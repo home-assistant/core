@@ -1045,7 +1045,6 @@ async def test_device_system_stats(
     device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that device stats sensors are working as expected."""
-
     assert len(hass.states.async_all()) == 8
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
 
@@ -1134,14 +1133,13 @@ async def test_device_system_stats(
         ]
     ],
 )
-@pytest.mark.usefixtures("config_entry_setup")
 async def test_bandwidth_port_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_websocket_message,
     config_entry_setup: ConfigEntry,
     config_entry_options: MappingProxyType[str, Any],
-    device_payload,
+    device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that port bandwidth sensors are working as expected."""
     assert len(hass.states.async_all()) == 5

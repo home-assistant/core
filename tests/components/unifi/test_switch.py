@@ -1,7 +1,9 @@
 """UniFi Network switch platform tests."""
 
+from collections.abc import Callable
 from copy import deepcopy
 from datetime import timedelta
+from typing import Any
 
 from aiounifi.models.message import MessageKey
 import pytest
@@ -20,7 +22,7 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_DEVICES,
     DOMAIN as UNIFI_DOMAIN,
 )
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY, ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -800,11 +802,9 @@ async def test_switches(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
-    config_entry_setup,
+    config_entry_setup: ConfigEntry,
 ) -> None:
     """Test the update_items function with some clients."""
-    config_entry = config_entry_setup
-
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 3
 
     switch_4 = hass.states.get("switch.poe_client_4")
@@ -831,8 +831,8 @@ async def test_switches(
     # Block and unblock client
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{config_entry.data[CONF_HOST]}:1234"
-        f"/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/stamgr",
+        f"https://{config_entry_setup.data[CONF_HOST]}:1234"
+        f"/api/s/{config_entry_setup.data[CONF_SITE_ID]}/cmd/stamgr",
     )
 
     await hass.services.async_call(
@@ -856,8 +856,8 @@ async def test_switches(
     # Enable and disable DPI
     aioclient_mock.clear_requests()
     aioclient_mock.put(
-        f"https://{config_entry.data[CONF_HOST]}:1234"
-        f"/api/s/{config_entry.data[CONF_SITE_ID]}/rest/dpiapp/{DPI_APPS[0]['_id']}",
+        f"https://{config_entry_setup.data[CONF_HOST]}:1234"
+        f"/api/s/{config_entry_setup.data[CONF_SITE_ID]}/rest/dpiapp/{DPI_APPS[0]['_id']}",
     )
 
     await hass.services.async_call(
@@ -924,11 +924,9 @@ async def test_block_switches(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_websocket_message,
-    config_entry_setup,
+    config_entry_setup: ConfigEntry,
 ) -> None:
     """Test the update_items function with some clients."""
-    config_entry = config_entry_setup
-
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
 
     blocked = hass.states.get("switch.block_client_1")
@@ -959,8 +957,8 @@ async def test_block_switches(
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{config_entry.data[CONF_HOST]}:1234"
-        f"/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/stamgr",
+        f"https://{config_entry_setup.data[CONF_HOST]}:1234"
+        f"/api/s/{config_entry_setup.data[CONF_SITE_ID]}/cmd/stamgr",
     )
 
     await hass.services.async_call(
@@ -1085,16 +1083,14 @@ async def test_outlet_switches(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_websocket_message,
-    config_entry_setup,
-    device_payload,
+    config_entry_setup: ConfigEntry,
+    device_payload: list[dict[str, Any]],
     mock_websocket_state,
     entity_id: str,
     outlet_index: int,
     expected_switches: int,
 ) -> None:
     """Test the outlet entities."""
-    config_entry = config_entry_setup
-
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == expected_switches
 
     # Validate state object
@@ -1114,8 +1110,8 @@ async def test_outlet_switches(
     device_id = device_payload[0]["device_id"]
     aioclient_mock.clear_requests()
     aioclient_mock.put(
-        f"https://{config_entry.data[CONF_HOST]}:1234"
-        f"/api/s/{config_entry.data[CONF_SITE_ID]}/rest/device/{device_id}",
+        f"https://{config_entry_setup.data[CONF_HOST]}:1234"
+        f"/api/s/{config_entry_setup.data[CONF_SITE_ID]}/rest/device/{device_id}",
     )
 
     await hass.services.async_call(
@@ -1171,11 +1167,11 @@ async def test_outlet_switches(
     assert hass.states.get(f"switch.{entity_id}").state == STATE_OFF
 
     # Unload config entry
-    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.config_entries.async_unload(config_entry_setup.entry_id)
     assert hass.states.get(f"switch.{entity_id}").state == STATE_UNAVAILABLE
 
     # Remove config entry
-    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.config_entries.async_remove(config_entry_setup.entry_id)
     await hass.async_block_till_done()
     assert hass.states.get(f"switch.{entity_id}") is None
 
@@ -1211,16 +1207,14 @@ async def test_new_client_discovered_on_block_control(
 )
 @pytest.mark.parametrize("clients_all_payload", [[BLOCKED, UNBLOCKED]])
 async def test_option_block_clients(
-    hass: HomeAssistant, config_entry_setup, clients_all_payload
+    hass: HomeAssistant, config_entry_setup: ConfigEntry, clients_all_payload
 ) -> None:
     """Test the changes to option reflects accordingly."""
-    config_entry = config_entry_setup
-
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
     # Add a second switch
     hass.config_entries.async_update_entry(
-        config_entry,
+        config_entry_setup,
         options={
             CONF_BLOCK_CLIENT: [
                 clients_all_payload[0]["mac"],
@@ -1233,24 +1227,21 @@ async def test_option_block_clients(
 
     # Remove the second switch again
     hass.config_entries.async_update_entry(
-        config_entry,
-        options={CONF_BLOCK_CLIENT: [clients_all_payload[0]["mac"]]},
+        config_entry_setup, options={CONF_BLOCK_CLIENT: [clients_all_payload[0]["mac"]]}
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
     # Enable one and remove the other one
     hass.config_entries.async_update_entry(
-        config_entry,
-        options={CONF_BLOCK_CLIENT: [clients_all_payload[1]["mac"]]},
+        config_entry_setup, options={CONF_BLOCK_CLIENT: [clients_all_payload[1]["mac"]]}
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
     # Remove one
     hass.config_entries.async_update_entry(
-        config_entry,
-        options={CONF_BLOCK_CLIENT: []},
+        config_entry_setup, options={CONF_BLOCK_CLIENT: []}
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
@@ -1263,16 +1254,15 @@ async def test_option_block_clients(
 @pytest.mark.parametrize("client_payload", [[CLIENT_1]])
 @pytest.mark.parametrize("dpi_app_payload", [DPI_APPS])
 @pytest.mark.parametrize("dpi_group_payload", [DPI_GROUPS])
-async def test_option_remove_switches(hass: HomeAssistant, config_entry_setup) -> None:
+async def test_option_remove_switches(
+    hass: HomeAssistant, config_entry_setup: ConfigEntry
+) -> None:
     """Test removal of DPI switch when options updated."""
-    config_entry = config_entry_setup
-
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
     # Disable DPI Switches
     hass.config_entries.async_update_entry(
-        config_entry,
-        options={CONF_DPI_RESTRICTIONS: False},
+        config_entry_setup, options={CONF_DPI_RESTRICTIONS: False}
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
@@ -1285,12 +1275,10 @@ async def test_poe_port_switches(
     aioclient_mock: AiohttpClientMocker,
     mock_websocket_message,
     mock_websocket_state,
-    config_entry_setup,
-    device_payload,
+    config_entry_setup: ConfigEntry,
+    device_payload: list[dict[str, Any]],
 ) -> None:
     """Test PoE port entities work."""
-    config_entry = config_entry_setup
-
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
     ent_reg_entry = entity_registry.async_get("switch.mock_name_port_1_poe")
@@ -1328,8 +1316,8 @@ async def test_poe_port_switches(
     # Turn off PoE
     aioclient_mock.clear_requests()
     aioclient_mock.put(
-        f"https://{config_entry.data[CONF_HOST]}:1234"
-        f"/api/s/{config_entry.data[CONF_SITE_ID]}/rest/device/mock-id",
+        f"https://{config_entry_setup.data[CONF_HOST]}:1234"
+        f"/api/s/{config_entry_setup.data[CONF_SITE_ID]}/rest/device/mock-id",
     )
 
     await hass.services.async_call(
@@ -1398,12 +1386,10 @@ async def test_wlan_switches(
     aioclient_mock: AiohttpClientMocker,
     mock_websocket_message,
     mock_websocket_state,
-    config_entry_setup,
-    wlan_payload,
+    config_entry_setup: ConfigEntry,
+    wlan_payload: list[dict[str, Any]],
 ) -> None:
     """Test control of UniFi WLAN availability."""
-    config_entry = config_entry_setup
-
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
     ent_reg_entry = entity_registry.async_get("switch.ssid_1")
@@ -1426,8 +1412,8 @@ async def test_wlan_switches(
     # Disable WLAN
     aioclient_mock.clear_requests()
     aioclient_mock.put(
-        f"https://{config_entry.data[CONF_HOST]}:1234"
-        f"/api/s/{config_entry.data[CONF_SITE_ID]}/rest/wlanconf/{wlan['_id']}",
+        f"https://{config_entry_setup.data[CONF_HOST]}:1234"
+        f"/api/s/{config_entry_setup.data[CONF_SITE_ID]}/rest/wlanconf/{wlan['_id']}",
     )
 
     await hass.services.async_call(
@@ -1485,11 +1471,10 @@ async def test_port_forwarding_switches(
     aioclient_mock: AiohttpClientMocker,
     mock_websocket_message,
     mock_websocket_state,
-    config_entry_setup,
-    port_forward_payload,
+    config_entry_setup: ConfigEntry,
+    port_forward_payload: list[dict[str, Any]],
 ) -> None:
     """Test control of UniFi port forwarding."""
-    config_entry = config_entry_setup
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
     ent_reg_entry = entity_registry.async_get("switch.unifi_network_plex")
@@ -1512,8 +1497,8 @@ async def test_port_forwarding_switches(
     # Disable port forward
     aioclient_mock.clear_requests()
     aioclient_mock.put(
-        f"https://{config_entry.data[CONF_HOST]}:1234"
-        f"/api/s/{config_entry.data[CONF_SITE_ID]}/rest/portforward/{data['_id']}",
+        f"https://{config_entry_setup.data[CONF_HOST]}:1234"
+        f"/api/s/{config_entry_setup.data[CONF_SITE_ID]}/rest/portforward/{data['_id']}",
     )
 
     await hass.services.async_call(
@@ -1594,8 +1579,8 @@ async def test_port_forwarding_switches(
 async def test_updating_unique_id(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    config_entry_factory,
-    config_entry,
+    config_entry_factory: Callable[[], ConfigEntry],
+    config_entry: ConfigEntry,
     device_payload,
 ) -> None:
     """Verify outlet control and poe control unique ID update works."""
