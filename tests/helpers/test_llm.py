@@ -627,6 +627,7 @@ async def test_script_tool(
                         "area_list": {"selector": {"area": {"multiple": True}}},
                         "floor": {"selector": {"floor": {}}},
                         "floor_list": {"selector": {"floor": {"multiple": True}}},
+                        "extra_field": {"selector": {"area": {}}},
                     },
                 },
                 "unexposed_script": {
@@ -655,6 +656,7 @@ async def test_script_tool(
         vol.Optional("area_list"): selector.AreaSelector({"multiple": True}),
         vol.Optional("floor"): selector.FloorSelector(),
         vol.Optional("floor_list"): selector.FloorSelector({"multiple": True}),
+        vol.Optional("extra_field"): selector.AreaSelector(),
     }
 
     tool_input = llm.ToolInput(
