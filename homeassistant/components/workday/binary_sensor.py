@@ -264,7 +264,7 @@ class IsWorkdaySensor(BinarySensorEntity):
 
     def get_next_interval(self, now: datetime) -> datetime:
         """Compute next time an update should occur."""
-        tomorrow = dt_util.as_local(now) + timedelta(days=1)
+        tomorrow = now + timedelta(days=1)
         return dt_util.start_of_local_day(tomorrow)
 
     def _update_state_and_setup_listener(self) -> None:
