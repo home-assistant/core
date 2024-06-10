@@ -154,7 +154,7 @@ async def test_setup_no_country_weekend(
     """Test setup shows weekend as non-workday with no country."""
     await hass.config.async_set_time_zone(time_zone)
     zone = await dt_util.async_get_time_zone(time_zone)
-    freezer.move_to(datetime(2020, 2, 23, 12, tzinfo=zone))  # Sunday
+    freezer.move_to(datetime(2020, 2, 23, 23, 59, 59, tzinfo=zone))  # Sunday
     await init_integration(hass, TEST_CONFIG_NO_COUNTRY)
 
     state = hass.states.get("binary_sensor.workday_sensor")
