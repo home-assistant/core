@@ -19,6 +19,7 @@ from homeassistant.components.teslemetry.services import (
     SERVICE_SET_SCHEDULED_CHARGING,
     SERVICE_SET_SCHEDULED_DEPARTURE,
     SERVICE_SPEED_LIMIT,
+    SERVICE_TIME_OF_USE,
     SERVICE_VALET_MODE,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_LATITUDE, CONF_LONGITUDE
@@ -151,7 +152,7 @@ async def test_services(
     ) as set_time_of_use:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SPEED_LIMIT,
+            SERVICE_TIME_OF_USE,
             {
                 CONF_DEVICE_ID: energy_device,
                 ATTR_TOU_SETTINGS: {},

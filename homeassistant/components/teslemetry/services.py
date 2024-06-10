@@ -86,7 +86,7 @@ def async_get_vehicle_for_entry(
 def async_get_energy_site_for_entry(
     hass: HomeAssistant, device: dr.DeviceEntry, config: ConfigEntry
 ) -> TeslemetryEnergyData:
-    """Get the vehicle data for a config entry."""
+    """Get the energy site data for a config entry."""
     assert device.serial_number is not None
     for site in config.runtime_data.energy_sites:
         if site.id == device.serial_number:
