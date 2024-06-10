@@ -300,7 +300,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         ) as err:
             self.last_exception = err
 
-        except (ConfigEntryError, ConfigEntryAuthFailed):
+        except (ConfigEntryError, ConfigEntryAuthFailed) as err:
+            self.last_exception = err
             self.last_update_success = False
             raise
 
