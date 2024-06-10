@@ -525,11 +525,19 @@ async def test_stop_refresh_on_ha_stop(
 
 @pytest.mark.parametrize(
     "err_msg",
-    KNOWN_ERRORS,
+    [
+        *KNOWN_ERRORS,
+        (Exception(), Exception, "Unknown exception"),
+    ],
+)
+@pytest.mark.parametrize(
+    "method",
+    ["update_method", "setup_method"],
 )
 async def test_async_config_entry_first_refresh_failure(
     err_msg: tuple[Exception, type[Exception], str],
     crd: update_coordinator.DataUpdateCoordinator[int],
+    method: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test async_config_entry_first_refresh raises ConfigEntryNotReady on failure.
@@ -538,7 +546,7 @@ async def test_async_config_entry_first_refresh_failure(
     will be caught by config_entries.async_setup which will log it with
     a decreasing level of logging once the first message is logged.
     """
-    crd.update_method = AsyncMock(side_effect=err_msg[0])
+    setattr(crd, method, AsyncMock(side_effect=err_msg[0]))
 
     with pytest.raises(ConfigEntryNotReady):
         await crd.async_config_entry_first_refresh()
@@ -555,31 +563,6 @@ async def test_async_config_entry_first_refresh_success(
     await crd.async_config_entry_first_refresh()
 
     assert crd.last_update_success is True
-
-
-@pytest.mark.parametrize(
-    "err_msg",
-    KNOWN_ERRORS,
-)
-async def test_async_setup_failure(
-    err_msg: tuple[Exception, type[Exception], str],
-    crd: update_coordinator.DataUpdateCoordinator[int],
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test async_setup raises ConfigEntryNotReady on failure.
-
-    Verify we do not log the exception since raising ConfigEntryNotReady
-    will be caught by config_entries.async_setup which will log it with
-    a decreasing level of logging once the first message is logged.
-    """
-    crd.setup_method = AsyncMock(side_effect=err_msg[0])
-
-    with pytest.raises(ConfigEntryNotReady):
-        await crd.async_config_entry_first_refresh()
-
-    assert crd.last_update_success is False
-    assert isinstance(crd.last_exception, err_msg[1])
-    assert err_msg[2] not in caplog.text
 
 
 async def test_not_schedule_refresh_if_system_option_disable_polling(

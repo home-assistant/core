@@ -304,11 +304,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             self.last_update_success = False
             raise
 
-        except NotImplementedError as err:
-            self.last_exception = err
-            self.last_update_success = False
-            raise
-
         except Exception as err:  # pylint: disable=broad-except
             self.last_exception = err
             self.logger.exception("Unexpected error fetching %s data", self.name)
