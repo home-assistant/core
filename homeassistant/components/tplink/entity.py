@@ -107,7 +107,6 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         feature: Feature | None = None,
         parent: Device | None = None,
         unique_id: str | None = None,
-        add_to_parent: bool = False,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
@@ -117,9 +116,9 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         registry_device = device
         name = device.alias
         if parent and parent.device_type != Device.Type.Hub:
-            if add_to_parent:
-                # Entity can be added to parent if add_to_parent parameter and not a hub
-                # Useful to assign primary controls to the parent for user experience.
+            if not feature or feature.category == Feature.Category.Primary:
+                # Entity will be added to parent if not a hub and no feature parameter
+                # (i.e. core platform like Light, Fan) or feature is primary like state
                 registry_device = parent
                 name = registry_device.alias
                 self._attr_name = device.alias
@@ -234,7 +233,6 @@ def _entities_for_device[_E: CoordinatedTPLinkEntity](
             coordinator,
             feature=feat,
             parent=parent,
-            add_to_parent=feat.category == Feature.Category.Primary,
         )
         for feat in device.features.values()
         if feat.type == feature_type

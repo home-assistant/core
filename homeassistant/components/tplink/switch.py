@@ -55,7 +55,6 @@ class TPLinkSwitch(CoordinatedTPLinkEntity, SwitchEntity):
         *,
         feature: Feature,
         parent: Device | None = None,
-        add_to_parent: bool = False,
     ) -> None:
         """Initialize the switch."""
         super().__init__(
@@ -63,16 +62,11 @@ class TPLinkSwitch(CoordinatedTPLinkEntity, SwitchEntity):
             coordinator,
             feature=feature,
             parent=parent,
-            add_to_parent=add_to_parent,
         )
         self._feature: Feature
 
         # Use the device name for the primary switch control
-        if (
-            feature.category is Feature.Category.Primary
-            and not parent
-            and add_to_parent
-        ):
+        if feature.category is Feature.Category.Primary and not parent:
             self._attr_name = None
 
         self.entity_description = _description_for_feature(
