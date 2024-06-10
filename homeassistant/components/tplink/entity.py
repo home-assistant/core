@@ -16,6 +16,7 @@ from kasa import (
     TimeoutError,
 )
 
+from homeassistant.components.light import LightEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -107,7 +108,6 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         *,
         feature: Feature | None = None,
         parent: Device | None = None,
-        unique_id: str | None = None,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
@@ -147,37 +147,40 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
                 (dr.CONNECTION_NETWORK_MAC, device.mac)
             }
 
-        # The rest of the initialization takes care of setting a proper unique_id
-        # This is transitional and will become cleaner as future platforms get converted.
-
-        # Specialized platforms define their own unique ids.
-        if unique_id is not None:
-            self._attr_unique_id = unique_id
-            return
-
-        # If no unique id is defined and we have no feature, it's a bug.
-        if feature is None:
-            raise HomeAssistantError(
-                "Entity is not feature-based nor does define unique_id"
-            )
-
+        self._attr_unique_id = self._get_unique_id()
         self._attr_entity_category = self._category_for_feature(feature)
 
-        # Special handling for primary state attribute (backwards compat for the main switch).
-        if feature.id == PRIMARY_STATE_ID:
-            self._attr_unique_id = legacy_device_id(device)
-        else:
-            self._attr_unique_id = f"{legacy_device_id(device)}_{feature.id}"
-            _LOGGER.debug(
-                "Initializing feature-based %s with category %s",
-                self._attr_unique_id,
-                self._attr_entity_category,
-            )
+    def _get_unique_id(self) -> str:
+        """Return unique ID for the entity."""
+        device = self._device
+        if self._feature is not None:
+            feature_id = self._feature.id
+            # Special handling for primary state attribute (backwards compat for the main switch).
+            if feature_id == PRIMARY_STATE_ID:
+                return legacy_device_id(device)
 
-    def _category_for_feature(self, feature: Feature) -> EntityCategory | None:
+            return f"{legacy_device_id(device)}_{feature_id}"
+
+        # Light entities were handled historically differently
+        if isinstance(self, LightEntity):
+            unique_id = device.mac.replace(":", "").upper()
+            # For backwards compat with pyHS100
+            if device.device_type == DeviceType.Dimmer:
+                # Dimmers used to use the switch format since
+                # pyHS100 treated them as SmartPlug but the old code
+                # created them as lights
+                # https://github.com/home-assistant/core/blob/2021.9.7/homeassistant/components/tplink/common.py#L86
+                unique_id = legacy_device_id(device)
+            return unique_id
+
+        # For legacy sensors, we construct our IDs from the entity description
+        if self.entity_description is not None:
+            return f"{legacy_device_id(device)}_{self.entity_description.key}"
+
+    def _category_for_feature(self, feature: Feature | None) -> EntityCategory | None:
         """Return entity category for a feature."""
         # Main controls have no category
-        if feature.category is Feature.Category.Primary:
+        if feature is None or feature.category is Feature.Category.Primary:
             return None
 
         if (

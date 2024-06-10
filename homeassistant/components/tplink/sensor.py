@@ -24,7 +24,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import legacy_device_id
 from .const import (
     ATTR_CURRENT_A,
     ATTR_CURRENT_POWER_W,
@@ -161,12 +160,7 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
     ) -> None:
         """Initialize the switch."""
         self.entity_description = description
-        super().__init__(
-            device,
-            coordinator,
-            parent=parent,
-            unique_id=f"{legacy_device_id(device)}_{description.key}",
-        )
+        super().__init__(device, coordinator, parent=parent)
         if parent is not None:
             assert device.alias
             self._attr_translation_placeholders = {"device_name": device.alias}

@@ -28,7 +28,6 @@ from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import legacy_device_id
 from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkEntity, async_refresh_after
@@ -184,16 +183,8 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         light_module: Light,
     ) -> None:
         """Initialize the switch."""
+        super().__init__(device, coordinator)
         self._light_module = light_module
-        unique_id = device.mac.replace(":", "").upper()
-        # For backwards compat with pyHS100
-        if device.device_type == DeviceType.Dimmer:
-            # Dimmers used to use the switch format since
-            # pyHS100 treated them as SmartPlug but the old code
-            # created them as lights
-            # https://github.com/home-assistant/core/blob/2021.9.7/homeassistant/components/tplink/common.py#L86
-            unique_id = legacy_device_id(device)
-        super().__init__(device, coordinator, unique_id=unique_id)
         modes: set[ColorMode] = {ColorMode.ONOFF}
         if light_module.is_variable_color_temp:
             modes.add(ColorMode.COLOR_TEMP)
