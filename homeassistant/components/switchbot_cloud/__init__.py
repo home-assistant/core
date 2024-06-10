@@ -15,7 +15,12 @@ from .const import DOMAIN
 from .coordinator import SwitchBotCoordinator
 
 _LOGGER = getLogger(__name__)
-PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SENSOR, Platform.LOCK, Platform.SWITCH]
+PLATFORMS: list[Platform] = [
+    Platform.CLIMATE,
+    Platform.LOCK,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 @dataclass
