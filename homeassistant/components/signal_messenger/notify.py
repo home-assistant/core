@@ -29,12 +29,18 @@ ATTR_URLS = "urls"
 ATTR_VERIFY_SSL = "verify_ssl"
 ATTR_TEXTMODE = "text_mode"
 
-DATA_FILENAMES_SCHEMA = vol.Schema([cv.string])
+DATA_FILENAMES_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_FILENAMES): [cv.string],
+        vol.Optional(ATTR_TEXTMODE, default="normal"): cv.string,
+    }
+)
 
 DATA_URLS_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_URLS): [cv.url],
         vol.Optional(ATTR_VERIFY_SSL, default=True): cv.boolean,
+        vol.Optional(ATTR_TEXTMODE, default="normal"): cv.string,
     }
 )
 
@@ -43,10 +49,10 @@ DATA_SCHEMA = vol.Any(
     vol.Schema(
         {
             vol.Optional(ATTR_TEXTMODE, default="normal"): cv.string,
-            vol.Exclusive(ATTR_FILENAMES, "attachments"): [cv.string],
-            vol.Exclusive(ATTR_URLS, "attachments"): DATA_URLS_SCHEMA,
         }
     ),
+    DATA_FILENAMES_SCHEMA,
+    DATA_URLS_SCHEMA,
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -122,15 +128,10 @@ class SignalNotificationService(BaseNotificationService):
     def get_filenames(data: Any) -> list[str] | None:
         """Extract attachment filenames from data."""
         try:
-            data = DATA_FILENAMES_SCHEMA(data[ATTR_FILENAMES])
+            data = DATA_FILENAMES_SCHEMA(data)
         except vol.Invalid:
             return None
-        except KeyError:
-            return None
-        except TypeError:
-            return None
-
-        return data
+        return data[ATTR_FILENAMES]
 
     @staticmethod
     def get_attachments_as_bytes(
@@ -140,12 +141,8 @@ class SignalNotificationService(BaseNotificationService):
     ) -> list[bytearray] | None:
         """Retrieve attachments from URLs defined in data."""
         try:
-            data = DATA_URLS_SCHEMA(data[ATTR_URLS])
+            data = DATA_URLS_SCHEMA(data)
         except vol.Invalid:
-            return None
-        except KeyError:
-            return None
-        except TypeError:
             return None
         urls = data[ATTR_URLS]
 
