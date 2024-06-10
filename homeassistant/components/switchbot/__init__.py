@@ -101,9 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     sensor_type: str = entry.data[CONF_SENSOR_TYPE]
-    switchbot_model: switchbot.SwitchbotModel = HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL[
-        sensor_type
-    ]
+    switchbot_model = HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL[sensor_type]
     # connectable means we can make connections to the device
     connectable = switchbot_model in CONNECTABLE_SUPPORTED_MODEL_TYPES
     address: str = entry.data[CONF_ADDRESS]
