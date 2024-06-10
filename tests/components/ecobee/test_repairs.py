@@ -48,14 +48,14 @@ async def test_ecobee_repair_flow(
 
     # Assert the issue is present
     assert issue_registry.async_get_issue(
-        domain=DOMAIN,
-        issue_id="migrate_notify",
+        domain="notify",
+        issue_id=f"migrate_notify_{DOMAIN}_{DOMAIN}",
     )
     assert len(issue_registry.issues) == 1
 
     url = RepairsFlowIndexView.url
     resp = await http_client.post(
-        url, json={"handler": DOMAIN, "issue_id": "migrate_notify"}
+        url, json={"handler": "notify", "issue_id": f"migrate_notify_{DOMAIN}_{DOMAIN}"}
     )
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -73,7 +73,7 @@ async def test_ecobee_repair_flow(
 
     # Assert the issue is no longer present
     assert not issue_registry.async_get_issue(
-        domain=DOMAIN,
-        issue_id="migrate_notify",
+        domain="notify",
+        issue_id=f"migrate_notify_{DOMAIN}_{DOMAIN}",
     )
     assert len(issue_registry.issues) == 0

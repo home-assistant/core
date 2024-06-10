@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Awaitable, Callable
 import copy
 from dataclasses import dataclass, field
 import time
-from typing import Any, TypeVar
+from typing import Any
 
 from google_nest_sdm.auth import AbstractAuth
 from google_nest_sdm.device import Device
@@ -14,14 +14,14 @@ from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.event import EventMessage
 from google_nest_sdm.event_media import CachePolicy
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
+from typing_extensions import Generator
 
 from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.components.nest import DOMAIN
 
 # Typing helpers
-PlatformSetup = Callable[[], Awaitable[None]]
-_T = TypeVar("_T")
-YieldFixture = Generator[_T, None, None]
+type PlatformSetup = Callable[[], Awaitable[None]]
+type YieldFixture[_T] = Generator[_T]
 
 WEB_AUTH_DOMAIN = DOMAIN
 APP_AUTH_DOMAIN = f"{DOMAIN}.installed"
@@ -91,6 +91,8 @@ TEST_CONFIG_ENTRY_LEGACY = NestTestConfig(
 class FakeSubscriber(GoogleNestSubscriber):
     """Fake subscriber that supplies a FakeDeviceManager."""
 
+    stop_calls = 0
+
     def __init__(self):
         """Initialize Fake Subscriber."""
         self._device_manager = DeviceManager()
@@ -122,7 +124,7 @@ class FakeSubscriber(GoogleNestSubscriber):
 
     def stop_async(self):
         """No-op to stop the subscriber."""
-        return None
+        self.stop_calls += 1
 
     async def async_receive_event(self, event_message: EventMessage):
         """Simulate a received pubsub message, invoked by tests."""

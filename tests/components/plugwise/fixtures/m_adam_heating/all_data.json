@@ -71,8 +71,7 @@
       "model": "ThermoTouch",
       "name": "Anna",
       "preset_modes": ["no_frost", "asleep", "vacation", "home", "away"],
-      "select_schedule": "Weekschema",
-      "selected_schedule": "None",
+      "select_schedule": "None",
       "sensors": {
         "setpoint": 20.0,
         "temperature": 19.1

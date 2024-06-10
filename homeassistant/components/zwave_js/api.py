@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 import dataclasses
 from functools import partial, wraps
-from typing import Any, Concatenate, Literal, ParamSpec, cast
+from typing import Any, Concatenate, Literal, cast
 
 from aiohttp import web, web_exceptions, web_request
 import voluptuous as vol
@@ -75,7 +75,6 @@ from .config_validation import BITMASK_SCHEMA
 from .const import (
     CONF_DATA_COLLECTION_OPTED_IN,
     DATA_CLIENT,
-    DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     USER_AGENT,
 )
@@ -84,8 +83,6 @@ from .helpers import (
     async_get_node_from_device_id,
     get_device_id,
 )
-
-_P = ParamSpec("_P")
 
 DATA_UNSUBSCRIBE = "unsubs"
 
@@ -119,8 +116,8 @@ ENABLED = "enabled"
 OPTED_IN = "opted_in"
 
 # constants for granting security classes
-SECURITY_CLASSES = "security_classes"
-CLIENT_SIDE_AUTH = "client_side_auth"
+SECURITY_CLASSES = "securityClasses"
+CLIENT_SIDE_AUTH = "clientSideAuth"
 
 # constants for inclusion
 INCLUSION_STRATEGY = "inclusion_strategy"
@@ -148,19 +145,19 @@ QR_CODE_STRING = "qr_code_string"
 DSK = "dsk"
 
 VERSION = "version"
-GENERIC_DEVICE_CLASS = "generic_device_class"
-SPECIFIC_DEVICE_CLASS = "specific_device_class"
-INSTALLER_ICON_TYPE = "installer_icon_type"
-MANUFACTURER_ID = "manufacturer_id"
-PRODUCT_TYPE = "product_type"
-PRODUCT_ID = "product_id"
-APPLICATION_VERSION = "application_version"
-MAX_INCLUSION_REQUEST_INTERVAL = "max_inclusion_request_interval"
+GENERIC_DEVICE_CLASS = "genericDeviceClass"
+SPECIFIC_DEVICE_CLASS = "specificDeviceClass"
+INSTALLER_ICON_TYPE = "installerIconType"
+MANUFACTURER_ID = "manufacturerId"
+PRODUCT_TYPE = "productType"
+PRODUCT_ID = "productId"
+APPLICATION_VERSION = "applicationVersion"
+MAX_INCLUSION_REQUEST_INTERVAL = "maxInclusionRequestInterval"
 UUID = "uuid"
-SUPPORTED_PROTOCOLS = "supported_protocols"
+SUPPORTED_PROTOCOLS = "supportedProtocols"
 ADDITIONAL_PROPERTIES = "additional_properties"
 STATUS = "status"
-REQUESTED_SECURITY_CLASSES = "requested_security_classes"
+REQUESTED_SECURITY_CLASSES = "requestedSecurityClasses"
 
 FEATURE = "feature"
 STRATEGY = "strategy"
@@ -186,6 +183,7 @@ def convert_planned_provisioning_entry(info: dict) -> ProvisioningEntry:
 
 def convert_qr_provisioning_information(info: dict) -> QRProvisioningInformation:
     """Convert QR provisioning information dict to QRProvisioningInformation."""
+    ## Remove this when we have fix for QRProvisioningInformation.from_dict()
     return QRProvisioningInformation(
         version=info[VERSION],
         security_classes=info[SECURITY_CLASSES],
@@ -202,7 +200,28 @@ def convert_qr_provisioning_information(info: dict) -> QRProvisioningInformation
         supported_protocols=info.get(SUPPORTED_PROTOCOLS),
         status=info[STATUS],
         requested_security_classes=info.get(REQUESTED_SECURITY_CLASSES),
-        additional_properties=info.get(ADDITIONAL_PROPERTIES, {}),
+        additional_properties={
+            k: v
+            for k, v in info.items()
+            if k
+            not in (
+                VERSION,
+                SECURITY_CLASSES,
+                DSK,
+                GENERIC_DEVICE_CLASS,
+                SPECIFIC_DEVICE_CLASS,
+                INSTALLER_ICON_TYPE,
+                MANUFACTURER_ID,
+                PRODUCT_TYPE,
+                PRODUCT_ID,
+                APPLICATION_VERSION,
+                MAX_INCLUSION_REQUEST_INTERVAL,
+                UUID,
+                SUPPORTED_PROTOCOLS,
+                STATUS,
+                REQUESTED_SECURITY_CLASSES,
+            )
+        },
     )
 
 
@@ -256,8 +275,8 @@ QR_PROVISIONING_INFORMATION_SCHEMA = vol.All(
             vol.Optional(REQUESTED_SECURITY_CLASSES): vol.All(
                 cv.ensure_list, [vol.Coerce(SecurityClass)]
             ),
-            vol.Optional(ADDITIONAL_PROPERTIES): dict,
-        }
+        },
+        extra=vol.ALLOW_EXTRA,
     ),
     convert_qr_provisioning_information,
 )
@@ -285,7 +304,7 @@ async def _async_get_entry(
         )
         return None, None, None
 
-    client: Client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+    client: Client = entry.runtime_data[DATA_CLIENT]
 
     if client.driver is None:
         connection.send_error(
@@ -363,7 +382,7 @@ def async_get_node(
     return async_get_node_func
 
 
-def async_handle_failed_command(
+def async_handle_failed_command[**_P](
     orig_func: Callable[
         Concatenate[HomeAssistant, ActiveConnection, dict[str, Any], _P],
         Coroutine[Any, Any, None],
@@ -993,9 +1012,7 @@ async def websocket_get_provisioning_entries(
 ) -> None:
     """Get provisioning entries (entries that have been pre-provisioned)."""
     provisioning_entries = await driver.controller.async_get_provisioning_entries()
-    connection.send_result(
-        msg[ID], [dataclasses.asdict(entry) for entry in provisioning_entries]
-    )
+    connection.send_result(msg[ID], [entry.to_dict() for entry in provisioning_entries])
 
 
 @websocket_api.require_admin
@@ -1021,7 +1038,7 @@ async def websocket_parse_qr_code_string(
     qr_provisioning_information = await async_parse_qr_code_string(
         client, msg[QR_CODE_STRING]
     )
-    connection.send_result(msg[ID], dataclasses.asdict(qr_provisioning_information))
+    connection.send_result(msg[ID], qr_provisioning_information.to_dict())
 
 
 @websocket_api.require_admin
@@ -2210,7 +2227,7 @@ class FirmwareUploadView(HomeAssistantView):
         assert node.client.driver
 
         # Increase max payload
-        request._client_max_size = 1024 * 1024 * 10  # pylint: disable=protected-access
+        request._client_max_size = 1024 * 1024 * 10  # noqa: SLF001
 
         data = await request.post()
 

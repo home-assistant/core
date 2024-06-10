@@ -1,11 +1,11 @@
 """Fixtures for HomeWizard integration tests."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homewizard_energy.errors import NotFoundError
 from homewizard_energy.models import Data, Device, State, System
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.homewizard.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
@@ -62,7 +62,7 @@ def mock_homewizardenergy(
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.homewizard.async_setup_entry", return_value=True
@@ -102,7 +102,7 @@ async def init_integration(
 
 
 @pytest.fixture
-def mock_onboarding() -> Generator[MagicMock, None, None]:
+def mock_onboarding() -> Generator[MagicMock]:
     """Mock that Home Assistant is currently onboarding."""
     with patch(
         "homeassistant.components.onboarding.async_is_onboarded",

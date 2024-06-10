@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.whois.const import DOMAIN
 from homeassistant.const import CONF_DOMAIN
@@ -30,7 +30,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.whois.async_setup_entry", return_value=True
@@ -39,7 +39,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_whois() -> Generator[MagicMock, None, None]:
+def mock_whois() -> Generator[MagicMock]:
     """Return a mocked query."""
     with (
         patch(
@@ -68,7 +68,7 @@ def mock_whois() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
-def mock_whois_missing_some_attrs() -> Generator[Mock, None, None]:
+def mock_whois_missing_some_attrs() -> Generator[Mock]:
     """Return a mocked query that only sets admin."""
 
     class LimitedWhoisMock:

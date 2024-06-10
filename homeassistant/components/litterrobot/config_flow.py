@@ -94,7 +94,7 @@ class LitterRobotConfigFlow(ConfigFlow, domain=DOMAIN):
             return "invalid_auth"
         except LitterRobotException:
             return "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return "unknown"
         return ""

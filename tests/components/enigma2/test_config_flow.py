@@ -12,7 +12,7 @@ from homeassistant.components.enigma2.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.issue_registry import IssueRegistry
+from homeassistant.helpers import issue_registry as ir
 
 from .conftest import (
     EXPECTED_OPTIONS,
@@ -41,7 +41,7 @@ async def user_flow(hass: HomeAssistant) -> str:
 )
 async def test_form_user(
     hass: HomeAssistant, user_flow: str, test_config: dict[str, Any]
-):
+) -> None:
     """Test a successful user initiated flow."""
     with (
         patch(
@@ -97,7 +97,7 @@ async def test_form_import(
     test_config: dict[str, Any],
     expected_data: dict[str, Any],
     expected_options: dict[str, Any],
-    issue_registry: IssueRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we get the form with import source."""
     with (
@@ -143,7 +143,7 @@ async def test_form_import_errors(
     hass: HomeAssistant,
     exception: Exception,
     error_type: str,
-    issue_registry: IssueRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we handle errors on import."""
     with patch(

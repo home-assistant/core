@@ -75,13 +75,7 @@ class LutronEventEntity(LutronKeypad, EventEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
-        self._lutron_device.subscribe(self.handle_event, None)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Unregister callbacks."""
-        await super().async_will_remove_from_hass()
-        # Temporary solution until https://github.com/thecynic/pylutron/pull/93 gets merged
-        self._lutron_device._subscribers.remove((self.handle_event, None))  # pylint: disable=protected-access
+        self.async_on_remove(self._lutron_device.subscribe(self.handle_event, None))
 
     @callback
     def handle_event(
@@ -106,4 +100,4 @@ class LutronEventEntity(LutronKeypad, EventEntity):
             }
             self.hass.bus.fire("lutron_event", data)
             self._trigger_event(action)
-            self.async_write_ha_state()
+            self.schedule_update_ha_state()

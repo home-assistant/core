@@ -6,7 +6,7 @@ from aiohttp import ClientConnectionError, ClientResponseError
 from bond_async import DeviceType
 import pytest
 
-from homeassistant.components.bond.const import DOMAIN
+from homeassistant.components.bond import DOMAIN, BondData
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ASSUMED_STATE, CONF_ACCESS_TOKEN, CONF_HOST
@@ -107,7 +107,7 @@ async def test_async_setup_entry_sets_up_hub_and_supported_domains(
         assert result is True
         await hass.async_block_till_done()
 
-    assert config_entry.entry_id in hass.data[DOMAIN]
+    assert isinstance(config_entry.runtime_data, BondData)
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == "ZXXX12345"
 
@@ -148,7 +148,6 @@ async def test_unload_config_entry(hass: HomeAssistant) -> None:
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.entry_id not in hass.data[DOMAIN]
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
@@ -194,7 +193,6 @@ async def test_old_identifiers_are_removed(
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
         await hass.async_block_till_done()
 
-    assert config_entry.entry_id in hass.data[DOMAIN]
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == "ZXXX12345"
 
@@ -238,7 +236,6 @@ async def test_smart_by_bond_device_suggested_area(
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
         await hass.async_block_till_done()
 
-    assert config_entry.entry_id in hass.data[DOMAIN]
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == "KXXX12345"
 
@@ -287,7 +284,6 @@ async def test_bridge_device_suggested_area(
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
         await hass.async_block_till_done()
 
-    assert config_entry.entry_id in hass.data[DOMAIN]
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == "ZXXX12345"
 

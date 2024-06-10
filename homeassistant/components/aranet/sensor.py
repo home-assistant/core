@@ -143,7 +143,7 @@ def _sensor_device_info_to_hass(
 
 def sensor_update_to_bluetooth_data_update(
     adv: Aranet4Advertisement,
-) -> PassiveBluetoothDataUpdate:
+) -> PassiveBluetoothDataUpdate[Any]:
     """Convert a sensor update to a Bluetooth data update."""
     data: dict[PassiveBluetoothEntityKey, Any] = {}
     names: dict[PassiveBluetoothEntityKey, str | None] = {}
@@ -171,9 +171,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Aranet sensors."""
-    coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinator: PassiveBluetoothProcessorCoordinator[Aranet4Advertisement] = hass.data[
+        DOMAIN
+    ][entry.entry_id]
     processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
     entry.async_on_unload(
         processor.async_add_entities_listener(
@@ -184,7 +184,9 @@ async def async_setup_entry(
 
 
 class Aranet4BluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[float | int | None]],
+    PassiveBluetoothProcessorEntity[
+        PassiveBluetoothDataProcessor[float | int | None, Aranet4Advertisement],
+    ],
     SensorEntity,
 ):
     """Representation of an Aranet sensor."""

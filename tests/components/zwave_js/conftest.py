@@ -496,6 +496,12 @@ def fibaro_fgr223_shutter_state_fixture():
     return json.loads(load_fixture("zwave_js/cover_fibaro_fgr223_state.json"))
 
 
+@pytest.fixture(name="shelly_europe_ltd_qnsh_001p10_state", scope="package")
+def shelly_europe_ltd_qnsh_001p10_state_fixture():
+    """Load the Shelly QNSH 001P10 node state fixture data."""
+    return json.loads(load_fixture("zwave_js/shelly_europe_ltd_qnsh_001p10_state.json"))
+
+
 @pytest.fixture(name="merten_507801_state", scope="package")
 def merten_507801_state_fixture():
     """Load the Merten 507801 Shutter node state fixture data."""
@@ -673,6 +679,12 @@ def logic_group_zdb5100_state_fixture():
 def central_scene_node_state_fixture():
     """Load node with Central Scene CC node state fixture data."""
     return json.loads(load_fixture("zwave_js/central_scene_node_state.json"))
+
+
+@pytest.fixture(name="light_device_class_is_null_state", scope="package")
+def light_device_class_is_null_state_fixture():
+    """Load node with device class is None state fixture data."""
+    return json.loads(load_fixture("zwave_js/light_device_class_is_null_state.json"))
 
 
 # model fixtures
@@ -1095,6 +1107,16 @@ def fibaro_fgr223_shutter_cover_fixture(client, fibaro_fgr223_shutter_state):
     return node
 
 
+@pytest.fixture(name="shelly_qnsh_001P10_shutter")
+def shelly_qnsh_001P10_cover_shutter_fixture(
+    client, shelly_europe_ltd_qnsh_001p10_state
+):
+    """Mock a Shelly QNSH 001P10 Shutter node."""
+    node = Node(client, copy.deepcopy(shelly_europe_ltd_qnsh_001p10_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="merten_507801")
 def merten_507801_cover_fixture(client, merten_507801_state):
     """Mock a Merten 507801 Shutter node."""
@@ -1323,5 +1345,13 @@ def logic_group_zdb5100_fixture(client, logic_group_zdb5100_state):
 def central_scene_node_fixture(client, central_scene_node_state):
     """Mock a node with the Central Scene CC."""
     node = Node(client, copy.deepcopy(central_scene_node_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="light_device_class_is_null")
+def light_device_class_is_null_fixture(client, light_device_class_is_null_state):
+    """Mock a node when device class is null."""
+    node = Node(client, copy.deepcopy(light_device_class_is_null_state))
     client.driver.controller.nodes[node.node_id] = node
     return node

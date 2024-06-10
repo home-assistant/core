@@ -9,7 +9,7 @@ import dataclasses
 from functools import wraps
 from http import HTTPStatus
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 import aiohttp
 from aiohttp import web
@@ -19,7 +19,7 @@ from hass_nabucasa.const import STATE_DISCONNECTED
 from hass_nabucasa.voice import TTS_VOICES
 import voluptuous as vol
 
-from homeassistant.components import http, websocket_api
+from homeassistant.components import websocket_api
 from homeassistant.components.alexa import (
     entities as alexa_entities,
     errors as alexa_errors,
@@ -46,7 +46,6 @@ from .const import (
     PREF_GOOGLE_REPORT_STATE,
     PREF_GOOGLE_SECURE_DEVICES_PIN,
     PREF_REMOTE_ALLOW_REMOTE_ENABLE,
-    PREF_STRICT_CONNECTION,
     PREF_TTS_DEFAULT_VOICE,
     REQUEST_TIMEOUT,
 )
@@ -116,11 +115,7 @@ def async_setup(hass: HomeAssistant) -> None:
     )
 
 
-_HassViewT = TypeVar("_HassViewT", bound=HomeAssistantView)
-_P = ParamSpec("_P")
-
-
-def _handle_cloud_errors(
+def _handle_cloud_errors[_HassViewT: HomeAssistantView, **_P](
     handler: Callable[
         Concatenate[_HassViewT, web.Request, _P], Awaitable[web.Response]
     ],
@@ -136,7 +131,7 @@ def _handle_cloud_errors(
         """Handle exceptions that raise from the wrapped request handler."""
         try:
             result = await handler(view, request, *args, **kwargs)
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             status, msg = _process_cloud_exception(err, request.path)
             return view.json_message(
                 msg, status_code=status, message_code=err.__class__.__name__.lower()
@@ -167,7 +162,7 @@ def _ws_handle_cloud_errors(
         try:
             return await handler(hass, connection, msg)
 
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             err_status, err_msg = _process_cloud_exception(err, msg["type"])
             connection.send_error(msg["id"], str(err_status), err_msg)
 
@@ -453,9 +448,6 @@ def validate_language_voice(value: tuple[str, str]) -> tuple[str, str]:
             vol.Coerce(tuple), validate_language_voice
         ),
         vol.Optional(PREF_REMOTE_ALLOW_REMOTE_ENABLE): bool,
-        vol.Optional(PREF_STRICT_CONNECTION): vol.Coerce(
-            http.const.StrictConnectionMode
-        ),
     }
 )
 @websocket_api.async_response

@@ -8,7 +8,7 @@
   "iot_class": "local_push",
   "loggers": ["aiounifi"],
   "quality_scale": "platinum",
-  "requirements": ["aiounifi==76"],
+  "requirements": ["aiounifi==77"],
   "ssdp": [
     {
       "manufacturer": "Ubiquiti Networks",
