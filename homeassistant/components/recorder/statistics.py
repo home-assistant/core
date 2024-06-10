@@ -1262,6 +1262,7 @@ def _get_oldest_sum_statistic(
     main_start_time: datetime | None,
     tail_start_time: datetime | None,
     oldest_stat: datetime | None,
+    oldest_5_min_stat: datetime | None,
     tail_only: bool,
     metadata_id: int,
 ) -> float | None:
@@ -1306,6 +1307,15 @@ def _get_oldest_sum_statistic(
 
     if (
         head_start_time is not None
+        and oldest_5_min_stat is not None
+        and (
+            # If we want stats older than the short term purge window, don't lookup
+            # the oldest sum in the short term table, as it would be prioritized
+            # over older LongTermStats.
+            (oldest_stat is None)
+            or (oldest_5_min_stat < oldest_stat)
+            or (oldest_5_min_stat <= head_start_time)
+        )
         and (
             oldest_sum := _get_oldest_sum_statistic_in_sub_period(
                 session, head_start_time, StatisticsShortTerm, metadata_id
@@ -1477,12 +1487,11 @@ def statistic_during_period(
         tail_end_time: datetime | None = None
         if end_time is None:
             tail_start_time = now.replace(minute=0, second=0, microsecond=0)
+        elif tail_only:
+            tail_start_time = start_time
+            tail_end_time = end_time
         elif end_time.minute:
-            tail_start_time = (
-                start_time
-                if tail_only
-                else end_time.replace(minute=0, second=0, microsecond=0)
-            )
+            tail_start_time = end_time.replace(minute=0, second=0, microsecond=0)
             tail_end_time = end_time
 
         # Calculate the main period
@@ -1517,6 +1526,7 @@ def statistic_during_period(
                     main_start_time,
                     tail_start_time,
                     oldest_stat,
+                    oldest_5_min_stat,
                     tail_only,
                     metadata_id,
                 )
