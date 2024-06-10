@@ -21,16 +21,14 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
 
 
-async def test_load_values_when_added_to_hass(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
+async def test_load_values_when_added_to_hass(hass: HomeAssistant) -> None:
     """Test that sensor initializes with observations of relevant entities."""
 
     config = {
