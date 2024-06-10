@@ -510,7 +510,7 @@ async def test_register_entity_service(hass: HomeAssistant) -> None:
             {"entity_id": entity.entity_id, "invalid": "data"},
             blocking=True,
         )
-        assert len(calls) == 0
+    assert len(calls) == 0
 
     await hass.services.async_call(
         DOMAIN, "hello", {"entity_id": entity.entity_id, "some": "data"}, blocking=True

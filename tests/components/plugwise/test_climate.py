@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 from plugwise.exceptions import PlugwiseError
 import pytest
 
-from homeassistant.components.climate.const import HVACMode
+from homeassistant.components.climate import HVACMode
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.dt import utcnow

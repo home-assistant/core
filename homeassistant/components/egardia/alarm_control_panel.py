@@ -67,6 +67,7 @@ class EgardiaAlarm(AlarmControlPanelEntity):
     """Representation of a Egardia alarm."""
 
     _attr_state: str | None
+    _attr_code_arm_required = False
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY

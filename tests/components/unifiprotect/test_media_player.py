@@ -5,8 +5,8 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from pyunifiprotect.data import Camera
-from pyunifiprotect.exceptions import StreamError
+from uiprotect.data import Camera
+from uiprotect.exceptions import StreamError
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_TYPE,
