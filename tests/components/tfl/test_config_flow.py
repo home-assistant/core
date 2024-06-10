@@ -391,6 +391,34 @@ async def test_async_step_reconfigure_is_successful(hass: HomeAssistant) -> None
     assert config_entry.data == {CONF_API_APP_KEY: new_api_key}
 
 
+async def test_async_step_reconfigure_allows_no_app_key(hass: HomeAssistant) -> None:
+    """Test that the reconfigure allows no app key to be specified."""
+    config_entry = await setup_config_entry_and_add_to_hass(hass)
+    show_reconfigure_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": config_entry.entry_id,
+        },
+    )
+    # set user_input and mock the validation
+    user_input = {}
+    with patch(
+        "homeassistant.components.tfl.config_flow.stopPoint.getCategories",
+        return_value={},
+    ):
+        reconfigure_config_flow_result = await hass.config_entries.flow.async_configure(
+            show_reconfigure_result["flow_id"],
+            user_input=user_input,
+        )
+        await hass.async_block_till_done()
+
+    assert reconfigure_config_flow_result["type"] == FlowResultType.ABORT
+    assert reconfigure_config_flow_result["handler"] == "tfl"
+    assert reconfigure_config_flow_result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {CONF_API_APP_KEY: ""}
+
+
 async def test_async_step_reconfigure_is_unsuccessful_with_auth_failure(
     hass: HomeAssistant,
 ) -> None:

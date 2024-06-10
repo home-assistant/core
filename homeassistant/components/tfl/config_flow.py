@@ -175,8 +175,9 @@ class TfLConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         assert config_entry is not None
         if user_input is not None:
+            app_key = user_input.get(CONF_API_APP_KEY, "")
             try:
-                await validate_app_key(self.hass, user_input[CONF_API_APP_KEY])
+                await validate_app_key(self.hass, app_key)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -186,11 +187,10 @@ class TfLConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 # Input is valid, set data
-                self.data[CONF_API_APP_KEY] = user_input[CONF_API_APP_KEY]
+                self.data[CONF_API_APP_KEY] = app_key
                 self.hass.config_entries.async_update_entry(
                     config_entry, data=self.data
                 )
-                await self.hass.config_entries.async_reload(self.context["entry_id"])
                 return self.async_abort(reason="reconfigure_successful")
 
         return self.async_show_form(
