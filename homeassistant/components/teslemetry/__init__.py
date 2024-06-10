@@ -27,12 +27,24 @@ from .coordinator import (
 from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
 
 PLATFORMS: Final = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.CLIMATE,
+    Platform.COVER,
+    Platform.DEVICE_TRACKER,
+    Platform.LOCK,
+    Platform.MEDIA_PLAYER,
+    Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.UPDATE,
 ]
 
+type TeslemetryConfigEntry = ConfigEntry[TeslemetryData]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Set up Teslemetry config."""
 
     access_token = entry.data[CONF_ACCESS_TOKEN]
@@ -118,17 +130,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
     )
 
+    # Add energy device models
+    for energysite in energysites:
+        models = set()
+        for gateway in energysite.info_coordinator.data.get("components_gateways", []):
+            if gateway.get("part_name"):
+                models.add(gateway["part_name"])
+        for battery in energysite.info_coordinator.data.get("components_batteries", []):
+            if battery.get("part_name"):
+                models.add(battery["part_name"])
+        if models:
+            energysite.device["model"] = ", ".join(sorted(models))
+
     # Setup Platforms
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = TeslemetryData(
-        vehicles, energysites, scopes
-    )
+    entry.runtime_data = TeslemetryData(vehicles, energysites, scopes)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Unload Teslemetry Config."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

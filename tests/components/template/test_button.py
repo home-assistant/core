@@ -14,8 +14,8 @@ from homeassistant.const import (
     CONF_ICON,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import async_get
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import assert_setup_component
 
@@ -62,7 +62,10 @@ async def test_missing_required_keys(hass: HomeAssistant) -> None:
 
 
 async def test_all_optional_config(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    calls: list[ServiceCall],
 ) -> None:
     """Test: including all optional templates is ok."""
     with assert_setup_component(1, "template"):
@@ -124,8 +127,7 @@ async def test_all_optional_config(
         _TEST_OPTIONS_BUTTON,
     )
 
-    er = async_get(hass)
-    assert er.async_get_entity_id("button", "template", "test-test")
+    assert entity_registry.async_get_entity_id("button", "template", "test-test")
 
 
 async def test_name_template(hass: HomeAssistant) -> None:

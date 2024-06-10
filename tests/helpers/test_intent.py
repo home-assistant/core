@@ -32,7 +32,12 @@ class MockIntentHandler(intent.IntentHandler):
 
     def __init__(self, slot_schema) -> None:
         """Initialize the mock handler."""
-        self.slot_schema = slot_schema
+        self._mock_slot_schema = slot_schema
+
+    @property
+    def slot_schema(self):
+        """Return the slot schema."""
+        return self._mock_slot_schema
 
 
 async def test_async_match_states(
@@ -605,7 +610,7 @@ def test_async_register(hass: HomeAssistant) -> None:
 
     intent.async_register(hass, handler)
 
-    assert hass.data[intent.DATA_KEY]["test_intent"] == handler
+    assert list(intent.async_get(hass)) == [handler]
 
 
 def test_async_register_overwrite(hass: HomeAssistant) -> None:
@@ -624,7 +629,7 @@ def test_async_register_overwrite(hass: HomeAssistant) -> None:
             "Intent %s is being overwritten by %s", "test_intent", handler2
         )
 
-    assert hass.data[intent.DATA_KEY]["test_intent"] == handler2
+    assert list(intent.async_get(hass)) == [handler2]
 
 
 def test_async_remove(hass: HomeAssistant) -> None:
@@ -635,7 +640,7 @@ def test_async_remove(hass: HomeAssistant) -> None:
     intent.async_register(hass, handler)
     intent.async_remove(hass, "test_intent")
 
-    assert "test_intent" not in hass.data[intent.DATA_KEY]
+    assert not list(intent.async_get(hass))
 
 
 def test_async_remove_no_existing_entry(hass: HomeAssistant) -> None:
@@ -646,7 +651,7 @@ def test_async_remove_no_existing_entry(hass: HomeAssistant) -> None:
 
     intent.async_remove(hass, "test_intent2")
 
-    assert "test_intent2" not in hass.data[intent.DATA_KEY]
+    assert list(intent.async_get(hass)) == [handler]
 
 
 def test_async_remove_no_existing(hass: HomeAssistant) -> None:
@@ -703,6 +708,9 @@ async def test_invalid_area_floor_names(hass: HomeAssistant) -> None:
     )
     intent.async_register(hass, handler)
 
+    # Need a light to avoid domain error
+    hass.states.async_set("light.test", "off")
+
     with pytest.raises(intent.MatchFailedError) as err:
         await intent.async_handle(
             hass,
@@ -710,7 +718,7 @@ async def test_invalid_area_floor_names(hass: HomeAssistant) -> None:
             "TestType",
             slots={"area": {"value": "invalid area"}},
         )
-        assert err.value.result.no_match_reason == intent.MatchFailedReason.INVALID_AREA
+    assert err.value.result.no_match_reason == intent.MatchFailedReason.INVALID_AREA
 
     with pytest.raises(intent.MatchFailedError) as err:
         await intent.async_handle(
@@ -719,9 +727,7 @@ async def test_invalid_area_floor_names(hass: HomeAssistant) -> None:
             "TestType",
             slots={"floor": {"value": "invalid floor"}},
         )
-        assert (
-            err.value.result.no_match_reason == intent.MatchFailedReason.INVALID_FLOOR
-        )
+    assert err.value.result.no_match_reason == intent.MatchFailedReason.INVALID_FLOOR
 
 
 async def test_service_intent_handler_required_domains(hass: HomeAssistant) -> None:
@@ -765,4 +771,46 @@ async def test_service_intent_handler_required_domains(hass: HomeAssistant) -> N
             "test",
             "TestType",
             slots={"name": {"value": "bedroom"}, "domain": {"value": "switch"}},
+        )
+
+
+async def test_service_handler_empty_strings(hass: HomeAssistant) -> None:
+    """Test that passing empty strings for filters fails in ServiceIntentHandler."""
+    handler = intent.ServiceIntentHandler(
+        "TestType", "light", "turn_on", "Turned {} on"
+    )
+    intent.async_register(hass, handler)
+
+    for slot_name in ("name", "area", "floor"):
+        # Empty string
+        with pytest.raises(intent.InvalidSlotInfo):
+            await intent.async_handle(
+                hass,
+                "test",
+                "TestType",
+                slots={slot_name: {"value": ""}},
+            )
+
+        # Whitespace
+        with pytest.raises(intent.InvalidSlotInfo):
+            await intent.async_handle(
+                hass,
+                "test",
+                "TestType",
+                slots={slot_name: {"value": "  "}},
+            )
+
+
+async def test_service_handler_no_filter(hass: HomeAssistant) -> None:
+    """Test that targeting all devices in the house fails."""
+    handler = intent.ServiceIntentHandler(
+        "TestType", "light", "turn_on", "Turned {} on"
+    )
+    intent.async_register(hass, handler)
+
+    with pytest.raises(intent.IntentHandleError):
+        await intent.async_handle(
+            hass,
+            "test",
+            "TestType",
         )

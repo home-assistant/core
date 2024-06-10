@@ -7,15 +7,9 @@ from datetime import date, datetime, timedelta
 from enum import Enum
 from typing import Any, NoReturn, cast
 
-from pyunifiprotect.data import (
-    Camera,
-    Event,
-    EventType,
-    ModelType,
-    SmartDetectObjectType,
-)
-from pyunifiprotect.exceptions import NvrError
-from pyunifiprotect.utils import from_js_time
+from uiprotect.data import Camera, Event, EventType, ModelType, SmartDetectObjectType
+from uiprotect.exceptions import NvrError
+from uiprotect.utils import from_js_time
 from yarl import URL
 
 from homeassistant.components.camera import CameraImageView
@@ -670,7 +664,7 @@ class ProtectMediaSource(MediaSource):
             hour=0,
             minute=0,
             second=0,
-            tzinfo=dt_util.DEFAULT_TIME_ZONE,
+            tzinfo=dt_util.get_default_time_zone(),
         )
         if is_all:
             if start_dt.month < 12:

@@ -4,16 +4,16 @@ from __future__ import annotations
 
 from typing import cast
 
-from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data import Bootstrap, Camera, ModelType
-from pyunifiprotect.data.types import FirmwareReleaseChannel
+from uiprotect import ProtectApiClient
+from uiprotect.data import Bootstrap, Camera, ModelType
+from uiprotect.data.types import FirmwareReleaseChannel
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.issue_registry import async_get as async_get_issue_registry
+from homeassistant.helpers import issue_registry as ir
 
 from .const import CONF_ALLOW_EA
 from .utils import async_create_api_client
@@ -34,7 +34,7 @@ class ProtectRepair(RepairsFlow):
 
     @callback
     def _async_get_placeholders(self) -> dict[str, str]:
-        issue_registry = async_get_issue_registry(self.hass)
+        issue_registry = ir.async_get(self.hass)
         description_placeholders = {}
         if issue := issue_registry.async_get_issue(self.handler, self.issue_id):
             description_placeholders = issue.translation_placeholders or {}

@@ -21,7 +21,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import slugify
 
 from .const import DEFAULT_NAME, FILE_ICON
 
@@ -59,14 +58,17 @@ async def async_setup_entry(
     """Set up the file sensor."""
     config = dict(entry.data)
     file_path: str = config[CONF_FILE_PATH]
-    name: str = config[CONF_NAME]
+    unique_id: str = entry.entry_id
+    name: str = config.get(CONF_NAME, DEFAULT_NAME)
     unit: str | None = config.get(CONF_UNIT_OF_MEASUREMENT)
     value_template: Template | None = None
 
     if CONF_VALUE_TEMPLATE in config:
         value_template = Template(config[CONF_VALUE_TEMPLATE], hass)
 
-    async_add_entities([FileSensor(name, file_path, unit, value_template)], True)
+    async_add_entities(
+        [FileSensor(unique_id, name, file_path, unit, value_template)], True
+    )
 
 
 class FileSensor(SensorEntity):
@@ -76,6 +78,7 @@ class FileSensor(SensorEntity):
 
     def __init__(
         self,
+        unique_id: str,
         name: str,
         file_path: str,
         unit_of_measurement: str | None,
@@ -86,7 +89,7 @@ class FileSensor(SensorEntity):
         self._file_path = file_path
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._val_tpl = value_template
-        self._attr_unique_id = slugify(f"{name}_{file_path}")
+        self._attr_unique_id = unique_id
 
     def update(self) -> None:
         """Get the latest entry from a file and updates the state."""

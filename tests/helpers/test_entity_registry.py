@@ -511,7 +511,7 @@ async def test_load_bad_data(
                     "id": "00003",
                     "orphaned_timestamp": None,
                     "platform": "super_platform",
-                    "unique_id": 234,  # Should trigger warning
+                    "unique_id": 234,  # Should not load
                 },
                 {
                     "config_entry_id": None,
@@ -536,7 +536,11 @@ async def test_load_bad_data(
 
     assert (
         "'test' from integration super_platform has a non string unique_id '123', "
-        "please create a bug report" in caplog.text
+        "please create a bug report" not in caplog.text
+    )
+    assert (
+        "'test' from integration super_platform has a non string unique_id '234', "
+        "please create a bug report" not in caplog.text
     )
     assert (
         "Entity registry entry 'test.test2' from integration super_platform could not "
@@ -1984,7 +1988,7 @@ async def test_get_or_create_thread_safety(
     """Test call async_get_or_create_from a thread."""
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls async_get_or_create from a thread. Please report this issue.",
+        match="Detected code that calls entity_registry.async_get_or_create from a thread.",
     ):
         await hass.async_add_executor_job(
             entity_registry.async_get_or_create, "light", "hue", "1234"
@@ -1998,7 +2002,7 @@ async def test_async_update_entity_thread_safety(
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls _async_update_entity from a thread. Please report this issue.",
+        match="Detected code that calls entity_registry.async_update_entity from a thread.",
     ):
         await hass.async_add_executor_job(
             partial(
@@ -2016,6 +2020,6 @@ async def test_async_remove_thread_safety(
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls async_remove from a thread. Please report this issue.",
+        match="Detected code that calls entity_registry.async_remove from a thread.",
     ):
         await hass.async_add_executor_job(entity_registry.async_remove, entry.entity_id)

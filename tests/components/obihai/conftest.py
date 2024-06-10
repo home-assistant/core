@@ -1,14 +1,14 @@
 """Define test fixtures for Obihai."""
 
-from collections.abc import Generator
 from socket import gaierror
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
 
     with patch(
@@ -18,7 +18,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_gaierror() -> Generator[AsyncMock, None, None]:
+def mock_gaierror() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
 
     with patch(

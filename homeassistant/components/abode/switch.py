@@ -13,8 +13,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AbodeAutomation, AbodeDevice, AbodeSystem
+from . import AbodeSystem
 from .const import DOMAIN
+from .entity import AbodeAutomation, AbodeDevice
 
 DEVICE_TYPES = [TYPE_SWITCH, TYPE_VALVE]
 

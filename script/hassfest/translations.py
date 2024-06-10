@@ -375,6 +375,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                     vol.Required("done"): translation_value_validator,
                 },
             },
+            vol.Optional("common"): vol.Schema({cv.slug: translation_value_validator}),
         }
     )
 
