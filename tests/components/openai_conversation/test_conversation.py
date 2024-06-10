@@ -529,7 +529,7 @@ async def test_conversation_id(
         hass, "hello", unknown_id, None, agent_id=mock_config_entry.entry_id
     )
 
-    assert result != unknown_id
+    assert result.conversation_id != unknown_id
 
     result = await conversation.async_converse(
         hass, "hello", "koala", None, agent_id=mock_config_entry.entry_id
