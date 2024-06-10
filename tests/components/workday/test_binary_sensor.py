@@ -163,6 +163,14 @@ async def test_setup_no_country_weekend(
     assert state is not None
     assert state.state == "off"
 
+    freezer.move_to(datetime(2020, 2, 24, 23, 59, 59, tzinfo=zone))  # Monday
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.workday_sensor")
+    assert state is not None
+    assert state.state == "on"
+
 
 @pytest.mark.parametrize(
     "time_zone", ["Asia/Tokyo", "Europe/Berlin", "America/Chicago", "US/Hawaii"]
@@ -181,6 +189,14 @@ async def test_setup_no_country_weekday(
     state = hass.states.get("binary_sensor.workday_sensor")
     assert state is not None
     assert state.state == "on"
+
+    freezer.move_to(datetime(2020, 2, 22, 23, 59, 59, tzinfo=zone))  # Saturday
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.workday_sensor")
+    assert state is not None
+    assert state.state == "off"
 
 
 async def test_setup_remove_holiday(
