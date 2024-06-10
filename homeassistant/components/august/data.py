@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 from yalexs.const import DEFAULT_BRAND
 from yalexs.lock import LockDetail
 from yalexs.manager.const import CONF_BRAND
@@ -12,11 +10,10 @@ from yalexs_ble import YaleXSBLEDiscovery
 
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery_flow
 
 from .gateway import AugustGateway
-
-_LOGGER = logging.getLogger(__name__)
 
 API_CACHED_ATTRS = {
     "door_state",
@@ -61,7 +58,7 @@ class AugustData(YaleXSData):
         """Init August data object."""
         self._hass = hass
         self._config_entry = config_entry
-        super().__init__(august_gateway)
+        super().__init__(august_gateway, HomeAssistantError)
 
     @property
     def brand(self) -> str:
