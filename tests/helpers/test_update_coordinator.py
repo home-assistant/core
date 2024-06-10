@@ -13,7 +13,11 @@ import requests
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import update_coordinator
 from homeassistant.util.dt import utcnow
 
@@ -527,6 +531,8 @@ async def test_stop_refresh_on_ha_stop(
     "err_msg",
     [
         *KNOWN_ERRORS,
+        (ConfigEntryError(), ConfigEntryError, "Config entry error"),
+        (ConfigEntryAuthFailed(), ConfigEntryAuthFailed, "Config entry error"),
         (Exception(), Exception, "Unknown exception"),
     ],
 )
@@ -549,6 +555,39 @@ async def test_async_config_entry_first_refresh_failure(
     setattr(crd, method, AsyncMock(side_effect=err_msg[0]))
 
     with pytest.raises(ConfigEntryNotReady):
+        await crd.async_config_entry_first_refresh()
+
+    assert crd.last_update_success is False
+    assert isinstance(crd.last_exception, err_msg[1])
+    assert err_msg[2] not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "err_msg",
+    [
+        (ConfigEntryError(), ConfigEntryError, "Config entry error"),
+        (ConfigEntryAuthFailed(), ConfigEntryAuthFailed, "Config entry error"),
+    ],
+)
+@pytest.mark.parametrize(
+    "method",
+    ["update_method", "setup_method"],
+)
+async def test_async_config_entry_first_refresh_failure_passed_through(
+    err_msg: tuple[Exception, type[Exception], str],
+    crd: update_coordinator.DataUpdateCoordinator[int],
+    method: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test async_config_entry_first_refresh passes through ConfigEntryError & ConfigEntryAuthFailed.
+
+    Verify we do not log the exception since it
+    will be caught by config_entries.async_setup which will log it with
+    a decreasing level of logging once the first message is logged.
+    """
+    setattr(crd, method, AsyncMock(side_effect=err_msg[0]))
+
+    with pytest.raises(err_msg[1]):
         await crd.async_config_entry_first_refresh()
 
     assert crd.last_update_success is False
