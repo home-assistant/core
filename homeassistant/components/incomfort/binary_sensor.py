@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from incomfortclient import FaultCode, Heater as InComfortHeater
+from incomfortclient import Heater as InComfortHeater
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -29,13 +29,6 @@ class IncomfortBinarySensorEntityDescription(BinarySensorEntityDescription):
     extra_state_attributes_fn: Callable[[dict[str, Any]], dict[str, Any]] | None = None
 
 
-def get_fault_code_label_name(value: FaultCode | None) -> str:
-    """Get label from fault code IntEnum."""
-    if value is None:
-        return "-"
-    return value.name
-
-
 SENSOR_TYPES: tuple[IncomfortBinarySensorEntityDescription, ...] = (
     IncomfortBinarySensorEntityDescription(
         key="failed",
@@ -44,7 +37,6 @@ SENSOR_TYPES: tuple[IncomfortBinarySensorEntityDescription, ...] = (
         value_key="is_failed",
         extra_state_attributes_fn=lambda status: {
             "fault_code": status["fault_code"] or "-",
-            "fault": get_fault_code_label_name(status["fault_code"]),
         },
     ),
     IncomfortBinarySensorEntityDescription(

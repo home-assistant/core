@@ -56,33 +56,7 @@
   "entity": {
     "binary_sensor": {
       "fault": {
-        "name": "Fault",
-        "state_attributes": {
-          "fault": {
-            "state": {
-              "sensor_fault_after_self_check_e0": "[%key:component::incomfort::entity::water_heater::boiler::state::sensor_fault_after_self_check_e0%]",
-              "cv_temperature_too_high_e1": "[%key:component::incomfort::entity::water_heater::boiler::state::cv_temperature_too_high_e1%]",
-              "s1_and_s2_interchanged_e2": "[%key:component::incomfort::entity::water_heater::boiler::state::s1_and_s2_interchanged_e2%]",
-              "no_flame_signal_e4": "[%key:component::incomfort::entity::water_heater::boiler::state::no_flame_signal_e4%]",
-              "poor_flame_signal_e5": "[%key:component::incomfort::entity::water_heater::boiler::state::poor_flame_signal_e5%]",
-              "flame_detection_fault_e6": "[%key:component::incomfort::entity::water_heater::boiler::state::flame_detection_fault_e6%]",
-              "incorrect_fan_speed_e8": "[%key:component::incomfort::entity::water_heater::boiler::state::incorrect_fan_speed_e8%]",
-              "sensor_fault_s1_e10": "[%key:component::incomfort::entity::water_heater::boiler::state::sensor_fault_s1_e10%]",
-              "sensor_fault_s1_e11": "[%key:component::incomfort::entity::water_heater::boiler::state::sensor_fault_s1_e10%]",
-              "sensor_fault_s1_e12": "[%key:component::incomfort::entity::water_heater::boiler::state::sensor_fault_s1_e10%]",
-              "sensor_fault_s1_e13": "[%key:component::incomfort::entity::water_heater::boiler::state::sensor_fault_s1_e10%]",
-              "sensor_fault_s1_e14": "[%key:component::incomfort::entity::water_heater::boiler::state::sensor_fault_s1_e10%]",
-              "sensor_fault_s2_e20": "[%key:component::incomfort::entity::water_heater::boiler::state::sensor_fault_s2_e20%]",
-              "sensor_fault_s2_e21": "[%key:component::incomfort::entity::water_heater::boiler::state::sensor_fault_s2_e20%]",
-              "sensor_fault_s2_e22": "[%key:component::incomfort::entity::water_heater::boiler::state::sensor_fault_s2_e20%]",
-              "sensor_fault_s2_e23": "[%key:component::incomfort::entity::water_heater::boiler::state::sensor_fault_s2_e20%]",
-              "sensor_fault_s2_e24": "[%key:component::incomfort::entity::water_heater::boiler::state::sensor_fault_s2_e20%]",
-              "shortcut_outside_sensor_temperature_e27": "[%key:component::incomfort::entity::water_heater::boiler::state::shortcut_outside_sensor_temperature_e27%]",
-              "gas_valve_relay_faulty_e29": "[%key:component::incomfort::entity::water_heater::boiler::state::gas_valve_relay_faulty_e29%]",
-              "gas_valve_relay_faulty_e30": "[%key:component::incomfort::entity::water_heater::boiler::state::gas_valve_relay_faulty_e29%]"
-            }
-          }
-        }
+        "name": "Fault"
       },
       "is_burning": {
         "name": "Burner"
