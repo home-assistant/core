@@ -1245,11 +1245,28 @@ def _first_statistic(
     table: type[StatisticsBase],
     metadata_id: int,
 ) -> datetime | None:
-    """Return the data of the oldest statistic row for a given metadata id."""
+    """Return the date of the oldest statistic row for a given metadata id."""
     stmt = lambda_stmt(
         lambda: select(table.start_ts)
         .filter(table.metadata_id == metadata_id)
         .order_by(table.start_ts.asc())
+        .limit(1)
+    )
+    if stats := cast(Sequence[Row], execute_stmt_lambda_element(session, stmt)):
+        return dt_util.utc_from_timestamp(stats[0].start_ts)
+    return None
+
+
+def _last_statistic(
+    session: Session,
+    table: type[StatisticsBase],
+    metadata_id: int,
+) -> datetime | None:
+    """Return the date of the newest statistic row for a given metadata id."""
+    stmt = lambda_stmt(
+        lambda: select(table.start_ts)
+        .filter(table.metadata_id == metadata_id)
+        .order_by(table.start_ts.desc())
         .limit(1)
     )
     if stats := cast(Sequence[Row], execute_stmt_lambda_element(session, stmt)):
@@ -1487,7 +1504,11 @@ def statistic_during_period(
         tail_start_time: datetime | None = None
         tail_end_time: datetime | None = None
         if end_time is None:
-            tail_start_time = now.replace(minute=0, second=0, microsecond=0)
+            tail_start_time = _last_statistic(session, Statistics, metadata_id)
+            if tail_start_time:
+                tail_start_time += Statistics.duration
+            else:
+                tail_start_time = now.replace(minute=0, second=0, microsecond=0)
         elif tail_only:
             tail_start_time = start_time
             tail_end_time = end_time
