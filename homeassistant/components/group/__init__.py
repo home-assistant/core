@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Collection
-import dataclasses
 import logging
 from typing import Any
 
@@ -15,7 +14,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,  # noqa: F401
     ATTR_ICON,
     ATTR_NAME,
-    CONF_DEVICE_ID,
     CONF_ENTITIES,
     CONF_ICON,
     CONF_NAME,
@@ -83,16 +81,6 @@ PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclasses.dataclass
-class GroupData:
-    """Runtime configuration data."""
-
-    device: str | None = None
-
-
-GroupConfigEntry = ConfigEntry[GroupData]
-
-
 def _conf_preprocess(value: Any) -> dict[str, Any]:
     """Preprocess alternative configuration formats."""
     if not isinstance(value, dict):
@@ -155,9 +143,6 @@ def groups_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    entry.runtime_data = GroupData(
-        device=entry.options.get(CONF_DEVICE_ID, None),
-    )
     await hass.config_entries.async_forward_entry_setups(
         entry, (entry.options["group_type"],)
     )
@@ -167,13 +152,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update listener, called when the config entry options are changed."""
-    old_device = entry.runtime_data.device
-    await hass.config_entries.async_reload(entry.entry_id)
-    if old_device != entry.options.get(CONF_DEVICE_ID, None) and old_device is not None:
-        device_registry = dr.async_get(hass)
+
+    # Remove device link for entry, the source device may have changed.
+    # The link will be recreated after load.
+    device_registry = dr.async_get(hass)
+    devices = device_registry.devices.get_devices_for_config_entry_id(entry.entry_id)
+
+    for device in devices:
         device_registry.async_update_device(
-            old_device, remove_config_entry_id=entry.entry_id
+            device.id, remove_config_entry_id=entry.entry_id
         )
+
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
