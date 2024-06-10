@@ -958,7 +958,7 @@ gios==4.0.0
 gitterpy==0.1.7
 
 # homeassistant.components.glances
-glances-api==0.7.0
+glances-api==0.8.0
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
@@ -980,7 +980,7 @@ google-cloud-texttospeech==2.12.3
 google-generativeai==0.6.0
 
 # homeassistant.components.nest
-google-nest-sdm==4.0.4
+google-nest-sdm==4.0.5
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -2363,9 +2363,6 @@ pytrydan==0.7.0
 # homeassistant.components.usb
 pyudev==0.24.1
 
-# homeassistant.components.unifiprotect
-pyunifiprotect==5.1.2
-
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
 
@@ -2770,7 +2767,7 @@ transmission-rpc==7.0.3
 ttls==1.5.1
 
 # homeassistant.components.thethingsnetwork
-ttn_client==0.0.4
+ttn_client==1.0.0
 
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.1.9
@@ -2786,6 +2783,9 @@ twitchAPI==4.0.0
 
 # homeassistant.components.ukraine_alarm
 uasiren==0.0.1
+
+# homeassistant.components.unifiprotect
+uiprotect==0.4.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7

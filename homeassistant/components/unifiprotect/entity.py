@@ -6,7 +6,7 @@ from collections.abc import Callable, Sequence
 import logging
 from typing import TYPE_CHECKING, Any
 
-from pyunifiprotect.data import (
+from uiprotect.data import (
     NVR,
     Camera,
     Chime,
