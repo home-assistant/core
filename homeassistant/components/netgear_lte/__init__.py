@@ -103,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         Platform.NOTIFY,
         DOMAIN,
-        {CONF_HOST: entry.data[CONF_HOST], CONF_NAME: entry.title},
+        {CONF_NAME: entry.title, "modem": modem},
         hass.data[DATA_HASS_CONFIG],
     )
 
