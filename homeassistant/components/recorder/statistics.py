@@ -1485,16 +1485,13 @@ def statistic_during_period(
 
         # Calculate the tail period
         tail_start_time: datetime | None = None
-        tail_end_time: datetime | None = None
+        tail_end_time: datetime | None = end_time
         if end_time is None:
             tail_start_time = now.replace(minute=0, second=0, microsecond=0)
+        elif tail_only:
+            tail_start_time = start_time
         elif end_time.minute:
-            tail_start_time = (
-                start_time
-                if tail_only
-                else end_time.replace(minute=0, second=0, microsecond=0)
-            )
-            tail_end_time = end_time
+            tail_start_time = end_time.replace(minute=0, second=0, microsecond=0)
 
         # Calculate the main period
         main_start_time: datetime | None = None

@@ -794,7 +794,7 @@ async def test_statistic_during_period_hole(
     }
 
 
-@pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 6, 31, tzinfo=datetime.UTC))
 async def test_statistic_during_period_partial_overlap(
     recorder_mock: Recorder,
     hass: HomeAssistant,
@@ -879,10 +879,7 @@ async def test_statistic_during_period_partial_overlap(
     )
     response = await client.receive_json()
     assert response["success"]
-    # FIXME: Only getting "360" as a result, so seems like STS might be being ignored for the end range?
-    # assert response["result"] == {
-    #     "change": 390,
-    # }
+    assert response["result"] == {"change": 390}
 
     async def assert_change_during_fixed(client, start_time, end_time, expected):
         json = {
@@ -944,8 +941,7 @@ async def test_statistic_during_period_partial_overlap(
     start_time = start.replace(hour=4, minute=55)
     end_time = start.replace(hour=5, minute=0)
     expect = 5
-    # FIXME: this returns None, I might have expected 5 given the behavior of other 5 minute intervals
-    # await assert_change_during_fixed(client, start_time, end_time, expect)
+    await assert_change_during_fixed(client, start_time, end_time, expect)
 
     # Five minutes of growth in STS-only, with a minute offset. Despite that this does not cover the full period, result is still 5
     start_time = start.replace(hour=6, minute=16)
@@ -999,8 +995,7 @@ async def test_statistic_during_period_partial_overlap(
     # will be actually 2:00 - end
     expect = 4 * 60 + 30
     # Pre-115291 says "115" (1 hour and 55 minutes)? which I do not understand
-    # FIXME: Postfix says 240, which doesn't seem right either, I would have expected 270 or 275? for 2:00 to the end
-    # await assert_change_during_fixed(client, start_time, end_time, expect)
+    await assert_change_during_fixed(client, start_time, end_time, expect)
 
     # 5 hours of growth, end_time_only (0:00-5:00)
     start_time = None
