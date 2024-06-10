@@ -59,8 +59,6 @@ async def test_load_values_when_added_to_hass(
     assert await async_setup_component(hass, "binary_sensor", config)
     await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
-
     state = hass.states.get("binary_sensor.test_binary")
     assert state.attributes.get("device_class") == "connectivity"
     assert state.attributes.get("observations")[0]["prob_given_true"] == 0.8
