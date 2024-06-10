@@ -51,7 +51,13 @@ from homeassistant.components.websocket_api.http import URL
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.config_entries import ConfigEntries, ConfigEntry, ConfigEntryState
 from homeassistant.const import HASSIO_USER_NAME
-from homeassistant.core import CoreState, HassJob, HomeAssistant, ServiceCall
+from homeassistant.core import (
+    CoreState,
+    HassJob,
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+)
 from homeassistant.helpers import (
     area_registry as ar,
     category_registry as cr,
@@ -1776,9 +1782,11 @@ def label_registry(hass: HomeAssistant) -> lr.LabelRegistry:
 
 
 @pytest.fixture
-def service_calls() -> Generator[None, None, list[ServiceCall]]:
+def service_calls(hass: HomeAssistant) -> Generator[None, None, list[ServiceCall]]:
     """Track all service calls."""
     calls = []
+
+    _original_async_call = hass.services.async_call
 
     async def _async_call(
         self,
@@ -1786,8 +1794,18 @@ def service_calls() -> Generator[None, None, list[ServiceCall]]:
         service: str,
         service_data: dict[str, Any] | None = None,
         **kwargs: Any,
-    ):
+    ) -> ServiceResponse:
         calls.append(ServiceCall(domain, service, service_data))
+        try:
+            return await _original_async_call(
+                domain,
+                service,
+                service_data,
+                **kwargs,
+            )
+        except ha.ServiceNotFound:
+            _LOGGER.debug("Ignoring unknown service call to %s.%s", domain, service)
+        return None
 
     with patch("homeassistant.core.ServiceRegistry.async_call", _async_call):
         yield calls

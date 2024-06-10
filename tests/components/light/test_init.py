@@ -22,13 +22,14 @@ from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.setup import async_setup_component
 import homeassistant.util.color as color_util
 
+from .common import MockLight
+
 from tests.common import (
     MockEntityPlatform,
     MockUser,
     async_mock_service,
     setup_test_component_platform,
 )
-from tests.components.light.common import MockLight
 
 orig_Profiles = light.Profiles
 
