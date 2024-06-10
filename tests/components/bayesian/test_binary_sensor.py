@@ -501,7 +501,7 @@ async def test_multiple_numeric_observations(
 
     for attrs in state.attributes.values():
         json.dumps(attrs)
-    assert state.attributes.get("occurred_observation_entities") == []
+    assert state.attributes.get("occurred_observation_entities") == ["sensor.test_temp"]
     assert state.attributes.get("probability") == 0.1
 
     # No observations made so probability should be the prior
@@ -851,7 +851,7 @@ async def test_bad_numeric(
     hass.states.async_set("sensor.temp", 21)
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.temp")
+    state = hass.states.get("binary_sensor.goldilocks_zone")
     await hass.async_block_till_done()
     assert state.attributes.get("occurred_observation_entities") == []
     assert abs(state.attributes.get("probability") - 0.4) == 0
