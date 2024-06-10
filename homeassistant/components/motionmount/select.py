@@ -24,8 +24,6 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
     """The presets of a MotionMount."""
 
     _attr_translation_key = "motionmount_preset"
-    _attr_current_option: str | None = None
-    _presets: list[motionmount.Preset] = []
 
     def __init__(
         self,
@@ -35,6 +33,7 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
         """Initialize Preset selector."""
         super().__init__(mm, config_entry)
         self._attr_unique_id = f"{self._base_unique_id}-preset"
+        self._presets: list[motionmount.Preset] = []
 
     def _update_options(self, presets: list[motionmount.Preset]) -> None:
         """Convert presets to select options."""
