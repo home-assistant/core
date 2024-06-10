@@ -42,7 +42,7 @@ class SunsynkUpdateCoordinator(DataUpdateCoordinator[None]):
             username=self.config_entry.data["username"],
             password=self.config_entry.data["password"],
         )
-        self.cache = Installation()
+        self.cache = Installation([])
 
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint.
