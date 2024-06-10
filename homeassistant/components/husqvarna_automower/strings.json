@@ -254,6 +254,11 @@
       }
     }
   },
+  "exceptions": {
+    "command_send_failed": {
+      "message": "Failed to send command: {exception}"
+    }
+  },
   "selector": {
     "override_modes": {
       "options": {

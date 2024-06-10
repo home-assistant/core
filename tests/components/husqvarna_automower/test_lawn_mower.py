@@ -10,7 +10,6 @@ from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
-from homeassistant.components.husqvarna_automower.lawn_mower import EXCEPTION_TEXT
 from homeassistant.components.lawn_mower import LawnMowerActivity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -87,7 +86,7 @@ async def test_lawn_mower_commands(
     ).side_effect = ApiException("Test error")
     with pytest.raises(
         HomeAssistantError,
-        match=EXCEPTION_TEXT.format(exception="Test error"),
+        match="Failed to send command: Test error",
     ):
         await hass.services.async_call(
             domain="lawn_mower",
@@ -147,7 +146,7 @@ async def test_lawn_mower_service_commands(
     ).side_effect = ApiException("Test error")
     with pytest.raises(
         HomeAssistantError,
-        match=EXCEPTION_TEXT.format(exception="Test error"),
+        match="Failed to send command: Test error",
     ):
         await hass.services.async_call(
             domain=DOMAIN,

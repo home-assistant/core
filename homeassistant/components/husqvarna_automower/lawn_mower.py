@@ -26,7 +26,6 @@ from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerControlEntity
 
 DOCKED_ACTIVITIES = (MowerActivities.PARKED_IN_CS, MowerActivities.CHARGING)
-EXCEPTION_TEXT = "Failed to send command: {exception}"
 MOWING_ACTIVITIES = (
     MowerActivities.MOWING,
     MowerActivities.LEAVING,
@@ -61,7 +60,9 @@ def handle_sending_exception(
             return await func(self, *args, **kwargs)
         except ApiException as exception:
             raise HomeAssistantError(
-                EXCEPTION_TEXT.format(exception=exception)
+                translation_domain=DOMAIN,
+                translation_key="command_send_failed",
+                translation_placeholders={"exception": str(exception)},
             ) from exception
 
     return wrapper

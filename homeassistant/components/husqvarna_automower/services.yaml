@@ -12,7 +12,7 @@ override_schedule:
           enable_day: true
     override_mode:
       required: true
-      example: "mowing"
+      example: "mow"
       selector:
         select:
           translation_key: override_modes
