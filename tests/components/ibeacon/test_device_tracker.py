@@ -7,11 +7,11 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.bluetooth import (
-    UNAVAILABLE_TRACK_SECONDS,
     BluetoothServiceInfoBleak,
     async_ble_device_from_address,
     async_last_service_info,
 )
+from homeassistant.components.bluetooth.const import UNAVAILABLE_TRACK_SECONDS
 from homeassistant.components.ibeacon.const import (
     DOMAIN,
     UNAVAILABLE_TIMEOUT,
