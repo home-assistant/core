@@ -27,8 +27,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
+from .mock_data import PROP
+
 from tests.common import MockConfigEntry
-from tests.components.roborock.mock_data import PROP
 
 ENTITY_ID = "vacuum.roborock_s7_maxv"
 DEVICE_ID = "abc123"

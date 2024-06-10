@@ -514,7 +514,6 @@ async def test_zero_conf_malformed_serial_property(
                 type="mock_type",
             ),
         )
-        await hass.async_block_till_done()
     assert "serialnum" in str(ex.value)
 
     result3 = await hass.config_entries.flow.async_configure(
