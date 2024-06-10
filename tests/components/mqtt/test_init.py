@@ -1,7 +1,6 @@
 """The tests for the MQTT component."""
 
 import asyncio
-from collections.abc import Generator
 from copy import deepcopy
 from datetime import datetime, timedelta
 from functools import partial
@@ -16,6 +15,7 @@ from unittest.mock import ANY, MagicMock, Mock, call, mock_open, patch
 from freezegun.api import FrozenDateTimeFactory
 import paho.mqtt.client as paho_mqtt
 import pytest
+from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant.components import mqtt
@@ -118,7 +118,7 @@ def record_calls(recorded_calls: list[ReceiveMessage]) -> MessageCallbackType:
 
 
 @pytest.fixture
-def client_debug_log() -> Generator[None, None]:
+def client_debug_log() -> Generator[None]:
     """Set the mqtt client log level to DEBUG."""
     logger = logging.getLogger("mqtt_client_tests_debug")
     logger.setLevel(logging.DEBUG)

@@ -1,12 +1,12 @@
 """The tests for the Xiaomi vacuum platform."""
 
-from collections.abc import Generator
 from datetime import datetime, time, timedelta
 from unittest import mock
 from unittest.mock import MagicMock, patch
 
 from miio import DeviceException
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_ICON,
@@ -143,7 +143,7 @@ new_fanspeeds = {
 @pytest.fixture(name="mock_mirobo_fanspeeds", params=[old_fanspeeds, new_fanspeeds])
 def mirobo_old_speeds_fixture(
     request: pytest.FixtureRequest,
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Fixture for testing both types of fanspeeds."""
     mock_vacuum = MagicMock()
     mock_vacuum.status().battery = 32

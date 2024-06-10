@@ -1,10 +1,10 @@
 """Fixtures for Intergas InComfort integration."""
 
-from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.incomfort import DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -20,7 +20,7 @@ MOCK_CONFIG = {
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.incomfort.async_setup_entry",

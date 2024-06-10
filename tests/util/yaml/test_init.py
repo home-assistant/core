@@ -1,6 +1,5 @@
 """Test Home Assistant yaml loader."""
 
-from collections.abc import Generator
 import importlib
 import io
 import os
@@ -10,6 +9,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 import pytest
+from typing_extensions import Generator
 import voluptuous as vol
 import yaml as pyyaml
 
@@ -596,15 +596,13 @@ async def test_loading_actual_file_with_syntax_error(
     hass: HomeAssistant, try_both_loaders
 ) -> None:
     """Test loading a real file with syntax errors."""
+    fixture_path = pathlib.Path(__file__).parent.joinpath("fixtures", "bad.yaml.txt")
     with pytest.raises(HomeAssistantError):
-        fixture_path = pathlib.Path(__file__).parent.joinpath(
-            "fixtures", "bad.yaml.txt"
-        )
         await hass.async_add_executor_job(load_yaml_config_file, fixture_path)
 
 
 @pytest.fixture
-def mock_integration_frame() -> Generator[Mock, None, None]:
+def mock_integration_frame() -> Generator[Mock]:
     """Mock as if we're calling code from inside an integration."""
     correct_frame = Mock(
         filename="/home/paulus/homeassistant/components/hue/light.py",
