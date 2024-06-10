@@ -56,12 +56,69 @@
   "entity": {
     "binary_sensor": {
       "fault": {
-        "name": "Fault"
+        "name": "Fault",
+        "state_attributes": {
+          "fault_code": {
+            "state": {
+              "none": "None"
+            }
+          }
+        }
+      },
+      "is_burning": {
+        "name": "Burner"
+      },
+      "is_pumping": {
+        "name": "Pump"
+      },
+      "is_tapping": {
+        "name": "Hot water tap"
       }
     },
     "sensor": {
       "tap_temperature": {
         "name": "Tap temperature"
+      }
+    },
+    "water_heater": {
+      "boiler": {
+        "state": {
+          "unknown": "Unknown",
+          "opentherm": "OpenTherm",
+          "boiler_ext": "Boiler external",
+          "frost": "Frost protection",
+          "central_heating_rf": "Central heating rf",
+          "tapwater_int": "Tap water internal",
+          "sensor_test": "Sensor test",
+          "central_heating": "Central heating",
+          "standby": "Stand-by",
+          "postrun_boyler": "Post run boiler",
+          "service": "Service",
+          "tapwater": "Tap water",
+          "postrun_ch": "Post run central heating",
+          "boiler_int": "Boiler internal",
+          "buffer": "Buffer",
+          "sensor_fault_after_self_check_e0": "Sensor fault after self check",
+          "cv_temperature_too_high_e1": "Temperature too high",
+          "s1_and_s2_interchanged_e2": "S1 and S2 interchanged",
+          "no_flame_signal_e4": "No flame signal",
+          "poor_flame_signal_e5": "Poor flame signal",
+          "flame_detection_fault_e6": "Flame detection fault",
+          "incorrect_fan_speed_e8": "Incorrect fan speed",
+          "sensor_fault_s1_e10": "Sensor fault S1",
+          "sensor_fault_s1_e11": "[%key:component::incomfort::entity::water_heater::boiler::state::sensor_fault_s1_e10%]",
+          "sensor_fault_s1_e12": "[%key:component::incomfort::entity::water_heater::boiler::state::sensor_fault_s1_e10%]",
+          "sensor_fault_s1_e13": "[%key:component::incomfort::entity::water_heater::boiler::state::sensor_fault_s1_e10%]",
+          "sensor_fault_s1_e14": "[%key:component::incomfort::entity::water_heater::boiler::state::sensor_fault_s1_e10%]",
+          "sensor_fault_s2_e20": "Sensor fault S2",
+          "sensor_fault_s2_e21": "[%key:component::incomfort::entity::water_heater::boiler::state::sensor_fault_s2_e20%]",
+          "sensor_fault_s2_e22": "[%key:component::incomfort::entity::water_heater::boiler::state::sensor_fault_s2_e20%]",
+          "sensor_fault_s2_e23": "[%key:component::incomfort::entity::water_heater::boiler::state::sensor_fault_s2_e20%]",
+          "sensor_fault_s2_e24": "[%key:component::incomfort::entity::water_heater::boiler::state::sensor_fault_s2_e20%]",
+          "shortcut_outside_sensor_temperature_e27": "Shortcut outside sensor temperature",
+          "gas_valve_relay_faulty_e29": "Gas valve relay faulty",
+          "gas_valve_relay_faulty_e30": "[%key:component::incomfort::entity::water_heater::boiler::state::gas_valve_relay_faulty_e29%]"
+        }
       }
     }
   }

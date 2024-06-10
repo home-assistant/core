@@ -10,8 +10,9 @@ import socket
 from typing import Any
 
 from aiohttp import CookieJar
-from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data import (
+from typing_extensions import Generator
+from uiprotect import ProtectApiClient
+from uiprotect.data import (
     Bootstrap,
     CameraChannel,
     Light,
@@ -19,7 +20,6 @@ from pyunifiprotect.data import (
     LightModeType,
     ProtectAdoptableDeviceModel,
 )
-from typing_extensions import Generator
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (

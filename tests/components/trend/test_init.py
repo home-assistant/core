@@ -4,8 +4,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from .conftest import ComponentSetup
+
 from tests.common import MockConfigEntry
-from tests.components.trend.conftest import ComponentSetup
 
 
 async def test_setup_and_remove_config_entry(

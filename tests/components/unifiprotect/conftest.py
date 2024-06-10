@@ -13,8 +13,8 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data import (
+from uiprotect import ProtectApiClient
+from uiprotect.data import (
     NVR,
     Bootstrap,
     Camera,
@@ -216,6 +216,7 @@ def doorbell_fixture(camera: Camera, fixed_now: datetime):
     doorbell.feature_flags.smart_detect_types = [
         SmartDetectObjectType.PERSON,
         SmartDetectObjectType.VEHICLE,
+        SmartDetectObjectType.ANIMAL,
     ]
     doorbell.has_speaker = True
     doorbell.feature_flags.has_hdr = True
