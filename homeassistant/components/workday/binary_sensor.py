@@ -28,7 +28,7 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
 )
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util import dt as dt_util, slugify
 
@@ -271,7 +271,7 @@ class IsWorkdaySensor(BinarySensorEntity):
         """Update state and setup listener for next interval."""
         now = dt_util.now()
         self.update_data(now)
-        self.unsub = async_track_point_in_utc_time(
+        self.unsub = async_track_point_in_time(
             self.hass, self.point_in_time_listener, self.get_next_interval(now)
         )
 
