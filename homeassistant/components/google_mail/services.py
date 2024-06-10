@@ -57,10 +57,11 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
     async def gmail_service(call: ServiceCall) -> None:
         """Call Google Mail service."""
-        auth: AsyncConfigEntryAuth
         for entry in await extract_gmail_config_entries(call):
-            if not (auth := hass.data[DOMAIN].get(entry.entry_id)):
-                raise ValueError(f"Config entry not loaded: {entry.entry_id}")
+            try:
+                auth: AsyncConfigEntryAuth = entry.runtime_data
+            except AttributeError as ex:
+                raise ValueError(f"Config entry not loaded: {entry.entry_id}") from ex
             service = await auth.get_resource()
 
             _settings = {
