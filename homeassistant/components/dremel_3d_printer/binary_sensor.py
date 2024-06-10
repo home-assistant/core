@@ -16,7 +16,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .entity import Dremel3DPrinterEntity
 
 
@@ -47,10 +46,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the available Dremel binary sensors."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
-
     async_add_entities(
-        Dremel3DPrinterBinarySensor(coordinator, description)
+        Dremel3DPrinterBinarySensor(config_entry.runtime_data, description)
         for description in BINARY_SENSOR_TYPES
     )
 

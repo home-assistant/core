@@ -13,7 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .entity import Dremel3DPrinterEntity
 
 
@@ -49,9 +48,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Dremel 3D Printer control buttons."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
-        Dremel3DPrinterButtonEntity(coordinator, description)
+        Dremel3DPrinterButtonEntity(config_entry.runtime_data, description)
         for description in BUTTON_TYPES
     )
 

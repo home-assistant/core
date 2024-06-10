@@ -28,7 +28,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 from homeassistant.util.variance import ignore_variance
 
-from .const import ATTR_EXTRUDER, ATTR_PLATFORM, DOMAIN
+from .const import ATTR_EXTRUDER, ATTR_PLATFORM
 from .entity import Dremel3DPrinterEntity
 
 
@@ -238,10 +238,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the available Dremel 3D Printer sensors."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
-
     async_add_entities(
-        Dremel3DPrinterSensor(coordinator, description) for description in SENSOR_TYPES
+        Dremel3DPrinterSensor(config_entry.runtime_data, description)
+        for description in SENSOR_TYPES
     )
 
 
