@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock, Mock
 
 from aiohttp import ClientResponse
 import pytest
-from pyunifiprotect.data import Camera, Event, EventType
-from pyunifiprotect.exceptions import ClientError
+from uiprotect.data import Camera, Event, EventType
+from uiprotect.exceptions import ClientError
 
 from homeassistant.components.unifiprotect.views import (
     async_generate_event_video_url,

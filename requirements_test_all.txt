@@ -326,7 +326,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==10.0.0
+aioshelly==10.0.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -362,7 +362,7 @@ aiovlc==0.3.2
 aiovodafone==0.6.0
 
 # homeassistant.components.waqi
-aiowaqi==3.0.1
+aiowaqi==3.1.0
 
 # homeassistant.components.watttime
 aiowatttime==0.1.1
@@ -747,7 +747,7 @@ fyta_cli==0.4.1
 gTTS==2.2.4
 
 # homeassistant.components.gardena_bluetooth
-gardena-bluetooth==1.4.1
+gardena-bluetooth==1.4.2
 
 # homeassistant.components.google_assistant_sdk
 gassist-text==0.0.11
@@ -784,7 +784,7 @@ getmac==0.9.4
 gios==4.0.0
 
 # homeassistant.components.glances
-glances-api==0.7.0
+glances-api==0.8.0
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
@@ -800,10 +800,10 @@ google-api-python-client==2.71.0
 google-cloud-pubsub==2.13.11
 
 # homeassistant.components.google_generative_ai_conversation
-google-generativeai==0.5.4
+google-generativeai==0.6.0
 
 # homeassistant.components.nest
-google-nest-sdm==4.0.4
+google-nest-sdm==4.0.5
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -889,7 +889,7 @@ hole==0.8.0
 holidays==0.50
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240605.0
+home-assistant-frontend==20240610.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.6.5
@@ -933,7 +933,7 @@ idasen-ha==2.5.3
 ifaddr==0.2.0
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.0.4
+imgw_pib==1.0.5
 
 # homeassistant.components.influxdb
 influxdb-client==1.24.0
@@ -1201,7 +1201,7 @@ openhomedevice==2.2.0
 openwebifpy==4.2.4
 
 # homeassistant.components.opower
-opower==0.4.6
+opower==0.4.7
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1311,7 +1311,7 @@ py-nightscout==1.2.2
 py-sucks==0.9.10
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.4.2
+py-synologydsm-api==2.4.4
 
 # homeassistant.components.seventeentrack
 py17track==2021.12.2
@@ -1326,7 +1326,7 @@ pyControl4==1.1.0
 pyDuotecno==2024.5.1
 
 # homeassistant.components.electrasmart
-pyElectra==1.2.0
+pyElectra==1.2.1
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.31.1
@@ -1794,7 +1794,7 @@ python-qbittorrent==0.4.3
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==2.2.3
+python-roborock==2.3.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
@@ -1835,9 +1835,6 @@ pytrydan==0.6.1
 
 # homeassistant.components.usb
 pyudev==0.24.1
-
-# homeassistant.components.unifiprotect
-pyunifiprotect==5.1.2
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2138,7 +2135,7 @@ transmission-rpc==7.0.3
 ttls==1.5.1
 
 # homeassistant.components.thethingsnetwork
-ttn_client==0.0.4
+ttn_client==1.0.0
 
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.1.9
@@ -2154,6 +2151,9 @@ twitchAPI==4.0.0
 
 # homeassistant.components.ukraine_alarm
 uasiren==0.0.1
+
+# homeassistant.components.unifiprotect
+uiprotect==0.4.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7

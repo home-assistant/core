@@ -5,15 +5,8 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from unittest.mock import Mock
 
-from pyunifiprotect.data import (
-    NVR,
-    Camera,
-    Event,
-    EventType,
-    Sensor,
-    SmartDetectObjectType,
-)
-from pyunifiprotect.data.nvr import EventMetadata, LicensePlateMetadata
+from uiprotect.data import NVR, Camera, Event, EventType, Sensor, SmartDetectObjectType
+from uiprotect.data.nvr import EventMetadata, LicensePlateMetadata
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.components.unifiprotect.sensor import (

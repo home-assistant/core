@@ -1245,11 +1245,28 @@ def _first_statistic(
     table: type[StatisticsBase],
     metadata_id: int,
 ) -> datetime | None:
-    """Return the data of the oldest statistic row for a given metadata id."""
+    """Return the date of the oldest statistic row for a given metadata id."""
     stmt = lambda_stmt(
         lambda: select(table.start_ts)
         .filter(table.metadata_id == metadata_id)
         .order_by(table.start_ts.asc())
+        .limit(1)
+    )
+    if stats := cast(Sequence[Row], execute_stmt_lambda_element(session, stmt)):
+        return dt_util.utc_from_timestamp(stats[0].start_ts)
+    return None
+
+
+def _last_statistic(
+    session: Session,
+    table: type[StatisticsBase],
+    metadata_id: int,
+) -> datetime | None:
+    """Return the date of the newest statistic row for a given metadata id."""
+    stmt = lambda_stmt(
+        lambda: select(table.start_ts)
+        .filter(table.metadata_id == metadata_id)
+        .order_by(table.start_ts.desc())
         .limit(1)
     )
     if stats := cast(Sequence[Row], execute_stmt_lambda_element(session, stmt)):
@@ -1263,6 +1280,7 @@ def _get_oldest_sum_statistic(
     main_start_time: datetime | None,
     tail_start_time: datetime | None,
     oldest_stat: datetime | None,
+    oldest_5_min_stat: datetime | None,
     tail_only: bool,
     metadata_id: int,
 ) -> float | None:
@@ -1307,6 +1325,15 @@ def _get_oldest_sum_statistic(
 
     if (
         head_start_time is not None
+        and oldest_5_min_stat is not None
+        and (
+            # If we want stats older than the short term purge window, don't lookup
+            # the oldest sum in the short term table, as it would be prioritized
+            # over older LongTermStats.
+            (oldest_stat is None)
+            or (oldest_5_min_stat < oldest_stat)
+            or (oldest_5_min_stat <= head_start_time)
+        )
         and (
             oldest_sum := _get_oldest_sum_statistic_in_sub_period(
                 session, head_start_time, StatisticsShortTerm, metadata_id
@@ -1477,13 +1504,16 @@ def statistic_during_period(
         tail_start_time: datetime | None = None
         tail_end_time: datetime | None = None
         if end_time is None:
-            tail_start_time = now.replace(minute=0, second=0, microsecond=0)
+            tail_start_time = _last_statistic(session, Statistics, metadata_id)
+            if tail_start_time:
+                tail_start_time += Statistics.duration
+            else:
+                tail_start_time = now.replace(minute=0, second=0, microsecond=0)
+        elif tail_only:
+            tail_start_time = start_time
+            tail_end_time = end_time
         elif end_time.minute:
-            tail_start_time = (
-                start_time
-                if tail_only
-                else end_time.replace(minute=0, second=0, microsecond=0)
-            )
+            tail_start_time = end_time.replace(minute=0, second=0, microsecond=0)
             tail_end_time = end_time
 
         # Calculate the main period
@@ -1518,6 +1548,7 @@ def statistic_during_period(
                     main_start_time,
                     tail_start_time,
                     oldest_stat,
+                    oldest_5_min_stat,
                     tail_only,
                     metadata_id,
                 )
