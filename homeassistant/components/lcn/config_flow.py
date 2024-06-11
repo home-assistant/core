@@ -19,8 +19,9 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, DIM_MODES, DOMAIN
@@ -111,8 +112,36 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.ConfigFlowResult:
         """Import existing configuration from LCN."""
         # validate the imported connection parameters
-        if (error := await validate_connection(data)) is not None:
+        if error := await validate_connection(data):
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"{error}_{DOMAIN}",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=IssueSeverity.ERROR,
+                translation_key=error,
+                translation_placeholders={
+                    "url": "/config/integrations/dashboard/add?domain=lcn"
+                },
+            )
             return self.async_abort(reason=error)
+
+        async_create_issue(
+            self.hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.12.0",
+            is_fixable=False,
+            is_persistent=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "LCN",
+            },
+        )
 
         # check if we already have a host with the same address configured
         if entry := get_config_entry(self.hass, data):
