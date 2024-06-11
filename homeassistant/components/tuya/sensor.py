@@ -56,7 +56,7 @@ BATTERY_SENSORS: tuple[TuyaSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TuyaSensorEntityDescription(
-        key=DPCode.BATTERY, # Used by non-standard contact sensor implementations
+        key=DPCode.BATTERY,  # Used by non-standard contact sensor implementations
         translation_key="battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,

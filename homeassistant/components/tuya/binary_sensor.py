@@ -191,7 +191,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             device_class=BinarySensorDeviceClass.DOOR,
         ),
         TuyaBinarySensorEntityDescription(
-            key=DPCode.SWITCH, # Used by non-standard contact sensor implementations
+            key=DPCode.SWITCH,  # Used by non-standard contact sensor implementations
             device_class=BinarySensorDeviceClass.DOOR,
         ),
         TAMPER_BINARY_SENSOR,
