@@ -271,7 +271,7 @@ class EvoBroker:
                 self.temps = {str(i[SZ_ID]): i[SZ_TEMP] for i in temps}
 
         finally:
-            if self.client_v1 and old_session_id != self.client_v1.broker.session_id:
+            if self.client_v1 and self.client_v1.broker.session_id != old_session_id:
                 await self._save_auth_tokens()
 
         _LOGGER.debug("Temperatures = %s", self.temps)
