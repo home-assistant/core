@@ -9,7 +9,6 @@ import logging
 import pypck
 
 from homeassistant import config_entries
-from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_DEVICE_ID,
@@ -25,7 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -59,22 +57,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LCN component."""
     if DOMAIN not in config:
         return True
-
-    async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2024.12.0",
-        is_fixable=False,
-        is_persistent=False,
-        issue_domain=DOMAIN,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "LCN",
-        },
-    )
 
     # initialize a config_flow for all LCN configurations read from
     # configuration.yaml
