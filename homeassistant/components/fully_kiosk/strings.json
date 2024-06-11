@@ -56,6 +56,11 @@
         "name": "Load start URL"
       }
     },
+    "camera": {
+      "camera": {
+        "name": "Camera"
+      }
+    },
     "number": {
       "screensaver_time": {
         "name": "Screensaver timer"
