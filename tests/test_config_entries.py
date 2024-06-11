@@ -5663,7 +5663,7 @@ async def test_non_awaited_async_forward_entry_setups(
     await hass.async_block_till_done()
 
     assert (
-        "Detected code that calls async_forward_entry_setups for integration, "
+        "Detected code that calls async_forward_entry_setups for integration "
         "test with title: Mock Title and entry_id: test2, during without "
         "awaiting async_forward_entry_setups, which can cause the setup lock "
         "to be released before the setup is done. This will stop working in "
@@ -5729,7 +5729,7 @@ async def test_non_awaited_async_forward_entry_setup(
     await hass.async_block_till_done()
 
     assert (
-        "Detected code that calls async_forward_entry_setup for integration, "
+        "Detected code that calls async_forward_entry_setup for integration "
         "test with title: Mock Title and entry_id: test2, during without "
         "awaiting async_forward_entry_setup, which can cause the setup lock "
         "to be released before the setup is done. This will stop working in "
