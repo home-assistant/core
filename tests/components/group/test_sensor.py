@@ -813,8 +813,8 @@ async def test_sensors_attributes_added_when_entity_info_available(
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "L"
 
-    
-    async def test_device_id(hass: HomeAssistant) -> None:
+
+async def test_device_id(hass: HomeAssistant) -> None:
     """Test for device for Group - Sensor."""
     group_type = "sensor"
     device_registry = dr.async_get(hass)
@@ -851,4 +851,3 @@ async def test_sensors_attributes_added_when_entity_info_available(
     group_entity = entity_registry.async_get(f"{group_type}.my_group")
     assert group_entity is not None
     assert group_entity.device_id == device_entry.id
-    
