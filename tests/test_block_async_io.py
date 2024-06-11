@@ -14,7 +14,7 @@ import pytest
 from homeassistant import block_async_io
 from homeassistant.core import HomeAssistant
 
-from tests.common import extract_stack_to_frame
+from .common import extract_stack_to_frame
 
 
 async def test_protect_loop_debugger_sleep(caplog: pytest.LogCaptureFixture) -> None:
