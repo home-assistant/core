@@ -1,0 +1,133 @@
+# serializer version: 1
+# name: test_bad_api_return_and_recovery
+  'unavailable'
+# ---
+# name: test_bad_api_return_and_recovery.1
+  'unavailable'
+# ---
+# name: test_bad_api_return_and_recovery.10
+  'unavailable'
+# ---
+# name: test_bad_api_return_and_recovery.11
+  '0'
+# ---
+# name: test_bad_api_return_and_recovery.12
+  '0'
+# ---
+# name: test_bad_api_return_and_recovery.13
+  '0'
+# ---
+# name: test_bad_api_return_and_recovery.14
+  '0'
+# ---
+# name: test_bad_api_return_and_recovery.15
+  '2'
+# ---
+# name: test_bad_api_return_and_recovery.16
+  '0'
+# ---
+# name: test_bad_api_return_and_recovery.17
+  '0'
+# ---
+# name: test_bad_api_return_and_recovery.18
+  '0'
+# ---
+# name: test_bad_api_return_and_recovery.19
+  '0'
+# ---
+# name: test_bad_api_return_and_recovery.2
+  'unavailable'
+# ---
+# name: test_bad_api_return_and_recovery.20
+  '0'
+# ---
+# name: test_bad_api_return_and_recovery.21
+  '0'
+# ---
+# name: test_bad_api_return_and_recovery.3
+  'unavailable'
+# ---
+# name: test_bad_api_return_and_recovery.4
+  'unavailable'
+# ---
+# name: test_bad_api_return_and_recovery.5
+  'unavailable'
+# ---
+# name: test_bad_api_return_and_recovery.6
+  'unavailable'
+# ---
+# name: test_bad_api_return_and_recovery.7
+  'unavailable'
+# ---
+# name: test_bad_api_return_and_recovery.8
+  'unavailable'
+# ---
+# name: test_bad_api_return_and_recovery.9
+  'unavailable'
+# ---
+# name: test_simple_update
+  '0'
+# ---
+# name: test_simple_update.1
+  '0'
+# ---
+# name: test_simple_update.10
+  '0'
+# ---
+# name: test_simple_update.11
+  '0'
+# ---
+# name: test_simple_update.12
+  '0'
+# ---
+# name: test_simple_update.13
+  '0'
+# ---
+# name: test_simple_update.14
+  '0'
+# ---
+# name: test_simple_update.15
+  '4'
+# ---
+# name: test_simple_update.16
+  '0'
+# ---
+# name: test_simple_update.17
+  '0'
+# ---
+# name: test_simple_update.18
+  '0'
+# ---
+# name: test_simple_update.19
+  '0'
+# ---
+# name: test_simple_update.2
+  '0'
+# ---
+# name: test_simple_update.20
+  '0'
+# ---
+# name: test_simple_update.21
+  '0'
+# ---
+# name: test_simple_update.3
+  '0'
+# ---
+# name: test_simple_update.4
+  '3'
+# ---
+# name: test_simple_update.5
+  '0'
+# ---
+# name: test_simple_update.6
+  '0'
+# ---
+# name: test_simple_update.7
+  '0'
+# ---
+# name: test_simple_update.8
+  '0'
+# ---
+# name: test_simple_update.9
+  '0'
+# ---
