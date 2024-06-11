@@ -803,13 +803,13 @@ class ConfigEntry(Generic[_DataT]):
             assert isinstance(result, bool)
 
             # Only adjust state if we unloaded the component
-            if domain_is_integration:
-                if result:
-                    self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
-
+            if domain_is_integration and result:
                 await self._async_process_on_unload(hass)
                 if hasattr(self, "runtime_data"):
                     object.__delattr__(self, "runtime_data")
+
+                self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
+
         except Exception as exc:
             _LOGGER.exception(
                 "Error unloading entry %s for %s", self.title, integration.domain
