@@ -44,12 +44,11 @@ from .common import (
     MockPlatform,
     async_capture_events,
     async_fire_time_changed,
+    async_get_persistent_notifications,
     mock_config_flow,
     mock_integration,
     mock_platform,
 )
-
-from tests.common import async_get_persistent_notifications
 
 
 @pytest.fixture(autouse=True)
