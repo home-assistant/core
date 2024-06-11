@@ -83,7 +83,7 @@ async def mock_client(hass, hass_client, registrations=None):
     return await hass_client()
 
 
-async def test_get_service_with_no_json(hass: HomeAssistant):
+async def test_get_service_with_no_json(hass: HomeAssistant) -> None:
     """Test empty json file."""
     await async_setup_component(hass, "http", {})
     m = mock_open()
@@ -94,7 +94,7 @@ async def test_get_service_with_no_json(hass: HomeAssistant):
 
 
 @patch("homeassistant.components.html5.notify.WebPusher")
-async def test_dismissing_message(mock_wp, hass: HomeAssistant):
+async def test_dismissing_message(mock_wp, hass: HomeAssistant) -> None:
     """Test dismissing message."""
     await async_setup_component(hass, "http", {})
     mock_wp().send().status_code = 201
@@ -123,7 +123,7 @@ async def test_dismissing_message(mock_wp, hass: HomeAssistant):
 
 
 @patch("homeassistant.components.html5.notify.WebPusher")
-async def test_sending_message(mock_wp, hass: HomeAssistant):
+async def test_sending_message(mock_wp, hass: HomeAssistant) -> None:
     """Test sending message."""
     await async_setup_component(hass, "http", {})
     mock_wp().send().status_code = 201
@@ -154,7 +154,7 @@ async def test_sending_message(mock_wp, hass: HomeAssistant):
 
 
 @patch("homeassistant.components.html5.notify.WebPusher")
-async def test_fcm_key_include(mock_wp, hass: HomeAssistant):
+async def test_fcm_key_include(mock_wp, hass: HomeAssistant) -> None:
     """Test if the FCM header is included."""
     await async_setup_component(hass, "http", {})
     mock_wp().send().status_code = 201
@@ -179,7 +179,7 @@ async def test_fcm_key_include(mock_wp, hass: HomeAssistant):
 
 
 @patch("homeassistant.components.html5.notify.WebPusher")
-async def test_fcm_send_with_unknown_priority(mock_wp, hass: HomeAssistant):
+async def test_fcm_send_with_unknown_priority(mock_wp, hass: HomeAssistant) -> None:
     """Test if the gcm_key is only included for GCM endpoints."""
     await async_setup_component(hass, "http", {})
     mock_wp().send().status_code = 201
@@ -204,7 +204,7 @@ async def test_fcm_send_with_unknown_priority(mock_wp, hass: HomeAssistant):
 
 
 @patch("homeassistant.components.html5.notify.WebPusher")
-async def test_fcm_no_targets(mock_wp, hass: HomeAssistant):
+async def test_fcm_no_targets(mock_wp, hass: HomeAssistant) -> None:
     """Test if the gcm_key is only included for GCM endpoints."""
     await async_setup_component(hass, "http", {})
     mock_wp().send().status_code = 201
@@ -229,7 +229,7 @@ async def test_fcm_no_targets(mock_wp, hass: HomeAssistant):
 
 
 @patch("homeassistant.components.html5.notify.WebPusher")
-async def test_fcm_additional_data(mock_wp, hass: HomeAssistant):
+async def test_fcm_additional_data(mock_wp, hass: HomeAssistant) -> None:
     """Test if the gcm_key is only included for GCM endpoints."""
     await async_setup_component(hass, "http", {})
     mock_wp().send().status_code = 201

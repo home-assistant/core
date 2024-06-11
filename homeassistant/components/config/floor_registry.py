@@ -7,7 +7,8 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.floor_registry import FloorEntry, async_get
+from homeassistant.helpers import floor_registry as fr
+from homeassistant.helpers.floor_registry import FloorEntry
 
 
 @callback
@@ -30,7 +31,7 @@ def websocket_list_floors(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle list floors command."""
-    registry = async_get(hass)
+    registry = fr.async_get(hass)
     connection.send_result(
         msg["id"],
         [_entry_dict(entry) for entry in registry.async_list_floors()],
@@ -52,7 +53,7 @@ def websocket_create_floor(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Create floor command."""
-    registry = async_get(hass)
+    registry = fr.async_get(hass)
 
     data = dict(msg)
     data.pop("type")
@@ -82,7 +83,7 @@ def websocket_delete_floor(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Delete floor command."""
-    registry = async_get(hass)
+    registry = fr.async_get(hass)
 
     try:
         registry.async_delete(msg["floor_id"])
@@ -108,7 +109,7 @@ def websocket_update_floor(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle update floor websocket command."""
-    registry = async_get(hass)
+    registry = fr.async_get(hass)
 
     data = dict(msg)
     data.pop("type")

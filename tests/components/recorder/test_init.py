@@ -3,18 +3,18 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Generator
 from datetime import datetime, timedelta
 from pathlib import Path
 import sqlite3
 import threading
-from typing import cast
+from typing import Any, cast
 from unittest.mock import MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 from sqlalchemy.pool import QueuePool
+from typing_extensions import Generator
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import (
@@ -74,8 +74,11 @@ from homeassistant.const import (
     STATE_UNLOCKED,
 )
 from homeassistant.core import Context, CoreState, Event, HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er, recorder as recorder_helper
-from homeassistant.helpers.issue_registry import async_get as async_get_issue_registry
+from homeassistant.helpers import (
+    entity_registry as er,
+    issue_registry as ir,
+    recorder as recorder_helper,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads
@@ -112,7 +115,7 @@ def setup_recorder(recorder_mock: Recorder) -> None:
 
 
 @pytest.fixture
-def small_cache_size() -> Generator[None, None, None]:
+def small_cache_size() -> Generator[None]:
     """Patch the default cache size to 8."""
     with (
         patch.object(state_attributes_table_manager, "CACHE_SIZE", 8),
@@ -290,7 +293,7 @@ async def test_saving_state(hass: HomeAssistant, setup_recorder: None) -> None:
 
 
 @pytest.mark.parametrize(
-    ("dialect_name", "expected_attributes"),
+    ("db_engine", "expected_attributes"),
     [
         (SupportedDialect.MYSQL, {"test_attr": 5, "test_attr_10": "silly\0stuff"}),
         (SupportedDialect.POSTGRESQL, {"test_attr": 5, "test_attr_10": "silly"}),
@@ -298,18 +301,19 @@ async def test_saving_state(hass: HomeAssistant, setup_recorder: None) -> None:
     ],
 )
 async def test_saving_state_with_nul(
-    hass: HomeAssistant, setup_recorder: None, dialect_name, expected_attributes
+    hass: HomeAssistant,
+    db_engine: str,
+    recorder_dialect_name: None,
+    setup_recorder: None,
+    expected_attributes: dict[str, Any],
 ) -> None:
     """Test saving and restoring a state with nul in attributes."""
     entity_id = "test.recorder"
     state = "restoring_from_db"
     attributes = {"test_attr": 5, "test_attr_10": "silly\0stuff"}
 
-    with patch(
-        "homeassistant.components.recorder.core.Recorder.dialect_name", dialect_name
-    ):
-        hass.states.async_set(entity_id, state, attributes)
-        await async_wait_recording_done(hass)
+    hass.states.async_set(entity_id, state, attributes)
+    await async_wait_recording_done(hass)
 
     with session_scope(hass=hass, read_only=True) as session:
         db_states = []
@@ -1258,7 +1262,7 @@ async def test_auto_purge_disabled(
 async def test_auto_statistics(
     hass: HomeAssistant,
     setup_recorder: None,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test periodic statistics scheduling."""
     timezone = "Europe/Copenhagen"
@@ -1849,8 +1853,8 @@ async def test_database_lock_and_unlock(
     # Recording can't be finished while lock is held
     with pytest.raises(TimeoutError):
         await asyncio.wait_for(asyncio.shield(task), timeout=0.25)
-        db_events = await hass.async_add_executor_job(_get_db_events)
-        assert len(db_events) == 0
+    db_events = await hass.async_add_executor_job(_get_db_events)
+    assert len(db_events) == 0
 
     assert instance.unlock_database()
 
@@ -1865,6 +1869,7 @@ async def test_database_lock_and_overflow(
     recorder_db_url: str,
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test writing events during lock leading to overflow the queue causes the database to unlock."""
     if recorder_db_url.startswith(("mysql://", "postgresql://")):
@@ -1915,8 +1920,7 @@ async def test_database_lock_and_overflow(
         assert "Database queue backlog reached more than" in caplog.text
         assert not instance.unlock_database()
 
-    registry = async_get_issue_registry(hass)
-    issue = registry.async_get_issue(DOMAIN, "backup_failed_out_of_resources")
+    issue = issue_registry.async_get_issue(DOMAIN, "backup_failed_out_of_resources")
     assert issue is not None
     assert "start_time" in issue.translation_placeholders
     start_time = issue.translation_placeholders["start_time"]
@@ -1931,6 +1935,7 @@ async def test_database_lock_and_overflow_checks_available_memory(
     recorder_db_url: str,
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test writing events during lock leading to overflow the queue causes the database to unlock."""
     if recorder_db_url.startswith(("mysql://", "postgresql://")):
@@ -2005,8 +2010,7 @@ async def test_database_lock_and_overflow_checks_available_memory(
         db_events = await instance.async_add_executor_job(_get_db_events)
         assert len(db_events) >= 2
 
-    registry = async_get_issue_registry(hass)
-    issue = registry.async_get_issue(DOMAIN, "backup_failed_out_of_resources")
+    issue = issue_registry.async_get_issue(DOMAIN, "backup_failed_out_of_resources")
     assert issue is not None
     assert "start_time" in issue.translation_placeholders
     start_time = issue.translation_placeholders["start_time"]
@@ -2068,18 +2072,19 @@ async def test_in_memory_database(
     assert "In-memory SQLite database is not supported" in caplog.text
 
 
+@pytest.mark.parametrize("db_engine", ["mysql"])
 async def test_database_connection_keep_alive(
     hass: HomeAssistant,
+    recorder_dialect_name: None,
     async_setup_recorder_instance: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test we keep alive socket based dialects."""
-    with patch("homeassistant.components.recorder.Recorder.dialect_name"):
-        instance = await async_setup_recorder_instance(hass)
-        # We have to mock this since we don't have a mock
-        # MySQL server available in tests.
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await instance.async_recorder_ready.wait()
+    instance = await async_setup_recorder_instance(hass)
+    # We have to mock this since we don't have a mock
+    # MySQL server available in tests.
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await instance.async_recorder_ready.wait()
 
     async_fire_time_changed(
         hass, dt_util.utcnow() + timedelta(seconds=recorder.core.KEEPALIVE_TIME)

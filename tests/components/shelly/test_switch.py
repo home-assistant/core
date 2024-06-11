@@ -115,14 +115,14 @@ async def test_block_restored_motion_switch(
     hass: HomeAssistant,
     model: str,
     mock_block_device: Mock,
-    device_reg: DeviceRegistry,
+    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block restored motion active switch."""
     entry = await init_integration(
         hass, 1, sleep_period=1000, model=model, skip_setup=True
     )
-    register_device(device_reg, entry)
+    register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         SWITCH_DOMAIN,
@@ -151,14 +151,14 @@ async def test_block_restored_motion_switch_no_last_state(
     hass: HomeAssistant,
     model: str,
     mock_block_device: Mock,
-    device_reg: DeviceRegistry,
+    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block restored motion active switch missing last state."""
     entry = await init_integration(
         hass, 1, sleep_period=1000, model=model, skip_setup=True
     )
-    register_device(device_reg, entry)
+    register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         SWITCH_DOMAIN,
@@ -230,7 +230,6 @@ async def test_block_set_state_auth_error(
         {ATTR_ENTITY_ID: "switch.test_name_channel_1"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
 
@@ -374,7 +373,6 @@ async def test_rpc_auth_error(
         {ATTR_ENTITY_ID: "switch.test_switch_0"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
 
@@ -474,11 +472,12 @@ async def test_wall_display_relay_mode(
     assert entry.unique_id == "123456789ABC-switch:0"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_create_issue_valve_switch(
     hass: HomeAssistant,
     mock_block_device: Mock,
-    entity_registry_enabled_by_default: None,
     monkeypatch: pytest.MonkeyPatch,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we create an issue when an automation or script is using a deprecated entity."""
     monkeypatch.setitem(mock_block_device.status, "cloud", {"connected": False})
@@ -521,7 +520,6 @@ async def test_create_issue_valve_switch(
 
     assert automations_with_entity(hass, entity_id)[0] == "automation.test"
     assert scripts_with_entity(hass, entity_id)[0] == "script.test"
-    issue_registry: ir.IssueRegistry = ir.async_get(hass)
 
     assert issue_registry.async_get_issue(DOMAIN, "deprecated_valve_switch")
     assert issue_registry.async_get_issue(

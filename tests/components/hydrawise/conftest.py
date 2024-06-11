@@ -1,6 +1,6 @@
 """Common fixtures for the Hydrawise tests."""
 
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
@@ -19,6 +19,7 @@ from pydrawise.schema import (
     Zone,
 )
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.hydrawise.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
@@ -29,7 +30,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.hydrawise.async_setup_entry", return_value=True
@@ -42,7 +43,7 @@ def mock_legacy_pydrawise(
     user: User,
     controller: Controller,
     zones: list[Zone],
-) -> Generator[AsyncMock, None, None]:
+) -> Generator[AsyncMock]:
     """Mock LegacyHydrawiseAsync."""
     with patch(
         "pydrawise.legacy.LegacyHydrawiseAsync", autospec=True
@@ -61,7 +62,7 @@ def mock_pydrawise(
     zones: list[Zone],
     sensors: list[Sensor],
     controller_water_use_summary: ControllerWaterUseSummary,
-) -> Generator[AsyncMock, None, None]:
+) -> Generator[AsyncMock]:
     """Mock Hydrawise."""
     with patch("pydrawise.client.Hydrawise", autospec=True) as mock_pydrawise:
         user.controllers = [controller]
@@ -75,7 +76,7 @@ def mock_pydrawise(
 
 
 @pytest.fixture
-def mock_auth() -> Generator[AsyncMock, None, None]:
+def mock_auth() -> Generator[AsyncMock]:
     """Mock pydrawise Auth."""
     with patch("pydrawise.auth.Auth", autospec=True) as mock_auth:
         yield mock_auth.return_value

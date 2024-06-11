@@ -44,13 +44,13 @@ from . import (
 from tests.common import mock_restore_cache
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_block_update(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_block_device: Mock,
     entity_registry: EntityRegistry,
     monkeypatch: pytest.MonkeyPatch,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test block device update entity."""
     entity_id = "update.test_name_firmware_update"
@@ -96,13 +96,13 @@ async def test_block_update(
     assert entry.unique_id == "123456789ABC-fwupdate"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_block_beta_update(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_block_device: Mock,
     entity_registry: EntityRegistry,
     monkeypatch: pytest.MonkeyPatch,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test block device beta update entity."""
     entity_id = "update.test_name_beta_firmware_update"
@@ -156,12 +156,12 @@ async def test_block_beta_update(
     assert entry.unique_id == "123456789ABC-fwupdate_beta"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_block_update_connection_error(
     hass: HomeAssistant,
     mock_block_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test block device update connection error."""
     monkeypatch.setitem(mock_block_device.status["update"], "old_version", "1")
@@ -173,21 +173,21 @@ async def test_block_update_connection_error(
     )
     await init_integration(hass, 1)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
             {ATTR_ENTITY_ID: "update.test_name_firmware_update"},
             blocking=True,
         )
-        assert "Error starting OTA update" in caplog.text
+    assert "Error starting OTA update" in str(excinfo.value)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_block_update_auth_error(
     hass: HomeAssistant,
     mock_block_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test block device update authentication error."""
     monkeypatch.setitem(mock_block_device.status["update"], "old_version", "1")
@@ -207,7 +207,6 @@ async def test_block_update_auth_error(
         {ATTR_ENTITY_ID: "update.test_name_firmware_update"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
 
@@ -380,12 +379,12 @@ async def test_rpc_sleeping_update(
 async def test_rpc_restored_sleeping_update(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
-    device_reg: DeviceRegistry,
+    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC restored update entity."""
     entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
-    register_device(device_reg, entry)
+    register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         UPDATE_DOMAIN,
@@ -430,7 +429,7 @@ async def test_rpc_restored_sleeping_update(
 async def test_rpc_restored_sleeping_update_no_last_state(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
-    device_reg: DeviceRegistry,
+    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC restored update entity missing last state."""
@@ -443,7 +442,7 @@ async def test_rpc_restored_sleeping_update_no_last_state(
         },
     )
     entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
-    register_device(device_reg, entry)
+    register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         UPDATE_DOMAIN,
@@ -476,13 +475,13 @@ async def test_rpc_restored_sleeping_update_no_last_state(
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == UpdateEntityFeature(0)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_rpc_beta_update(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_rpc_device: Mock,
     entity_registry: EntityRegistry,
     monkeypatch: pytest.MonkeyPatch,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test RPC device beta update entity."""
     entity_id = "update.test_name_beta_firmware_update"
@@ -598,10 +597,11 @@ async def test_rpc_beta_update(
 @pytest.mark.parametrize(
     ("exc", "error"),
     [
-        (DeviceConnectionError, "Error starting OTA update"),
+        (DeviceConnectionError, "OTA update connection error: DeviceConnectionError()"),
         (RpcCallError(-1, "error"), "OTA update request error"),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_rpc_update_errors(
     hass: HomeAssistant,
     exc: Exception,
@@ -609,7 +609,6 @@ async def test_rpc_update_errors(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test RPC device update connection/call errors."""
     monkeypatch.setitem(mock_rpc_device.shelly, "ver", "1")
@@ -626,22 +625,22 @@ async def test_rpc_update_errors(
     )
     await init_integration(hass, 2)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
             {ATTR_ENTITY_ID: "update.test_name_firmware_update"},
             blocking=True,
         )
-        assert error in caplog.text
+    assert error in str(excinfo.value)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_rpc_update_auth_error(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     entity_registry: EntityRegistry,
     monkeypatch: pytest.MonkeyPatch,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test RPC device update authentication error."""
     monkeypatch.setitem(mock_rpc_device.shelly, "ver", "1")
@@ -669,7 +668,6 @@ async def test_rpc_update_auth_error(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()

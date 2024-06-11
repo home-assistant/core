@@ -158,8 +158,3 @@ def async_get_local_ip_mock() -> Iterable[Mock]:
     ) as func:
         func.return_value = AddressFamily.AF_INET, LOCAL_IP
         yield func
-
-
-@pytest.fixture(autouse=True)
-def dlna_dmr_mock_get_source_ip(mock_get_source_ip):
-    """Mock network util's async_get_source_ip."""

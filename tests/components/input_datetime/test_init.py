@@ -1,6 +1,7 @@
 """Tests for the Input slider component."""
 
 import datetime
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -45,7 +46,7 @@ INITIAL_DATETIME = f"{INITIAL_DATE} {INITIAL_TIME}"
 
 
 @pytest.fixture
-def storage_setup(hass, hass_storage):
+def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
     """Storage setup."""
 
     async def _storage(items=None, config=None):

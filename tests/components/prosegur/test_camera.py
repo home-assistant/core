@@ -40,9 +40,9 @@ async def test_camera_fail(
     ):
         await camera.async_get_image(hass, "camera.contract_1234abcd_test_cam")
 
-        assert "Unable to get image" in str(exc.value)
+    assert "Unable to get image" in str(exc.value)
 
-        assert "Image test_cam doesn't exist" in caplog.text
+    assert "Image test_cam doesn't exist" in caplog.text
 
 
 async def test_request_image(

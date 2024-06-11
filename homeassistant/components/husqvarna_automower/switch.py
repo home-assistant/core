@@ -14,13 +14,14 @@ from aioautomower.model import (
 )
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import AutomowerConfigEntry
+from .const import EXECUTION_TIME_DELAY
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerControlEntity
 
@@ -40,14 +41,15 @@ ERROR_STATES = [
     MowerStates.STOPPED,
     MowerStates.OFF,
 ]
-EXECUTION_TIME = 5
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AutomowerConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switch platform."""
-    coordinator: AutomowerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     entities: list[SwitchEntity] = []
     entities.extend(
         AutomowerScheduleSwitchEntity(mower_id, coordinator)
@@ -172,7 +174,7 @@ class AutomowerStayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
         else:
             # As there are no updates from the websocket regarding stay out zone changes,
             # we need to wait until the command is executed and then poll the API.
-            await asyncio.sleep(EXECUTION_TIME)
+            await asyncio.sleep(EXECUTION_TIME_DELAY)
             await self.coordinator.async_request_refresh()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -188,7 +190,7 @@ class AutomowerStayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
         else:
             # As there are no updates from the websocket regarding stay out zone changes,
             # we need to wait until the command is executed and then poll the API.
-            await asyncio.sleep(EXECUTION_TIME)
+            await asyncio.sleep(EXECUTION_TIME_DELAY)
             await self.coordinator.async_request_refresh()
 
 
@@ -196,7 +198,7 @@ class AutomowerStayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
 def async_remove_entities(
     hass: HomeAssistant,
     coordinator: AutomowerDataUpdateCoordinator,
-    config_entry: ConfigEntry,
+    entry: AutomowerConfigEntry,
     mower_id: str,
 ) -> None:
     """Remove deleted stay-out-zones from Home Assistant."""
@@ -207,11 +209,10 @@ def async_remove_entities(
         for zones_uid in _zones.zones:
             uid = f"{mower_id}_{zones_uid}_stay_out_zones"
             active_zones.add(uid)
-    for entity_entry in er.async_entries_for_config_entry(
-        entity_reg, config_entry.entry_id
-    ):
+    for entity_entry in er.async_entries_for_config_entry(entity_reg, entry.entry_id):
         if (
-            (split := entity_entry.unique_id.split("_"))[0] == mower_id
+            entity_entry.domain == Platform.SWITCH
+            and (split := entity_entry.unique_id.split("_"))[0] == mower_id
             and split[-1] == "zones"
             and entity_entry.unique_id not in active_zones
         ):
