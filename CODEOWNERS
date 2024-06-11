@@ -543,6 +543,7 @@ build.json @home-assistant/supervisor
 /tests/components/google_tasks/ @allenporter
 /homeassistant/components/google_travel_time/ @eifinger
 /tests/components/google_travel_time/ @eifinger
+/homeassistant/components/google_travel_time_llm_api/ @fjfricke
 /homeassistant/components/govee_ble/ @bdraco @PierreAronnax
 /tests/components/govee_ble/ @bdraco @PierreAronnax
 /homeassistant/components/govee_light_local/ @Galorhallen

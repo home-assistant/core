@@ -809,6 +809,7 @@ google-generativeai==0.6.0
 google-nest-sdm==4.0.5
 
 # homeassistant.components.google_travel_time
+# homeassistant.components.google_travel_time_llm_api
 googlemaps==2.5.1
 
 # homeassistant.components.tailwind

@@ -1,0 +1,10 @@
+{
+  "domain": "google_travel_time_llm_api",
+  "name": "Google Travel Time LLM API",
+  "codeowners": ["@fjfricke"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/google_travel_time_llm_api",
+  "iot_class": "cloud_polling",
+  "loggers": ["googlemaps"],
+  "requirements": ["googlemaps==2.5.1"]
+}

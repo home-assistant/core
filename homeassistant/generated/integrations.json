@@ -2364,6 +2364,11 @@
         }
       }
     },
+    "google_travel_time_llm_api": {
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "govee": {
       "name": "Govee",
       "integrations": {
@@ -7256,6 +7261,7 @@
     "garages_amsterdam",
     "generic",
     "google_travel_time",
+    "google_travel_time_llm_api",
     "group",
     "growatt_server",
     "holiday",
