@@ -15,6 +15,7 @@ from kasa import (
     KasaException,
     TimeoutError,
 )
+from kasa.iot import IotDevice
 
 from homeassistant.components.light import LightEntity
 from homeassistant.components.sensor import SensorEntity
@@ -169,7 +170,9 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         if isinstance(self, LightEntity):
             unique_id = device.mac.replace(":", "").upper()
             # For backwards compat with pyHS100
-            if device.device_type is DeviceType.Dimmer:
+            if device.device_type is DeviceType.Dimmer and isinstance(
+                device, IotDevice
+            ):
                 # Dimmers used to use the switch format since
                 # pyHS100 treated them as SmartPlug but the old code
                 # created them as lights

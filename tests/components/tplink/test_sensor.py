@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import MAC_ADDRESS, _mocked_device, _patch_connect, _patch_discovery
+from . import DEVICE_ID, MAC_ADDRESS, _mocked_device, _patch_connect, _patch_discovery
 
 from tests.common import MockConfigEntry
 
@@ -139,11 +139,11 @@ async def test_sensor_unique_id(
         await hass.async_block_till_done()
 
     expected = {
-        "sensor.my_plug_current_consumption": "aa:bb:cc:dd:ee:ff_current_power_w",
-        "sensor.my_plug_total_consumption": "aa:bb:cc:dd:ee:ff_total_energy_kwh",
-        "sensor.my_plug_today_s_consumption": "aa:bb:cc:dd:ee:ff_today_energy_kwh",
-        "sensor.my_plug_voltage": "aa:bb:cc:dd:ee:ff_voltage",
-        "sensor.my_plug_current": "aa:bb:cc:dd:ee:ff_current_a",
+        "sensor.my_plug_current_consumption": f"{DEVICE_ID}_current_power_w",
+        "sensor.my_plug_total_consumption": f"{DEVICE_ID}_total_energy_kwh",
+        "sensor.my_plug_today_s_consumption": f"{DEVICE_ID}_today_energy_kwh",
+        "sensor.my_plug_voltage": f"{DEVICE_ID}_voltage",
+        "sensor.my_plug_current": f"{DEVICE_ID}_current_a",
     }
     for sensor_entity_id, value in expected.items():
         assert entity_registry.async_get(sensor_entity_id).unique_id == value

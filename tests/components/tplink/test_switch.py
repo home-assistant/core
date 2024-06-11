@@ -24,6 +24,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, slugify
 
 from . import (
+    DEVICE_ID,
     MAC_ADDRESS,
     _mocked_device,
     _mocked_strip_children,
@@ -128,7 +129,7 @@ async def test_plug_unique_id(
         await hass.async_block_till_done()
 
     entity_id = "switch.my_plug"
-    assert entity_registry.async_get(entity_id).unique_id == "aa:bb:cc:dd:ee:ff"
+    assert entity_registry.async_get(entity_id).unique_id == DEVICE_ID
 
 
 async def test_plug_update_fails(hass: HomeAssistant) -> None:

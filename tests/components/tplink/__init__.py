@@ -39,6 +39,7 @@ IP_ADDRESS2 = "127.0.0.2"
 ALIAS = "My Bulb"
 MODEL = "HS100"
 MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
+DEVICE_ID = "123456789ABCDEFGH"
 DHCP_FORMATTED_MAC_ADDRESS = MAC_ADDRESS.replace(":", "")
 MAC_ADDRESS2 = "11:22:33:44:55:66"
 DEFAULT_ENTRY_TITLE = f"{ALIAS} {MODEL}"
@@ -94,7 +95,7 @@ CREATE_ENTRY_DATA_AUTH2 = {
 
 
 def _mock_protocol() -> BaseProtocol:
-    protocol = MagicMock(auto_spec=BaseProtocol)
+    protocol = MagicMock(spec=BaseProtocol)
     protocol.close = AsyncMock()
     return protocol
 
@@ -103,14 +104,15 @@ def _mocked_device(
     device_config=DEVICE_CONFIG_LEGACY,
     credentials_hash=CREDENTIALS_HASH_LEGACY,
     mac=MAC_ADDRESS,
-    device_id=MAC_ADDRESS,
+    device_id=DEVICE_ID,
     alias=ALIAS,
     modules: list[str] | None = None,
     children: list[Device] | None = None,
     features: list[str] | None = None,
     device_type=DeviceType.Unknown,
+    spec: type = Device,
 ) -> Device:
-    device = MagicMock(auto_spec=Device, name="Mocked device")
+    device = MagicMock(spec=spec, name="Mocked device")
     device.update = AsyncMock()
     device.turn_off = AsyncMock()
     device.turn_on = AsyncMock()
@@ -150,7 +152,7 @@ def _mocked_device(
 def _mocked_feature(
     value: Any, id: str, type_=Feature.Type.Sensor, category=Feature.Category.Debug
 ) -> Feature:
-    feature = MagicMock(auto_spec=Feature, name="Mocked feature")
+    feature = MagicMock(spec=Feature, name="Mocked feature")
     feature.id = id
     feature.name = id
     feature.value = value
@@ -161,7 +163,7 @@ def _mocked_feature(
 
 
 def _mocked_light_module() -> Light:
-    light = MagicMock(auto_spec=Light, name="Mocked light module")
+    light = MagicMock(spec=Light, name="Mocked light module")
     light.update = AsyncMock()
     light.brightness = 50
     light.color_temp = 4000
@@ -182,7 +184,7 @@ def _mocked_light_module() -> Light:
 
 
 def _mocked_light_effect_module() -> LightEffect:
-    effect = MagicMock(auto_spec=LightEffect, name="Mocked light effect")
+    effect = MagicMock(spec=LightEffect, name="Mocked light effect")
     effect.has_effects = True
     effect.has_custom_effects = True
     effect.effect = "Effect1"
