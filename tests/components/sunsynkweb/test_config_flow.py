@@ -123,7 +123,7 @@ async def test_form_cannot_connect(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_unepxected(
+async def test_unexpected(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     basicdata,
