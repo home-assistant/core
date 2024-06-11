@@ -73,7 +73,6 @@ async def test_session_scope_not_setup(
 
 async def test_recorder_bad_execute(hass: HomeAssistant, setup_recorder: None) -> None:
     """Bad execute, retry 3 times."""
-    from sqlalchemy.exc import SQLAlchemyError
 
     def to_native(validate_entity_id=True):
         """Raise exception."""
