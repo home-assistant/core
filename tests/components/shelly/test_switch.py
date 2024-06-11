@@ -115,14 +115,14 @@ async def test_block_restored_motion_switch(
     hass: HomeAssistant,
     model: str,
     mock_block_device: Mock,
-    device_reg: DeviceRegistry,
+    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block restored motion active switch."""
     entry = await init_integration(
         hass, 1, sleep_period=1000, model=model, skip_setup=True
     )
-    register_device(device_reg, entry)
+    register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         SWITCH_DOMAIN,
@@ -151,14 +151,14 @@ async def test_block_restored_motion_switch_no_last_state(
     hass: HomeAssistant,
     model: str,
     mock_block_device: Mock,
-    device_reg: DeviceRegistry,
+    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block restored motion active switch missing last state."""
     entry = await init_integration(
         hass, 1, sleep_period=1000, model=model, skip_setup=True
     )
-    register_device(device_reg, entry)
+    register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         SWITCH_DOMAIN,
