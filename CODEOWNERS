@@ -1454,6 +1454,7 @@ build.json @home-assistant/supervisor
 /tests/components/totalconnect/ @austinmroczek
 /homeassistant/components/tplink/ @rytilahti @thegardenmonkey @bdraco @sdb9696
 /tests/components/tplink/ @rytilahti @thegardenmonkey @bdraco @sdb9696
+/homeassistant/components/tplink_deco/ @anisar17
 /homeassistant/components/tplink_omada/ @MarkGodwin
 /tests/components/tplink_omada/ @MarkGodwin
 /homeassistant/components/traccar/ @ludeeus
