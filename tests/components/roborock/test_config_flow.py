@@ -18,8 +18,9 @@ from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from ...common import MockConfigEntry
 from .mock_data import MOCK_CONFIG, USER_DATA, USER_EMAIL
+
+from tests.common import MockConfigEntry
 
 
 async def test_config_flow_success(

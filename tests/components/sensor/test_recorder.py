@@ -41,6 +41,8 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
+from .common import MockSensor
+
 from tests.common import setup_test_component_platform
 from tests.components.recorder.common import (
     assert_dict_of_states_equal_without_context_and_last_changed,
@@ -50,7 +52,6 @@ from tests.components.recorder.common import (
     do_adhoc_statistics,
     statistics_during_period,
 )
-from tests.components.sensor.common import MockSensor
 from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
 
 BATTERY_SENSOR_ATTRIBUTES = {

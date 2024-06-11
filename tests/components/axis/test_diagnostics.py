@@ -3,6 +3,7 @@
 import pytest
 from syrupy import SnapshotAssertion
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import API_DISCOVERY_BASIC_DEVICE_INFO
@@ -15,7 +16,7 @@ from tests.typing import ClientSessionGenerator
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    setup_config_entry,
+    setup_config_entry: ConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
