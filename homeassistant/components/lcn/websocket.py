@@ -66,7 +66,7 @@ type AsyncLcnWebSocketCommandHandler = Callable[
 URL_BASE: Final = "/lcn_static"
 
 
-async def register_panel(hass: HomeAssistant) -> None:
+async def register_panel_and_ws_api(hass: HomeAssistant) -> None:
     """Register the LCN Panel and Websocket API."""
     websocket_api.async_register_command(hass, websocket_get_device_configs)
     websocket_api.async_register_command(hass, websocket_get_entity_configs)
