@@ -148,6 +148,32 @@ def test_send_message_with_attachment(
     assert_sending_requests(signal_requests_mock, 1)
 
 
+def test_send_message_styled_with_attachment(
+    signal_notification_service: SignalNotificationService,
+    signal_requests_mock_factory: Mocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test send message with attachment."""
+    signal_requests_mock = signal_requests_mock_factory()
+    with (
+        caplog.at_level(
+            logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
+        ),
+        tempfile.NamedTemporaryFile(
+            mode="w", suffix=".png", prefix=os.path.basename(__file__)
+        ) as temp_file,
+    ):
+        temp_file.write("attachment_data")
+        data = {"attachments": [temp_file.name], "text_mode": "styled"}
+        signal_notification_service.send_message(MESSAGE, data=data)
+    post_data = json.loads(signal_requests_mock.request_history[-1].text)
+    assert "Sending signal message" in caplog.text
+    assert signal_requests_mock.called
+    assert signal_requests_mock.call_count == 2
+    assert_sending_requests(signal_requests_mock, 1)
+    assert post_data["text_mode"] == "styled"
+
+
 def test_send_message_with_attachment_as_url(
     signal_notification_service: SignalNotificationService,
     signal_requests_mock_factory: Mocker,
@@ -165,6 +191,26 @@ def test_send_message_with_attachment_as_url(
     assert signal_requests_mock.called
     assert signal_requests_mock.call_count == 3
     assert_sending_requests(signal_requests_mock, 1)
+
+
+def test_send_message_styled_with_attachment_as_url(
+    signal_notification_service: SignalNotificationService,
+    signal_requests_mock_factory: Mocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test send message with attachment as URL."""
+    signal_requests_mock = signal_requests_mock_factory(True, str(len(CONTENT)))
+    with caplog.at_level(
+        logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
+    ):
+        data = {"urls": [URL_ATTACHMENT], "text_mode": "styled"}
+        signal_notification_service.send_message(MESSAGE, data=data)
+    post_data = json.loads(signal_requests_mock.request_history[-1].text)
+    assert "Sending signal message" in caplog.text
+    assert signal_requests_mock.called
+    assert signal_requests_mock.call_count == 3
+    assert_sending_requests(signal_requests_mock, 1)
+    assert post_data["text_mode"] == "styled"
 
 
 def test_get_attachments(
