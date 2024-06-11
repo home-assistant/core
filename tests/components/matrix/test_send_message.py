@@ -12,7 +12,7 @@ from homeassistant.components.matrix.const import FORMAT_HTML, SERVICE_SEND_MESS
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
 from homeassistant.core import HomeAssistant
 
-from tests.components.matrix.conftest import TEST_BAD_ROOM, TEST_JOINABLE_ROOMS
+from .conftest import TEST_BAD_ROOM, TEST_JOINABLE_ROOMS
 
 
 async def test_send_message(
@@ -21,7 +21,7 @@ async def test_send_message(
     image_path,
     matrix_events,
     caplog: pytest.LogCaptureFixture,
-):
+) -> None:
     """Test the send_message service."""
 
     await hass.async_start()
@@ -65,7 +65,7 @@ async def test_unsendable_message(
     matrix_bot: MatrixBot,
     matrix_events,
     caplog: pytest.LogCaptureFixture,
-):
+) -> None:
     """Test the send_message service with an invalid room."""
     assert len(matrix_events) == 0
     await matrix_bot._login()

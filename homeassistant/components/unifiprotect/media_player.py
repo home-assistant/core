@@ -5,14 +5,14 @@ from __future__ import annotations
 import logging
 from typing import Any, cast
 
-from pyunifiprotect.data import (
+from uiprotect.data import (
     Camera,
     ModelType,
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
     StateType,
 )
-from pyunifiprotect.exceptions import StreamError
+from uiprotect.exceptions import StreamError
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (

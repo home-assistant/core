@@ -1,6 +1,5 @@
 """Define fixtures for Notion tests."""
 
-from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -9,6 +8,7 @@ from aionotion.listener.models import Listener
 from aionotion.sensor.models import Sensor
 from aionotion.user.models import UserPreferences
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.notion import CONF_REFRESH_TOKEN, CONF_USER_UUID, DOMAIN
 from homeassistant.const import CONF_USERNAME
@@ -23,7 +23,7 @@ TEST_USER_UUID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.notion.async_setup_entry", return_value=True

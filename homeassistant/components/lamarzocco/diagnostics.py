@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
+from dataclasses import asdict
+from typing import Any, TypedDict
+
+from lmcloud.const import FirmwareType
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
@@ -13,31 +16,30 @@ from .coordinator import LaMarzoccoUpdateCoordinator
 
 TO_REDACT = {
     "serial_number",
-    "machine_sn",
 }
 
 
+class DiagnosticsData(TypedDict):
+    """Diagnostic data for La Marzocco."""
+
+    model: str
+    config: dict[str, Any]
+    firmware: list[dict[FirmwareType, dict[str, Any]]]
+    statistics: dict[str, Any]
+
+
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: LaMarzoccoUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: LaMarzoccoUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    device = coordinator.device
     # collect all data sources
-    data = {}
-    data["current_status"] = coordinator.lm.current_status
-    data["machine_info"] = coordinator.lm.machine_info
-    data["config"] = coordinator.lm.config
-    data["statistics"] = {"stats": coordinator.lm.statistics}  # wrap to satisfy mypy
+    diagnostics_data = DiagnosticsData(
+        model=device.model,
+        config=asdict(device.config),
+        firmware=[{key: asdict(firmware)} for key, firmware in device.firmware.items()],
+        statistics=asdict(device.statistics),
+    )
 
-    # build a firmware section
-    data["firmware"] = {
-        "machine": {
-            "version": coordinator.lm.firmware_version,
-            "latest_version": coordinator.lm.latest_firmware_version,
-        },
-        "gateway": {
-            "version": coordinator.lm.gateway_version,
-            "latest_version": coordinator.lm.latest_gateway_version,
-        },
-    }
-    return async_redact_data(data, TO_REDACT)
+    return async_redact_data(diagnostics_data, TO_REDACT)

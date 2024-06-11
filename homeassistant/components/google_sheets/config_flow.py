@@ -61,7 +61,9 @@ class OAuth2FlowHandler(
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow, or update existing entry."""
-        service = Client(Credentials(data[CONF_TOKEN][CONF_ACCESS_TOKEN]))
+        service = Client(
+            Credentials(data[CONF_TOKEN][CONF_ACCESS_TOKEN])  # type: ignore[no-untyped-call]
+        )
 
         if self.reauth_entry:
             _LOGGER.debug("service.open_by_key")
