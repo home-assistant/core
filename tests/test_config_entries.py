@@ -5664,7 +5664,7 @@ async def test_non_awaited_async_forward_entry_setups(
 
     assert (
         "Detected code that calls async_forward_entry_setups for integration "
-        "test with title: Mock Title and entry_id: test2, during without "
+        "test with title: Mock Title and entry_id: test2, during setup without "
         "awaiting async_forward_entry_setups, which can cause the setup lock "
         "to be released before the setup is done. This will stop working in "
         "Home Assistant 2025.1. Please report this issue."
@@ -5730,7 +5730,7 @@ async def test_non_awaited_async_forward_entry_setup(
 
     assert (
         "Detected code that calls async_forward_entry_setup for integration "
-        "test with title: Mock Title and entry_id: test2, during without "
+        "test with title: Mock Title and entry_id: test2, during setup without "
         "awaiting async_forward_entry_setup, which can cause the setup lock "
         "to be released before the setup is done. This will stop working in "
         "Home Assistant 2025.1. Please report this issue."
