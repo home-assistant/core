@@ -6,7 +6,7 @@ from functools import partial
 from typing import Any, Never
 
 from .deprecation import (
-    DeprecatedAlias,
+    DeferredDeprecatedAlias,
     all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
@@ -33,14 +33,16 @@ class UndefinedType(Enum):
 UNDEFINED = UndefinedType._singleton  # noqa: SLF001
 
 
-def _deprecated_typing_helper(attr: str) -> DeprecatedAlias:
-    """Help to make a DeprecatedAlias."""
-    # pylint: disable-next=import-outside-toplevel
-    import homeassistant.core
+def _deprecated_typing_helper(attr: str) -> DeferredDeprecatedAlias:
+    """Help to make a DeferredDeprecatedAlias."""
 
-    return DeprecatedAlias(
-        getattr(homeassistant.core, attr), f"homeassistant.core.{attr}", "2025.5"
-    )
+    def value_fn() -> Any:
+        # pylint: disable-next=import-outside-toplevel
+        import homeassistant.core
+
+        return getattr(homeassistant.core, attr)
+
+    return DeferredDeprecatedAlias(value_fn, f"homeassistant.core.{attr}", "2025.5")
 
 
 # The following types should not used and
