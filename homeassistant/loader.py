@@ -40,6 +40,7 @@ from .generated.ssdp import SSDP
 from .generated.usb import USB
 from .generated.zeroconf import HOMEKIT, ZEROCONF
 from .helpers.json import json_bytes, json_fragment
+from .helpers.typing import UNDEFINED
 from .util.hass_dict import HassKey
 from .util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
@@ -128,9 +129,6 @@ IMPORT_EVENT_LOOP_WARNING = (
     "cause stability problems, be sure to disable it if you "
     "experience issues with Home Assistant"
 )
-
-_UNDEF = object()  # Internal; not helpers.typing.UNDEFINED due to circular dependency
-
 
 MOVED_ZEROCONF_PROPS = ("macaddress", "model", "manufacturer")
 
@@ -1322,7 +1320,7 @@ def async_get_loaded_integration(hass: HomeAssistant, domain: str) -> Integratio
     Raises IntegrationNotLoaded if the integration is not loaded.
     """
     cache = hass.data[DATA_INTEGRATIONS]
-    int_or_fut = cache.get(domain, _UNDEF)
+    int_or_fut = cache.get(domain, UNDEFINED)
     # Integration is never subclassed, so we can check for type
     if type(int_or_fut) is Integration:
         return int_or_fut
@@ -1332,7 +1330,7 @@ def async_get_loaded_integration(hass: HomeAssistant, domain: str) -> Integratio
 async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration:
     """Get integration."""
     cache = hass.data[DATA_INTEGRATIONS]
-    if type(int_or_fut := cache.get(domain, _UNDEF)) is Integration:
+    if type(int_or_fut := cache.get(domain, UNDEFINED)) is Integration:
         return int_or_fut
     integrations_or_excs = await async_get_integrations(hass, [domain])
     int_or_exc = integrations_or_excs[domain]
@@ -1350,11 +1348,11 @@ async def async_get_integrations(
     needed: dict[str, asyncio.Future[None]] = {}
     in_progress: dict[str, asyncio.Future[None]] = {}
     for domain in domains:
-        int_or_fut = cache.get(domain, _UNDEF)
+        int_or_fut = cache.get(domain, UNDEFINED)
         # Integration is never subclassed, so we can check for type
         if type(int_or_fut) is Integration:
             results[domain] = int_or_fut
-        elif int_or_fut is not _UNDEF:
+        elif int_or_fut is not UNDEFINED:
             in_progress[domain] = cast(asyncio.Future[None], int_or_fut)
         elif "." in domain:
             results[domain] = ValueError(f"Invalid domain {domain}")
@@ -1364,10 +1362,10 @@ async def async_get_integrations(
     if in_progress:
         await asyncio.wait(in_progress.values())
         for domain in in_progress:
-            # When we have waited and it's _UNDEF, it doesn't exist
+            # When we have waited and it's UNDEFINED, it doesn't exist
             # We don't cache that it doesn't exist, or else people can't fix it
             # and then restart, because their config will never be valid.
-            if (int_or_fut := cache.get(domain, _UNDEF)) is _UNDEF:
+            if (int_or_fut := cache.get(domain, UNDEFINED)) is UNDEFINED:
                 results[domain] = IntegrationNotFound(domain)
             else:
                 results[domain] = cast(Integration, int_or_fut)

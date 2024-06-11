@@ -96,6 +96,7 @@ from .helpers.deprecation import (
     dir_with_deprecated_constants,
 )
 from .helpers.json import json_bytes, json_fragment
+from .helpers.typing import UNDEFINED, UndefinedType
 from .util import dt as dt_util, location
 from .util.async_ import (
     cancelling,
@@ -131,8 +132,6 @@ FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT = 60
 CLOSE_STAGE_SHUTDOWN_TIMEOUT = 30
 
 
-# Internal; not helpers.typing.UNDEFINED due to circular dependency
-_UNDEF: dict[Any, Any] = {}
 _SENTINEL = object()
 _DataT = TypeVar("_DataT", bound=Mapping[str, Any], default=Mapping[str, Any])
 type CALLBACK_TYPE = Callable[[], None]
@@ -3035,11 +3034,10 @@ class Config:
         unit_system: str | None = None,
         location_name: str | None = None,
         time_zone: str | None = None,
-        # pylint: disable=dangerous-default-value # _UNDEFs not modified
-        external_url: str | dict[Any, Any] | None = _UNDEF,
-        internal_url: str | dict[Any, Any] | None = _UNDEF,
+        external_url: str | UndefinedType | None = UNDEFINED,
+        internal_url: str | UndefinedType | None = UNDEFINED,
         currency: str | None = None,
-        country: str | dict[Any, Any] | None = _UNDEF,
+        country: str | UndefinedType | None = UNDEFINED,
         language: str | None = None,
     ) -> None:
         """Update the configuration from a dictionary."""
@@ -3059,14 +3057,14 @@ class Config:
             self.location_name = location_name
         if time_zone is not None:
             await self.async_set_time_zone(time_zone)
-        if external_url is not _UNDEF:
-            self.external_url = cast(str | None, external_url)
-        if internal_url is not _UNDEF:
-            self.internal_url = cast(str | None, internal_url)
+        if external_url is not UNDEFINED:
+            self.external_url = external_url
+        if internal_url is not UNDEFINED:
+            self.internal_url = internal_url
         if currency is not None:
             self.currency = currency
-        if country is not _UNDEF:
-            self.country = cast(str | None, country)
+        if country is not UNDEFINED:
+            self.country = country
         if language is not None:
             self.language = language
 
@@ -3112,8 +3110,8 @@ class Config:
             unit_system=data.get("unit_system_v2"),
             location_name=data.get("location_name"),
             time_zone=data.get("time_zone"),
-            external_url=data.get("external_url", _UNDEF),
-            internal_url=data.get("internal_url", _UNDEF),
+            external_url=data.get("external_url", UNDEFINED),
+            internal_url=data.get("internal_url", UNDEFINED),
             currency=data.get("currency"),
             country=data.get("country"),
             language=data.get("language"),
