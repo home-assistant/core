@@ -408,7 +408,8 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             translation_key="switch",
         ),
     ),
-    # Diivoo dual zone smart water timer
+    # Irrigator
+    # https://developer.tuya.com/en/docs/iot/categoryggq?id=Kaiuz1qib7z0k
     "ggq": (
         SwitchEntityDescription(
             key=DPCode.SWITCH_1,
