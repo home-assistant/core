@@ -9,18 +9,10 @@ from homeassistant.const import CONF_HOST
 from .const import DOMAIN
 
 
-@config_entries.HANDLERS.register(DOMAIN)
 class KermiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Kermi."""
 
-    VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    async def async_setup_entry(self, entry: ConfigEntry) -> bool:
-        """Set up a config entry."""
-        # Set the unique ID of the config flow to the entry_id of the config entry
-        await self.async_set_unique_id(entry.entry_id)
-        return True
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""

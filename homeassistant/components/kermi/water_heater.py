@@ -49,6 +49,7 @@ class KermiWaterHeater(WaterHeaterEntity, CoordinatorEntity):
     """Representation of water_heater device attached to IFM."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
     _attr_supported_features = SUPPORT_FLAGS_HEATER
 
     def __init__(

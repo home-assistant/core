@@ -23,7 +23,6 @@ PLATFORMS = ["water_heater"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up kermi from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
 
     # Create a ModbusTcpClient
     client = AsyncModbusTcpClient(host=entry.data[CONF_HOST], port=502)
