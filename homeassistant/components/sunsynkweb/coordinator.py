@@ -36,7 +36,6 @@ class SunsynkUpdateCoordinator(DataUpdateCoordinator[None]):
             update_interval=timedelta(seconds=30),
         )
         self.bearer = None
-        self.hass = hass
         self.session = SunsynkwebSession(
             session=async_get_clientsession(hass),
             username=self.config_entry.data["username"],
