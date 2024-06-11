@@ -16,7 +16,7 @@ import voluptuous as vol
 from voluptuous import Invalid, MultipleInvalid
 import yaml
 
-from homeassistant import config, loader
+from homeassistant import loader
 import homeassistant.config as config_util
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -27,9 +27,6 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
-    CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
     __version__,
 )
 from homeassistant.core import (
@@ -49,7 +46,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import (
-    _CONF_UNIT_SYSTEM_US_CUSTOMARY,
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
     UnitSystem,
@@ -511,7 +507,7 @@ async def test_create_default_config_returns_none_if_write_error(
 def test_core_config_schema() -> None:
     """Test core config schema."""
     for value in (
-        {CONF_UNIT_SYSTEM: "K"},
+        {"unit_system": "K"},
         {"time_zone": "non-exist"},
         {"latitude": "91"},
         {"longitude": -181},
@@ -534,7 +530,7 @@ def test_core_config_schema() -> None:
             "longitude": "123.45",
             "external_url": "https://www.example.com",
             "internal_url": "http://example.local",
-            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
+            "unit_system": "metric",
             "currency": "USD",
             "customize": {"sensor.temperature": {"hidden": True}},
             "country": "SE",
@@ -850,7 +846,7 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
             "longitude": 50,
             "elevation": 25,
             "name": "Huis",
-            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+            "unit_system": "imperial",
             "time_zone": "America/New_York",
             "allowlist_external_dirs": "/etc",
             "external_url": "https://www.example.com",
@@ -982,7 +978,7 @@ async def test_loading_configuration_from_packages(hass: HomeAssistant) -> None:
             "longitude": -1,
             "elevation": 500,
             "name": "Huis",
-            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
+            "unit_system": "metric",
             "time_zone": "Europe/Madrid",
             "external_url": "https://www.example.com",
             "internal_url": "http://example.local",
@@ -1006,7 +1002,7 @@ async def test_loading_configuration_from_packages(hass: HomeAssistant) -> None:
                 "longitude": -1,
                 "elevation": 500,
                 "name": "Huis",
-                CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
+                "unit_system": "metric",
                 "time_zone": "Europe/Madrid",
                 "packages": {"empty_package": None},
             },
@@ -1016,9 +1012,9 @@ async def test_loading_configuration_from_packages(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("unit_system_name", "expected_unit_system"),
     [
-        (CONF_UNIT_SYSTEM_METRIC, METRIC_SYSTEM),
-        (CONF_UNIT_SYSTEM_IMPERIAL, US_CUSTOMARY_SYSTEM),
-        (_CONF_UNIT_SYSTEM_US_CUSTOMARY, US_CUSTOMARY_SYSTEM),
+        ("metric", METRIC_SYSTEM),
+        ("imperial", US_CUSTOMARY_SYSTEM),
+        ("us_customary", US_CUSTOMARY_SYSTEM),
     ],
 )
 async def test_loading_configuration_unit_system(
@@ -1295,7 +1291,7 @@ async def test_merge_customize(hass: HomeAssistant) -> None:
         "longitude": 50,
         "elevation": 25,
         "name": "Huis",
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        "unit_system": "imperial",
         "time_zone": "GMT",
         "customize": {"a.a": {"friendly_name": "A"}},
         "packages": {
@@ -1314,7 +1310,7 @@ async def test_auth_provider_config(hass: HomeAssistant) -> None:
         "longitude": 50,
         "elevation": 25,
         "name": "Huis",
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        "unit_system": "imperial",
         "time_zone": "GMT",
         CONF_AUTH_PROVIDERS: [
             {"type": "homeassistant"},
@@ -1341,7 +1337,7 @@ async def test_auth_provider_config_default(hass: HomeAssistant) -> None:
         "longitude": 50,
         "elevation": 25,
         "name": "Huis",
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        "unit_system": "imperial",
         "time_zone": "GMT",
     }
     if hasattr(hass, "auth"):
@@ -1361,7 +1357,7 @@ async def test_disallowed_auth_provider_config(hass: HomeAssistant) -> None:
         "longitude": 50,
         "elevation": 25,
         "name": "Huis",
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        "unit_system": "imperial",
         "time_zone": "GMT",
         CONF_AUTH_PROVIDERS: [
             {
@@ -1387,7 +1383,7 @@ async def test_disallowed_duplicated_auth_provider_config(hass: HomeAssistant) -
         "longitude": 50,
         "elevation": 25,
         "name": "Huis",
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        "unit_system": "imperial",
         "time_zone": "GMT",
         CONF_AUTH_PROVIDERS: [{"type": "homeassistant"}, {"type": "homeassistant"}],
     }
@@ -1402,7 +1398,7 @@ async def test_disallowed_auth_mfa_module_config(hass: HomeAssistant) -> None:
         "longitude": 50,
         "elevation": 25,
         "name": "Huis",
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        "unit_system": "imperial",
         "time_zone": "GMT",
         CONF_AUTH_MFA_MODULES: [
             {
@@ -1424,7 +1420,7 @@ async def test_disallowed_duplicated_auth_mfa_module_config(
         "longitude": 50,
         "elevation": 25,
         "name": "Huis",
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        "unit_system": "imperial",
         "time_zone": "GMT",
         CONF_AUTH_MFA_MODULES: [{"type": "totp"}, {"type": "totp"}],
     }
@@ -2459,7 +2455,7 @@ async def test_loading_platforms_gathers(hass: HomeAssistant) -> None:
         _load_platform,
     ):
         light_task = hass.async_create_task(
-            config.async_process_component_config(
+            config_util.async_process_component_config(
                 hass,
                 {
                     "light": [
@@ -2472,7 +2468,7 @@ async def test_loading_platforms_gathers(hass: HomeAssistant) -> None:
             eager_start=True,
         )
         sensor_task = hass.async_create_task(
-            config.async_process_component_config(
+            config_util.async_process_component_config(
                 hass,
                 {
                     "sensor": [

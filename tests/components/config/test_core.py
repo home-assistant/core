@@ -9,11 +9,6 @@ from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
 from homeassistant.components.config import core
 from homeassistant.components.websocket_api import TYPE_RESULT
-from homeassistant.const import (
-    CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util, location
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
@@ -140,7 +135,7 @@ async def test_websocket_core_update(hass: HomeAssistant, client) -> None:
                 "longitude": 50,
                 "elevation": 25,
                 "location_name": "Huis",
-                CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+                "unit_system": "imperial",
                 "time_zone": "America/New_York",
                 "external_url": "https://www.example.com",
                 "internal_url": "http://example.local",
@@ -181,7 +176,7 @@ async def test_websocket_core_update(hass: HomeAssistant, client) -> None:
             {
                 "id": 6,
                 "type": "config/core/update",
-                CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
+                "unit_system": "metric",
                 "update_units": True,
             }
         )
