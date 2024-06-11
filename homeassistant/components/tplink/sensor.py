@@ -137,9 +137,12 @@ async def async_setup_entry(
     if parent.children:
         # Historically we only add the children if the device is a strip
         for idx, child in enumerate(parent.children):
-            entities.extend(
-                _async_sensors_for_device(child, children_coordinators[idx], parent)
-            )
+            # Only iot strips have child coordinators
+            if children_coordinators:
+                coordinator = children_coordinators[idx]
+            else:
+                coordinator = parent_coordinator
+            entities.extend(_async_sensors_for_device(child, coordinator, parent))
     else:
         entities.extend(_async_sensors_for_device(parent, parent_coordinator))
 
