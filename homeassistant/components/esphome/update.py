@@ -230,6 +230,8 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
     @esphome_state_property
     def in_progress(self) -> bool | int | None:
         """Return if the update is in progress."""
+        if self._state.has_progress:
+            return int(self._state.progress)
         return self._state.in_progress
 
     @property
