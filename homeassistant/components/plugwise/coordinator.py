@@ -42,7 +42,7 @@ async def cleanup_device_and_entity_registry(
 
         item = list(list(device_entry.identifiers)[0])
         if item[0] != DOMAIN:
-            continue  # pragma: no cover
+            continue
 
         # First find the Plugwise via_device, this is always the first device
         if item[1] == data.gateway[GATEWAY_ID]:
