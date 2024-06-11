@@ -3,7 +3,6 @@
 from unittest.mock import MagicMock
 
 from homeassistant import config_entries
-from homeassistant.components import speedtestdotnet
 from homeassistant.components.speedtestdotnet.const import (
     CONF_SERVER_ID,
     CONF_SERVER_NAME,
@@ -18,7 +17,7 @@ from tests.common import MockConfigEntry
 async def test_flow_works(hass: HomeAssistant) -> None:
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
-        speedtestdotnet.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -84,7 +83,7 @@ async def test_integration_already_configured(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        speedtestdotnet.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"

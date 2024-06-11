@@ -10,7 +10,7 @@ import pytest
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
 from homeassistant.components.config import automation
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import yaml
@@ -25,10 +25,10 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 @pytest.fixture
 async def setup_automation(
-    hass,
+    hass: HomeAssistant,
     automation_config,
-    stub_blueprint_populate,
-):
+    stub_blueprint_populate: None,
+) -> None:
     """Set up automation integration."""
     assert await async_setup_component(
         hass, "automation", {"automation": automation_config}
@@ -82,10 +82,8 @@ async def test_update_automation_config(
     )
     await hass.async_block_till_done()
     assert sorted(hass.states.async_entity_ids("automation")) == [
-        "automation.automation_0",
         "automation.automation_1",
     ]
-    assert hass.states.get("automation.automation_0").state == STATE_UNAVAILABLE
     assert hass.states.get("automation.automation_1").state == STATE_ON
 
     assert resp.status == HTTPStatus.OK
@@ -260,10 +258,8 @@ async def test_update_remove_key_automation_config(
     )
     await hass.async_block_till_done()
     assert sorted(hass.states.async_entity_ids("automation")) == [
-        "automation.automation_0",
         "automation.automation_1",
     ]
-    assert hass.states.get("automation.automation_0").state == STATE_UNAVAILABLE
     assert hass.states.get("automation.automation_1").state == STATE_ON
 
     assert resp.status == HTTPStatus.OK
@@ -305,10 +301,8 @@ async def test_bad_formatted_automations(
     )
     await hass.async_block_till_done()
     assert sorted(hass.states.async_entity_ids("automation")) == [
-        "automation.automation_0",
         "automation.automation_1",
     ]
-    assert hass.states.get("automation.automation_0").state == STATE_UNAVAILABLE
     assert hass.states.get("automation.automation_1").state == STATE_ON
 
     assert resp.status == HTTPStatus.OK

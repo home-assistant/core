@@ -609,6 +609,15 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         )
         coro = self._async_run(variables, context)
         if wait:
+            # If we are executing in parallel, we need to copy the script stack so
+            # that if this script is called in parallel, it will not be seen in the
+            # stack of the other parallel calls and hit the disallowed recursion
+            # check as each parallel call would otherwise be appending to the same
+            # stack. We do not wipe the stack in this case because we still want to
+            # be able to detect if there is a disallowed recursion.
+            if script_stack := script_stack_cv.get():
+                script_stack_cv.set(script_stack.copy())
+
             script_result = await coro
             return script_result.service_response if script_result else None
 
@@ -708,7 +717,7 @@ def websocket_config(
 
     if script is None:
         connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Entity not found"
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Entity not found"
         )
         return
 

@@ -277,7 +277,7 @@ async def test_service_update_devices(hass: HomeAssistant, create_hdmi_network) 
 
 
 @pytest.mark.parametrize(
-    ("count", "calls"),
+    ("count", "call_count"),
     [
         (3, 3),
         (1, 1),
@@ -294,7 +294,12 @@ async def test_service_update_devices(hass: HomeAssistant, create_hdmi_network) 
 )
 @pytest.mark.parametrize(("direction", "key"), [("up", 65), ("down", 66)])
 async def test_service_volume_x_times(
-    hass: HomeAssistant, create_hdmi_network, count, calls, direction, key
+    hass: HomeAssistant,
+    create_hdmi_network,
+    count: int,
+    call_count: int,
+    direction,
+    key,
 ) -> None:
     """Test the volume service call with steps."""
     mock_hdmi_network_instance = await create_hdmi_network()
@@ -306,8 +311,8 @@ async def test_service_volume_x_times(
         blocking=True,
     )
 
-    assert mock_hdmi_network_instance.send_command.call_count == calls * 2
-    for i in range(calls):
+    assert mock_hdmi_network_instance.send_command.call_count == call_count * 2
+    for i in range(call_count):
         assert_key_press_release(
             mock_hdmi_network_instance.send_command, i, dst=5, key=key
         )

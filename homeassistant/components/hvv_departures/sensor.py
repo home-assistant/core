@@ -9,7 +9,7 @@ from pygti.exceptions import InvalidAuth
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ID
+from homeassistant.const import ATTR_ID, CONF_OFFSET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -92,7 +92,7 @@ class HVVDepartureSensor(SensorEntity):
     async def async_update(self, **kwargs: Any) -> None:
         """Update the sensor."""
         departure_time = utcnow() + timedelta(
-            minutes=self.config_entry.options.get("offset", 0)
+            minutes=self.config_entry.options.get(CONF_OFFSET, 0)
         )
 
         departure_time_tz_berlin = departure_time.astimezone(BERLIN_TIME_ZONE)
@@ -125,7 +125,7 @@ class HVVDepartureSensor(SensorEntity):
                 _LOGGER.warning("Network unavailable: %r", error)
                 self._last_error = ClientConnectorError
             self._attr_available = False
-        except Exception as error:  # pylint: disable=broad-except
+        except Exception as error:  # noqa: BLE001
             if self._last_error != error:
                 _LOGGER.error("Error occurred while fetching data: %r", error)
                 self._last_error = error

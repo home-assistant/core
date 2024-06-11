@@ -14,6 +14,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from .common import MockUpdateEntity
+
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
@@ -22,7 +24,6 @@ from tests.common import (
     async_mock_service,
     setup_test_component_platform,
 )
-from tests.components.update.common import MockUpdateEntity
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")

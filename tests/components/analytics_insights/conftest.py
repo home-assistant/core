@@ -1,23 +1,23 @@
 """Common fixtures for the Homeassistant Analytics tests."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from python_homeassistant_analytics import CurrentAnalytics
 from python_homeassistant_analytics.models import CustomIntegration, Integration
+from typing_extensions import Generator
 
-from homeassistant.components.analytics_insights import DOMAIN
 from homeassistant.components.analytics_insights.const import (
     CONF_TRACKED_CUSTOM_INTEGRATIONS,
     CONF_TRACKED_INTEGRATIONS,
+    DOMAIN,
 )
 
 from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.analytics_insights.async_setup_entry",
@@ -27,7 +27,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_analytics_client() -> Generator[AsyncMock, None, None]:
+def mock_analytics_client() -> Generator[AsyncMock]:
     """Mock a Homeassistant Analytics client."""
     with (
         patch(

@@ -49,9 +49,8 @@ from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
 
-async def test_bad_credentials(
-    hass: HomeAssistant, current_request_with_host: None
-) -> None:
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_bad_credentials(hass: HomeAssistant) -> None:
     """Test when provided credentials are rejected."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -81,9 +80,8 @@ async def test_bad_credentials(
         assert result["errors"][CONF_TOKEN] == "faulty_credentials"
 
 
-async def test_bad_hostname(
-    hass: HomeAssistant, mock_plex_calls, current_request_with_host: None
-) -> None:
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_bad_hostname(hass: HomeAssistant, mock_plex_calls) -> None:
     """Test when an invalid address is provided."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -114,9 +112,8 @@ async def test_bad_hostname(
         assert result["errors"][CONF_HOST] == "not_found"
 
 
-async def test_unknown_exception(
-    hass: HomeAssistant, current_request_with_host: None
-) -> None:
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_unknown_exception(hass: HomeAssistant) -> None:
     """Test when an unknown exception is encountered."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -142,12 +139,12 @@ async def test_unknown_exception(
         assert result["reason"] == "unknown"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_no_servers_found(
     hass: HomeAssistant,
     mock_plex_calls,
     requests_mock: requests_mock.Mocker,
     empty_payload,
-    current_request_with_host: None,
 ) -> None:
     """Test when no servers are on an account."""
     requests_mock.get("https://plex.tv/api/v2/resources", text=empty_payload)
@@ -176,10 +173,10 @@ async def test_no_servers_found(
         assert result["errors"]["base"] == "no_servers"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_single_available_server(
     hass: HomeAssistant,
     mock_plex_calls,
-    current_request_with_host: None,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test creating an entry with one server available."""
@@ -218,12 +215,12 @@ async def test_single_available_server(
     mock_setup_entry.assert_called_once()
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_multiple_servers_with_selection(
     hass: HomeAssistant,
     mock_plex_calls,
     requests_mock: requests_mock.Mocker,
     plextv_resources_two_servers,
-    current_request_with_host: None,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test creating an entry with multiple servers available."""
@@ -275,12 +272,12 @@ async def test_multiple_servers_with_selection(
     mock_setup_entry.assert_called_once()
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_adding_last_unconfigured_server(
     hass: HomeAssistant,
     mock_plex_calls,
     requests_mock: requests_mock.Mocker,
     plextv_resources_two_servers,
-    current_request_with_host: None,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test automatically adding last unconfigured server when multiple servers on account."""
@@ -332,13 +329,13 @@ async def test_adding_last_unconfigured_server(
     assert mock_setup_entry.call_count == 2
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_all_available_servers_configured(
     hass: HomeAssistant,
     entry,
     requests_mock: requests_mock.Mocker,
     plextv_account,
     plextv_resources_two_servers,
-    current_request_with_host: None,
 ) -> None:
     """Test when all available servers are already configured."""
     entry.add_to_hass(hass)
@@ -479,9 +476,8 @@ async def test_option_flow_new_users_available(
         assert "[New]" in multiselect_defaults[user]
 
 
-async def test_external_timed_out(
-    hass: HomeAssistant, current_request_with_host: None
-) -> None:
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_external_timed_out(hass: HomeAssistant) -> None:
     """Test when external flow times out."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -506,10 +502,10 @@ async def test_external_timed_out(
         assert result["reason"] == "token_request_timeout"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_callback_view(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    current_request_with_host: None,
 ) -> None:
     """Test callback view."""
     result = await hass.config_entries.flow.async_init(
@@ -534,9 +530,8 @@ async def test_callback_view(
         assert resp.status == HTTPStatus.OK
 
 
-async def test_manual_config(
-    hass: HomeAssistant, mock_plex_calls, current_request_with_host: None
-) -> None:
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_manual_config(hass: HomeAssistant, mock_plex_calls) -> None:
     """Test creating via manual configuration."""
 
     class WrongCertValidaitionException(requests.exceptions.SSLError):
@@ -722,7 +717,7 @@ async def test_integration_discovery(hass: HomeAssistant) -> None:
 
     with patch("homeassistant.components.plex.config_flow.GDM", return_value=mock_gdm):
         await config_flow.async_discover(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     flows = hass.config_entries.flow.async_progress()
 
@@ -739,11 +734,11 @@ async def test_integration_discovery(hass: HomeAssistant) -> None:
     assert flow["step_id"] == "user"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     mock_plex_calls: None,
-    current_request_with_host: None,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test setup and reauthorization of a Plex token."""
@@ -783,11 +778,11 @@ async def test_reauth(
     mock_setup_entry.assert_called_once()
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth_multiple_servers_available(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     mock_plex_calls: None,
-    current_request_with_host: None,
     requests_mock: requests_mock.Mocker,
     plextv_resources_two_servers: str,
     mock_setup_entry: AsyncMock,
@@ -853,9 +848,8 @@ async def test_client_request_missing(hass: HomeAssistant) -> None:
         )
 
 
-async def test_client_header_issues(
-    hass: HomeAssistant, current_request_with_host: None
-) -> None:
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_client_header_issues(hass: HomeAssistant) -> None:
     """Test when client headers are not set properly."""
 
     class MockRequest:

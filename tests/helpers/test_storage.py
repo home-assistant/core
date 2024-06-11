@@ -684,7 +684,7 @@ async def test_loading_corrupt_core_file(
         assert data == {"hello": "world"}
 
         def _corrupt_store():
-            with open(store_file, "w") as f:
+            with open(store_file, "w", encoding="utf8") as f:
                 f.write("corrupt")
 
         await hass.async_add_executor_job(_corrupt_store)
@@ -745,7 +745,7 @@ async def test_loading_corrupt_file_known_domain(
         assert data == {"hello": "world"}
 
         def _corrupt_store():
-            with open(store_file, "w") as f:
+            with open(store_file, "w", encoding="utf8") as f:
                 f.write('{"valid":"json"}..with..corrupt')
 
         await hass.async_add_executor_job(_corrupt_store)
@@ -1159,3 +1159,21 @@ async def test_store_manager_cleanup_after_stop(
         assert store_manager.async_fetch("integration1") is None
         assert store_manager.async_fetch("integration2") is None
         await hass.async_stop(force=True)
+
+
+async def test_storage_concurrent_load(hass: HomeAssistant) -> None:
+    """Test that we can load the store concurrently."""
+
+    store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
+
+    async def _load_store():
+        await asyncio.sleep(0)
+        return "data"
+
+    with patch.object(store, "_async_load", side_effect=_load_store):
+        # Test that we can load the store concurrently
+        loads = await asyncio.gather(
+            store.async_load(), store.async_load(), store.async_load()
+        )
+        for load in loads:
+            assert load == "data"

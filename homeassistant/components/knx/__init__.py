@@ -191,17 +191,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 create_knx_exposure(hass, knx_module.xknx, expose_config)
             )
     # always forward sensor for system entities (telegram counter, etc.)
-    await hass.config_entries.async_forward_entry_setup(entry, Platform.SENSOR)
-    await hass.config_entries.async_forward_entry_setups(
-        entry,
-        [
-            platform
-            for platform in SUPPORTED_PLATFORMS
-            if platform in config and platform not in (Platform.SENSOR, Platform.NOTIFY)
-        ],
-    )
+    platforms = {platform for platform in SUPPORTED_PLATFORMS if platform in config}
+    platforms.add(Platform.SENSOR)
+    await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
-    # set up notify platform, no entry support for notify component yet
+    # set up notify service for backwards compatibility - remove 2024.11
     if NotifySchema.PLATFORM in config:
         hass.async_create_task(
             discovery.async_load_platform(
@@ -232,7 +226,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 platform
                 for platform in SUPPORTED_PLATFORMS
                 if platform in hass.data[DATA_KNX_CONFIG]
-                and platform not in (Platform.SENSOR, Platform.NOTIFY)
+                and platform is not Platform.SENSOR
             ],
         ],
     )

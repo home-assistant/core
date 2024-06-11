@@ -84,7 +84,7 @@ class OpenExchangeRatesConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except TimeoutError:
             errors["base"] = "timeout_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:

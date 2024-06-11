@@ -10,7 +10,7 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
-from homeassistant.components.event.const import ATTR_EVENT_TYPE
+from homeassistant.components.event import ATTR_EVENT_TYPE
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -76,7 +76,7 @@ async def test_last_job(
     await notify_and_wait(
         hass,
         event_bus,
-        ReportStatsEvent(0, 1, "spotArea", "3", CleanJobStatus.MANUAL_STOPPED, [1]),
+        ReportStatsEvent(0, 1, "spotArea", "3", CleanJobStatus.MANUALLY_STOPPED, [1]),
     )
 
     assert (state := hass.states.get(state.entity_id))

@@ -688,7 +688,7 @@ async def test_unload_config_entry(
 ) -> None:
     """Test the player is set unavailable when the config entry is unloaded."""
     await setup_platform(hass, config_entry, config)
-    await config_entry.async_unload(hass)
+    await hass.config_entries.async_unload(config_entry.entry_id)
     assert hass.states.get("media_player.test_player").state == STATE_UNAVAILABLE
 
 

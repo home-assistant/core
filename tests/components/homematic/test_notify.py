@@ -14,7 +14,7 @@ async def test_setup_full(hass: HomeAssistant) -> None:
         "homematic",
         {"homematic": {"hosts": {"ccu2": {"host": "127.0.0.1"}}}},
     )
-    with assert_setup_component(1) as handle_config:
+    with assert_setup_component(1, domain="notify") as handle_config:
         assert await async_setup_component(
             hass,
             "notify",
@@ -40,7 +40,7 @@ async def test_setup_without_optional(hass: HomeAssistant) -> None:
         "homematic",
         {"homematic": {"hosts": {"ccu2": {"host": "127.0.0.1"}}}},
     )
-    with assert_setup_component(1) as handle_config:
+    with assert_setup_component(1, domain="notify") as handle_config:
         assert await async_setup_component(
             hass,
             "notify",
@@ -61,6 +61,6 @@ async def test_setup_without_optional(hass: HomeAssistant) -> None:
 async def test_bad_config(hass: HomeAssistant) -> None:
     """Test invalid configuration."""
     config = {notify_comp.DOMAIN: {"name": "test", "platform": "homematic"}}
-    with assert_setup_component(0) as handle_config:
+    with assert_setup_component(0, domain="notify") as handle_config:
         assert await async_setup_component(hass, notify_comp.DOMAIN, config)
     assert not handle_config[notify_comp.DOMAIN]

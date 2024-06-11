@@ -25,7 +25,7 @@ TEST_BAD_SERIALIED = "THIS IS NOT JSON\n"
 def test_load_bad_data(tmp_path: Path) -> None:
     """Test error from trying to load unserializable data."""
     fname = tmp_path / "test5.json"
-    with open(fname, "w") as fh:
+    with open(fname, "w", encoding="utf8") as fh:
         fh.write(TEST_BAD_SERIALIED)
     with pytest.raises(HomeAssistantError, match=re.escape(str(fname))) as err:
         load_json(fname)
@@ -159,7 +159,7 @@ async def test_deprecated_save_json(
     assert "should be updated to use homeassistant.helpers.json module" in caplog.text
 
 
-async def test_loading_derived_class():
+async def test_loading_derived_class() -> None:
     """Test loading data from classes derived from str."""
 
     class MyStr(str):

@@ -57,8 +57,11 @@ def entities_unique_id(entity_registry: er.EntityRegistry) -> dict[str, str]:
     entry_sensor_temperature = entity_registry.async_get_or_create(
         "sensor",
         "test",
-        "unique2",
+        "unique3",
         original_device_class="temperature",
+    )
+    entry_media_player = entity_registry.async_get_or_create(
+        "media_player", "test", "unique4", original_device_class="media_player"
     )
     return {
         "blocked": entry_blocked.entity_id,
@@ -67,6 +70,7 @@ def entities_unique_id(entity_registry: er.EntityRegistry) -> dict[str, str]:
         "door_sensor": entry_binary_sensor_door.entity_id,
         "sensor": entry_sensor.entity_id,
         "temperature_sensor": entry_sensor_temperature.entity_id,
+        "media_player": entry_media_player.entity_id,
     }
 
 
@@ -78,10 +82,12 @@ def entities_no_unique_id(hass: HomeAssistant) -> dict[str, str]:
     door_sensor = "binary_sensor.door"
     sensor = "sensor.test"
     sensor_temperature = "sensor.temperature"
+    media_player = "media_player.test"
     hass.states.async_set(binary_sensor, "on", {})
     hass.states.async_set(door_sensor, "on", {"device_class": "door"})
     hass.states.async_set(sensor, "on", {})
     hass.states.async_set(sensor_temperature, "on", {"device_class": "temperature"})
+    hass.states.async_set(media_player, "idle", {})
     return {
         "blocked": blocked,
         "lock": lock,
@@ -89,6 +95,7 @@ def entities_no_unique_id(hass: HomeAssistant) -> dict[str, str]:
         "door_sensor": door_sensor,
         "sensor": sensor,
         "temperature_sensor": sensor_temperature,
+        "media_player": media_player,
     }
 
 
@@ -409,8 +416,8 @@ async def test_should_expose(
     # Blocked entity is not exposed
     assert async_should_expose(hass, "cloud.alexa", entities["blocked"]) is False
 
-    # Lock is exposed
-    assert async_should_expose(hass, "cloud.alexa", entities["lock"]) is True
+    # Lock is not exposed
+    assert async_should_expose(hass, "cloud.alexa", entities["lock"]) is False
 
     # Binary sensor without device class is not exposed
     assert async_should_expose(hass, "cloud.alexa", entities["binary_sensor"]) is False
@@ -425,6 +432,9 @@ async def test_should_expose(
     assert (
         async_should_expose(hass, "cloud.alexa", entities["temperature_sensor"]) is True
     )
+
+    # Media player is exposed
+    assert async_should_expose(hass, "cloud.alexa", entities["media_player"]) is True
 
     # The second time we check, it should load it from storage
     assert (

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator, Iterable
+from collections.abc import Iterable
 import contextlib
 from enum import Enum
 from pathlib import Path
@@ -10,8 +10,9 @@ import socket
 from typing import Any
 
 from aiohttp import CookieJar
-from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data import (
+from typing_extensions import Generator
+from uiprotect import ProtectApiClient
+from uiprotect.data import (
     Bootstrap,
     CameraChannel,
     Light,
@@ -99,7 +100,7 @@ def async_get_devices_by_type(
 @callback
 def async_get_devices(
     bootstrap: Bootstrap, model_type: Iterable[ModelType]
-) -> Generator[ProtectAdoptableDeviceModel, None, None]:
+) -> Generator[ProtectAdoptableDeviceModel]:
     """Return all device by type."""
     return (
         device

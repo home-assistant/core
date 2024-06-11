@@ -1,0 +1,57 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "description": "Please enter the connection details of your device.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "deep_standby": "Turn off to Deep Standby",
+          "source_bouquet": "Bouquet to use as media source",
+          "use_channel_icon": "Show channel icon as media image"
+        },
+        "data_description": {
+          "deep_standby": "Turn off the device to Deep Standby (shutdown) instead of standby mode."
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_unknown": {
+      "title": "The Enigma2 YAML configuration import failed",
+      "description": "Configuring Enigma2 using YAML is being removed but there was an error importing your YAML configuration.\n\nEnsure connection to the device works, the authentication details are correct and restart Home Assistant to try again or remove the Enigma2 YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    },
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "title": "The Enigma2 YAML configuration import failed",
+      "description": "Configuring Enigma2 using YAML is being removed but there was an error importing your YAML configuration.\n\nEnsure the authentication details are correct and restart Home Assistant to try again or remove the Enigma2 YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    },
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "title": "The Enigma2 YAML configuration import failed",
+      "description": "Configuring Enigma2 using YAML is being removed but there was an error importing your YAML configuration.\n\nEnsure connection to the device works and restart Home Assistant to try again or remove the Enigma2 YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    }
+  }
+}

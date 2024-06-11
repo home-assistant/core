@@ -154,7 +154,7 @@ async def test_qos_encoding_default(
         {"test_topic1": {"topic": "test-topic1", "msg_callback": msg_callback}},
     )
     await async_subscribe_topics(hass, sub_state)
-    mqtt_mock.async_subscribe.assert_called_with("test-topic1", ANY, 0, "utf-8")
+    mqtt_mock.async_subscribe.assert_called_with("test-topic1", ANY, 0, "utf-8", None)
 
 
 async def test_qos_encoding_custom(
@@ -183,7 +183,7 @@ async def test_qos_encoding_custom(
         },
     )
     await async_subscribe_topics(hass, sub_state)
-    mqtt_mock.async_subscribe.assert_called_with("test-topic1", ANY, 1, "utf-16")
+    mqtt_mock.async_subscribe.assert_called_with("test-topic1", ANY, 1, "utf-16", None)
 
 
 async def test_no_change(
