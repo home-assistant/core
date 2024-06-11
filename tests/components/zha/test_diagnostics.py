@@ -12,7 +12,7 @@ from homeassistant.components.zha.core.helpers import get_zha_gateway
 from homeassistant.components.zha.diagnostics import KEYS_TO_REDACT
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import async_get
+from homeassistant.helpers import device_registry as dr
 
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
@@ -104,6 +104,7 @@ async def test_diagnostics_for_config_entry(
 async def test_diagnostics_for_device(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
     zha_device_joined,
     zigpy_device,
@@ -126,8 +127,9 @@ async def test_diagnostics_for_device(
         }
     )
 
-    dev_reg = async_get(hass)
-    device = dev_reg.async_get_device(identifiers={("zha", str(zha_device.ieee))})
+    device = device_registry.async_get_device(
+        identifiers={("zha", str(zha_device.ieee))}
+    )
     assert device
     diagnostics_data = await get_diagnostics_for_device(
         hass, hass_client, config_entry, device

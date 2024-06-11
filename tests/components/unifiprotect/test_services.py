@@ -5,9 +5,9 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from pyunifiprotect.data import Camera, Chime, Color, Light, ModelType
-from pyunifiprotect.data.devices import CameraZone
-from pyunifiprotect.exceptions import BadRequest
+from uiprotect.data import Camera, Chime, Color, Light, ModelType
+from uiprotect.data.devices import CameraZone
+from uiprotect.exceptions import BadRequest
 
 from homeassistant.components.unifiprotect.const import ATTR_MESSAGE, DOMAIN
 from homeassistant.components.unifiprotect.services import (
@@ -233,4 +233,4 @@ async def test_remove_privacy_zone(
         blocking=True,
     )
     ufp.api.update_device.assert_called()
-    assert not len(doorbell.privacy_zones)
+    assert not doorbell.privacy_zones

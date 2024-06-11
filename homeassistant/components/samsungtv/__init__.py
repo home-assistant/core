@@ -297,16 +297,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     if version == 2:
         if minor_version < 2:
             # Cleanup invalid MAC addresses - see #103512
-            dev_reg = dr.async_get(hass)
-            for device in dr.async_entries_for_config_entry(
-                dev_reg, config_entry.entry_id
-            ):
-                new_connections = device.connections.copy()
-                new_connections.discard((dr.CONNECTION_NETWORK_MAC, "none"))
-                if new_connections != device.connections:
-                    dev_reg.async_update_device(
-                        device.id, new_connections=new_connections
-                    )
+            # Reverted due to device registry collisions - see #119082 / #119249
 
             minor_version = 2
             hass.config_entries.async_update_entry(config_entry, minor_version=2)

@@ -1,6 +1,6 @@
 """Constant definitions for UniFi Protect Integration."""
 
-from pyunifiprotect.data import ModelType, Version
+from uiprotect.data import ModelType, Version
 
 from homeassistant.const import Platform
 
