@@ -115,6 +115,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ):
         return False
 
+    await broker.authenticate_v1()
+
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN]["broker"] = broker
 

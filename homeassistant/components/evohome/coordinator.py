@@ -120,13 +120,26 @@ class EvoBroker:
         Sets self._tokens and self._session_id to the latest values.
 
             app_storage = None -> {}
-            app_storage = {}   -> {}
+
+            app_storage = {}
+
             app_storage = {
-                'username':             'spotty.blackcat@gmail.com',
+                'username':             'username@email.com',
                 'refresh_token':        'PlsqGsCd72_0BWl...',
                 'access_token':         'W5y0jpNTKIqTmbA...',
                 'access_token_expires': '2024-06-10T21:06:09+00:00'
             }
+
+            app_storage = {
+                "username":             "username@email.com",
+                "refresh_token":        "jg68ZCKYdxEI3fF...",
+                "access_token":         "1dc7z657UKzbhKA...",
+                "access_token_expires": "2024-06-10T22:05:54+00:00",
+                "user_data": {
+                    "sessionId": "F7181186..."
+                },
+            }
+
         """
 
         app_storage: dict[str, Any] = dict(await self._store.async_load() or {})
@@ -248,10 +261,6 @@ class EvoBroker:
         """Get the latest high-precision temperatures of the default Location."""
 
         assert self.client_v1 is not None  # mypy check
-
-        def get_session_id(client_v1: ev1.EvohomeClient) -> str | None:
-            user_data = client_v1.user_data if client_v1 else None
-            return user_data.get(SZ_SESSION_ID) if user_data else None  # type: ignore[return-value]
 
         old_session_id = self._session_id
 
