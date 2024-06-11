@@ -191,9 +191,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 create_knx_exposure(hass, knx_module.xknx, expose_config)
             )
     # always forward sensor for system entities (telegram counter, etc.)
-    platforms = {platform for platform in SUPPORTED_PLATFORMS if platform in config}
-    platforms.add(Platform.SENSOR)
-    await hass.config_entries.async_forward_entry_setups(entry, platforms)
+    await hass.config_entries.async_forward_entry_setup(entry, Platform.SENSOR)
+    await hass.config_entries.async_forward_entry_setups(
+        entry,
+        [
+            platform
+            for platform in SUPPORTED_PLATFORMS
+            if platform in config and platform is not Platform.SENSOR
+        ],
+    )
 
     # set up notify service for backwards compatibility - remove 2024.11
     if NotifySchema.PLATFORM in config:

@@ -141,8 +141,6 @@ async def test_gateway_setup(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Successful setup."""
-    # Patching async_forward_entry_setup* is not advisable, and should be refactored
-    # in the future.
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
         return_value=True,
@@ -192,10 +190,8 @@ async def test_gateway_device_configuration_url_when_addon(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Successful setup."""
-    # Patching async_forward_entry_setup* is not advisable, and should be refactored
-    # in the future.
     with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
+        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup",
         return_value=True,
     ):
         config_entry = await setup_deconz_integration(

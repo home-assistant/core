@@ -88,8 +88,7 @@ async def test_hap_setup_works(hass: HomeAssistant) -> None:
     home = Mock()
     hap = HomematicipHAP(hass, entry)
     with patch.object(hap, "get_hap", return_value=home):
-        async with entry.setup_lock:
-            assert await hap.async_setup()
+        assert await hap.async_setup()
 
     assert hap.home is home
 
@@ -97,17 +96,14 @@ async def test_hap_setup_works(hass: HomeAssistant) -> None:
 async def test_hap_setup_connection_error() -> None:
     """Test a failed accesspoint setup."""
     hass = Mock()
-    entry = MockConfigEntry(
-        domain=HMIPC_DOMAIN,
-        data={HMIPC_HAPID: "ABC123", HMIPC_AUTHTOKEN: "123", HMIPC_NAME: "hmip"},
-    )
+    entry = Mock()
+    entry.data = {HMIPC_HAPID: "ABC123", HMIPC_AUTHTOKEN: "123", HMIPC_NAME: "hmip"}
     hap = HomematicipHAP(hass, entry)
     with (
         patch.object(hap, "get_hap", side_effect=HmipcConnectionError),
         pytest.raises(ConfigEntryNotReady),
     ):
-        async with entry.setup_lock:
-            assert not await hap.async_setup()
+        assert not await hap.async_setup()
 
     assert not hass.async_run_hass_job.mock_calls
     assert not hass.config_entries.flow.async_init.mock_calls
@@ -136,8 +132,7 @@ async def test_hap_create(
     hap = HomematicipHAP(hass, hmip_config_entry)
     assert hap
     with patch.object(hap, "async_connect"):
-        async with hmip_config_entry.setup_lock:
-            assert await hap.async_setup()
+        assert await hap.async_setup()
 
 
 async def test_hap_create_exception(

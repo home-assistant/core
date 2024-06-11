@@ -47,10 +47,7 @@ def platforms_from_config(config: list[ConfigType]) -> set[Platform | str]:
 
 
 async def async_forward_entry_setup_and_setup_discovery(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    platforms: set[Platform | str],
-    late: bool = False,
+    hass: HomeAssistant, config_entry: ConfigEntry, platforms: set[Platform | str]
 ) -> None:
     """Forward the config entry setup to the platforms and set up discovery."""
     mqtt_data = hass.data[DATA_MQTT]
@@ -72,11 +69,13 @@ async def async_forward_entry_setup_and_setup_discovery(
 
         tasks.append(create_eager_task(tag.async_setup_entry(hass, config_entry)))
     if new_entity_platforms := (new_platforms - {"tag", "device_automation"}):
-        if late:
-            coro = hass.config_entries.async_late_forward_entry_setups
-        else:
-            coro = hass.config_entries.async_forward_entry_setups
-        tasks.append(create_eager_task(coro(config_entry, new_entity_platforms)))
+        tasks.append(
+            create_eager_task(
+                hass.config_entries.async_forward_entry_setups(
+                    config_entry, new_entity_platforms
+                )
+            )
+        )
     if not tasks:
         return
     await asyncio.gather(*tasks)
