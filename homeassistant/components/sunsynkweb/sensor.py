@@ -141,16 +141,6 @@ class SunSynkApiSensor(CoordinatorEntity[SunsynkUpdateCoordinator], SensorEntity
 
     _attr_has_entity_name = True
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Publish a device info."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, str(sum(plant.id for plant in self.coordinator.cache.plants))),
-            },
-            name="sunsynk_installation",
-        )
-
     def __init__(
         self, coordinator, description: SunsynkEntitySensorDescription
     ) -> None:
@@ -163,6 +153,13 @@ class SunSynkApiSensor(CoordinatorEntity[SunsynkUpdateCoordinator], SensorEntity
         self.entity_id = f"sensor.sunsynk_{description.key}"
 
         self.entity_description: SunsynkEntitySensorDescription = description
+        self._attr_device_info = DeviceInfo(
+            identifiers={
+                (DOMAIN, str(sum(plant.id for plant in self.coordinator.cache.plants))),
+            },
+            name="sunsynk_installation",
+            manufacturer="Sunsynk",
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
