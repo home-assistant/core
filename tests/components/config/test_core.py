@@ -165,6 +165,8 @@ async def test_websocket_core_update(hass: HomeAssistant, client) -> None:
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
     assert hass.config.currency == "USD"
+    assert hass.config.country == "SE"
+    assert hass.config.language == "sv"
 
     assert len(mock_set_tz.mock_calls) == 1
     assert mock_set_tz.mock_calls[0][1][0] == dt_util.get_time_zone("America/New_York")
