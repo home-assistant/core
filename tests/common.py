@@ -1432,7 +1432,10 @@ def mock_config_flow(domain: str, config_flow: type[ConfigFlow]) -> None:
 
 
 def mock_integration(
-    hass: HomeAssistant, module: MockModule, built_in: bool = True
+    hass: HomeAssistant,
+    module: MockModule,
+    built_in: bool = True,
+    top_level_files: set[str] | None = None,
 ) -> loader.Integration:
     """Mock an integration."""
     integration = loader.Integration(
@@ -1442,7 +1445,7 @@ def mock_integration(
         else f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{module.DOMAIN}",
         pathlib.Path(""),
         module.mock_manifest(),
-        set(),
+        top_level_files,
     )
 
     def mock_import_platform(platform_name: str) -> NoReturn:
