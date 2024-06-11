@@ -36,10 +36,9 @@ class SunsynkConfigFlow(BaseConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
-        session = async_get_clientsession(self.hass)
         if user_input is not None:
             swebsession = SunsynkwebSession(
-                session, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                async_get_clientsession(self.hass), user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
             )
             try:
                 await swebsession.get(BASE_API)
