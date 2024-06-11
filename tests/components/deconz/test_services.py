@@ -22,7 +22,6 @@ from homeassistant.components.deconz.services import (
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 
 from .test_gateway import (
     BRIDGEID,
@@ -368,7 +367,7 @@ async def test_remove_orphaned_entries_service(
     )
 
     assert (
-        len(async_entries_for_config_entry(entity_registry, config_entry.entry_id))
+        len(er.async_entries_for_config_entry(entity_registry, config_entry.entry_id))
         == 3  # Light, switch battery and orphan
     )
 
@@ -391,6 +390,6 @@ async def test_remove_orphaned_entries_service(
     )
 
     assert (
-        len(async_entries_for_config_entry(entity_registry, config_entry.entry_id))
+        len(er.async_entries_for_config_entry(entity_registry, config_entry.entry_id))
         == 2  # Light and switch battery
     )

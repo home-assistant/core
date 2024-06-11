@@ -11,6 +11,33 @@ from decimal import Decimal
 from itertools import chain, repeat
 from unittest.mock import DEFAULT, MagicMock
 
+from dsmr_parser.obis_references import (
+    BELGIUM_CURRENT_AVERAGE_DEMAND,
+    BELGIUM_MAXIMUM_DEMAND_MONTH,
+    BELGIUM_MBUS1_DEVICE_TYPE,
+    BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
+    BELGIUM_MBUS1_METER_READING1,
+    BELGIUM_MBUS1_METER_READING2,
+    BELGIUM_MBUS2_DEVICE_TYPE,
+    BELGIUM_MBUS2_EQUIPMENT_IDENTIFIER,
+    BELGIUM_MBUS2_METER_READING1,
+    BELGIUM_MBUS2_METER_READING2,
+    BELGIUM_MBUS3_DEVICE_TYPE,
+    BELGIUM_MBUS3_EQUIPMENT_IDENTIFIER,
+    BELGIUM_MBUS3_METER_READING1,
+    BELGIUM_MBUS3_METER_READING2,
+    BELGIUM_MBUS4_DEVICE_TYPE,
+    BELGIUM_MBUS4_EQUIPMENT_IDENTIFIER,
+    BELGIUM_MBUS4_METER_READING1,
+    BELGIUM_MBUS4_METER_READING2,
+    CURRENT_ELECTRICITY_USAGE,
+    ELECTRICITY_ACTIVE_TARIFF,
+    ELECTRICITY_EXPORTED_TOTAL,
+    ELECTRICITY_IMPORTED_TOTAL,
+    GAS_METER_READING,
+    HOURLY_GAS_METER_READING,
+)
+from dsmr_parser.objects import CosemObject, MBusObject
 import pytest
 
 from homeassistant.components.sensor import (
@@ -40,13 +67,6 @@ async def test_default_setup(
 ) -> None:
     """Test the default setup."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
-
-    from dsmr_parser.obis_references import (
-        CURRENT_ELECTRICITY_USAGE,
-        ELECTRICITY_ACTIVE_TARIFF,
-        GAS_METER_READING,
-    )
-    from dsmr_parser.objects import CosemObject, MBusObject
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -176,12 +196,6 @@ async def test_setup_only_energy(
     """Test the default setup."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
-    from dsmr_parser.obis_references import (
-        CURRENT_ELECTRICITY_USAGE,
-        ELECTRICITY_ACTIVE_TARIFF,
-    )
-    from dsmr_parser.objects import CosemObject
-
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
@@ -229,12 +243,6 @@ async def test_setup_only_energy(
 async def test_v4_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test if v4 meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
-
-    from dsmr_parser.obis_references import (
-        ELECTRICITY_ACTIVE_TARIFF,
-        HOURLY_GAS_METER_READING,
-    )
-    from dsmr_parser.objects import CosemObject, MBusObject
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -316,12 +324,6 @@ async def test_v5_meter(
     """Test if v5 meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
-    from dsmr_parser.obis_references import (
-        ELECTRICITY_ACTIVE_TARIFF,
-        HOURLY_GAS_METER_READING,
-    )
-    from dsmr_parser.objects import CosemObject, MBusObject
-
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "5",
@@ -387,13 +389,6 @@ async def test_v5_meter(
 async def test_luxembourg_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test if v5 meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
-
-    from dsmr_parser.obis_references import (
-        ELECTRICITY_EXPORTED_TOTAL,
-        ELECTRICITY_IMPORTED_TOTAL,
-        HOURLY_GAS_METER_READING,
-    )
-    from dsmr_parser.objects import CosemObject, MBusObject
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -476,25 +471,6 @@ async def test_luxembourg_meter(hass: HomeAssistant, dsmr_connection_fixture) ->
 async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test if Belgian meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
-
-    from dsmr_parser.obis_references import (
-        BELGIUM_CURRENT_AVERAGE_DEMAND,
-        BELGIUM_MAXIMUM_DEMAND_MONTH,
-        BELGIUM_MBUS1_DEVICE_TYPE,
-        BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS1_METER_READING2,
-        BELGIUM_MBUS2_DEVICE_TYPE,
-        BELGIUM_MBUS2_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS2_METER_READING1,
-        BELGIUM_MBUS3_DEVICE_TYPE,
-        BELGIUM_MBUS3_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS3_METER_READING2,
-        BELGIUM_MBUS4_DEVICE_TYPE,
-        BELGIUM_MBUS4_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS4_METER_READING1,
-        ELECTRICITY_ACTIVE_TARIFF,
-    )
-    from dsmr_parser.objects import CosemObject, MBusObject
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -679,22 +655,6 @@ async def test_belgian_meter_alt(hass: HomeAssistant, dsmr_connection_fixture) -
     """Test if Belgian meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
-    from dsmr_parser.obis_references import (
-        BELGIUM_MBUS1_DEVICE_TYPE,
-        BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS1_METER_READING1,
-        BELGIUM_MBUS2_DEVICE_TYPE,
-        BELGIUM_MBUS2_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS2_METER_READING2,
-        BELGIUM_MBUS3_DEVICE_TYPE,
-        BELGIUM_MBUS3_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS3_METER_READING1,
-        BELGIUM_MBUS4_DEVICE_TYPE,
-        BELGIUM_MBUS4_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS4_METER_READING2,
-    )
-    from dsmr_parser.objects import CosemObject, MBusObject
-
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "5B",
@@ -842,20 +802,6 @@ async def test_belgian_meter_mbus(hass: HomeAssistant, dsmr_connection_fixture) 
     """Test if Belgian meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
-    from dsmr_parser.obis_references import (
-        BELGIUM_MBUS1_DEVICE_TYPE,
-        BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS2_DEVICE_TYPE,
-        BELGIUM_MBUS2_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS3_DEVICE_TYPE,
-        BELGIUM_MBUS3_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS3_METER_READING2,
-        BELGIUM_MBUS4_DEVICE_TYPE,
-        BELGIUM_MBUS4_METER_READING1,
-        ELECTRICITY_ACTIVE_TARIFF,
-    )
-    from dsmr_parser.objects import CosemObject, MBusObject
-
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "5B",
@@ -963,9 +909,6 @@ async def test_belgian_meter_low(hass: HomeAssistant, dsmr_connection_fixture) -
     """Test if Belgian meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
-    from dsmr_parser.obis_references import ELECTRICITY_ACTIVE_TARIFF
-    from dsmr_parser.objects import CosemObject
-
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "5B",
@@ -1011,12 +954,6 @@ async def test_belgian_meter_low(hass: HomeAssistant, dsmr_connection_fixture) -
 async def test_swedish_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test if v5 meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
-
-    from dsmr_parser.obis_references import (
-        ELECTRICITY_EXPORTED_TOTAL,
-        ELECTRICITY_IMPORTED_TOTAL,
-    )
-    from dsmr_parser.objects import CosemObject
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -1083,12 +1020,6 @@ async def test_swedish_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
 async def test_easymeter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test if Q3D meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
-
-    from dsmr_parser.obis_references import (
-        ELECTRICITY_EXPORTED_TOTAL,
-        ELECTRICITY_IMPORTED_TOTAL,
-    )
-    from dsmr_parser.objects import CosemObject
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -1248,11 +1179,6 @@ async def test_connection_errors_retry(
 @patch("homeassistant.components.dsmr.sensor.DEFAULT_RECONNECT_INTERVAL", 0)
 async def test_reconnect(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """If transport disconnects, the connection should be retried."""
-    from dsmr_parser.obis_references import (
-        CURRENT_ELECTRICITY_USAGE,
-        ELECTRICITY_ACTIVE_TARIFF,
-    )
-    from dsmr_parser.objects import CosemObject
 
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -1333,9 +1259,6 @@ async def test_gas_meter_providing_energy_reading(
 ) -> None:
     """Test that gas providing energy readings use the correct device class."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
-
-    from dsmr_parser.obis_references import GAS_METER_READING
-    from dsmr_parser.objects import MBusObject
 
     entry_data = {
         "port": "/dev/ttyUSB0",

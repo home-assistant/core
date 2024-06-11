@@ -36,7 +36,14 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import (
@@ -45,6 +52,7 @@ from homeassistant.helpers.entity import (
     get_unit_of_measurement,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
@@ -329,6 +337,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         self._native_unit_of_measurement = unit_of_measurement
         self._valid_units: set[str | None] = set()
         self._can_convert: bool = False
+        self.calculate_attributes_later: CALLBACK_TYPE | None = None
         self._attr_name = name
         if name == DEFAULT_NAME:
             self._attr_name = f"{DEFAULT_NAME} {sensor_type}".capitalize()
@@ -345,13 +354,32 @@ class SensorGroup(GroupEntity, SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """When added to hass."""
+        for entity_id in self._entity_ids:
+            if self.hass.states.get(entity_id) is None:
+                self.calculate_attributes_later = async_track_state_change_event(
+                    self.hass, self._entity_ids, self.calculate_state_attributes
+                )
+                break
+        if not self.calculate_attributes_later:
+            await self.calculate_state_attributes()
+        await super().async_added_to_hass()
+
+    async def calculate_state_attributes(
+        self, event: Event[EventStateChangedData] | None = None
+    ) -> None:
+        """Calculate state attributes."""
+        for entity_id in self._entity_ids:
+            if self.hass.states.get(entity_id) is None:
+                return
+        if self.calculate_attributes_later:
+            self.calculate_attributes_later()
+            self.calculate_attributes_later = None
         self._attr_state_class = self._calculate_state_class(self._state_class)
         self._attr_device_class = self._calculate_device_class(self._device_class)
         self._attr_native_unit_of_measurement = self._calculate_unit_of_measurement(
             self._native_unit_of_measurement
         )
         self._valid_units = self._get_valid_units()
-        await super().async_added_to_hass()
 
     @callback
     def async_update_group_state(self) -> None:

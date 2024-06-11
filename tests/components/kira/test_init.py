@@ -79,7 +79,7 @@ async def test_kira_creates_codes(work_dir) -> None:
 async def test_load_codes(work_dir) -> None:
     """Kira should ignore invalid codes."""
     code_path = os.path.join(work_dir, "codes.yaml")
-    with open(code_path, "w") as code_file:
+    with open(code_path, "w", encoding="utf8") as code_file:
         code_file.write(KIRA_CODES)
     res = kira.load_codes(code_path)
     assert len(res) == 1, "Expected exactly 1 valid Kira code"

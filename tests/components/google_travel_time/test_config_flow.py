@@ -88,7 +88,7 @@ async def test_minimum_fields(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
     await assert_common_create_steps(hass, result)
 
@@ -100,7 +100,7 @@ async def test_invalid_config_entry(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result["errors"] is None
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         MOCK_CONFIG,
@@ -118,7 +118,7 @@ async def test_invalid_api_key(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result["errors"] is None
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         MOCK_CONFIG,
@@ -136,7 +136,7 @@ async def test_transport_error(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result["errors"] is None
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         MOCK_CONFIG,
@@ -154,7 +154,7 @@ async def test_timeout(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result["errors"] is None
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         MOCK_CONFIG,
@@ -171,7 +171,7 @@ async def test_malformed_api_key(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result["errors"] is None
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         MOCK_CONFIG,
@@ -234,7 +234,7 @@ async def test_reconfigure_invalid_config_entry(
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result["errors"] is None
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         RECONFIGURE_CONFIG,
@@ -269,7 +269,7 @@ async def test_reconfigure_invalid_api_key(hass: HomeAssistant, mock_config) -> 
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result["errors"] is None
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         RECONFIGURE_CONFIG,
@@ -303,7 +303,7 @@ async def test_reconfigure_transport_error(hass: HomeAssistant, mock_config) -> 
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result["errors"] is None
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         RECONFIGURE_CONFIG,
@@ -337,7 +337,7 @@ async def test_reconfigure_timeout(hass: HomeAssistant, mock_config) -> None:
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result["errors"] is None
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         RECONFIGURE_CONFIG,
@@ -615,7 +615,7 @@ async def test_dupe(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -633,7 +633,7 @@ async def test_dupe(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
