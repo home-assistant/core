@@ -15,8 +15,10 @@ from kasa import (
     KasaException,
     TimeoutError,
 )
+from kasa.iot import IotDevice
 
 from homeassistant.components.light import LightEntity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -117,7 +119,10 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         registry_device = device
         name = device.alias
         if parent and parent.device_type != Device.Type.Hub:
-            if not feature or feature.category == Feature.Category.Primary:
+            # Check for SensorEntity can be removed when sensor features are implemented
+            if not isinstance(self, SensorEntity) and (
+                not feature or feature.category == Feature.Category.Primary
+            ):
                 # Entity will be added to parent if not a hub and no feature parameter
                 # (i.e. core platform like Light, Fan) or feature is primary like state
                 registry_device = parent
@@ -165,7 +170,9 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         if isinstance(self, LightEntity):
             unique_id = device.mac.replace(":", "").upper()
             # For backwards compat with pyHS100
-            if device.device_type == DeviceType.Dimmer:
+            if device.device_type is DeviceType.Dimmer and isinstance(
+                device, IotDevice
+            ):
                 # Dimmers used to use the switch format since
                 # pyHS100 treated them as SmartPlug but the old code
                 # created them as lights
@@ -200,8 +207,12 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         raise NotImplementedError
 
     @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _async_call_update_attrs(self) -> None:
+        """Call update_attrs and make entity unavailable on error.
+
+        update_attrs can sometimes fail if a device firmware update breaks the
+        downstream library.
+        """
         try:
             self._async_update_attrs()
         except Exception as ex:  # noqa: BLE001
@@ -209,13 +220,23 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
                 _LOGGER.warning(
                     "Unable to read data for %s %s: %s",
                     self._device,
-                    self.entity_description,
+                    self.entity_id,
                     ex,
                 )
             self._attr_available = False
+        else:
+            self._attr_available = True
 
-        self._attr_available = True
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._async_call_update_attrs()
         super()._handle_coordinator_update()
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.last_update_success and self._attr_available
 
 
 def _entities_for_device[_E: CoordinatedTPLinkEntity](

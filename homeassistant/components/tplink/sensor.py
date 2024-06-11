@@ -137,9 +137,12 @@ async def async_setup_entry(
     if parent.children:
         # Historically we only add the children if the device is a strip
         for idx, child in enumerate(parent.children):
-            entities.extend(
-                _async_sensors_for_device(child, children_coordinators[idx], parent)
-            )
+            # Only iot strips have child coordinators
+            if children_coordinators:
+                coordinator = children_coordinators[idx]
+            else:
+                coordinator = parent_coordinator
+            entities.extend(_async_sensors_for_device(child, coordinator, parent))
     else:
         entities.extend(_async_sensors_for_device(parent, parent_coordinator))
 
@@ -169,7 +172,7 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
             else:
                 assert description.device_class
                 self._attr_translation_key = f"{description.device_class.value}_child"
-        self._async_update_attrs()
+        self._async_call_update_attrs()
 
     @callback
     def _async_update_attrs(self) -> None:
@@ -177,9 +180,3 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
         self._attr_native_value = async_emeter_from_device(
             self._device, self.entity_description
         )
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._async_update_attrs()
-        super()._handle_coordinator_update()

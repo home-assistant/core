@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from kasa import AuthenticationError, Device, KasaException, Module, TimeoutError
+from kasa.iot import IotStrip
 import pytest
 
 from homeassistant.components import tplink
@@ -24,6 +25,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, slugify
 
 from . import (
+    DEVICE_ID,
     MAC_ADDRESS,
     _mocked_device,
     _mocked_strip_children,
@@ -128,7 +130,7 @@ async def test_plug_unique_id(
         await hass.async_block_till_done()
 
     entity_id = "switch.my_plug"
-    assert entity_registry.async_get(entity_id).unique_id == "aa:bb:cc:dd:ee:ff"
+    assert entity_registry.async_get(entity_id).unique_id == DEVICE_ID
 
 
 async def test_plug_update_fails(hass: HomeAssistant) -> None:
@@ -163,6 +165,7 @@ async def test_strip(hass: HomeAssistant) -> None:
         alias="my_strip",
         children=_mocked_strip_children(features=["state"]),
         features=["state", "led"],
+        spec=IotStrip,
     )
     strip.children[0].features["state"].value = True
     strip.children[1].features["state"].value = False
