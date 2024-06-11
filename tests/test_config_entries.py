@@ -35,6 +35,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
+from homeassistant.util.async_ import create_eager_task
 import homeassistant.util.dt as dt_util
 
 from .common import (
@@ -5611,6 +5612,8 @@ async def test_non_awaited_async_forward_entry_setups(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test async_forward_entry_setups not being awaited."""
+    forward_event = asyncio.Event()
+    task: asyncio.Task | None = None
 
     async def mock_setup_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
@@ -5618,7 +5621,8 @@ async def test_non_awaited_async_forward_entry_setups(
         """Mock setting up entry."""
         # Call async_forward_entry_setups without awaiting it
         # This is not allowed and will raise a warning
-        hass.async_create_task(
+        nonlocal task
+        task = create_eager_task(
             hass.config_entries.async_forward_entry_setups(entry, ["light"])
         )
         return True
@@ -5639,7 +5643,7 @@ async def test_non_awaited_async_forward_entry_setups(
         async_add_entities: AddEntitiesCallback,
     ) -> None:
         """Mock setting up platform."""
-        await asyncio.sleep(0)
+        await forward_event.wait()
 
     mock_integration(
         hass,
@@ -5661,6 +5665,9 @@ async def test_non_awaited_async_forward_entry_setups(
     # Setup entry
     await manager.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+    forward_event.set()
+    await hass.async_block_till_done()
+    await task
 
     assert (
         "Detected code that calls async_forward_entry_setups for integration "
@@ -5677,14 +5684,17 @@ async def test_non_awaited_async_forward_entry_setup(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test async_forward_entry_setup not being awaited."""
+    forward_event = asyncio.Event()
+    task: asyncio.Task | None = None
 
     async def mock_setup_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
     ) -> bool:
         """Mock setting up entry."""
-        # Call async_forward_entry_setups without awaiting it
+        # Call async_forward_entry_setup without awaiting it
         # This is not allowed and will raise a warning
-        hass.async_create_task(
+        nonlocal task
+        task = create_eager_task(
             hass.config_entries.async_forward_entry_setup(entry, "light")
         )
         return True
@@ -5705,7 +5715,7 @@ async def test_non_awaited_async_forward_entry_setup(
         async_add_entities: AddEntitiesCallback,
     ) -> None:
         """Mock setting up platform."""
-        await asyncio.sleep(0)
+        await forward_event.wait()
 
     mock_integration(
         hass,
@@ -5727,6 +5737,9 @@ async def test_non_awaited_async_forward_entry_setup(
     # Setup entry
     await manager.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+    forward_event.set()
+    await hass.async_block_till_done()
+    await task
 
     assert (
         "Detected code that calls async_forward_entry_setup for integration "
