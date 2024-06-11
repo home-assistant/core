@@ -119,13 +119,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 serial_number=str(site_id),
             )
 
-            device_registry.async_get_or_create(
-                config_entry_id=entry.entry_id, **device
-            )
-
-            # Create the energy site device regardless of direct entities
-            # so it can be used for custom service calls
-
             energysites.append(
                 TeslemetryEnergyData(
                     api=api,
@@ -163,6 +156,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 models.add(battery["part_name"])
         if models:
             energysite.device["model"] = ", ".join(sorted(models))
+
+        # Create the energy site device regardless of direct entities so it can be used for custom service calls
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id, **energysite.device
+        )
 
     # Setup Platforms
     entry.runtime_data = TeslemetryData(vehicles, energysites, scopes)

@@ -473,6 +473,15 @@
     },
     "invalid_cop_temp": {
       "message": "Cabin overheat protection does not support that temperature"
+    },
+    "set_scheduled_charging_time": {
+      "message": "Time required to complete the operation"
+    },
+    "set_scheduled_departure_preconditioning": {
+      "message": "Departure time required to enable preconditioning"
+    },
+    "set_scheduled_departure_off_peak": {
+      "message": "End off peak time required to enable off peak charging"
     }
   },
   "services": {

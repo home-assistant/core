@@ -30,8 +30,8 @@ ATTR_ENABLE = "enable"
 ATTR_TIME = "time"
 ATTR_PIN = "pin"
 ATTR_TOU_SETTINGS = "tou_settings"
-ATTR_PRECODITIONING_ENABLED = "preconditioning_enabled"
-ATTR_PRECODITIONING_WEEKDAYS = "preconditioning_weekdays_only"
+ATTR_PRECONDITIONING_ENABLED = "preconditioning_enabled"
+ATTR_PRECONDITIONING_WEEKDAYS = "preconditioning_weekdays_only"
 ATTR_DEPARTURE_TIME = "departure_time"
 ATTR_OFF_PEAK_CHARGING_ENABLED = "off_peak_charging_enabled"
 ATTR_OFF_PEAK_CHARGING_WEEKDAYS = "off_peak_charging_weekdays_only"
@@ -133,14 +133,15 @@ def async_register_services(hass: HomeAssistant) -> None:  # noqa: C901
         config = async_get_config_for_device(hass, device)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
+        time: int | None = None
         # Convert time to minutes since minute
         if "time" in call.data:
             (hours, minutes, *seconds) = call.data["time"].split(":")
             time = int(hours) * 60 + int(minutes)
         elif call.data["enable"]:
-            raise ServiceValidationError("Time required to enable scheduled charging")
-        else:
-            time = None
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="set_scheduled_charging_time"
+            )
 
         await wake_up_vehicle(vehicle)
         await handle_vehicle_command(
@@ -169,34 +170,35 @@ def async_register_services(hass: HomeAssistant) -> None:  # noqa: C901
         enable = call.data.get("enable", True)
 
         # Preconditioning
-        preconditioning_enabled = call.data.get("preconditioning_enabled", False)
+        preconditioning_enabled = call.data.get(ATTR_PRECONDITIONING_ENABLED, False)
         preconditioning_weekdays_only = call.data.get(
-            "preconditioning_weekdays_only", False
+            ATTR_PRECONDITIONING_WEEKDAYS, False
         )
-        if "departure_time" in call.data:
-            (hours, minutes, *seconds) = call.data["departure_time"].split(":")
+        departure_time: int | None = None
+        if ATTR_DEPARTURE_TIME in call.data:
+            (hours, minutes, *seconds) = call.data[ATTR_DEPARTURE_TIME].split(":")
             departure_time = int(hours) * 60 + int(minutes)
         elif preconditioning_enabled:
             raise ServiceValidationError(
-                "Departure time required to enable preconditioning"
+                translation_domain=DOMAIN,
+                translation_key="set_scheduled_departure_preconditioning",
             )
-        else:
-            departure_time = 0
 
         # Off peak charging
-        off_peak_charging_enabled = call.data.get("off_peak_charging_enabled", False)
+        off_peak_charging_enabled = call.data.get(ATTR_OFF_PEAK_CHARGING_ENABLED, False)
         off_peak_charging_weekdays_only = call.data.get(
-            "off_peak_charging_weekdays_only", False
+            ATTR_OFF_PEAK_CHARGING_WEEKDAYS, False
         )
-        if "end_off_peak_time" in call.data:
-            (hours, minutes, *seconds) = call.data["end_off_peak_time"].split(":")
+        end_off_peak_time: int | None = None
+
+        if ATTR_END_OFF_PEAK_TIME in call.data:
+            (hours, minutes, *seconds) = call.data[ATTR_END_OFF_PEAK_TIME].split(":")
             end_off_peak_time = int(hours) * 60 + int(minutes)
         elif off_peak_charging_enabled:
             raise ServiceValidationError(
-                "End off peak time required to enable off peak charging"
+                translation_domain=DOMAIN,
+                translation_key="set_scheduled_departure_off_peak",
             )
-        else:
-            end_off_peak_time = 0
 
         await wake_up_vehicle(vehicle)
         await handle_vehicle_command(
@@ -219,8 +221,8 @@ def async_register_services(hass: HomeAssistant) -> None:  # noqa: C901
             {
                 vol.Required(CONF_DEVICE_ID): cv.string,
                 vol.Optional(ATTR_ENABLE): bool,
-                vol.Optional(ATTR_PRECODITIONING_ENABLED): bool,
-                vol.Optional(ATTR_PRECODITIONING_WEEKDAYS): bool,
+                vol.Optional(ATTR_PRECONDITIONING_ENABLED): bool,
+                vol.Optional(ATTR_PRECONDITIONING_WEEKDAYS): bool,
                 vol.Optional(ATTR_DEPARTURE_TIME): str,
                 vol.Optional(ATTR_OFF_PEAK_CHARGING_ENABLED): bool,
                 vol.Optional(ATTR_OFF_PEAK_CHARGING_WEEKDAYS): bool,

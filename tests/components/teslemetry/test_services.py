@@ -14,8 +14,8 @@ from homeassistant.components.teslemetry.services import (
     ATTR_OFF_PEAK_CHARGING_ENABLED,
     ATTR_OFF_PEAK_CHARGING_WEEKDAYS,
     ATTR_PIN,
-    ATTR_PRECODITIONING_ENABLED,
-    ATTR_PRECODITIONING_WEEKDAYS,
+    ATTR_PRECONDITIONING_ENABLED,
+    ATTR_PRECONDITIONING_WEEKDAYS,
     ATTR_TIME,
     ATTR_TOU_SETTINGS,
     SERVICE_NAVIGATE_ATTR_GPS_REQUEST,
@@ -32,7 +32,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from . import setup_platform
-from .const import COMMAND_OK
+from .const import COMMAND_ERROR, COMMAND_OK
 
 lat = -27.9699373
 lon = 153.3726526
@@ -83,6 +83,17 @@ async def test_services(
         )
         set_scheduled_charging.assert_called_once()
 
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_SCHEDULED_CHARGING,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_ENABLE: True,
+            },
+            blocking=True,
+        )
+
     with patch(
         "homeassistant.components.teslemetry.VehicleSpecific.set_scheduled_departure",
         return_value=COMMAND_OK,
@@ -93,8 +104,8 @@ async def test_services(
             {
                 CONF_DEVICE_ID: vehicle_device,
                 ATTR_ENABLE: True,
-                ATTR_PRECODITIONING_ENABLED: True,
-                ATTR_PRECODITIONING_WEEKDAYS: False,
+                ATTR_PRECONDITIONING_ENABLED: True,
+                ATTR_PRECONDITIONING_WEEKDAYS: False,
                 ATTR_DEPARTURE_TIME: "6:00",
                 ATTR_OFF_PEAK_CHARGING_ENABLED: True,
                 ATTR_OFF_PEAK_CHARGING_WEEKDAYS: False,
@@ -103,6 +114,30 @@ async def test_services(
             blocking=True,
         )
         set_scheduled_departure.assert_called_once()
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_SCHEDULED_DEPARTURE,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_ENABLE: True,
+                ATTR_PRECONDITIONING_ENABLED: True,
+            },
+            blocking=True,
+        )
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_SCHEDULED_DEPARTURE,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_ENABLE: True,
+                ATTR_OFF_PEAK_CHARGING_ENABLED: True,
+            },
+            blocking=True,
+        )
 
     with patch(
         "homeassistant.components.teslemetry.VehicleSpecific.set_valet_mode",
@@ -166,6 +201,23 @@ async def test_services(
             blocking=True,
         )
         set_time_of_use.assert_called_once()
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.EnergySpecific.time_of_use_settings",
+            return_value=COMMAND_ERROR,
+        ) as set_time_of_use,
+        pytest.raises(ServiceValidationError),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TIME_OF_USE,
+            {
+                CONF_DEVICE_ID: energy_device,
+                ATTR_TOU_SETTINGS: {},
+            },
+            blocking=True,
+        )
 
 
 async def test_service_validation_errors(
