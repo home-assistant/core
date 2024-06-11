@@ -2,7 +2,6 @@
 
 from binascii import unhexlify
 from http import HTTPStatus
-import json
 from unittest.mock import ANY, patch
 
 import pytest
@@ -37,13 +36,12 @@ async def homeassistant(hass):
 def encrypt_payload(secret_key, payload, encode_json=True):
     """Return a encrypted payload given a key and dictionary of data."""
     try:
-        # pylint: disable-next=import-outside-toplevel
         from nacl.encoding import Base64Encoder
-
-        # pylint: disable-next=import-outside-toplevel
         from nacl.secret import SecretBox
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
+
+    import json
 
     prepped_key = unhexlify(secret_key)
 
@@ -59,13 +57,12 @@ def encrypt_payload(secret_key, payload, encode_json=True):
 def encrypt_payload_legacy(secret_key, payload, encode_json=True):
     """Return a encrypted payload given a key and dictionary of data."""
     try:
-        # pylint: disable-next=import-outside-toplevel
         from nacl.encoding import Base64Encoder
-
-        # pylint: disable-next=import-outside-toplevel
         from nacl.secret import SecretBox
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
+
+    import json
 
     keylen = SecretBox.KEY_SIZE
     prepped_key = secret_key.encode("utf-8")
@@ -84,13 +81,12 @@ def encrypt_payload_legacy(secret_key, payload, encode_json=True):
 def decrypt_payload(secret_key, encrypted_data):
     """Return a decrypted payload given a key and a string of encrypted data."""
     try:
-        # pylint: disable-next=import-outside-toplevel
         from nacl.encoding import Base64Encoder
-
-        # pylint: disable-next=import-outside-toplevel
         from nacl.secret import SecretBox
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
+
+    import json
 
     prepped_key = unhexlify(secret_key)
 
@@ -105,13 +101,12 @@ def decrypt_payload(secret_key, encrypted_data):
 def decrypt_payload_legacy(secret_key, encrypted_data):
     """Return a decrypted payload given a key and a string of encrypted data."""
     try:
-        # pylint: disable-next=import-outside-toplevel
         from nacl.encoding import Base64Encoder
-
-        # pylint: disable-next=import-outside-toplevel
         from nacl.secret import SecretBox
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
+
+    import json
 
     keylen = SecretBox.KEY_SIZE
     prepped_key = secret_key.encode("utf-8")
