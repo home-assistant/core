@@ -698,11 +698,11 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         await self.hass.async_add_executor_job(self.turn_off)
 
     def turn_on(self) -> None:
-        """Turn off camera."""
+        """Turn on camera."""
         raise NotImplementedError
 
     async def async_turn_on(self) -> None:
-        """Turn off camera."""
+        """Turn on camera."""
         await self.hass.async_add_executor_job(self.turn_on)
 
     def enable_motion_detection(self) -> None:
