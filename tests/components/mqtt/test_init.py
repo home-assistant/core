@@ -1,7 +1,6 @@
 """The tests for the MQTT component."""
 
 import asyncio
-from collections.abc import Generator
 from copy import deepcopy
 from datetime import datetime, timedelta
 from functools import partial
@@ -13,9 +12,11 @@ import time
 from typing import Any, TypedDict
 from unittest.mock import ANY, MagicMock, Mock, call, mock_open, patch
 
+import certifi
 from freezegun.api import FrozenDateTimeFactory
 import paho.mqtt.client as paho_mqtt
 import pytest
+from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant.components import mqtt
@@ -118,7 +119,7 @@ def record_calls(recorded_calls: list[ReceiveMessage]) -> MessageCallbackType:
 
 
 @pytest.fixture
-def client_debug_log() -> Generator[None, None]:
+def client_debug_log() -> Generator[None]:
     """Set the mqtt client log level to DEBUG."""
     logger = logging.getLogger("mqtt_client_tests_debug")
     logger.setLevel(logging.DEBUG)
@@ -2478,8 +2479,6 @@ async def test_setup_uses_certificate_on_certificate_set_to_auto_and_insecure(
         await hass.async_block_till_done()
 
     assert calls
-
-    import certifi
 
     expected_certificate = certifi.where()
     assert calls[0][0] == expected_certificate

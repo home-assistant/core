@@ -14,12 +14,13 @@ from homeassistant.components.opensky.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 
+from . import setup_integration
+
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     load_json_object_fixture,
 )
-from tests.components.opensky import setup_integration
 
 
 async def test_sensor(
@@ -27,7 +28,7 @@ async def test_sensor(
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     opensky_client: AsyncMock,
-):
+) -> None:
     """Test setup sensor."""
     await setup_integration(hass, config_entry)
 
@@ -48,7 +49,7 @@ async def test_sensor_altitude(
     config_entry_altitude: MockConfigEntry,
     opensky_client: AsyncMock,
     snapshot: SnapshotAssertion,
-):
+) -> None:
     """Test setup sensor with a set altitude."""
     await setup_integration(hass, config_entry_altitude)
 
@@ -62,7 +63,7 @@ async def test_sensor_updating(
     opensky_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
-):
+) -> None:
     """Test updating sensor."""
     await setup_integration(hass, config_entry)
 

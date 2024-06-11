@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Generator
 from datetime import timedelta
 from functools import cached_property
 import logging
@@ -13,6 +12,7 @@ from unittest.mock import ANY, AsyncMock, Mock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from typing_extensions import Generator
 
 from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.components import dhcp
@@ -44,16 +44,15 @@ from .common import (
     MockPlatform,
     async_capture_events,
     async_fire_time_changed,
+    async_get_persistent_notifications,
     mock_config_flow,
     mock_integration,
     mock_platform,
 )
 
-from tests.common import async_get_persistent_notifications
-
 
 @pytest.fixture(autouse=True)
-def mock_handlers() -> Generator[None, None, None]:
+def mock_handlers() -> Generator[None]:
     """Mock config flows."""
 
     class MockFlowHandler(config_entries.ConfigFlow):
@@ -1726,16 +1725,23 @@ async def test_entry_unload_succeed(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test that we can unload an entry."""
+    unloads_called = []
+
+    async def verify_runtime_data(*args):
+        """Verify runtime data."""
+        assert entry.runtime_data == 2
+        unloads_called.append(args)
+        return True
+
     entry = MockConfigEntry(domain="comp", state=config_entries.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
+    entry.async_on_unload(verify_runtime_data)
     entry.runtime_data = 2
 
-    async_unload_entry = AsyncMock(return_value=True)
-
-    mock_integration(hass, MockModule("comp", async_unload_entry=async_unload_entry))
+    mock_integration(hass, MockModule("comp", async_unload_entry=verify_runtime_data))
 
     assert await manager.async_unload(entry.entry_id)
-    assert len(async_unload_entry.mock_calls) == 1
+    assert len(unloads_called) == 2
     assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
     assert not hasattr(entry, "runtime_data")
 

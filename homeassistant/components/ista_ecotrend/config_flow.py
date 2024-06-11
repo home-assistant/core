@@ -1,4 +1,4 @@
-"""Config flow for ista Ecotrend integration."""
+"""Config flow for ista EcoTrend integration."""
 
 from __future__ import annotations
 
@@ -45,7 +45,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for ista Ecotrend."""
+    """Handle a config flow for ista EcoTrend."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

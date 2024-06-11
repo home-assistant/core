@@ -1,6 +1,5 @@
 """Test fixtures for TP-Link Omada integration."""
 
-from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -11,6 +10,7 @@ from tplink_omada_client.devices import (
     OmadaSwitch,
     OmadaSwitchPortDetails,
 )
+from typing_extensions import Generator
 
 from homeassistant.components.tplink_omada.config_flow import CONF_SITE
 from homeassistant.components.tplink_omada.const import DOMAIN
@@ -38,7 +38,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.tplink_omada.async_setup_entry", return_value=True
@@ -47,7 +47,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_omada_site_client() -> Generator[AsyncMock, None, None]:
+def mock_omada_site_client() -> Generator[AsyncMock]:
     """Mock Omada site client."""
     site_client = AsyncMock()
 
@@ -73,9 +73,7 @@ def mock_omada_site_client() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_omada_client(
-    mock_omada_site_client: AsyncMock,
-) -> Generator[MagicMock, None, None]:
+def mock_omada_client(mock_omada_site_client: AsyncMock) -> Generator[MagicMock]:
     """Mock Omada client."""
     with patch(
         "homeassistant.components.tplink_omada.create_omada_client",
