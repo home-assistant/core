@@ -302,7 +302,7 @@ def _home_conf(hass: HomeAssistant) -> dict:
         CONF_NAME: hass.config.location_name,
         CONF_LATITUDE: hass.config.latitude,
         CONF_LONGITUDE: hass.config.longitude,
-        CONF_RADIUS: DEFAULT_RADIUS,
+        CONF_RADIUS: hass.config.radius,
         CONF_ICON: ICON_HOME,
         CONF_PASSIVE: False,
     }

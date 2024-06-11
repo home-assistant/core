@@ -1934,6 +1934,7 @@ async def test_config_defaults() -> None:
     assert config.currency == "EUR"
     assert config.country is None
     assert config.language == "en"
+    assert config.radius == 100
 
 
 async def test_config_path_with_file() -> None:
@@ -1981,6 +1982,7 @@ async def test_config_as_dict() -> None:
         "language": "en",
         "safe_mode": False,
         "debug": False,
+        "radius": 100,
     }
 
     assert expected == config.as_dict()
