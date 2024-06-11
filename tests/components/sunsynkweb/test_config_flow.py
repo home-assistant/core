@@ -130,7 +130,7 @@ async def test_unexpected(
     basic_flow,
     sessiongetter,
 ) -> None:
-    """Test we handle cannot connect error."""
+    """Test we handle other errors while accessing the api."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

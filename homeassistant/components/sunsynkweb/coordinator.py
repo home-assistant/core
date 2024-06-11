@@ -35,7 +35,6 @@ class SunsynkUpdateCoordinator(DataUpdateCoordinator[None]):
             # Polling interval. Will only be polled if there are subscribers.
             update_interval=timedelta(seconds=30),
         )
-        self.bearer = None
         self.session = SunsynkwebSession(
             session=async_get_clientsession(hass),
             username=self.config_entry.data["username"],
