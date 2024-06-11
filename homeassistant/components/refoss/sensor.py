@@ -31,8 +31,6 @@ from .const import (
     COORDINATORS,
     DISPATCH_DEVICE_DISCOVERED,
     DOMAIN,
-    ENERGY,
-    ENERGY_RETURNED,
 )
 from .entity import RefossEntity
 
@@ -53,34 +51,37 @@ SENSORS: dict[str, tuple[RefossSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfPower.WATT,
+            suggested_display_precision=2,
             subkey="power",
-            fn=lambda x: round(x / 1000, 2),
+            fn=lambda x: x / 1000.0,
         ),
         RefossSensorEntityDescription(
             key="voltage",
             name="Voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+            suggested_display_precision=2,
+            suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
             subkey="voltage",
-            fn=lambda x: round(x / 1000, 2),
         ),
         RefossSensorEntityDescription(
             key="current",
             name="Current",
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+            suggested_display_precision=2,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             subkey="current",
-            fn=lambda x: round(x / 1000, 2),
         ),
         RefossSensorEntityDescription(
             key="factor",
             name="Power Factor",
             device_class=SensorDeviceClass.POWER_FACTOR,
             state_class=SensorStateClass.MEASUREMENT,
+            suggested_display_precision=2,
             subkey="factor",
-            fn=lambda x: round(x, 2),
         ),
         RefossSensorEntityDescription(
             key="energy",
@@ -88,8 +89,9 @@ SENSORS: dict[str, tuple[RefossSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL,
             native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+            suggested_display_precision=2,
             subkey="mConsume",
-            fn=lambda x: round(x, 2),
+            fn=lambda x: x if x > 0 else 0,
         ),
         RefossSensorEntityDescription(
             key="energy_returned",
@@ -97,8 +99,9 @@ SENSORS: dict[str, tuple[RefossSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL,
             native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+            suggested_display_precision=2,
             subkey="mConsume",
-            fn=lambda x: round(x, 2),
+            fn=lambda x: abs(x) if x < 0 else 0,
         ),
     ),
 }
@@ -155,9 +158,8 @@ class RefossSensor(RefossEntity, SensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
         device_type = coordinator.device.device_type
-        self._attr_name = (
-            f"{CHANNEL_DISPLAY_NAME[device_type][channel]} {description.name}"
-        )
+        channel_name = CHANNEL_DISPLAY_NAME[device_type][channel]
+        self._attr_name = f"{channel_name} {description.name}"
 
     @property
     def native_value(self) -> StateType:
@@ -167,10 +169,6 @@ class RefossSensor(RefossEntity, SensorEntity):
         )
         if value is None:
             return None
-        if (self.entity_description.key == ENERGY and value < 0) or (
-            self.entity_description.key == ENERGY_RETURNED and value > 0
-        ):
-            value = 0
         if self.entity_description.fn is not None:
             return self.entity_description.fn(value)
         return value
