@@ -1,0 +1,11 @@
+{
+    "domain": "tplink_deco",
+    "name": "TP-Link Deco",
+    "codeowners": ["@anisar17"],
+    "config_flow": true,
+    "documentation": "https://www.home-assistant.io/integrations/tplink_deco",
+    "iot_class": "local_polling",
+    "requirements": [],
+    "dependencies": []
+  }
+  
