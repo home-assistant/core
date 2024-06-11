@@ -459,44 +459,35 @@ class SonoffPresenceSenorClusterHandler(ClusterHandler):
 class DanfossThermostatClusterHandler(ThermostatClusterHandler):
     """Thermostat cluster handler for the Danfoss TRV and derivatives."""
 
-    def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
-        """Extend ThermostatClusterHandler."""
+    REPORT_CONFIG = (
+        *ThermostatClusterHandler.REPORT_CONFIG,
+        AttrReportConfig(attr="open_window_detection", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="heat_required", config=REPORT_CONFIG_ASAP),
+        AttrReportConfig(attr="mounting_mode_active", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="load_estimate", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="adaptation_run_status", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="preheat_status", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="preheat_time", config=REPORT_CONFIG_DEFAULT),
+    )
 
-        self.REPORT_CONFIG = (  # type: ignore[assignment]
-            *self.REPORT_CONFIG,
-            AttrReportConfig(
-                attr="open_window_detection", config=REPORT_CONFIG_DEFAULT
-            ),
-            AttrReportConfig(attr="heat_required", config=REPORT_CONFIG_ASAP),
-            AttrReportConfig(attr="mounting_mode_active", config=REPORT_CONFIG_DEFAULT),
-            AttrReportConfig(attr="load_estimate", config=REPORT_CONFIG_DEFAULT),
-            AttrReportConfig(
-                attr="adaptation_run_status", config=REPORT_CONFIG_DEFAULT
-            ),
-            AttrReportConfig(attr="preheat_status", config=REPORT_CONFIG_DEFAULT),
-            AttrReportConfig(attr="preheat_time", config=REPORT_CONFIG_DEFAULT),
-        )
-
-        self.ZCL_INIT_ATTRS = {
-            **self.ZCL_INIT_ATTRS,
-            "external_open_window_detected": True,
-            "window_open_feature": True,
-            "exercise_day_of_week": True,
-            "exercise_trigger_time": True,
-            "mounting_mode_control": False,  # Can change
-            "orientation": True,
-            "external_measured_room_sensor": False,  # Can change
-            "radiator_covered": True,
-            "heat_available": True,
-            "load_balancing_enable": True,
-            "load_room_mean": False,  # Can change
-            "control_algorithm_scale_factor": True,
-            "regulation_setpoint_offset": True,
-            "adaptation_run_control": True,
-            "adaptation_run_settings": True,
-        }
-
-        super().__init__(cluster, endpoint)
+    ZCL_INIT_ATTRS = {
+        **ThermostatClusterHandler.ZCL_INIT_ATTRS,
+        "external_open_window_detected": True,
+        "window_open_feature": True,
+        "exercise_day_of_week": True,
+        "exercise_trigger_time": True,
+        "mounting_mode_control": False,  # Can change
+        "orientation": True,
+        "external_measured_room_sensor": False,  # Can change
+        "radiator_covered": True,
+        "heat_available": True,
+        "load_balancing_enable": True,
+        "load_room_mean": False,  # Can change
+        "control_algorithm_scale_factor": True,
+        "regulation_setpoint_offset": True,
+        "adaptation_run_control": True,
+        "adaptation_run_settings": True,
+    }
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
@@ -505,12 +496,10 @@ class DanfossThermostatClusterHandler(ThermostatClusterHandler):
 class DanfossUserInterfaceClusterHandler(UserInterfaceClusterHandler):
     """Interface cluster handler for the Danfoss TRV and derivatives."""
 
-    def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
-        """Extend UserInterface."""
-
-        self.ZCL_INIT_ATTRS = {**self.ZCL_INIT_ATTRS, "viewing_direction": True}
-
-        super().__init__(cluster, endpoint)
+    ZCL_INIT_ATTRS = {
+        **UserInterfaceClusterHandler.ZCL_INIT_ATTRS,
+        "viewing_direction": True,
+    }
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
@@ -519,13 +508,8 @@ class DanfossUserInterfaceClusterHandler(UserInterfaceClusterHandler):
 class DanfossDiagnosticClusterHandler(DiagnosticClusterHandler):
     """Diagnostic cluster handler for the Danfoss TRV and derivatives."""
 
-    def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
-        """Extend Diagnostic."""
-
-        self.REPORT_CONFIG = (
-            *self.REPORT_CONFIG,
-            AttrReportConfig(attr="sw_error_code", config=REPORT_CONFIG_DEFAULT),
-            AttrReportConfig(attr="motor_step_counter", config=REPORT_CONFIG_DEFAULT),
-        )
-
-        super().__init__(cluster, endpoint)
+    REPORT_CONFIG = (
+        *DiagnosticClusterHandler.REPORT_CONFIG,
+        AttrReportConfig(attr="sw_error_code", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="motor_step_counter", config=REPORT_CONFIG_DEFAULT),
+    )
