@@ -170,17 +170,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update listener, called when the config entry options are changed."""
 
-    # Remove device link for entry, the source device may have changed.
-    # The link will be recreated after load.
+    # Device id before reload
     old_device = entry.runtime_data.device
+
     await hass.config_entries.async_reload(entry.entry_id)
+
+    # If the old device is different from the current device it is removed from the config entry
     if old_device != entry.options.get(CONF_DEVICE_ID, None) and old_device is not None:
         device_registry = dr.async_get(hass)
         device_registry.async_update_device(
             old_device, remove_config_entry_id=entry.entry_id
         )
-
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
