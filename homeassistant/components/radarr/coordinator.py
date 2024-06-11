@@ -150,15 +150,15 @@ class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
     async def _fetch_data(self) -> None:
         """Fetch the calendar."""
         self.event = None
-        _date = datetime.today()
+        _date = dt_util.start_of_local_day()
         while self.event is None:
             await self.async_get_events(_date, _date + timedelta(days=1))
             for event in self._events:
-                if event.start >= _date.date():
+                if event.start >= _date:
                     self.event = event
                     break
             # Prevent infinite loop in case there is nothing recent in the calendar
-            if (_date - datetime.today()).days > 45:
+            if (_date - dt_util.now()).days > 45:
                 break
             _date = _date + timedelta(days=1)
 
@@ -167,17 +167,17 @@ class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
     ) -> list[RadarrEvent]:
         """Get cached events and request missing dates."""
         # remove older events to prevent memory leak
+        start = start_date.date()
         self._events = [
-            e
-            for e in self._events
-            if e.start >= datetime.now().date() - timedelta(days=30)
+            e for e in self._events if e.start >= dt_util.now() - timedelta(days=30)
         ]
-        _days = (end_date - start_date).days
+        _days = (end_date.date() - start).days
         await asyncio.gather(
             *(
                 self._async_get_events(d)
-                for d in ((start_date + timedelta(days=x)).date() for x in range(_days))
-                if d not in (event.start for event in self._events)
+                for d in (start + timedelta(days=x) for x in range(_days))
+                if d
+                not in (cast(datetime, event.start).date() for event in self._events)
             )
         )
         return self._events
@@ -202,8 +202,8 @@ def _get_calendar_event(offset: timedelta, event: RadarrCalendarItem) -> RadarrE
     _dt = dt_util.start_of_local_day(_date) + offset
     return RadarrEvent(
         summary=event.title,
-        start=_dt.date() - timedelta(days=1),
-        end=_dt.date(),
+        start=_dt - timedelta(days=1),
+        end=_dt,
         description=event.overview.replace(":", ";"),
         release_type=_type,
     )
