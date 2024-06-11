@@ -26,9 +26,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry=entry,
     )
 
-    # Store the coordinator in hass data
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    # Store the coordinator in runtime data
+    entry.runtime_data = coordinator
 
     # If a personal access token is set, authorize the client
     if entry.data.get(CONF_PAT) is not None:
