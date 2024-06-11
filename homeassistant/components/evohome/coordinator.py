@@ -89,21 +89,13 @@ class EvoBroker:
             )
 
         else:  # force a re-authentication
-            self.client_v2._user_account = None  # noqa: SLF001
+            self.client_v2._user_account = {}  # noqa: SLF001
 
         try:
             await self.client_v2.login()
         except evo.AuthenticationFailed as err:
             handle_evo_exception(err)
             return False
-
-        await self._save_auth_tokens()
-        return True
-
-    async def authenticate_v1(self) -> bool:
-        """Instantiate a client using the older API."""
-
-        await self._load_auth_tokens(self.client_v2.username)  # for self._session_id
 
         self.client_v1 = ev1.EvohomeClient(
             self.client_v2.username,
@@ -112,6 +104,7 @@ class EvoBroker:
             session=self._session,
         )
 
+        await self._save_auth_tokens()
         return True
 
     async def _load_auth_tokens(self, username: str) -> None:
@@ -139,7 +132,6 @@ class EvoBroker:
                     "sessionId": "F7181186..."
                 },
             }
-
         """
 
         app_storage: dict[str, Any] = dict(await self._store.async_load() or {})
@@ -168,13 +160,6 @@ class EvoBroker:
         """Save access tokens and session_id to the store.
 
         Sets self._tokens and self._session_id to the latest values.
-
-            {
-                "version": 1,
-                "minor_version": 1,
-                "key": "evohome",
-                "data": {}
-            }
         """
 
         # evohomeasync2 uses naive/local datetimes
