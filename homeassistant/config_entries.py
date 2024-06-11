@@ -1170,6 +1170,20 @@ class FlowCancelledError(Exception):
     """Error to indicate that a flow has been cancelled."""
 
 
+def _report_non_awaited_platform_forwards(entry: ConfigEntry, what: str) -> None:
+    """Report non awaited platform forwards."""
+    report(
+        f"calls {what} for "
+        f"integration, {entry.domain} with title: {entry.title} "
+        f"and entry_id: {entry.entry_id}, "
+        f"during without awaiting {what}, which can cause "
+        "the setup lock to be released before the setup is done. "
+        "This will stop working in Home Assistant 2025.1",
+        error_if_integration=False,
+        error_if_core=False,
+    )
+
+
 class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
     """Manage all the config entry flows that are in progress."""
 
@@ -2043,6 +2057,12 @@ class ConfigEntries:
                 await self._async_forward_entry_setups_locked(entry, platforms)
         else:
             await self._async_forward_entry_setups_locked(entry, platforms)
+            # If the lock was held when we stated, and it was released during
+            # the platform setup, it means they did not await the setup call.
+            if not entry.setup_lock.locked():
+                _report_non_awaited_platform_forwards(
+                    entry, "async_forward_entry_setups"
+                )
 
     async def _async_forward_entry_setups_locked(
         self, entry: ConfigEntry, platforms: Iterable[Platform | str]
@@ -2094,7 +2114,12 @@ class ConfigEntries:
                         f" is not loaded in the {entry.state} state"
                     )
                 return await self._async_forward_entry_setup(entry, domain, True)
-        return await self._async_forward_entry_setup(entry, domain, True)
+        result = await self._async_forward_entry_setup(entry, domain, True)
+        # If the lock was held when we stated, and it was released during
+        # the platform setup, it means they did not await the setup call.
+        if not entry.setup_lock.locked():
+            _report_non_awaited_platform_forwards(entry, "async_forward_entry_setup")
+        return result
 
     async def _async_forward_entry_setup(
         self,
