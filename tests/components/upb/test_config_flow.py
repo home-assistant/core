@@ -1,5 +1,6 @@
 """Test the UPB Control config flow."""
 
+from asyncio import TimeoutError
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from homeassistant import config_entries
@@ -84,7 +85,6 @@ async def test_form_user_with_tcp_upb(hass: HomeAssistant) -> None:
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
-    from asyncio import TimeoutError
 
     with patch(
         "homeassistant.components.upb.config_flow.asyncio.timeout",

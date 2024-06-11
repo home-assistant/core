@@ -198,7 +198,6 @@ async def test_delete_service(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
@@ -209,7 +208,6 @@ async def test_delete_service(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
     assert hass.states.get("scene.hallo_2") is not None
 
     assert hass.states.get("scene.hallo") is not None
@@ -303,7 +301,6 @@ async def test_ensure_no_intersection(hass: HomeAssistant) -> None:
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
     assert "entities and snapshot_entities must not overlap" in str(ex.value)
     assert hass.states.get("scene.hallo") is None
 

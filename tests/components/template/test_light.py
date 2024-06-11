@@ -881,7 +881,7 @@ async def test_legacy_color_action_no_template(
     hass: HomeAssistant,
     setup_light,
     calls: list[ServiceCall],
-):
+) -> None:
     """Test setting color with optimistic template."""
     state = hass.states.get("light.test_template_light")
     assert state.attributes.get("hs_color") is None
@@ -1103,12 +1103,12 @@ async def test_rgbww_color_action_no_template(
     ],
 )
 async def test_legacy_color_template(
-    hass,
-    expected_hs,
-    expected_color_mode,
-    count,
-    color_template,
-):
+    hass: HomeAssistant,
+    expected_hs: tuple[float, float] | None,
+    expected_color_mode: ColorMode,
+    count: int,
+    color_template: str,
+) -> None:
     """Test the template for the color."""
     light_config = {
         "test_template_light": {

@@ -4,15 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import UserDict
-from collections.abc import (
-    Callable,
-    Coroutine,
-    Generator,
-    Hashable,
-    Iterable,
-    Mapping,
-    ValuesView,
-)
+from collections.abc import Callable, Coroutine, Hashable, Iterable, Mapping, ValuesView
 from contextvars import ContextVar
 from copy import deepcopy
 from enum import Enum, StrEnum
@@ -24,7 +16,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Generic, Self, cast
 
 from async_interrupt import interrupt
-from typing_extensions import TypeVar
+from typing_extensions import Generator, TypeVar
 
 from . import data_entry_flow, loader
 from .components import persistent_notification
@@ -811,13 +803,13 @@ class ConfigEntry(Generic[_DataT]):
             assert isinstance(result, bool)
 
             # Only adjust state if we unloaded the component
-            if domain_is_integration:
-                if result:
-                    self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
-                    if hasattr(self, "runtime_data"):
-                        object.__delattr__(self, "runtime_data")
-
+            if domain_is_integration and result:
                 await self._async_process_on_unload(hass)
+                if hasattr(self, "runtime_data"):
+                    object.__delattr__(self, "runtime_data")
+
+                self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
+
         except Exception as exc:
             _LOGGER.exception(
                 "Error unloading entry %s for %s", self.title, integration.domain
@@ -1105,7 +1097,7 @@ class ConfigEntry(Generic[_DataT]):
     @callback
     def async_get_active_flows(
         self, hass: HomeAssistant, sources: set[str]
-    ) -> Generator[ConfigFlowResult, None, None]:
+    ) -> Generator[ConfigFlowResult]:
         """Get any active flows of certain sources for this entry."""
         return (
             flow

@@ -1,0 +1,24 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "is_burning": {
+        "state": {
+          "off": "mdi:fire-off",
+          "on": "mdi:fire"
+        }
+      },
+      "is_pumping": {
+        "state": {
+          "off": "mdi:pump-off",
+          "on": "mdi:pump"
+        }
+      },
+      "is_tapping": {
+        "state": {
+          "off": "mdi:water-pump-off",
+          "on": "mdi:water-pump"
+        }
+      }
+    }
+  }
+}

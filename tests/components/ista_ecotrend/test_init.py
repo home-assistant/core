@@ -1,4 +1,4 @@
-"""Test the ista Ecotrend init."""
+"""Test the ista EcoTrend init."""
 
 from unittest.mock import MagicMock
 
@@ -19,8 +19,9 @@ from homeassistant.helpers import device_registry as dr
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_ista")
 async def test_entry_setup_unload(
-    hass: HomeAssistant, ista_config_entry: MockConfigEntry, mock_ista: MagicMock
+    hass: HomeAssistant, ista_config_entry: MockConfigEntry
 ) -> None:
     """Test integration setup and unload."""
 
@@ -79,10 +80,10 @@ async def test_config_entry_error(
     assert ista_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
+@pytest.mark.usefixtures("mock_ista")
 async def test_device_registry(
     hass: HomeAssistant,
     ista_config_entry: MockConfigEntry,
-    mock_ista: MagicMock,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:

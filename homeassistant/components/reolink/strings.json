@@ -233,6 +233,13 @@
           "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
+      },
+      "sleep": {
+        "name": "Sleep status",
+        "state": {
+          "off": "Awake",
+          "on": "Sleeping"
+        }
       }
     },
     "button": {
@@ -536,6 +543,9 @@
       },
       "record": {
         "name": "Record"
+      },
+      "manual_record": {
+        "name": "Manual record"
       },
       "buzzer": {
         "name": "Buzzer on event"

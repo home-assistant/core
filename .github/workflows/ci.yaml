@@ -33,12 +33,12 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 8
+  CACHE_VERSION: 9
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 8
   HA_SHORT_VERSION: "2024.7"
-  DEFAULT_PYTHON: "3.12"
-  ALL_PYTHON_VERSIONS: "['3.12']"
+  DEFAULT_PYTHON: "3.12.3"
+  ALL_PYTHON_VERSIONS: "['3.12.3']"
   # 10.3 is the oldest supported version
   # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
   # 10.6 is the current long-term-support
@@ -746,6 +746,7 @@ jobs:
       - hassfest
       - lint-other
       - lint-ruff
+      - lint-ruff-format
       - mypy
       - prepare-pytest-full
     strategy:
@@ -863,6 +864,7 @@ jobs:
       - hassfest
       - lint-other
       - lint-ruff
+      - lint-ruff-format
       - mypy
     strategy:
       fail-fast: false
@@ -986,6 +988,7 @@ jobs:
       - hassfest
       - lint-other
       - lint-ruff
+      - lint-ruff-format
       - mypy
     strategy:
       fail-fast: false
@@ -1128,6 +1131,7 @@ jobs:
       - hassfest
       - lint-other
       - lint-ruff
+      - lint-ruff-format
       - mypy
     strategy:
       fail-fast: false
