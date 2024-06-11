@@ -441,7 +441,7 @@ async def test_setup_and_remove_config_entry(
 
     # Check the state and entity registry entry are removed
     assert len(hass.states.async_all()) == 0
-    assert len(registry.entities) == 0
+    assert len(entity_registry.entities) == 0
 
 
 async def test_device_cleaning(hass: HomeAssistant) -> None:
