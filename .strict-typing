@@ -163,6 +163,7 @@ homeassistant.components.easyenergy.*
 homeassistant.components.ecovacs.*
 homeassistant.components.ecowitt.*
 homeassistant.components.efergy.*
+homeassistant.components.electrasmart.*
 homeassistant.components.electric_kiwi.*
 homeassistant.components.elgato.*
 homeassistant.components.elkm1.*
