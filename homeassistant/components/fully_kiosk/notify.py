@@ -17,8 +17,7 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> BaseNotificationService | None:
     """Get the notification service."""
-    if discovery_info is None:
-        return None
+    assert discovery_info
     coordinator: FullyKioskDataUpdateCoordinator = hass.data[DOMAIN][
         discovery_info[CONF_ENTITY_ID]
     ]
