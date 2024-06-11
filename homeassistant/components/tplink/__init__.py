@@ -17,6 +17,7 @@ from kasa import (
     KasaException,
 )
 from kasa.httpclient import get_cookie_jar
+from kasa.iot import IotStrip
 
 from homeassistant import config_entries
 from homeassistant.components import network
@@ -189,7 +190,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     parent_coordinator = TPLinkDataUpdateCoordinator(hass, device, timedelta(seconds=5))
     child_coordinators: list[TPLinkDataUpdateCoordinator] = []
 
-    if device.children:
+    # The iot HS300 allows a limited number of concurrent requests and fetching the
+    # emeter information requires separate ones so create child coordinators here.
+    if isinstance(device, IotStrip):
         child_coordinators = [
             # The child coordinators only update energy data so we can
             # set a longer update interval to avoid flooding the device
