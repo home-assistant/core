@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 import logging
@@ -10,6 +9,7 @@ from types import ModuleType
 from typing import Any
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components import sensor
 from homeassistant.components.number import NumberDeviceClass
@@ -51,6 +51,8 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
+from .common import MockRestoreSensor, MockSensor
+
 from tests.common import (
     MockConfigEntry,
     MockEntityPlatform,
@@ -65,7 +67,6 @@ from tests.common import (
     mock_restore_cache_with_extra_data,
     setup_test_component_platform,
 )
-from tests.components.sensor.common import MockRestoreSensor, MockSensor
 
 TEST_DOMAIN = "test"
 
@@ -2384,7 +2385,7 @@ class MockFlow(ConfigFlow):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -2399,7 +2400,9 @@ async def test_name(hass: HomeAssistant) -> None:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, SENSOR_DOMAIN)
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [SENSOR_DOMAIN]
+        )
         return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")

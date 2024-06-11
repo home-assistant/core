@@ -3,9 +3,11 @@
 From http://doc.pytest.org/en/latest/example/simple.html#making-test-result-information-available-in-fixtures
 """
 
-from collections.abc import Generator
+from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import ConfigFlow
@@ -37,13 +39,13 @@ def pytest_runtest_makereport(item, call):
 
 
 @pytest.fixture(autouse=True, name="mock_tts_cache_dir")
-def mock_tts_cache_dir_fixture_autouse(mock_tts_cache_dir):
+def mock_tts_cache_dir_fixture_autouse(mock_tts_cache_dir: Path) -> Path:
     """Mock the TTS cache dir with empty dir."""
     return mock_tts_cache_dir
 
 
 @pytest.fixture(autouse=True)
-def tts_mutagen_mock_fixture_autouse(tts_mutagen_mock):
+def tts_mutagen_mock_fixture_autouse(tts_mutagen_mock: MagicMock) -> None:
     """Mock writing tags."""
 
 
@@ -80,7 +82,7 @@ class TTSFlow(ConfigFlow):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 

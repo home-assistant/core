@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 import logging
 from typing import Any, cast
 
-from pyunifiprotect.data import (
+from typing_extensions import Generator
+from uiprotect.data import (
     Camera as UFPCamera,
     CameraChannel,
     ModelType,
@@ -71,7 +71,7 @@ def _get_camera_channels(
     entry: ConfigEntry,
     data: ProtectData,
     ufp_device: UFPCamera | None = None,
-) -> Generator[tuple[UFPCamera, CameraChannel, bool], None, None]:
+) -> Generator[tuple[UFPCamera, CameraChannel, bool]]:
     """Get all the camera channels."""
 
     devices = (

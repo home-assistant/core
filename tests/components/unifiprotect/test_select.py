@@ -5,7 +5,7 @@ from __future__ import annotations
 from copy import copy
 from unittest.mock import AsyncMock, Mock
 
-from pyunifiprotect.data import (
+from uiprotect.data import (
     Camera,
     DoorbellMessageType,
     IRLEDMode,
@@ -17,7 +17,7 @@ from pyunifiprotect.data import (
     RecordingMode,
     Viewer,
 )
-from pyunifiprotect.data.nvr import DoorbellMessage
+from uiprotect.data.nvr import DoorbellMessage
 
 from homeassistant.components.select import ATTR_OPTIONS
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION

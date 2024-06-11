@@ -50,7 +50,13 @@ class TibberNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to Tibber devices."""
-        migrate_notify_issue(self.hass, TIBBER_DOMAIN, "Tibber", "2024.12.0")
+        migrate_notify_issue(
+            self.hass,
+            TIBBER_DOMAIN,
+            "Tibber",
+            "2024.12.0",
+            service_name=self._service_name,
+        )
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         try:
             await self._notify(title=title, message=message)

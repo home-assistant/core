@@ -16,7 +16,7 @@ from homeassistant.components.fan import (
     NotValidPresetModeError,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.common import assert_setup_component
 from tests.components.fan import common
@@ -387,7 +387,7 @@ async def test_invalid_availability_template_keeps_component_available(
     assert "x" in caplog_setup_text
 
 
-async def test_on_off(hass: HomeAssistant, calls) -> None:
+async def test_on_off(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test turn on and turn off."""
     await _register_components(hass)
 
@@ -406,7 +406,7 @@ async def test_on_off(hass: HomeAssistant, calls) -> None:
 
 
 async def test_set_invalid_direction_from_initial_stage(
-    hass: HomeAssistant, calls
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test set invalid direction when fan is in initial state."""
     await _register_components(hass)
@@ -419,7 +419,7 @@ async def test_set_invalid_direction_from_initial_stage(
     _verify(hass, STATE_ON, 0, None, None, None)
 
 
-async def test_set_osc(hass: HomeAssistant, calls) -> None:
+async def test_set_osc(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test set oscillating."""
     await _register_components(hass)
     expected_calls = 0
@@ -437,7 +437,7 @@ async def test_set_osc(hass: HomeAssistant, calls) -> None:
         assert calls[-1].data["option"] == state
 
 
-async def test_set_direction(hass: HomeAssistant, calls) -> None:
+async def test_set_direction(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test set valid direction."""
     await _register_components(hass)
     expected_calls = 0
@@ -455,7 +455,9 @@ async def test_set_direction(hass: HomeAssistant, calls) -> None:
         assert calls[-1].data["option"] == cmd
 
 
-async def test_set_invalid_direction(hass: HomeAssistant, calls) -> None:
+async def test_set_invalid_direction(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test set invalid direction when fan has valid direction."""
     await _register_components(hass)
 
@@ -466,7 +468,7 @@ async def test_set_invalid_direction(hass: HomeAssistant, calls) -> None:
         _verify(hass, STATE_ON, 0, None, DIRECTION_FORWARD, None)
 
 
-async def test_preset_modes(hass: HomeAssistant, calls) -> None:
+async def test_preset_modes(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test preset_modes."""
     await _register_components(
         hass, ["off", "low", "medium", "high", "auto", "smart"], ["auto", "smart"]
@@ -493,7 +495,7 @@ async def test_preset_modes(hass: HomeAssistant, calls) -> None:
     assert hass.states.get(_PRESET_MODE_INPUT_SELECT).state == "auto"
 
 
-async def test_set_percentage(hass: HomeAssistant, calls) -> None:
+async def test_set_percentage(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test set valid speed percentage."""
     await _register_components(hass)
     expected_calls = 0
@@ -519,7 +521,9 @@ async def test_set_percentage(hass: HomeAssistant, calls) -> None:
     _verify(hass, STATE_ON, 50, None, None, None)
 
 
-async def test_increase_decrease_speed(hass: HomeAssistant, calls) -> None:
+async def test_increase_decrease_speed(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test set valid increase and decrease speed."""
     await _register_components(hass, speed_count=3)
 
@@ -536,7 +540,7 @@ async def test_increase_decrease_speed(hass: HomeAssistant, calls) -> None:
         _verify(hass, state, value, None, None, None)
 
 
-async def test_no_value_template(hass: HomeAssistant, calls) -> None:
+async def test_no_value_template(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test a fan without a value_template."""
     await _register_fan_sources(hass)
 
@@ -648,7 +652,7 @@ async def test_no_value_template(hass: HomeAssistant, calls) -> None:
 
 
 async def test_increase_decrease_speed_default_speed_count(
-    hass: HomeAssistant, calls
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test set valid increase and decrease speed."""
     await _register_components(hass)
@@ -666,7 +670,9 @@ async def test_increase_decrease_speed_default_speed_count(
         _verify(hass, state, value, None, None, None)
 
 
-async def test_set_invalid_osc_from_initial_state(hass: HomeAssistant, calls) -> None:
+async def test_set_invalid_osc_from_initial_state(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test set invalid oscillating when fan is in initial state."""
     await _register_components(hass)
 
@@ -677,7 +683,7 @@ async def test_set_invalid_osc_from_initial_state(hass: HomeAssistant, calls) ->
     _verify(hass, STATE_ON, 0, None, None, None)
 
 
-async def test_set_invalid_osc(hass: HomeAssistant, calls) -> None:
+async def test_set_invalid_osc(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test set invalid oscillating when fan has valid osc."""
     await _register_components(hass)
 

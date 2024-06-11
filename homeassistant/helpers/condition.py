@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
-from collections.abc import Callable, Container, Generator
+from collections.abc import Callable, Container
 from contextlib import contextmanager
 from datetime import datetime, time as dt_time, timedelta
 import functools as ft
@@ -12,6 +12,7 @@ import re
 import sys
 from typing import Any, Protocol, cast
 
+from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant.components import zone as zone_cmp
@@ -150,7 +151,7 @@ def condition_trace_update_result(**kwargs: Any) -> None:
 
 
 @contextmanager
-def trace_condition(variables: TemplateVarsType) -> Generator[TraceElement, None, None]:
+def trace_condition(variables: TemplateVarsType) -> Generator[TraceElement]:
     """Trace condition evaluation."""
     should_pop = True
     trace_element = trace_stack_top(trace_stack_cv)

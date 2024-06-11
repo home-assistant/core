@@ -237,28 +237,32 @@ class MqttSensor(MqttEntity, RestoreSensor):
             payload = msg.payload
         if payload is PayloadSentinel.DEFAULT:
             return
-        new_value = str(payload)
+        if not isinstance(payload, str):
+            _LOGGER.warning(
+                "Invalid undecoded state message '%s' received from '%s'",
+                payload,
+                msg.topic,
+            )
+            return
         if self._numeric_state_expected:
-            if new_value == "":
+            if payload == "":
                 _LOGGER.debug("Ignore empty state from '%s'", msg.topic)
-            elif new_value == PAYLOAD_NONE:
+            elif payload == PAYLOAD_NONE:
                 self._attr_native_value = None
             else:
-                self._attr_native_value = new_value
+                self._attr_native_value = payload
             return
         if self.device_class in {
             None,
             SensorDeviceClass.ENUM,
-        } and not check_state_too_long(_LOGGER, new_value, self.entity_id, msg):
-            self._attr_native_value = new_value
+        } and not check_state_too_long(_LOGGER, payload, self.entity_id, msg):
+            self._attr_native_value = payload
             return
         try:
-            if (payload_datetime := dt_util.parse_datetime(new_value)) is None:
+            if (payload_datetime := dt_util.parse_datetime(payload)) is None:
                 raise ValueError
         except ValueError:
-            _LOGGER.warning(
-                "Invalid state message '%s' from '%s'", msg.payload, msg.topic
-            )
+            _LOGGER.warning("Invalid state message '%s' from '%s'", payload, msg.topic)
             self._attr_native_value = None
             return
         if self.device_class == SensorDeviceClass.DATE:

@@ -28,7 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.device_registry import DeviceRegistry
-from homeassistant.helpers.entity_registry import EntityRegistry, async_get
+from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component
 
 from . import (
@@ -182,12 +182,12 @@ async def test_block_sleeping_sensor(
 async def test_block_restored_sleeping_sensor(
     hass: HomeAssistant,
     mock_block_device: Mock,
-    device_reg: DeviceRegistry,
+    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block restored sleeping sensor."""
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_reg, entry)
+    register_device(device_registry, entry)
     entity_id = register_entity(
         hass, SENSOR_DOMAIN, "test_name_temperature", "sensor_0-temp", entry
     )
@@ -215,12 +215,12 @@ async def test_block_restored_sleeping_sensor(
 async def test_block_restored_sleeping_sensor_no_last_state(
     hass: HomeAssistant,
     mock_block_device: Mock,
-    device_reg: DeviceRegistry,
+    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block restored sleeping sensor missing last state."""
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_reg, entry)
+    register_device(device_registry, entry)
     entity_id = register_entity(
         hass, SENSOR_DOMAIN, "test_name_temperature", "sensor_0-temp", entry
     )
@@ -282,12 +282,12 @@ async def test_block_sensor_removal(
 async def test_block_not_matched_restored_sleeping_sensor(
     hass: HomeAssistant,
     mock_block_device: Mock,
-    device_reg: DeviceRegistry,
+    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block not matched to restored sleeping sensor."""
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_reg, entry)
+    register_device(device_registry, entry)
     entity_id = register_entity(
         hass, SENSOR_DOMAIN, "test_name_temperature", "sensor_0-temp", entry
     )
@@ -355,11 +355,11 @@ async def test_rpc_sensor(
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_rpc_rssi_sensor_removal(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test RPC RSSI sensor removal if no WiFi stations enabled."""
     entity_id = f"{SENSOR_DOMAIN}.test_name_rssi"
@@ -443,7 +443,7 @@ async def test_rpc_polling_sensor(
 async def test_rpc_sleeping_sensor(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
-    device_reg: DeviceRegistry,
+    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC online sleeping sensor."""
@@ -477,12 +477,12 @@ async def test_rpc_sleeping_sensor(
 async def test_rpc_restored_sleeping_sensor(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
-    device_reg: DeviceRegistry,
+    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC restored sensor."""
     entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
-    register_device(device_reg, entry)
+    register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         SENSOR_DOMAIN,
@@ -515,12 +515,12 @@ async def test_rpc_restored_sleeping_sensor(
 async def test_rpc_restored_sleeping_sensor_no_last_state(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
-    device_reg: DeviceRegistry,
+    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC restored sensor missing last state."""
     entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
-    register_device(device_reg, entry)
+    register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         SENSOR_DOMAIN,
@@ -548,18 +548,18 @@ async def test_rpc_restored_sleeping_sensor_no_last_state(
     assert hass.states.get(entity_id).state == "22.9"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_rpc_em1_sensors(
-    hass: HomeAssistant, mock_rpc_device: Mock, entity_registry_enabled_by_default: None
+    hass: HomeAssistant, entity_registry: EntityRegistry, mock_rpc_device: Mock
 ) -> None:
     """Test RPC sensors for EM1 component."""
-    registry = async_get(hass)
     await init_integration(hass, 2)
 
     state = hass.states.get("sensor.test_name_em0_power")
     assert state
     assert state.state == "85.3"
 
-    entry = registry.async_get("sensor.test_name_em0_power")
+    entry = entity_registry.async_get("sensor.test_name_em0_power")
     assert entry
     assert entry.unique_id == "123456789ABC-em1:0-power_em1"
 
@@ -567,7 +567,7 @@ async def test_rpc_em1_sensors(
     assert state
     assert state.state == "123.3"
 
-    entry = registry.async_get("sensor.test_name_em1_power")
+    entry = entity_registry.async_get("sensor.test_name_em1_power")
     assert entry
     assert entry.unique_id == "123456789ABC-em1:1-power_em1"
 
@@ -575,7 +575,7 @@ async def test_rpc_em1_sensors(
     assert state
     assert state.state == "123.4564"
 
-    entry = registry.async_get("sensor.test_name_em0_total_active_energy")
+    entry = entity_registry.async_get("sensor.test_name_em0_total_active_energy")
     assert entry
     assert entry.unique_id == "123456789ABC-em1data:0-total_act_energy"
 
@@ -583,7 +583,7 @@ async def test_rpc_em1_sensors(
     assert state
     assert state.state == "987.6543"
 
-    entry = registry.async_get("sensor.test_name_em1_total_active_energy")
+    entry = entity_registry.async_get("sensor.test_name_em1_total_active_energy")
     assert entry
     assert entry.unique_id == "123456789ABC-em1data:1-total_act_energy"
 

@@ -6,6 +6,7 @@ import re
 from typing import Any
 from unittest.mock import patch
 
+from aiohttp.test_utils import TestClient
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -20,7 +21,7 @@ from homeassistant.components.frontend import (
     async_register_built_in_panel,
     async_remove_panel,
 )
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
@@ -99,25 +100,33 @@ def aiohttp_client(
 
 
 @pytest.fixture
-async def mock_http_client(hass, aiohttp_client, frontend):
+async def mock_http_client(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, frontend
+) -> TestClient:
     """Start the Home Assistant HTTP component."""
     return await aiohttp_client(hass.http.app)
 
 
 @pytest.fixture
-async def themes_ws_client(hass, hass_ws_client, frontend_themes):
+async def themes_ws_client(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, frontend_themes
+) -> MockHAClientWebSocket:
     """Start the Home Assistant HTTP component."""
     return await hass_ws_client(hass)
 
 
 @pytest.fixture
-async def ws_client(hass, hass_ws_client, frontend):
+async def ws_client(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, frontend
+) -> MockHAClientWebSocket:
     """Start the Home Assistant HTTP component."""
     return await hass_ws_client(hass)
 
 
 @pytest.fixture
-async def mock_http_client_with_extra_js(hass, aiohttp_client, ignore_frontend_deps):
+async def mock_http_client_with_extra_js(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, ignore_frontend_deps
+) -> TestClient:
     """Start the Home Assistant HTTP component."""
     assert await async_setup_component(
         hass,
@@ -396,9 +405,8 @@ async def test_missing_themes(hass: HomeAssistant, ws_client) -> None:
     assert msg["result"]["themes"] == {}
 
 
-async def test_extra_js(
-    hass: HomeAssistant, mock_http_client_with_extra_js, mock_onboarded
-):
+@pytest.mark.usefixtures("mock_onboarded")
+async def test_extra_js(hass: HomeAssistant, mock_http_client_with_extra_js) -> None:
     """Test that extra javascript is loaded."""
     resp = await mock_http_client_with_extra_js.get("")
     assert resp.status == 200

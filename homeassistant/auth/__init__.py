@@ -53,7 +53,7 @@ async def auth_manager_from_config(
 ) -> AuthManager:
     """Initialize an auth manager from config.
 
-    CORE_CONFIG_SCHEMA will make sure do duplicated auth providers or
+    CORE_CONFIG_SCHEMA will make sure no duplicated auth providers or
     mfa modules exist in configs.
     """
     store = auth_store.AuthStore(hass)
@@ -515,6 +515,13 @@ class AuthManager:
         callbacks = self._revoke_callbacks.pop(refresh_token.id, ())
         for revoke_callback in callbacks:
             revoke_callback()
+
+    @callback
+    def async_set_expiry(
+        self, refresh_token: models.RefreshToken, *, enable_expiry: bool
+    ) -> None:
+        """Enable or disable expiry of a refresh token."""
+        self._store.async_set_expiry(refresh_token, enable_expiry=enable_expiry)
 
     @callback
     def _async_remove_expired_refresh_tokens(self, _: datetime | None = None) -> None:

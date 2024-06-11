@@ -627,12 +627,6 @@ def tv_event_fixture(soco):
     return SonosMockEvent(soco, soco.avTransport, variables)
 
 
-@pytest.fixture(autouse=True)
-def mock_get_source_ip(mock_get_source_ip):
-    """Mock network util's async_get_source_ip in all sonos tests."""
-    return mock_get_source_ip
-
-
 @pytest.fixture(name="zgs_discovery", scope="package")
 def zgs_discovery_fixture():
     """Load ZoneGroupState discovery payload and return it."""

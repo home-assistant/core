@@ -17,7 +17,7 @@ from homeassistant.components.input_text import (
 )
 from homeassistant.const import ATTR_ENTITY_PICTURE, CONF_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import async_get
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from tests.common import assert_setup_component
@@ -211,7 +211,9 @@ async def test_missing_required_keys(hass: HomeAssistant) -> None:
     assert hass.states.async_all("image") == []
 
 
-async def test_unique_id(hass: HomeAssistant) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test unique_id configuration."""
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
@@ -232,8 +234,7 @@ async def test_unique_id(hass: HomeAssistant) -> None:
     await hass.async_start()
     await hass.async_block_till_done()
 
-    ent_reg = async_get(hass)
-    entry = ent_reg.async_get(_TEST_IMAGE)
+    entry = entity_registry.async_get(_TEST_IMAGE)
     assert entry
     assert entry.unique_id == "b-a"
 
