@@ -1,5 +1,6 @@
 """Test ZHA sensor."""
 
+from collections.abc import Callable
 from datetime import timedelta
 import math
 from typing import Any
@@ -23,8 +24,6 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
     LIGHT_LUX,
     PERCENTAGE,
     STATE_UNAVAILABLE,
@@ -633,10 +632,10 @@ def assert_state(hass: HomeAssistant, entity_id, state, unit_of_measurement):
 
 
 @pytest.fixture
-def hass_ms(hass: HomeAssistant):
+def hass_ms(hass: HomeAssistant) -> Callable[[str], HomeAssistant]:
     """Hass instance with measurement system."""
 
-    async def _hass_ms(meas_sys):
+    async def _hass_ms(meas_sys: str) -> HomeAssistant:
         await config_util.async_process_ha_core_config(
             hass, {CONF_UNIT_SYSTEM: meas_sys}
         )
@@ -688,11 +687,11 @@ def core_rs(hass_storage: dict[str, Any]):
 )
 async def test_temp_uom(
     hass: HomeAssistant,
-    uom,
-    raw_temp,
-    expected,
-    restore,
-    hass_ms,
+    uom: UnitOfTemperature,
+    raw_temp: int,
+    expected: int,
+    restore: bool,
+    hass_ms: Callable[[str], HomeAssistant],
     core_rs,
     zigpy_device_mock,
     zha_device_restored,
@@ -704,11 +703,7 @@ async def test_temp_uom(
         core_rs(entity_id, uom, state=(expected - 2))
         await async_mock_load_restore_state_from_storage(hass)
 
-    hass = await hass_ms(
-        CONF_UNIT_SYSTEM_METRIC
-        if uom == UnitOfTemperature.CELSIUS
-        else CONF_UNIT_SYSTEM_IMPERIAL
-    )
+    hass = await hass_ms("metric" if uom == UnitOfTemperature.CELSIUS else "imperial")
 
     zigpy_device = zigpy_device_mock(
         {
