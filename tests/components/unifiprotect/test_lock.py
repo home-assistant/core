@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock
 
-from pyunifiprotect.data import Doorlock, LockStatusType
+from uiprotect.data import Doorlock, LockStatusType
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.const import (

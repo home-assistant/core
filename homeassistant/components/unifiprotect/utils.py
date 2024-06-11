@@ -10,8 +10,8 @@ import socket
 from typing import Any
 
 from aiohttp import CookieJar
-from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data import (
+from uiprotect import ProtectApiClient
+from uiprotect.data import (
     Bootstrap,
     CameraChannel,
     Light,
