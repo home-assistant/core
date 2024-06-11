@@ -5,7 +5,13 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from aioautomower.exceptions import ApiException
-from aioautomower.model import MowerActivities, MowerStates, StayOutZones, Zone
+from aioautomower.model import (
+    MowerActivities,
+    MowerModes,
+    MowerStates,
+    StayOutZones,
+    Zone,
+)
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -78,7 +84,7 @@ class AutomowerScheduleSwitchEntity(AutomowerControlEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the switch."""
-        return self.mower_attributes.mower.mode != "HOME"
+        return self.mower_attributes.mower.mode != MowerModes.HOME
 
     @property
     def available(self) -> bool:

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from aioautomower.exceptions import ApiException
+from aioautomower.model import MowerModes
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -41,8 +42,8 @@ async def test_switch_states(
     await setup_integration(hass, mock_config_entry)
 
     for mode, expected_state in [
-        ("HOME", "off"),
-        ("MAIN_AREA", "on"),
+        (MowerModes.HOME, "off"),
+        (MowerModes.MAIN_AREA, "on"),
     ]:
         values[TEST_MOWER_ID].mower.mode = mode
         mock_automower_client.get_status.return_value = values
