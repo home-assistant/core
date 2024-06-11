@@ -827,9 +827,11 @@ def time(
                 after_entity.attributes.get("minute", 59),
                 after_entity.attributes.get("second", 59),
             )
-        elif after_entity.attributes.get(
-            ATTR_DEVICE_CLASS
-        ) == SensorDeviceClass.TIMESTAMP and after_entity.state not in (
+        elif (
+            after_entity.domain == "time"
+            or after_entity.attributes.get(ATTR_DEVICE_CLASS)
+            == SensorDeviceClass.TIMESTAMP
+        ) and after_entity.state not in (
             STATE_UNAVAILABLE,
             STATE_UNKNOWN,
         ):
@@ -851,9 +853,11 @@ def time(
                 before_entity.attributes.get("minute", 59),
                 before_entity.attributes.get("second", 59),
             )
-        elif before_entity.attributes.get(
-            ATTR_DEVICE_CLASS
-        ) == SensorDeviceClass.TIMESTAMP and before_entity.state not in (
+        elif (
+            before_entity.domain == "time"
+            or before_entity.attributes.get(ATTR_DEVICE_CLASS)
+            == SensorDeviceClass.TIMESTAMP
+        ) and before_entity.state not in (
             STATE_UNAVAILABLE,
             STATE_UNKNOWN,
         ):
