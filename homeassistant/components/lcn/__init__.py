@@ -48,7 +48,7 @@ from .helpers import (
 )
 from .schemas import CONFIG_SCHEMA  # noqa: F401
 from .services import SERVICES
-from .websocket import register_panel
+from .websocket import register_panel_and_ws_api
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -143,7 +143,7 @@ async def async_setup_entry(
                 DOMAIN, service_name, service(hass).async_call_service, service.schema
             )
 
-    await register_panel(hass)
+    await register_panel_and_ws_api(hass)
 
     return True
 
