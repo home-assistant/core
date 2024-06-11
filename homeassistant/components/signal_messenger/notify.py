@@ -198,9 +198,8 @@ class SignalNotificationService(BaseNotificationService):
     def get_text_mode(data) -> str:
         """Extract text mode parameter from data."""
         try:
-            text_mode = data.get(ATTR_TEXTMODE)
-            if text_mode in ["normal", "styled"]:
-                return text_mode
+            return vol.In(["normal", "styled"])(data.get(ATTR_TEXTMODE))
         except AttributeError:
             return "normal"
-        return "normal"
+        except vol.Invalid:
+            return "normal"
