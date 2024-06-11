@@ -1,6 +1,8 @@
 """The tests for the Owntracks device tracker."""
 
+import base64
 import json
+import pickle
 from unittest.mock import patch
 
 import pytest
@@ -1330,11 +1332,12 @@ def generate_ciphers(secret):
     # PyNaCl ciphertext generation will fail if the module
     # cannot be imported. However, the test for decryption
     # also relies on this library and won't be run without it.
-    import base64
-    import pickle
 
     try:
+        # pylint: disable-next=import-outside-toplevel
         from nacl.encoding import Base64Encoder
+
+        # pylint: disable-next=import-outside-toplevel
         from nacl.secret import SecretBox
 
         keylen = SecretBox.KEY_SIZE
@@ -1381,9 +1384,6 @@ def mock_cipher():
 
     def mock_decrypt(ciphertext, key):
         """Decrypt/unpickle."""
-        import base64
-        import pickle
-
         (mkey, plaintext) = pickle.loads(base64.b64decode(ciphertext))
         if key != mkey:
             raise ValueError
@@ -1505,10 +1505,10 @@ async def test_encrypted_payload_no_topic_key(hass: HomeAssistant, setup_comp) -
 async def test_encrypted_payload_libsodium(hass: HomeAssistant, setup_comp) -> None:
     """Test sending encrypted message payload."""
     try:
+        # pylint: disable-next=import-outside-toplevel
         import nacl  # noqa: F401
     except (ImportError, OSError):
         pytest.skip("PyNaCl/libsodium is not installed")
-        return
 
     await setup_owntracks(hass, {CONF_SECRET: TEST_SECRET_KEY})
 
