@@ -67,7 +67,7 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
         except (PyVLXException, ConnectionError):
             create_repair("cannot_connect")
             return self.async_abort(reason="cannot_connect")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             create_repair("unknown")
             return self.async_abort(reason="unknown")
 
@@ -95,7 +95,7 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
             except (PyVLXException, ConnectionError) as err:
                 errors["base"] = "cannot_connect"
                 LOGGER.debug("Cannot connect: %s", err)
-            except Exception as err:  # pylint: disable=broad-except
+            except Exception as err:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception: %s", err)
                 errors["base"] = "unknown"
             else:

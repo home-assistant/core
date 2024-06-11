@@ -22,7 +22,7 @@ async def test_load_unload_entry(
 
     assert mock_devops_client.authorized
     assert mock_devops_client.authorize.call_count == 1
-    assert mock_devops_client.get_builds.call_count == 2
+    assert mock_devops_client.get_builds.call_count == 1
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 

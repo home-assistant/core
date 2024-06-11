@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Awaitable, Callable
 from datetime import datetime
 from socket import AddressFamily
 from typing import Any
@@ -19,6 +19,7 @@ from samsungtvws.encrypted.remote import SamsungTVEncryptedWSAsyncRemote
 from samsungtvws.event import ED_INSTALLED_APP_EVENT
 from samsungtvws.exceptions import ResponseError
 from samsungtvws.remote import ChannelEmitCommand
+from typing_extensions import Generator
 
 from homeassistant.components.samsungtv.const import WEBSOCKET_SSL_PORT
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -30,7 +31,7 @@ from tests.common import async_mock_service
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.samsungtv.async_setup_entry", return_value=True
@@ -53,11 +54,6 @@ async def silent_ssdp_scanner(hass):
         ),
     ):
         yield
-
-
-@pytest.fixture(autouse=True)
-def samsungtv_mock_get_source_ip(mock_get_source_ip):
-    """Mock network util's async_get_source_ip."""
 
 
 @pytest.fixture(autouse=True)

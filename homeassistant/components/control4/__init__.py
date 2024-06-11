@@ -120,7 +120,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     director_all_items = json.loads(director_all_items)
     entry_data[CONF_DIRECTOR_ALL_ITEMS] = director_all_items
 
-    entry_data[CONF_UI_CONFIGURATION] = json.loads(await director.getUiConfiguration())
+    # Check if OS version is 3 or higher to get UI configuration
+    entry_data[CONF_UI_CONFIGURATION] = None
+    if int(entry_data[CONF_DIRECTOR_SW_VERSION].split(".")[0]) >= 3:
+        entry_data[CONF_UI_CONFIGURATION] = json.loads(
+            await director.getUiConfiguration()
+        )
 
     # Load options from config entry
     entry_data[CONF_SCAN_INTERVAL] = entry.options.get(

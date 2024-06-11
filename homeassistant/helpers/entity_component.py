@@ -182,7 +182,10 @@ class EntityComponent(Generic[_EntityT]):
         key = config_entry.entry_id
 
         if key in self._platforms:
-            raise ValueError("Config entry has already been setup!")
+            raise ValueError(
+                f"Config entry {config_entry.title} ({key}) for "
+                f"{platform_type}.{self.domain} has already been setup!"
+            )
 
         self._platforms[key] = self._async_init_entity_platform(
             platform_type,

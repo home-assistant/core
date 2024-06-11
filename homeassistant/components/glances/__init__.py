@@ -73,7 +73,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def get_api(hass: HomeAssistant, entry_data: dict[str, Any]) -> Glances:
     """Return the api from glances_api."""
     httpx_client = get_async_client(hass, verify_ssl=entry_data[CONF_VERIFY_SSL])
-    for version in (3, 2):
+    for version in (4, 3, 2):
         api = Glances(
             host=entry_data[CONF_HOST],
             port=entry_data[CONF_PORT],
@@ -100,7 +100,7 @@ async def get_api(hass: HomeAssistant, entry_data: dict[str, Any]) -> Glances:
             )
         _LOGGER.debug("Connected to Glances API v%s", version)
         return api
-    raise ServerVersionMismatch("Could not connect to Glances API version 2 or 3")
+    raise ServerVersionMismatch("Could not connect to Glances API version 2, 3 or 4")
 
 
 class ServerVersionMismatch(HomeAssistantError):

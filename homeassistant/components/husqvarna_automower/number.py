@@ -11,14 +11,14 @@ from aioautomower.model import MowerAttributes, WorkArea
 from aioautomower.session import AutomowerSession
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import AutomowerConfigEntry
+from .const import EXECUTION_TIME_DELAY
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerControlEntity
 
@@ -30,8 +30,8 @@ def _async_get_cutting_height(data: MowerAttributes) -> int:
     """Return the cutting height."""
     if TYPE_CHECKING:
         # Sensor does not get created if it is None
-        assert data.cutting_height is not None
-    return data.cutting_height
+        assert data.settings.cutting_height is not None
+    return data.settings.cutting_height
 
 
 @callback
@@ -49,13 +49,18 @@ async def async_set_work_area_cutting_height(
     work_area_id: int,
 ) -> None:
     """Set cutting height for work area."""
-    await coordinator.api.set_cutting_height_workarea(
+    await coordinator.api.commands.set_cutting_height_workarea(
         mower_id, int(cheight), work_area_id
     )
-    # As there are no updates from the websocket regarding work area changes,
-    # we need to wait 5s and then poll the API.
-    await asyncio.sleep(5)
-    await coordinator.async_request_refresh()
+
+
+async def async_set_cutting_height(
+    session: AutomowerSession,
+    mower_id: str,
+    cheight: float,
+) -> None:
+    """Set cutting height."""
+    await session.commands.set_cutting_height(mower_id, int(cheight))
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -75,11 +80,9 @@ NUMBER_TYPES: tuple[AutomowerNumberEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         native_min_value=1,
         native_max_value=9,
-        exists_fn=lambda data: data.cutting_height is not None,
+        exists_fn=lambda data: data.settings.cutting_height is not None,
         value_fn=_async_get_cutting_height,
-        set_value_fn=lambda session, mower_id, cheight: session.set_cutting_height(
-            mower_id, int(cheight)
-        ),
+        set_value_fn=async_set_cutting_height,
     ),
 )
 
@@ -108,10 +111,12 @@ WORK_AREA_NUMBER_TYPES: tuple[AutomowerWorkAreaNumberEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AutomowerConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up number platform."""
-    coordinator: AutomowerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     entities: list[NumberEntity] = []
 
     for mower_id in coordinator.data:
@@ -126,12 +131,11 @@ async def async_setup_entry(
                     for work_area_id in _work_areas
                 )
             async_remove_entities(hass, coordinator, entry, mower_id)
-    entities.extend(
-        AutomowerNumberEntity(mower_id, coordinator, description)
-        for mower_id in coordinator.data
-        for description in NUMBER_TYPES
-        if description.exists_fn(coordinator.data[mower_id])
-    )
+        entities.extend(
+            AutomowerNumberEntity(mower_id, coordinator, description)
+            for description in NUMBER_TYPES
+            if description.exists_fn(coordinator.data[mower_id])
+        )
     async_add_entities(entities)
 
 
@@ -214,13 +218,18 @@ class AutomowerWorkAreaNumberEntity(AutomowerControlEntity, NumberEntity):
             raise HomeAssistantError(
                 f"Command couldn't be sent to the command queue: {exception}"
             ) from exception
+        else:
+            # As there are no updates from the websocket regarding work area changes,
+            # we need to wait 5s and then poll the API.
+            await asyncio.sleep(EXECUTION_TIME_DELAY)
+            await self.coordinator.async_request_refresh()
 
 
 @callback
 def async_remove_entities(
     hass: HomeAssistant,
     coordinator: AutomowerDataUpdateCoordinator,
-    config_entry: ConfigEntry,
+    entry: AutomowerConfigEntry,
     mower_id: str,
 ) -> None:
     """Remove deleted work areas from Home Assistant."""
@@ -231,10 +240,11 @@ def async_remove_entities(
         for work_area_id in _work_areas:
             uid = f"{mower_id}_{work_area_id}_cutting_height_work_area"
             active_work_areas.add(uid)
-        for entity_entry in er.async_entries_for_config_entry(
-            entity_reg, config_entry.entry_id
+    for entity_entry in er.async_entries_for_config_entry(entity_reg, entry.entry_id):
+        if (
+            entity_entry.domain == Platform.NUMBER
+            and (split := entity_entry.unique_id.split("_"))[0] == mower_id
+            and split[-1] == "area"
+            and entity_entry.unique_id not in active_work_areas
         ):
-            if entity_entry.unique_id.split("_")[0] == mower_id:
-                if entity_entry.unique_id.endswith("cutting_height_work_area"):
-                    if entity_entry.unique_id not in active_work_areas:
-                        entity_reg.async_remove(entity_entry.entity_id)
+            entity_reg.async_remove(entity_entry.entity_id)

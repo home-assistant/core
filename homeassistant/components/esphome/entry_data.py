@@ -244,15 +244,29 @@ class RuntimeEntryData:
                 callback_(static_info)
 
     async def _ensure_platforms_loaded(
-        self, hass: HomeAssistant, entry: ConfigEntry, platforms: set[Platform]
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        platforms: set[Platform],
+        late: bool,
     ) -> None:
         async with self.platform_load_lock:
             if needed := platforms - self.loaded_platforms:
-                await hass.config_entries.async_forward_entry_setups(entry, needed)
+                if late:
+                    await hass.config_entries.async_late_forward_entry_setups(
+                        entry, needed
+                    )
+                else:
+                    await hass.config_entries.async_forward_entry_setups(entry, needed)
             self.loaded_platforms |= needed
 
     async def async_update_static_infos(
-        self, hass: HomeAssistant, entry: ConfigEntry, infos: list[EntityInfo], mac: str
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        infos: list[EntityInfo],
+        mac: str,
+        late: bool = False,
     ) -> None:
         """Distribute an update of static infos to all platforms."""
         # First, load all platforms
@@ -282,7 +296,7 @@ class RuntimeEntryData:
             ):
                 ent_reg.async_update_entity(old_entry, new_unique_id=new_unique_id)
 
-        await self._ensure_platforms_loaded(hass, entry, needed_platforms)
+        await self._ensure_platforms_loaded(hass, entry, needed_platforms, late)
 
         # Make a dict of the EntityInfo by type and send
         # them to the listeners for each specific EntityInfo type
@@ -374,7 +388,7 @@ class RuntimeEntryData:
         if subscription := self.state_subscriptions.get(subscription_key):
             try:
                 subscription()
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 # If we allow this exception to raise it will
                 # make it all the way to data_received in aioesphomeapi
                 # which will cause the connection to be closed.

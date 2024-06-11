@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
-from typing import Any, TypeVar
+from collections.abc import Awaitable, Callable
+from typing import Any
 from unittest.mock import patch
 
 import pytest
 import rtsp_to_webrtc
+from typing_extensions import AsyncGenerator
 
 from homeassistant.components import camera
 from homeassistant.components.rtsp_to_webrtc import DOMAIN
@@ -23,9 +24,8 @@ SERVER_URL = "http://127.0.0.1:8083"
 CONFIG_ENTRY_DATA = {"server_url": SERVER_URL}
 
 # Typing helpers
-ComponentSetup = Callable[[], Awaitable[None]]
-_T = TypeVar("_T")
-YieldFixture = Generator[_T, None, None]
+type ComponentSetup = Callable[[], Awaitable[None]]
+type AsyncYieldFixture[_T] = AsyncGenerator[_T]
 
 
 @pytest.fixture(autouse=True)
@@ -39,7 +39,7 @@ async def webrtc_server() -> None:
 
 
 @pytest.fixture
-async def mock_camera(hass) -> AsyncGenerator[None, None]:
+async def mock_camera(hass) -> AsyncGenerator[None]:
     """Initialize a demo camera platform."""
     assert await async_setup_component(
         hass, "camera", {camera.DOMAIN: {"platform": "demo"}}
@@ -91,7 +91,7 @@ async def rtsp_to_webrtc_client() -> None:
 @pytest.fixture
 async def setup_integration(
     hass: HomeAssistant, config_entry: MockConfigEntry
-) -> YieldFixture[ComponentSetup]:
+) -> AsyncYieldFixture[ComponentSetup]:
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
 

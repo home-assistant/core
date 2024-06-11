@@ -13,7 +13,7 @@ from .hub import AxisHub, get_axis_api
 
 _LOGGER = logging.getLogger(__name__)
 
-AxisConfigEntry = ConfigEntry[AxisHub]
+type AxisConfigEntry = ConfigEntry[AxisHub]
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: AxisConfigEntry) -> bool:

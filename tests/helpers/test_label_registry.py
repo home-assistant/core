@@ -1,5 +1,6 @@
 """Tests for the Label Registry."""
 
+from functools import partial
 import re
 from typing import Any
 
@@ -10,14 +11,6 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     label_registry as lr,
-)
-from homeassistant.helpers.label_registry import (
-    EVENT_LABEL_REGISTRY_UPDATED,
-    STORAGE_KEY,
-    STORAGE_VERSION_MAJOR,
-    LabelRegistry,
-    async_get,
-    async_load,
 )
 
 from tests.common import MockConfigEntry, async_capture_events, flush_store
@@ -33,7 +26,7 @@ async def test_create_label(
     hass: HomeAssistant, label_registry: lr.LabelRegistry
 ) -> None:
     """Make sure that we can create labels."""
-    update_events = async_capture_events(hass, EVENT_LABEL_REGISTRY_UPDATED)
+    update_events = async_capture_events(hass, lr.EVENT_LABEL_REGISTRY_UPDATED)
     label = label_registry.async_create(
         name="My Label",
         color="#FF0000",
@@ -62,7 +55,7 @@ async def test_create_label_with_name_already_in_use(
     hass: HomeAssistant, label_registry: lr.LabelRegistry
 ) -> None:
     """Make sure that we can't create a label with a ID already in use."""
-    update_events = async_capture_events(hass, EVENT_LABEL_REGISTRY_UPDATED)
+    update_events = async_capture_events(hass, lr.EVENT_LABEL_REGISTRY_UPDATED)
     label_registry.async_create("mock")
 
     with pytest.raises(
@@ -94,7 +87,7 @@ async def test_delete_label(
     hass: HomeAssistant, label_registry: lr.LabelRegistry
 ) -> None:
     """Make sure that we can delete a label."""
-    update_events = async_capture_events(hass, EVENT_LABEL_REGISTRY_UPDATED)
+    update_events = async_capture_events(hass, lr.EVENT_LABEL_REGISTRY_UPDATED)
     label = label_registry.async_create("Label")
     assert len(label_registry.labels) == 1
 
@@ -129,7 +122,7 @@ async def test_update_label(
     hass: HomeAssistant, label_registry: lr.LabelRegistry
 ) -> None:
     """Make sure that we can update labels."""
-    update_events = async_capture_events(hass, EVENT_LABEL_REGISTRY_UPDATED)
+    update_events = async_capture_events(hass, lr.EVENT_LABEL_REGISTRY_UPDATED)
     label = label_registry.async_create("Mock")
 
     assert len(label_registry.labels) == 1
@@ -173,7 +166,7 @@ async def test_update_label_with_same_data(
     hass: HomeAssistant, label_registry: lr.LabelRegistry
 ) -> None:
     """Make sure that we can reapply the same data to the label and it won't update."""
-    update_events = async_capture_events(hass, EVENT_LABEL_REGISTRY_UPDATED)
+    update_events = async_capture_events(hass, lr.EVENT_LABEL_REGISTRY_UPDATED)
     label = label_registry.async_create(
         "mock",
         color="#FFFFFF",
@@ -201,7 +194,7 @@ async def test_update_label_with_same_data(
 
 
 async def test_update_label_with_same_name_change_case(
-    hass: HomeAssistant, label_registry: lr.LabelRegistry
+    label_registry: lr.LabelRegistry,
 ) -> None:
     """Make sure that we can reapply the same name with a different case to the label."""
     label = label_registry.async_create("mock")
@@ -267,7 +260,7 @@ async def test_load_labels(
 
     assert len(label_registry.labels) == 2
 
-    registry2 = LabelRegistry(hass)
+    registry2 = lr.LabelRegistry(hass)
     await flush_store(label_registry._store)
     await registry2.async_load()
 
@@ -292,11 +285,11 @@ async def test_load_labels(
 
 @pytest.mark.parametrize("load_registries", [False])
 async def test_loading_label_from_storage(
-    hass: HomeAssistant, hass_storage: Any
+    hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test loading stored labels on start."""
-    hass_storage[STORAGE_KEY] = {
-        "version": STORAGE_VERSION_MAJOR,
+    hass_storage[lr.STORAGE_KEY] = {
+        "version": lr.STORAGE_VERSION_MAJOR,
         "data": {
             "labels": [
                 {
@@ -310,8 +303,8 @@ async def test_loading_label_from_storage(
         },
     }
 
-    await async_load(hass)
-    registry = async_get(hass)
+    await lr.async_load(hass)
+    registry = lr.async_get(hass)
 
     assert len(registry.labels) == 1
 
@@ -454,3 +447,45 @@ async def test_labels_removed_from_entities(
     assert len(entries) == 0
     entries = er.async_entries_for_label(entity_registry, label2.label_id)
     assert len(entries) == 0
+
+
+async def test_async_create_thread_safety(
+    hass: HomeAssistant,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test async_create raises when called from wrong thread."""
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls label_registry.async_create from a thread.",
+    ):
+        await hass.async_add_executor_job(label_registry.async_create, "any")
+
+
+async def test_async_delete_thread_safety(
+    hass: HomeAssistant,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test async_delete raises when called from wrong thread."""
+    any_label = label_registry.async_create("any")
+
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls label_registry.async_delete from a thread.",
+    ):
+        await hass.async_add_executor_job(label_registry.async_delete, any_label)
+
+
+async def test_async_update_thread_safety(
+    hass: HomeAssistant,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test async_update raises when called from wrong thread."""
+    any_label = label_registry.async_create("any")
+
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls label_registry.async_update from a thread.",
+    ):
+        await hass.async_add_executor_job(
+            partial(label_registry.async_update, any_label.label_id, name="new name")
+        )

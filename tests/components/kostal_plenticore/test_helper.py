@@ -1,10 +1,10 @@
 """Test Kostal Plenticore helper."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pykoplenti import ApiClient, ExtendedApiClient, SettingsData
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.kostal_plenticore.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -14,10 +14,10 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_apiclient() -> Generator[ApiClient, None, None]:
+def mock_apiclient() -> Generator[ApiClient]:
     """Return a mocked ApiClient class."""
     with patch(
-        "homeassistant.components.kostal_plenticore.helper.ExtendedApiClient",
+        "homeassistant.components.kostal_plenticore.coordinator.ExtendedApiClient",
         autospec=True,
     ) as mock_api_class:
         apiclient = MagicMock(spec=ExtendedApiClient)

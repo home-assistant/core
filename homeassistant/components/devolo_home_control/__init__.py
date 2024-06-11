@@ -20,7 +20,7 @@ from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import CONF_MYDEVOLO, DEFAULT_MYDEVOLO, GATEWAY_SERIAL_PATTERN, PLATFORMS
 
-DevoloHomeControlConfigEntry = ConfigEntry[list[HomeControl]]
+type DevoloHomeControlConfigEntry = ConfigEntry[list[HomeControl]]
 
 
 async def async_setup_entry(
@@ -62,7 +62,7 @@ async def async_setup_entry(
                 await hass.async_add_executor_job(
                     partial(
                         HomeControl,
-                        gateway_id=gateway_id,
+                        gateway_id=str(gateway_id),
                         mydevolo_instance=mydevolo,
                         zeroconf_instance=zeroconf_instance,
                     )

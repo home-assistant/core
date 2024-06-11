@@ -1,6 +1,5 @@
 """Test the speech-to-text platform for the cloud integration."""
 
-from collections.abc import AsyncGenerator
 from copy import deepcopy
 from http import HTTPStatus
 from typing import Any
@@ -8,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from hass_nabucasa.voice import STTResponse, VoiceError
 import pytest
+from typing_extensions import AsyncGenerator
 
 from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY
 from homeassistant.components.cloud import DOMAIN
@@ -21,7 +21,7 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
-async def delay_save_fixture() -> AsyncGenerator[None, None]:
+async def delay_save_fixture() -> AsyncGenerator[None]:
     """Load the homeassistant integration."""
     with patch("homeassistant.helpers.collection.SAVE_DELAY", new=0):
         yield

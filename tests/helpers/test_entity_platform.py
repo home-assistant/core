@@ -213,6 +213,7 @@ async def test_update_state_adds_entities_with_update_before_add_false(
     assert not ent.update.called
 
 
+@pytest.mark.usefixtures("disable_translations_once")
 async def test_set_scan_interval_via_platform(hass: HomeAssistant) -> None:
     """Test the setting of the scan interval via platform."""
 
@@ -260,6 +261,7 @@ async def test_adding_entities_with_generator_and_thread_callback(
     await component.async_add_entities(create_entity(i) for i in range(2))
 
 
+@pytest.mark.usefixtures("disable_translations_once")
 async def test_platform_warn_slow_setup(hass: HomeAssistant) -> None:
     """Warn we log when platform setup takes a long time."""
     platform = MockPlatform()
@@ -1853,7 +1855,6 @@ async def test_cancellation_is_not_blocked(
 
     with pytest.raises(asyncio.CancelledError):
         assert await platform.async_setup_entry(config_entry)
-        await hass.async_block_till_done()
 
     full_name = f"{config_entry.domain}.{platform.domain}"
     assert full_name not in hass.config.components
