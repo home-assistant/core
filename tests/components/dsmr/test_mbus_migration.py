@@ -3,6 +3,13 @@
 import datetime
 from decimal import Decimal
 
+from dsmr_parser.obis_references import (
+    BELGIUM_MBUS1_DEVICE_TYPE,
+    BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
+    BELGIUM_MBUS1_METER_READING2,
+)
+from dsmr_parser.objects import CosemObject, MBusObject
+
 from homeassistant.components.dsmr.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
@@ -19,13 +26,6 @@ async def test_migrate_gas_to_mbus(
 ) -> None:
     """Test migration of unique_id."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
-
-    from dsmr_parser.obis_references import (
-        BELGIUM_MBUS1_DEVICE_TYPE,
-        BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS1_METER_READING2,
-    )
-    from dsmr_parser.objects import CosemObject, MBusObject
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -117,13 +117,6 @@ async def test_migrate_gas_to_mbus_exists(
 ) -> None:
     """Test migration of unique_id."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
-
-    from dsmr_parser.obis_references import (
-        BELGIUM_MBUS1_DEVICE_TYPE,
-        BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS1_METER_READING2,
-    )
-    from dsmr_parser.objects import CosemObject, MBusObject
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
