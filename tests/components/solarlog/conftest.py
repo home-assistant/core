@@ -29,7 +29,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture(name="test_connect")
-def mock_controller():
+def mock_test_connection():
     """Mock a successful _test_connection."""
     with patch(
         "homeassistant.components.solarlog.config_flow.SolarLogConfigFlow._test_connection",
