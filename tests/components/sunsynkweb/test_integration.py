@@ -1,4 +1,4 @@
-"""Basic coordinator tests."""
+"""Integration end-to-end tests."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ async def test_coordinator_simple_update(
     freezer,
     sensor_keys,
 ) -> None:
-    """Run coordinator tests."""
+    """Validate that all sensors are registered and that updates propagate."""
     for key in sensor_keys:
         state = hass.states.get(f"sensor.sunsynk_{key}")
         assert state.state == "unknown"
@@ -40,14 +40,14 @@ async def test_coordinator_simple_update(
         assert state.state in ("0", "-0", "4")
 
 
-async def test_coordinator_fail_update_and_recover(
+async def test_bad_api_return_and_recovery(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
     init_integration,
     freezer,
     sensor_keys,
 ) -> None:
-    """Run coordinator tests."""
+    """Verify that if api calls return invalid responses, all sensors are appropriately flagged as unavailable, then recover on normal updates."""
     coordinator = init_integration.runtime_data
 
     async def raisekeyerror():
