@@ -191,6 +191,33 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Utility Meter from a config entry."""
+
+    # Remove device link for entry, the source device may have changed.
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+
+    devices_in_entry = device_registry.devices.get_devices_for_config_entry_id(
+        entry.entry_id
+    )
+
+    # Resolve source entity device
+    if (
+        (source_entity := entity_registry.async_get(entry.options[CONF_SOURCE_SENSOR]))
+        is not None
+    ) and (source_entity.device_id is not None):
+        current_device = device_registry.async_get(
+            device_id=source_entity.device_id,
+        )
+    else:
+        current_device = None
+
+    # Removes all devices from the config entry that are not the same as the current device
+    for device_in_entry in devices_in_entry:
+        if device_in_entry != current_device:
+            device_registry.async_update_device(
+                device_in_entry.id, remove_config_entry_id=entry.entry_id
+            )
+
     entity_registry = er.async_get(hass)
     hass.data[DATA_UTILITY][entry.entry_id] = {
         "source": entry.options[CONF_SOURCE_SENSOR],
@@ -230,16 +257,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update listener, called when the config entry options are changed."""
-
-    # Remove device link for entry, the source device may have changed.
-    # The link will be recreated after load.
-    device_registry = dr.async_get(hass)
-    devices = device_registry.devices.get_devices_for_config_entry_id(entry.entry_id)
-
-    for device in devices:
-        device_registry.async_update_device(
-            device.id, remove_config_entry_id=entry.entry_id
-        )
 
     await hass.config_entries.async_reload(entry.entry_id)
 
