@@ -64,6 +64,26 @@ def test_send_message(
     assert_sending_requests(signal_requests_mock)
 
 
+def test_send_message_styled(
+    signal_notification_service: SignalNotificationService,
+    signal_requests_mock_factory: Mocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test send message."""
+    signal_requests_mock = signal_requests_mock_factory()
+    with caplog.at_level(
+        logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
+    ):
+        data = {"text_mode": "styled"}
+        signal_notification_service.send_message(MESSAGE, data=data)
+    post_data = json.loads(signal_requests_mock.request_history[-1].text)
+    assert "Sending signal message" in caplog.text
+    assert signal_requests_mock.called
+    assert signal_requests_mock.call_count == 2
+    assert post_data["text_mode"] == "styled"
+    assert_sending_requests(signal_requests_mock)
+
+
 def test_send_message_to_api_with_bad_data_throws_error(
     signal_notification_service: SignalNotificationService,
     signal_requests_mock_factory: Mocker,
