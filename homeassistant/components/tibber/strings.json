@@ -86,7 +86,7 @@
   },
   "services": {
     "get_prices": {
-      "name": "Get enegry prices",
+      "name": "Get energy prices",
       "description": "Get hourly energy prices from Tibber",
       "fields": {
         "start": {

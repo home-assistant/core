@@ -22,6 +22,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent, llm
 from homeassistant.setup import async_setup_component
+from homeassistant.util import ulid
 
 from tests.common import MockConfigEntry
 
@@ -497,3 +498,41 @@ async def test_unknown_hass_api(
     )
 
     assert result == snapshot
+
+
+@patch(
+    "openai.resources.chat.completions.AsyncCompletions.create",
+    new_callable=AsyncMock,
+)
+async def test_conversation_id(
+    mock_create,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test conversation ID is honored."""
+    result = await conversation.async_converse(
+        hass, "hello", None, None, agent_id=mock_config_entry.entry_id
+    )
+
+    conversation_id = result.conversation_id
+
+    result = await conversation.async_converse(
+        hass, "hello", conversation_id, None, agent_id=mock_config_entry.entry_id
+    )
+
+    assert result.conversation_id == conversation_id
+
+    unknown_id = ulid.ulid()
+
+    result = await conversation.async_converse(
+        hass, "hello", unknown_id, None, agent_id=mock_config_entry.entry_id
+    )
+
+    assert result.conversation_id != unknown_id
+
+    result = await conversation.async_converse(
+        hass, "hello", "koala", None, agent_id=mock_config_entry.entry_id
+    )
+
+    assert result.conversation_id == "koala"
