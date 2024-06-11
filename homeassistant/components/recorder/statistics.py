@@ -395,7 +395,7 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
     """
     start_time = start.replace(minute=0)
     start_time_ts = start_time.timestamp()
-    end_time = start_time + timedelta(hours=1)
+    end_time = start_time + Statistics.duration
     end_time_ts = end_time.timestamp()
 
     # Compute last hour's average, min, max
@@ -463,7 +463,9 @@ def compile_missing_statistics(instance: Recorder) -> bool:
     ) as session:
         # Find the newest statistics run, if any
         if last_run := session.query(func.max(StatisticsRuns.start)).scalar():
-            start = max(start, process_timestamp(last_run) + timedelta(minutes=5))
+            start = max(
+                start, process_timestamp(last_run) + StatisticsShortTerm.duration
+            )
 
         periods_without_commit = 0
         while start < last_period:
@@ -532,7 +534,7 @@ def _compile_statistics(
     returns a set of modified statistic_ids if any were modified.
     """
     assert start.tzinfo == dt_util.UTC, "start must be in UTC"
-    end = start + timedelta(minutes=5)
+    end = start + StatisticsShortTerm.duration
     statistics_meta_manager = instance.statistics_meta_manager
     modified_statistic_ids: set[str] = set()
 
@@ -1477,7 +1479,7 @@ def statistic_during_period(
         tail_only = (
             start_time is not None
             and end_time is not None
-            and end_time - start_time < timedelta(hours=1)
+            and end_time - start_time < Statistics.duration
         )
 
         # Calculate the head period
@@ -1487,20 +1489,22 @@ def statistic_during_period(
             not tail_only
             and oldest_stat is not None
             and oldest_5_min_stat is not None
-            and oldest_5_min_stat - oldest_stat < timedelta(hours=1)
+            and oldest_5_min_stat - oldest_stat < Statistics.duration
             and (start_time is None or start_time < oldest_5_min_stat)
         ):
             # To improve accuracy of averaged for statistics which were added within
             # recorder's retention period.
             head_start_time = oldest_5_min_stat
-            head_end_time = oldest_5_min_stat.replace(
-                minute=0, second=0, microsecond=0
-            ) + timedelta(hours=1)
+            head_end_time = (
+                oldest_5_min_stat.replace(minute=0, second=0, microsecond=0)
+                + Statistics.duration
+            )
         elif not tail_only and start_time is not None and start_time.minute:
             head_start_time = start_time
-            head_end_time = start_time.replace(
-                minute=0, second=0, microsecond=0
-            ) + timedelta(hours=1)
+            head_end_time = (
+                start_time.replace(minute=0, second=0, microsecond=0)
+                + Statistics.duration
+            )
 
         # Calculate the tail period
         tail_start_time: datetime | None = None

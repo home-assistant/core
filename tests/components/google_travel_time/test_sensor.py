@@ -9,8 +9,9 @@ from homeassistant.components.google_travel_time.const import (
     CONF_ARRIVAL_TIME,
     CONF_DEPARTURE_TIME,
     DOMAIN,
+    UNITS_IMPERIAL,
+    UNITS_METRIC,
 )
-from homeassistant.const import CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
@@ -208,8 +209,8 @@ async def test_sensor_arrival_time_custom_timestamp(hass: HomeAssistant) -> None
 @pytest.mark.parametrize(
     ("unit_system", "expected_unit_option"),
     [
-        (METRIC_SYSTEM, CONF_UNIT_SYSTEM_METRIC),
-        (US_CUSTOMARY_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL),
+        (METRIC_SYSTEM, UNITS_METRIC),
+        (US_CUSTOMARY_SYSTEM, UNITS_IMPERIAL),
     ],
 )
 async def test_sensor_unit_system(
