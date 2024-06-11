@@ -12,6 +12,7 @@ import time
 from typing import Any, TypedDict
 from unittest.mock import ANY, MagicMock, Mock, call, mock_open, patch
 
+import certifi
 from freezegun.api import FrozenDateTimeFactory
 import paho.mqtt.client as paho_mqtt
 import pytest
@@ -2478,8 +2479,6 @@ async def test_setup_uses_certificate_on_certificate_set_to_auto_and_insecure(
         await hass.async_block_till_done()
 
     assert calls
-
-    import certifi
 
     expected_certificate = certifi.where()
     assert calls[0][0] == expected_certificate

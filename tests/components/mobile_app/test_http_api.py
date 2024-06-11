@@ -67,11 +67,13 @@ async def test_registration_encryption(
 ) -> None:
     """Test that registrations happen."""
     try:
+        # pylint: disable-next=import-outside-toplevel
         from nacl.encoding import Base64Encoder
+
+        # pylint: disable-next=import-outside-toplevel
         from nacl.secret import SecretBox
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
-        return
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -112,11 +114,13 @@ async def test_registration_encryption_legacy(
 ) -> None:
     """Test that registrations happen."""
     try:
+        # pylint: disable-next=import-outside-toplevel
         from nacl.encoding import Base64Encoder
+
+        # pylint: disable-next=import-outside-toplevel
         from nacl.secret import SecretBox
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
-        return
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
