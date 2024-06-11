@@ -72,7 +72,7 @@ class TPLinkSwitch(CoordinatedTPLinkEntity, SwitchEntity):
         self.entity_description = _description_for_feature(
             SwitchEntityDescription, feature
         )
-        self._async_update_attrs()
+        self._async_call_update_attrs()
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:

@@ -91,7 +91,7 @@ async def test_dimmer_unique_id(hass: HomeAssistant) -> None:
     ("device", "transition"),
     [
         (_mocked_device(modules=[Module.Light]), 2.0),
-        (_mocked_device(modules=[Module.Light]), None),
+        (_mocked_device(modules=[Module.Light, Module.LightEffect]), None),
     ],
 )
 async def test_color_light(

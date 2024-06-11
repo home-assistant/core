@@ -169,7 +169,7 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
             else:
                 assert description.device_class
                 self._attr_translation_key = f"{description.device_class.value}_child"
-        self._async_update_attrs()
+        self._async_call_update_attrs()
 
     @callback
     def _async_update_attrs(self) -> None:
@@ -177,9 +177,3 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
         self._attr_native_value = async_emeter_from_device(
             self._device, self.entity_description
         )
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._async_update_attrs()
-        super()._handle_coordinator_update()

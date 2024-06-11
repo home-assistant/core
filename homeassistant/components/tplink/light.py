@@ -199,7 +199,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         if len(self._attr_supported_color_modes) == 1:
             # If the light supports only a single color mode, set it now
             self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
-        self._async_update_attrs()
+        self._async_call_update_attrs()
 
     @callback
     def _async_extract_brightness_transition(
@@ -306,12 +306,6 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         elif color_mode is ColorMode.HS:
             hue, saturation, _ = light_module.hsv
             self._attr_hs_color = hue, saturation
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._async_update_attrs()
-        super()._handle_coordinator_update()
 
 
 class TPLinkSmartLightStrip(TPLinkSmartBulb):
