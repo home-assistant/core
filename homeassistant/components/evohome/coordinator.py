@@ -111,27 +111,6 @@ class EvoBroker:
         """Load access tokens and session_id from the store and validate them.
 
         Sets self._tokens and self._session_id to the latest values.
-
-            app_storage = None -> {}
-
-            app_storage = {}
-
-            app_storage = {
-                'username':             'username@email.com',
-                'refresh_token':        'PlsqGsCd72_0BWl...',
-                'access_token':         'W5y0jpNTKIqTmbA...',
-                'access_token_expires': '2024-06-10T21:06:09+00:00'
-            }
-
-            app_storage = {
-                "username":             "username@email.com",
-                "refresh_token":        "jg68ZCKYdxEI3fF...",
-                "access_token":         "1dc7z657UKzbhKA...",
-                "access_token_expires": "2024-06-10T22:05:54+00:00",
-                "user_data": {
-                    "sessionId": "F7181186..."
-                },
-            }
         """
 
         app_storage: dict[str, Any] = dict(await self._store.async_load() or {})
