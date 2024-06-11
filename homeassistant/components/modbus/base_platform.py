@@ -57,6 +57,7 @@ from .const import (
     CONF_SWAP_BYTE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
+    CONF_SYNC,
     CONF_VERIFY,
     CONF_VIRTUAL_COUNT,
     CONF_WRITE_TYPE,
@@ -299,6 +300,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
             ][0]
             self._state_on = config[CONF_VERIFY].get(CONF_STATE_ON, self.command_on)
             self._state_off = config[CONF_VERIFY].get(CONF_STATE_OFF, self._command_off)
+            self._verify_sync = config[CONF_VERIFY].get(CONF_SYNC, False)
         else:
             self._verify_active = False
 
@@ -360,12 +362,30 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
 
         self._attr_available = True
         if self._verify_type in (CALL_TYPE_COIL, CALL_TYPE_DISCRETE):
+            value_bool = bool(result.bits[0] & 1)
+            if (value_bool != self._attr_is_on) and self._verify_sync:
+                if value_bool:
+                    await self._hub.async_pb_call(
+                        self._slave, self._address, self.command_on, self._write_type
+                    )
+                else:
+                    await self._hub.async_pb_call(
+                        self._slave, self._address, self._command_off, self._write_type
+                    )
             self._attr_is_on = bool(result.bits[0] & 1)
         else:
             value = int(result.registers[0])
             if value == self._state_on:
+                if value and self._verify_sync:
+                    await self._hub.async_pb_call(
+                        self._slave, self._address, self.command_on, self._write_type
+                    )
                 self._attr_is_on = True
             elif value == self._state_off:
+                if (value is False) and self._verify_sync:
+                    await self._hub.async_pb_call(
+                        self._slave, self._address, self._command_off, self._write_type
+                    )
                 self._attr_is_on = False
             elif value is not None:
                 _LOGGER.error(

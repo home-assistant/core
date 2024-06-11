@@ -120,6 +120,7 @@ from .const import (
     CONF_SWING_MODE_SWING_ON,
     CONF_SWING_MODE_SWING_VERT,
     CONF_SWING_MODE_VALUES,
+    CONF_SYNC,
     CONF_TARGET_TEMP,
     CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_VERIFY,
@@ -238,6 +239,7 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                 vol.Optional(CONF_STATE_OFF): cv.positive_int,
                 vol.Optional(CONF_STATE_ON): cv.positive_int,
                 vol.Optional(CONF_DELAY, default=0): cv.positive_int,
+                vol.Optional(CONF_SYNC, default=False): cv.boolean,
             }
         ),
     }
