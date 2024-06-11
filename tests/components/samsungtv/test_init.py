@@ -220,10 +220,14 @@ async def test_incorrectly_formatted_mac_fixed(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("remotews", "rest_api")
+@pytest.mark.xfail
 async def test_cleanup_mac(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry, snapshot: SnapshotAssertion
 ) -> None:
-    """Test for `none` mac cleanup #103512."""
+    """Test for `none` mac cleanup #103512.
+
+    Reverted due to device registry collisions in #119249 / #119082
+    """
     entry = MockConfigEntry(
         domain=SAMSUNGTV_DOMAIN,
         data=MOCK_ENTRY_WS_WITH_MAC,

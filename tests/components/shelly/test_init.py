@@ -117,13 +117,13 @@ async def test_shared_device_mac(
     gen: int,
     mock_block_device: Mock,
     mock_rpc_device: Mock,
-    device_reg: DeviceRegistry,
+    device_registry: DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test first time shared device with another domain."""
     config_entry = MockConfigEntry(domain="test", data={}, unique_id="some_id")
     config_entry.add_to_hass(hass)
-    device_reg.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(CONNECTION_NETWORK_MAC, format_mac(MOCK_MAC))},
     )
@@ -243,13 +243,13 @@ async def test_sleeping_block_device_online(
     device_sleep: int,
     mock_block_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
-    device_reg: DeviceRegistry,
+    device_registry: DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test sleeping block device online."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id="shelly")
     config_entry.add_to_hass(hass)
-    device_reg.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(CONNECTION_NETWORK_MAC, format_mac(MOCK_MAC))},
     )

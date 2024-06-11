@@ -244,7 +244,7 @@ async def test_climate_set_preset_mode(
 async def test_block_restored_climate(
     hass: HomeAssistant,
     mock_block_device: Mock,
-    device_reg: DeviceRegistry,
+    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block restored climate."""
@@ -253,7 +253,7 @@ async def test_block_restored_climate(
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
     monkeypatch.delattr(mock_block_device.blocks[EMETER_BLOCK_ID], "targetTemp")
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_reg, entry)
+    register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         CLIMATE_DOMAIN,
@@ -310,7 +310,7 @@ async def test_block_restored_climate(
 async def test_block_restored_climate_us_customery(
     hass: HomeAssistant,
     mock_block_device: Mock,
-    device_reg: DeviceRegistry,
+    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block restored climate with US CUSTOMATY unit system."""
@@ -320,7 +320,7 @@ async def test_block_restored_climate_us_customery(
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
     monkeypatch.delattr(mock_block_device.blocks[EMETER_BLOCK_ID], "targetTemp")
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_reg, entry)
+    register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         CLIMATE_DOMAIN,
@@ -382,14 +382,14 @@ async def test_block_restored_climate_us_customery(
 async def test_block_restored_climate_unavailable(
     hass: HomeAssistant,
     mock_block_device: Mock,
-    device_reg: DeviceRegistry,
+    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block restored climate unavailable state."""
     monkeypatch.delattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "targetTemp")
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_reg, entry)
+    register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         CLIMATE_DOMAIN,
@@ -409,14 +409,14 @@ async def test_block_restored_climate_unavailable(
 async def test_block_restored_climate_set_preset_before_online(
     hass: HomeAssistant,
     mock_block_device: Mock,
-    device_reg: DeviceRegistry,
+    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block restored climate set preset before device is online."""
     monkeypatch.delattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "targetTemp")
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_reg, entry)
+    register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         CLIMATE_DOMAIN,
@@ -510,14 +510,14 @@ async def test_block_set_mode_auth_error(
 async def test_block_restored_climate_auth_error(
     hass: HomeAssistant,
     mock_block_device: Mock,
-    device_reg: DeviceRegistry,
+    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block restored climate with authentication error during init."""
     monkeypatch.delattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "targetTemp")
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_reg, entry)
+    register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         CLIMATE_DOMAIN,

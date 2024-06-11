@@ -26,6 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import TeslemetryConfigEntry
 from .const import DOMAIN, TeslemetryClimateSide
 from .entity import TeslemetryVehicleEntity
+from .helpers import handle_vehicle_command
 from .models import TeslemetryVehicleData
 
 DEFAULT_MIN_TEMP = 15
@@ -114,7 +115,7 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
 
         self.raise_for_scope()
         await self.wake_up_if_asleep()
-        await self.handle_command(self.api.auto_conditioning_start())
+        await handle_vehicle_command(self.api.auto_conditioning_start())
 
         self._attr_hvac_mode = HVACMode.HEAT_COOL
         self.async_write_ha_state()
@@ -124,7 +125,7 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
 
         self.raise_for_scope()
         await self.wake_up_if_asleep()
-        await self.handle_command(self.api.auto_conditioning_stop())
+        await handle_vehicle_command(self.api.auto_conditioning_stop())
 
         self._attr_hvac_mode = HVACMode.OFF
         self._attr_preset_mode = self._attr_preset_modes[0]
@@ -135,7 +136,7 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
 
         if temp := kwargs.get(ATTR_TEMPERATURE):
             await self.wake_up_if_asleep()
-            await self.handle_command(
+            await handle_vehicle_command(
                 self.api.set_temps(
                     driver_temp=temp,
                     passenger_temp=temp,
@@ -159,7 +160,7 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the climate preset mode."""
         await self.wake_up_if_asleep()
-        await self.handle_command(
+        await handle_vehicle_command(
             self.api.set_climate_keeper_mode(
                 climate_keeper_mode=self._attr_preset_modes.index(preset_mode)
             )
@@ -261,7 +262,7 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryVehicleEntity, ClimateEn
             )
 
         await self.wake_up_if_asleep()
-        await self.handle_command(self.api.set_cop_temp(cop_mode))
+        await handle_vehicle_command(self.api.set_cop_temp(cop_mode))
         self._attr_target_temperature = temp
 
         if mode := kwargs.get(ATTR_HVAC_MODE):
@@ -271,15 +272,15 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryVehicleEntity, ClimateEn
 
     async def _async_set_cop(self, hvac_mode: HVACMode) -> None:
         if hvac_mode == HVACMode.OFF:
-            await self.handle_command(
+            await handle_vehicle_command(
                 self.api.set_cabin_overheat_protection(on=False, fan_only=False)
             )
         elif hvac_mode == HVACMode.COOL:
-            await self.handle_command(
+            await handle_vehicle_command(
                 self.api.set_cabin_overheat_protection(on=True, fan_only=False)
             )
         elif hvac_mode == HVACMode.FAN_ONLY:
-            await self.handle_command(
+            await handle_vehicle_command(
                 self.api.set_cabin_overheat_protection(on=True, fan_only=True)
             )
 
