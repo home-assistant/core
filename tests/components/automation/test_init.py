@@ -2771,6 +2771,7 @@ async def test_recursive_automation_starting_script(
                     ],
                     "action": [
                         {"service": "test.automation_started"},
+                        {"delay": 0.001},
                         {"service": "script.script1"},
                     ],
                 }
@@ -2817,7 +2818,10 @@ async def test_recursive_automation_starting_script(
         assert script_warning_msg in caplog.text
 
 
-@pytest.mark.parametrize("automation_mode", SCRIPT_MODE_CHOICES)
+@pytest.mark.parametrize(
+    "automation_mode",
+    [mode for mode in SCRIPT_MODE_CHOICES if mode != SCRIPT_MODE_RESTART],
+)
 @pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
 async def test_recursive_automation(
     hass: HomeAssistant, automation_mode, caplog: pytest.LogCaptureFixture
@@ -2865,6 +2869,68 @@ async def test_recursive_automation(
 
         hass.bus.async_fire("trigger_automation")
         await asyncio.wait_for(service_called.wait(), 1)
+
+        # Trigger 1st stage script shutdown
+        hass.set_state(CoreState.stopping)
+        hass.bus.async_fire("homeassistant_stop")
+        await asyncio.wait_for(stop_scripts_at_shutdown_called.wait(), 1)
+
+        # Trigger 2nd stage script shutdown
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=90))
+        await hass.async_block_till_done()
+
+        assert "Disallowed recursion detected" not in caplog.text
+
+
+@pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
+async def test_recursive_automation_restart_mode(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test automation restarting itself.
+
+    The automation is an infinite loop since it keeps restarting itself
+
+    - Illegal recursion detection should not be triggered
+    - Home Assistant should not hang on shut down
+    """
+    stop_scripts_at_shutdown_called = asyncio.Event()
+    real_stop_scripts_at_shutdown = _async_stop_scripts_at_shutdown
+
+    async def stop_scripts_at_shutdown(*args):
+        await real_stop_scripts_at_shutdown(*args)
+        stop_scripts_at_shutdown_called.set()
+
+    with patch(
+        "homeassistant.helpers.script._async_stop_scripts_at_shutdown",
+        wraps=stop_scripts_at_shutdown,
+    ):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: {
+                    "mode": SCRIPT_MODE_RESTART,
+                    "trigger": [
+                        {"platform": "event", "event_type": "trigger_automation"},
+                    ],
+                    "action": [
+                        {"event": "trigger_automation"},
+                        {"service": "test.automation_done"},
+                    ],
+                }
+            },
+        )
+
+        service_called = asyncio.Event()
+
+        async def async_service_handler(service):
+            if service.service == "automation_done":
+                service_called.set()
+
+        hass.services.async_register("test", "automation_done", async_service_handler)
+
+        hass.bus.async_fire("trigger_automation")
+        await asyncio.sleep(0)
 
         # Trigger 1st stage script shutdown
         hass.set_state(CoreState.stopping)
@@ -2940,9 +3006,7 @@ def test_deprecated_constants(
     )
 
 
-async def test_automation_turns_off_other_automation(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_automation_turns_off_other_automation(hass: HomeAssistant) -> None:
     """Test an automation that turns off another automation."""
     hass.set_state(CoreState.not_running)
     calls = async_mock_service(hass, "persistent_notification", "create")
@@ -3021,7 +3085,7 @@ async def test_automation_turns_off_other_automation(
 
 
 async def test_two_automations_call_restart_script_same_time(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
 ) -> None:
     """Test two automations that call a restart mode script at the same."""
     hass.states.async_set("binary_sensor.presence", "off")
@@ -3097,3 +3161,72 @@ async def test_two_automations_call_restart_script_same_time(
     await hass.async_block_till_done()
     assert len(events) == 2
     cancel()
+
+
+async def test_two_automation_call_restart_script_right_after_each_other(
+    hass: HomeAssistant,
+) -> None:
+    """Test two automations call a restart script right after each other."""
+
+    events = async_capture_events(hass, "repeat_test_script_finished")
+
+    assert await async_setup_component(
+        hass,
+        input_boolean.DOMAIN,
+        {
+            input_boolean.DOMAIN: {
+                "test_1": None,
+                "test_2": None,
+            }
+        },
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "state",
+                        "entity_id": ["input_boolean.test_1", "input_boolean.test_1"],
+                        "from": "off",
+                        "to": "on",
+                    },
+                    "action": [
+                        {
+                            "repeat": {
+                                "count": 2,
+                                "sequence": [
+                                    {
+                                        "delay": {
+                                            "hours": 0,
+                                            "minutes": 0,
+                                            "seconds": 0,
+                                            "milliseconds": 100,
+                                        }
+                                    }
+                                ],
+                            }
+                        },
+                        {"event": "repeat_test_script_finished", "event_data": {}},
+                    ],
+                    "id": "automation_0",
+                    "mode": "restart",
+                },
+            ]
+        },
+    )
+    hass.states.async_set("input_boolean.test_1", "off")
+    hass.states.async_set("input_boolean.test_2", "off")
+    await hass.async_block_till_done()
+    hass.states.async_set("input_boolean.test_1", "on")
+    hass.states.async_set("input_boolean.test_2", "on")
+    await asyncio.sleep(0)
+    hass.states.async_set("input_boolean.test_1", "off")
+    hass.states.async_set("input_boolean.test_2", "off")
+    await asyncio.sleep(0)
+    hass.states.async_set("input_boolean.test_1", "on")
+    hass.states.async_set("input_boolean.test_2", "on")
+    await hass.async_block_till_done()
+    assert len(events) == 1

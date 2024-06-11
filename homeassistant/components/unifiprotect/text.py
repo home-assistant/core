@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from pyunifiprotect.data import (
+from uiprotect.data import (
     Camera,
     DoorbellMessageType,
     ProtectAdoptableDeviceModel,

@@ -159,7 +159,7 @@ async def test_deprecated_save_json(
     assert "should be updated to use homeassistant.helpers.json module" in caplog.text
 
 
-async def test_loading_derived_class():
+async def test_loading_derived_class() -> None:
     """Test loading data from classes derived from str."""
 
     class MyStr(str):

@@ -1,9 +1,9 @@
 """Fixtures for Webmin integration tests."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.webmin.const import DEFAULT_PORT, DOMAIN
 from homeassistant.const import (
@@ -29,7 +29,7 @@ TEST_USER_INPUT = {
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.webmin.async_setup_entry", return_value=True
