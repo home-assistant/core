@@ -139,6 +139,9 @@
       }
     },
     "switch": {
+      "auto_on_off": {
+        "name": "Auto on/off ({id})"
+      },
       "steam_boiler": {
         "name": "Steam boiler"
       }
@@ -150,12 +153,6 @@
       "gateway_firmware": {
         "name": "Gateway firmware"
       }
-    }
-  },
-  "issues": {
-    "unsupported_gateway_firmware": {
-      "title": "Unsupported gateway firmware",
-      "description": "Gateway firmware {gateway_version} is no longer supported by this integration, please update."
     }
   }
 }
