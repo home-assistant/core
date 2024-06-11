@@ -38,7 +38,7 @@ async def cleanup_device_and_entity_registry(
     via_device: str = ""
     for device_entry in device_list:
         if not device_entry.identifiers:
-            continue  # pragma: no cover
+            continue
 
         item = list(list(device_entry.identifiers)[0])
         if item[0] != DOMAIN:
