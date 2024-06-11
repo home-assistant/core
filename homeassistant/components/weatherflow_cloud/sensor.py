@@ -17,13 +17,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DEGREE,
-    UnitOfLength,
-    UnitOfPressure,
-    UnitOfSpeed,
-    UnitOfTemperature,
-)
+from homeassistant.const import UnitOfLength, UnitOfPressure, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -44,30 +38,6 @@ class WeatherFlowCloudSensorEntityDescription(
     extra_state_attributes_fn: (
         Callable[[WeatherFlowDataREST], dict[str, Any]] | None
     ) = None
-
-
-def wind_angle_icon_fn(degree: int) -> str:
-    """Return a wind icon based on the current direction (in degrees) the wind is blowing."""
-    degree = degree % 360  # Normalize degrees
-
-    if degree < 23:
-        return "mdi:arrow-up-thin"
-    if degree < 68:
-        return "mdi:arrow-top-right-thin"
-    if degree < 113:
-        return "mdi:arrow-right-thin"
-    if degree < 158:
-        return "mdi:arrow-bottom-right-thin"
-    if degree < 203:
-        return "mdi:arrow-down-thin"
-    if degree < 248:
-        return "mdi:arrow-bottom-left-thin"
-    if degree < 293:
-        return "mdi:arrow-left-thin"
-    if degree < 338:
-        return "mdi:arrow-top-left-thin"
-
-    return "mdi:arrow-up-thin"
 
 
 WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
@@ -174,73 +144,6 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
-    ),
-    # Wind Sensors
-    WeatherFlowCloudSensorEntityDescription(
-        key="wind_direction",
-        translation_key="wind_direction",
-        native_unit_of_measurement=DEGREE,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=0,
-        value_fn=lambda data: data.observation.obs[0].wind_direction,
-        extra_state_attributes_fn=lambda data: {
-            "cardinal": str(data.observation.obs[0].wind_cardinal_direction),
-        },
-        icon_fn=lambda data: wind_angle_icon_fn(data.observation.obs[0].wind_direction),
-    ),
-    WeatherFlowCloudSensorEntityDescription(
-        key="wind_direction_cardinal",
-        translation_key="wind_direction_cardinal",
-        device_class=SensorDeviceClass.ENUM,
-        options=[
-            "N",
-            "NNE",
-            "NE",
-            "ENE",
-            "E",
-            "ESE",
-            "SE",
-            "SSE",
-            "S",
-            "SSW",
-            "SW",
-            "WSW",
-            "W",
-            "WNW",
-            "NW",
-            "NNW",
-        ],
-        value_fn=lambda data: str(data.observation.obs[0].wind_cardinal_direction),
-        icon_fn=lambda data: wind_angle_icon_fn(  # The wind direction icon function is more precise so lets use it again here
-            data.observation.obs[0].wind_direction
-        ),
-    ),
-    WeatherFlowCloudSensorEntityDescription(
-        key="wind_avg",
-        translation_key="wind_avg",
-        device_class=SensorDeviceClass.WIND_SPEED,
-        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-        value_fn=lambda data: data.observation.obs[0].wind_avg,
-    ),
-    WeatherFlowCloudSensorEntityDescription(
-        key="wind_gust",
-        translation_key="wind_gust",
-        device_class=SensorDeviceClass.WIND_SPEED,
-        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-        value_fn=lambda data: data.observation.obs[0].wind_gust,
-    ),
-    WeatherFlowCloudSensorEntityDescription(
-        key="wind_lull",
-        translation_key="wind_lull",
-        device_class=SensorDeviceClass.WIND_SPEED,
-        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-        value_fn=lambda data: data.observation.obs[0].wind_lull,
     ),
     # Lightning Sensors
     WeatherFlowCloudSensorEntityDescription(
