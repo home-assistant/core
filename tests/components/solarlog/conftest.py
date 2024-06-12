@@ -47,6 +47,6 @@ def device_reg_fixture(hass: HomeAssistant):
 
 
 @pytest.fixture(name="entity_reg")
-def entity_reg_fixture(hass):
+def entity_reg_fixture(hass: HomeAssistant):
     """Return an empty, loaded, registry."""
     return mock_registry(hass)
