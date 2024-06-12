@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator, Mapping
+from collections.abc import Mapping
 import logging
 import ssl
 from typing import Any
@@ -18,6 +18,7 @@ from deebot_client.mqtt_client import MqttClient, create_mqtt_config
 from deebot_client.util import md5
 from deebot_client.util.continents import get_continent
 from sucks import EcoVacsAPI, VacBot
+from typing_extensions import Generator
 
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
@@ -119,7 +120,7 @@ class EcovacsController:
         await self._authenticator.teardown()
 
     @callback
-    def devices(self, capability: type[Capabilities]) -> Generator[Device, None, None]:
+    def devices(self, capability: type[Capabilities]) -> Generator[Device]:
         """Return generator for devices with a specific capability."""
         for device in self._devices:
             if isinstance(device.capabilities, capability):

@@ -115,14 +115,14 @@ async def test_block_restored_motion_switch(
     hass: HomeAssistant,
     model: str,
     mock_block_device: Mock,
-    device_reg: DeviceRegistry,
+    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block restored motion active switch."""
     entry = await init_integration(
         hass, 1, sleep_period=1000, model=model, skip_setup=True
     )
-    register_device(device_reg, entry)
+    register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         SWITCH_DOMAIN,
@@ -151,14 +151,14 @@ async def test_block_restored_motion_switch_no_last_state(
     hass: HomeAssistant,
     model: str,
     mock_block_device: Mock,
-    device_reg: DeviceRegistry,
+    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block restored motion active switch missing last state."""
     entry = await init_integration(
         hass, 1, sleep_period=1000, model=model, skip_setup=True
     )
-    register_device(device_reg, entry)
+    register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         SWITCH_DOMAIN,
@@ -472,10 +472,10 @@ async def test_wall_display_relay_mode(
     assert entry.unique_id == "123456789ABC-switch:0"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_create_issue_valve_switch(
     hass: HomeAssistant,
     mock_block_device: Mock,
-    entity_registry_enabled_by_default: None,
     monkeypatch: pytest.MonkeyPatch,
     issue_registry: ir.IssueRegistry,
 ) -> None:

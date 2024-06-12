@@ -24,7 +24,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from . import expose_entity, expose_new
+from . import MockAgent, expose_entity, expose_new
 
 from tests.common import (
     MockConfigEntry,
@@ -94,7 +94,7 @@ async def test_http_processing_intent_target_ha_agent(
     init_components,
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
-    mock_conversation_agent,
+    mock_conversation_agent: MockAgent,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -663,7 +663,7 @@ async def test_custom_agent(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
-    mock_conversation_agent,
+    mock_conversation_agent: MockAgent,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test a custom conversation agent."""
@@ -1081,8 +1081,8 @@ async def test_agent_id_validator_invalid_agent(
 async def test_get_agent_list(
     hass: HomeAssistant,
     init_components,
-    mock_conversation_agent,
-    mock_agent_support_all,
+    mock_conversation_agent: MockAgent,
+    mock_agent_support_all: MockAgent,
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -1139,7 +1139,7 @@ async def test_get_agent_list(
 async def test_get_agent_info(
     hass: HomeAssistant,
     init_components,
-    mock_conversation_agent,
+    mock_conversation_agent: MockAgent,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test get agent info."""

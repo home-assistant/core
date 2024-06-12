@@ -9,8 +9,8 @@ from typing import Any
 from urllib.parse import urlencode
 
 from aiohttp import web
-from pyunifiprotect.data import Camera, Event
-from pyunifiprotect.exceptions import ClientError
+from uiprotect.data import Camera, Event
+from uiprotect.exceptions import ClientError
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback

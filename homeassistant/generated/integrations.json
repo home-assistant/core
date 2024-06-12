@@ -94,7 +94,7 @@
       "iot_class": "local_polling"
     },
     "airgradient": {
-      "name": "Airgradient",
+      "name": "AirGradient",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -413,6 +413,12 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "aquacell": {
+      "name": "Aquacell",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "aqualogic": {
       "name": "AquaLogic",
@@ -1240,7 +1246,7 @@
       "iot_class": "cloud_push"
     },
     "discovergy": {
-      "name": "Discovergy",
+      "name": "inexogy",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -2809,7 +2815,7 @@
     "incomfort": {
       "name": "Intergas InComfort/Intouch Lan2RF gateway",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "indianamichiganpower": {
@@ -2919,6 +2925,12 @@
     "iss": {
       "name": "International Space Station (ISS)",
       "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "ista_ecotrend": {
+      "name": "ista EcoTrend",
+      "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -5154,17 +5166,22 @@
         }
       }
     },
-    "ruuvi_gateway": {
-      "name": "Ruuvi Gateway",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
-    "ruuvitag_ble": {
-      "name": "RuuviTag BLE",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_push"
+    "ruuvi": {
+      "name": "Ruuvi",
+      "integrations": {
+        "ruuvi_gateway": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Ruuvi Gateway"
+        },
+        "ruuvitag_ble": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "RuuviTag BLE"
+        }
+      }
     },
     "rympro": {
       "name": "Read Your Meter Pro",
@@ -6744,15 +6761,20 @@
     },
     "weatherflow": {
       "name": "WeatherFlow",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_push"
-    },
-    "weatherflow_cloud": {
-      "name": "WeatherflowCloud",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
+      "integrations": {
+        "weatherflow": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "WeatherFlow"
+        },
+        "weatherflow_cloud": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "WeatherflowCloud"
+        }
+      }
     },
     "webhook": {
       "name": "Webhook",

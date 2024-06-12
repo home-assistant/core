@@ -86,7 +86,6 @@ CONF_TEMP_MIN = "min_temp"
 CONF_CERTIFICATE = "certificate"
 CONF_CLIENT_KEY = "client_key"
 CONF_CLIENT_CERT = "client_cert"
-CONF_COMPONENTS = "components"
 CONF_TLS_INSECURE = "tls_insecure"
 
 # Device and integration info options

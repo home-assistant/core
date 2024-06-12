@@ -2,16 +2,15 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+
 from homeassistant.core import HomeAssistant
 
 from . import init_integration
 
 
-async def test_height_sensor(
-    hass: HomeAssistant,
-    mock_desk_api: MagicMock,
-    entity_registry_enabled_by_default: None,
-) -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_height_sensor(hass: HomeAssistant, mock_desk_api: MagicMock) -> None:
     """Test height sensor."""
     await init_integration(hass)
 

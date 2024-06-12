@@ -118,6 +118,42 @@ async def test_setting_sensor_value_via_mqtt_message(
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
+                    "unit_of_measurement": "%",
+                    "device_class": "battery",
+                    "encoding": "",
+                }
+            }
+        }
+    ],
+)
+async def test_handling_undecoded_sensor_value(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the setting of the value via MQTT."""
+    await mqtt_mock_entry()
+
+    state = hass.states.get("sensor.test")
+    assert state.state == STATE_UNKNOWN
+
+    async_fire_mqtt_message(hass, "test-topic", b"88")
+    state = hass.states.get("sensor.test")
+    assert state.state == STATE_UNKNOWN
+    assert (
+        "Invalid undecoded state message 'b'88'' received from 'test-topic'"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
                 }
             }
         },

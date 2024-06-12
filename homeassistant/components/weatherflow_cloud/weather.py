@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_ATTRIBUTION, DOMAIN, MANUFACTURER
+from .const import ATTR_ATTRIBUTION, DOMAIN, MANUFACTURER, STATE_MAP
 from .coordinator import WeatherFlowCloudDataUpdateCoordinator
 
 
@@ -86,7 +86,7 @@ class WeatherFlowWeather(
     @property
     def condition(self) -> str | None:
         """Return current condition - required property."""
-        return self.local_data.weather.current_conditions.icon.ha_icon
+        return STATE_MAP[self.local_data.weather.current_conditions.icon.value]
 
     @property
     def native_temperature(self) -> float | None:

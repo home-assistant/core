@@ -15,7 +15,8 @@
       }
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_version": "This firmware version is unsupported. Please upgrade the firmware of the device to at least version 3.1.1."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -28,8 +29,7 @@
         "name": "Configuration source",
         "state": {
           "cloud": "Cloud",
-          "local": "Local",
-          "both": "Both"
+          "local": "Local"
         }
       },
       "display_temperature_unit": {
@@ -48,7 +48,7 @@
         "name": "Nitrogen index"
       },
       "pm003_count": {
-        "name": "PM0.3 count"
+        "name": "PM0.3"
       },
       "raw_total_volatile_organic_component": {
         "name": "Raw total VOC"

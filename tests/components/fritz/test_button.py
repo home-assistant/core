@@ -77,9 +77,9 @@ async def test_buttons(
         assert button.state != STATE_UNKNOWN
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_wol_button(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     fc_class_mock,
     fh_class_mock,
 ) -> None:
@@ -110,9 +110,9 @@ async def test_wol_button(
         assert button.state != STATE_UNKNOWN
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_wol_button_new_device(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     fc_class_mock,
     fh_class_mock,
 ) -> None:
@@ -138,9 +138,9 @@ async def test_wol_button_new_device(
     assert hass.states.get("button.server_wake_on_lan")
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_wol_button_absent_for_mesh_slave(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     fc_class_mock,
     fh_class_mock,
 ) -> None:
@@ -160,9 +160,9 @@ async def test_wol_button_absent_for_mesh_slave(
     assert button is None
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_wol_button_absent_for_non_lan_device(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     fc_class_mock,
     fh_class_mock,
 ) -> None:

@@ -14,8 +14,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import OSOEnergyEntity
 from .const import DOMAIN
+from .entity import OSOEnergyEntity
 
 
 @dataclass(frozen=True, kw_only=True)

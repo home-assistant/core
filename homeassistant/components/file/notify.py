@@ -69,7 +69,9 @@ class FileNotificationService(BaseNotificationService):
         """Send a message to a file."""
         # The use of the legacy notify service was deprecated with HA Core 2024.6.0
         # and will be removed with HA Core 2024.12
-        migrate_notify_issue(self.hass, DOMAIN, "File", "2024.12.0")
+        migrate_notify_issue(
+            self.hass, DOMAIN, "File", "2024.12.0", service_name=self._service_name
+        )
         await self.hass.async_add_executor_job(
             partial(self.send_message, message, **kwargs)
         )

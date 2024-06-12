@@ -7,7 +7,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from pyunifiprotect.data import (
+from uiprotect.data import (
     Camera,
     Doorlock,
     Light,

@@ -299,4 +299,4 @@ async def test_service_setup_failed(hass: HomeAssistant, knx: KNXTestKit) -> Non
             {"address": "1/2/3", "payload": True, "response": False},
             blocking=True,
         )
-        assert str(exc_info.value) == "KNX entry not loaded"
+    assert str(exc_info.value) == "KNX entry not loaded"

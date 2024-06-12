@@ -8,13 +8,13 @@ from brother import Brother, SnmpError, UnsupportedModelError
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
+from homeassistant.components.snmp import async_get_snmp_engine
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.network import is_host_valid
 
 from .const import DOMAIN, PRINTER_TYPES
-from .utils import get_snmp_engine
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -45,7 +45,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not is_host_valid(user_input[CONF_HOST]):
                     raise InvalidHost
 
-                snmp_engine = get_snmp_engine(self.hass)
+                snmp_engine = await async_get_snmp_engine(self.hass)
 
                 brother = await Brother.create(
                     user_input[CONF_HOST], snmp_engine=snmp_engine
@@ -79,7 +79,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
         # Do not probe the device if the host is already configured
         self._async_abort_entries_match({CONF_HOST: self.host})
 
-        snmp_engine = get_snmp_engine(self.hass)
+        snmp_engine = await async_get_snmp_engine(self.hass)
         model = discovery_info.properties.get("product")
 
         try:

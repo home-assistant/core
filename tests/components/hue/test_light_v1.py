@@ -186,7 +186,7 @@ async def setup_bridge(hass: HomeAssistant, mock_bridge_v1):
     config_entry.mock_state(hass, ConfigEntryState.LOADED)
     mock_bridge_v1.config_entry = config_entry
     hass.data[hue.DOMAIN] = {config_entry.entry_id: mock_bridge_v1}
-    await hass.config_entries.async_forward_entry_setup(config_entry, "light")
+    await hass.config_entries.async_late_forward_entry_setups(config_entry, ["light"])
     # To flush out the service call to update the group
     await hass.async_block_till_done()
 

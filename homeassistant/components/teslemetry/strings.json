@@ -117,6 +117,9 @@
       }
     },
     "climate": {
+      "climate_state_cabin_overheat_protection": {
+        "name": "Cabin overheat protection"
+      },
       "driver_temp": {
         "name": "[%key:component::climate::title%]",
         "state_attributes": {
@@ -254,7 +257,7 @@
       "charge_state_charge_limit_soc": {
         "name": "Charge limit"
       },
-      "off_grid_vehicle_charging_reserve": {
+      "off_grid_vehicle_charging_reserve_percent": {
         "name": "Off grid reserve"
       }
     },
@@ -464,6 +467,9 @@
   "exceptions": {
     "no_cable": {
       "message": "Charge cable will lock automatically when connected"
+    },
+    "invalid_cop_temp": {
+      "message": "Cabin overheat protection does not support that temperature"
     }
   }
 }

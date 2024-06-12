@@ -18,6 +18,7 @@ from homeassistant.components.telegram_bot import (
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
     ATTR_MESSAGE_TAG,
+    ATTR_MESSAGE_THREAD_ID,
     ATTR_PARSER,
 )
 from homeassistant.const import ATTR_LOCATION
@@ -90,6 +91,11 @@ class TelegramNotificationService(BaseNotificationService):
         if data is not None and ATTR_DISABLE_WEB_PREV in data:
             disable_web_page_preview = data[ATTR_DISABLE_WEB_PREV]
             service_data.update({ATTR_DISABLE_WEB_PREV: disable_web_page_preview})
+
+        # Set message_thread_id
+        if data is not None and ATTR_MESSAGE_THREAD_ID in data:
+            message_thread_id = data[ATTR_MESSAGE_THREAD_ID]
+            service_data.update({ATTR_MESSAGE_THREAD_ID: message_thread_id})
 
         # Get keyboard info
         if data is not None and ATTR_KEYBOARD in data:

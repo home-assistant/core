@@ -129,8 +129,7 @@ def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
     """
     if DATA_INSTANCE not in hass.data:
         return False
-    instance = get_instance(hass)
-    return instance.entity_filter(entity_id)
+    return hass.data[DATA_INSTANCE].entity_filter(entity_id)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -165,6 +164,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         entity_filter=entity_filter,
         exclude_event_types=exclude_event_types,
     )
+    get_instance.cache_clear()
     instance.async_initialize()
     instance.async_register()
     instance.start()

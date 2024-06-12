@@ -798,6 +798,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         model: str | None | UndefinedType = UNDEFINED,
         name_by_user: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
+        new_connections: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
         serial_number: str | None | UndefinedType = UNDEFINED,
@@ -813,8 +814,15 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         config_entries = old.config_entries
 
+        if merge_connections is not UNDEFINED and new_connections is not UNDEFINED:
+            raise HomeAssistantError(
+                "Cannot define both merge_connections and new_connections"
+            )
+
         if merge_identifiers is not UNDEFINED and new_identifiers is not UNDEFINED:
-            raise HomeAssistantError
+            raise HomeAssistantError(
+                "Cannot define both merge_identifiers and new_identifiers"
+            )
 
         if isinstance(disabled_by, str) and not isinstance(
             disabled_by, DeviceEntryDisabler
@@ -872,6 +880,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             if setvalue is not UNDEFINED and not setvalue.issubset(old_value):
                 new_values[attr_name] = old_value | setvalue
                 old_values[attr_name] = old_value
+
+        if new_connections is not UNDEFINED:
+            new_values["connections"] = _normalize_connections(new_connections)
+            old_values["connections"] = old.connections
 
         if new_identifiers is not UNDEFINED:
             new_values["identifiers"] = new_identifiers

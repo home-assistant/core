@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
+from typing_extensions import AsyncGenerator
 
 from homeassistant.components import onboarding
 from homeassistant.components.onboarding import const, views
@@ -35,7 +36,9 @@ def auth_active(hass):
 
 
 @pytest.fixture(name="rpi")
-async def rpi_fixture(hass, aioclient_mock, mock_supervisor):
+async def rpi_fixture(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_supervisor
+) -> None:
     """Mock core info with rpi."""
     aioclient_mock.get(
         "http://127.0.0.1/core/info",
@@ -49,7 +52,9 @@ async def rpi_fixture(hass, aioclient_mock, mock_supervisor):
 
 
 @pytest.fixture(name="no_rpi")
-async def no_rpi_fixture(hass, aioclient_mock, mock_supervisor):
+async def no_rpi_fixture(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_supervisor
+) -> None:
     """Mock core info with rpi."""
     aioclient_mock.get(
         "http://127.0.0.1/core/info",
@@ -63,7 +68,9 @@ async def no_rpi_fixture(hass, aioclient_mock, mock_supervisor):
 
 
 @pytest.fixture(name="mock_supervisor")
-async def mock_supervisor_fixture(hass, aioclient_mock):
+async def mock_supervisor_fixture(
+    aioclient_mock: AiohttpClientMocker,
+) -> AsyncGenerator[None]:
     """Mock supervisor."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})

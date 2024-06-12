@@ -41,6 +41,8 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
+from .common import MockSensor
+
 from tests.common import setup_test_component_platform
 from tests.components.recorder.common import (
     assert_dict_of_states_equal_without_context_and_last_changed,
@@ -50,7 +52,6 @@ from tests.components.recorder.common import (
     do_adhoc_statistics,
     statistics_during_period,
 )
-from tests.components.sensor.common import MockSensor
 from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
 
 BATTERY_SENSOR_ATTRIBUTES = {
@@ -2412,7 +2413,7 @@ async def test_list_statistic_ids(
             "unit_class": unit_class,
         },
     ]
-    for stat_type in ["mean", "sum", "dogs"]:
+    for stat_type in ("mean", "sum", "dogs"):
         statistic_ids = await async_list_statistic_ids(hass, statistic_type=stat_type)
         if statistic_type == stat_type:
             assert statistic_ids == [
@@ -3886,12 +3887,12 @@ async def test_compile_statistics_hourly_daily_monthly_summary(
     start = zero
     end = zero + timedelta(minutes=5)
     for i in range(24):
-        for entity_id in [
+        for entity_id in (
             "sensor.test1",
             "sensor.test2",
             "sensor.test3",
             "sensor.test4",
-        ]:
+        ):
             expected_average = (
                 expected_averages[entity_id][i]
                 if entity_id in expected_averages
@@ -3935,12 +3936,12 @@ async def test_compile_statistics_hourly_daily_monthly_summary(
     start = zero
     end = zero + timedelta(hours=1)
     for i in range(2):
-        for entity_id in [
+        for entity_id in (
             "sensor.test1",
             "sensor.test2",
             "sensor.test3",
             "sensor.test4",
-        ]:
+        ):
             expected_average = (
                 mean(expected_averages[entity_id][i * 12 : (i + 1) * 12])
                 if entity_id in expected_averages
@@ -3992,12 +3993,12 @@ async def test_compile_statistics_hourly_daily_monthly_summary(
     start = dt_util.parse_datetime("2021-08-31T06:00:00+00:00")
     end = start + timedelta(days=1)
     for i in range(2):
-        for entity_id in [
+        for entity_id in (
             "sensor.test1",
             "sensor.test2",
             "sensor.test3",
             "sensor.test4",
-        ]:
+        ):
             expected_average = (
                 mean(expected_averages[entity_id][i * 12 : (i + 1) * 12])
                 if entity_id in expected_averages
@@ -4049,12 +4050,12 @@ async def test_compile_statistics_hourly_daily_monthly_summary(
     start = dt_util.parse_datetime("2021-08-01T06:00:00+00:00")
     end = dt_util.parse_datetime("2021-09-01T06:00:00+00:00")
     for i in range(2):
-        for entity_id in [
+        for entity_id in (
             "sensor.test1",
             "sensor.test2",
             "sensor.test3",
             "sensor.test4",
-        ]:
+        ):
             expected_average = (
                 mean(expected_averages[entity_id][i * 12 : (i + 1) * 12])
                 if entity_id in expected_averages
@@ -4785,10 +4786,10 @@ async def test_validate_statistics_unit_change_no_conversion(
         with session_scope(hass=hass, read_only=True) as session:
             db_states = list(session.query(StatisticsMeta))
             assert len(db_states) == len(expected_result)
-            for i in range(len(db_states)):
-                assert db_states[i].statistic_id == expected_result[i]["statistic_id"]
+            for i, db_state in enumerate(db_states):
+                assert db_state.statistic_id == expected_result[i]["statistic_id"]
                 assert (
-                    db_states[i].unit_of_measurement
+                    db_state.unit_of_measurement
                     == expected_result[i]["unit_of_measurement"]
                 )
 
@@ -4919,10 +4920,10 @@ async def test_validate_statistics_unit_change_equivalent_units(
         with session_scope(hass=hass, read_only=True) as session:
             db_states = list(session.query(StatisticsMeta))
             assert len(db_states) == len(expected_result)
-            for i in range(len(db_states)):
-                assert db_states[i].statistic_id == expected_result[i]["statistic_id"]
+            for i, db_state in enumerate(db_states):
+                assert db_state.statistic_id == expected_result[i]["statistic_id"]
                 assert (
-                    db_states[i].unit_of_measurement
+                    db_state.unit_of_measurement
                     == expected_result[i]["unit_of_measurement"]
                 )
 
@@ -5004,10 +5005,10 @@ async def test_validate_statistics_unit_change_equivalent_units_2(
         with session_scope(hass=hass, read_only=True) as session:
             db_states = list(session.query(StatisticsMeta))
             assert len(db_states) == len(expected_result)
-            for i in range(len(db_states)):
-                assert db_states[i].statistic_id == expected_result[i]["statistic_id"]
+            for i, db_state in enumerate(db_states):
+                assert db_state.statistic_id == expected_result[i]["statistic_id"]
                 assert (
-                    db_states[i].unit_of_measurement
+                    db_state.unit_of_measurement
                     == expected_result[i]["unit_of_measurement"]
                 )
 
@@ -5234,9 +5235,8 @@ async def async_record_states_partially_unavailable(hass, zero, entity_id, attri
     return four, states
 
 
-async def test_exclude_attributes(
-    hass: HomeAssistant, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_exclude_attributes(hass: HomeAssistant) -> None:
     """Test sensor attributes to be excluded."""
     entity0 = MockSensor(
         has_entity_name=True,

@@ -98,6 +98,11 @@
       "water": "{entity_name} water changes",
       "weight": "{entity_name} weight changes",
       "wind_speed": "{entity_name} wind speed changes"
+    },
+    "extra_fields": {
+      "above": "[%key:common::device_automation::extra_fields::above%]",
+      "below": "[%key:common::device_automation::extra_fields::below%]",
+      "for": "[%key:common::device_automation::extra_fields::for%]"
     }
   },
   "entity_component": {

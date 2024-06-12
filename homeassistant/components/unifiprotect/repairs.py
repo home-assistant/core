@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import cast
 
-from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data import Bootstrap, Camera, ModelType
-from pyunifiprotect.data.types import FirmwareReleaseChannel
+from uiprotect import ProtectApiClient
+from uiprotect.data import Bootstrap, Camera, ModelType
+from uiprotect.data.types import FirmwareReleaseChannel
 import voluptuous as vol
 
 from homeassistant import data_entry_flow

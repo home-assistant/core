@@ -309,7 +309,7 @@ async def test_ota_sw_version(
 )
 async def test_device_restore_availability(
     hass: HomeAssistant,
-    request,
+    request: pytest.FixtureRequest,
     device,
     last_seen_delta,
     is_available,

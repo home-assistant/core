@@ -266,7 +266,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-async def knx(request, hass, mock_config_entry: MockConfigEntry):
+async def knx(hass: HomeAssistant, mock_config_entry: MockConfigEntry):
     """Create a KNX TestKit instance."""
     knx_test_kit = KNXTestKit(hass, mock_config_entry)
     yield knx_test_kit
