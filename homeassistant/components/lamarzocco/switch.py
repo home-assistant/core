@@ -118,12 +118,10 @@ class LaMarzoccoAutoOnOffSwitchEntity(LaMarzoccoBaseEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
         await self._async_enable(True)
-        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         await self._async_enable(False)
-        self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool:
