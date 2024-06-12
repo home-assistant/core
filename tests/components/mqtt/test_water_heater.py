@@ -71,7 +71,6 @@ from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 ENTITY_WATER_HEATER = "water_heater.test"
 
-
 _DEFAULT_MIN_TEMP_CELSIUS = round(
     TemperatureConverter.convert(
         DEFAULT_MIN_TEMP,
@@ -88,7 +87,6 @@ _DEFAULT_MAX_TEMP_CELSIUS = round(
     ),
     1,
 )
-
 
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {
@@ -1302,3 +1300,41 @@ async def test_value_template_fails(
         "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
         in caplog.text
     )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            water_heater.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "temperature_unit": "F",
+                    "current_temperature_topic": "current_temperature",
+                    "temperature_high_state_topic": "temperature_high",
+                    "temperature_low_state_topic": "temperature_low",
+                },
+            ),
+        )
+    ],
+)
+async def test_target_temp_high_low_topic(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test setting the target high and low temperature."""
+    await mqtt_mock_entry()
+
+    state = hass.states.get(ENTITY_WATER_HEATER)
+    assert state.attributes.get("temperature") == _DEFAULT_MIN_TEMP_CELSIUS
+    assert state.attributes.get("min_temp") == _DEFAULT_MIN_TEMP_CELSIUS
+    assert state.attributes.get("max_temp") == _DEFAULT_MAX_TEMP_CELSIUS
+
+    async_fire_mqtt_message(hass, "current_temperature", "127")
+    async_fire_mqtt_message(hass, "temperature_high", "150")
+    async_fire_mqtt_message(hass, "temperature_low", "110")
+
+    state = hass.states.get(ENTITY_WATER_HEATER)
+    assert state.attributes.get("current_temperature") == 52.8
+    assert state.attributes.get("target_temp_high") == 65.6
+    assert state.attributes.get("target_temp_low") == 43.3
