@@ -52,7 +52,7 @@ class ZHAEnumSelectEntity(ZHAEntity, SelectEntity):
     def __init__(self, entity_data: EntityData, **kwargs: Any) -> None:
         """Initialize the ZHA select entity."""
         super().__init__(entity_data, **kwargs)
-        self._attr_options = self.entity_data.entity._attr_options
+        self._attr_options = self.entity_data.entity.info_object.options
 
     @property
     def current_option(self) -> str | None:
@@ -61,5 +61,5 @@ class ZHAEnumSelectEntity(ZHAEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self.entity_data.entity.async_select_option(option)
+        await self.entity_data.entity.async_select_option(option=option)
         self.async_write_ha_state()

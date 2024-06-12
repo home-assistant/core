@@ -71,5 +71,5 @@ class ZhaNumber(ZHAEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value from HA."""
-        await self.entity_data.entity.async_set_native_value(value)
+        await self.entity_data.entity.async_set_native_value(value=value)
         self.async_write_ha_state()
