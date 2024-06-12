@@ -1,10 +1,10 @@
 """tplink conftest."""
 
-from collections.abc import Generator
 import copy
 from unittest.mock import DEFAULT, AsyncMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.tplink import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -84,13 +84,8 @@ def entity_reg_fixture(hass):
     return mock_registry(hass)
 
 
-@pytest.fixture(autouse=True)
-def tplink_mock_get_source_ip(mock_get_source_ip):
-    """Mock network util's async_get_source_ip."""
-
-
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch.multiple(
         async_setup=DEFAULT,
@@ -102,7 +97,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_init() -> Generator[AsyncMock, None, None]:
+def mock_init() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch.multiple(
         "homeassistant.components.tplink",

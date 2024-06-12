@@ -32,7 +32,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     UnitOfTemperature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfDataRate, UnitOfPower
 from homeassistant.core import Event as core_Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -40,6 +39,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 import homeassistant.util.dt as dt_util
 
+from . import UnifiConfigEntry
 from .const import DEVICE_STATES
 from .entity import (
     HandlerT,
@@ -102,6 +102,27 @@ def async_wlan_client_value_fn(hub: UnifiHub, wlan: Wlan) -> int:
             client.mac
             for client in hub.api.clients.values()
             if client.essid == wlan.name
+            and dt_util.utcnow() - dt_util.utc_from_timestamp(client.last_seen or 0)
+            < hub.config.option_detection_time
+        ]
+    )
+
+
+@callback
+def async_device_clients_value_fn(hub: UnifiHub, device: Device) -> int:
+    """Calculate the amount of clients connected to a device."""
+
+    return len(
+        [
+            client.mac
+            for client in hub.api.clients.values()
+            if (
+                (
+                    client.access_point_mac != ""
+                    and client.access_point_mac == device.mac
+                )
+                or (client.access_point_mac == "" and client.switch_mac == device.mac)
+            )
             and dt_util.utcnow() - dt_util.utc_from_timestamp(client.last_seen or 0)
             < hub.config.option_detection_time
         ]
@@ -302,6 +323,20 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         unique_id_fn=lambda hub, obj_id: f"wlan_clients-{obj_id}",
         value_fn=async_wlan_client_value_fn,
     ),
+    UnifiSensorEntityDescription[Devices, Device](
+        key="Device clients",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        api_handler_fn=lambda api: api.devices,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        name_fn=lambda device: "Clients",
+        object_fn=lambda api, obj_id: api.devices[obj_id],
+        should_poll=True,
+        unique_id_fn=lambda hub, obj_id: f"device_clients-{obj_id}",
+        value_fn=async_device_clients_value_fn,
+    ),
     UnifiSensorEntityDescription[Outlets, Outlet](
         key="Outlet power metering",
         device_class=SensorDeviceClass.POWER,
@@ -420,11 +455,11 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: UnifiConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for UniFi Network integration."""
-    UnifiHub.get_hub(hass, config_entry).entity_loader.register_platform(
+    config_entry.runtime_data.entity_loader.register_platform(
         async_add_entities, UnifiSensorEntity, ENTITY_DESCRIPTIONS
     )
 

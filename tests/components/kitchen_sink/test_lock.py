@@ -16,7 +16,12 @@ from homeassistant.components.lock import (
     STATE_UNLOCKED,
     STATE_UNLOCKING,
 )
-from homeassistant.const import ATTR_ENTITY_ID, EVENT_STATE_CHANGED, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    EVENT_STATE_CHANGED,
+    STATE_OPEN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -103,4 +108,4 @@ async def test_opening(hass: HomeAssistant) -> None:
         LOCK_DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: OPENABLE_LOCK}, blocking=True
     )
     state = hass.states.get(OPENABLE_LOCK)
-    assert state.state == STATE_UNLOCKED
+    assert state.state == STATE_OPEN

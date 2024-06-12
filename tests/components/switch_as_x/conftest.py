@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -18,7 +18,7 @@ async def setup_homeassistant(hass: HomeAssistant):
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.switch_as_x.async_setup_entry", return_value=True

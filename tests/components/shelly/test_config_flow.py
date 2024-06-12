@@ -23,7 +23,7 @@ from homeassistant.components.shelly.const import (
     BLEScannerMode,
 )
 from homeassistant.components.shelly.coordinator import ENTRY_RELOAD_COOLDOWN
-from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_RECONFIGURE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
@@ -1187,3 +1187,120 @@ async def test_sleeping_device_gen2_with_new_firmware(
         "sleep_period": 666,
         "gen": 2,
     }
+
+
+@pytest.mark.parametrize("gen", [1, 2, 3])
+async def test_reconfigure_successful(
+    hass: HomeAssistant,
+    gen: int,
+    mock_block_device: Mock,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test starting a reconfiguration flow."""
+    entry = MockConfigEntry(
+        domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": gen}
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_RECONFIGURE,
+            "entry_id": entry.entry_id,
+        },
+        data=entry.data,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_confirm"
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={"mac": "test-mac", "type": MODEL_1, "auth": False, "gen": gen},
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"host": "10.10.10.10", "port": 99},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {"host": "10.10.10.10", "port": 99, "gen": gen}
+
+
+@pytest.mark.parametrize("gen", [1, 2, 3])
+async def test_reconfigure_unsuccessful(
+    hass: HomeAssistant,
+    gen: int,
+    mock_block_device: Mock,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test reconfiguration flow failed."""
+    entry = MockConfigEntry(
+        domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": gen}
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_RECONFIGURE,
+            "entry_id": entry.entry_id,
+        },
+        data=entry.data,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_confirm"
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={"mac": "another-mac", "type": MODEL_1, "auth": False, "gen": gen},
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"host": "10.10.10.10", "port": 99},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "another_device"
+
+
+@pytest.mark.parametrize(
+    ("exc", "base_error"),
+    [
+        (DeviceConnectionError, "cannot_connect"),
+        (CustomPortNotSupported, "custom_port_not_supported"),
+    ],
+)
+async def test_reconfigure_with_exception(
+    hass: HomeAssistant,
+    exc: Exception,
+    base_error: str,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test reconfiguration flow when an exception is raised."""
+    entry = MockConfigEntry(
+        domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": 2}
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_RECONFIGURE,
+            "entry_id": entry.entry_id,
+        },
+        data=entry.data,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_confirm"
+
+    with patch("homeassistant.components.shelly.config_flow.get_info", side_effect=exc):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"host": "10.10.10.10", "port": 99},
+        )
+
+    assert result["errors"] == {"base": base_error}

@@ -37,12 +37,13 @@ async def test_async_setup_entry_auth_failed(hass: HomeAssistant) -> None:
     assert not hass.data.get(DOMAIN)
 
 
-async def test_device_info(hass: HomeAssistant) -> None:
+async def test_device_info(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test device info."""
     entry = create_entry(hass)
     with patch_interface():
         await hass.config_entries.async_setup(entry.entry_id)
-    device_registry = dr.async_get(hass)
     await hass.async_block_till_done()
     device = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
 

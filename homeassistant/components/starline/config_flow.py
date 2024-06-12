@@ -182,7 +182,7 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
                 self._auth.get_app_token, self._app_id, self._app_secret, self._app_code
             )
             return self._async_form_auth_user(error)
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             _LOGGER.error("Error auth StarLine: %s", err)
             return self._async_form_auth_app(ERROR_AUTH_APP)
 
@@ -216,7 +216,7 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
 
             #  pylint: disable=broad-exception-raised
             raise Exception(data)
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             _LOGGER.error("Error auth user: %s", err)
             return self._async_form_auth_user(ERROR_AUTH_USER)
 

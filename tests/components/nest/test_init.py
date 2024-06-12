@@ -19,6 +19,7 @@ from google_nest_sdm.exceptions import (
     SubscriberException,
 )
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.nest import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -32,6 +33,7 @@ from .common import (
     TEST_CONFIG_LEGACY,
     TEST_CONFIGFLOW_APP_CREDS,
     FakeSubscriber,
+    PlatformSetup,
     YieldFixture,
 )
 
@@ -47,14 +49,18 @@ def platforms() -> list[str]:
 
 
 @pytest.fixture
-def error_caplog(caplog):
+def error_caplog(
+    caplog: pytest.LogCaptureFixture,
+) -> Generator[pytest.LogCaptureFixture]:
     """Fixture to capture nest init error messages."""
     with caplog.at_level(logging.ERROR, logger="homeassistant.components.nest"):
         yield caplog
 
 
 @pytest.fixture
-def warning_caplog(caplog):
+def warning_caplog(
+    caplog: pytest.LogCaptureFixture,
+) -> Generator[pytest.LogCaptureFixture]:
     """Fixture to capture nest init warning messages."""
     with caplog.at_level(logging.WARNING, logger="homeassistant.components.nest"):
         yield caplog
@@ -77,7 +83,9 @@ def failing_subscriber(subscriber_side_effect: Any) -> YieldFixture[FakeSubscrib
         yield subscriber
 
 
-async def test_setup_success(hass: HomeAssistant, error_caplog, setup_platform) -> None:
+async def test_setup_success(
+    hass: HomeAssistant, error_caplog: pytest.LogCaptureFixture, setup_platform
+) -> None:
     """Test successful setup."""
     await setup_platform()
     assert not error_caplog.records
@@ -108,7 +116,10 @@ async def test_setup_configuration_failure(
 
 @pytest.mark.parametrize("subscriber_side_effect", [SubscriberException()])
 async def test_setup_susbcriber_failure(
-    hass: HomeAssistant, caplog, failing_subscriber, setup_base_platform
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    failing_subscriber,
+    setup_base_platform,
 ) -> None:
     """Test configuration error."""
     await setup_base_platform()
@@ -120,7 +131,7 @@ async def test_setup_susbcriber_failure(
 
 
 async def test_setup_device_manager_failure(
-    hass: HomeAssistant, caplog, setup_base_platform
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, setup_base_platform
 ) -> None:
     """Test device manager api failure."""
     with (
@@ -160,7 +171,7 @@ async def test_subscriber_auth_failure(
 
 @pytest.mark.parametrize("subscriber_id", [(None)])
 async def test_setup_missing_subscriber_id(
-    hass: HomeAssistant, warning_caplog, setup_base_platform
+    hass: HomeAssistant, warning_caplog: pytest.LogCaptureFixture, setup_base_platform
 ) -> None:
     """Test missing subscriber id from configuration."""
     await setup_base_platform()
@@ -173,7 +184,10 @@ async def test_setup_missing_subscriber_id(
 
 @pytest.mark.parametrize("subscriber_side_effect", [(ConfigurationException())])
 async def test_subscriber_configuration_failure(
-    hass: HomeAssistant, error_caplog, setup_base_platform, failing_subscriber
+    hass: HomeAssistant,
+    error_caplog: pytest.LogCaptureFixture,
+    setup_base_platform,
+    failing_subscriber,
 ) -> None:
     """Test configuration error."""
     await setup_base_platform()
@@ -186,7 +200,7 @@ async def test_subscriber_configuration_failure(
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_APP_CREDS])
 async def test_empty_config(
-    hass: HomeAssistant, error_caplog, config, setup_platform
+    hass: HomeAssistant, error_caplog: pytest.LogCaptureFixture, config, setup_platform
 ) -> None:
     """Test setup is a no-op with not config."""
     await setup_platform()
@@ -239,6 +253,23 @@ async def test_remove_entry(
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert not entries
+
+
+async def test_home_assistant_stop(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    subscriber: FakeSubscriber,
+) -> None:
+    """Test successful subscriber shutdown when HomeAssistant stops."""
+    await setup_platform()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.state is ConfigEntryState.LOADED
+
+    await hass.async_stop()
+    assert subscriber.stop_calls == 1
 
 
 async def test_remove_entry_delete_subscriber_failure(

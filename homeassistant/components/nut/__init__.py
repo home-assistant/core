@@ -26,22 +26,30 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    COORDINATOR,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     INTEGRATION_SUPPORTED_COMMANDS,
     PLATFORMS,
-    PYNUT_DATA,
-    PYNUT_UNIQUE_ID,
-    USER_AVAILABLE_COMMANDS,
 )
 
 NUT_FAKE_SERIAL = ["unknown", "blank"]
 
 _LOGGER = logging.getLogger(__name__)
 
+type NutConfigEntry = ConfigEntry[NutRuntimeData]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+@dataclass
+class NutRuntimeData:
+    """Runtime data definition."""
+
+    coordinator: DataUpdateCoordinator
+    data: PyNUTData
+    unique_id: str
+    user_available_commands: set[str]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
     """Set up Network UPS Tools (NUT) from a config entry."""
 
     # strip out the stale options CONF_RESOURCES,
@@ -110,13 +118,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         user_available_commands = set()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        COORDINATOR: coordinator,
-        PYNUT_DATA: data,
-        PYNUT_UNIQUE_ID: unique_id,
-        USER_AVAILABLE_COMMANDS: user_available_commands,
-    }
+    entry.runtime_data = NutRuntimeData(
+        coordinator, data, unique_id, user_available_commands
+    )
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -135,9 +139,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:

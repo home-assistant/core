@@ -146,7 +146,7 @@ async def test_update_device(
     client: MockHAClientWebSocket,
     device_registry: dr.DeviceRegistry,
     payload_key: str,
-    payload_value: str | None | dr.DeviceEntryDisabler,
+    payload_value: str | dr.DeviceEntryDisabler | None,
 ) -> None:
     """Test update entry."""
     entry = MockConfigEntry(title=None)

@@ -162,7 +162,7 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await self.hass.async_add_executor_job(
-                self.client._get_session_id  # pylint: disable=protected-access
+                self.client._get_session_id  # noqa: SLF001
             )
         except AccessTokenError:
             if user_input is not None:
@@ -194,7 +194,7 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
         assert self.client is not None
         with contextlib.suppress(AccessTokenError, SessionIdError):
             await self.hass.async_add_executor_job(
-                self.client._get_session_id  # pylint: disable=protected-access
+                self.client._get_session_id  # noqa: SLF001
             )
 
     @callback

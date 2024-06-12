@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -48,10 +49,21 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type DevoloHomeNetworkConfigEntry = ConfigEntry[DevoloHomeNetworkData]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+@dataclass
+class DevoloHomeNetworkData:
+    """The devolo Home Network data."""
+
+    device: Device
+    coordinators: dict[str, DataUpdateCoordinator[Any]]
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: DevoloHomeNetworkConfigEntry
+) -> bool:
     """Set up devolo Home Network from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     zeroconf_instance = await zeroconf.async_get_async_instance(hass)
     async_client = get_async_client(hass)
     device_registry = dr.async_get(hass)
@@ -73,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             translation_placeholders={"ip_address": entry.data[CONF_IP_ADDRESS]},
         ) from err
 
-    hass.data[DOMAIN][entry.entry_id] = {"device": device}
+    entry.runtime_data = DevoloHomeNetworkData(device=device, coordinators={})
 
     async def async_update_firmware_available() -> UpdateFirmwareCheck:
         """Fetch data from API endpoint."""
@@ -188,7 +200,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for coordinator in coordinators.values():
         await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id]["coordinators"] = coordinators
+    entry.runtime_data.coordinators = coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, platforms(device))
 
@@ -199,15 +211,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: DevoloHomeNetworkConfigEntry
+) -> bool:
     """Unload a config entry."""
-    device: Device = hass.data[DOMAIN][entry.entry_id]["device"]
+    device = entry.runtime_data.device
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, platforms(device)
     )
     if unload_ok:
         await device.async_disconnect()
-        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 

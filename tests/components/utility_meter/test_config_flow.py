@@ -261,7 +261,7 @@ def get_suggested(schema, key):
                 return None
             return k.description["suggested_value"]
     # Wanted key absent from schema
-    raise Exception
+    raise KeyError("Wanted key absent from schema")
 
 
 async def test_options(hass: HomeAssistant) -> None:
@@ -336,12 +336,12 @@ async def test_options(hass: HomeAssistant) -> None:
     assert state.attributes["source"] == input_sensor2_entity_id
 
 
-async def test_change_device_source(hass: HomeAssistant) -> None:
+async def test_change_device_source(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test remove the device registry configuration entry when the source entity changes."""
-
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
     # Configure source entity 1 (with a linked device)
     source_config_entry_1 = MockConfigEntry()
     source_config_entry_1.add_to_hass(hass)

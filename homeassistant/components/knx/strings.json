@@ -384,18 +384,5 @@
       "name": "[%key:common::action::reload%]",
       "description": "Reloads the KNX integration."
     }
-  },
-  "issues": {
-    "migrate_notify": {
-      "title": "Migration of KNX notify service",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "description": "The KNX `notify` service has been migrated. New `notify` entities are available now.\n\nUpdate any automations to use the new `notify.send_message` exposed by these new entities. When this is done, fix this issue and restart Home Assistant.",
-            "title": "Disable legacy KNX notify service"
-          }
-        }
-      }
-    }
   }
 }

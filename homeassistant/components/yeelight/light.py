@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 import logging
 import math
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 import voluptuous as vol
 import yeelight
@@ -66,10 +66,6 @@ from .const import (
 )
 from .device import YeelightDevice
 from .entity import YeelightEntity
-
-_YeelightBaseLightT = TypeVar("_YeelightBaseLightT", bound="YeelightBaseLight")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -243,7 +239,7 @@ def _parse_custom_effects(effects_config) -> dict[str, dict[str, Any]]:
     return effects
 
 
-def _async_cmd(
+def _async_cmd[_YeelightBaseLightT: YeelightBaseLight, **_P, _R](
     func: Callable[Concatenate[_YeelightBaseLightT, _P], Coroutine[Any, Any, _R]],
 ) -> Callable[Concatenate[_YeelightBaseLightT, _P], Coroutine[Any, Any, _R | None]]:
     """Define a wrapper to catch exceptions from the bulb."""

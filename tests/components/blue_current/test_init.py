@@ -62,6 +62,8 @@ async def test_config_exceptions(
     config_error: IntegrationError,
 ) -> None:
     """Test if the correct config error is raised when connecting to the api fails."""
+    config_entry.add_to_hass(hass)
+
     with (
         patch(
             "homeassistant.components.blue_current.Client.validate_api_token",
@@ -69,7 +71,6 @@ async def test_config_exceptions(
         ),
         pytest.raises(config_error),
     ):
-        config_entry.add_to_hass(hass)
         await async_setup_entry(hass, config_entry)
 
 

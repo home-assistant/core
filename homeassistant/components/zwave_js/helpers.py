@@ -155,7 +155,7 @@ async def async_enable_server_logging_if_needed(
     if (curr_server_log_level := driver.log_config.level) and (
         LOG_LEVEL_MAP[curr_server_log_level]
     ) > (lib_log_level := LIB_LOGGER.getEffectiveLevel()):
-        entry_data = hass.data[DOMAIN][entry.entry_id]
+        entry_data = entry.runtime_data
         LOGGER.warning(
             (
                 "Server logging is set to %s and is currently less verbose "
@@ -174,7 +174,6 @@ async def async_disable_server_logging_if_needed(
     hass: HomeAssistant, entry: ConfigEntry, driver: Driver
 ) -> None:
     """Disable logging of zwave-js-server in the lib if still connected to server."""
-    entry_data = hass.data[DOMAIN][entry.entry_id]
     if (
         not driver
         or not driver.client.connected
@@ -183,8 +182,8 @@ async def async_disable_server_logging_if_needed(
         return
     LOGGER.info("Disabling zwave_js server logging")
     if (
-        DATA_OLD_SERVER_LOG_LEVEL in entry_data
-        and (old_server_log_level := entry_data.pop(DATA_OLD_SERVER_LOG_LEVEL))
+        DATA_OLD_SERVER_LOG_LEVEL in entry.runtime_data
+        and (old_server_log_level := entry.runtime_data.pop(DATA_OLD_SERVER_LOG_LEVEL))
         != driver.log_config.level
     ):
         LOGGER.info(
@@ -275,12 +274,12 @@ def async_get_node_from_device_id(
     )
     if entry and entry.state != ConfigEntryState.LOADED:
         raise ValueError(f"Device {device_id} config entry is not loaded")
-    if entry is None or entry.entry_id not in hass.data[DOMAIN]:
+    if entry is None:
         raise ValueError(
             f"Device {device_id} is not from an existing zwave_js config entry"
         )
 
-    client: ZwaveClient = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
+    client: ZwaveClient = entry.runtime_data[DATA_CLIENT]
     driver = client.driver
 
     if driver is None:
@@ -443,7 +442,9 @@ def async_get_node_status_sensor_entity_id(
     if not (entry_id := _zwave_js_config_entry(hass, device)):
         return None
 
-    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+    entry = hass.config_entries.async_get_entry(entry_id)
+    assert entry
+    client = entry.runtime_data[DATA_CLIENT]
     node = async_get_node_from_device_id(hass, device_id, dev_reg)
     return ent_reg.async_get_entity_id(
         SENSOR_DOMAIN,

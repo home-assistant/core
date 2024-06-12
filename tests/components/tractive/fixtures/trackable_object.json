@@ -1,0 +1,43 @@
+{
+  "device_id": "device_id_123",
+  "_id": "pet_id_123",
+  "details": {
+    "_id": "pet_id_123",
+    "_version": "123abc",
+    "name": "Test Pet",
+    "pet_type": "DOG",
+    "breed_ids": [],
+    "gender": "F",
+    "birthday": 1572606592,
+    "profile_picture_frame": null,
+    "height": 0.56,
+    "length": null,
+    "weight": 23700,
+    "chip_id": "",
+    "neutered": true,
+    "personality": [],
+    "lost_or_dead": null,
+    "lim": null,
+    "ribcage": null,
+    "weight_is_default": null,
+    "height_is_default": null,
+    "birthday_is_default": null,
+    "breed_is_default": null,
+    "instagram_username": "",
+    "profile_picture_id": null,
+    "cover_picture_id": null,
+    "characteristic_ids": [],
+    "gallery_picture_ids": [],
+    "activity_settings": {
+      "_id": "345abc",
+      "_version": "ccaabb4",
+      "daily_goal": 1000,
+      "daily_distance_goal": 2000,
+      "daily_active_minutes_goal": 120,
+      "activity_category_thresholds_override": null,
+      "_type": "activity_setting"
+    },
+    "_type": "pet_detail",
+    "read_only": false
+  }
+}

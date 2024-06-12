@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 import dataclasses
 import logging
 from typing import Any
 
-from pyunifiprotect.data import (
+from uiprotect.data import (
     NVR,
     Camera,
     Light,
@@ -16,21 +17,20 @@ from pyunifiprotect.data import (
     ProtectModelWithId,
     Sensor,
 )
-from pyunifiprotect.data.nvr import UOSDisk
+from uiprotect.data.nvr import UOSDisk
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DISPATCH_ADOPT, DOMAIN
-from .data import ProtectData
+from .const import DISPATCH_ADOPT
+from .data import ProtectData, UFPConfigEntry
 from .entity import (
     EventEntityMixin,
     ProtectDeviceEntity,
@@ -173,6 +173,15 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="can_detect_vehicle",
         ufp_value="is_vehicle_detection_on",
+        ufp_perm=PermRequired.NO_WRITE,
+    ),
+    ProtectBinaryEntityDescription(
+        key="smart_animal",
+        name="Detections: Animal",
+        icon="mdi:paw",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ufp_required_field="can_detect_animal",
+        ufp_value="is_animal_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
@@ -454,6 +463,15 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_event_obj="last_vehicle_detect_event",
     ),
     ProtectBinaryEventEntityDescription(
+        key="smart_obj_animal",
+        name="Animal Detected",
+        icon="mdi:paw",
+        ufp_value="is_animal_currently_detected",
+        ufp_required_field="can_detect_animal",
+        ufp_enabled="is_animal_detection_on",
+        ufp_event_obj="last_animal_detect_event",
+    ),
+    ProtectBinaryEventEntityDescription(
         key="smart_obj_package",
         name="Package Detected",
         icon="mdi:package-variant-closed",
@@ -593,25 +611,29 @@ DISK_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
 )
 
+_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] = {
+    ModelType.CAMERA: CAMERA_SENSORS,
+    ModelType.LIGHT: LIGHT_SENSORS,
+    ModelType.SENSOR: SENSE_SENSORS,
+    ModelType.DOORLOCK: DOORLOCK_SENSORS,
+    ModelType.VIEWPORT: VIEWER_SENSORS,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: UFPConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up binary sensors for UniFi Protect integration."""
-    data: ProtectData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         entities: list[ProtectDeviceEntity] = async_all_device_entities(
             data,
             ProtectDeviceBinarySensor,
-            camera_descs=CAMERA_SENSORS,
-            light_descs=LIGHT_SENSORS,
-            sense_descs=SENSE_SENSORS,
-            lock_descs=DOORLOCK_SENSORS,
-            viewer_descs=VIEWER_SENSORS,
+            model_descriptions=_MODEL_DESCRIPTIONS,
             ufp_device=device,
         )
         if device.is_adopted and isinstance(device, Camera):
@@ -623,13 +645,7 @@ async def async_setup_entry(
     )
 
     entities: list[ProtectDeviceEntity] = async_all_device_entities(
-        data,
-        ProtectDeviceBinarySensor,
-        camera_descs=CAMERA_SENSORS,
-        light_descs=LIGHT_SENSORS,
-        sense_descs=SENSE_SENSORS,
-        lock_descs=DOORLOCK_SENSORS,
-        viewer_descs=VIEWER_SENSORS,
+        data, ProtectDeviceBinarySensor, model_descriptions=_MODEL_DESCRIPTIONS
     )
     entities += _async_event_entities(data)
     entities += _async_nvr_entities(data)

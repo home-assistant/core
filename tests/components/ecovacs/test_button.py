@@ -7,7 +7,7 @@ from deebot_client.events import LifeSpan
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.button.const import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform

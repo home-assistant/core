@@ -24,14 +24,14 @@ async def async_get_config_entry_diagnostics(
             "data": async_redact_data(entry.data, TO_REDACT),
         },
         "hub": {
-            "version": hub._version,  # pylint: disable=protected-access
+            "version": hub._version,  # noqa: SLF001
         },
         "devices": [
             {
                 "device_id": device.device_id,
                 "props": device.props,
-                "attrs": device._attrs,  # pylint: disable=protected-access
-                "supported_actions": device._supported_actions,  # pylint: disable=protected-access
+                "attrs": device._attrs,  # noqa: SLF001
+                "supported_actions": device._supported_actions,  # noqa: SLF001
             }
             for device in hub.devices
         ],

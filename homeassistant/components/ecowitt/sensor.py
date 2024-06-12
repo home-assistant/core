@@ -241,7 +241,12 @@ async def async_setup_entry(
         )
 
         # Hourly rain doesn't reset to fixed hours, it must be measurement state classes
-        if sensor.key in ("hrain_piezomm", "hrain_piezo"):
+        if sensor.key in (
+            "hrain_piezomm",
+            "hrain_piezo",
+            "hourlyrainmm",
+            "hourlyrainin",
+        ):
             description = dataclasses.replace(
                 description,
                 state_class=SensorStateClass.MEASUREMENT,

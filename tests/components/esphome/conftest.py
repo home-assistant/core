@@ -5,8 +5,9 @@ from __future__ import annotations
 import asyncio
 from asyncio import Event
 from collections.abc import Awaitable, Callable
+from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aioesphomeapi import (
     APIClient,
@@ -41,12 +42,12 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
-def mock_bluetooth(enable_bluetooth):
+def mock_bluetooth(enable_bluetooth: None) -> None:
     """Auto mock bluetooth."""
 
 
 @pytest.fixture(autouse=True)
-def esphome_mock_async_zeroconf(mock_async_zeroconf):
+def esphome_mock_async_zeroconf(mock_async_zeroconf: MagicMock) -> None:
     """Auto mock zeroconf."""
 
 
@@ -57,7 +58,7 @@ async def load_homeassistant(hass) -> None:
 
 
 @pytest.fixture(autouse=True)
-def mock_tts(mock_tts_cache_dir):
+def mock_tts(mock_tts_cache_dir: Path) -> None:
     """Auto mock the tts cache."""
 
 

@@ -1,11 +1,11 @@
 """Fixtures for Pure Energie integration tests."""
 
-from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from gridnet import Device as GridNetDevice, SmartBridge
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.pure_energie.const import DOMAIN
 from homeassistant.const import CONF_HOST
@@ -26,7 +26,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[None, None, None]:
+def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.pure_energie.async_setup_entry", return_value=True
@@ -35,9 +35,7 @@ def mock_setup_entry() -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def mock_pure_energie_config_flow(
-    request: pytest.FixtureRequest,
-) -> Generator[None, MagicMock, None]:
+def mock_pure_energie_config_flow() -> Generator[MagicMock]:
     """Return a mocked Pure Energie client."""
     with patch(
         "homeassistant.components.pure_energie.config_flow.GridNet", autospec=True
@@ -53,7 +51,7 @@ def mock_pure_energie_config_flow(
 def mock_pure_energie():
     """Return a mocked Pure Energie client."""
     with patch(
-        "homeassistant.components.pure_energie.GridNet", autospec=True
+        "homeassistant.components.pure_energie.coordinator.GridNet", autospec=True
     ) as pure_energie_mock:
         pure_energie = pure_energie_mock.return_value
         pure_energie.smartbridge = AsyncMock(

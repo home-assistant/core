@@ -457,59 +457,59 @@ async def test_volume_while_mute(hass: HomeAssistant) -> None:
     assert not ws66i.zones[11].mute
 
 
-async def test_first_run_with_available_zones(hass: HomeAssistant) -> None:
+async def test_first_run_with_available_zones(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test first run with all zones available."""
     ws66i = MockWs66i()
     await _setup_ws66i(hass, ws66i)
 
-    registry = er.async_get(hass)
-
-    entry = registry.async_get(ZONE_7_ID)
+    entry = entity_registry.async_get(ZONE_7_ID)
     assert not entry.disabled
 
 
-async def test_first_run_with_failing_zones(hass: HomeAssistant) -> None:
+async def test_first_run_with_failing_zones(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test first run with failed zones."""
     ws66i = MockWs66i()
 
     with patch.object(MockWs66i, "zone_status", return_value=None):
         await _setup_ws66i(hass, ws66i)
 
-    registry = er.async_get(hass)
-
-    entry = registry.async_get(ZONE_1_ID)
+    entry = entity_registry.async_get(ZONE_1_ID)
     assert entry is None
 
-    entry = registry.async_get(ZONE_7_ID)
+    entry = entity_registry.async_get(ZONE_7_ID)
     assert entry is None
 
 
-async def test_register_all_entities(hass: HomeAssistant) -> None:
+async def test_register_all_entities(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test run with all entities registered."""
     ws66i = MockWs66i()
     await _setup_ws66i(hass, ws66i)
 
-    registry = er.async_get(hass)
-
-    entry = registry.async_get(ZONE_1_ID)
+    entry = entity_registry.async_get(ZONE_1_ID)
     assert not entry.disabled
 
-    entry = registry.async_get(ZONE_7_ID)
+    entry = entity_registry.async_get(ZONE_7_ID)
     assert not entry.disabled
 
 
-async def test_register_entities_in_1_amp_only(hass: HomeAssistant) -> None:
+async def test_register_entities_in_1_amp_only(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test run with only zones 11-16 registered."""
     ws66i = MockWs66i(fail_zone_check=[21])
     await _setup_ws66i(hass, ws66i)
 
-    registry = er.async_get(hass)
-
-    entry = registry.async_get(ZONE_1_ID)
+    entry = entity_registry.async_get(ZONE_1_ID)
     assert not entry.disabled
 
-    entry = registry.async_get(ZONE_2_ID)
+    entry = entity_registry.async_get(ZONE_2_ID)
     assert not entry.disabled
 
-    entry = registry.async_get(ZONE_7_ID)
+    entry = entity_registry.async_get(ZONE_7_ID)
     assert entry is None

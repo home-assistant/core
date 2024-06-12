@@ -591,7 +591,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
     hass: HomeAssistant,
 ) -> None:
     """Test we startup from history and switch to watching state changes."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -692,7 +692,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
     hass: HomeAssistant,
 ) -> None:
     """Test we startup from history and switch to watching state changes with an expanding end time."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -809,7 +809,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
     hass: HomeAssistant,
 ) -> None:
     """Test we startup from history and switch to watching state changes."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -950,7 +950,7 @@ async def test_does_not_work_into_the_future(
 
     Verifies we do not regress https://github.com/home-assistant/core/pull/20589
     """
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -1357,7 +1357,7 @@ async def test_measure_from_end_going_backwards(
 
 async def test_measure_cet(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test the history statistics sensor measure with a non-UTC timezone."""
-    hass.config.set_time_zone("Europe/Berlin")
+    await hass.config.async_set_time_zone("Europe/Berlin")
     start_time = dt_util.utcnow() - timedelta(minutes=60)
     t0 = start_time + timedelta(minutes=20)
     t1 = t0 + timedelta(minutes=10)
@@ -1446,7 +1446,7 @@ async def test_end_time_with_microseconds_zeroed(
     hass: HomeAssistant,
 ) -> None:
     """Test the history statistics sensor that has the end time microseconds zeroed out."""
-    hass.config.set_time_zone(time_zone)
+    await hass.config.async_set_time_zone(time_zone)
     start_of_today = dt_util.now().replace(
         day=9, month=7, year=1986, hour=0, minute=0, second=0, microsecond=0
     )
@@ -1650,7 +1650,7 @@ async def test_history_stats_handles_floored_timestamps(
     hass: HomeAssistant,
 ) -> None:
     """Test we account for microseconds when doing the data calculation."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=0, minute=0, second=0, microsecond=0)
     last_times = None

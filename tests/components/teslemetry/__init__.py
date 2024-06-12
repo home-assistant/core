@@ -25,11 +25,10 @@ async def setup_platform(hass: HomeAssistant, platforms: list[Platform] | None =
 
     if platforms is None:
         await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
     else:
         with patch("homeassistant.components.teslemetry.PLATFORMS", platforms):
             await hass.config_entries.async_setup(mock_entry.entry_id)
-            await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     return mock_entry
 
@@ -41,6 +40,7 @@ def assert_entities(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that all entities match their snapshot."""
+
     entity_entries = er.async_entries_for_config_entry(entity_registry, entry_id)
 
     assert entity_entries

@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 import logging
 from typing import Any, cast
 
-from pyunifiprotect.data import (
+from typing_extensions import Generator
+from uiprotect.data import (
     Camera as UFPCamera,
     CameraChannel,
     ModelType,
@@ -16,7 +16,6 @@ from pyunifiprotect.data import (
 )
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -33,7 +32,7 @@ from .const import (
     DISPATCH_CHANNELS,
     DOMAIN,
 )
-from .data import ProtectData
+from .data import ProtectData, UFPConfigEntry
 from .entity import ProtectDeviceEntity
 from .utils import async_dispatch_id as _ufpd, get_camera_base_name
 
@@ -42,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @callback
 def _create_rtsp_repair(
-    hass: HomeAssistant, entry: ConfigEntry, data: ProtectData, camera: UFPCamera
+    hass: HomeAssistant, entry: UFPConfigEntry, data: ProtectData, camera: UFPCamera
 ) -> None:
     edit_key = "readonly"
     if camera.can_write(data.api.bootstrap.auth_user):
@@ -68,10 +67,10 @@ def _create_rtsp_repair(
 @callback
 def _get_camera_channels(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: UFPConfigEntry,
     data: ProtectData,
     ufp_device: UFPCamera | None = None,
-) -> Generator[tuple[UFPCamera, CameraChannel, bool], None, None]:
+) -> Generator[tuple[UFPCamera, CameraChannel, bool]]:
     """Get all the camera channels."""
 
     devices = (
@@ -108,7 +107,7 @@ def _get_camera_channels(
 
 def _async_camera_entities(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: UFPConfigEntry,
     data: ProtectData,
     ufp_device: UFPCamera | None = None,
 ) -> list[ProtectDeviceEntity]:
@@ -146,11 +145,11 @@ def _async_camera_entities(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: UFPConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Discover cameras on a UniFi Protect NVR."""
-    data: ProtectData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:

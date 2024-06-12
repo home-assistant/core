@@ -12,7 +12,7 @@ ENV \
 ARG QEMU_CPU
 
 # Install uv
-RUN pip3 install uv==0.1.39
+RUN pip3 install uv==0.1.43
 
 WORKDIR /usr/src
 
