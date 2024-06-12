@@ -4,11 +4,10 @@ from __future__ import annotations
 
 from homeassistant.components.camera import CameraEntityDescription
 from homeassistant.components.mjpeg import MjpegCamera
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import Dremel3DPrinterDataUpdateCoordinator
+from .coordinator import Dremel3DPrinterDataUpdateCoordinator, DremelConfigEntry
 from .entity import Dremel3DPrinterEntity
 
 CAMERA_TYPE = CameraEntityDescription(
@@ -19,7 +18,7 @@ CAMERA_TYPE = CameraEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: DremelConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a MJPEG IP Camera for the 3D45 Model. The 3D20 and 3D40 models don't have built in cameras."""

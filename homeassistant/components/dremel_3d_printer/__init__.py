@@ -5,18 +5,19 @@ from __future__ import annotations
 from dremel3dpy import Dremel3DPrinter
 from requests.exceptions import ConnectTimeout, HTTPError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CAMERA_MODEL
-from .coordinator import Dremel3DPrinterDataUpdateCoordinator
+from .coordinator import Dremel3DPrinterDataUpdateCoordinator, DremelConfigEntry
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.CAMERA, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: DremelConfigEntry
+) -> bool:
     """Set up Dremel 3D Printer from a config entry."""
     try:
         api = await hass.async_add_executor_job(
@@ -38,10 +39,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DremelConfigEntry) -> bool:
     """Unload Dremel config entry."""
     platforms = list(PLATFORMS)
-    api: Dremel3DPrinter = entry.runtime_data.api
-    if api.get_model() != CAMERA_MODEL:
+    if entry.runtime_data.api.get_model() != CAMERA_MODEL:
         platforms.remove(Platform.CAMERA)
     return await hass.config_entries.async_unload_platforms(entry, platforms)

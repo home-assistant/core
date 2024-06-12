@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -29,6 +28,7 @@ from homeassistant.util.dt import utcnow
 from homeassistant.util.variance import ignore_variance
 
 from .const import ATTR_EXTRUDER, ATTR_PLATFORM
+from .coordinator import DremelConfigEntry
 from .entity import Dremel3DPrinterEntity
 
 
@@ -234,7 +234,7 @@ SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: DremelConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the available Dremel 3D Printer sensors."""
