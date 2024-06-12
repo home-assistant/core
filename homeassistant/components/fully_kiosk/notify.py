@@ -44,7 +44,7 @@ NOTIFIERS: tuple[FullyNotifyEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the Fully Kiosk Browser notification entity."""
+    """Set up the Fully Kiosk Browser notify entities."""
     coordinator: FullyKioskDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         FullyNotifyEntity(coordinator, description) for description in NOTIFIERS
@@ -52,7 +52,7 @@ async def async_setup_entry(
 
 
 class FullyNotifyEntity(FullyKioskEntity, NotifyEntity):
-    """Implement the notification entity for Fully Kiosk Browser."""
+    """Implement the notify entity for Fully Kiosk Browser."""
 
     entity_description: FullyNotifyEntityDescription
 
