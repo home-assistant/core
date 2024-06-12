@@ -6,8 +6,18 @@ import functools
 import logging
 from typing import Any
 
-from homeassistant.components import light
-from homeassistant.components.light import ColorMode, LightEntityFeature
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
+    ATTR_EFFECT,
+    ATTR_FLASH,
+    ATTR_HS_COLOR,
+    ATTR_TRANSITION,
+    ATTR_XY_COLOR,
+    ColorMode,
+    LightEntity,
+    LightEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import HomeAssistant, callback
@@ -43,7 +53,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-class Light(light.LightEntity, ZHAEntity):
+class Light(LightEntity, ZHAEntity):
     """Representation of a ZHA or ZLL light."""
 
     def __init__(self, entity_data: Any) -> None:
@@ -129,12 +139,22 @@ class Light(light.LightEntity, ZHAEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self.entity_data.entity.async_turn_on(**kwargs)
+        await self.entity_data.entity.async_turn_on(
+            transition=kwargs.get(ATTR_TRANSITION),
+            brightness=kwargs.get(ATTR_BRIGHTNESS),
+            effect=kwargs.get(ATTR_EFFECT),
+            flash=kwargs.get(ATTR_FLASH),
+            color_temp=kwargs.get(ATTR_COLOR_TEMP),
+            xy_color=kwargs.get(ATTR_XY_COLOR),
+            hs_color=kwargs.get(ATTR_HS_COLOR),
+        )
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self.entity_data.entity.async_turn_off(**kwargs)
+        await self.entity_data.entity.async_turn_off(
+            transition=kwargs.get(ATTR_TRANSITION)
+        )
         self.async_write_ha_state()
 
     @callback
