@@ -132,6 +132,7 @@ class MockAsyncBulb:
 
 
 def _mocked_bulb(cannot_connect=False):
+    # pylint: disable=attribute-defined-outside-init
     bulb = MockAsyncBulb(MODEL, BulbType.Color, cannot_connect)
     type(bulb).async_get_properties = AsyncMock(
         side_effect=BulbException if cannot_connect else None
