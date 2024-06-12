@@ -18,7 +18,7 @@ from voluptuous.humanize import humanize_error
 
 from homeassistant.components import websocket_api
 from homeassistant.const import CONF_ID
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import slugify
 
@@ -525,6 +525,9 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
         self.create_schema = create_schema
         self.update_schema = update_schema
 
+        self.remove_subscription: CALLBACK_TYPE | None = None
+        self.subscribers: set[tuple[websocket_api.ActiveConnection, int]] = set()
+
         assert self.api_prefix[-1] != "/", "API prefix should not end in /"
 
     @property
@@ -538,6 +541,7 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
         hass: HomeAssistant,
         *,
         create_create: bool = True,
+        create_subscribe: bool = False,
     ) -> None:
         """Set up the websocket commands."""
         websocket_api.async_register_command(
@@ -561,6 +565,16 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
                         **self.create_schema,
                         vol.Required("type"): f"{self.api_prefix}/create",
                     }
+                ),
+            )
+
+        if create_subscribe:
+            websocket_api.async_register_command(
+                hass,
+                f"{self.api_prefix}/subscribe",
+                self.ws_subscribe,
+                websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+                    {vol.Required("type"): f"{self.api_prefix}/subscribe"}
                 ),
             )
 
@@ -618,6 +632,41 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
             )
         except ValueError as err:
             connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
+
+    @callback
+    def ws_subscribe(
+        self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    ) -> None:
+        """Subscribe to collection updates."""
+
+        async def async_change_listener(
+            change_type: str, item_id: str, updated_item: dict
+        ) -> None:
+            json_msg = {
+                "change_type": change_type,
+                self.item_id_key: item_id,
+                "item": updated_item,
+            }
+            for connection, msg_id in self.subscribers:
+                connection.send_message(websocket_api.event_message(msg_id, json_msg))
+
+        if not self.subscribers:
+            self.remove_subscription = self.storage_collection.async_add_listener(
+                async_change_listener
+            )
+
+        self.subscribers.add((connection, msg["id"]))
+
+        @callback
+        def cancel_subscription() -> None:
+            self.subscribers.remove((connection, msg["id"]))
+            if not self.subscribers and self.remove_subscription:
+                self.remove_subscription()
+                self.remove_subscription = None
+
+        connection.subscriptions[msg["id"]] = cancel_subscription
+
+        connection.send_message(websocket_api.result_message(msg["id"]))
 
     async def ws_update_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
