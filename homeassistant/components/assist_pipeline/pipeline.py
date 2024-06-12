@@ -1610,12 +1610,9 @@ class PipelineStorageCollectionWebsocket(
         hass: HomeAssistant,
         *,
         create_create: bool = True,
-        create_subscribe: bool = False,
     ) -> None:
         """Set up the websocket commands."""
-        super().async_setup(
-            hass, create_create=create_create, create_subscribe=create_subscribe
-        )
+        super().async_setup(hass, create_create=create_create)
 
         websocket_api.async_register_command(
             hass,

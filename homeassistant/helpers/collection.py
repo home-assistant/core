@@ -541,7 +541,6 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
         hass: HomeAssistant,
         *,
         create_create: bool = True,
-        create_subscribe: bool = False,
     ) -> None:
         """Set up the websocket commands."""
         websocket_api.async_register_command(
@@ -568,15 +567,14 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
                 ),
             )
 
-        if create_subscribe:
-            websocket_api.async_register_command(
-                hass,
-                f"{self.api_prefix}/subscribe",
-                self.ws_subscribe,
-                websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-                    {vol.Required("type"): f"{self.api_prefix}/subscribe"}
-                ),
-            )
+        websocket_api.async_register_command(
+            hass,
+            f"{self.api_prefix}/subscribe",
+            self.ws_subscribe,
+            websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+                {vol.Required("type"): f"{self.api_prefix}/subscribe"}
+            ),
+        )
 
         websocket_api.async_register_command(
             hass,

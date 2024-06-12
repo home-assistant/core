@@ -578,7 +578,7 @@ async def test_storage_collection_websocket_subscribe(
         "test_item",
         {vol.Required("name"): str, vol.Required("immutable_string"): str},
         {vol.Optional("name"): str},
-    ).async_setup(hass, create_subscribe=True)
+    ).async_setup(hass)
 
     client = await hass_ws_client(hass)
 
