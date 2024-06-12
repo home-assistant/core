@@ -13,7 +13,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 from typing_extensions import Generator
 
-from homeassistant import bootstrap, loader, runner
+from homeassistant import block_async_io, bootstrap, loader, runner
 import homeassistant.config as config_util
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEBUG, SIGNAL_BOOTSTRAP_INTEGRATIONS
@@ -53,6 +53,13 @@ def apply_mock_storage(hass_storage: dict[str, Any]) -> None:
 @pytest.fixture(autouse=True)
 async def apply_stop_hass(stop_hass: None) -> None:
     """Make sure all hass are stopped."""
+
+
+@pytest.fixture(autouse=True)
+def unpatch_block_async_io():
+    """Unpatch block_async_io after each test."""
+    yield
+    block_async_io.disable()
 
 
 @pytest.fixture(scope="module", autouse=True)
