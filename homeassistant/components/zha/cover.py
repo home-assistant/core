@@ -7,6 +7,8 @@ import logging
 from typing import Any
 
 from homeassistant.components.cover import (
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -60,7 +62,8 @@ class ZhaCover(ZHAEntity, CoverEntity):
 
         if (
             hasattr(self.entity_data.entity, "_attr_supported_features")
-            and self.entity_data.entity._attr_supported_features is not None  # noqa: SLF001
+            and self.entity_data.entity._attr_supported_features
+            is not None  # noqa: SLF001
         ):
             self._attr_supported_features: CoverEntityFeature = CoverEntityFeature(
                 self.entity_data.entity._attr_supported_features  # noqa: SLF001
@@ -93,40 +96,44 @@ class ZhaCover(ZHAEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self.entity_data.entity.async_open_cover(**kwargs)
+        await self.entity_data.entity.async_open_cover()
         await self.async_update_ha_state()
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
-        await self.entity_data.entity.async_open_cover_tilt(**kwargs)
+        await self.entity_data.entity.async_open_cover_tilt()
         await self.async_update_ha_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self.entity_data.entity.async_close_cover(**kwargs)
+        await self.entity_data.entity.async_close_cover()
         await self.async_update_ha_state()
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
-        await self.entity_data.entity.async_close_cover_tilt(**kwargs)
+        await self.entity_data.entity.async_close_cover_tilt()
         await self.async_update_ha_state()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        await self.entity_data.entity.async_set_cover_position(**kwargs)
+        await self.entity_data.entity.async_set_cover_position(
+            position=kwargs.get(ATTR_POSITION)
+        )
         await self.async_update_ha_state()
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        await self.entity_data.entity.async_set_cover_tilt_position(**kwargs)
+        await self.entity_data.entity.async_set_cover_tilt_position(
+            tilt_position=kwargs.get(ATTR_TILT_POSITION)
+        )
         await self.async_update_ha_state()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        await self.entity_data.entity.async_stop_cover(**kwargs)
+        await self.entity_data.entity.async_stop_cover()
         await self.async_update_ha_state()
 
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""
-        await self.entity_data.entity.async_stop_cover_tilt(**kwargs)
+        await self.entity_data.entity.async_stop_cover_tilt()
         await self.async_update_ha_state()
