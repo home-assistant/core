@@ -1507,7 +1507,7 @@ class AqaraCurtainHookStateSensor(EnumSensor):
 class BitMapSensor(Sensor):
     """A sensor with only state attributes.
 
-    The sensor value will be a sensor of the state attributes.
+    The sensor value will be an aggregate of the state attributes.
     """
 
     _bitmap: types.bitmap8 | types.bitmap16
