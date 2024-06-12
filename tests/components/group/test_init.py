@@ -1236,7 +1236,7 @@ async def test_group_mixed_domains_on(hass: HomeAssistant) -> None:
     hass.states.async_set("binary_sensor.alexander_garage_side_door_open", "on")
     hass.states.async_set("cover.small_garage_door", "open")
 
-    for domain in ["lock", "binary_sensor", "cover"]:
+    for domain in ("lock", "binary_sensor", "cover"):
         assert await async_setup_component(hass, domain, {})
     assert await async_setup_component(
         hass,
@@ -1261,7 +1261,7 @@ async def test_group_mixed_domains_off(hass: HomeAssistant) -> None:
     hass.states.async_set("binary_sensor.alexander_garage_side_door_open", "off")
     hass.states.async_set("cover.small_garage_door", "closed")
 
-    for domain in ["lock", "binary_sensor", "cover"]:
+    for domain in ("lock", "binary_sensor", "cover"):
         assert await async_setup_component(hass, domain, {})
     assert await async_setup_component(
         hass,

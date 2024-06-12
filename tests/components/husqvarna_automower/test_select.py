@@ -38,14 +38,14 @@ async def test_select_states(
     assert state is not None
     assert state.state == "evening_only"
 
-    for state, expected_state in [
+    for state, expected_state in (
         (
             HeadlightModes.ALWAYS_OFF,
             "always_off",
         ),
         (HeadlightModes.ALWAYS_ON, "always_on"),
         (HeadlightModes.EVENING_AND_NIGHT, "evening_and_night"),
-    ]:
+    ):
         values[TEST_MOWER_ID].settings.headlight.mode = state
         mock_automower_client.get_status.return_value = values
         freezer.tick(SCAN_INTERVAL)
