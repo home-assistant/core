@@ -30,7 +30,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, TEMP_UNIT_LIB_TO_HASS
+from . import AirzoneConfigEntry
+from .const import TEMP_UNIT_LIB_TO_HASS
 from .coordinator import AirzoneUpdateCoordinator
 from .entity import (
     AirzoneEntity,
@@ -77,10 +78,12 @@ ZONE_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AirzoneConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add Airzone sensors from a config_entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     sensors: list[AirzoneSensor] = [
         AirzoneZoneSensor(
