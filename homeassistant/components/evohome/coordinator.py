@@ -56,7 +56,7 @@ class EvoBroker:
         self._store = Store[dict[str, Any]](hass, STORAGE_VER, STORAGE_KEY)
 
         # the main client, which uses the newer API
-        self.client_v2: evo.EvohomeClient = None  # type: ignore[assignment]
+        self.client: evo.EvohomeClient = None  # type: ignore[assignment]
         self._tokens: dict[str, Any] = {}
 
         self.loc_idx: int = None  # type: ignore[assignment]
@@ -75,13 +75,13 @@ class EvoBroker:
         """Check the user credentials against the web API."""
 
         if (
-            self.client_v2 is None
-            or username != self.client_v2.username
-            or password != self.client_v2.password
+            self.client is None
+            or username != self.client.username
+            or password != self.client.password
         ):
             await self._load_auth_tokens(username)  # for self._tokens
 
-            self.client_v2 = evo.EvohomeClient(
+            self.client = evo.EvohomeClient(
                 username,
                 password,
                 **self._tokens,
@@ -89,17 +89,17 @@ class EvoBroker:
             )
 
         else:  # force a re-authentication
-            self.client_v2._user_account = {}  # noqa: SLF001
+            self.client._user_account = {}  # noqa: SLF001
 
         try:
-            await self.client_v2.login()
+            await self.client.login()
         except evo.AuthenticationFailed as err:
             handle_evo_exception(err)
             return False
 
         self.client_v1 = ev1.EvohomeClient(
-            self.client_v2.username,
-            self.client_v2.password,
+            self.client.username,
+            self.client.password,
             session_id=self._session_id,
             session=self._session,
         )
@@ -143,13 +143,13 @@ class EvoBroker:
 
         # evohomeasync2 uses naive/local datetimes
         access_token_expires = dt_local_to_aware(
-            self.client_v2.access_token_expires  # type: ignore[arg-type]
+            self.client.access_token_expires  # type: ignore[arg-type]
         )
 
         self._tokens = {
-            CONF_USERNAME: self.client_v2.username,
-            REFRESH_TOKEN: self.client_v2.refresh_token,
-            ACCESS_TOKEN: self.client_v2.access_token,
+            CONF_USERNAME: self.client.username,
+            REFRESH_TOKEN: self.client.refresh_token,
+            ACCESS_TOKEN: self.client.access_token,
             ACCESS_TOKEN_EXPIRES: access_token_expires.isoformat(),
         }
 
@@ -166,10 +166,10 @@ class EvoBroker:
 
         self.loc_idx = loc_idx
 
-        assert isinstance(self.client_v2.installation_info, list)  # mypy
+        assert isinstance(self.client.installation_info, list)  # mypy
 
         try:
-            loc_config = self.client_v2.installation_info[loc_idx]
+            loc_config = self.client.installation_info[loc_idx]
         except IndexError:
             _LOGGER.error(
                 (
@@ -178,11 +178,11 @@ class EvoBroker:
                 ),
                 CONF_LOCATION_IDX,
                 loc_idx,
-                len(self.client_v2.installation_info) - 1,
+                len(self.client.installation_info) - 1,
             )
             return False
 
-        self.loc = self.client_v2.locations[loc_idx]
+        self.loc = self.client.locations[loc_idx]
         self.loc_utc_offset = timedelta(minutes=self.loc.timeZone[UTC_OFFSET])
         self.tcs = self.loc._gateways[0]._control_systems[0]  # noqa: SLF001
 
@@ -279,7 +279,7 @@ class EvoBroker:
     async def _update_v2_api_state(self, *args: Any) -> None:
         """Get the latest modes, temperatures, setpoints of a Location."""
 
-        access_token = self.client_v2.access_token  # maybe receive a new token?
+        access_token = self.client.access_token  # maybe receive a new token?
 
         try:
             status = await self.loc.refresh_status()
@@ -289,7 +289,7 @@ class EvoBroker:
             async_dispatcher_send(self.hass, DOMAIN)
             _LOGGER.debug("Status = %s", status)
         finally:
-            if access_token != self.client_v2.access_token:
+            if access_token != self.client.access_token:
                 await self._save_auth_tokens()
 
     async def async_update(self, *args: Any) -> None:
