@@ -114,6 +114,19 @@ _ALL_MODEL_TYPES = (
 
 
 @callback
+def _combine_model_descs(
+    model_type: ModelType,
+    model_descriptions: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] | None,
+    all_descs: Sequence[ProtectRequiredKeysMixin] | None,
+) -> list[ProtectRequiredKeysMixin]:
+    """Combine all the descriptions with descriptions a model type."""
+    descs: list[ProtectRequiredKeysMixin] = list(all_descs) if all_descs else []
+    if model_descriptions and (model_descs := model_descriptions.get(model_type)):
+        descs.extend(model_descs)
+    return descs
+
+
+@callback
 def async_all_device_entities(
     data: ProtectData,
     klass: type[ProtectDeviceEntity],
@@ -127,11 +140,7 @@ def async_all_device_entities(
     if ufp_device is None:
         entities: list[ProtectDeviceEntity] = []
         for model_type in _ALL_MODEL_TYPES:
-            descs = list(all_descs) if all_descs else []
-            if model_descriptions and (
-                model_descs := model_descriptions.get(model_type)
-            ):
-                descs.extend(model_descs)
+            descs = _combine_model_descs(model_type, model_descriptions, all_descs)
             entities.extend(
                 _async_device_entities(
                     data,
@@ -143,13 +152,14 @@ def async_all_device_entities(
             )
         return entities
 
-    ufp_model = ufp_device.model
-    assert ufp_model is not None
+    ufp_device_model_type = ufp_device.model
+    assert ufp_device_model_type is not None
+    descs = _combine_model_descs(ufp_device_model_type, model_descriptions, all_descs)
     return _async_device_entities(
         data,
         klass,
-        ufp_model,
-        (model_descriptions or {}).get(ufp_model, []),
+        ufp_device_model_type,
+        descs,
         unadopted_descs or [],
         ufp_device,
     )
