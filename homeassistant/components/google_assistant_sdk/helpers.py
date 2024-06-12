@@ -113,6 +113,33 @@ def default_language_code(hass: HomeAssistant) -> str:
     return DEFAULT_LANGUAGE_CODES.get(hass.config.language, "en-US")
 
 
+def best_matching_language_code(
+    hass: HomeAssistant, assist_language: str, agent_language: str | None = None
+) -> str:
+    """Get the best matching language, based on the preferred assist language and the configured agent language."""
+
+    # Use the assist language if supported
+    if assist_language in SUPPORTED_LANGUAGE_CODES:
+        return assist_language
+    language = assist_language.split("-")[0]
+
+    # Use the agent language if assist and agent start with the same language part
+    if agent_language is not None and agent_language.startswith(language):
+        return best_matching_language_code(hass, agent_language)
+
+    # If assist and agent are not matching, try to find the default language
+    default_language = DEFAULT_LANGUAGE_CODES.get(language)
+    if default_language is not None:
+        return default_language
+
+    # If no default agent is available, use the agent language
+    if agent_language is not None:
+        return best_matching_language_code(hass, agent_language)
+
+    # Fallback to the system default language
+    return default_language_code(hass)
+
+
 class InMemoryStorage:
     """Temporarily store and retrieve data from in memory storage."""
 

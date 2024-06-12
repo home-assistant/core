@@ -114,7 +114,6 @@ async def test_switch_error(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("switch.frenck_s_lametric_bluetooth")
     assert state
@@ -143,7 +142,6 @@ async def test_switch_connection_error(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("switch.frenck_s_lametric_bluetooth")
     assert state

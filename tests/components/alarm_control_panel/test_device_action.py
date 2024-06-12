@@ -24,13 +24,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
+from .common import MockAlarm
+
 from tests.common import (
     MockConfigEntry,
     async_get_device_automation_capabilities,
     async_get_device_automations,
     setup_test_component_platform,
 )
-from tests.components.alarm_control_panel.common import MockAlarm
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")

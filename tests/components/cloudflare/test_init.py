@@ -140,7 +140,6 @@ async def test_integration_services_with_issue(hass: HomeAssistant, cfupdate) ->
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     instance.update_dns_record.assert_not_called()
 

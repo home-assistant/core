@@ -14,7 +14,7 @@ import pytest
 from homeassistant import block_async_io
 from homeassistant.core import HomeAssistant
 
-from tests.common import extract_stack_to_frame
+from .common import extract_stack_to_frame
 
 
 async def test_protect_loop_debugger_sleep(caplog: pytest.LogCaptureFixture) -> None:
@@ -113,7 +113,6 @@ async def test_protect_loop_importlib_import_module_non_integration(
         ]
     )
     with (
-        pytest.raises(ImportError),
         patch.object(block_async_io, "_IN_TESTS", False),
         patch(
             "homeassistant.block_async_io.get_current_frame",
@@ -125,7 +124,8 @@ async def test_protect_loop_importlib_import_module_non_integration(
         ),
     ):
         block_async_io.enable()
-        importlib.import_module("not_loaded_module")
+        with pytest.raises(ImportError):
+            importlib.import_module("not_loaded_module")
 
     assert "Detected blocking call to import_module" in caplog.text
 
@@ -184,7 +184,6 @@ async def test_protect_loop_importlib_import_module_in_integration(
         ]
     )
     with (
-        pytest.raises(ImportError),
         patch.object(block_async_io, "_IN_TESTS", False),
         patch(
             "homeassistant.block_async_io.get_current_frame",
@@ -196,7 +195,8 @@ async def test_protect_loop_importlib_import_module_in_integration(
         ),
     ):
         block_async_io.enable()
-        importlib.import_module("not_loaded_module")
+        with pytest.raises(ImportError):
+            importlib.import_module("not_loaded_module")
 
     assert (
         "Detected blocking call to import_module inside the event loop by "
@@ -208,7 +208,7 @@ async def test_protect_loop_open(caplog: pytest.LogCaptureFixture) -> None:
     """Test open of a file in /proc is not reported."""
     block_async_io.enable()
     with contextlib.suppress(FileNotFoundError):
-        open("/proc/does_not_exist").close()
+        open("/proc/does_not_exist", encoding="utf8").close()
     assert "Detected blocking call to open with args" not in caplog.text
 
 
@@ -216,7 +216,7 @@ async def test_protect_open(caplog: pytest.LogCaptureFixture) -> None:
     """Test opening a file in the event loop logs."""
     block_async_io.enable()
     with contextlib.suppress(FileNotFoundError):
-        open("/config/data_not_exist").close()
+        open("/config/data_not_exist", encoding="utf8").close()
 
     assert "Detected blocking call to open with args" in caplog.text
 
@@ -233,7 +233,7 @@ async def test_protect_open_path(path: Any, caplog: pytest.LogCaptureFixture) ->
     """Test opening a file by path in the event loop logs."""
     block_async_io.enable()
     with contextlib.suppress(FileNotFoundError):
-        open(path).close()
+        open(path, encoding="utf8").close()
 
     assert "Detected blocking call to open with args" in caplog.text
 
