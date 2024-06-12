@@ -54,6 +54,7 @@ class EntityDescriptionExtras(TypedDict, total=False):
     """Extra kwargs that can be provided to entity descriptions."""
 
     entity_registry_enabled_default: bool
+    native_unit_of_measurement: str | None
 
 
 def async_refresh_after[_T: CoordinatedTPLinkEntity, **_P](

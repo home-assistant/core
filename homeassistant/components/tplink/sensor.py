@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import cast
 
-from kasa import Device, Feature
+from kasa import Device, Feature, SmartStrip
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -108,7 +108,7 @@ def async_emeter_from_device(
         return round(cast(float, emeter_today), description.precision)
     # today's consumption not available, when device was off all the day
     # bulb's do not report this information, so filter it out
-    return None if device.device_type == DeviceType.Bulb else 0.0
+    return None if device.device_type == Device.Type.Bulb else 0.0
 
 
 def _async_sensors_for_device(
@@ -146,8 +146,6 @@ async def async_setup_entry(
 
     for idx, child in enumerate(device.children):
         # TODO: nicer way for multi-coordinator updates.
-        from kasa import SmartStrip  # noqa: C0415
-
         if isinstance(device, SmartStrip):
             entities.extend(
                 _async_sensors_for_device(
