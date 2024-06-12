@@ -60,14 +60,9 @@ class ZhaCover(ZHAEntity, CoverEntity):
                 self.entity_data.entity.info_object.device_class
             )
 
-        if (
-            hasattr(self.entity_data.entity, "_attr_supported_features")
-            and self.entity_data.entity._attr_supported_features
-            is not None  # noqa: SLF001
-        ):
-            self._attr_supported_features: CoverEntityFeature = CoverEntityFeature(
-                self.entity_data.entity._attr_supported_features  # noqa: SLF001
-            )
+        self._attr_supported_features: CoverEntityFeature = CoverEntityFeature(
+            self.entity_data.entity._attr_supported_features  # noqa: SLF001
+        )
 
     @property
     def is_closed(self) -> bool | None:
