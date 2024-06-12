@@ -94,8 +94,8 @@ async def test_site_cannot_connect(
 
     assert hass.states.get("weather.met_office_wavertree_3hourly") is None
     assert hass.states.get("weather.met_office_wavertree_daily") is None
-    for sensor_id in WAVERTREE_SENSOR_RESULTS:
-        sensor_name, _ = WAVERTREE_SENSOR_RESULTS[sensor_id]
+    for sensor in WAVERTREE_SENSOR_RESULTS.values():
+        sensor_name = sensor[0]
         sensor = hass.states.get(f"sensor.wavertree_{sensor_name}")
         assert sensor is None
 
