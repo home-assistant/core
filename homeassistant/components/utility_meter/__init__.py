@@ -192,7 +192,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Utility Meter from a config entry."""
 
-    await async_remove_obsolete_devices_entry(
+    await async_remove_stale_device_links(
         hass, entry.entry_id, entry.options[CONF_SOURCE_SENSOR]
     )
 
@@ -268,7 +268,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     return True
 
 
-async def async_remove_obsolete_devices_entry(
+async def async_remove_stale_device_links(
     hass: HomeAssistant, entry_id: str, entity_id: str
 ) -> None:
     """Remove device link for entry, the source device may have changed."""
@@ -286,8 +286,7 @@ async def async_remove_obsolete_devices_entry(
     devices_in_entry = device_registry.devices.get_devices_for_config_entry_id(entry_id)
 
     # Removes all devices from the config entry that are not the same as the current device
-    for device_in_entry in devices_in_entry:
-        if device_in_entry.id != current_device_id:
-            device_registry.async_update_device(
-                device_in_entry.id, remove_config_entry_id=entry_id
-            )
+    for device in devices_in_entry:
+        if device.id == current_device_id:
+            continue
+        device_registry.async_update_device(device.id, remove_config_entry_id=entry_id)
