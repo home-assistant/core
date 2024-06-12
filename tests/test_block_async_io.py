@@ -17,6 +17,13 @@ from homeassistant.core import HomeAssistant
 from .common import extract_stack_to_frame
 
 
+@pytest.fixture(autouse=True)
+def unpatch_block_async_io():
+    """Unpatch block_async_io after each test."""
+    yield
+    block_async_io.disable()
+
+
 async def test_protect_loop_debugger_sleep(caplog: pytest.LogCaptureFixture) -> None:
     """Test time.sleep injected by the debugger is not reported."""
     block_async_io.enable()
@@ -214,7 +221,8 @@ async def test_protect_loop_open(caplog: pytest.LogCaptureFixture) -> None:
 
 async def test_protect_open(caplog: pytest.LogCaptureFixture) -> None:
     """Test opening a file in the event loop logs."""
-    block_async_io.enable()
+    with patch.object(block_async_io, "_IN_TESTS", False):
+        block_async_io.enable()
     with contextlib.suppress(FileNotFoundError):
         open("/config/data_not_exist", encoding="utf8").close()
 
@@ -231,7 +239,8 @@ async def test_protect_open(caplog: pytest.LogCaptureFixture) -> None:
 )
 async def test_protect_open_path(path: Any, caplog: pytest.LogCaptureFixture) -> None:
     """Test opening a file by path in the event loop logs."""
-    block_async_io.enable()
+    with patch.object(block_async_io, "_IN_TESTS", False):
+        block_async_io.enable()
     with contextlib.suppress(FileNotFoundError):
         open(path, encoding="utf8").close()
 
@@ -242,7 +251,8 @@ async def test_protect_loop_glob(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test glob calls in the loop are logged."""
-    block_async_io.enable()
+    with patch.object(block_async_io, "_IN_TESTS", False):
+        block_async_io.enable()
     glob.glob("/dev/null")
     assert "Detected blocking call to glob with args" in caplog.text
     caplog.clear()
@@ -254,7 +264,8 @@ async def test_protect_loop_iglob(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test iglob calls in the loop are logged."""
-    block_async_io.enable()
+    with patch.object(block_async_io, "_IN_TESTS", False):
+        block_async_io.enable()
     glob.iglob("/dev/null")
     assert "Detected blocking call to iglob with args" in caplog.text
     caplog.clear()
@@ -266,7 +277,8 @@ async def test_protect_loop_scandir(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test glob calls in the loop are logged."""
-    block_async_io.enable()
+    with patch.object(block_async_io, "_IN_TESTS", False):
+        block_async_io.enable()
     with contextlib.suppress(FileNotFoundError):
         os.scandir("/path/that/does/not/exists")
     assert "Detected blocking call to scandir with args" in caplog.text
@@ -280,7 +292,8 @@ async def test_protect_loop_listdir(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test listdir calls in the loop are logged."""
-    block_async_io.enable()
+    with patch.object(block_async_io, "_IN_TESTS", False):
+        block_async_io.enable()
     with contextlib.suppress(FileNotFoundError):
         os.listdir("/path/that/does/not/exists")
     assert "Detected blocking call to listdir with args" in caplog.text
@@ -293,8 +306,9 @@ async def test_protect_loop_listdir(
 async def test_protect_loop_walk(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test glob calls in the loop are logged."""
-    block_async_io.enable()
+    """Test os.walk calls in the loop are logged."""
+    with patch.object(block_async_io, "_IN_TESTS", False):
+        block_async_io.enable()
     with contextlib.suppress(FileNotFoundError):
         os.walk("/path/that/does/not/exists")
     assert "Detected blocking call to walk with args" in caplog.text
@@ -302,3 +316,13 @@ async def test_protect_loop_walk(
     with contextlib.suppress(FileNotFoundError):
         await hass.async_add_executor_job(os.walk, "/path/that/does/not/exists")
     assert "Detected blocking call to walk with args" not in caplog.text
+
+
+async def test_open_calls_ignored_in_tests(caplog: pytest.LogCaptureFixture) -> None:
+    """Test opening a file in tests is ignored."""
+    assert block_async_io._IN_TESTS
+    block_async_io.enable()
+    with contextlib.suppress(FileNotFoundError):
+        open("/config/data_not_exist", encoding="utf8").close()
+
+    assert "Detected blocking call to open with args" not in caplog.text
