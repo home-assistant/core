@@ -57,7 +57,6 @@ async def test_user(
     hass: HomeAssistant,
     mock_solarlog: AsyncMock,
     mock_setup_entry: AsyncMock,
-    test_connect,
 ) -> None:
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
