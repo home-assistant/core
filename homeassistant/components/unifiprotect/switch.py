@@ -16,15 +16,14 @@ from uiprotect.data import (
 )
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DISPATCH_ADOPT, DOMAIN
-from .data import ProtectData
+from .const import DISPATCH_ADOPT
+from .data import ProtectData, UFPConfigEntry
 from .entity import ProtectDeviceEntity, ProtectNVREntity, async_all_device_entities
 from .models import PermRequired, ProtectSetableKeysMixin, T
 from .utils import async_dispatch_id as _ufpd
@@ -459,11 +458,11 @@ NVR_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: UFPConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for UniFi Protect integration."""
-    data: ProtectData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
