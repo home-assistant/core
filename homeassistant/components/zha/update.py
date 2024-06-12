@@ -100,6 +100,7 @@ class ZHAFirmwareUpdateEntity(
     def __init__(self, entity_data: EntityData, **kwargs: Any) -> None:
         """Initialize the ZHA siren."""
         zha_data = get_zha_data(entity_data.device_proxy.gateway_proxy.hass)
+        assert zha_data.update_coordinator is not None
 
         super().__init__(entity_data, coordinator=zha_data.update_coordinator, **kwargs)
         CoordinatorEntity.__init__(self, zha_data.update_coordinator)
