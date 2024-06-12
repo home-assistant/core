@@ -52,7 +52,7 @@ def _handle_errors(func):
     return send_with_error_handling
 
 
-@websocket_api.websocket_command({"type": "lovelace/resources"})
+@websocket_api.websocket_command({"type": "lovelace/resources/list"})
 @websocket_api.async_response
 async def websocket_lovelace_resources(
     hass: HomeAssistant,
