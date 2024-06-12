@@ -49,8 +49,6 @@ async def async_setup_entry(
 class ZHASiren(ZHAEntity, SirenEntity):
     """Representation of a ZHA siren."""
 
-    _attr_name: str = "Siren"
-
     def __init__(self, entity_data: EntityData, **kwargs: Any) -> None:
         """Initialize the ZHA siren."""
         super().__init__(entity_data, **kwargs)
