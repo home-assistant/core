@@ -78,7 +78,6 @@ class MockedAnovaWebsocketHandler(AnovaWebsocketHandler):
         self.ws = MockedAnovaWebsocketStream(self.connect_messages)
         await self.message_listener()
         self.ws = MockedAnovaWebsocketStream(self.post_connect_messages)
-        # pylint: disable-next=fixme
         # TODO: fix RUF006 in parent library (AnovaWebsocketHandler)
         asyncio.ensure_future(self.message_listener())  # noqa: RUF006
 
