@@ -43,12 +43,10 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
     )
 
-    entities = []
-    for device in data.get_by_types({ModelType.DOORLOCK}):
-        device = cast(Doorlock, device)
-        entities.append(ProtectLock(data, device))
-
-    async_add_entities(entities)
+    async_add_entities(
+        ProtectLock(data, cast(Doorlock, device))
+        for device in data.get_by_types({ModelType.DOORLOCK})
+    )
 
 
 class ProtectLock(ProtectDeviceEntity, LockEntity):
