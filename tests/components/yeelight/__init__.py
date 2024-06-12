@@ -115,6 +115,7 @@ class MockAsyncBulb:
         self.bulb_type = bulb_type
         self._async_callback = None
         self._cannot_connect = cannot_connect
+        self.capabilities = None
 
     async def async_listen(self, callback):
         """Mock the listener."""
