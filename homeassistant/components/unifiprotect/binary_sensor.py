@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 import dataclasses
 import logging
 from typing import Any
@@ -23,15 +24,15 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DISPATCH_ADOPT, DOMAIN
-from .data import ProtectData
+from .const import DISPATCH_ADOPT
+from .data import ProtectData, UFPConfigEntry
 from .entity import (
+    BaseProtectEntity,
     EventEntityMixin,
     ProtectDeviceEntity,
     ProtectNVREntity,
@@ -611,25 +612,29 @@ DISK_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
 )
 
+_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] = {
+    ModelType.CAMERA: CAMERA_SENSORS,
+    ModelType.LIGHT: LIGHT_SENSORS,
+    ModelType.SENSOR: SENSE_SENSORS,
+    ModelType.DOORLOCK: DOORLOCK_SENSORS,
+    ModelType.VIEWPORT: VIEWER_SENSORS,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: UFPConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up binary sensors for UniFi Protect integration."""
-    data: ProtectData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        entities: list[ProtectDeviceEntity] = async_all_device_entities(
+        entities = async_all_device_entities(
             data,
             ProtectDeviceBinarySensor,
-            camera_descs=CAMERA_SENSORS,
-            light_descs=LIGHT_SENSORS,
-            sense_descs=SENSE_SENSORS,
-            lock_descs=DOORLOCK_SENSORS,
-            viewer_descs=VIEWER_SENSORS,
+            model_descriptions=_MODEL_DESCRIPTIONS,
             ufp_device=device,
         )
         if device.is_adopted and isinstance(device, Camera):
@@ -640,14 +645,8 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
     )
 
-    entities: list[ProtectDeviceEntity] = async_all_device_entities(
-        data,
-        ProtectDeviceBinarySensor,
-        camera_descs=CAMERA_SENSORS,
-        light_descs=LIGHT_SENSORS,
-        sense_descs=SENSE_SENSORS,
-        lock_descs=DOORLOCK_SENSORS,
-        viewer_descs=VIEWER_SENSORS,
+    entities = async_all_device_entities(
+        data, ProtectDeviceBinarySensor, model_descriptions=_MODEL_DESCRIPTIONS
     )
     entities += _async_event_entities(data)
     entities += _async_nvr_entities(data)
@@ -681,8 +680,8 @@ def _async_event_entities(
 @callback
 def _async_nvr_entities(
     data: ProtectData,
-) -> list[ProtectDeviceEntity]:
-    entities: list[ProtectDeviceEntity] = []
+) -> list[BaseProtectEntity]:
+    entities: list[BaseProtectEntity] = []
     device = data.api.bootstrap.nvr
     if device.system_info.ustorage is None:
         return entities

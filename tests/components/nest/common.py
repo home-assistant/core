@@ -93,7 +93,7 @@ class FakeSubscriber(GoogleNestSubscriber):
 
     stop_calls = 0
 
-    def __init__(self):
+    def __init__(self):  # pylint: disable=super-init-not-called
         """Initialize Fake Subscriber."""
         self._device_manager = DeviceManager()
 
