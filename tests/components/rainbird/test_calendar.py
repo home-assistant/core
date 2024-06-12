@@ -7,7 +7,6 @@ from typing import Any
 import urllib
 from zoneinfo import ZoneInfo
 
-from aiohttp import ClientSession
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -115,7 +114,7 @@ def mock_insert_schedule_response(
 
 @pytest.fixture(name="get_events")
 def get_events_fixture(
-    hass_client: Callable[..., Awaitable[ClientSession]],
+    hass_client: ClientSessionGenerator,
 ) -> GetEventsFn:
     """Fetch calendar events from the HTTP API."""
 

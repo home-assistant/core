@@ -1,9 +1,9 @@
 """Common fixtures for the Lutron Homeworks Series 4 and 8 tests."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.homeworks.const import (
     CONF_ADDR,
@@ -88,7 +88,7 @@ def mock_empty_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_homeworks() -> Generator[None, MagicMock, None]:
+def mock_homeworks() -> Generator[MagicMock]:
     """Return a mocked Homeworks client."""
     with (
         patch(
@@ -103,7 +103,7 @@ def mock_homeworks() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.homeworks.async_setup_entry", return_value=True

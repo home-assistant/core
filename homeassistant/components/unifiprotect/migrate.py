@@ -6,8 +6,8 @@ from itertools import chain
 import logging
 from typing import TypedDict
 
-from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data import Bootstrap
+from uiprotect import ProtectApiClient
+from uiprotect.data import Bootstrap
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity

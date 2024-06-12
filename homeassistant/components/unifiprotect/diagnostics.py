@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from pyunifiprotect.test_util.anonymize import anonymize_data
+from uiprotect.test_util.anonymize import anonymize_data
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

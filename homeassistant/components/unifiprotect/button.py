@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import logging
 from typing import Final
 
-from pyunifiprotect.data import ProtectAdoptableDeviceModel, ProtectModelWithId
+from uiprotect.data import ProtectAdoptableDeviceModel, ProtectModelWithId
 
 from homeassistant.components.button import (
     ButtonDeviceClass,

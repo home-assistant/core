@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from pyunifiprotect.data import (
+from uiprotect.data import (
     NVR,
     Camera,
     ProtectAdoptableDeviceModel,
@@ -177,6 +177,17 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_value="is_vehicle_detection_on",
         ufp_enabled="is_recording_enabled",
         ufp_set_method="set_vehicle_detection",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectSwitchEntityDescription(
+        key="smart_animal",
+        name="Detections: Animal",
+        icon="mdi:paw",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="can_detect_animal",
+        ufp_value="is_animal_detection_on",
+        ufp_enabled="is_recording_enabled",
+        ufp_set_method="set_animal_detection",
         ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(

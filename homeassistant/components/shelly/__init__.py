@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import contextlib
 from typing import Final
 
 from aioshelly.block_device import BlockDevice
@@ -301,13 +300,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> b
             entry, platforms
         ):
             if shelly_entry_data.rpc:
-                with contextlib.suppress(DeviceConnectionError):
-                    # If the device is restarting or has gone offline before
-                    # the ping/pong timeout happens, the shutdown command
-                    # will fail, but we don't care since we are unloading
-                    # and if we setup again, we will fix anything that is
-                    # in an inconsistent state at that time.
-                    await shelly_entry_data.rpc.shutdown()
+                await shelly_entry_data.rpc.shutdown()
 
         return unload_ok
 

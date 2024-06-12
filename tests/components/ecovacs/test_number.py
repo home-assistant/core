@@ -10,7 +10,7 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
-from homeassistant.components.number.const import (
+from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as PLATFORM_DOMAIN,
     SERVICE_SET_VALUE,

@@ -13,12 +13,10 @@ from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
 from homeassistant.components.lawn_mower import (
     DOMAIN as PLATFORM_DOMAIN,
-    LawnMowerActivity,
-)
-from homeassistant.components.lawn_mower.const import (
     SERVICE_DOCK,
     SERVICE_PAUSE,
     SERVICE_START_MOWING,
+    LawnMowerActivity,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant

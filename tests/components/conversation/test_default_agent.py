@@ -72,15 +72,23 @@ async def test_hidden_entities_skipped(
 async def test_exposed_domains(hass: HomeAssistant, init_components) -> None:
     """Test that we can't interact with entities that aren't exposed."""
     hass.states.async_set(
-        "media_player.test", "off", attributes={ATTR_FRIENDLY_NAME: "Test Media Player"}
+        "lock.front_door", "off", attributes={ATTR_FRIENDLY_NAME: "Front Door"}
     )
+    hass.states.async_set(
+        "script.my_script", "off", attributes={ATTR_FRIENDLY_NAME: "My Script"}
+    )
+
+    # These are match failures instead of handle failures because the domains
+    # aren't exposed by default.
+    result = await conversation.async_converse(
+        hass, "unlock front door", None, Context(), None
+    )
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
 
     result = await conversation.async_converse(
-        hass, "turn on test media player", None, Context(), None
+        hass, "run my script", None, Context(), None
     )
-
-    # This is a match failure instead of a handle failure because the media
-    # player domain is not exposed.
     assert result.response.response_type == intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
 
@@ -806,7 +814,6 @@ async def test_error_wrong_state(hass: HomeAssistant, init_components) -> None:
         media_player.STATE_IDLE,
         {ATTR_FRIENDLY_NAME: "test player"},
     )
-    expose_entity(hass, "media_player.test_player", True)
 
     result = await conversation.async_converse(
         hass, "pause test player", None, Context(), None
@@ -829,7 +836,6 @@ async def test_error_feature_not_supported(
         {ATTR_FRIENDLY_NAME: "test player"},
         # missing VOLUME_SET feature
     )
-    expose_entity(hass, "media_player.test_player", True)
 
     result = await conversation.async_converse(
         hass, "set test player volume to 100%", None, Context(), None

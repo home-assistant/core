@@ -67,6 +67,9 @@ def enable() -> None:
     glob.iglob = protect_loop(
         glob.iglob, strict_core=False, strict=False, loop_thread_id=loop_thread_id
     )
+    os.walk = protect_loop(
+        os.walk, strict_core=False, strict=False, loop_thread_id=loop_thread_id
+    )
 
     if not _IN_TESTS:
         # Prevent files being opened inside the event loop

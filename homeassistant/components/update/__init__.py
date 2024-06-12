@@ -495,14 +495,14 @@ async def websocket_release_notes(
 
     if entity is None:
         connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Entity not found"
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Entity not found"
         )
         return
 
     if UpdateEntityFeature.RELEASE_NOTES not in entity.supported_features_compat:
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_SUPPORTED,
+            websocket_api.ERR_NOT_SUPPORTED,
             "Entity does not support release notes",
         )
         return

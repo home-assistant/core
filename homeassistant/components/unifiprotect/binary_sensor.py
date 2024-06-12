@@ -6,7 +6,7 @@ import dataclasses
 import logging
 from typing import Any
 
-from pyunifiprotect.data import (
+from uiprotect.data import (
     NVR,
     Camera,
     Light,
@@ -16,7 +16,7 @@ from pyunifiprotect.data import (
     ProtectModelWithId,
     Sensor,
 )
-from pyunifiprotect.data.nvr import UOSDisk
+from uiprotect.data.nvr import UOSDisk
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -173,6 +173,15 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="can_detect_vehicle",
         ufp_value="is_vehicle_detection_on",
+        ufp_perm=PermRequired.NO_WRITE,
+    ),
+    ProtectBinaryEntityDescription(
+        key="smart_animal",
+        name="Detections: Animal",
+        icon="mdi:paw",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ufp_required_field="can_detect_animal",
+        ufp_value="is_animal_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
@@ -452,6 +461,15 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_required_field="can_detect_vehicle",
         ufp_enabled="is_vehicle_detection_on",
         ufp_event_obj="last_vehicle_detect_event",
+    ),
+    ProtectBinaryEventEntityDescription(
+        key="smart_obj_animal",
+        name="Animal Detected",
+        icon="mdi:paw",
+        ufp_value="is_animal_currently_detected",
+        ufp_required_field="can_detect_animal",
+        ufp_enabled="is_animal_detection_on",
+        ufp_event_obj="last_animal_detect_event",
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_obj_package",

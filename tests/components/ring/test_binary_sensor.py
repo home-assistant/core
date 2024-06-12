@@ -1,32 +1,14 @@
 """The tests for the Ring binary sensor platform."""
 
-from time import time
-from unittest.mock import patch
-
-import requests_mock
-
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .common import setup_platform
 
 
-async def test_binary_sensor(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker
-) -> None:
+async def test_binary_sensor(hass: HomeAssistant, mock_ring_client) -> None:
     """Test the Ring binary sensors."""
-    with patch(
-        "ring_doorbell.Ring.active_alerts",
-        return_value=[
-            {
-                "kind": "motion",
-                "doorbot_id": 987654,
-                "state": "ringing",
-                "now": time(),
-                "expires_in": 180,
-            }
-        ],
-    ):
-        await setup_platform(hass, "binary_sensor")
+    await setup_platform(hass, Platform.BINARY_SENSOR)
 
     motion_state = hass.states.get("binary_sensor.front_door_motion")
     assert motion_state is not None

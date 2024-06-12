@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pyunifiprotect.data import (
+from uiprotect.data import (
     Light,
     ModelType,
     ProtectAdoptableDeviceModel,
