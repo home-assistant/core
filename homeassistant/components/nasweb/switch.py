@@ -16,8 +16,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import EntityRegistry, async_get
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
+    BaseCoordinatorEntity,
+    BaseDataUpdateCoordinatorProtocol,
 )
 
 from .const import DOMAIN, OUTPUT_TRANSLATION_KEY, STATUS_UPDATE_MAX_TIME_INTERVAL
@@ -36,7 +36,6 @@ async def async_setup_entry(
     nasweb_data: NASwebData = hass.data[DOMAIN]
     coordinator = nasweb_data.entries_coordinators[config.entry_id]
     nasweb_outputs = coordinator.data[KEY_OUTPUTS]
-    coordinator.async_add_switch_callback = async_add_entities
     entities: list[RelaySwitch] = []
     for out in nasweb_outputs:
         if not isinstance(out, NASwebOutput):
@@ -47,11 +46,13 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class RelaySwitch(SwitchEntity, CoordinatorEntity):
+class RelaySwitch(SwitchEntity, BaseCoordinatorEntity):
     """Entity representing NASweb Output."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, nasweb_output: NASwebOutput
+        self,
+        coordinator: BaseDataUpdateCoordinatorProtocol,
+        nasweb_output: NASwebOutput,
     ) -> None:
         """Initialize RelaySwitch."""
         super().__init__(coordinator)
@@ -67,14 +68,19 @@ class RelaySwitch(SwitchEntity, CoordinatorEntity):
             identifiers={(DOMAIN, self._output.webio_serial)},
         )
 
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self._handle_coordinator_update()
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         old_available = self.available
         self._attr_is_on = self._output.state
         if (
-            time.time() - self._output.last_update >= STATUS_UPDATE_MAX_TIME_INTERVAL
-            or not self.coordinator.last_update_success
+            self.coordinator.last_update is None
+            or time.time() - self._output.last_update >= STATUS_UPDATE_MAX_TIME_INTERVAL
         ):
             self._attr_available = False
         else:
@@ -87,6 +93,13 @@ class RelaySwitch(SwitchEntity, CoordinatorEntity):
             er.async_remove(self.entity_id)
             return
         self.async_write_ha_state()
+
+    async def async_update(self) -> None:
+        """Update the entity.
+
+        Only used by the generic entity update service.
+        """
+        # return await super().async_update()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn On RelaySwitch."""
