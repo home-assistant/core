@@ -41,7 +41,7 @@ def mock_test_connection():
 
 
 @pytest.fixture(name="device_reg")
-def device_reg_fixture(hass):
+def device_reg_fixture(hass: HomeAssistant):
     """Return an empty, loaded, registry."""
     return mock_device_registry(hass)
 
