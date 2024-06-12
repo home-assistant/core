@@ -26,7 +26,7 @@ from .entity import FullyKioskEntity
 class FullyCameraEntityDescription(CameraEntityDescription):
     """Fully Kiosk Browser camera entity description."""
 
-    image_action: Callable[[FullyKiosk], Any]
+    image_action: Callable[[FullyKiosk], bytes]
     on_action: Callable[[FullyKiosk], Any] | None
     off_action: Callable[[FullyKiosk], Any] | None
     is_on_fn: Callable[[dict[str, Any]], Any]
