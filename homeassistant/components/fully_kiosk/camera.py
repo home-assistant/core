@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
@@ -26,7 +26,7 @@ from .entity import FullyKioskEntity
 class FullyCameraEntityDescription(CameraEntityDescription):
     """Fully Kiosk Browser camera entity description."""
 
-    image_action: Callable[[FullyKiosk], bytes]
+    image_action: Callable[[FullyKiosk], Coroutine[Any, Any, bytes]]
     on_action: Callable[[FullyKiosk], Any] | None
     off_action: Callable[[FullyKiosk], Any] | None
     is_on_fn: Callable[[dict[str, Any]], Any]
