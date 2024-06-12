@@ -29,6 +29,8 @@ from homeassistant.helpers.selector import ConfigEntrySelector
 
 from .const import DEFAULT_ACCESS, DOMAIN
 
+type GoogleSheetsConfigEntry = ConfigEntry[OAuth2Session]
+
 DATA = "data"
 DATA_CONFIG_ENTRY = "config_entry"
 WORKSHEET = "worksheet"
@@ -44,7 +46,9 @@ SHEET_SERVICE_SCHEMA = vol.All(
 )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: GoogleSheetsConfigEntry
+) -> bool:
     """Set up Google Sheets from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
@@ -68,12 +72,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-def async_entry_has_scopes(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+def async_entry_has_scopes(hass: HomeAssistant, entry: GoogleSheetsConfigEntry) -> bool:
     """Verify that the config entry desired scope is present in the oauth token."""
     return DEFAULT_ACCESS in entry.data.get(CONF_TOKEN, {}).get("scope", "").split(" ")
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: GoogleSheetsConfigEntry
+) -> bool:
     """Unload a config entry."""
     loaded_entries = [
         entry
@@ -90,7 +96,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_setup_service(hass: HomeAssistant) -> None:
     """Add the services for Google Sheets."""
 
-    def _append_to_sheet(call: ServiceCall, entry: ConfigEntry) -> None:
+    def _append_to_sheet(call: ServiceCall, entry: GoogleSheetsConfigEntry) -> None:
         """Run append in the executor."""
         service = Client(Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]))  # type: ignore[no-untyped-call]
         try:
@@ -114,7 +120,7 @@ async def async_setup_service(hass: HomeAssistant) -> None:
 
     async def append_to_sheet(call: ServiceCall) -> None:
         """Append new line of data to a Google Sheets document."""
-        entry: ConfigEntry | None = hass.config_entries.async_get_entry(
+        entry: GoogleSheetsConfigEntry | None = hass.config_entries.async_get_entry(
             call.data[DATA_CONFIG_ENTRY]
         )
         if not entry or not hasattr(entry, "runtime_data"):
