@@ -11,10 +11,10 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import GoogleMailConfigEntry
 from .entity import GoogleMailEntity
 
 SCAN_INTERVAL = timedelta(minutes=15)
@@ -27,7 +27,9 @@ SENSOR_TYPE = SensorEntityDescription(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: GoogleMailConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Google Mail sensor."""
     async_add_entities([GoogleMailSensor(entry.runtime_data, SENSOR_TYPE)], True)
