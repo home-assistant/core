@@ -84,6 +84,31 @@ async def test_media_player(
     )
     assert len(mock_fully_kiosk.setAudioVolume.mock_calls) == 1
 
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        "play_media",
+        {
+            ATTR_ENTITY_ID: "media_player.amazon_fire",
+            "media_content_type": "video",
+            "media_content_id": "test.mp4",
+        },
+        blocking=True,
+    )
+    assert len(mock_fully_kiosk.sendCommand.mock_calls) == 1
+    mock_fully_kiosk.sendCommand.assert_called_with(
+        "playVideo", url="test.mp4", stream=3, showControls=1, exitOnCompletion=1
+    )
+
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        "media_stop",
+        {
+            ATTR_ENTITY_ID: "media_player.amazon_fire",
+        },
+        blocking=True,
+    )
+    mock_fully_kiosk.sendCommand.assert_called_with("stopVideo")
+
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
