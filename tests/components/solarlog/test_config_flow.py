@@ -53,6 +53,7 @@ def init_config_flow(hass):
     return flow
 
 
+@pytest.mark.usefixtures("test_connect")
 async def test_user(
     hass: HomeAssistant,
     mock_solarlog: AsyncMock,
