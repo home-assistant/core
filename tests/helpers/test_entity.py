@@ -107,6 +107,7 @@ async def test_async_update_support(hass: HomeAssistant) -> None:
         """Async update."""
         async_update.append(1)
 
+    # pylint: disable-next=attribute-defined-outside-init
     ent.async_update = async_update_func
 
     await ent.async_update_ha_state(True)
