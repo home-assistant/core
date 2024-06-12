@@ -2240,8 +2240,6 @@ def _async_abort_entries_match(
         for kv in match_dict.items():
             if kv not in options_items and kv not in data_items:
                 break
-        else:
-            raise data_entry_flow.AbortFlow("already_configured")
 
 
 class ConfigEntryBaseFlow(data_entry_flow.FlowHandler[ConfigFlowResult]):
