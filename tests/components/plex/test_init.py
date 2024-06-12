@@ -255,7 +255,7 @@ async def test_setup_when_certificate_changed(
     # Test with success
     new_url = PLEX_DIRECT_URL
     requests_mock.get("https://plex.tv/api/v2/resources", text=plextv_resources)
-    for resource_url in [new_url, "http://1.2.3.4:32400"]:
+    for resource_url in (new_url, "http://1.2.3.4:32400"):
         requests_mock.get(resource_url, text=plex_server_default)
     requests_mock.get(f"{new_url}/accounts", text=plex_server_accounts)
     requests_mock.get(f"{new_url}/library", text=empty_library)
