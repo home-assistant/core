@@ -19,8 +19,8 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -156,24 +156,3 @@ class Light(LightEntity, ZHAEntity):
             transition=kwargs.get(ATTR_TRANSITION)
         )
         self.async_write_ha_state()
-
-    @callback
-    def async_restore_last_state(self, last_state):
-        """Restore previous state."""
-        self._attr_state = last_state.state == STATE_ON
-        if "brightness" in last_state.attributes:
-            self._attr_brightness = last_state.attributes["brightness"]
-        if "off_with_transition" in last_state.attributes:
-            self._off_with_transition = last_state.attributes["off_with_transition"]
-        if "off_brightness" in last_state.attributes:
-            self._off_brightness = last_state.attributes["off_brightness"]
-        if (color_mode := last_state.attributes.get("color_mode")) is not None:
-            self._attr_color_mode = ColorMode(color_mode)
-        if "color_temp" in last_state.attributes:
-            self._attr_color_temp = last_state.attributes["color_temp"]
-        if "xy_color" in last_state.attributes:
-            self._attr_xy_color = last_state.attributes["xy_color"]
-        if "hs_color" in last_state.attributes:
-            self._attr_hs_color = last_state.attributes["hs_color"]
-        if "effect" in last_state.attributes:
-            self._attr_effect = last_state.attributes["effect"]
