@@ -43,6 +43,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DISPATCH_ADOPT
 from .data import ProtectData, UFPConfigEntry
 from .entity import (
+    BaseProtectEntity,
     EventEntityMixin,
     ProtectDeviceEntity,
     ProtectNVREntity,
@@ -644,7 +645,7 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
     )
 
-    entities: list[ProtectDeviceEntity] = async_all_device_entities(
+    entities = async_all_device_entities(
         data,
         ProtectDeviceSensor,
         all_descs=ALL_DEVICES_SENSORS,
@@ -695,8 +696,8 @@ def _async_event_entities(
 @callback
 def _async_nvr_entities(
     data: ProtectData,
-) -> list[ProtectDeviceEntity]:
-    entities: list[ProtectDeviceEntity] = []
+) -> list[BaseProtectEntity]:
+    entities: list[BaseProtectEntity] = []
     device = data.api.bootstrap.nvr
     for description in NVR_SENSORS + NVR_DISABLED_SENSORS:
         entities.append(ProtectNVRSensor(data, device, description))

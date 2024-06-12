@@ -349,7 +349,7 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
     )
 
-    entities: list[ProtectDeviceEntity] = async_all_device_entities(
+    entities = async_all_device_entities(
         data, ProtectSelects, model_descriptions=_MODEL_DESCRIPTIONS
     )
 

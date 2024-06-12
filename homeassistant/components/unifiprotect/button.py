@@ -156,7 +156,7 @@ async def async_setup_entry(
         )
     )
 
-    entities: list[ProtectDeviceEntity] = async_all_device_entities(
+    entities = async_all_device_entities(
         data,
         ProtectButton,
         all_descs=ALL_DEVICE_BUTTONS,

@@ -26,12 +26,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DISPATCH_ADOPT
 from .data import ProtectData, UFPConfigEntry
-from .entity import (
-    BaseProtectEntity,
-    ProtectDeviceEntity,
-    ProtectNVREntity,
-    async_all_device_entities,
-)
+from .entity import ProtectDeviceEntity, ProtectNVREntity, async_all_device_entities
 from .models import PermRequired, ProtectRequiredKeysMixin, ProtectSetableKeysMixin, T
 from .utils import async_dispatch_id as _ufpd
 
@@ -503,7 +498,7 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
     )
 
-    entities: list[BaseProtectEntity] = async_all_device_entities(
+    entities = async_all_device_entities(
         data,
         ProtectSwitch,
         model_descriptions=_MODEL_DESCRIPTIONS,
