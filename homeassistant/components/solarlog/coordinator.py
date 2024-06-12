@@ -1,6 +1,6 @@
 """DataUpdateCoordinator for solarlog integration."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from urllib.parse import ParseResult, urlparse
 
@@ -43,7 +43,6 @@ class SolarlogData(update_coordinator.DataUpdateCoordinator):
         self.solarlog = SolarLogConnector(
             self.host, extended_data, hass.config.time_zone
         )
-        self._attr_last_update_success = None
 
     async def _async_update_data(self):
         """Update the data from the SolarLog device."""
@@ -55,8 +54,6 @@ class SolarlogData(update_coordinator.DataUpdateCoordinator):
             raise ConfigEntryNotReady(err) from err
         except SolarLogUpdateError as err:
             raise update_coordinator.UpdateFailed(err) from err
-
-        self._attr_last_update_success = datetime.now()
 
         _LOGGER.debug("Data successfully updated")
 

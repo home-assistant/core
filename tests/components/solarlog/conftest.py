@@ -5,6 +5,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from tests.common import mock_device_registry, mock_registry
+
 
 @pytest.fixture
 def mock_solarlog():
@@ -36,3 +38,15 @@ def mock_test_connection():
         return_value=True,
     ):
         yield
+
+
+@pytest.fixture(name="device_reg")
+def device_reg_fixture(hass):
+    """Return an empty, loaded, registry."""
+    return mock_device_registry(hass)
+
+
+@pytest.fixture(name="entity_reg")
+def entity_reg_fixture(hass):
+    """Return an empty, loaded, registry."""
+    return mock_registry(hass)
