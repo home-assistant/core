@@ -10,6 +10,10 @@ import functools
 from typing import Any
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
+    ATTR_TEMPERATURE,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -133,20 +137,25 @@ class Thermostat(ZHAEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
-        await self.entity_data.entity.async_set_fan_mode(fan_mode)
+        await self.entity_data.entity.async_set_fan_mode(fan_mode=fan_mode)
         self.async_write_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
-        await self.entity_data.entity.async_set_hvac_mode(hvac_mode)
+        await self.entity_data.entity.async_set_hvac_mode(hvac_mode=hvac_mode)
         self.async_write_ha_state()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        await self.entity_data.entity.async_set_preset_mode(preset_mode)
+        await self.entity_data.entity.async_set_preset_mode(preset_mode=preset_mode)
         self.async_write_ha_state()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        await self.entity_data.entity.async_set_temperature(**kwargs)
+        await self.entity_data.entity.async_set_temperature(
+            target_temp_low=kwargs.get(ATTR_TARGET_TEMP_LOW),
+            target_temp_high=kwargs.get(ATTR_TARGET_TEMP_HIGH),
+            temperature=kwargs.get(ATTR_TEMPERATURE),
+            hvac_mode=kwargs.get(ATTR_HVAC_MODE),
+        )
         self.async_write_ha_state()
