@@ -59,18 +59,26 @@ class ReolinkVODMediaSource(MediaSource):
         data: dict[str, ReolinkData] = self.hass.data[DOMAIN]
         host = data[config_entry_id].host
 
-        vod_type = VodRequestType.RTMP
-        if host.api.is_nvr:
-            vod_type = VodRequestType.FLV
+        vod_type = VodRequestType.PLAYBACK
+        if not filename.endswith(".mp4"):
+            vod_type = VodRequestType.RTMP
+            if host.api.is_nvr:
+                vod_type = VodRequestType.FLV
 
         mime_type, url = await host.api.get_vod_source(
             channel, filename, stream_res, vod_type
         )
         if _LOGGER.isEnabledFor(logging.DEBUG):
-            url_log = f"{url.split('&user=')[0]}&user=xxxxx&password=xxxxx"
+            if "&user=" in url:
+                url_log = f"{url.split('&user=')[0]}&user=xxxxx&password=xxxxx"
+            if "&token=" in url:
+                url_log = f"{url.split('&token=')[0]}&token=xxxxx"
             _LOGGER.debug(
                 "Opening VOD stream from %s: %s", host.api.camera_name(channel), url_log
             )
+
+        if mime_type == "video/mp4":
+            return PlayMedia(url, mime_type)
 
         stream = create_stream(self.hass, url, {}, DynamicStreamSettings())
         stream.add_provider("hls", timeout=3600)
