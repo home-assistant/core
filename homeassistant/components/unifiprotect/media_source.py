@@ -26,7 +26,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .data import ProtectData
+from .data import ProtectData, async_get_ufp_entries
 from .views import async_generate_event_video_url, async_generate_thumbnail_url
 
 VIDEO_FORMAT = "video/mp4"
@@ -89,13 +89,13 @@ def get_ufp_event(event_type: SimpleEventType) -> set[EventType]:
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up UniFi Protect media source."""
-
-    data_sources: dict[str, ProtectData] = {}
-    for data in hass.data.get(DOMAIN, {}).values():
-        if isinstance(data, ProtectData):
-            data_sources[data.api.bootstrap.nvr.id] = data
-
-    return ProtectMediaSource(hass, data_sources)
+    return ProtectMediaSource(
+        hass,
+        {
+            entry.runtime_data.api.bootstrap.nvr.id: entry.runtime_data
+            for entry in async_get_ufp_entries(hass)
+        },
+    )
 
 
 @callback
