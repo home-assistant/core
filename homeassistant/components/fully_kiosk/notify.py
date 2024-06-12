@@ -1,36 +1,77 @@
-"""Support for fully_kiosk notifications."""
+"""Support for Fully Kiosk Browser notifications."""
 
-from typing import Any
+from __future__ import annotations
 
-from homeassistant.components.notify import BaseNotificationService
-from homeassistant.const import CONF_ENTITY_ID
+from dataclasses import dataclass
+
+from fullykiosk import FullyKioskError
+
+from homeassistant.components.notify import NotifyEntity, NotifyEntityDescription
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import FullyKioskDataUpdateCoordinator
+from .entity import FullyKioskEntity
 
 
-async def async_get_service(
-    hass: HomeAssistant,
-    config: ConfigType,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> BaseNotificationService | None:
-    """Get the notification service."""
-    assert discovery_info
-    coordinator: FullyKioskDataUpdateCoordinator = hass.data[DOMAIN][
-        discovery_info[CONF_ENTITY_ID]
-    ]
-    return NotificationService(coordinator)
+@dataclass(frozen=True, kw_only=True)
+class FullyNotifyEntityDescription(NotifyEntityDescription):
+    """Fully Kiosk Browser notify entity description."""
+
+    cmd: str
 
 
-class NotificationService(BaseNotificationService):
-    """Implement notification service."""
+NOTIFIERS: tuple[FullyNotifyEntityDescription, ...] = (
+    FullyNotifyEntityDescription(
+        key="overlay_message",
+        translation_key="overlay_message",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        cmd="setOverlayMessage",
+    ),
+    FullyNotifyEntityDescription(
+        key="tts",
+        translation_key="tts",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        cmd="textToSpeech",
+    ),
+)
 
-    def __init__(self, coordinator: FullyKioskDataUpdateCoordinator) -> None:
-        """Initialize the service."""
-        self.coordinator = coordinator
 
-    async def async_send_message(self, message: str, **kwargs: Any) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the Fully Kiosk Browser notification entity."""
+    coordinator: FullyKioskDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities(
+        FullyNotifyEntity(coordinator, description) for description in NOTIFIERS
+    )
+
+
+class FullyNotifyEntity(FullyKioskEntity, NotifyEntity):
+    """Implement the notification entity for Fully Kiosk Browser."""
+
+    entity_description: FullyNotifyEntityDescription
+
+    def __init__(
+        self,
+        coordinator: FullyKioskDataUpdateCoordinator,
+        description: FullyNotifyEntityDescription,
+    ) -> None:
+        """Initialize the entity."""
+        FullyKioskEntity.__init__(self, coordinator)
+        NotifyEntity.__init__(self)
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.data['deviceID']}-{description.key}"
+
+    async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
-        await self.coordinator.fully.sendCommand("textToSpeech", text=message)
+        try:
+            await self.coordinator.fully.sendCommand(
+                self.entity_description.cmd, text=message
+            )
+        except FullyKioskError as err:
+            raise HomeAssistantError(err) from err
