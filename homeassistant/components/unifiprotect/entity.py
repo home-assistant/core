@@ -281,15 +281,6 @@ class ProtectNVREntity(ProtectDeviceEntity):
     # separate subclass on purpose
     device: NVR  # type: ignore[assignment]
 
-    def __init__(
-        self,
-        entry: ProtectData,
-        device: NVR,
-        description: EntityDescription | None = None,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(entry, device, description)  # type: ignore[arg-type]
-
     @callback
     def _async_set_device_info(self) -> None:
         self._attr_device_info = DeviceInfo(
