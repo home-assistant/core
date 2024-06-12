@@ -36,7 +36,7 @@ from .const import (
     OUTDATED_LOG_MESSAGE,
     PLATFORMS,
 )
-from .data import ProtectData, UFPConfigEntry, async_ufp_instance_for_config_entry_ids
+from .data import ProtectData, UFPConfigEntry
 from .discovery import async_start_discovery
 from .migrate import async_migrate_data
 from .services import async_cleanup_services, async_setup_services
@@ -200,8 +200,7 @@ async def async_remove_config_entry_device(
         for connection in device_entry.connections
         if connection[0] == dr.CONNECTION_NETWORK_MAC
     }
-    api = async_ufp_instance_for_config_entry_ids(hass, {config_entry.entry_id})
-    assert api is not None
+    api = config_entry.runtime_data.api
     if api.bootstrap.nvr.mac in unifi_macs:
         return False
     for device in async_get_devices(api.bootstrap, DEVICES_THAT_ADOPT):
