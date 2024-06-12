@@ -94,8 +94,10 @@ async def test_polling_check_works_if_entity_add_fails(
             return self.hass.data is not None
 
     working_poll_ent = MockEntityNeedsSelfHassInShouldPoll(should_poll=True)
+    # pylint: disable-next=attribute-defined-outside-init
     working_poll_ent.async_update = AsyncMock()
     broken_poll_ent = MockEntityNeedsSelfHassInShouldPoll(should_poll=True)
+    # pylint: disable-next=attribute-defined-outside-init
     broken_poll_ent.async_update = AsyncMock(side_effect=Exception("Broken"))
 
     await component.async_add_entities(
