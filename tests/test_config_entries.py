@@ -4879,7 +4879,7 @@ async def test_preview_not_supported(
 
         VERSION = 1
 
-        async def async_step_user(self, data):
+        async def async_step_user(self, user_input):
             """Mock Reauth."""
             return self.async_show_form(step_id="user_confirm")
 
