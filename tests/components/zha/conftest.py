@@ -9,6 +9,7 @@ import warnings
 
 import pytest
 from typing_extensions import Generator
+import zhaquirks
 import zigpy
 from zigpy.application import ControllerApplication
 import zigpy.backups
@@ -62,8 +63,6 @@ def globally_load_quirks():
     independently, bugs can emerge that will show up only when more of the test suite is
     run.
     """
-
-    import zhaquirks
 
     zhaquirks.setup()
 
