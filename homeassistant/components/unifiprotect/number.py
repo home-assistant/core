@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -11,6 +12,7 @@ from uiprotect.data import (
     Camera,
     Doorlock,
     Light,
+    ModelType,
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
 )
@@ -25,7 +27,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DISPATCH_ADOPT, DOMAIN
 from .data import ProtectData
 from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import PermRequired, ProtectSetableKeysMixin, T
+from .models import PermRequired, ProtectRequiredKeysMixin, ProtectSetableKeysMixin, T
 from .utils import async_dispatch_id as _ufpd
 
 _LOGGER = logging.getLogger(__name__)
@@ -216,6 +218,13 @@ CHIME_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_perm=PermRequired.WRITE,
     ),
 )
+_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] = {
+    ModelType.CAMERA: CAMERA_NUMBERS,
+    ModelType.LIGHT: LIGHT_NUMBERS,
+    ModelType.SENSOR: SENSE_NUMBERS,
+    ModelType.DOORLOCK: DOORLOCK_NUMBERS,
+    ModelType.CHIME: CHIME_NUMBERS,
+}
 
 
 async def async_setup_entry(
@@ -231,11 +240,7 @@ async def async_setup_entry(
         entities = async_all_device_entities(
             data,
             ProtectNumbers,
-            camera_descs=CAMERA_NUMBERS,
-            light_descs=LIGHT_NUMBERS,
-            sense_descs=SENSE_NUMBERS,
-            lock_descs=DOORLOCK_NUMBERS,
-            chime_descs=CHIME_NUMBERS,
+            model_descriptions=_MODEL_DESCRIPTIONS,
             ufp_device=device,
         )
         async_add_entities(entities)
@@ -247,11 +252,7 @@ async def async_setup_entry(
     entities: list[ProtectDeviceEntity] = async_all_device_entities(
         data,
         ProtectNumbers,
-        camera_descs=CAMERA_NUMBERS,
-        light_descs=LIGHT_NUMBERS,
-        sense_descs=SENSE_NUMBERS,
-        lock_descs=DOORLOCK_NUMBERS,
-        chime_descs=CHIME_NUMBERS,
+        model_descriptions=_MODEL_DESCRIPTIONS,
     )
 
     async_add_entities(entities)

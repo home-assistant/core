@@ -8,17 +8,11 @@ from typing import TYPE_CHECKING, Any
 
 from uiprotect.data import (
     NVR,
-    Camera,
-    Chime,
-    Doorlock,
     Event,
-    Light,
     ModelType,
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
-    Sensor,
     StateType,
-    Viewer,
 )
 
 from homeassistant.core import callback
@@ -58,9 +52,10 @@ def _async_device_entities(
         if ufp_device is not None
         else data.get_by_types({model_type}, ignore_unadopted=False)
     )
+    auth_user = data.api.bootstrap.auth_user
     for device in devices:
         if TYPE_CHECKING:
-            assert isinstance(device, (Camera, Light, Sensor, Viewer, Doorlock, Chime))
+            assert isinstance(device, ProtectAdoptableDeviceModel)
         if not device.is_adopted_by_us:
             for description in unadopted_descs:
                 entities.append(
@@ -78,17 +73,14 @@ def _async_device_entities(
                 )
             continue
 
-        can_write = device.can_write(data.api.bootstrap.auth_user)
+        can_write = device.can_write(auth_user)
         for description in descs:
-            if description.ufp_perm is not None:
-                if description.ufp_perm is PermRequired.WRITE and not can_write:
+            if (perms := description.ufp_perm) is not None:
+                if perms is PermRequired.WRITE and not can_write:
                     continue
-                if description.ufp_perm is PermRequired.NO_WRITE and can_write:
+                if perms is PermRequired.NO_WRITE and can_write:
                     continue
-                if (
-                    description.ufp_perm is PermRequired.DELETE
-                    and not device.can_delete(data.api.bootstrap.auth_user)
-                ):
+                if perms is PermRequired.DELETE and not device.can_delete(auth_user):
                     continue
 
             if not description.has_required(device):
@@ -111,66 +103,47 @@ def _async_device_entities(
     return entities
 
 
+_ALL_MODEL_TYPES = (
+    ModelType.CAMERA,
+    ModelType.LIGHT,
+    ModelType.SENSOR,
+    ModelType.VIEWPORT,
+    ModelType.DOORLOCK,
+    ModelType.CHIME,
+)
+
+
 @callback
 def async_all_device_entities(
     data: ProtectData,
     klass: type[ProtectDeviceEntity],
-    camera_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
-    light_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
-    sense_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
-    viewer_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
-    lock_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
-    chime_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
+    model_descriptions: dict[ModelType, Sequence[ProtectRequiredKeysMixin]]
+    | None = None,
     all_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     unadopted_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     ufp_device: ProtectAdoptableDeviceModel | None = None,
 ) -> list[ProtectDeviceEntity]:
     """Generate a list of all the device entities."""
-    all_descs = list(all_descs or [])
-    unadopted_descs = list(unadopted_descs or [])
-    camera_descs = list(camera_descs or []) + all_descs
-    light_descs = list(light_descs or []) + all_descs
-    sense_descs = list(sense_descs or []) + all_descs
-    viewer_descs = list(viewer_descs or []) + all_descs
-    lock_descs = list(lock_descs or []) + all_descs
-    chime_descs = list(chime_descs or []) + all_descs
-
     if ufp_device is None:
-        return (
-            _async_device_entities(
-                data, klass, ModelType.CAMERA, camera_descs, unadopted_descs
+        entities: list[ProtectDeviceEntity] = []
+        for model_type in _ALL_MODEL_TYPES:
+            descs = list(all_descs) if all_descs else []
+            if model_descriptions and (
+                model_descs := model_descriptions.get(model_type)
+            ):
+                descs.extend(model_descs)
+            entities.extend(
+                _async_device_entities(
+                    data,
+                    klass,
+                    model_type,
+                    descs,
+                    unadopted_descs or [],
+                )
             )
-            + _async_device_entities(
-                data, klass, ModelType.LIGHT, light_descs, unadopted_descs
-            )
-            + _async_device_entities(
-                data, klass, ModelType.SENSOR, sense_descs, unadopted_descs
-            )
-            + _async_device_entities(
-                data, klass, ModelType.VIEWPORT, viewer_descs, unadopted_descs
-            )
-            + _async_device_entities(
-                data, klass, ModelType.DOORLOCK, lock_descs, unadopted_descs
-            )
-            + _async_device_entities(
-                data, klass, ModelType.CHIME, chime_descs, unadopted_descs
-            )
-        )
+        return entities
 
-    descs = []
-    if ufp_device.model is ModelType.CAMERA:
-        descs = camera_descs
-    elif ufp_device.model is ModelType.LIGHT:
-        descs = light_descs
-    elif ufp_device.model is ModelType.SENSOR:
-        descs = sense_descs
-    elif ufp_device.model is ModelType.VIEWPORT:
-        descs = viewer_descs
-    elif ufp_device.model is ModelType.DOORLOCK:
-        descs = lock_descs
-    elif ufp_device.model is ModelType.CHIME:
-        descs = chime_descs
-
+    unadopted_descs = list(unadopted_descs or [])
     if not descs and not unadopted_descs or ufp_device.model is None:
         return []
     return _async_device_entities(

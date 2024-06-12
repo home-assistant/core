@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
 
 from uiprotect.data import (
     Camera,
     DoorbellMessageType,
+    ModelType,
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
 )
@@ -22,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DISPATCH_ADOPT, DOMAIN
 from .data import ProtectData
 from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import PermRequired, ProtectSetableKeysMixin, T
+from .models import PermRequired, ProtectRequiredKeysMixin, ProtectSetableKeysMixin, T
 from .utils import async_dispatch_id as _ufpd
 
 
@@ -53,6 +55,10 @@ CAMERA: tuple[ProtectTextEntityDescription, ...] = (
     ),
 )
 
+_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] = {
+    ModelType.CAMERA: CAMERA,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -67,7 +73,7 @@ async def async_setup_entry(
         entities = async_all_device_entities(
             data,
             ProtectDeviceText,
-            camera_descs=CAMERA,
+            model_descriptions=_MODEL_DESCRIPTIONS,
             ufp_device=device,
         )
         async_add_entities(entities)
@@ -77,9 +83,7 @@ async def async_setup_entry(
     )
 
     entities: list[ProtectDeviceEntity] = async_all_device_entities(
-        data,
-        ProtectDeviceText,
-        camera_descs=CAMERA,
+        data, ProtectDeviceText, model_descriptions=_MODEL_DESCRIPTIONS
     )
 
     async_add_entities(entities)
