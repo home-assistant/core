@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable, Coroutine
 import logging
-from typing import Any, Concatenate, TypedDict, Unpack
+from typing import Any, Concatenate, TypedDict
 
 from kasa import (
     AuthenticationError,
@@ -54,7 +54,6 @@ class EntityDescriptionExtras(TypedDict, total=False):
     """Extra kwargs that can be provided to entity descriptions."""
 
     entity_registry_enabled_default: bool
-    native_unit_of_measurement: str | None
 
 
 def async_refresh_after[_T: CoordinatedTPLinkEntity, **_P](
@@ -247,6 +246,7 @@ def _entities_for_device[_E: CoordinatedTPLinkEntity](
     feature_type: Feature.Type,
     entity_class: type[_E],
     parent: Device | None = None,
+    extra_filter: Callable[[Device, Feature], bool] | None = None,
 ) -> list[_E]:
     """Return a list of entities to add.
 
@@ -266,6 +266,7 @@ def _entities_for_device[_E: CoordinatedTPLinkEntity](
             feat.category != Feature.Category.Primary
             or device.device_type not in DEVICETYPES_WITH_SPECIALIZED_PLATFORMS
         )
+        and (not extra_filter or extra_filter(device, feat))
     ]
 
 
@@ -275,6 +276,8 @@ def _entities_for_device_and_its_children[_E: CoordinatedTPLinkEntity](
     *,
     feature_type: Feature.Type,
     entity_class: type[_E],
+    children_coordinators: list[TPLinkDataUpdateCoordinator] | None = None,
+    extra_filter: Callable[[Device, Feature], bool] | None = None,
 ) -> list[_E]:
     """Create entities for device and its children.
 
@@ -283,14 +286,20 @@ def _entities_for_device_and_its_children[_E: CoordinatedTPLinkEntity](
     entities: list[_E] = []
     if device.children:
         _LOGGER.debug("Initializing device with %s children", len(device.children))
-        for child in device.children:
+        for idx, child in enumerate(device.children):
+            # Only iot strips have child coordinators
+            if children_coordinators:
+                child_coordinator = children_coordinators[idx]
+            else:
+                child_coordinator = coordinator
             entities.extend(
                 _entities_for_device(
                     child,
-                    coordinator=coordinator,
+                    coordinator=child_coordinator,
                     feature_type=feature_type,
                     entity_class=entity_class,
                     parent=device,
+                    extra_filter=extra_filter,
                 )
             )
 
@@ -300,6 +309,7 @@ def _entities_for_device_and_its_children[_E: CoordinatedTPLinkEntity](
             coordinator=coordinator,
             feature_type=feature_type,
             entity_class=entity_class,
+            extra_filter=extra_filter,
         )
     )
 
@@ -307,7 +317,7 @@ def _entities_for_device_and_its_children[_E: CoordinatedTPLinkEntity](
 
 
 def _description_for_feature[_D: EntityDescription](
-    desc_cls: type[_D], feature: Feature, **kwargs: Unpack[EntityDescriptionExtras]
+    desc_cls: type[_D], feature: Feature, **kwargs: Any
 ) -> _D:
     """Return description object for the given feature.
 
@@ -320,10 +330,11 @@ def _description_for_feature[_D: EntityDescription](
         kwargs["entity_registry_enabled_default"] = (
             feature.category is not Feature.Category.Debug
         )
+    if "translation_key" not in kwargs:
+        kwargs["translation_key"] = feature.id
 
     return desc_cls(
         key=feature.id,
-        translation_key=feature.id,
         name=feature.name,
         **kwargs,
     )

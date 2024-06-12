@@ -1,6 +1,7 @@
 """Tests for the TP-Link component."""
 
 from collections import namedtuple
+from datetime import datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -108,7 +109,7 @@ def _mocked_device(
     alias=ALIAS,
     modules: list[str] | None = None,
     children: list[Device] | None = None,
-    features: list[str] | None = None,
+    features: list[str | Feature] | None = None,
     device_type=DeviceType.Unknown,
     spec: type = Device,
 ) -> Device:
@@ -133,8 +134,18 @@ def _mocked_device(
 
     if features:
         device.features = {
-            feature_id: FEATURE_TO_MOCK_GEN[feature_id]() for feature_id in features
+            feature_id: FEATURE_TO_MOCK_GEN[feature_id]()
+            for feature_id in features
+            if isinstance(feature_id, str)
         }
+
+        device.features.update(
+            {
+                feature.id: feature
+                for feature in features
+                if isinstance(feature, Feature)
+            }
+        )
 
     device.children = children if children else []
     device.device_type = device_type
@@ -150,14 +161,23 @@ def _mocked_device(
 
 
 def _mocked_feature(
-    value: Any, id: str, type_=Feature.Type.Sensor, category=Feature.Category.Debug
+    value: Any,
+    id: str,
+    *,
+    name=None,
+    type_=Feature.Type.Sensor,
+    category=Feature.Category.Debug,
+    precision_hint=None,
+    unit=None,
 ) -> Feature:
     feature = MagicMock(spec=Feature, name="Mocked feature")
     feature.id = id
-    feature.name = id
+    feature.name = name or id
     feature.value = value
     feature.type = type_
     feature.category = category
+    feature.precision_hint = precision_hint
+    feature.unit = unit
     feature.set_value = AsyncMock()
     return feature
 
@@ -214,6 +234,58 @@ def _mocked_strip_children(features=None) -> list[Device]:
     return [plug0, plug1]
 
 
+def _mocked_emeter_features(
+    power=None, total=None, voltage=None, current=None, today=None
+) -> list[Feature]:
+    return [
+        _mocked_feature(
+            power,
+            "current_power_w",
+            name="Current consumption",
+            type_=Feature.Type.Sensor,
+            category=Feature.Category.Primary,
+            unit="W",
+            precision_hint=1,
+        ),
+        _mocked_feature(
+            total,
+            "total_energy_kwh",
+            name="Total consumption since reboot",
+            type_=Feature.Type.Sensor,
+            category=Feature.Category.Info,
+            unit="kWh",
+            precision_hint=3,
+        ),
+        _mocked_feature(
+            voltage,
+            "voltage",
+            name="Voltage",
+            type_=Feature.Type.Sensor,
+            category=Feature.Category.Primary,
+            unit="V",
+            precision_hint=1,
+        ),
+        _mocked_feature(
+            current,
+            "current_a",
+            name="Current",
+            type_=Feature.Type.Sensor,
+            category=Feature.Category.Primary,
+            unit="A",
+            precision_hint=2,
+        ),
+        _mocked_feature(
+            today,
+            "today_energy_kwh",
+            name="Today's consumption",
+            type_=Feature.Type.Sensor,
+            category=Feature.Category.Info,
+            unit="kWh",
+            precision_hint=3,
+        ),
+    ]
+
+
 MODULE_TO_MOCK_GEN = {
     Module.Light: _mocked_light_module,
     Module.LightEffect: _mocked_light_effect_module,
@@ -221,10 +293,16 @@ MODULE_TO_MOCK_GEN = {
 
 FEATURE_TO_MOCK_GEN = {
     "state": lambda: _mocked_feature(
-        True, "state", Feature.Type.Switch, Feature.Category.Primary
+        True, "state", type_=Feature.Type.Switch, category=Feature.Category.Primary
     ),
     "led": lambda: _mocked_feature(
-        True, "led", Feature.Type.Switch, Feature.Category.Config
+        True, "led", type_=Feature.Type.Switch, category=Feature.Category.Config
+    ),
+    "on_since": lambda: _mocked_feature(
+        datetime.now() - timedelta(minutes=5),
+        "on_since",
+        type_=Feature.Type.Sensor,
+        category=Feature.Category.Info,
     ),
 }
 

@@ -1,7 +1,5 @@
 """Tests for light platform."""
 
-from unittest.mock import Mock
-
 from kasa import Module
 
 from homeassistant.components import tplink
@@ -11,7 +9,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import DEVICE_ID, MAC_ADDRESS, _mocked_device, _patch_connect, _patch_discovery
+from . import (
+    DEVICE_ID,
+    MAC_ADDRESS,
+    _mocked_device,
+    _mocked_emeter_features,
+    _patch_connect,
+    _patch_discovery,
+)
 
 from tests.common import MockConfigEntry
 
@@ -22,15 +27,16 @@ async def test_color_light_with_an_emeter(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    bulb = _mocked_device(alias="my_bulb", modules=[Module.Light])
-    bulb.has_emeter = True
-    bulb.emeter_realtime = Mock(
+    emeter_features = _mocked_emeter_features(
         power=None,
         total=None,
         voltage=None,
         current=5,
+        today=5000.0036,
     )
-    bulb.emeter_today = 5000.0036
+    bulb = _mocked_device(
+        alias="my_bulb", modules=[Module.Light], features=["state", *emeter_features]
+    )
     with _patch_discovery(device=bulb), _patch_connect(device=bulb):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -61,15 +67,13 @@ async def test_plug_with_an_emeter(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    plug = _mocked_device(alias="my_plug", features=["state"])
-    plug.has_emeter = True
-    plug.emeter_realtime = Mock(
+    emeter_features = _mocked_emeter_features(
         power=100.06,
         total=30.0049,
         voltage=121.19,
         current=5.035,
     )
-    plug.emeter_today = None
+    plug = _mocked_device(alias="my_plug", features=["state", *emeter_features])
     with _patch_discovery(device=plug), _patch_connect(device=plug):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -125,15 +129,14 @@ async def test_sensor_unique_id(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    plug = _mocked_device(alias="my_plug")
-    plug.has_emeter = True
-    plug.emeter_realtime = Mock(
+    emeter_features = _mocked_emeter_features(
         power=100,
         total=30,
         voltage=121,
         current=5,
+        today=None,
     )
-    plug.emeter_today = None
+    plug = _mocked_device(alias="my_plug", features=emeter_features)
     with _patch_discovery(device=plug), _patch_connect(device=plug):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
