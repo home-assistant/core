@@ -55,7 +55,7 @@
           "all_updates": "Realtime metrics (WARNING: Greatly increases CPU usage)",
           "override_connection_host": "Override Connection Host",
           "max_media": "Max number of event to load for Media Browser (increases RAM usage)",
-          "allow_ea": "Allow Early Access versions of Protect (WARNING: Will mark your integration as unsupported)"
+          "allow_ea_channel": "Allow Early Access versions of Protect (WARNING: Will mark your integration as unsupported)"
         }
       }
     }

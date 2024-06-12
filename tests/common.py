@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Generator, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
 from enum import Enum
@@ -23,6 +23,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
 import pytest
 from syrupy import SnapshotAssertion
+from typing_extensions import AsyncGenerator, Generator
 import voluptuous as vol
 
 from homeassistant import auth, bootstrap, config_entries, loader
@@ -38,7 +39,7 @@ from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
 from homeassistant.config import async_process_component_config
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, _DataT
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -70,7 +71,6 @@ from homeassistant.helpers import (
     issue_registry as ir,
     label_registry as lr,
     recorder as recorder_helper,
-    restore_state,
     restore_state as rs,
     storage,
     translation,
@@ -95,11 +95,11 @@ from homeassistant.util.json import (
     json_loads_object,
 )
 from homeassistant.util.signal_type import SignalType
+import homeassistant.util.ulid as ulid_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
-import homeassistant.util.uuid as uuid_util
 import homeassistant.util.yaml.loader as yaml_loader
 
-from tests.testing_config.custom_components.test_constant_deprecation import (
+from .testing_config.custom_components.test_constant_deprecation import (
     import_deprecated_constant,
 )
 
@@ -161,7 +161,7 @@ def get_test_config_dir(*add_path):
 
 
 @contextmanager
-def get_test_home_assistant() -> Generator[HomeAssistant, None, None]:
+def get_test_home_assistant() -> Generator[HomeAssistant]:
     """Return a Home Assistant object pointing at test config directory."""
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -174,7 +174,7 @@ def get_test_home_assistant() -> Generator[HomeAssistant, None, None]:
         """Run event loop."""
 
         loop._thread_ident = threading.get_ident()
-        hass._loop_thread_id = loop._thread_ident
+        hass.loop_thread_id = loop._thread_ident
         loop.run_forever()
         loop_stop_event.set()
 
@@ -222,7 +222,7 @@ async def async_test_home_assistant(
     event_loop: asyncio.AbstractEventLoop | None = None,
     load_registries: bool = True,
     config_dir: str | None = None,
-) -> AsyncGenerator[HomeAssistant, None]:
+) -> AsyncGenerator[HomeAssistant]:
     """Return a Home Assistant object pointing at test config dir."""
     hass = HomeAssistant(config_dir or get_test_config_dir())
     store = auth_store.AuthStore(hass)
@@ -413,10 +413,10 @@ def async_mock_intent(hass, intent_typ):
     class MockIntentHandler(intent.IntentHandler):
         intent_type = intent_typ
 
-        async def async_handle(self, intent):
+        async def async_handle(self, intent_obj):
             """Handle the intent."""
-            intents.append(intent)
-            return intent.create_response()
+            intents.append(intent_obj)
+            return intent_obj.create_response()
 
     intent.async_register(hass, MockIntentHandler())
 
@@ -555,7 +555,7 @@ def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.P
 @lru_cache
 def load_fixture(filename: str, integration: str | None = None) -> str:
     """Load a fixture."""
-    return get_fixture_path(filename, integration).read_text()
+    return get_fixture_path(filename, integration).read_text(encoding="utf8")
 
 
 def load_json_value_fixture(
@@ -600,7 +600,7 @@ def mock_state_change_event(
 def mock_component(hass: HomeAssistant, component: str) -> None:
     """Mock a component is setup."""
     if component in hass.config.components:
-        AssertionError(f"Integration {component} is already setup")
+        raise AssertionError(f"Integration {component} is already setup")
 
     hass.config.components.add(component)
 
@@ -971,10 +971,8 @@ class MockToggleEntity(entity.ToggleEntity):
             return None
 
 
-class MockConfigEntry(config_entries.ConfigEntry[_DataT]):
+class MockConfigEntry(config_entries.ConfigEntry):
     """Helper for creating config entries that adds some defaults."""
-
-    runtime_data: _DataT
 
     def __init__(
         self,
@@ -999,7 +997,7 @@ class MockConfigEntry(config_entries.ConfigEntry[_DataT]):
             "data": data or {},
             "disabled_by": disabled_by,
             "domain": domain,
-            "entry_id": entry_id or uuid_util.random_uuid_hex(),
+            "entry_id": entry_id or ulid_util.ulid_now(),
             "minor_version": minor_version,
             "options": options or {},
             "pref_disable_new_entities": pref_disable_new_entities,
@@ -1134,6 +1132,7 @@ def init_recorder_component(hass, add_config=None, db_url="sqlite://"):
     """Initialize the recorder."""
     # Local import to avoid processing recorder and SQLite modules when running a
     # testcase which does not use the recorder.
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.components import recorder
 
     config = dict(add_config) if add_config else {}
@@ -1155,8 +1154,8 @@ def init_recorder_component(hass, add_config=None, db_url="sqlite://"):
 
 def mock_restore_cache(hass: HomeAssistant, states: Sequence[State]) -> None:
     """Mock the DATA_RESTORE_CACHE."""
-    key = restore_state.DATA_RESTORE_STATE
-    data = restore_state.RestoreStateData(hass)
+    key = rs.DATA_RESTORE_STATE
+    data = rs.RestoreStateData(hass)
     now = dt_util.utcnow()
 
     last_states = {}
@@ -1168,14 +1167,14 @@ def mock_restore_cache(hass: HomeAssistant, states: Sequence[State]) -> None:
                 json.dumps(restored_state["attributes"], cls=JSONEncoder)
             ),
         }
-        last_states[state.entity_id] = restore_state.StoredState.from_dict(
+        last_states[state.entity_id] = rs.StoredState.from_dict(
             {"state": restored_state, "last_seen": now}
         )
     data.last_states = last_states
     _LOGGER.debug("Restore cache: %s", data.last_states)
     assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
 
-    restore_state.async_get.cache_clear()
+    rs.async_get.cache_clear()
     hass.data[key] = data
 
 
@@ -1183,8 +1182,8 @@ def mock_restore_cache_with_extra_data(
     hass: HomeAssistant, states: Sequence[tuple[State, Mapping[str, Any]]]
 ) -> None:
     """Mock the DATA_RESTORE_CACHE."""
-    key = restore_state.DATA_RESTORE_STATE
-    data = restore_state.RestoreStateData(hass)
+    key = rs.DATA_RESTORE_STATE
+    data = rs.RestoreStateData(hass)
     now = dt_util.utcnow()
 
     last_states = {}
@@ -1196,22 +1195,22 @@ def mock_restore_cache_with_extra_data(
                 json.dumps(restored_state["attributes"], cls=JSONEncoder)
             ),
         }
-        last_states[state.entity_id] = restore_state.StoredState.from_dict(
+        last_states[state.entity_id] = rs.StoredState.from_dict(
             {"state": restored_state, "extra_data": extra_data, "last_seen": now}
         )
     data.last_states = last_states
     _LOGGER.debug("Restore cache: %s", data.last_states)
     assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
 
-    restore_state.async_get.cache_clear()
+    rs.async_get.cache_clear()
     hass.data[key] = data
 
 
 async def async_mock_restore_state_shutdown_restart(
     hass: HomeAssistant,
-) -> restore_state.RestoreStateData:
+) -> rs.RestoreStateData:
     """Mock shutting down and saving restore state and restoring."""
-    data = restore_state.async_get(hass)
+    data = rs.async_get(hass)
     await data.async_dump_states()
     await async_mock_load_restore_state_from_storage(hass)
     return data
@@ -1224,7 +1223,7 @@ async def async_mock_load_restore_state_from_storage(
 
     hass_storage must already be mocked.
     """
-    await restore_state.async_get(hass).async_load()
+    await rs.async_get(hass).async_load()
 
 
 class MockEntity(entity.Entity):
@@ -1325,9 +1324,7 @@ class MockEntity(entity.Entity):
 
 
 @contextmanager
-def mock_storage(
-    data: dict[str, Any] | None = None,
-) -> Generator[dict[str, Any], None, None]:
+def mock_storage(data: dict[str, Any] | None = None) -> Generator[dict[str, Any]]:
     """Mock storage.
 
     Data is a dict {'key': {'version': version, 'data': data}}
@@ -1435,7 +1432,10 @@ def mock_config_flow(domain: str, config_flow: type[ConfigFlow]) -> None:
 
 
 def mock_integration(
-    hass: HomeAssistant, module: MockModule, built_in: bool = True
+    hass: HomeAssistant,
+    module: MockModule,
+    built_in: bool = True,
+    top_level_files: set[str] | None = None,
 ) -> loader.Integration:
     """Mock an integration."""
     integration = loader.Integration(
@@ -1445,7 +1445,7 @@ def mock_integration(
         else f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{module.DOMAIN}",
         pathlib.Path(""),
         module.mock_manifest(),
-        set(),
+        top_level_files,
     )
 
     def mock_import_platform(platform_name: str) -> NoReturn:
@@ -1574,6 +1574,7 @@ def async_get_persistent_notifications(
 
 def async_mock_cloud_connection_status(hass: HomeAssistant, connected: bool) -> None:
     """Mock a signal the cloud disconnected."""
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.components.cloud import (
         SIGNAL_CLOUD_CONNECTION_STATE,
         CloudConnectionState,
@@ -1682,15 +1683,17 @@ def import_and_test_deprecated_alias(
 def help_test_all(module: ModuleType) -> None:
     """Test module.__all__ is correctly set."""
     assert set(module.__all__) == {
-        itm for itm in module.__dir__() if not itm.startswith("_")
+        itm for itm in dir(module) if not itm.startswith("_")
     }
 
 
 def extract_stack_to_frame(extract_stack: list[Mock]) -> FrameType:
     """Convert an extract stack to a frame list."""
     stack = list(extract_stack)
+    _globals = globals()
     for frame in stack:
         frame.f_back = None
+        frame.f_globals = _globals
         frame.f_code.co_filename = frame.filename
         frame.f_lineno = int(frame.lineno)
 

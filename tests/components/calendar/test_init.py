@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
@@ -10,6 +9,7 @@ from typing import Any
 from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
@@ -37,7 +37,7 @@ def mock_frozen_time() -> None:
 
 
 @pytest.fixture(autouse=True)
-def mock_set_frozen_time(frozen_time: Any) -> Generator[None, None, None]:
+def mock_set_frozen_time(frozen_time: Any) -> Generator[None]:
     """Fixture to freeze time that also can work for other fixtures."""
     if not frozen_time:
         yield

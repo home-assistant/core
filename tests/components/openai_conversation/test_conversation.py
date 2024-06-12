@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, Mock, patch
 
+from freezegun import freeze_time
 from httpx import Response
 from openai import RateLimitError
 from openai.types.chat.chat_completion import ChatCompletion, Choice
@@ -21,6 +22,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent, llm
 from homeassistant.setup import async_setup_component
+from homeassistant.util import ulid
 
 from tests.common import MockConfigEntry
 
@@ -214,11 +216,14 @@ async def test_function_call(
             ),
         )
 
-    with patch(
-        "openai.resources.chat.completions.AsyncCompletions.create",
-        new_callable=AsyncMock,
-        side_effect=completion_result,
-    ) as mock_create:
+    with (
+        patch(
+            "openai.resources.chat.completions.AsyncCompletions.create",
+            new_callable=AsyncMock,
+            side_effect=completion_result,
+        ) as mock_create,
+        freeze_time("2024-06-03 23:00:00"),
+    ):
         result = await conversation.async_converse(
             hass,
             "Please call the test function",
@@ -226,6 +231,11 @@ async def test_function_call(
             context,
             agent_id=agent_id,
         )
+
+    assert (
+        "Today's date is 2024-06-03."
+        in mock_create.mock_calls[1][2]["messages"][0]["content"]
+    )
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert mock_create.mock_calls[1][2]["messages"][3] == {
@@ -262,6 +272,37 @@ async def test_function_call(
     # AGENT_DETAIL event contains the raw prompt passed to the model
     detail_event = trace_events[1]
     assert "Answer in plain text" in detail_event["data"]["messages"][0]["content"]
+    assert (
+        "Today's date is 2024-06-03."
+        in trace_events[1]["data"]["messages"][0]["content"]
+    )
+
+    # Call it again, make sure we have updated prompt
+    with (
+        patch(
+            "openai.resources.chat.completions.AsyncCompletions.create",
+            new_callable=AsyncMock,
+            side_effect=completion_result,
+        ) as mock_create,
+        freeze_time("2024-06-04 23:00:00"),
+    ):
+        result = await conversation.async_converse(
+            hass,
+            "Please call the test function",
+            None,
+            context,
+            agent_id=agent_id,
+        )
+
+    assert (
+        "Today's date is 2024-06-04."
+        in mock_create.mock_calls[1][2]["messages"][0]["content"]
+    )
+    # Test old assert message not updated
+    assert (
+        "Today's date is 2024-06-03."
+        in trace_events[1]["data"]["messages"][0]["content"]
+    )
 
 
 @patch(
@@ -388,7 +429,7 @@ async def test_assist_api_tools_conversion(
     mock_init_component,
 ) -> None:
     """Test that we are able to convert actual tools from Assist API."""
-    for component in [
+    for component in (
         "intent",
         "todo",
         "light",
@@ -399,7 +440,7 @@ async def test_assist_api_tools_conversion(
         "vacuum",
         "cover",
         "weather",
-    ]:
+    ):
         assert await async_setup_component(hass, component, {})
 
     agent_id = mock_config_entry_with_assist.entry_id
@@ -457,3 +498,41 @@ async def test_unknown_hass_api(
     )
 
     assert result == snapshot
+
+
+@patch(
+    "openai.resources.chat.completions.AsyncCompletions.create",
+    new_callable=AsyncMock,
+)
+async def test_conversation_id(
+    mock_create,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test conversation ID is honored."""
+    result = await conversation.async_converse(
+        hass, "hello", None, None, agent_id=mock_config_entry.entry_id
+    )
+
+    conversation_id = result.conversation_id
+
+    result = await conversation.async_converse(
+        hass, "hello", conversation_id, None, agent_id=mock_config_entry.entry_id
+    )
+
+    assert result.conversation_id == conversation_id
+
+    unknown_id = ulid.ulid()
+
+    result = await conversation.async_converse(
+        hass, "hello", unknown_id, None, agent_id=mock_config_entry.entry_id
+    )
+
+    assert result.conversation_id != unknown_id
+
+    result = await conversation.async_converse(
+        hass, "hello", "koala", None, agent_id=mock_config_entry.entry_id
+    )
+
+    assert result.conversation_id == "koala"

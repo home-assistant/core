@@ -32,6 +32,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import Enigma2ConfigEntry
 from .const import (
     CONF_DEEP_STANDBY,
     CONF_MAC_ADDRESS,
@@ -102,12 +103,12 @@ async def async_setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: Enigma2ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Enigma2 media player platform."""
 
-    device: OpenWebIfDevice = hass.data[DOMAIN][entry.entry_id]
+    device = entry.runtime_data
     about = await device.get_about()
     device.mac_address = about["info"]["ifaces"][0]["mac"]
     entity = Enigma2Device(entry, device, about)
@@ -141,10 +142,10 @@ class Enigma2Device(MediaPlayerEntity):
         self._device: OpenWebIfDevice = device
         self._entry = entry
 
-        self._attr_unique_id = device.mac_address
+        self._attr_unique_id = device.mac_address or entry.entry_id
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.mac_address)},
+            identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer=about["info"]["brand"],
             model=about["info"]["model"],
             configuration_url=device.base,

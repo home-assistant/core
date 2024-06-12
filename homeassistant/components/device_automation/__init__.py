@@ -369,7 +369,7 @@ def handle_device_errors(
             await func(hass, connection, msg)
         except DeviceNotFound:
             connection.send_error(
-                msg["id"], websocket_api.const.ERR_NOT_FOUND, "Device not found"
+                msg["id"], websocket_api.ERR_NOT_FOUND, "Device not found"
             )
 
     return with_error_handling

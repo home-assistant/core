@@ -104,7 +104,9 @@ async def test_restoring_location(
 
     # mobile app doesn't support unloading, so we just reload device tracker
     await hass.config_entries.async_forward_entry_unload(config_entry, "device_tracker")
-    await hass.config_entries.async_forward_entry_setup(config_entry, "device_tracker")
+    await hass.config_entries.async_late_forward_entry_setups(
+        config_entry, ["device_tracker"]
+    )
     await hass.async_block_till_done()
 
     state_2 = hass.states.get("device_tracker.test_1_2")

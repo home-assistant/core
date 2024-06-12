@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator, Iterable
+from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta
 from functools import partial
 import logging
 from typing import Any, cast
 
-from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data import (
+from typing_extensions import Generator
+from uiprotect import ProtectApiClient
+from uiprotect.data import (
     NVR,
     Bootstrap,
     Camera,
@@ -20,8 +21,8 @@ from pyunifiprotect.data import (
     ProtectAdoptableDeviceModel,
     WSSubscriptionMessage,
 )
-from pyunifiprotect.exceptions import ClientError, NotAuthorized
-from pyunifiprotect.utils import log_event
+from uiprotect.exceptions import ClientError, NotAuthorized
+from uiprotect.utils import log_event
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -44,16 +45,15 @@ from .utils import async_dispatch_id as _ufpd, async_get_devices_by_type
 
 _LOGGER = logging.getLogger(__name__)
 type ProtectDeviceType = ProtectAdoptableDeviceModel | NVR
+type UFPConfigEntry = ConfigEntry[ProtectData]
 
 
 @callback
-def async_last_update_was_successful(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+def async_last_update_was_successful(
+    hass: HomeAssistant, entry: UFPConfigEntry
+) -> bool:
     """Check if the last update was successful for a config entry."""
-    return bool(
-        DOMAIN in hass.data
-        and entry.entry_id in hass.data[DOMAIN]
-        and hass.data[DOMAIN][entry.entry_id].last_update_success
-    )
+    return hasattr(entry, "runtime_data") and entry.runtime_data.last_update_success
 
 
 class ProtectData:
@@ -64,7 +64,7 @@ class ProtectData:
         hass: HomeAssistant,
         protect: ProtectApiClient,
         update_interval: timedelta,
-        entry: ConfigEntry,
+        entry: UFPConfigEntry,
     ) -> None:
         """Initialize an subscriber."""
         super().__init__()
@@ -94,7 +94,7 @@ class ProtectData:
 
     def get_by_types(
         self, device_types: Iterable[ModelType], ignore_unadopted: bool = True
-    ) -> Generator[ProtectAdoptableDeviceModel, None, None]:
+    ) -> Generator[ProtectAdoptableDeviceModel]:
         """Get all devices matching types."""
         for device_type in device_types:
             devices = async_get_devices_by_type(
@@ -315,9 +315,50 @@ def async_ufp_instance_for_config_entry_ids(
     hass: HomeAssistant, config_entry_ids: set[str]
 ) -> ProtectApiClient | None:
     """Find the UFP instance for the config entry ids."""
-    domain_data = hass.data[DOMAIN]
-    for config_entry_id in config_entry_ids:
-        if config_entry_id in domain_data:
-            protect_data: ProtectData = domain_data[config_entry_id]
-            return protect_data.api
+    return next(
+        iter(
+            entry.runtime_data.api
+            for entry_id in config_entry_ids
+            if (entry := hass.config_entries.async_get_entry(entry_id))
+        ),
+        None,
+    )
+
+
+@callback
+def async_get_ufp_entries(hass: HomeAssistant) -> list[UFPConfigEntry]:
+    """Get all the UFP entries."""
+    return cast(
+        list[UFPConfigEntry],
+        [
+            entry
+            for entry in hass.config_entries.async_entries(
+                DOMAIN, include_ignore=True, include_disabled=True
+            )
+            if hasattr(entry, "runtime_data")
+        ],
+    )
+
+
+@callback
+def async_get_data_for_nvr_id(hass: HomeAssistant, nvr_id: str) -> ProtectData | None:
+    """Find the ProtectData instance for the NVR id."""
+    return next(
+        iter(
+            entry.runtime_data
+            for entry in async_get_ufp_entries(hass)
+            if entry.runtime_data.api.bootstrap.nvr.id == nvr_id
+        ),
+        None,
+    )
+
+
+@callback
+def async_get_data_for_entry_id(
+    hass: HomeAssistant, entry_id: str
+) -> ProtectData | None:
+    """Find the ProtectData instance for a config entry id."""
+    if entry := hass.config_entries.async_get_entry(entry_id):
+        entry = cast(UFPConfigEntry, entry)
+        return entry.runtime_data
     return None

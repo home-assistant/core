@@ -454,6 +454,7 @@ async def test_light_initialization(
 
     assert entity_id is not None
 
+    # pylint: disable-next=fixme
     # TODO ensure hue and saturation are properly set on startup
 
 

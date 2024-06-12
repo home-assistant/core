@@ -2,18 +2,18 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 import logging
 from typing import Final
 
-from pyunifiprotect.data import ProtectAdoptableDeviceModel, ProtectModelWithId
+from uiprotect.data import ModelType, ProtectAdoptableDeviceModel, ProtectModelWithId
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -21,9 +21,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DEVICES_THAT_ADOPT, DISPATCH_ADD, DISPATCH_ADOPT, DOMAIN
-from .data import ProtectData
+from .data import ProtectData, UFPConfigEntry
 from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import PermRequired, ProtectSetableKeysMixin, T
+from .models import PermRequired, ProtectRequiredKeysMixin, ProtectSetableKeysMixin, T
 from .utils import async_dispatch_id as _ufpd
 
 _LOGGER = logging.getLogger(__name__)
@@ -95,6 +95,12 @@ CHIME_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
 )
 
 
+_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] = {
+    ModelType.CHIME: CHIME_BUTTONS,
+    ModelType.SENSOR: SENSOR_BUTTONS,
+}
+
+
 @callback
 def _async_remove_adopt_button(
     hass: HomeAssistant, device: ProtectAdoptableDeviceModel
@@ -108,11 +114,11 @@ def _async_remove_adopt_button(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: UFPConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Discover devices on a UniFi Protect NVR."""
-    data: ProtectData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
@@ -121,8 +127,7 @@ async def async_setup_entry(
             ProtectButton,
             all_descs=ALL_DEVICE_BUTTONS,
             unadopted_descs=[ADOPT_BUTTON],
-            chime_descs=CHIME_BUTTONS,
-            sense_descs=SENSOR_BUTTONS,
+            model_descriptions=_MODEL_DESCRIPTIONS,
             ufp_device=device,
         )
         async_add_entities(entities)
@@ -156,8 +161,7 @@ async def async_setup_entry(
         ProtectButton,
         all_descs=ALL_DEVICE_BUTTONS,
         unadopted_descs=[ADOPT_BUTTON],
-        chime_descs=CHIME_BUTTONS,
-        sense_descs=SENSOR_BUTTONS,
+        model_descriptions=_MODEL_DESCRIPTIONS,
     )
     async_add_entities(entities)
 

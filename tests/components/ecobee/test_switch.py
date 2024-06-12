@@ -12,9 +12,8 @@ from homeassistant.components.switch import DOMAIN, SERVICE_TURN_OFF, SERVICE_TU
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
+from . import GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP
 from .common import setup_platform
-
-from tests.components.ecobee import GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP
 
 VENTILATOR_20MIN_ID = "switch.ecobee_ventilator_20m_timer"
 THERMOSTAT_ID = 0
