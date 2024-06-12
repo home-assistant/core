@@ -171,7 +171,7 @@ async def test_get_conditions_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for condition in ["is_value"]
+        for condition in ("is_value",)
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id

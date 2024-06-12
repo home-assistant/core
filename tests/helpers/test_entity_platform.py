@@ -615,7 +615,7 @@ async def test_async_remove_with_platform_update_finishes(hass: HomeAssistant) -
     # Add, remove, and make sure no updates
     # cause the entity to reappear after removal and
     # that we can add another entity with the same entity_id
-    for entity in [entity1, entity2]:
+    for entity in (entity1, entity2):
         update_called = asyncio.Event()
         update_done = asyncio.Event()
         await component.async_add_entities([entity])
