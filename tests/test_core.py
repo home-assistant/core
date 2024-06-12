@@ -1997,7 +1997,7 @@ async def test_config_is_allowed_path() -> None:
         config.allowlist_external_dirs = {os.path.realpath(tmp_dir)}
 
         test_file = os.path.join(tmp_dir, "test.jpg")
-        with open(test_file, "w") as tmp_file:
+        with open(test_file, "w", encoding="utf8") as tmp_file:
             tmp_file.write("test")
 
         valid = [test_file, tmp_dir, os.path.join(tmp_dir, "notfound321")]

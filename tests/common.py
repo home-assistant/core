@@ -555,7 +555,7 @@ def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.P
 @lru_cache
 def load_fixture(filename: str, integration: str | None = None) -> str:
     """Load a fixture."""
-    return get_fixture_path(filename, integration).read_text()
+    return get_fixture_path(filename, integration).read_text(encoding="utf8")
 
 
 def load_json_value_fixture(

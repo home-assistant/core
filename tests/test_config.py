@@ -74,7 +74,7 @@ SAFE_MODE_PATH = os.path.join(CONFIG_DIR, config_util.SAFE_MODE_FILENAME)
 
 def create_file(path):
     """Create an empty file."""
-    with open(path, "w"):
+    with open(path, "w", encoding="utf8"):
         pass
 
 
@@ -414,7 +414,7 @@ async def test_ensure_config_exists_uses_existing_config(hass: HomeAssistant) ->
     create_file(YAML_PATH)
     await config_util.async_ensure_config_exists(hass)
 
-    with open(YAML_PATH) as fp:
+    with open(YAML_PATH, encoding="utf8") as fp:
         content = fp.read()
 
     # File created with create_file are empty
@@ -427,7 +427,7 @@ async def test_ensure_existing_files_is_not_overwritten(hass: HomeAssistant) -> 
 
     await config_util.async_create_default_config(hass)
 
-    with open(SECRET_PATH) as fp:
+    with open(SECRET_PATH, encoding="utf8") as fp:
         content = fp.read()
 
     # File created with create_file are empty
@@ -443,7 +443,7 @@ def test_load_yaml_config_converts_empty_files_to_dict() -> None:
 
 def test_load_yaml_config_raises_error_if_not_dict() -> None:
     """Test error raised when YAML file is not a dict."""
-    with open(YAML_PATH, "w") as fp:
+    with open(YAML_PATH, "w", encoding="utf8") as fp:
         fp.write("5")
 
     with pytest.raises(HomeAssistantError):
@@ -452,7 +452,7 @@ def test_load_yaml_config_raises_error_if_not_dict() -> None:
 
 def test_load_yaml_config_raises_error_if_malformed_yaml() -> None:
     """Test error raised if invalid YAML."""
-    with open(YAML_PATH, "w") as fp:
+    with open(YAML_PATH, "w", encoding="utf8") as fp:
         fp.write(":-")
 
     with pytest.raises(HomeAssistantError):
@@ -461,7 +461,7 @@ def test_load_yaml_config_raises_error_if_malformed_yaml() -> None:
 
 def test_load_yaml_config_raises_error_if_unsafe_yaml() -> None:
     """Test error raised if unsafe YAML."""
-    with open(YAML_PATH, "w") as fp:
+    with open(YAML_PATH, "w", encoding="utf8") as fp:
         fp.write("- !!python/object/apply:os.system []")
 
     with (
@@ -474,7 +474,10 @@ def test_load_yaml_config_raises_error_if_unsafe_yaml() -> None:
 
     # Here we validate that the test above is a good test
     # since previously the syntax was not valid
-    with open(YAML_PATH) as fp, patch.object(os, "system") as system_mock:
+    with (
+        open(YAML_PATH, encoding="utf8") as fp,
+        patch.object(os, "system") as system_mock,
+    ):
         list(yaml.unsafe_load_all(fp))
 
     assert len(system_mock.mock_calls) == 1
@@ -482,7 +485,7 @@ def test_load_yaml_config_raises_error_if_unsafe_yaml() -> None:
 
 def test_load_yaml_config_preserves_key_order() -> None:
     """Test removal of library."""
-    with open(YAML_PATH, "w") as fp:
+    with open(YAML_PATH, "w", encoding="utf8") as fp:
         fp.write("hello: 2\n")
         fp.write("world: 1\n")
 
