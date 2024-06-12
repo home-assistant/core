@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any
 from icmplib import NameLookupError, async_ping
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import ICMP_TIMEOUT, PING_TIMEOUT
 
@@ -58,9 +59,16 @@ class PingDataICMPLib(PingData):
                 timeout=ICMP_TIMEOUT,
                 privileged=self._privileged,
             )
-        except NameLookupError:
+        except NameLookupError as err:
             self.is_alive = False
-            return
+            raise UpdateFailed(f"Error resolving host: {self.ip_address}") from err
+
+        _LOGGER.debug(
+            "async_ping returned: reachable=%s sent=%i received=%s",
+            data.is_alive,
+            data.packets_sent,
+            data.packets_received,
+        )
 
         self.is_alive = data.is_alive
         if not self.is_alive:
@@ -94,6 +102,10 @@ class PingDataSubProcess(PingData):
 
     async def async_ping(self) -> dict[str, Any] | None:
         """Send ICMP echo request and return details if success."""
+        _LOGGER.debug(
+            "Pinging %s with: `%s`", self.ip_address, " ".join(self._ping_cmd)
+        )
+
         pinger = await asyncio.create_subprocess_exec(
             *self._ping_cmd,
             stdin=None,
@@ -140,20 +152,17 @@ class PingDataSubProcess(PingData):
             if TYPE_CHECKING:
                 assert match is not None
             rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
-        except TimeoutError:
-            _LOGGER.exception(
-                "Timed out running command: `%s`, after: %ss",
-                self._ping_cmd,
-                self._count + PING_TIMEOUT,
-            )
+        except TimeoutError as err:
             if pinger:
                 with suppress(TypeError):
                     await pinger.kill()  # type: ignore[func-returns-value]
                 del pinger
 
-            return None
-        except AttributeError:
-            return None
+            raise UpdateFailed(
+                f"Timed out running command: `{self._ping_cmd}`, after: {self._count + PING_TIMEOUT}s"
+            ) from err
+        except AttributeError as err:
+            raise UpdateFailed from err
         return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": rtt_mdev}
 
     async def async_update(self) -> None:

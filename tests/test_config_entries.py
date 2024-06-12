@@ -44,12 +44,11 @@ from .common import (
     MockPlatform,
     async_capture_events,
     async_fire_time_changed,
+    async_get_persistent_notifications,
     mock_config_flow,
     mock_integration,
     mock_platform,
 )
-
-from tests.common import async_get_persistent_notifications
 
 
 @pytest.fixture(autouse=True)
@@ -577,7 +576,7 @@ async def test_remove_entry_raises(
 
     async def mock_unload_entry(hass, entry):
         """Mock unload entry function."""
-        raise Exception("BROKEN")
+        raise Exception("BROKEN")  # pylint: disable=broad-exception-raised
 
     mock_integration(hass, MockModule("comp", async_unload_entry=mock_unload_entry))
 
@@ -1726,16 +1725,23 @@ async def test_entry_unload_succeed(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test that we can unload an entry."""
+    unloads_called = []
+
+    async def verify_runtime_data(*args):
+        """Verify runtime data."""
+        assert entry.runtime_data == 2
+        unloads_called.append(args)
+        return True
+
     entry = MockConfigEntry(domain="comp", state=config_entries.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
+    entry.async_on_unload(verify_runtime_data)
     entry.runtime_data = 2
 
-    async_unload_entry = AsyncMock(return_value=True)
-
-    mock_integration(hass, MockModule("comp", async_unload_entry=async_unload_entry))
+    mock_integration(hass, MockModule("comp", async_unload_entry=verify_runtime_data))
 
     assert await manager.async_unload(entry.entry_id)
-    assert len(async_unload_entry.mock_calls) == 1
+    assert len(unloads_called) == 2
     assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
     assert not hasattr(entry, "runtime_data")
 
@@ -4873,7 +4879,7 @@ async def test_preview_not_supported(
 
         VERSION = 1
 
-        async def async_step_user(self, data):
+        async def async_step_user(self, user_input):
             """Mock Reauth."""
             return self.async_show_form(step_id="user_confirm")
 

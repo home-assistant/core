@@ -68,9 +68,6 @@ class IncomfortWaterHeater(IncomfortBoilerEntity, WaterHeaterEntity):
         return max(self._heater.heater_temp, self._heater.tap_temp)
 
     @property
-    def current_operation(self) -> str:
+    def current_operation(self) -> str | None:
         """Return the current operation mode."""
-        if self._heater.is_failed:
-            return f"Fault code: {self._heater.fault_code}"
-
         return self._heater.display_text

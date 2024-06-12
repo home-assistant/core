@@ -2413,7 +2413,7 @@ async def test_list_statistic_ids(
             "unit_class": unit_class,
         },
     ]
-    for stat_type in ["mean", "sum", "dogs"]:
+    for stat_type in ("mean", "sum", "dogs"):
         statistic_ids = await async_list_statistic_ids(hass, statistic_type=stat_type)
         if statistic_type == stat_type:
             assert statistic_ids == [
@@ -3887,12 +3887,12 @@ async def test_compile_statistics_hourly_daily_monthly_summary(
     start = zero
     end = zero + timedelta(minutes=5)
     for i in range(24):
-        for entity_id in [
+        for entity_id in (
             "sensor.test1",
             "sensor.test2",
             "sensor.test3",
             "sensor.test4",
-        ]:
+        ):
             expected_average = (
                 expected_averages[entity_id][i]
                 if entity_id in expected_averages
@@ -3936,12 +3936,12 @@ async def test_compile_statistics_hourly_daily_monthly_summary(
     start = zero
     end = zero + timedelta(hours=1)
     for i in range(2):
-        for entity_id in [
+        for entity_id in (
             "sensor.test1",
             "sensor.test2",
             "sensor.test3",
             "sensor.test4",
-        ]:
+        ):
             expected_average = (
                 mean(expected_averages[entity_id][i * 12 : (i + 1) * 12])
                 if entity_id in expected_averages
@@ -3993,12 +3993,12 @@ async def test_compile_statistics_hourly_daily_monthly_summary(
     start = dt_util.parse_datetime("2021-08-31T06:00:00+00:00")
     end = start + timedelta(days=1)
     for i in range(2):
-        for entity_id in [
+        for entity_id in (
             "sensor.test1",
             "sensor.test2",
             "sensor.test3",
             "sensor.test4",
-        ]:
+        ):
             expected_average = (
                 mean(expected_averages[entity_id][i * 12 : (i + 1) * 12])
                 if entity_id in expected_averages
@@ -4050,12 +4050,12 @@ async def test_compile_statistics_hourly_daily_monthly_summary(
     start = dt_util.parse_datetime("2021-08-01T06:00:00+00:00")
     end = dt_util.parse_datetime("2021-09-01T06:00:00+00:00")
     for i in range(2):
-        for entity_id in [
+        for entity_id in (
             "sensor.test1",
             "sensor.test2",
             "sensor.test3",
             "sensor.test4",
-        ]:
+        ):
             expected_average = (
                 mean(expected_averages[entity_id][i * 12 : (i + 1) * 12])
                 if entity_id in expected_averages

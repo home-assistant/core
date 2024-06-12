@@ -71,7 +71,6 @@ from homeassistant.helpers import (
     issue_registry as ir,
     label_registry as lr,
     recorder as recorder_helper,
-    restore_state,
     restore_state as rs,
     storage,
     translation,
@@ -100,7 +99,7 @@ import homeassistant.util.ulid as ulid_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.yaml.loader as yaml_loader
 
-from tests.testing_config.custom_components.test_constant_deprecation import (
+from .testing_config.custom_components.test_constant_deprecation import (
     import_deprecated_constant,
 )
 
@@ -414,10 +413,10 @@ def async_mock_intent(hass, intent_typ):
     class MockIntentHandler(intent.IntentHandler):
         intent_type = intent_typ
 
-        async def async_handle(self, intent):
+        async def async_handle(self, intent_obj):
             """Handle the intent."""
-            intents.append(intent)
-            return intent.create_response()
+            intents.append(intent_obj)
+            return intent_obj.create_response()
 
     intent.async_register(hass, MockIntentHandler())
 
@@ -556,7 +555,7 @@ def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.P
 @lru_cache
 def load_fixture(filename: str, integration: str | None = None) -> str:
     """Load a fixture."""
-    return get_fixture_path(filename, integration).read_text()
+    return get_fixture_path(filename, integration).read_text(encoding="utf8")
 
 
 def load_json_value_fixture(
@@ -601,7 +600,7 @@ def mock_state_change_event(
 def mock_component(hass: HomeAssistant, component: str) -> None:
     """Mock a component is setup."""
     if component in hass.config.components:
-        AssertionError(f"Integration {component} is already setup")
+        raise AssertionError(f"Integration {component} is already setup")
 
     hass.config.components.add(component)
 
@@ -1133,6 +1132,7 @@ def init_recorder_component(hass, add_config=None, db_url="sqlite://"):
     """Initialize the recorder."""
     # Local import to avoid processing recorder and SQLite modules when running a
     # testcase which does not use the recorder.
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.components import recorder
 
     config = dict(add_config) if add_config else {}
@@ -1154,8 +1154,8 @@ def init_recorder_component(hass, add_config=None, db_url="sqlite://"):
 
 def mock_restore_cache(hass: HomeAssistant, states: Sequence[State]) -> None:
     """Mock the DATA_RESTORE_CACHE."""
-    key = restore_state.DATA_RESTORE_STATE
-    data = restore_state.RestoreStateData(hass)
+    key = rs.DATA_RESTORE_STATE
+    data = rs.RestoreStateData(hass)
     now = dt_util.utcnow()
 
     last_states = {}
@@ -1167,14 +1167,14 @@ def mock_restore_cache(hass: HomeAssistant, states: Sequence[State]) -> None:
                 json.dumps(restored_state["attributes"], cls=JSONEncoder)
             ),
         }
-        last_states[state.entity_id] = restore_state.StoredState.from_dict(
+        last_states[state.entity_id] = rs.StoredState.from_dict(
             {"state": restored_state, "last_seen": now}
         )
     data.last_states = last_states
     _LOGGER.debug("Restore cache: %s", data.last_states)
     assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
 
-    restore_state.async_get.cache_clear()
+    rs.async_get.cache_clear()
     hass.data[key] = data
 
 
@@ -1182,8 +1182,8 @@ def mock_restore_cache_with_extra_data(
     hass: HomeAssistant, states: Sequence[tuple[State, Mapping[str, Any]]]
 ) -> None:
     """Mock the DATA_RESTORE_CACHE."""
-    key = restore_state.DATA_RESTORE_STATE
-    data = restore_state.RestoreStateData(hass)
+    key = rs.DATA_RESTORE_STATE
+    data = rs.RestoreStateData(hass)
     now = dt_util.utcnow()
 
     last_states = {}
@@ -1195,22 +1195,22 @@ def mock_restore_cache_with_extra_data(
                 json.dumps(restored_state["attributes"], cls=JSONEncoder)
             ),
         }
-        last_states[state.entity_id] = restore_state.StoredState.from_dict(
+        last_states[state.entity_id] = rs.StoredState.from_dict(
             {"state": restored_state, "extra_data": extra_data, "last_seen": now}
         )
     data.last_states = last_states
     _LOGGER.debug("Restore cache: %s", data.last_states)
     assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
 
-    restore_state.async_get.cache_clear()
+    rs.async_get.cache_clear()
     hass.data[key] = data
 
 
 async def async_mock_restore_state_shutdown_restart(
     hass: HomeAssistant,
-) -> restore_state.RestoreStateData:
+) -> rs.RestoreStateData:
     """Mock shutting down and saving restore state and restoring."""
-    data = restore_state.async_get(hass)
+    data = rs.async_get(hass)
     await data.async_dump_states()
     await async_mock_load_restore_state_from_storage(hass)
     return data
@@ -1223,7 +1223,7 @@ async def async_mock_load_restore_state_from_storage(
 
     hass_storage must already be mocked.
     """
-    await restore_state.async_get(hass).async_load()
+    await rs.async_get(hass).async_load()
 
 
 class MockEntity(entity.Entity):
@@ -1432,7 +1432,10 @@ def mock_config_flow(domain: str, config_flow: type[ConfigFlow]) -> None:
 
 
 def mock_integration(
-    hass: HomeAssistant, module: MockModule, built_in: bool = True
+    hass: HomeAssistant,
+    module: MockModule,
+    built_in: bool = True,
+    top_level_files: set[str] | None = None,
 ) -> loader.Integration:
     """Mock an integration."""
     integration = loader.Integration(
@@ -1442,7 +1445,7 @@ def mock_integration(
         else f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{module.DOMAIN}",
         pathlib.Path(""),
         module.mock_manifest(),
-        set(),
+        top_level_files,
     )
 
     def mock_import_platform(platform_name: str) -> NoReturn:
@@ -1571,6 +1574,7 @@ def async_get_persistent_notifications(
 
 def async_mock_cloud_connection_status(hass: HomeAssistant, connected: bool) -> None:
     """Mock a signal the cloud disconnected."""
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.components.cloud import (
         SIGNAL_CLOUD_CONNECTION_STATE,
         CloudConnectionState,
@@ -1679,7 +1683,7 @@ def import_and_test_deprecated_alias(
 def help_test_all(module: ModuleType) -> None:
     """Test module.__all__ is correctly set."""
     assert set(module.__all__) == {
-        itm for itm in module.__dir__() if not itm.startswith("_")
+        itm for itm in dir(module) if not itm.startswith("_")
     }
 
 

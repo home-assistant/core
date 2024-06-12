@@ -233,4 +233,4 @@ async def test_remove_privacy_zone(
         blocking=True,
     )
     ufp.api.update_device.assert_called()
-    assert not len(doorbell.privacy_zones)
+    assert not doorbell.privacy_zones

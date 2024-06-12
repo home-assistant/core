@@ -9,6 +9,7 @@ from incomfortclient import Heater as InComfortHeater, Room as InComfortRoom
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
@@ -56,6 +57,7 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
         """Initialize the climate device."""
         super().__init__(coordinator)
 
+        self._heater = heater
         self._room = room
 
         self._attr_unique_id = f"{heater.serial_no}_{room.room_no}"
@@ -74,6 +76,13 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._room.room_temp
+
+    @property
+    def hvac_action(self) -> HVACAction | None:
+        """Return the actual current HVAC action."""
+        if self._heater.is_burning and self._heater.is_pumping:
+            return HVACAction.HEATING
+        return HVACAction.IDLE
 
     @property
     def target_temperature(self) -> float | None:
