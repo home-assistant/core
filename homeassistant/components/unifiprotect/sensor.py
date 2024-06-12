@@ -767,7 +767,7 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
 
 
 class ProtectLicensePlateEventSensor(ProtectEventSensor):
-    """A UniFi Protect Device Sensor with access tokens."""
+    """A UniFi Protect license plate sensor."""
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
