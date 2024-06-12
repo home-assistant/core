@@ -423,11 +423,11 @@ async def test_async_get_hass_can_be_called(hass: HomeAssistant) -> None:
         try:
             if ha.async_get_hass() is hass:
                 return True
-            raise Exception
+            raise Exception  # pylint: disable=broad-exception-raised
         except HomeAssistantError:
             return False
 
-        raise Exception
+        raise Exception  # pylint: disable=broad-exception-raised
 
     # Test scheduling a coroutine which calls async_get_hass via hass.async_create_task
     async def _async_create_task() -> None:
