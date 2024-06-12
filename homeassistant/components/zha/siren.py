@@ -5,7 +5,13 @@ from __future__ import annotations
 import functools
 from typing import Any
 
-from homeassistant.components.siren import SirenEntity, SirenEntityFeature
+from homeassistant.components.siren import (
+    ATTR_DURATION,
+    ATTR_TONE,
+    ATTR_VOLUME_LEVEL,
+    SirenEntity,
+    SirenEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -49,7 +55,7 @@ class ZHASiren(ZHAEntity, SirenEntity):
         """Initialize the ZHA siren."""
         super().__init__(entity_data, **kwargs)
         self._attr_supported_features = SirenEntityFeature(
-            self.entity_data.entity._attr_supported_features.value
+            self.entity_data.entity._attr_supported_features.value  # noqa: SLF001
         )
 
     @property
@@ -59,10 +65,14 @@ class ZHASiren(ZHAEntity, SirenEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on siren."""
-        await self.entity_data.entity.async_turn_on(**kwargs)
+        await self.entity_data.entity.async_turn_on(
+            duration=ATTR_DURATION,
+            tone=ATTR_TONE,
+            volume_level=ATTR_VOLUME_LEVEL,
+        )
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off siren."""
-        await self.entity_data.entity.async_turn_off(**kwargs)
+        await self.entity_data.entity.async_turn_off()
         self.async_write_ha_state()
