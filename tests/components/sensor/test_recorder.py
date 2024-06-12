@@ -4786,10 +4786,10 @@ async def test_validate_statistics_unit_change_no_conversion(
         with session_scope(hass=hass, read_only=True) as session:
             db_states = list(session.query(StatisticsMeta))
             assert len(db_states) == len(expected_result)
-            for i in range(len(db_states)):
-                assert db_states[i].statistic_id == expected_result[i]["statistic_id"]
+            for i, db_state in enumerate(db_states):
+                assert db_state.statistic_id == expected_result[i]["statistic_id"]
                 assert (
-                    db_states[i].unit_of_measurement
+                    db_state.unit_of_measurement
                     == expected_result[i]["unit_of_measurement"]
                 )
 
@@ -4920,10 +4920,10 @@ async def test_validate_statistics_unit_change_equivalent_units(
         with session_scope(hass=hass, read_only=True) as session:
             db_states = list(session.query(StatisticsMeta))
             assert len(db_states) == len(expected_result)
-            for i in range(len(db_states)):
-                assert db_states[i].statistic_id == expected_result[i]["statistic_id"]
+            for i, db_state in enumerate(db_states):
+                assert db_state.statistic_id == expected_result[i]["statistic_id"]
                 assert (
-                    db_states[i].unit_of_measurement
+                    db_state.unit_of_measurement
                     == expected_result[i]["unit_of_measurement"]
                 )
 
@@ -5005,10 +5005,10 @@ async def test_validate_statistics_unit_change_equivalent_units_2(
         with session_scope(hass=hass, read_only=True) as session:
             db_states = list(session.query(StatisticsMeta))
             assert len(db_states) == len(expected_result)
-            for i in range(len(db_states)):
-                assert db_states[i].statistic_id == expected_result[i]["statistic_id"]
+            for i, db_state in enumerate(db_states):
+                assert db_state.statistic_id == expected_result[i]["statistic_id"]
                 assert (
-                    db_states[i].unit_of_measurement
+                    db_state.unit_of_measurement
                     == expected_result[i]["unit_of_measurement"]
                 )
 
