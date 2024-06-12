@@ -368,6 +368,7 @@ def test_cluster_handler_registry() -> None:
                             all_quirk_ids[cluster_id] = {None}
                         all_quirk_ids[cluster_id].add(quirk_id)
 
+    # pylint: disable-next=undefined-loop-variable
     del quirk, model_quirk_list, manufacturer
 
     for (
@@ -585,7 +586,7 @@ async def test_ep_cluster_handlers_configure(cluster_handler) -> None:
         await endpoint.async_configure()
         await endpoint.async_initialize(mock.sentinel.from_cache)
 
-    for ch in [*claimed.values(), *client_handlers.values()]:
+    for ch in (*claimed.values(), *client_handlers.values()):
         assert ch.async_initialize.call_count == 1
         assert ch.async_initialize.await_count == 1
         assert ch.async_initialize.call_args[0][0] is mock.sentinel.from_cache

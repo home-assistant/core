@@ -50,6 +50,7 @@ class FakeHarmonyClient:
         self, ip_address: str = "", callbacks: ClientCallbackType = MagicMock()
     ):
         """Initialize FakeHarmonyClient class to capture callbacks."""
+        # pylint: disable=attribute-defined-outside-init
         self._activity_name = "Watch TV"
         self.close = AsyncMock()
         self.send_commands = AsyncMock()
