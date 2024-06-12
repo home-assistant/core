@@ -195,9 +195,11 @@ def get_test_home_assistant() -> Generator[HomeAssistant]:
 
     threading.Thread(name="LoopThread", target=run_loop, daemon=False).start()
 
-    yield hass
-    loop.run_until_complete(context_manager.__aexit__(None, None, None))
-    loop.close()
+    try:
+        yield hass
+    finally:
+        loop.run_until_complete(context_manager.__aexit__(None, None, None))
+        loop.close()
 
 
 class StoreWithoutWriteLoad[_T: (Mapping[str, Any] | Sequence[Any])](storage.Store[_T]):
@@ -359,10 +361,11 @@ async def async_test_home_assistant(
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, clear_instance)
 
-    yield hass
-
-    # Restore timezone, it is set when creating the hass object
-    dt_util.set_default_time_zone(orig_tz)
+    try:
+        yield hass
+    finally:
+        # Restore timezone, it is set when creating the hass object
+        dt_util.set_default_time_zone(orig_tz)
 
 
 def async_mock_service(
