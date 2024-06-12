@@ -609,7 +609,7 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
     async def ws_create_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
-        """Create a item."""
+        """Create an item."""
         try:
             data = dict(msg)
             data.pop("id")
@@ -628,7 +628,7 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
     async def ws_update_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
-        """Update a item."""
+        """Update an item."""
         data = dict(msg)
         msg_id = data.pop("id")
         item_id = data.pop(self.item_id_key)
@@ -655,7 +655,7 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
     async def ws_delete_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
-        """Delete a item."""
+        """Delete an item."""
         try:
             await self.storage_collection.async_delete_item(msg[self.item_id_key])
         except ItemNotFound:
