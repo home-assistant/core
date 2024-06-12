@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 import logging
 from typing import Final
 
-from uiprotect.data import ProtectAdoptableDeviceModel, ProtectModelWithId
+from uiprotect.data import ModelType, ProtectAdoptableDeviceModel, ProtectModelWithId
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -22,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DEVICES_THAT_ADOPT, DISPATCH_ADD, DISPATCH_ADOPT, DOMAIN
 from .data import ProtectData, UFPConfigEntry
 from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import PermRequired, ProtectSetableKeysMixin, T
+from .models import PermRequired, ProtectRequiredKeysMixin, ProtectSetableKeysMixin, T
 from .utils import async_dispatch_id as _ufpd
 
 _LOGGER = logging.getLogger(__name__)
@@ -94,6 +95,12 @@ CHIME_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
 )
 
 
+_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] = {
+    ModelType.CHIME: CHIME_BUTTONS,
+    ModelType.SENSOR: SENSOR_BUTTONS,
+}
+
+
 @callback
 def _async_remove_adopt_button(
     hass: HomeAssistant, device: ProtectAdoptableDeviceModel
@@ -120,8 +127,7 @@ async def async_setup_entry(
             ProtectButton,
             all_descs=ALL_DEVICE_BUTTONS,
             unadopted_descs=[ADOPT_BUTTON],
-            chime_descs=CHIME_BUTTONS,
-            sense_descs=SENSOR_BUTTONS,
+            model_descriptions=_MODEL_DESCRIPTIONS,
             ufp_device=device,
         )
         async_add_entities(entities)
@@ -155,8 +161,7 @@ async def async_setup_entry(
         ProtectButton,
         all_descs=ALL_DEVICE_BUTTONS,
         unadopted_descs=[ADOPT_BUTTON],
-        chime_descs=CHIME_BUTTONS,
-        sense_descs=SENSOR_BUTTONS,
+        model_descriptions=_MODEL_DESCRIPTIONS,
     )
     async_add_entities(entities)
 

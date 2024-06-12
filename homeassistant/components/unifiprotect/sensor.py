@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
 import logging
@@ -608,6 +609,15 @@ VIEWER_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ),
 )
 
+_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] = {
+    ModelType.CAMERA: CAMERA_SENSORS + CAMERA_DISABLED_SENSORS,
+    ModelType.SENSOR: SENSE_SENSORS,
+    ModelType.LIGHT: LIGHT_SENSORS,
+    ModelType.DOORLOCK: DOORLOCK_SENSORS,
+    ModelType.CHIME: CHIME_SENSORS,
+    ModelType.VIEWPORT: VIEWER_SENSORS,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -623,12 +633,7 @@ async def async_setup_entry(
             data,
             ProtectDeviceSensor,
             all_descs=ALL_DEVICES_SENSORS,
-            camera_descs=CAMERA_SENSORS + CAMERA_DISABLED_SENSORS,
-            sense_descs=SENSE_SENSORS,
-            light_descs=LIGHT_SENSORS,
-            lock_descs=DOORLOCK_SENSORS,
-            chime_descs=CHIME_SENSORS,
-            viewer_descs=VIEWER_SENSORS,
+            model_descriptions=_MODEL_DESCRIPTIONS,
             ufp_device=device,
         )
         if device.is_adopted_by_us and isinstance(device, Camera):
@@ -643,12 +648,7 @@ async def async_setup_entry(
         data,
         ProtectDeviceSensor,
         all_descs=ALL_DEVICES_SENSORS,
-        camera_descs=CAMERA_SENSORS + CAMERA_DISABLED_SENSORS,
-        sense_descs=SENSE_SENSORS,
-        light_descs=LIGHT_SENSORS,
-        lock_descs=DOORLOCK_SENSORS,
-        chime_descs=CHIME_SENSORS,
-        viewer_descs=VIEWER_SENSORS,
+        model_descriptions=_MODEL_DESCRIPTIONS,
     )
     entities += _async_event_entities(data)
     entities += _async_nvr_entities(data)
