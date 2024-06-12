@@ -3742,69 +3742,62 @@ async def test_compile_statistics_hourly_daily_monthly_summary(
         "sensor.test4": None,
     }
     start = zero
-    with freeze_time(start) as freezer:
-        for i in range(24):
-            seq = [-10, 15, 30]
-            # test1 has same value in every period
-            four, _states = await async_record_states(
-                hass, freezer, start, "sensor.test1", attributes, seq
+    for i in range(24):
+        seq = [-10, 15, 30]
+        # test1 has same value in every period
+        four, _states = await async_record_states(
+            hass, freezer, start, "sensor.test1", attributes, seq
+        )
+        states["sensor.test1"] += _states["sensor.test1"]
+        last_state = last_states["sensor.test1"]
+        expected_minima["sensor.test1"].append(_min(seq, last_state))
+        expected_maxima["sensor.test1"].append(_max(seq, last_state))
+        expected_averages["sensor.test1"].append(_weighted_average(seq, i, last_state))
+        last_states["sensor.test1"] = seq[-1]
+        # test2 values change: min/max at the last state
+        seq = [-10 * (i + 1), 15 * (i + 1), 30 * (i + 1)]
+        four, _states = await async_record_states(
+            hass, freezer, start, "sensor.test2", attributes, seq
+        )
+        states["sensor.test2"] += _states["sensor.test2"]
+        last_state = last_states["sensor.test2"]
+        expected_minima["sensor.test2"].append(_min(seq, last_state))
+        expected_maxima["sensor.test2"].append(_max(seq, last_state))
+        expected_averages["sensor.test2"].append(_weighted_average(seq, i, last_state))
+        last_states["sensor.test2"] = seq[-1]
+        # test3 values change: min/max at the first state
+        seq = [-10 * (23 - i + 1), 15 * (23 - i + 1), 30 * (23 - i + 1)]
+        four, _states = await async_record_states(
+            hass, freezer, start, "sensor.test3", attributes, seq
+        )
+        states["sensor.test3"] += _states["sensor.test3"]
+        last_state = last_states["sensor.test3"]
+        expected_minima["sensor.test3"].append(_min(seq, last_state))
+        expected_maxima["sensor.test3"].append(_max(seq, last_state))
+        expected_averages["sensor.test3"].append(_weighted_average(seq, i, last_state))
+        last_states["sensor.test3"] = seq[-1]
+        # test4 values grow
+        seq = [i, i + 0.5, i + 0.75]
+        start_meter = start
+        for j in range(len(seq)):
+            _states = await async_record_meter_state(
+                hass,
+                freezer,
+                start_meter,
+                "sensor.test4",
+                sum_attributes,
+                seq[j : j + 1],
             )
-            states["sensor.test1"] += _states["sensor.test1"]
-            last_state = last_states["sensor.test1"]
-            expected_minima["sensor.test1"].append(_min(seq, last_state))
-            expected_maxima["sensor.test1"].append(_max(seq, last_state))
-            expected_averages["sensor.test1"].append(
-                _weighted_average(seq, i, last_state)
-            )
-            last_states["sensor.test1"] = seq[-1]
-            # test2 values change: min/max at the last state
-            seq = [-10 * (i + 1), 15 * (i + 1), 30 * (i + 1)]
-            four, _states = await async_record_states(
-                hass, freezer, start, "sensor.test2", attributes, seq
-            )
-            states["sensor.test2"] += _states["sensor.test2"]
-            last_state = last_states["sensor.test2"]
-            expected_minima["sensor.test2"].append(_min(seq, last_state))
-            expected_maxima["sensor.test2"].append(_max(seq, last_state))
-            expected_averages["sensor.test2"].append(
-                _weighted_average(seq, i, last_state)
-            )
-            last_states["sensor.test2"] = seq[-1]
-            # test3 values change: min/max at the first state
-            seq = [-10 * (23 - i + 1), 15 * (23 - i + 1), 30 * (23 - i + 1)]
-            four, _states = await async_record_states(
-                hass, freezer, start, "sensor.test3", attributes, seq
-            )
-            states["sensor.test3"] += _states["sensor.test3"]
-            last_state = last_states["sensor.test3"]
-            expected_minima["sensor.test3"].append(_min(seq, last_state))
-            expected_maxima["sensor.test3"].append(_max(seq, last_state))
-            expected_averages["sensor.test3"].append(
-                _weighted_average(seq, i, last_state)
-            )
-            last_states["sensor.test3"] = seq[-1]
-            # test4 values grow
-            seq = [i, i + 0.5, i + 0.75]
-            start_meter = start
-            for j in range(len(seq)):
-                _states = await async_record_meter_state(
-                    hass,
-                    freezer,
-                    start_meter,
-                    "sensor.test4",
-                    sum_attributes,
-                    seq[j : j + 1],
-                )
-                start_meter += timedelta(minutes=1)
-                states["sensor.test4"] += _states["sensor.test4"]
-            last_state = last_states["sensor.test4"]
-            expected_states["sensor.test4"].append(seq[-1])
-            expected_sums["sensor.test4"].append(
-                _sum(seq, last_state, expected_sums["sensor.test4"])
-            )
-            last_states["sensor.test4"] = seq[-1]
+            start_meter += timedelta(minutes=1)
+            states["sensor.test4"] += _states["sensor.test4"]
+        last_state = last_states["sensor.test4"]
+        expected_states["sensor.test4"].append(seq[-1])
+        expected_sums["sensor.test4"].append(
+            _sum(seq, last_state, expected_sums["sensor.test4"])
+        )
+        last_states["sensor.test4"] = seq[-1]
 
-            start += timedelta(minutes=5)
+        start += timedelta(minutes=5)
     await async_wait_recording_done(hass)
     hist = history.get_significant_states(
         hass,
