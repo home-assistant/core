@@ -257,7 +257,7 @@ def _google_temp_unit(units):
 
 
 def _next_selected(items: list[str], selected: str | None) -> str | None:
-    """Return the next item in a item list starting at given value.
+    """Return the next item in an item list starting at given value.
 
     If selected is missing in items, None is returned
     """
