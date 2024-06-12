@@ -26,7 +26,7 @@ from syrupy import SnapshotAssertion
 from typing_extensions import AsyncGenerator, Generator
 import voluptuous as vol
 
-from homeassistant import auth, bootstrap, config_entries, loader
+from homeassistant import auth, block_async_io, bootstrap, config_entries, loader
 from homeassistant.auth import (
     auth_store,
     models as auth_models,
@@ -1767,3 +1767,12 @@ async def snapshot_platform(
         state = hass.states.get(entity_entry.entity_id)
         assert state, f"State not found for {entity_entry.entity_id}"
         assert state == snapshot(name=f"{entity_entry.entity_id}-state")
+
+
+def disable_block_async_io() -> None:
+    """Disable the detection of blocking calls in the event loop."""
+    for blocking_call in block_async_io.BLOCKED_CALLS.calls:
+        setattr(
+            blocking_call.object, blocking_call.function, blocking_call.original_func
+        )
+    block_async_io.BLOCKED_CALLS.calls.clear()

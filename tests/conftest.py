@@ -100,6 +100,7 @@ pytest.register_assert_rewrite("tests.common")
 from .common import (  # noqa: E402, isort:skip
     CLIENT_ID,
     INSTANCES,
+    disable_block_async_io,
     MockConfigEntry,
     MockUser,
     async_fire_mqtt_message,
@@ -1814,3 +1815,10 @@ def service_calls(hass: HomeAssistant) -> Generator[None, None, list[ServiceCall
 def snapshot(snapshot: SnapshotAssertion) -> SnapshotAssertion:
     """Return snapshot assertion fixture with the Home Assistant extension."""
     return snapshot.use_extension(HomeAssistantSnapshotExtension)
+
+
+@pytest.fixture
+def disable_block_async_io_after() -> Generator[Any, Any, None]:
+    """Disable the block async io context manager."""
+    yield
+    disable_block_async_io()

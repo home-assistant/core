@@ -153,12 +153,12 @@ class BlockedCalls:
     calls: set[BlockingCall]
 
 
-_BLOCKED_CALLS = BlockedCalls(set())
+BLOCKED_CALLS = BlockedCalls(set())
 
 
 def enable() -> None:
     """Enable the detection of blocking calls in the event loop."""
-    if _BLOCKED_CALLS.calls:
+    if BLOCKED_CALLS.calls:
         raise RuntimeError("Blocking call detection is already enabled")
 
     loop_thread_id = threading.get_ident()
@@ -174,13 +174,4 @@ def enable() -> None:
             loop_thread_id=loop_thread_id,
         )
         setattr(blocking_call.object, blocking_call.function, protected_function)
-        _BLOCKED_CALLS.calls.add(blocking_call)
-
-
-def disable() -> None:
-    """Disable the detection of blocking calls in the event loop."""
-    for blocking_call in _BLOCKED_CALLS.calls:
-        setattr(
-            blocking_call.object, blocking_call.function, blocking_call.original_func
-        )
-    _BLOCKED_CALLS.calls.clear()
+        BLOCKED_CALLS.calls.add(blocking_call)
