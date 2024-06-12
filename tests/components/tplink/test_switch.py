@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from kasa import AuthenticationError, Device, KasaException, Module, TimeoutError
+from kasa.iot import IotStrip
 import pytest
 
 from homeassistant.components import tplink
@@ -24,6 +25,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, slugify
 
 from . import (
+    DEVICE_ID,
     MAC_ADDRESS,
     _mocked_device,
     _mocked_strip_children,
@@ -40,7 +42,8 @@ async def test_plug(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    plug = _mocked_device(alias="my_plug", modules=[Module.Led])
+    plug = _mocked_device(alias="my_plug", features=["state"])
+    feat = plug.features["state"]
     with _patch_discovery(device=plug), _patch_connect(device=plug):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -52,29 +55,34 @@ async def test_plug(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    plug.turn_off.assert_called_once()
-    plug.turn_off.reset_mock()
+    feat.set_value.assert_called_once()
+    feat.set_value.reset_mock()
 
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    plug.turn_on.assert_called_once()
-    plug.turn_on.reset_mock()
+    feat.set_value.assert_called_once()
+    feat.set_value.reset_mock()
 
 
 @pytest.mark.parametrize(
     ("dev", "domain"),
     [
-        (_mocked_device(alias="my_plug", modules=[Module.Led]), "switch"),
+        (_mocked_device(alias="my_plug", features=["state", "led"]), "switch"),
         (
             _mocked_device(
                 alias="my_strip",
-                modules=[Module.Led],
+                features=["state", "led"],
                 children=_mocked_strip_children(),
             ),
             "switch",
         ),
-        (_mocked_device(alias="my_light", modules=[Module.Led, Module.Light]), "light"),
+        (
+            _mocked_device(
+                alias="my_light", modules=[Module.Light], features=["state", "led"]
+            ),
+            "light",
+        ),
     ],
 )
 async def test_led_switch(hass: HomeAssistant, dev: Device, domain: str) -> None:
@@ -82,7 +90,7 @@ async def test_led_switch(hass: HomeAssistant, dev: Device, domain: str) -> None
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
-    led_module = dev.modules[Module.Led]
+    feat = dev.features["led"]
     already_migrated_config_entry.add_to_hass(hass)
     with _patch_discovery(device=dev), _patch_connect(device=dev):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
@@ -98,14 +106,14 @@ async def test_led_switch(hass: HomeAssistant, dev: Device, domain: str) -> None
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_off", {ATTR_ENTITY_ID: led_entity_id}, blocking=True
     )
-    led_module.set_led.assert_called_once_with(False)
-    led_module.set_led.reset_mock()
+    feat.set_value.assert_called_once_with(False)
+    feat.set_value.reset_mock()
 
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_on", {ATTR_ENTITY_ID: led_entity_id}, blocking=True
     )
-    led_module.set_led.assert_called_once_with(True)
-    led_module.set_led.reset_mock()
+    feat.set_value.assert_called_once_with(True)
+    feat.set_value.reset_mock()
 
 
 async def test_plug_unique_id(
@@ -116,13 +124,13 @@ async def test_plug_unique_id(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    plug = _mocked_device(alias="my_plug", modules=[Module.Led])
+    plug = _mocked_device(alias="my_plug", features=["state", "led"])
     with _patch_discovery(device=plug), _patch_connect(device=plug):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
     entity_id = "switch.my_plug"
-    assert entity_registry.async_get(entity_id).unique_id == "aa:bb:cc:dd:ee:ff"
+    assert entity_registry.async_get(entity_id).unique_id == DEVICE_ID
 
 
 async def test_plug_update_fails(hass: HomeAssistant) -> None:
@@ -131,7 +139,7 @@ async def test_plug_update_fails(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    plug = _mocked_device(alias="my_plug", modules=[Module.Led])
+    plug = _mocked_device(alias="my_plug", features=["state", "led"])
     with _patch_discovery(device=plug), _patch_connect(device=plug):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -154,15 +162,16 @@ async def test_strip(hass: HomeAssistant) -> None:
     )
     already_migrated_config_entry.add_to_hass(hass)
     strip = _mocked_device(
-        alias="my_strip", children=_mocked_strip_children(), modules=[Module.Led]
+        alias="my_strip",
+        children=_mocked_strip_children(features=["state"]),
+        features=["state", "led"],
+        spec=IotStrip,
     )
+    strip.children[0].features["state"].value = True
+    strip.children[1].features["state"].value = False
     with _patch_discovery(device=strip), _patch_connect(device=strip):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
-
-    # Verify we only create entities for the children
-    # since this is what the previous version did
-    assert hass.states.get("switch.my_strip") is None
 
     entity_id = "switch.my_strip_plug0"
     state = hass.states.get(entity_id)
@@ -171,14 +180,15 @@ async def test_strip(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    strip.children[0].turn_off.assert_called_once()
-    strip.children[0].turn_off.reset_mock()
+    feat = strip.children[0].features["state"]
+    feat.set_value.assert_called_once()
+    feat.set_value.reset_mock()
 
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    strip.children[0].turn_on.assert_called_once()
-    strip.children[0].turn_on.reset_mock()
+    feat.set_value.assert_called_once()
+    feat.set_value.reset_mock()
 
     entity_id = "switch.my_strip_plug1"
     state = hass.states.get(entity_id)
@@ -187,14 +197,15 @@ async def test_strip(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    strip.children[1].turn_off.assert_called_once()
-    strip.children[1].turn_off.reset_mock()
+    feat = strip.children[1].features["state"]
+    feat.set_value.assert_called_once()
+    feat.set_value.reset_mock()
 
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    strip.children[1].turn_on.assert_called_once()
-    strip.children[1].turn_on.reset_mock()
+    feat.set_value.assert_called_once()
+    feat.set_value.reset_mock()
 
 
 async def test_strip_unique_ids(
@@ -206,7 +217,9 @@ async def test_strip_unique_ids(
     )
     already_migrated_config_entry.add_to_hass(hass)
     strip = _mocked_device(
-        alias="my_strip", children=_mocked_strip_children(), modules=[Module.Led]
+        alias="my_strip",
+        children=_mocked_strip_children(features=["state"]),
+        features=["state", "led"],
     )
     with _patch_discovery(device=strip), _patch_connect(device=strip):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
@@ -251,8 +264,9 @@ async def test_plug_errors_when_turned_on(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    plug = _mocked_device(alias="my_plug", modules=[Module.Led])
-    plug.turn_on.side_effect = exception_type("test error")
+    plug = _mocked_device(alias="my_plug", features=["state", "led"])
+    feat = plug.features["state"]
+    feat.set_value.side_effect = exception_type("test error")
 
     with _patch_discovery(device=plug), _patch_connect(device=plug):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
@@ -269,7 +283,7 @@ async def test_plug_errors_when_turned_on(
             SWITCH_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
     await hass.async_block_till_done()
-    assert plug.turn_on.call_count == 1
+    assert feat.set_value.call_count == 1
     assert (
         any(
             flow

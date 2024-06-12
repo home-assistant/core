@@ -1,6 +1,7 @@
 """Tests for the TP-Link component."""
 
 from collections import namedtuple
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from kasa import (
@@ -8,11 +9,13 @@ from kasa import (
     Device,
     DeviceConfig,
     DeviceFamilyType,
+    DeviceType,
     EncryptType,
+    Feature,
     KasaException,
     Module,
 )
-from kasa.interfaces import Led, Light, LightEffect
+from kasa.interfaces import Light, LightEffect
 from kasa.protocol import BaseProtocol
 
 from homeassistant.components.tplink import (
@@ -36,6 +39,7 @@ IP_ADDRESS2 = "127.0.0.2"
 ALIAS = "My Bulb"
 MODEL = "HS100"
 MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
+DEVICE_ID = "123456789ABCDEFGH"
 DHCP_FORMATTED_MAC_ADDRESS = MAC_ADDRESS.replace(":", "")
 MAC_ADDRESS2 = "11:22:33:44:55:66"
 DEFAULT_ENTRY_TITLE = f"{ALIAS} {MODEL}"
@@ -91,7 +95,7 @@ CREATE_ENTRY_DATA_AUTH2 = {
 
 
 def _mock_protocol() -> BaseProtocol:
-    protocol = MagicMock(auto_spec=BaseProtocol)
+    protocol = MagicMock(spec=BaseProtocol)
     protocol.close = AsyncMock()
     return protocol
 
@@ -100,28 +104,44 @@ def _mocked_device(
     device_config=DEVICE_CONFIG_LEGACY,
     credentials_hash=CREDENTIALS_HASH_LEGACY,
     mac=MAC_ADDRESS,
-    device_id=MAC_ADDRESS,
+    device_id=DEVICE_ID,
     alias=ALIAS,
     modules: list[str] | None = None,
     children: list[Device] | None = None,
+    features: list[str] | None = None,
+    device_type=DeviceType.Unknown,
+    spec: type = Device,
 ) -> Device:
-    device = MagicMock(auto_spec=Device, name="Mocked device")
+    device = MagicMock(spec=spec, name="Mocked device")
     device.update = AsyncMock()
+    device.turn_off = AsyncMock()
+    device.turn_on = AsyncMock()
+
     device.mac = mac
     device.alias = alias
     device.model = MODEL
     device.host = IP_ADDRESS
     device.device_id = device_id
     device.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
-    device.turn_off = AsyncMock()
-    device.turn_on = AsyncMock()
+    device.modules = {}
+    device.features = {}
 
-    device.modules = (
-        {module_name: MODULE_TO_MOCK_GEN[module_name]() for module_name in modules}
-        if modules
-        else {}
-    )
+    if modules:
+        device.modules = {
+            module_name: MODULE_TO_MOCK_GEN[module_name]() for module_name in modules
+        }
+
+    if features:
+        device.features = {
+            feature_id: FEATURE_TO_MOCK_GEN[feature_id]() for feature_id in features
+        }
+
     device.children = children if children else []
+    device.device_type = device_type
+    if device.children and all(
+        child.device_type == DeviceType.StripSocket for child in device.children
+    ):
+        device.device_type = DeviceType.Strip
 
     device.protocol = _mock_protocol()
     device.config = device_config
@@ -129,8 +149,21 @@ def _mocked_device(
     return device
 
 
+def _mocked_feature(
+    value: Any, id: str, type_=Feature.Type.Sensor, category=Feature.Category.Debug
+) -> Feature:
+    feature = MagicMock(spec=Feature, name="Mocked feature")
+    feature.id = id
+    feature.name = id
+    feature.value = value
+    feature.type = type_
+    feature.category = category
+    feature.set_value = AsyncMock()
+    return feature
+
+
 def _mocked_light_module() -> Light:
-    light = MagicMock(auto_spec=Light, name="Mocked light module")
+    light = MagicMock(spec=Light, name="Mocked light module")
     light.update = AsyncMock()
     light.brightness = 50
     light.color_temp = 4000
@@ -151,7 +184,7 @@ def _mocked_light_module() -> Light:
 
 
 def _mocked_light_effect_module() -> LightEffect:
-    effect = MagicMock(auto_spec=LightEffect, name="Mocked light effect")
+    effect = MagicMock(spec=LightEffect, name="Mocked light effect")
     effect.has_effects = True
     effect.has_custom_effects = True
     effect.effect = "Effect1"
@@ -161,23 +194,20 @@ def _mocked_light_effect_module() -> LightEffect:
     return effect
 
 
-def _mocked_led_module() -> Led:
-    led_module = MagicMock(auto_spec=Led, name="Mocked led")
-    led_module.led = True
-    led_module.set_led = AsyncMock()
-    return led_module
-
-
-def _mocked_strip_children() -> list[Device]:
+def _mocked_strip_children(features=None) -> list[Device]:
     plug0 = _mocked_device(
         alias="Plug0",
         device_id="bb:bb:cc:dd:ee:ff_PLUG0DEVICEID",
         mac="bb:bb:cc:dd:ee:ff",
+        device_type=DeviceType.StripSocket,
+        features=features,
     )
     plug1 = _mocked_device(
         alias="Plug1",
         device_id="cc:bb:cc:dd:ee:ff_PLUG1DEVICEID",
         mac="cc:bb:cc:dd:ee:ff",
+        device_type=DeviceType.StripSocket,
+        features=features,
     )
     plug0.is_on = True
     plug1.is_on = False
@@ -187,7 +217,15 @@ def _mocked_strip_children() -> list[Device]:
 MODULE_TO_MOCK_GEN = {
     Module.Light: _mocked_light_module,
     Module.LightEffect: _mocked_light_effect_module,
-    Module.Led: _mocked_led_module,
+}
+
+FEATURE_TO_MOCK_GEN = {
+    "state": lambda: _mocked_feature(
+        True, "state", Feature.Type.Switch, Feature.Category.Primary
+    ),
+    "led": lambda: _mocked_feature(
+        True, "led", Feature.Type.Switch, Feature.Category.Config
+    ),
 }
 
 

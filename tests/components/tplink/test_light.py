@@ -14,6 +14,7 @@ from kasa import (
     TimeoutError,
 )
 from kasa.interfaces import LightEffect
+from kasa.iot import IotDevice
 import pytest
 
 from homeassistant.components import tplink
@@ -53,8 +54,17 @@ from . import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+@pytest.mark.parametrize(
+    ("device_type"),
+    [
+        pytest.param(DeviceType.Dimmer, id="Dimmer"),
+        pytest.param(DeviceType.Bulb, id="Bulb"),
+        pytest.param(DeviceType.LightStrip, id="LightStrip"),
+        pytest.param(DeviceType.WallSwitch, id="WallSwitch"),
+    ],
+)
 async def test_light_unique_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, device_type
 ) -> None:
     """Test a light unique id."""
     already_migrated_config_entry = MockConfigEntry(
@@ -62,12 +72,16 @@ async def test_light_unique_id(
     )
     already_migrated_config_entry.add_to_hass(hass)
     light = _mocked_device(modules=[Module.Light], alias="my_light")
+    light.device_type = device_type
     with _patch_discovery(device=light), _patch_connect(device=light):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
     entity_id = "light.my_light"
-    assert entity_registry.async_get(entity_id).unique_id == "AABBCCDDEEFF"
+    assert (
+        entity_registry.async_get(entity_id).unique_id
+        == MAC_ADDRESS.replace(":", "").upper()
+    )
 
 
 async def test_dimmer_unique_id(hass: HomeAssistant) -> None:
@@ -76,7 +90,12 @@ async def test_dimmer_unique_id(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    light = _mocked_device(modules=[Module.Light], alias="my_light")
+    light = _mocked_device(
+        modules=[Module.Light],
+        alias="my_light",
+        spec=IotDevice,
+        device_id="aa:bb:cc:dd:ee:ff",
+    )
     light.device_type = DeviceType.Dimmer
     with _patch_discovery(device=light), _patch_connect(device=light):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
@@ -91,7 +110,7 @@ async def test_dimmer_unique_id(hass: HomeAssistant) -> None:
     ("device", "transition"),
     [
         (_mocked_device(modules=[Module.Light]), 2.0),
-        (_mocked_device(modules=[Module.Light]), None),
+        (_mocked_device(modules=[Module.Light, Module.LightEffect]), None),
     ],
 )
 async def test_color_light(

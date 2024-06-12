@@ -28,7 +28,6 @@ from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import legacy_device_id
 from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkEntity, async_refresh_after
@@ -186,15 +185,6 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         """Initialize the switch."""
         super().__init__(device, coordinator)
         self._light_module = light_module
-        # For backwards compat with pyHS100
-        if device.device_type == DeviceType.Dimmer:
-            # Dimmers used to use the switch format since
-            # pyHS100 treated them as SmartPlug but the old code
-            # created them as lights
-            # https://github.com/home-assistant/core/blob/2021.9.7/homeassistant/components/tplink/common.py#L86
-            self._attr_unique_id = legacy_device_id(device)
-        else:
-            self._attr_unique_id = device.mac.replace(":", "").upper()
         modes: set[ColorMode] = {ColorMode.ONOFF}
         if light_module.is_variable_color_temp:
             modes.add(ColorMode.COLOR_TEMP)
@@ -209,7 +199,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         if len(self._attr_supported_color_modes) == 1:
             # If the light supports only a single color mode, set it now
             self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
-        self._async_update_attrs()
+        self._async_call_update_attrs()
 
     @callback
     def _async_extract_brightness_transition(
@@ -221,7 +211,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
             brightness = round((brightness * 100.0) / 255.0)
 
-        if self.device.device_type == DeviceType.Dimmer and transition is None:
+        if self._device.device_type == DeviceType.Dimmer and transition is None:
             # This is a stopgap solution for inconsistent set_brightness handling
             # in the upstream library, see #57265.
             # This should be removed when the upstream has fixed the issue.
@@ -266,7 +256,6 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             await self._light_module.set_brightness(brightness, transition=transition)
             return
         await self._light_module.set_state(
-            # transition currently incorrectly typed in library
             LightState(light_on=True, transition=transition)
         )
 
@@ -307,7 +296,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
         light_module = self._light_module
-        self._attr_is_on = self.device.is_on
+        self._attr_is_on = self._device.is_on
         if light_module.is_dimmable:
             self._attr_brightness = round((light_module.brightness * 255.0) / 100.0)
         color_mode = self._determine_color_mode()
@@ -317,12 +306,6 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         elif color_mode is ColorMode.HS:
             hue, saturation, _ = light_module.hsv
             self._attr_hs_color = hue, saturation
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._async_update_attrs()
-        super()._handle_coordinator_update()
 
 
 class TPLinkSmartLightStrip(TPLinkSmartBulb):

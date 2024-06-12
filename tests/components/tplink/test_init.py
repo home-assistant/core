@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import copy
 from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from kasa import AuthenticationError, Module
+from kasa import AuthenticationError, Feature, KasaException, Module
 import pytest
 
 from homeassistant import setup
@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     STATE_ON,
     STATE_UNAVAILABLE,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -274,7 +275,7 @@ async def test_plug_auth_fails(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     config_entry.add_to_hass(hass)
-    device = _mocked_device(alias="my_plug")
+    device = _mocked_device(alias="my_plug", features=["state"])
     with _patch_discovery(device=device), _patch_connect(device=device):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -297,3 +298,101 @@ async def test_plug_auth_fails(hass: HomeAssistant) -> None:
         )
         == 1
     )
+
+
+async def test_update_attrs_fails_in_init(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a smart plug auth failure."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
+    config_entry.add_to_hass(hass)
+    light = _mocked_device(modules=[Module.Light], alias="my_light")
+    light_module = light.modules[Module.Light]
+    p = PropertyMock(side_effect=KasaException)
+    type(light_module).color_temp = p
+    light.__str__ = lambda _: "MockLight"
+    with _patch_discovery(device=light), _patch_connect(device=light):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_light"
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
+    assert "Unable to read data for MockLight None:" in caplog.text
+
+
+async def test_update_attrs_fails_on_update(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a smart plug auth failure."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
+    config_entry.add_to_hass(hass)
+    light = _mocked_device(modules=[Module.Light], alias="my_light")
+    light_module = light.modules[Module.Light]
+
+    with _patch_discovery(device=light), _patch_connect(device=light):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_light"
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    p = PropertyMock(side_effect=KasaException)
+    type(light_module).color_temp = p
+    light.__str__ = lambda _: "MockLight"
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
+    assert f"Unable to read data for MockLight {entity_id}:" in caplog.text
+    # Check only logs once
+    caplog.clear()
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
+    assert f"Unable to read data for MockLight {entity_id}:" not in caplog.text
+
+
+async def test_feature_no_category(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a strip unique id."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    dev = _mocked_device(
+        alias="my_plug",
+        features=["led"],
+    )
+    dev.features["led"].category = Feature.Category.Unset
+    with _patch_discovery(device=dev), _patch_connect(device=dev):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "switch.my_plug_led"
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+    assert entity.entity_category == EntityCategory.DIAGNOSTIC
+    assert "Unhandled category Category.Unset, fallback to DIAGNOSTIC" in caplog.text

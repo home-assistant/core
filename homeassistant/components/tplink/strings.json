@@ -88,6 +88,12 @@
     "switch": {
       "led": {
         "name": "LED"
+      },
+      "auto_update_enabled": {
+        "name": "Auto update enabled"
+      },
+      "auto_off_enabled": {
+        "name": "Auto off enabled"
       }
     }
   },
