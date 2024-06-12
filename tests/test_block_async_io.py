@@ -229,6 +229,17 @@ async def test_protect_open(caplog: pytest.LogCaptureFixture) -> None:
     assert "Detected blocking call to open with args" in caplog.text
 
 
+async def test_enable_multiple_times(caplog: pytest.LogCaptureFixture) -> None:
+    """Test trying to enable multiple times."""
+    with patch.object(block_async_io, "_IN_TESTS", False):
+        block_async_io.enable()
+
+    with pytest.raises(
+        RuntimeError, match="Blocking call detection is already enabled"
+    ):
+        block_async_io.enable()
+
+
 @pytest.mark.parametrize(
     "path",
     [
