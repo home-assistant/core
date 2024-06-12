@@ -38,6 +38,7 @@ from .const import (
     DATA_SERVICE,
     DATA_STORE,
     DOMAIN,
+    EVENT_ATTENDEES,
     EVENT_DESCRIPTION,
     EVENT_END_DATE,
     EVENT_END_DATETIME,
@@ -118,6 +119,9 @@ ADD_EVENT_SERVICE_SCHEMA = vol.All(
         vol.Required(EVENT_CALENDAR_ID): cv.string,
         vol.Required(EVENT_SUMMARY): cv.string,
         vol.Optional(EVENT_DESCRIPTION, default=""): cv.string,
+        vol.Optional(EVENT_ATTENDEES, default=[]): vol.All(
+            cv.ensure_list, dict[str, Any]
+        ),
         vol.Optional(EVENT_LOCATION, default=""): cv.string,
         vol.Inclusive(
             EVENT_START_DATE, "dates", "Start and end dates must both be specified"
@@ -289,6 +293,7 @@ async def async_setup_add_event_service(
         event = Event(
             summary=call.data[EVENT_SUMMARY],
             description=call.data[EVENT_DESCRIPTION],
+            attendees=call.data.get(EVENT_ATTENDEES, []),
             start=start,
             end=end,
         )

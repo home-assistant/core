@@ -40,6 +40,7 @@ from homeassistant.util.json import JsonValueType
 
 from .const import (
     CONF_EVENT,
+    EVENT_ATTENDEES,
     EVENT_DESCRIPTION,
     EVENT_DURATION,
     EVENT_END,
@@ -199,7 +200,10 @@ CREATE_EVENT_SCHEMA = vol.All(
         {
             vol.Required(EVENT_SUMMARY): cv.string,
             vol.Optional(EVENT_DESCRIPTION, default=""): cv.string,
-            vol.Optional(EVENT_LOCATION): cv.string,
+            vol.Optional(EVENT_ATTENDEES, default=[]): vol.All(
+                cv.ensure_list, dict[str, Any]
+            ),
+            vol.Optional(EVENT_LOCATION): cv.ensure_list,
             vol.Inclusive(
                 EVENT_START_DATE, "dates", "Start and end dates must both be specified"
             ): cv.date,
@@ -237,6 +241,7 @@ WEBSOCKET_EVENT_SCHEMA = vol.Schema(
             vol.Required(EVENT_END): vol.Any(cv.date, cv.datetime),
             vol.Required(EVENT_SUMMARY): cv.string,
             vol.Optional(EVENT_DESCRIPTION): cv.string,
+            vol.Optional(EVENT_ATTENDEES): vol.All(cv.ensure_list, dict[str, Any]),
             vol.Optional(EVENT_LOCATION): cv.string,
             vol.Optional(EVENT_RRULE): _validate_rrule,
         },
@@ -255,6 +260,9 @@ CALENDAR_EVENT_SCHEMA = vol.Schema(
             vol.Required("end"): vol.Any(cv.date, cv.datetime),
             vol.Required(EVENT_SUMMARY): cv.string,
             vol.Optional(EVENT_RRULE): _validate_rrule,
+            vol.Optional(EVENT_ATTENDEES, default=[]): vol.All(
+                cv.ensure_list, dict[str, Any]
+            ),
         },
         _has_same_type("start", "end"),
         _has_timezone("start", "end"),
@@ -347,6 +355,8 @@ class CalendarEvent:
     summary: str
     description: str | None = None
     location: str | None = None
+    attendees_omitted: bool | None = False
+    attendees: list[dict[str, Any]] = []
 
     uid: str | None = None
     recurrence_id: str | None = None

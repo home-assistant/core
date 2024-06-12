@@ -15,6 +15,7 @@ from gcal_sync.sync import CalendarEventSyncManager
 from homeassistant.components.calendar import (
     CREATE_EVENT_SCHEMA,
     ENTITY_ID_FORMAT,
+    EVENT_ATTENDEES,
     EVENT_DESCRIPTION,
     EVENT_END,
     EVENT_LOCATION,
@@ -356,6 +357,7 @@ class GoogleCalendarEntity(
                 "start": start,
                 "end": end,
                 EVENT_DESCRIPTION: kwargs.get(EVENT_DESCRIPTION),
+                EVENT_ATTENDEES: kwargs.get(EVENT_ATTENDEES),
             }
         )
         if location := kwargs.get(EVENT_LOCATION):
@@ -454,6 +456,7 @@ async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) ->
     event = Event(
         summary=call.data[EVENT_SUMMARY],
         description=call.data[EVENT_DESCRIPTION],
+        attendees=call.data.get(EVENT_ATTENDEES, []),
         start=start,
         end=end,
     )
