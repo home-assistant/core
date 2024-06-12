@@ -155,10 +155,10 @@ def async_all_device_entities(
     )
 
 
-class ProtectDeviceEntity(Entity):
+class BaseProtectDeviceEntity(Entity):
     """Base class for UniFi protect entities."""
 
-    device: ProtectAdoptableDeviceModel
+    device: ProtectAdoptableDeviceModel | NVR
 
     _attr_should_poll = False
 
@@ -275,11 +275,16 @@ class ProtectDeviceEntity(Entity):
         )
 
 
-class ProtectNVREntity(ProtectDeviceEntity):
+class ProtectDeviceEntity(BaseProtectDeviceEntity):
+    """Base class for UniFi protect entities."""
+
+    device: ProtectAdoptableDeviceModel
+
+
+class ProtectNVREntity(BaseProtectDeviceEntity):
     """Base class for unifi protect entities."""
 
-    # separate subclass on purpose
-    device: NVR  # type: ignore[assignment]
+    device: NVR
 
     @callback
     def _async_set_device_info(self) -> None:
