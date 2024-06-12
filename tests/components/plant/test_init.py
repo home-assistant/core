@@ -204,8 +204,8 @@ def test_daily_history_one_day(hass: HomeAssistant) -> None:
     """Test storing data for the same day."""
     dh = plant.DailyHistory(3)
     values = [-2, 10, 0, 5, 20]
-    for i in range(len(values)):
-        dh.add_measurement(values[i])
+    for i, value in enumerate(values):
+        dh.add_measurement(value)
         max_value = max(values[0 : i + 1])
         assert len(dh._days) == 1
         assert dh.max == max_value
@@ -222,6 +222,6 @@ def test_daily_history_multiple_days(hass: HomeAssistant) -> None:
     values = [10, 1, 7, 3]
     max_values = [10, 10, 10, 7]
 
-    for i in range(len(days)):
-        dh.add_measurement(values[i], days[i])
+    for i, value in enumerate(days):
+        dh.add_measurement(values[i], value)
         assert max_values[i] == dh.max
