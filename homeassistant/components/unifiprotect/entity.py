@@ -143,18 +143,13 @@ def async_all_device_entities(
             )
         return entities
 
-    if not (ufp_model := ufp_device.model):
-        return []
-    if (
-        not model_descriptions or not (model_descs := model_descriptions.get(ufp_model))
-    ) and not unadopted_descs:
-        return []
-
+    ufp_model = ufp_device.model
+    assert ufp_model is not None
     return _async_device_entities(
         data,
         klass,
         ufp_model,
-        model_descs or [],
+        (model_descriptions or {}).get(ufp_model, []),
         unadopted_descs or [],
         ufp_device,
     )
