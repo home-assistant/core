@@ -56,7 +56,7 @@ async def test_notify_overlay_message(
     mock_fully_kiosk: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Test notify text overlay entity."""
+    """Test notify overlay message entity."""
     message = "one, two, testing, testing"
     await hass.services.async_call(
         "notify",
