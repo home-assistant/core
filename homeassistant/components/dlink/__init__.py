@@ -12,10 +12,12 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import CONF_USE_LEGACY_PROTOCOL
 from .data import SmartPlugData
 
+type DLinkConfigEntry = ConfigEntry[SmartPlugData]
+
 PLATFORMS = [Platform.SWITCH]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DLinkConfigEntry) -> bool:
     """Set up D-Link Power Plug from a config entry."""
     smartplug = await hass.async_add_executor_job(
         SmartPlug,
@@ -33,6 +35,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DLinkConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
