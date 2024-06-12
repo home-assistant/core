@@ -124,7 +124,7 @@ async def test_observable_collection() -> None:
 
     changes = track_changes(coll)
     await coll.notify_changes(
-        [collection.CollectionChangeSet("mock_type", "mock_id", {"mock": "item"})]
+        [collection.CollectionChange("mock_type", "mock_id", {"mock": "item"})]
     )
     assert len(changes) == 1
     assert changes[0] == ("mock_type", "mock_id", {"mock": "item"})
@@ -263,7 +263,7 @@ async def test_attach_entity_component_collection(hass: HomeAssistant) -> None:
 
     await coll.notify_changes(
         [
-            collection.CollectionChangeSet(
+            collection.CollectionChange(
                 collection.CHANGE_ADDED,
                 "mock_id",
                 {"id": "mock_id", "state": "initial", "name": "Mock 1"},
@@ -276,7 +276,7 @@ async def test_attach_entity_component_collection(hass: HomeAssistant) -> None:
 
     await coll.notify_changes(
         [
-            collection.CollectionChangeSet(
+            collection.CollectionChange(
                 collection.CHANGE_UPDATED,
                 "mock_id",
                 {"id": "mock_id", "state": "second", "name": "Mock 1 updated"},
@@ -288,7 +288,7 @@ async def test_attach_entity_component_collection(hass: HomeAssistant) -> None:
     assert hass.states.get("test.mock_1").state == "second"
 
     await coll.notify_changes(
-        [collection.CollectionChangeSet(collection.CHANGE_REMOVED, "mock_id", None)],
+        [collection.CollectionChange(collection.CHANGE_REMOVED, "mock_id", None)],
     )
 
     assert hass.states.get("test.mock_1") is None
@@ -331,7 +331,7 @@ async def test_entity_component_collection_abort(
 
     await coll.notify_changes(
         [
-            collection.CollectionChangeSet(
+            collection.CollectionChange(
                 collection.CHANGE_ADDED,
                 "mock_id",
                 {"id": "mock_id", "state": "initial", "name": "Mock 1"},
@@ -343,7 +343,7 @@ async def test_entity_component_collection_abort(
 
     await coll.notify_changes(
         [
-            collection.CollectionChangeSet(
+            collection.CollectionChange(
                 collection.CHANGE_UPDATED,
                 "mock_id",
                 {"id": "mock_id", "state": "second", "name": "Mock 1 updated"},
@@ -355,7 +355,7 @@ async def test_entity_component_collection_abort(
     assert len(async_update_config_calls) == 0
 
     await coll.notify_changes(
-        [collection.CollectionChangeSet(collection.CHANGE_REMOVED, "mock_id", None)],
+        [collection.CollectionChange(collection.CHANGE_REMOVED, "mock_id", None)],
     )
 
     assert hass.states.get("test.mock_1") is None
@@ -395,7 +395,7 @@ async def test_entity_component_collection_entity_removed(
 
     await coll.notify_changes(
         [
-            collection.CollectionChangeSet(
+            collection.CollectionChange(
                 collection.CHANGE_ADDED,
                 "mock_id",
                 {"id": "mock_id", "state": "initial", "name": "Mock 1"},
@@ -413,7 +413,7 @@ async def test_entity_component_collection_entity_removed(
 
     await coll.notify_changes(
         [
-            collection.CollectionChangeSet(
+            collection.CollectionChange(
                 collection.CHANGE_UPDATED,
                 "mock_id",
                 {"id": "mock_id", "state": "second", "name": "Mock 1 updated"},
@@ -425,7 +425,7 @@ async def test_entity_component_collection_entity_removed(
     assert len(async_update_config_calls) == 0
 
     await coll.notify_changes(
-        [collection.CollectionChangeSet(collection.CHANGE_REMOVED, "mock_id", None)],
+        [collection.CollectionChange(collection.CHANGE_REMOVED, "mock_id", None)],
     )
 
     assert hass.states.get("test.mock_1") is None
