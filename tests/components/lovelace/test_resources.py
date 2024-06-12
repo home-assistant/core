@@ -113,27 +113,26 @@ async def test_storage_resources_import(
 
     response = await client.receive_json()
     assert response["id"] == event_id
-    assert response["event"] == {
-        "change_type": "added",
-        "item": {
-            "id": ANY,
-            "type": "js",
-            "url": "/local/bla.js",
+    assert response["event"] == [
+        {
+            "change_type": "added",
+            "item": {
+                "id": ANY,
+                "type": "js",
+                "url": "/local/bla.js",
+            },
+            "resource_id": ANY,
         },
-        "resource_id": ANY,
-    }
-
-    response = await client.receive_json()
-    assert response["id"] == event_id
-    assert response["event"] == {
-        "change_type": "added",
-        "item": {
-            "id": ANY,
-            "type": "css",
-            "url": "/local/bla.css",
+        {
+            "change_type": "added",
+            "item": {
+                "id": ANY,
+                "type": "css",
+                "url": "/local/bla.css",
+            },
+            "resource_id": ANY,
         },
-        "resource_id": ANY,
-    }
+    ]
 
     response = await client.receive_json()
     assert response["success"]
@@ -156,15 +155,17 @@ async def test_storage_resources_import(
     )
     response = await client.receive_json()
     assert response["id"] == event_id
-    assert response["event"] == {
-        "change_type": "added",
-        "item": {
-            "id": ANY,
-            "type": "module",
-            "url": "/local/yo.js",
-        },
-        "resource_id": ANY,
-    }
+    assert response["event"] == [
+        {
+            "change_type": "added",
+            "item": {
+                "id": ANY,
+                "type": "module",
+                "url": "/local/yo.js",
+            },
+            "resource_id": ANY,
+        }
+    ]
 
     response = await client.receive_json()
     assert response["success"]
@@ -190,15 +191,17 @@ async def test_storage_resources_import(
     )
     response = await client.receive_json()
     assert response["id"] == event_id
-    assert response["event"] == {
-        "change_type": "updated",
-        "item": {
-            "id": first_item["id"],
-            "type": "css",
-            "url": "/local/updated.css",
-        },
-        "resource_id": first_item["id"],
-    }
+    assert response["event"] == [
+        {
+            "change_type": "updated",
+            "item": {
+                "id": first_item["id"],
+                "type": "css",
+                "url": "/local/updated.css",
+            },
+            "resource_id": first_item["id"],
+        }
+    ]
 
     response = await client.receive_json()
     assert response["success"]
@@ -220,15 +223,17 @@ async def test_storage_resources_import(
     )
     response = await client.receive_json()
     assert response["id"] == event_id
-    assert response["event"] == {
-        "change_type": "removed",
-        "item": {
-            "id": first_item["id"],
-            "type": "css",
-            "url": "/local/updated.css",
-        },
-        "resource_id": first_item["id"],
-    }
+    assert response["event"] == [
+        {
+            "change_type": "removed",
+            "item": {
+                "id": first_item["id"],
+                "type": "css",
+                "url": "/local/updated.css",
+            },
+            "resource_id": first_item["id"],
+        }
+    ]
 
     response = await client.receive_json()
     assert response["success"]

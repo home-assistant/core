@@ -640,19 +640,24 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
         """Subscribe to collection updates."""
 
         async def async_change_listener(
-            change_type: str, item_id: str, updated_item: dict
+            change_set: Iterable[CollectionChange],
         ) -> None:
-            json_msg = {
-                "change_type": change_type,
-                self.item_id_key: item_id,
-                "item": updated_item,
-            }
+            json_msg = [
+                {
+                    "change_type": change.change_type,
+                    self.item_id_key: change.item_id,
+                    "item": change.item,
+                }
+                for change in change_set
+            ]
             for connection, msg_id in self.subscribers:
                 connection.send_message(websocket_api.event_message(msg_id, json_msg))
 
         if not self.subscribers:
-            self.remove_subscription = self.storage_collection.async_add_listener(
-                async_change_listener
+            self.remove_subscription = (
+                self.storage_collection.async_add_change_set_listener(
+                    async_change_listener
+                )
             )
 
         self.subscribers.add((connection, msg["id"]))

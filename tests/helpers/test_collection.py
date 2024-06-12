@@ -613,15 +613,17 @@ async def test_storage_collection_websocket_subscribe(
     )
     response = await client.receive_json()
     assert response["id"] == event_id
-    assert response["event"] == {
-        "change_type": "added",
-        "item": {
-            "id": "initial_name",
-            "immutable_string": "no-changes",
-            "name": "Initial Name",
-        },
-        "test_item_id": "initial_name",
-    }
+    assert response["event"] == [
+        {
+            "change_type": "added",
+            "item": {
+                "id": "initial_name",
+                "immutable_string": "no-changes",
+                "name": "Initial Name",
+            },
+            "test_item_id": "initial_name",
+        }
+    ]
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
@@ -681,15 +683,17 @@ async def test_storage_collection_websocket_subscribe(
     )
     response = await client.receive_json()
     assert response["id"] == event_id
-    assert response["event"] == {
-        "change_type": "updated",
-        "item": {
-            "id": "initial_name",
-            "immutable_string": "no-changes",
-            "name": "Updated name",
-        },
-        "test_item_id": "initial_name",
-    }
+    assert response["event"] == [
+        {
+            "change_type": "updated",
+            "item": {
+                "id": "initial_name",
+                "immutable_string": "no-changes",
+                "name": "Updated name",
+            },
+            "test_item_id": "initial_name",
+        }
+    ]
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
@@ -715,15 +719,17 @@ async def test_storage_collection_websocket_subscribe(
     )
     response = await client.receive_json()
     assert response["id"] == event_id
-    assert response["event"] == {
-        "change_type": "removed",
-        "item": {
-            "id": "initial_name",
-            "immutable_string": "no-changes",
-            "name": "Updated name",
-        },
-        "test_item_id": "initial_name",
-    }
+    assert response["event"] == [
+        {
+            "change_type": "removed",
+            "item": {
+                "id": "initial_name",
+                "immutable_string": "no-changes",
+                "name": "Updated name",
+            },
+            "test_item_id": "initial_name",
+        }
+    ]
     response = await client.receive_json()
     assert response["success"]
 
