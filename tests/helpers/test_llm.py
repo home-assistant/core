@@ -174,7 +174,21 @@ async def test_assist_api(
             "targets": [],
         },
         "response_type": "action_done",
-        "speech": {},
+        "reprompt": {
+            "plain": {
+                "extra_data": None,
+                "reprompt": "Do it again",
+            },
+        },
+        "speech": {
+            "plain": {
+                "extra_data": None,
+                "speech": "Some speech",
+            },
+        },
+        "speech_slots": {
+            "hello": 1,
+        },
     }
 
 
