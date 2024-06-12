@@ -5,6 +5,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.core import HomeAssistant
+
 from tests.common import mock_device_registry, mock_registry
 
 
