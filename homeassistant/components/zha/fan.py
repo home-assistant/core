@@ -78,23 +78,23 @@ class ZhaFan(FanEntity, ZHAEntity):
     ) -> None:
         """Turn the entity on."""
         await self.entity_data.entity.async_turn_on(
-            percentage=percentage, preset_mode=preset_mode, **kwargs
+            percentage=percentage, preset_mode=preset_mode
         )
         await self.async_update_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self.entity_data.entity.async_turn_off(**kwargs)
+        await self.entity_data.entity.async_turn_off()
         await self.async_update_ha_state()
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
-        await self.entity_data.entity.async_set_percentage(percentage)
+        await self.entity_data.entity.async_set_percentage(percentage=percentage)
         await self.async_update_ha_state()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode for the fan."""
-        await self.entity_data.entity.async_set_preset_mode(preset_mode)
+        await self.entity_data.entity.async_set_preset_mode(preset_mode=preset_mode)
         await self.async_update_ha_state()
 
     @property
