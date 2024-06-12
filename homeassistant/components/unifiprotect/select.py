@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import Enum
 import logging
@@ -18,6 +18,7 @@ from uiprotect.data import (
     Light,
     LightModeEnableType,
     LightModeType,
+    ModelType,
     MountType,
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
@@ -35,7 +36,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DISPATCH_ADOPT, TYPE_EMPTY_VALUE
 from .data import ProtectData, UFPConfigEntry
 from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import PermRequired, ProtectSetableKeysMixin, T
+from .models import PermRequired, ProtectRequiredKeysMixin, ProtectSetableKeysMixin, T
 from .utils import async_dispatch_id as _ufpd, async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)
@@ -319,6 +320,14 @@ VIEWER_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ),
 )
 
+_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] = {
+    ModelType.CAMERA: CAMERA_SELECTS,
+    ModelType.LIGHT: LIGHT_SELECTS,
+    ModelType.SENSOR: SENSE_SELECTS,
+    ModelType.VIEWPORT: VIEWER_SELECTS,
+    ModelType.DOORLOCK: DOORLOCK_SELECTS,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: UFPConfigEntry, async_add_entities: AddEntitiesCallback
@@ -331,11 +340,7 @@ async def async_setup_entry(
         entities = async_all_device_entities(
             data,
             ProtectSelects,
-            camera_descs=CAMERA_SELECTS,
-            light_descs=LIGHT_SELECTS,
-            sense_descs=SENSE_SELECTS,
-            viewer_descs=VIEWER_SELECTS,
-            lock_descs=DOORLOCK_SELECTS,
+            model_descriptions=_MODEL_DESCRIPTIONS,
             ufp_device=device,
         )
         async_add_entities(entities)
@@ -345,13 +350,7 @@ async def async_setup_entry(
     )
 
     entities: list[ProtectDeviceEntity] = async_all_device_entities(
-        data,
-        ProtectSelects,
-        camera_descs=CAMERA_SELECTS,
-        light_descs=LIGHT_SELECTS,
-        sense_descs=SENSE_SELECTS,
-        viewer_descs=VIEWER_SELECTS,
-        lock_descs=DOORLOCK_SELECTS,
+        data, ProtectSelects, model_descriptions=_MODEL_DESCRIPTIONS
     )
 
     async_add_entities(entities)
