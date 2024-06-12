@@ -2,33 +2,36 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
-from typing import Any
 
-from bleak.exc import BleakError
-from pinecil import DeviceDisconnectedException, DeviceNotFoundException, Pinecil
+from pynecil import (
+    CommunicationError,
+    DeviceInfoResponse,
+    LiveDataResponse,
+    Pynecil,
+    SettingsDataResponse,
+)
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import Throttle
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=5)
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 
-class PinecilCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class PinecilCoordinator(DataUpdateCoordinator[LiveDataResponse]):
     """Pinecil coordinator."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        pinecil: Pinecil,
-    ) -> None:
+    _save_delayed_task: asyncio.Task | None = None
+    settings: SettingsDataResponse = SettingsDataResponse()
+    device: DeviceInfoResponse | None = None
+
+    def __init__(self, hass: HomeAssistant, pinecil: Pynecil) -> None:
         """Initialize Pinecil coordinator."""
         super().__init__(
             hass,
@@ -38,36 +41,15 @@ class PinecilCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.pinecil = pinecil
         self.hass = hass
-        self.device: dict[str, str] = {}
-        self.settings: dict[str, int] = {}
 
-    async def _async_update_data(self) -> dict[str, int]:
+    async def _async_update_data(self) -> LiveDataResponse:
         """Fetch data from Pinecil."""
 
         try:
             if not self.device:
-                self.device = await self.pinecil.get_info()
-
-            await self.get_settings()
-
+                self.device = await self.pinecil.get_device_info()
             return await self.pinecil.get_live_data()
 
-        except (
-            DeviceDisconnectedException,
-            DeviceNotFoundException,
-            BleakError,
-        ) as e:
-            raise UpdateFailed(
-                f"Cannot connect to {self.device.get("name", "Pinecil")}"
-            ) from e
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def get_settings(self) -> None:
-        """Fetch settings from Pinecil."""
-
-        # pretty ugly, but the get_all_settings method times out
-        # because it slows down polling of characteristics with sleep
-
-        for setting in self.pinecil.crx_settings:
-            key, value = await self.pinecil._Pinecil__read_setting(setting)  # noqa: SLF001
-            self.settings[key] = value
+        except CommunicationError as e:
+            await self.pinecil.disconnect()
+            raise UpdateFailed("Cannot connect to device") from e

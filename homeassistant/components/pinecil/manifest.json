@@ -12,6 +12,6 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/pinecil",
   "iot_class": "local_polling",
-  "loggers": ["pinecil"],
-  "requirements": ["pinecil==0.2.15"]
+  "loggers": ["pynecil"],
+  "requirements": ["pynecil==0.1.1"]
 }

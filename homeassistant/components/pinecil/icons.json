@@ -1,25 +1,5 @@
 {
   "entity": {
-    "number": {
-      "sleep_temperature": {
-        "default": "mdi:thermometer-low"
-      },
-      "sleep_timeout": {
-        "default": "mdi:timer-pause"
-      },
-      "pd_timeout": {
-        "default": "mdi:timer-sync"
-      },
-      "boost_temp": {
-        "default": "mdi:rocket-launch"
-      },
-      "shutdown_timeout": {
-        "default": "mdi:timer-stop"
-      },
-      "display_brightness": {
-        "default": "mdi:brightness-6"
-      }
-    },
     "sensor": {
       "live_temperature": {
         "default": "mdi:soldering-iron"

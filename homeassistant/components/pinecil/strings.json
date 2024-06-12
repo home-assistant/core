@@ -17,32 +17,6 @@
     }
   },
   "entity": {
-    "number": {
-      "setpoint_temperature": {
-        "name": "Set temperature"
-      },
-      "sleep_temperature": {
-        "name": "Sleep temperature"
-      },
-      "sleep_timeout": {
-        "name": "Sleep timeout"
-      },
-      "qc_max_voltage": {
-        "name": "QC voltage"
-      },
-      "pd_timeout": {
-        "name": "PD timeout"
-      },
-      "boost_temp": {
-        "name": "Boost temperature"
-      },
-      "shutdown_timeout": {
-        "name": "Shutdown timeout"
-      },
-      "display_brightness": {
-        "name": "Display brightness"
-      }
-    },
     "sensor": {
       "live_temperature": {
         "name": "Tip temperature"
@@ -61,7 +35,7 @@
         "state": {
           "dc": "DC Input",
           "qc": "USB Quick Charge",
-          "pd_vbus": "USB Power Delivery VBUS",
+          "pd_vbus": "USB PD VBUS",
           "pd": "USB Power Delivery"
         }
       },
@@ -96,6 +70,14 @@
       "estimated_power": {
         "name": "Estimated Power"
       }
+    }
+  },
+  "exceptions": {
+    "setup_device_unavailable_exception": {
+      "message": "Device {name} is not reachable"
+    },
+    "setup_device_connection_error_exception": {
+      "message": "Connection to device {name} failed, try again later"
     }
   }
 }
