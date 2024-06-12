@@ -82,9 +82,9 @@ class Light(LightEntity, ZHAEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return state attributes."""
-        attributes = {
-            "off_with_transition": self.entity_data.entity._off_with_transition,
-            "off_brightness": self.entity_data.entity._off_brightness,
+        return {
+            "off_with_transition": self.entity_data.entity.state["off_with_transition"],
+            "off_brightness": self.entity_data.entity.state["off_brightness"],
         }
 
     @property
