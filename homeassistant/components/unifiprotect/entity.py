@@ -155,7 +155,7 @@ def async_all_device_entities(
     )
 
 
-class BaseProtectDeviceEntity(Entity):
+class BaseProtectEntity(Entity):
     """Base class for UniFi protect entities."""
 
     device: ProtectAdoptableDeviceModel | NVR
@@ -275,13 +275,13 @@ class BaseProtectDeviceEntity(Entity):
         )
 
 
-class ProtectDeviceEntity(BaseProtectDeviceEntity):
+class ProtectDeviceEntity(BaseProtectEntity):
     """Base class for UniFi protect entities."""
 
     device: ProtectAdoptableDeviceModel
 
 
-class ProtectNVREntity(BaseProtectDeviceEntity):
+class ProtectNVREntity(BaseProtectEntity):
     """Base class for unifi protect entities."""
 
     device: NVR
