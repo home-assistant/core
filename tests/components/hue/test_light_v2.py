@@ -455,11 +455,11 @@ async def test_grouped_lights(
     assert mock_bridge_v2.mock_requests[0]["json"]["dynamics"]["duration"] == 200
 
     # Now generate update events by emitting the json we've sent as incoming events
-    for light_id in [
+    for light_id in (
         "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1",
         "b3fe71ef-d0ef-48de-9355-d9e604377df0",
         "8015b17f-8336-415b-966a-b364bd082397",
-    ]:
+    ):
         event = {
             "id": light_id,
             "type": "light",

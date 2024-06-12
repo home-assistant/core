@@ -131,10 +131,10 @@ async def test_error_sensor(
     )
     await setup_integration(hass, mock_config_entry)
 
-    for state, expected_state in [
+    for state, expected_state in (
         (None, "no_error"),
         ("can_error", "can_error"),
-    ]:
+    ):
         values[TEST_MOWER_ID].mower.error_key = state
         mock_automower_client.get_status.return_value = values
         freezer.tick(SCAN_INTERVAL)

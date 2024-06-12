@@ -482,7 +482,7 @@ def mock_plex_calls(
 
     url = plex_server_url(entry)
 
-    for server in [url, PLEX_DIRECT_URL]:
+    for server in (url, PLEX_DIRECT_URL):
         requests_mock.get(server, text=plex_server_default)
         requests_mock.get(f"{server}/accounts", text=plex_server_accounts)
 

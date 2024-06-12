@@ -153,7 +153,7 @@ async def test_load_from_db(recorder_mock: Recorder, hass: HomeAssistant) -> Non
     is enabled via plant.ENABLE_LOAD_HISTORY.
     """
     plant_name = "wise_plant"
-    for value in [20, 30, 10]:
+    for value in (20, 30, 10):
         hass.states.async_set(
             BRIGHTNESS_ENTITY, value, {ATTR_UNIT_OF_MEASUREMENT: "Lux"}
         )

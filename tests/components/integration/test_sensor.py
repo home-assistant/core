@@ -326,7 +326,7 @@ async def test_trapezoidal(hass: HomeAssistant) -> None:
     start_time = dt_util.utcnow()
     with freeze_time(start_time) as freezer:
         # Testing a power sensor with non-monotonic intervals and values
-        for time, value in [(20, 10), (30, 30), (40, 5), (50, 0)]:
+        for time, value in ((20, 10), (30, 30), (40, 5), (50, 0)):
             freezer.move_to(start_time + timedelta(minutes=time))
             hass.states.async_set(
                 entity_id,
@@ -365,7 +365,7 @@ async def test_left(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     # Testing a power sensor with non-monotonic intervals and values
-    for time, value in [(20, 10), (30, 30), (40, 5), (50, 0)]:
+    for time, value in ((20, 10), (30, 30), (40, 5), (50, 0)):
         now = dt_util.utcnow() + timedelta(minutes=time)
         with freeze_time(now):
             hass.states.async_set(
@@ -405,7 +405,7 @@ async def test_right(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     # Testing a power sensor with non-monotonic intervals and values
-    for time, value in [(20, 10), (30, 30), (40, 5), (50, 0)]:
+    for time, value in ((20, 10), (30, 30), (40, 5), (50, 0)):
         now = dt_util.utcnow() + timedelta(minutes=time)
         with freeze_time(now):
             hass.states.async_set(

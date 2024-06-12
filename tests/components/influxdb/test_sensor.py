@@ -111,7 +111,7 @@ def _make_v1_resultset(*args):
 
 def _make_v1_databases_resultset():
     """Create a mock V1 'show databases' resultset."""
-    for name in [DEFAULT_DATABASE, "db2"]:
+    for name in (DEFAULT_DATABASE, "db2"):
         yield {"name": name}
 
 
@@ -129,7 +129,7 @@ def _make_v2_resultset(*args):
 
 def _make_v2_buckets_resultset():
     """Create a mock V2 'buckets()' resultset."""
-    records = [Record({"name": name}) for name in [DEFAULT_BUCKET, "bucket2"]]
+    records = [Record({"name": name}) for name in (DEFAULT_BUCKET, "bucket2")]
 
     return [Table(records)]
 

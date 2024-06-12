@@ -68,7 +68,7 @@ async def test_get_triggers_block_device(
                 CONF_SUBTYPE: "button1",
                 "metadata": {},
             }
-            for type_ in ["single", "long"]
+            for type_ in ("single", "long")
         ]
 
     triggers = await async_get_device_automations(
@@ -94,14 +94,14 @@ async def test_get_triggers_rpc_device(
             CONF_SUBTYPE: "button1",
             "metadata": {},
         }
-        for trigger_type in [
+        for trigger_type in (
             "btn_down",
             "btn_up",
             "single_push",
             "double_push",
             "triple_push",
             "long_push",
-        ]
+        )
     ]
 
     triggers = await async_get_device_automations(
@@ -127,7 +127,7 @@ async def test_get_triggers_button(
             CONF_SUBTYPE: "button",
             "metadata": {},
         }
-        for trigger_type in ["single", "double", "triple", "long"]
+        for trigger_type in ("single", "double", "triple", "long")
     ]
 
     triggers = await async_get_device_automations(

@@ -62,14 +62,14 @@ async def test_get_conditions(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
-        for condition in [
+        for condition in (
             "is_buffering",
             "is_off",
             "is_on",
             "is_idle",
             "is_paused",
             "is_playing",
-        ]
+        )
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
@@ -117,14 +117,14 @@ async def test_get_conditions_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for condition in [
+        for condition in (
             "is_buffering",
             "is_off",
             "is_on",
             "is_idle",
             "is_paused",
             "is_playing",
-        ]
+        )
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id

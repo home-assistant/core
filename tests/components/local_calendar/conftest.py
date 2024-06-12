@@ -129,7 +129,7 @@ def event_fields(data: dict[str, str]) -> dict[str, str]:
     """Filter event API response to minimum fields."""
     return {
         k: data[k]
-        for k in ["summary", "start", "end", "recurrence_id", "location"]
+        for k in ("summary", "start", "end", "recurrence_id", "location")
         if data.get(k)
     }
 

@@ -29,11 +29,11 @@ async def test_sensors(enable_bluetooth: None, hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) >= 3
 
-    for sensor, value, unit, state_class in [
+    for sensor, value, unit, state_class in (
         ("carbon_dioxide", "724", "ppm", "measurement"),
         ("humidity", "27.8", "%", "measurement"),
         ("temperature", "20.1", "°C", "measurement"),
-    ]:
+    ):
         state = hass.states.get(f"sensor.{CONFIGURED_PREFIX}_{sensor}")
         assert state is not None
         assert state.state == value
