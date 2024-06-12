@@ -90,7 +90,7 @@ class PumpClusterHandler(ClusterHandler):
 class ThermostatClusterHandler(ClusterHandler):
     """Thermostat cluster handler."""
 
-    REPORT_CONFIG: tuple[AttrReportConfig, ...] = (
+    REPORT_CONFIG = (
         AttrReportConfig(
             attr=Thermostat.AttributeDefs.local_temperature.name,
             config=REPORT_CONFIG_CLIMATE,
