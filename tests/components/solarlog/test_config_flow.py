@@ -18,7 +18,7 @@ NAME = "Solarlog test 1 2 3"
 HOST = "http://1.1.1.1"
 
 
-async def test_form(hass: HomeAssistant, mock_setup_entry) -> None:
+async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
