@@ -79,6 +79,7 @@ class MockedAnovaWebsocketHandler(AnovaWebsocketHandler):
         await self.message_listener()
         self.ws = MockedAnovaWebsocketStream(self.post_connect_messages)
         # RUF006 ignored as it replicates the parent library
+        # https://github.com/Lash-L/anova_wifi/issues/35
         asyncio.ensure_future(self.message_listener())  # noqa: RUF006
 
 
