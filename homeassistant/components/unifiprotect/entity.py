@@ -137,31 +137,21 @@ def async_all_device_entities(
     ufp_device: ProtectAdoptableDeviceModel | None = None,
 ) -> list[ProtectDeviceEntity]:
     """Generate a list of all the device entities."""
+    unadopted_descs = list(unadopted_descs or [])
     if ufp_device is None:
         entities: list[ProtectDeviceEntity] = []
         for model_type in _ALL_MODEL_TYPES:
             descs = _combine_model_descs(model_type, model_descriptions, all_descs)
             entities.extend(
-                _async_device_entities(
-                    data,
-                    klass,
-                    model_type,
-                    descs,
-                    unadopted_descs or [],
-                )
+                _async_device_entities(data, klass, model_type, descs, unadopted_descs)
             )
         return entities
 
-    ufp_device_model_type = ufp_device.model
-    assert ufp_device_model_type is not None
-    descs = _combine_model_descs(ufp_device_model_type, model_descriptions, all_descs)
+    device_model_type = ufp_device.model
+    assert device_model_type is not None
+    descs = _combine_model_descs(device_model_type, model_descriptions, all_descs)
     return _async_device_entities(
-        data,
-        klass,
-        ufp_device_model_type,
-        descs,
-        unadopted_descs or [],
-        ufp_device,
+        data, klass, device_model_type, descs, unadopted_descs, ufp_device
     )
 
 
