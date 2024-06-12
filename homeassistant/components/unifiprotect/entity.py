@@ -37,16 +37,16 @@ _LOGGER = logging.getLogger(__name__)
 @callback
 def _async_device_entities(
     data: ProtectData,
-    klass: type[ProtectDeviceEntity],
+    klass: type[BaseProtectEntity],
     model_type: ModelType,
     descs: Sequence[ProtectRequiredKeysMixin],
     unadopted_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     ufp_device: ProtectAdoptableDeviceModel | None = None,
-) -> list[ProtectDeviceEntity]:
+) -> list[BaseProtectEntity]:
     if not descs and not unadopted_descs:
         return []
 
-    entities: list[ProtectDeviceEntity] = []
+    entities: list[BaseProtectEntity] = []
     devices = (
         [ufp_device]
         if ufp_device is not None
@@ -130,16 +130,16 @@ def _combine_model_descs(
 @callback
 def async_all_device_entities(
     data: ProtectData,
-    klass: type[ProtectDeviceEntity],
+    klass: type[BaseProtectEntity],
     model_descriptions: dict[ModelType, Sequence[ProtectRequiredKeysMixin]]
     | None = None,
     all_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     unadopted_descs: list[ProtectRequiredKeysMixin] | None = None,
     ufp_device: ProtectAdoptableDeviceModel | None = None,
-) -> list[ProtectDeviceEntity]:
+) -> list[BaseProtectEntity]:
     """Generate a list of all the device entities."""
     if ufp_device is None:
-        entities: list[ProtectDeviceEntity] = []
+        entities: list[BaseProtectEntity] = []
         for model_type in _ALL_MODEL_TYPES:
             descs = _combine_model_descs(model_type, model_descriptions, all_descs)
             entities.extend(
@@ -165,7 +165,7 @@ class BaseProtectEntity(Entity):
     def __init__(
         self,
         data: ProtectData,
-        device: ProtectAdoptableDeviceModel,
+        device: ProtectAdoptableDeviceModel | NVR,
         description: EntityDescription | None = None,
     ) -> None:
         """Initialize the entity."""
