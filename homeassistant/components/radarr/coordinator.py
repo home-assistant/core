@@ -184,8 +184,7 @@ class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
 
     async def _async_get_events(self, _date: date) -> None:
         """Return events from specified date."""
-        info = dt_util.get_default_time_zone()
-        offset = info.utcoffset(dt_util.now())
+        offset = dt_util.start_of_local_day(_date).utcoffset()
         days = timedelta(days=0 if offset and offset < timedelta() else 1)
         self._events.extend(
             _get_calendar_event(days, evt)
