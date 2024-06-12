@@ -2338,7 +2338,6 @@ class ConfigFlow(ConfigEntryBaseFlow):
             return
         if should_reload:
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
-        raise data_entry_flow.AbortFlow(error)
 
     async def async_set_unique_id(
         self, unique_id: str | None = None, *, raise_on_progress: bool = True
