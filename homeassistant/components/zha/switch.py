@@ -52,10 +52,10 @@ class Switch(ZHAEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self.entity_data.entity.async_turn_on(**kwargs)
+        await self.entity_data.entity.async_turn_on()
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self.entity_data.entity.async_turn_off(**kwargs)
+        await self.entity_data.entity.async_turn_off()
         self.async_write_ha_state()
