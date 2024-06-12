@@ -36,9 +36,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoalZeroConfigEntry) -> 
     except exceptions.ConnectError as ex:
         raise ConfigEntryNotReady(f"Failed to connect to device: {ex}") from ex
 
-    coordinator = GoalZeroDataUpdateCoordinator(hass, api)
-    await coordinator.async_config_entry_first_refresh()
-    entry.runtime_data = coordinator
+    entry.runtime_data = GoalZeroDataUpdateCoordinator(hass, api)
+    await entry.runtime_data.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
