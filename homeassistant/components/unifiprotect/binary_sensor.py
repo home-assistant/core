@@ -32,6 +32,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DISPATCH_ADOPT
 from .data import ProtectData, UFPConfigEntry
 from .entity import (
+    BaseProtectEntity,
     EventEntityMixin,
     ProtectDeviceEntity,
     ProtectNVREntity,
@@ -630,7 +631,7 @@ async def async_setup_entry(
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        entities: list[ProtectDeviceEntity] = async_all_device_entities(
+        entities = async_all_device_entities(
             data,
             ProtectDeviceBinarySensor,
             model_descriptions=_MODEL_DESCRIPTIONS,
@@ -644,7 +645,7 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
     )
 
-    entities: list[ProtectDeviceEntity] = async_all_device_entities(
+    entities = async_all_device_entities(
         data, ProtectDeviceBinarySensor, model_descriptions=_MODEL_DESCRIPTIONS
     )
     entities += _async_event_entities(data)
@@ -679,8 +680,8 @@ def _async_event_entities(
 @callback
 def _async_nvr_entities(
     data: ProtectData,
-) -> list[ProtectDeviceEntity]:
-    entities: list[ProtectDeviceEntity] = []
+) -> list[BaseProtectEntity]:
+    entities: list[BaseProtectEntity] = []
     device = data.api.bootstrap.nvr
     if device.system_info.ustorage is None:
         return entities

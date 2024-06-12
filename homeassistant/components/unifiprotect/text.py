@@ -69,23 +69,24 @@ async def async_setup_entry(
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        entities = async_all_device_entities(
-            data,
-            ProtectDeviceText,
-            model_descriptions=_MODEL_DESCRIPTIONS,
-            ufp_device=device,
+        async_add_entities(
+            async_all_device_entities(
+                data,
+                ProtectDeviceText,
+                model_descriptions=_MODEL_DESCRIPTIONS,
+                ufp_device=device,
+            )
         )
-        async_add_entities(entities)
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
     )
 
-    entities: list[ProtectDeviceEntity] = async_all_device_entities(
-        data, ProtectDeviceText, model_descriptions=_MODEL_DESCRIPTIONS
+    async_add_entities(
+        async_all_device_entities(
+            data, ProtectDeviceText, model_descriptions=_MODEL_DESCRIPTIONS
+        )
     )
-
-    async_add_entities(entities)
 
 
 class ProtectDeviceText(ProtectDeviceEntity, TextEntity):
