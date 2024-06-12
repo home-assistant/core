@@ -192,13 +192,13 @@ async def mock_non_adr_0007_integration_with_docs(hass: HomeAssistant) -> None:
 async def mock_adr_0007_integrations(hass: HomeAssistant) -> list[Integration]:
     """Mock ADR-0007 compliant integrations."""
     integrations = []
-    for domain in [
+    for domain in (
         "adr_0007_1",
         "adr_0007_2",
         "adr_0007_3",
         "adr_0007_4",
         "adr_0007_5",
-    ]:
+    ):
         adr_0007_config_schema = vol.Schema(
             {
                 domain: vol.Schema(
@@ -225,13 +225,13 @@ async def mock_adr_0007_integrations_with_docs(
 ) -> list[Integration]:
     """Mock ADR-0007 compliant integrations."""
     integrations = []
-    for domain in [
+    for domain in (
         "adr_0007_1",
         "adr_0007_2",
         "adr_0007_3",
         "adr_0007_4",
         "adr_0007_5",
-    ]:
+    ):
         adr_0007_config_schema = vol.Schema(
             {
                 domain: vol.Schema(
@@ -293,10 +293,10 @@ async def mock_custom_validator_integrations(hass: HomeAssistant) -> list[Integr
             Mock(async_validate_config=gen_async_validate_config(domain)),
         )
 
-    for domain, exception in [
+    for domain, exception in (
         ("custom_validator_bad_1", HomeAssistantError("broken")),
         ("custom_validator_bad_2", ValueError("broken")),
-    ]:
+    ):
         integrations.append(mock_integration(hass, MockModule(domain)))
         mock_platform(
             hass,
@@ -352,10 +352,10 @@ async def mock_custom_validator_integrations_with_docs(
             Mock(async_validate_config=gen_async_validate_config(domain)),
         )
 
-    for domain, exception in [
+    for domain, exception in (
         ("custom_validator_bad_1", HomeAssistantError("broken")),
         ("custom_validator_bad_2", ValueError("broken")),
-    ]:
+    ):
         integrations.append(
             mock_integration(
                 hass,

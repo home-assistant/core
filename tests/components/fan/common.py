@@ -38,11 +38,11 @@ async def async_turn_on(
     """Turn all or specified fan on."""
     data = {
         key: value
-        for key, value in [
+        for key, value in (
             (ATTR_ENTITY_ID, entity_id),
             (ATTR_PERCENTAGE, percentage),
             (ATTR_PRESET_MODE, preset_mode),
-        ]
+        )
         if value is not None
     }
 
@@ -64,10 +64,10 @@ async def async_oscillate(
     """Set oscillation on all or specified fan."""
     data = {
         key: value
-        for key, value in [
+        for key, value in (
             (ATTR_ENTITY_ID, entity_id),
             (ATTR_OSCILLATING, should_oscillate),
-        ]
+        )
         if value is not None
     }
 
@@ -81,7 +81,7 @@ async def async_set_preset_mode(
     """Set preset mode for all or specified fan."""
     data = {
         key: value
-        for key, value in [(ATTR_ENTITY_ID, entity_id), (ATTR_PRESET_MODE, preset_mode)]
+        for key, value in ((ATTR_ENTITY_ID, entity_id), (ATTR_PRESET_MODE, preset_mode))
         if value is not None
     }
 
@@ -95,7 +95,7 @@ async def async_set_percentage(
     """Set percentage for all or specified fan."""
     data = {
         key: value
-        for key, value in [(ATTR_ENTITY_ID, entity_id), (ATTR_PERCENTAGE, percentage)]
+        for key, value in ((ATTR_ENTITY_ID, entity_id), (ATTR_PERCENTAGE, percentage))
         if value is not None
     }
 
@@ -109,10 +109,10 @@ async def async_increase_speed(
     """Increase speed for all or specified fan."""
     data = {
         key: value
-        for key, value in [
+        for key, value in (
             (ATTR_ENTITY_ID, entity_id),
             (ATTR_PERCENTAGE_STEP, percentage_step),
-        ]
+        )
         if value is not None
     }
 
@@ -126,10 +126,10 @@ async def async_decrease_speed(
     """Decrease speed for all or specified fan."""
     data = {
         key: value
-        for key, value in [
+        for key, value in (
             (ATTR_ENTITY_ID, entity_id),
             (ATTR_PERCENTAGE_STEP, percentage_step),
-        ]
+        )
         if value is not None
     }
 
@@ -143,7 +143,7 @@ async def async_set_direction(
     """Set direction for all or specified fan."""
     data = {
         key: value
-        for key, value in [(ATTR_ENTITY_ID, entity_id), (ATTR_DIRECTION, direction)]
+        for key, value in ((ATTR_ENTITY_ID, entity_id), (ATTR_DIRECTION, direction))
         if value is not None
     }
 

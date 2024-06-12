@@ -54,7 +54,7 @@ async def test_get_conditions(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
-        for condition in ["is_not_home", "is_home"]
+        for condition in ("is_not_home", "is_home")
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
@@ -102,7 +102,7 @@ async def test_get_conditions_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for condition in ["is_not_home", "is_home"]
+        for condition in ("is_not_home", "is_home")
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id

@@ -74,11 +74,11 @@ async def test_get_triggers(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
-        for trigger in [
+        for trigger in (
             "hvac_mode_changed",
             "current_temperature_changed",
             "current_humidity_changed",
-        ]
+        )
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
@@ -135,11 +135,11 @@ async def test_get_triggers_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for trigger in [
+        for trigger in (
             "hvac_mode_changed",
             "current_temperature_changed",
             "current_humidity_changed",
-        ]
+        )
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id

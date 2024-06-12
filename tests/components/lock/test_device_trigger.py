@@ -72,7 +72,7 @@ async def test_get_triggers(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
-        for trigger in [
+        for trigger in (
             "locked",
             "unlocked",
             "unlocking",
@@ -80,7 +80,7 @@ async def test_get_triggers(
             "jammed",
             "open",
             "opening",
-        ]
+        )
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
@@ -129,7 +129,7 @@ async def test_get_triggers_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for trigger in [
+        for trigger in (
             "locked",
             "unlocked",
             "unlocking",
@@ -137,7 +137,7 @@ async def test_get_triggers_hidden_auxiliary(
             "jammed",
             "open",
             "opening",
-        ]
+        )
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id

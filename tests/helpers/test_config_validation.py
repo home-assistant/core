@@ -768,7 +768,7 @@ def test_date() -> None:
     """Test date validation."""
     schema = vol.Schema(cv.date)
 
-    for value in ["Not a date", "23:42", "2016-11-23T18:59:08"]:
+    for value in ("Not a date", "23:42", "2016-11-23T18:59:08"):
         with pytest.raises(vol.Invalid):
             schema(value)
 
@@ -780,7 +780,7 @@ def test_time() -> None:
     """Test date validation."""
     schema = vol.Schema(cv.time)
 
-    for value in ["Not a time", "2016-11-23", "2016-11-23T18:59:08"]:
+    for value in ("Not a time", "2016-11-23", "2016-11-23T18:59:08"):
         with pytest.raises(vol.Invalid):
             schema(value)
 
@@ -792,7 +792,7 @@ def test_time() -> None:
 def test_datetime() -> None:
     """Test date time validation."""
     schema = vol.Schema(cv.datetime)
-    for value in [date.today(), "Wrong DateTime"]:
+    for value in (date.today(), "Wrong DateTime"):
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
@@ -1307,7 +1307,7 @@ def test_uuid4_hex(caplog: pytest.LogCaptureFixture) -> None:
     """Test uuid validation."""
     schema = vol.Schema(cv.uuid4_hex)
 
-    for value in ["Not a hex string", "0", 0]:
+    for value in ("Not a hex string", "0", 0):
         with pytest.raises(vol.Invalid):
             schema(value)
 
