@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from deebot_client.capabilities import Capabilities, DeviceType
 from deebot_client.device import Device
@@ -324,6 +324,10 @@ class EcovacsVacuum(
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
+        if TYPE_CHECKING:
+            # mypy does not understand that VacuumEntityFeature.FAN_SPEED is only set
+            # if self._capability.fan_speed is not None (see __init__)
+            assert self._capability.fan_speed
         await self._device.execute_command(self._capability.fan_speed.set(fan_speed))
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
