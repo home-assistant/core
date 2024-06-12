@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from fullykiosk.exceptions import FullyKioskError
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
+
+from fullykiosk import FullyKiosk
 
 from homeassistant.components.camera import (
     Camera,
@@ -18,57 +22,84 @@ from .coordinator import FullyKioskDataUpdateCoordinator
 from .entity import FullyKioskEntity
 
 
+@dataclass(frozen=True, kw_only=True)
+class FullyCameraEntityDescription(CameraEntityDescription):
+    """Fully Kiosk Browser camera entity description."""
+
+    image_action: Callable[[FullyKiosk], Any]
+    on_action: Callable[[FullyKiosk], Any] | None
+    off_action: Callable[[FullyKiosk], Any] | None
+    is_on_fn: Callable[[dict[str, Any]], Any]
+
+
+CAMERAS: tuple[FullyCameraEntityDescription, ...] = (
+    FullyCameraEntityDescription(
+        key="camera",
+        translation_key="camera",
+        image_action=lambda fully: fully.getCamshot(),
+        on_action=lambda fully: fully.enableMotionDetection(),
+        off_action=lambda fully: fully.disableMotionDetection(),
+        is_on_fn=lambda data: data["settings"].get("motionDetection"),
+    ),
+    FullyCameraEntityDescription(
+        key="screenshot",
+        translation_key="screenshot",
+        image_action=lambda fully: fully.getScreenshot(),
+        on_action=None,
+        off_action=None,
+        is_on_fn=lambda data: True,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the camera."""
+    """Set up the cameras."""
     coordinator: FullyKioskDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([FullyKioskCamera(coordinator)])
+    async_add_entities(
+        FullyCameraEntity(coordinator, description) for description in CAMERAS
+    )
 
 
-class FullyKioskCamera(FullyKioskEntity, Camera):
+class FullyCameraEntity(FullyKioskEntity, Camera):
     """Fully Kiosk Browser camera entity."""
 
-    entity_description = CameraEntityDescription(key="camera", translation_key="camera")
-    _attr_supported_features = CameraEntityFeature.ON_OFF
+    entity_description: FullyCameraEntityDescription
 
-    def __init__(self, coordinator: FullyKioskDataUpdateCoordinator) -> None:
+    def __init__(
+        self,
+        coordinator: FullyKioskDataUpdateCoordinator,
+        description: FullyCameraEntityDescription,
+    ) -> None:
         """Initialize the camera."""
         FullyKioskEntity.__init__(self, coordinator)
         Camera.__init__(self)
-        self._attr_unique_id = f"{coordinator.data['deviceID']}-camera"
+        self._attr_unique_id = f"{coordinator.data['deviceID']}-{description.key}"
+        self.entity_description = description
+        if description.on_action:
+            self._attr_supported_features = CameraEntityFeature.ON_OFF
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
-        # TODO: use this after https://github.com/cgarwood/python-fullykiosk/pull/20
-        # return await self.coordinator.fully.getCamshot()
-        fully = self.coordinator.fully
-        url = f"http{'s' if fully._rh.use_ssl else ''}://{fully._rh.host}:{fully._rh.port}"  # noqa: SLF001
-        params = [("cmd", "getCamshot"), ("password", fully._password)]  # noqa: SLF001
-        req_params = {"url": url, "headers": {}, "params": params}
-        if not fully._rh.verify_ssl:  # noqa: SLF001
-            req_params["ssl"] = False
-        async with fully._rh.session.get(**req_params) as response:  # noqa: SLF001
-            if response.status != 200:
-                raise FullyKioskError(response.status, await response.text())
-            return await response.content.read()
+        return await self.entity_description.image_action(self.coordinator.fully)
 
     async def async_turn_on(self) -> None:
         """Turn on camera."""
-        await self.coordinator.fully.enableMotionDetection()
-        await self.coordinator.async_refresh()
+        if self.entity_description.on_action:
+            await self.entity_description.on_action(self.coordinator.fully)
+            await self.coordinator.async_refresh()
 
     async def async_turn_off(self) -> None:
         """Turn off camera."""
-        await self.coordinator.fully.disableMotionDetection()
-        await self.coordinator.async_refresh()
+        if self.entity_description.off_action:
+            await self.entity_description.off_action(self.coordinator.fully)
+            await self.coordinator.async_refresh()
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_is_on = bool(
-            self.coordinator.data["settings"].get("motionDetection")
-        )
+        self._attr_is_on = bool(self.entity_description.is_on_fn(self.coordinator.data))
         self.async_write_ha_state()
