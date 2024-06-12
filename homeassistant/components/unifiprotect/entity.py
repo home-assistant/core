@@ -40,7 +40,7 @@ def _async_device_entities(
     klass: type[ProtectDeviceEntity],
     model_type: ModelType,
     descs: Sequence[ProtectRequiredKeysMixin],
-    unadopted_descs: Sequence[ProtectRequiredKeysMixin],
+    unadopted_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     ufp_device: ProtectAdoptableDeviceModel | None = None,
 ) -> list[ProtectDeviceEntity]:
     if not descs and not unadopted_descs:
@@ -57,20 +57,21 @@ def _async_device_entities(
         if TYPE_CHECKING:
             assert isinstance(device, ProtectAdoptableDeviceModel)
         if not device.is_adopted_by_us:
-            for description in unadopted_descs:
-                entities.append(
-                    klass(
-                        data,
-                        device=device,
-                        description=description,
+            if unadopted_descs:
+                for description in unadopted_descs:
+                    entities.append(
+                        klass(
+                            data,
+                            device=device,
+                            description=description,
+                        )
                     )
-                )
-                _LOGGER.debug(
-                    "Adding %s entity %s for %s",
-                    klass.__name__,
-                    description.name,
-                    device.display_name,
-                )
+                    _LOGGER.debug(
+                        "Adding %s entity %s for %s",
+                        klass.__name__,
+                        description.name,
+                        device.display_name,
+                    )
             continue
 
         can_write = device.can_write(auth_user)
@@ -133,11 +134,10 @@ def async_all_device_entities(
     model_descriptions: dict[ModelType, Sequence[ProtectRequiredKeysMixin]]
     | None = None,
     all_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
-    unadopted_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
+    unadopted_descs: list[ProtectRequiredKeysMixin] | None = None,
     ufp_device: ProtectAdoptableDeviceModel | None = None,
 ) -> list[ProtectDeviceEntity]:
     """Generate a list of all the device entities."""
-    unadopted_descs = list(unadopted_descs or [])
     if ufp_device is None:
         entities: list[ProtectDeviceEntity] = []
         for model_type in _ALL_MODEL_TYPES:
