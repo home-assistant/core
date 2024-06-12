@@ -413,10 +413,10 @@ def async_mock_intent(hass, intent_typ):
     class MockIntentHandler(intent.IntentHandler):
         intent_type = intent_typ
 
-        async def async_handle(self, intent):
+        async def async_handle(self, intent_obj):
             """Handle the intent."""
-            intents.append(intent)
-            return intent.create_response()
+            intents.append(intent_obj)
+            return intent_obj.create_response()
 
     intent.async_register(hass, MockIntentHandler())
 

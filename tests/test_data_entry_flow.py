@@ -260,7 +260,7 @@ async def test_finish_callback_change_result_type(hass: HomeAssistant) -> None:
             )
 
     class FlowManager(data_entry_flow.FlowManager):
-        async def async_create_flow(self, handler_name, *, context, data):
+        async def async_create_flow(self, handler_key, *, context, data):
             """Create a test flow."""
             return TestFlow()
 
