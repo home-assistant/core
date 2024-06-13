@@ -1,6 +1,6 @@
 """Tests for Tankerkoenig config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from aiotankerkoenig.exceptions import TankerkoenigInvalidKeyError
 
@@ -21,6 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.setup import async_setup_component
 
 from .const import NEARBY_STATIONS
 
@@ -208,7 +209,7 @@ async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
     assert entry.data[CONF_API_KEY] == "269534f6-aaaa-bbbb-cccc-yyyyzzzzxxxx"
 
 
-async def test_options_flow(hass: HomeAssistant) -> None:
+async def test_options_flow(hass: HomeAssistant, tankerkoenig: AsyncMock) -> None:
     """Test options flow."""
 
     mock_config = MockConfigEntry(
@@ -218,10 +219,17 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         unique_id=f"{DOMAIN}_{MOCK_USER_DATA[CONF_LOCATION][CONF_LATITUDE]}_{MOCK_USER_DATA[CONF_LOCATION][CONF_LONGITUDE]}",
     )
     mock_config.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",
-        return_value=NEARBY_STATIONS,
+    with (
+        patch(
+            "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",
+            return_value=NEARBY_STATIONS,
+        ),
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_reload"
+        ) as mock_async_reload,
     ):
         result = await hass.config_entries.options.async_init(mock_config.entry_id)
         assert result["type"] is FlowResultType.FORM
@@ -236,6 +244,10 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert not mock_config.options[CONF_SHOW_ON_MAP]
+
+        await hass.async_block_till_done()
+
+        assert mock_async_reload.call_count == 1
 
 
 async def test_options_flow_error(hass: HomeAssistant) -> None:

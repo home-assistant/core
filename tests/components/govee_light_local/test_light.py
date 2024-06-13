@@ -1,5 +1,6 @@
 """Test Govee light local."""
 
+from errno import EADDRINUSE, ENETDOWN
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from govee_local_api import GoveeDevice
@@ -136,6 +137,62 @@ async def test_light_setup_retry(
         ):
             await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_light_setup_retry_eaddrinuse(
+    hass: HomeAssistant, mock_govee_api: AsyncMock
+) -> None:
+    """Test adding an unknown device."""
+
+    mock_govee_api.start.side_effect = OSError()
+    mock_govee_api.start.side_effect.errno = EADDRINUSE
+    mock_govee_api.devices = [
+        GoveeDevice(
+            controller=mock_govee_api,
+            ip="192.168.1.100",
+            fingerprint="asdawdqwdqwd",
+            sku="H615A",
+            capabilities=DEFAULT_CAPABILITEIS,
+        )
+    ]
+
+    with patch(
+        "homeassistant.components.govee_light_local.coordinator.GoveeController",
+        return_value=mock_govee_api,
+    ):
+        entry = MockConfigEntry(domain=DOMAIN)
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_light_setup_error(
+    hass: HomeAssistant, mock_govee_api: AsyncMock
+) -> None:
+    """Test adding an unknown device."""
+
+    mock_govee_api.start.side_effect = OSError()
+    mock_govee_api.start.side_effect.errno = ENETDOWN
+    mock_govee_api.devices = [
+        GoveeDevice(
+            controller=mock_govee_api,
+            ip="192.168.1.100",
+            fingerprint="asdawdqwdqwd",
+            sku="H615A",
+            capabilities=DEFAULT_CAPABILITEIS,
+        )
+    ]
+
+    with patch(
+        "homeassistant.components.govee_light_local.coordinator.GoveeController",
+        return_value=mock_govee_api,
+    ):
+        entry = MockConfigEntry(domain=DOMAIN)
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_light_on_off(hass: HomeAssistant, mock_govee_api: MagicMock) -> None:

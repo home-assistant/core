@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from adguardhome import AdGuardHomeError
 
-from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
+from homeassistant.config_entries import SOURCE_HASSIO
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from . import AdGuardData
+from . import AdGuardConfigEntry, AdGuardData
 from .const import DOMAIN, LOGGER
 
 
@@ -21,7 +21,7 @@ class AdGuardHomeEntity(Entity):
     def __init__(
         self,
         data: AdGuardData,
-        entry: ConfigEntry,
+        entry: AdGuardConfigEntry,
     ) -> None:
         """Initialize the AdGuard Home entity."""
         self._entry = entry

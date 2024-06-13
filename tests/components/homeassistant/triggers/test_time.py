@@ -16,7 +16,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -29,7 +29,7 @@ from tests.common import (
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -41,7 +41,7 @@ def setup_comp(hass):
 
 
 async def test_if_fires_using_at(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls: list[ServiceCall]
 ) -> None:
     """Test for firing at."""
     now = dt_util.now()
@@ -80,7 +80,11 @@ async def test_if_fires_using_at(
     ("has_date", "has_time"), [(True, True), (True, False), (False, True)]
 )
 async def test_if_fires_using_at_input_datetime(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls, has_date, has_time
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    calls: list[ServiceCall],
+    has_date,
+    has_time,
 ) -> None:
     """Test for firing at input_datetime."""
     await async_setup_component(
@@ -161,7 +165,7 @@ async def test_if_fires_using_at_input_datetime(
 
 
 async def test_if_fires_using_multiple_at(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls: list[ServiceCall]
 ) -> None:
     """Test for firing at."""
 
@@ -202,7 +206,7 @@ async def test_if_fires_using_multiple_at(
 
 
 async def test_if_not_fires_using_wrong_at(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls: list[ServiceCall]
 ) -> None:
     """YAML translates time values to total seconds.
 
@@ -241,7 +245,7 @@ async def test_if_not_fires_using_wrong_at(
     assert len(calls) == 0
 
 
-async def test_if_action_before(hass: HomeAssistant, calls) -> None:
+async def test_if_action_before(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test for if action before."""
     assert await async_setup_component(
         hass,
@@ -272,7 +276,7 @@ async def test_if_action_before(hass: HomeAssistant, calls) -> None:
     assert len(calls) == 1
 
 
-async def test_if_action_after(hass: HomeAssistant, calls) -> None:
+async def test_if_action_after(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test for if action after."""
     assert await async_setup_component(
         hass,
@@ -303,7 +307,9 @@ async def test_if_action_after(hass: HomeAssistant, calls) -> None:
     assert len(calls) == 1
 
 
-async def test_if_action_one_weekday(hass: HomeAssistant, calls) -> None:
+async def test_if_action_one_weekday(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test for if action with one weekday."""
     assert await async_setup_component(
         hass,
@@ -335,7 +341,9 @@ async def test_if_action_one_weekday(hass: HomeAssistant, calls) -> None:
     assert len(calls) == 1
 
 
-async def test_if_action_list_weekday(hass: HomeAssistant, calls) -> None:
+async def test_if_action_list_weekday(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test for action with a list of weekdays."""
     assert await async_setup_component(
         hass,
@@ -408,7 +416,7 @@ async def test_untrack_time_change(hass: HomeAssistant) -> None:
 
 
 async def test_if_fires_using_at_sensor(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls: list[ServiceCall]
 ) -> None:
     """Test for firing at sensor time."""
     now = dt_util.now()
@@ -535,7 +543,9 @@ def test_schema_invalid(conf) -> None:
         time.TRIGGER_SCHEMA(conf)
 
 
-async def test_datetime_in_past_on_load(hass: HomeAssistant, calls) -> None:
+async def test_datetime_in_past_on_load(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test time trigger works if input_datetime is in past."""
     await async_setup_component(
         hass,

@@ -45,6 +45,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type ProximityConfigEntry = ConfigEntry[ProximityDataUpdateCoordinator]
+
 
 @dataclass
 class StateChangedData:
@@ -73,7 +75,7 @@ DEFAULT_PROXIMITY_DATA: dict[str, str | int | None] = {
 class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
     """Proximity data update coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: ProximityConfigEntry
 
     def __init__(
         self, hass: HomeAssistant, friendly_name: str, config: ConfigType
@@ -348,7 +350,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             if cast(int, nearest_distance_to) == int(distance_to):
                 _LOGGER.debug("set equally close entity_data: %s", entity_data)
                 proximity_data[ATTR_NEAREST] = (
-                    f"{proximity_data[ATTR_NEAREST]}, {str(entity_data[ATTR_NAME])}"
+                    f"{proximity_data[ATTR_NEAREST]}, {entity_data[ATTR_NAME]!s}"
                 )
 
         return ProximityData(proximity_data, entities_data)

@@ -21,7 +21,8 @@ from homeassistant.const import (
     SERVICE_ALARM_DISARM,
     SERVICE_ALARM_TRIGGER,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.deprecation import (
@@ -55,6 +56,8 @@ _LOGGER: Final = logging.getLogger(__name__)
 SCAN_INTERVAL: Final = timedelta(seconds=30)
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 
+CONF_DEFAULT_CODE = "default_code"
+
 ALARM_SERVICE_SCHEMA: Final = make_entity_service_schema(
     {vol.Optional(ATTR_CODE): cv.string}
 )
@@ -74,36 +77,38 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_ALARM_DISARM, ALARM_SERVICE_SCHEMA, "async_alarm_disarm"
+        SERVICE_ALARM_DISARM,
+        ALARM_SERVICE_SCHEMA,
+        "async_handle_alarm_disarm",
     )
     component.async_register_entity_service(
         SERVICE_ALARM_ARM_HOME,
         ALARM_SERVICE_SCHEMA,
-        "async_alarm_arm_home",
+        "async_handle_alarm_arm_home",
         [AlarmControlPanelEntityFeature.ARM_HOME],
     )
     component.async_register_entity_service(
         SERVICE_ALARM_ARM_AWAY,
         ALARM_SERVICE_SCHEMA,
-        "async_alarm_arm_away",
+        "async_handle_alarm_arm_away",
         [AlarmControlPanelEntityFeature.ARM_AWAY],
     )
     component.async_register_entity_service(
         SERVICE_ALARM_ARM_NIGHT,
         ALARM_SERVICE_SCHEMA,
-        "async_alarm_arm_night",
+        "async_handle_alarm_arm_night",
         [AlarmControlPanelEntityFeature.ARM_NIGHT],
     )
     component.async_register_entity_service(
         SERVICE_ALARM_ARM_VACATION,
         ALARM_SERVICE_SCHEMA,
-        "async_alarm_arm_vacation",
+        "async_handle_alarm_arm_vacation",
         [AlarmControlPanelEntityFeature.ARM_VACATION],
     )
     component.async_register_entity_service(
         SERVICE_ALARM_ARM_CUSTOM_BYPASS,
         ALARM_SERVICE_SCHEMA,
-        "async_alarm_arm_custom_bypass",
+        "async_handle_alarm_arm_custom_bypass",
         [AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS],
     )
     component.async_register_entity_service(
@@ -150,6 +155,21 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
     _attr_supported_features: AlarmControlPanelEntityFeature = (
         AlarmControlPanelEntityFeature(0)
     )
+    _alarm_control_panel_option_default_code: str | None = None
+
+    @final
+    @callback
+    def code_or_default_code(self, code: str | None) -> str | None:
+        """Return code to use for a service call.
+
+        If the passed in code is not None, it will be returned. Otherwise return the
+        default code, if set, or None if not set, is returned.
+        """
+        if code:
+            # Return code provided by user
+            return code
+        # Fallback to default code or None if not set
+        return self._alarm_control_panel_option_default_code
 
     @cached_property
     def code_format(self) -> CodeFormat | None:
@@ -166,6 +186,26 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
         """Whether the code is required for arm actions."""
         return self._attr_code_arm_required
 
+    @final
+    @callback
+    def check_code_arm_required(self, code: str | None) -> str | None:
+        """Check if arm code is required, raise if no code is given."""
+        if not (_code := self.code_or_default_code(code)) and self.code_arm_required:
+            raise ServiceValidationError(
+                f"Arming requires a code but none was given for {self.entity_id}",
+                translation_domain=DOMAIN,
+                translation_key="code_arm_required",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                },
+            )
+        return _code
+
+    @final
+    async def async_handle_alarm_disarm(self, code: str | None = None) -> None:
+        """Add default code and disarm."""
+        await self.async_alarm_disarm(self.code_or_default_code(code))
+
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         raise NotImplementedError
@@ -173,6 +213,11 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         await self.hass.async_add_executor_job(self.alarm_disarm, code)
+
+    @final
+    async def async_handle_alarm_arm_home(self, code: str | None = None) -> None:
+        """Add default code and arm home."""
+        await self.async_alarm_arm_home(self.check_code_arm_required(code))
 
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
@@ -182,6 +227,11 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
         """Send arm home command."""
         await self.hass.async_add_executor_job(self.alarm_arm_home, code)
 
+    @final
+    async def async_handle_alarm_arm_away(self, code: str | None = None) -> None:
+        """Add default code and arm away."""
+        await self.async_alarm_arm_away(self.check_code_arm_required(code))
+
     def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         raise NotImplementedError
@@ -190,6 +240,11 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
         """Send arm away command."""
         await self.hass.async_add_executor_job(self.alarm_arm_away, code)
 
+    @final
+    async def async_handle_alarm_arm_night(self, code: str | None = None) -> None:
+        """Add default code and arm night."""
+        await self.async_alarm_arm_night(self.check_code_arm_required(code))
+
     def alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         raise NotImplementedError
@@ -197,6 +252,11 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         await self.hass.async_add_executor_job(self.alarm_arm_night, code)
+
+    @final
+    async def async_handle_alarm_arm_vacation(self, code: str | None = None) -> None:
+        """Add default code and arm vacation."""
+        await self.async_alarm_arm_vacation(self.check_code_arm_required(code))
 
     def alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm vacation command."""
@@ -213,6 +273,13 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command."""
         await self.hass.async_add_executor_job(self.alarm_trigger, code)
+
+    @final
+    async def async_handle_alarm_arm_custom_bypass(
+        self, code: str | None = None
+    ) -> None:
+        """Add default code and arm custom bypass."""
+        await self.async_alarm_arm_custom_bypass(self.check_code_arm_required(code))
 
     def alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm custom bypass command."""
@@ -241,6 +308,33 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
             ATTR_CHANGED_BY: self.changed_by,
             ATTR_CODE_ARM_REQUIRED: self.code_arm_required,
         }
+
+    async def async_internal_added_to_hass(self) -> None:
+        """Call when the alarm control panel entity is added to hass."""
+        await super().async_internal_added_to_hass()
+        if not self.registry_entry:
+            return
+        self._async_read_entity_options()
+
+    @callback
+    def async_registry_entry_updated(self) -> None:
+        """Run when the entity registry entry has been updated."""
+        self._async_read_entity_options()
+
+    @callback
+    def _async_read_entity_options(self) -> None:
+        """Read entity options from entity registry.
+
+        Called when the entity registry entry has been updated and before the
+        alarm control panel is added to the state machine.
+        """
+        assert self.registry_entry
+        if (alarm_options := self.registry_entry.options.get(DOMAIN)) and (
+            default_code := alarm_options.get(CONF_DEFAULT_CODE)
+        ):
+            self._alarm_control_panel_option_default_code = default_code
+            return
+        self._alarm_control_panel_option_default_code = None
 
 
 # As we import constants of the const module here, we need to add the following

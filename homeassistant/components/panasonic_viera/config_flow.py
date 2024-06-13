@@ -60,7 +60,7 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
             except (URLError, SOAPError, OSError) as err:
                 _LOGGER.error("Could not establish remote connection: %s", err)
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("An unknown error occurred")
                 return self.async_abort(reason="unknown")
 
@@ -118,7 +118,7 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
             except (URLError, OSError) as err:
                 _LOGGER.error("The remote connection was lost: %s", err)
                 return self.async_abort(reason="cannot_connect")
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unknown error")
                 return self.async_abort(reason="unknown")
 
@@ -142,7 +142,7 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
         except (URLError, SOAPError, OSError) as err:
             _LOGGER.error("The remote connection was lost: %s", err)
             return self.async_abort(reason="cannot_connect")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unknown error")
             return self.async_abort(reason="unknown")
 

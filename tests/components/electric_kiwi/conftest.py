@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Awaitable, Callable
 from time import time
 from unittest.mock import AsyncMock, patch
-import zoneinfo
 
 from electrickiwi_api.model import AccountBalance, Hop, HopIntervals
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -24,16 +24,13 @@ CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 REDIRECT_URI = "https://example.com/auth/external/callback"
 
-TZ_NAME = "Pacific/Auckland"
-TIMEZONE = zoneinfo.ZoneInfo(TZ_NAME)
-YieldFixture = Generator[AsyncMock, None, None]
-ComponentSetup = Callable[[], Awaitable[bool]]
+type YieldFixture = Generator[AsyncMock]
+type ComponentSetup = Callable[[], Awaitable[bool]]
 
 
 @pytest.fixture(autouse=True)
-async def request_setup(current_request_with_host) -> None:
+async def request_setup(current_request_with_host: None) -> None:
     """Request setup."""
-    return
 
 
 @pytest.fixture
@@ -82,7 +79,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.electric_kiwi.async_setup_entry", return_value=True

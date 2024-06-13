@@ -57,6 +57,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_OPEN,
     STATE_OPENING,
+    STATE_UNAVAILABLE,
     STATE_UNLOCKED,
     UnitOfEnergy,
     UnitOfTemperature,
@@ -1050,6 +1051,126 @@ async def test_disabling_entity(
         'entity_available{domain="sensor",'
         'entity="sensor.outside_humidity",'
         'friendly_name="Outside Humidity"} 1.0' in body
+    )
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_entity_becomes_unavailable_with_export(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client: ClientSessionGenerator,
+    sensor_entities: dict[str, er.RegistryEntry],
+) -> None:
+    """Test an entity that becomes unavailable is still exported."""
+    data = {**sensor_entities}
+
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'sensor_temperature_celsius{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 15.6' in body
+    )
+
+    assert (
+        'state_change_total{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 1.0' in body
+    )
+
+    assert (
+        'entity_available{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 1.0' in body
+    )
+
+    assert (
+        'sensor_humidity_percent{domain="sensor",'
+        'entity="sensor.outside_humidity",'
+        'friendly_name="Outside Humidity"} 54.0' in body
+    )
+
+    assert (
+        'state_change_total{domain="sensor",'
+        'entity="sensor.outside_humidity",'
+        'friendly_name="Outside Humidity"} 1.0' in body
+    )
+
+    assert (
+        'entity_available{domain="sensor",'
+        'entity="sensor.outside_humidity",'
+        'friendly_name="Outside Humidity"} 1.0' in body
+    )
+
+    # Make sensor_1 unavailable.
+    set_state_with_entry(
+        hass, data["sensor_1"], STATE_UNAVAILABLE, data["sensor_1_attributes"]
+    )
+
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+
+    # Check that only the availability changed on sensor_1.
+    assert (
+        'sensor_temperature_celsius{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 15.6' in body
+    )
+
+    assert (
+        'state_change_total{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 2.0' in body
+    )
+
+    assert (
+        'entity_available{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 0.0' in body
+    )
+
+    # The other sensor should be unchanged.
+    assert (
+        'sensor_humidity_percent{domain="sensor",'
+        'entity="sensor.outside_humidity",'
+        'friendly_name="Outside Humidity"} 54.0' in body
+    )
+
+    assert (
+        'state_change_total{domain="sensor",'
+        'entity="sensor.outside_humidity",'
+        'friendly_name="Outside Humidity"} 1.0' in body
+    )
+
+    assert (
+        'entity_available{domain="sensor",'
+        'entity="sensor.outside_humidity",'
+        'friendly_name="Outside Humidity"} 1.0' in body
+    )
+
+    # Bring sensor_1 back and check that it is correct.
+    set_state_with_entry(hass, data["sensor_1"], 200.0, data["sensor_1_attributes"])
+
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'sensor_temperature_celsius{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 200.0' in body
+    )
+
+    assert (
+        'state_change_total{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 3.0' in body
+    )
+
+    assert (
+        'entity_available{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 1.0' in body
     )
 
 

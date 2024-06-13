@@ -125,13 +125,13 @@ class ImapMessage:
             return str(part.get_payload())
 
     @property
-    def headers(self) -> dict[str, tuple[str,]]:
+    def headers(self) -> dict[str, tuple[str, ...]]:
         """Get the email headers."""
-        header_base: dict[str, tuple[str,]] = {}
+        header_base: dict[str, tuple[str, ...]] = {}
         for key, value in self.email_message.items():
-            header_instances: tuple[str,] = (str(value),)
+            header_instances: tuple[str, ...] = (str(value),)
             if header_base.setdefault(key, header_instances) != header_instances:
-                header_base[key] += header_instances  # type: ignore[assignment]
+                header_base[key] += header_instances
         return header_base
 
     @property
@@ -195,13 +195,13 @@ class ImapMessage:
             ):
                 message_untyped_text = str(part.get_payload())
 
-        if message_text is not None:
+        if message_text is not None and message_text.strip():
             return message_text
 
-        if message_html is not None:
+        if message_html:
             return message_html
 
-        if message_untyped_text is not None:
+        if message_untyped_text:
             return message_untyped_text
 
         return str(self.email_message.get_payload())

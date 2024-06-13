@@ -2,6 +2,7 @@
 
 import asyncio
 from http import HTTPStatus
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -187,7 +188,7 @@ async def test_setup_component_no_access_cache_folder(
 )
 async def test_service(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -248,7 +249,7 @@ async def test_service(
 )
 async def test_service_default_language(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -309,7 +310,7 @@ async def test_service_default_language(
 )
 async def test_service_default_special_language(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -366,7 +367,7 @@ async def test_service_default_special_language(
 )
 async def test_service_language(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -423,7 +424,7 @@ async def test_service_language(
 )
 async def test_service_wrong_language(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -477,7 +478,7 @@ async def test_service_wrong_language(
 )
 async def test_service_options(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -561,7 +562,7 @@ class MockEntityWithDefaults(MockTTSEntity):
 )
 async def test_service_default_options(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -629,7 +630,7 @@ async def test_service_default_options(
 )
 async def test_merge_default_service_options(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -696,7 +697,7 @@ async def test_merge_default_service_options(
 )
 async def test_service_wrong_options(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -752,7 +753,7 @@ async def test_service_wrong_options(
 )
 async def test_service_clear_cache(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -814,7 +815,7 @@ async def test_service_clear_cache(
 async def test_service_receive_voice(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -886,7 +887,7 @@ async def test_service_receive_voice(
 async def test_service_receive_voice_german(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -994,7 +995,7 @@ async def test_web_view_wrong_filename(
 )
 async def test_service_without_cache(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -1042,7 +1043,7 @@ class MockEntityBoom(MockTTSEntity):
 @pytest.mark.parametrize("mock_provider", [MockProviderBoom(DEFAULT_LANG)])
 async def test_setup_legacy_cache_dir(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     mock_provider: MockProvider,
 ) -> None:
     """Set up a TTS platform with cache and call service without cache."""
@@ -1078,7 +1079,7 @@ async def test_setup_legacy_cache_dir(
 @pytest.mark.parametrize("mock_tts_entity", [MockEntityBoom(DEFAULT_LANG)])
 async def test_setup_cache_dir(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     mock_tts_entity: MockTTSEntity,
 ) -> None:
     """Set up a TTS platform with cache and call service without cache."""
@@ -1185,7 +1186,7 @@ async def test_service_get_tts_error(
 async def test_load_cache_legacy_retrieve_without_mem_cache(
     hass: HomeAssistant,
     mock_provider: MockProvider,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Set up component and load cache and get without mem cache."""
@@ -1211,7 +1212,7 @@ async def test_load_cache_legacy_retrieve_without_mem_cache(
 async def test_load_cache_retrieve_without_mem_cache(
     hass: HomeAssistant,
     mock_tts_entity: MockTTSEntity,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Set up component and load cache and get without mem cache."""

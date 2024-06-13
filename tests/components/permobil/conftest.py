@@ -1,16 +1,16 @@
 """Common fixtures for the MyPermobil tests."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 from mypermobil import MyPermobil
 import pytest
+from typing_extensions import Generator
 
 from .const import MOCK_REGION_NAME, MOCK_TOKEN, MOCK_URL
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.permobil.async_setup_entry", return_value=True

@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any, cast
 
-from pyunifiprotect.data import (
+from uiprotect.data import (
     Doorlock,
     LockStatusType,
     ModelType,
@@ -14,13 +14,12 @@ from pyunifiprotect.data import (
 )
 
 from homeassistant.components.lock import LockEntity, LockEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DISPATCH_ADOPT, DOMAIN
-from .data import ProtectData
+from .const import DISPATCH_ADOPT
+from .data import ProtectData, UFPConfigEntry
 from .entity import ProtectDeviceEntity
 from .utils import async_dispatch_id as _ufpd
 
@@ -29,11 +28,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: UFPConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up locks on a UniFi Protect NVR."""
-    data: ProtectData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
@@ -44,12 +43,10 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
     )
 
-    entities = []
-    for device in data.get_by_types({ModelType.DOORLOCK}):
-        device = cast(Doorlock, device)
-        entities.append(ProtectLock(data, device))
-
-    async_add_entities(entities)
+    async_add_entities(
+        ProtectLock(data, cast(Doorlock, device))
+        for device in data.get_by_types({ModelType.DOORLOCK})
+    )
 
 
 class ProtectLock(ProtectDeviceEntity, LockEntity):

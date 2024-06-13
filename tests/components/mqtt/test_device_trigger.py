@@ -529,16 +529,16 @@ async def test_non_unique_triggers(
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[0].data["some"] == "press1"
-    assert calls[1].data["some"] == "press2"
+    all_calls = {calls[0].data["some"], calls[1].data["some"]}
+    assert all_calls == {"press1", "press2"}
 
     # Trigger second config references to same trigger
     # and triggers both attached instances.
     async_fire_mqtt_message(hass, "foobar/triggers/button2", "long_press")
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[0].data["some"] == "press1"
-    assert calls[1].data["some"] == "press2"
+    all_calls = {calls[0].data["some"], calls[1].data["some"]}
+    assert all_calls == {"press1", "press2"}
 
     # Removing the first trigger will clean up
     calls.clear()
@@ -986,15 +986,9 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
 
     # Remove MQTT from the device
     mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": mqtt_config_entry.entry_id,
-            "device_id": device_entry.id,
-        }
+    response = await ws_client.remove_device(
+        device_entry.id, mqtt_config_entry.entry_id
     )
-    response = await ws_client.receive_json()
     assert response["success"]
     await hass.async_block_till_done()
 
@@ -1349,15 +1343,9 @@ async def test_cleanup_trigger(
 
     # Remove MQTT from the device
     mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": mqtt_config_entry.entry_id,
-            "device_id": device_entry.id,
-        }
+    response = await ws_client.remove_device(
+        device_entry.id, mqtt_config_entry.entry_id
     )
-    response = await ws_client.receive_json()
     assert response["success"]
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -1370,7 +1358,7 @@ async def test_cleanup_trigger(
 
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_called_once_with(
-        "homeassistant/device_automation/bla/config", "", 0, True
+        "homeassistant/device_automation/bla/config", None, 0, True
     )
 
 

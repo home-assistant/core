@@ -1,7 +1,6 @@
 """Constants for System Monitor."""
 
 DOMAIN = "systemmonitor"
-DOMAIN_COORDINATOR = "systemmonitor_coordinator"
 
 CONF_INDEX = "index"
 CONF_PROCESS = "process"

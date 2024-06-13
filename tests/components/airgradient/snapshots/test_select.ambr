@@ -1,0 +1,166 @@
+# serializer version: 1
+# name: test_all_entities[select.airgradient_configuration_source-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'cloud',
+        'local',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.airgradient_configuration_source',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Configuration source',
+    'platform': 'airgradient',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'configuration_control',
+    'unique_id': '84fce612f5b8-configuration_control',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.airgradient_configuration_source-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Airgradient Configuration source',
+      'options': list([
+        'cloud',
+        'local',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.airgradient_configuration_source',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'local',
+  })
+# ---
+# name: test_all_entities[select.airgradient_display_temperature_unit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'c',
+        'f',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.airgradient_display_temperature_unit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Display temperature unit',
+    'platform': 'airgradient',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'display_temperature_unit',
+    'unique_id': '84fce612f5b8-display_temperature_unit',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.airgradient_display_temperature_unit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Airgradient Display temperature unit',
+      'options': list([
+        'c',
+        'f',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.airgradient_display_temperature_unit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'c',
+  })
+# ---
+# name: test_all_entities_outdoor[select.airgradient_configuration_source-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'cloud',
+        'local',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.airgradient_configuration_source',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Configuration source',
+    'platform': 'airgradient',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'configuration_control',
+    'unique_id': '84fce612f5b8-configuration_control',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities_outdoor[select.airgradient_configuration_source-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Airgradient Configuration source',
+      'options': list([
+        'cloud',
+        'local',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.airgradient_configuration_source',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'local',
+  })
+# ---

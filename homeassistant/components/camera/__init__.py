@@ -335,7 +335,7 @@ def _get_camera_from_entity_id(hass: HomeAssistant, entity_id: str) -> Camera:
 #     stream_id: A unique id for the stream, used to update an existing source
 # The output is the SDP answer, or None if the source or offer is not eligible.
 # The Callable may throw HomeAssistantError on failure.
-RtspToWebRtcProviderType = Callable[[str, str, str], Awaitable[str | None]]
+type RtspToWebRtcProviderType = Callable[[str, str, str], Awaitable[str | None]]
 
 
 def async_register_rtsp_to_web_rtc_provider(
@@ -698,11 +698,11 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         await self.hass.async_add_executor_job(self.turn_off)
 
     def turn_on(self) -> None:
-        """Turn off camera."""
+        """Turn on camera."""
         raise NotImplementedError
 
     async def async_turn_on(self) -> None:
-        """Turn off camera."""
+        """Turn on camera."""
         await self.hass.async_add_executor_job(self.turn_on)
 
     def enable_motion_detection(self) -> None:

@@ -15,12 +15,10 @@ from homeassistant.components.lawn_mower import (
     LawnMowerEntityEntityDescription,
     LawnMowerEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .controller import EcovacsController
+from . import EcovacsConfigEntry
 from .entity import EcovacsEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,11 +36,11 @@ _STATE_TO_MOWER_STATE = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EcovacsConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Ecovacs mowers."""
-    controller: EcovacsController = hass.data[DOMAIN][config_entry.entry_id]
+    controller = config_entry.runtime_data
     mowers: list[EcovacsMower] = [
         EcovacsMower(device) for device in controller.devices(MowerCapabilities)
     ]

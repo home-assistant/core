@@ -11,7 +11,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, STATE_UNKNOWN
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -35,23 +34,6 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.NOT_LOADED
-
-
-async def test_from_import(hass: HomeAssistant) -> None:
-    """Test imported entry."""
-    with patch(
-        "homeassistant.components.fastdotcom.coordinator.fast_com", return_value=5.0
-    ):
-        await async_setup_component(
-            hass,
-            DOMAIN,
-            {"fastdotcom": {}},
-        )
-        await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.fast_com_download")
-    assert state is not None
-    assert state.state == "5.0"
 
 
 async def test_delayed_speedtest_during_startup(

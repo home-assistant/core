@@ -6,8 +6,12 @@ from datetime import timedelta
 import logging
 
 from bring_api.bring import Bring
-from bring_api.exceptions import BringParseException, BringRequestException
-from bring_api.types import BringList, BringPurchase
+from bring_api.exceptions import (
+    BringAuthException,
+    BringParseException,
+    BringRequestException,
+)
+from bring_api.types import BringItemsResponse, BringList
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -18,11 +22,8 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class BringData(BringList):
+class BringData(BringList, BringItemsResponse):
     """Coordinator data class."""
-
-    purchase_items: list[BringPurchase]
-    recently_items: list[BringPurchase]
 
 
 class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
@@ -47,8 +48,12 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
             raise UpdateFailed("Unable to connect and retrieve data from bring") from e
         except BringParseException as e:
             raise UpdateFailed("Unable to parse response from bring") from e
+        except BringAuthException as e:
+            raise UpdateFailed(
+                "Unable to retrieve data from bring, authentication failed"
+            ) from e
 
-        list_dict = {}
+        list_dict: dict[str, BringData] = {}
         for lst in lists_response["lists"]:
             try:
                 items = await self.bring.get_list(lst["listUuid"])
@@ -58,8 +63,7 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
                 ) from e
             except BringParseException as e:
                 raise UpdateFailed("Unable to parse response from bring") from e
-            lst["purchase_items"] = items["purchase"]
-            lst["recently_items"] = items["recently"]
-            list_dict[lst["listUuid"]] = lst
+            else:
+                list_dict[lst["listUuid"]] = BringData(**lst, **items)
 
         return list_dict

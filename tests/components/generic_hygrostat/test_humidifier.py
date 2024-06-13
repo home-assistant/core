@@ -471,7 +471,7 @@ async def test_sensor_bad_value(hass: HomeAssistant, setup_comp_2) -> None:
 
 
 async def test_sensor_bad_value_twice(
-    hass: HomeAssistant, setup_comp_2, caplog
+    hass: HomeAssistant, setup_comp_2, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test sensor that the second bad value is not logged as warning."""
     assert hass.states.get(ENTITY).state == STATE_ON

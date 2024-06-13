@@ -108,9 +108,8 @@ async def test_lights_on_when_sun_sets(
     )
 
 
-async def test_lights_turn_off_when_everyone_leaves(
-    hass: HomeAssistant, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_lights_turn_off_when_everyone_leaves(hass: HomeAssistant) -> None:
     """Test lights turn off when everyone leaves the house."""
     assert await async_setup_component(
         hass, "light", {light.DOMAIN: {CONF_PLATFORM: "test"}}

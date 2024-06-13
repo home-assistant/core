@@ -17,7 +17,7 @@ from .const import (
 from tests.common import AsyncMock, MockConfigEntry
 
 
-def create_mock_device():
+def create_mock_device() -> AsyncMock:
     """Create a mock instance of RAVEnStreamDevice."""
     device = AsyncMock()
 
@@ -33,7 +33,7 @@ def create_mock_device():
     return device
 
 
-def create_mock_entry(no_meters=False):
+def create_mock_entry(no_meters: bool = False) -> MockConfigEntry:
     """Create a mock config entry for a RAVEn device."""
     return MockConfigEntry(
         domain=DOMAIN,
