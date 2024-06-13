@@ -6,7 +6,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import FakeHarmonyClient
 from .const import (
     ENTITY_NILE_TV,
     ENTITY_PLAY_MUSIC,
@@ -22,7 +21,7 @@ from tests.common import MockConfigEntry, mock_registry
 
 
 async def test_unique_id_migration(
-    harmony_client: FakeHarmonyClient, hass: HomeAssistant, mock_write_config
+    mock_hc, hass: HomeAssistant, mock_write_config
 ) -> None:
     """Test migration of switch unique ids to stable ones."""
     entry = MockConfigEntry(

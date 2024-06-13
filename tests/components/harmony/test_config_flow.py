@@ -12,8 +12,6 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import FakeHarmonyClient
-
 from tests.common import MockConfigEntry
 
 
@@ -197,9 +195,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_options_flow(
-    hass: HomeAssistant, harmony_client: FakeHarmonyClient, mock_write_config
-) -> None:
+async def test_options_flow(hass: HomeAssistant, mock_hc, mock_write_config) -> None:
     """Test config flow options."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

@@ -33,7 +33,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.util import utcnow
 
-from .conftest import ACTIVITIES_TO_IDS, TV_DEVICE_ID, TV_DEVICE_NAME, FakeHarmonyClient
+from .conftest import ACTIVITIES_TO_IDS, TV_DEVICE_ID, TV_DEVICE_NAME
 from .const import ENTITY_REMOTE, HUB_NAME
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -43,7 +43,8 @@ STOP_COMMAND = "Stop"
 
 
 async def test_connection_state_changes(
-    harmony_client: FakeHarmonyClient,
+    harmony_client,
+    mock_hc,
     hass: HomeAssistant,
     mock_write_config,
     mock_config_entry: MockConfigEntry,
@@ -83,10 +84,7 @@ async def test_connection_state_changes(
 
 
 async def test_remote_toggles(
-    harmony_client: FakeHarmonyClient,
-    hass: HomeAssistant,
-    mock_write_config,
-    mock_config_entry: MockConfigEntry,
+    mock_hc, hass: HomeAssistant, mock_write_config, mock_config_entry: MockConfigEntry
 ) -> None:
     """Ensure calls to the remote also updates the switches."""
 
@@ -153,7 +151,8 @@ async def test_remote_toggles(
 
 
 async def test_async_send_command(
-    harmony_client: FakeHarmonyClient,
+    mock_hc,
+    harmony_client,
     hass: HomeAssistant,
     mock_write_config,
     mock_config_entry: MockConfigEntry,
@@ -287,7 +286,8 @@ async def test_async_send_command(
 
 
 async def test_async_send_command_custom_delay(
-    harmony_client: FakeHarmonyClient,
+    mock_hc,
+    harmony_client,
     hass: HomeAssistant,
     mock_write_config,
     mock_config_entry: MockConfigEntry,
@@ -333,7 +333,8 @@ async def test_async_send_command_custom_delay(
 
 
 async def test_change_channel(
-    harmony_client: FakeHarmonyClient,
+    mock_hc,
+    harmony_client,
     hass: HomeAssistant,
     mock_write_config,
     mock_config_entry: MockConfigEntry,
@@ -359,7 +360,8 @@ async def test_change_channel(
 
 
 async def test_sync(
-    harmony_client: FakeHarmonyClient,
+    mock_hc,
+    harmony_client,
     mock_write_config,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

@@ -149,22 +149,27 @@ class FakeHarmonyClient:
 
 
 @pytest.fixture
-def harmony_client() -> Generator[FakeHarmonyClient]:
-    """Patch the real HarmonyClient with initialization side effect."""
-    client = FakeHarmonyClient()
+def harmony_client() -> FakeHarmonyClient:
+    """Create the FakeHarmonyClient instance."""
+    return FakeHarmonyClient()
 
-    def _create_instance(
+
+@pytest.fixture
+def mock_hc(harmony_client: FakeHarmonyClient) -> Generator[None]:
+    """Patch the real HarmonyClient with initialization side effect."""
+
+    def _on_create_instance(
         ip_address: str, callbacks: ClientCallbackType
     ) -> FakeHarmonyClient:
         """Set client callbacks on instance creation."""
-        client._callbacks = callbacks
-        return client
+        harmony_client._callbacks = callbacks
+        return harmony_client
 
     with patch(
         "homeassistant.components.harmony.data.HarmonyClient",
-        side_effect=_create_instance,
+        side_effect=_on_create_instance,
     ):
-        yield client
+        yield
 
 
 @pytest.fixture
