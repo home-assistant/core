@@ -17,6 +17,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
@@ -117,8 +118,9 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
         """Initialize the alarm panel."""
         self._partition_number = partition_number
         self._panic_type = panic_type
-        self._alarm_control_panel_option_default_code = code
-        self._attr_code_format = CodeFormat.NUMBER
+        self._code = code
+        self._panic_type = panic_type
+        self._attr_code_arm_required = not self._code
 
         _LOGGER.debug("Setting up alarm: %s", alarm_name)
         super().__init__(alarm_name, info, controller)
@@ -143,19 +145,26 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
             self.async_write_ha_state()
 
     @property
+    def code_format(self) -> CodeFormat | None:
+        """Regex for code format or None if no code keypad is required."""
+        return None if self._code else CodeFormat.NUMBER
+
+    @property
     def state(self) -> str:
         """Return the state of the device."""
         state = STATE_UNKNOWN
 
         if self._info["status"]["alarm"]:
             state = STATE_ALARM_TRIGGERED
-        elif self._info["status"]["armed_zero_entry_delay"]:
-            state = STATE_ALARM_ARMED_NIGHT
-        elif self._info["status"]["armed_away"]:
-            state = STATE_ALARM_ARMED_AWAY
         elif self._info["status"]["armed_stay"]:
             state = STATE_ALARM_ARMED_HOME
-        elif self._info["status"]["exit_delay"] or self._info["status"]["entry_delay"]:
+        elif self._info["status"]["armed_away"]:
+            state = STATE_ALARM_ARMED_AWAY
+        elif self._info["status"]["armed_zero_entry_delay"]:
+            state = STATE_ALARM_ARMED_NIGHT
+        elif self._info["status"]["exit_delay"]:
+            state = STATE_ALARM_ARMING
+        elif self._info["status"]["entry_delay"]:
             state = STATE_ALARM_PENDING
         elif self._info["status"]["alpha"]:
             state = STATE_ALARM_DISARMED
@@ -163,23 +172,31 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        self.hass.data[DATA_EVL].disarm_partition(code, self._partition_number)
+        self.hass.data[DATA_EVL].disarm_partition(
+            code if code else self._code, self._partition_number
+        )
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        self.hass.data[DATA_EVL].arm_stay_partition(code, self._partition_number)
+        self.hass.data[DATA_EVL].arm_stay_partition(
+            code if code else self._code, self._partition_number
+        )
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        self.hass.data[DATA_EVL].arm_away_partition(code, self._partition_number)
+        self.hass.data[DATA_EVL].arm_away_partition(
+            code if code else self._code, self._partition_number
+        )
+
+    async def async_alarm_arm_night(self, code: str | None = None) -> None:
+        """Send arm night command."""
+        self.hass.data[DATA_EVL].arm_night_partition(
+            code if code else self._code, self._partition_number
+        )
 
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Alarm trigger command. Will be used to trigger a panic alarm."""
         self.hass.data[DATA_EVL].panic_alarm(self._panic_type)
-
-    async def async_alarm_arm_night(self, code: str | None = None) -> None:
-        """Send arm night command."""
-        self.hass.data[DATA_EVL].arm_night_partition(code, self._partition_number)
 
     @callback
     def async_alarm_keypress(self, keypress=None):
