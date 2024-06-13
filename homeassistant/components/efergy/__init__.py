@@ -16,11 +16,12 @@ from homeassistant.helpers.entity import Entity
 from .const import DEFAULT_NAME, DOMAIN
 
 PLATFORMS = [Platform.SENSOR]
+type EfergyConfigEntry = ConfigEntry[Efergy]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EfergyConfigEntry) -> bool:
     """Set up Efergy from a config entry."""
-    api = Efergy(
+    entry.runtime_data = Efergy(
         entry.data[CONF_API_KEY],
         session=async_get_clientsession(hass),
         utc_offset=hass.config.time_zone,
@@ -28,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     try:
-        await api.async_status(get_sids=True)
+        await entry.runtime_data.async_status(get_sids=True)
     except (exceptions.ConnectError, exceptions.DataError) as ex:
         raise ConfigEntryNotReady(f"Failed to connect to device: {ex}") from ex
     except exceptions.InvalidAuth as ex:
@@ -36,17 +37,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "API Key is no longer valid. Please reauthenticate"
         ) from ex
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = api
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EfergyConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class EfergyEntity(Entity):
