@@ -117,7 +117,7 @@ async def test_handler_google_actions(hass: HomeAssistant) -> None:
         },
     )
 
-    mock_cloud_prefs(hass)
+    mock_cloud_prefs(hass, {})
     cloud = hass.data["cloud"]
 
     reqid = "5711642932632160983"

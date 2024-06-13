@@ -29,15 +29,16 @@ async def test_http_handle_intent(
 
         intent_type = "OrderBeer"
 
-        async def async_handle(self, intent):
+        async def async_handle(self, intent_obj):
             """Handle the intent."""
-            assert intent.context.user_id == hass_admin_user.id
-            response = intent.create_response()
+            assert intent_obj.context.user_id == hass_admin_user.id
+            response = intent_obj.create_response()
             response.async_set_speech(
-                "I've ordered a {}!".format(intent.slots["type"]["value"])
+                "I've ordered a {}!".format(intent_obj.slots["type"]["value"])
             )
             response.async_set_card(
-                "Beer ordered", "You chose a {}.".format(intent.slots["type"]["value"])
+                "Beer ordered",
+                "You chose a {}.".format(intent_obj.slots["type"]["value"]),
             )
             return response
 

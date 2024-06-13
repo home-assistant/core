@@ -2812,7 +2812,7 @@ def test_version(hass: HomeAssistant) -> None:
         "{{ version('2099.9.9') < '2099.9.10' }}",
         hass,
     ).async_render()
-    assert filter_result == function_result is True
+    assert filter_result is function_result is True
 
     filter_result = template.Template(
         "{{ '2099.9.9' | version == '2099.9.9' }}",
@@ -2822,7 +2822,7 @@ def test_version(hass: HomeAssistant) -> None:
         "{{ version('2099.9.9') == '2099.9.9' }}",
         hass,
     ).async_render()
-    assert filter_result == function_result is True
+    assert filter_result is function_result is True
 
     with pytest.raises(TemplateError):
         template.Template(
