@@ -818,6 +818,7 @@ class MockModule:
 
         if setup:
             # We run this in executor, wrap it in function
+            # pylint: disable-next=unnecessary-lambda
             self.setup = lambda *args: setup(*args)
 
         if async_setup is not None:
@@ -875,6 +876,7 @@ class MockPlatform:
 
         if setup_platform is not None:
             # We run this in executor, wrap it in function
+            # pylint: disable-next=unnecessary-lambda
             self.setup_platform = lambda *args: setup_platform(*args)
 
         if async_setup_platform is not None:
