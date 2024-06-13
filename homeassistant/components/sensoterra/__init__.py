@@ -22,23 +22,22 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Sensoterra from a config entry."""
 
-    # if hass.data.get(DOMAIN) is None:
-    #     hass.data.setdefault(DOMAIN, {})
-    #     _LOGGER.info(STARTUP_MESSAGE)
-
-    _LOGGER.info("Initializing version %s", VERSION)
-
     hass.data.setdefault(DOMAIN, {})
 
     api = CustomerApi()
     api.set_language(hass.config.language)
-    _LOGGER.debug("Version %s", api.get_version())
-
     api.set_token(entry.data["token"])
+
+    _LOGGER.info("Starting up version %s, API %s", VERSION, api.get_version())
 
     coordinator = SensoterraCoordinator(hass, api)
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
+    # Fetch initial data so we have data when entities subscribe.
+    # If the refresh fails, async_config_entry_first_refresh will
+    # raise ConfigEntryNotReady and setup will try again later.
+    # If you do not want to retry setup on failure, use
+    # coordinator.async_refresh() instead.
     await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

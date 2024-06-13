@@ -7,6 +7,13 @@
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "reconfigure": {
+        "description": "Enter credentials to obtain a new token",
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "error": {
@@ -15,7 +22,21 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "soil_moisture": {
+        "name": "Soil moisture"
+      },
+      "soil_moisture_at_cm": {
+        "name": "Soil moisture @ {depth} cm"
+      },
+      "last_seen": {
+        "name": "Last seen"
+      }
     }
   }
 }
