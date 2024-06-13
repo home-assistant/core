@@ -325,8 +325,6 @@ class EcovacsVacuum(
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         if TYPE_CHECKING:
-            # mypy does not understand that VacuumEntityFeature.FAN_SPEED is only set
-            # if self._capability.fan_speed is not None (see __init__)
             assert self._capability.fan_speed
         await self._device.execute_command(self._capability.fan_speed.set(fan_speed))
 
