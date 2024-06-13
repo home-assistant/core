@@ -34,22 +34,28 @@ class ReolinkHostEntityDescription(EntityDescription):
     supported: Callable[[Host], bool] = lambda api: True
 
 
-class ReolinkBaseCoordinatorEntity[_DataT](
-    CoordinatorEntity[DataUpdateCoordinator[_DataT]]
-):
-    """Parent class for Reolink entities."""
+class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
+    """Parent class for entities that control the Reolink NVR itself, without a channel.
+
+    A camera connected directly to HomeAssistant without using a NVR is in the reolink API
+    basically a NVR with a single channel that has the camera connected to that channel.
+    """
 
     _attr_has_entity_name = True
+    entity_description: ReolinkHostEntityDescription | ReolinkChannelEntityDescription
 
     def __init__(
         self,
         reolink_data: ReolinkData,
-        coordinator: DataUpdateCoordinator[_DataT],
+        coordinator: DataUpdateCoordinator[None] | None = None,
     ) -> None:
-        """Initialize ReolinkBaseCoordinatorEntity."""
+        """Initialize ReolinkHostCoordinatorEntity."""
+        if coordinator is None:
+            coordinator = reolink_data.device_coordinator
         super().__init__(coordinator)
 
         self._host = reolink_data.host
+        self._attr_unique_id = f"{self._host.unique_id}_{self.entity_description.key}"
 
         http_s = "https" if self._host.api.use_https else "http"
         self._conf_url = f"{http_s}://{self._host.api.host}:{self._host.api.port}"
@@ -69,22 +75,6 @@ class ReolinkBaseCoordinatorEntity[_DataT](
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._host.api.session_active and super().available
-
-
-class ReolinkHostCoordinatorEntity(ReolinkBaseCoordinatorEntity[None]):
-    """Parent class for entities that control the Reolink NVR itself, without a channel.
-
-    A camera connected directly to HomeAssistant without using a NVR is in the reolink API
-    basically a NVR with a single channel that has the camera connected to that channel.
-    """
-
-    entity_description: ReolinkHostEntityDescription | ReolinkChannelEntityDescription
-
-    def __init__(self, reolink_data: ReolinkData) -> None:
-        """Initialize ReolinkHostCoordinatorEntity."""
-        super().__init__(reolink_data, reolink_data.device_coordinator)
-
-        self._attr_unique_id = f"{self._host.unique_id}_{self.entity_description.key}"
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
@@ -116,9 +106,10 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
         self,
         reolink_data: ReolinkData,
         channel: int,
+        coordinator: DataUpdateCoordinator[None] | None = None,
     ) -> None:
         """Initialize ReolinkChannelCoordinatorEntity for a hardware camera connected to a channel of the NVR."""
-        super().__init__(reolink_data)
+        super().__init__(reolink_data, coordinator)
 
         self._channel = channel
         self._attr_unique_id = (
