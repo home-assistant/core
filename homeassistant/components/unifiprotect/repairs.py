@@ -223,11 +223,11 @@ class RTSPRepair(ProtectRepair):
 @callback
 def _async_get_or_create_api_client(
     hass: HomeAssistant, entry: ConfigEntry
-) -> ProtectApiClient | None:
+) -> ProtectApiClient:
     """Get or create an API client."""
     if data := async_get_data_for_entry_id(hass, entry.entry_id):
         return data.api
-    return async_create_api_client(hass, entry) if entry else None
+    return async_create_api_client(hass, entry)
 
 
 async def async_create_fix_flow(
@@ -238,10 +238,10 @@ async def async_create_fix_flow(
     """Create flow."""
     if (
         data is not None
-        and "entity_id" in data
+        and "entry_id" in data
         and (entry := hass.config_entries.async_get_entry(cast(str, data["entry_id"])))
-        and (api := _async_get_or_create_api_client(hass, entry))
     ):
+        api = _async_get_or_create_api_client(hass, entry)
         if issue_id == "ea_channel_warning":
             return EAConfirmRepair(api=api, entry=entry)
         if issue_id == "cloud_user":
