@@ -9,5 +9,27 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "power": {
+        "name": "{channel_name} Power"
+      },
+      "voltage": {
+        "name": "{channel_name} Voltage"
+      },
+      "current": {
+        "name": "{channel_name} Current"
+      },
+      "power_factor": {
+        "name": "{channel_name} Power Factor"
+      },
+      "this_month_energy": {
+        "name": "{channel_name} This Month Energy"
+      },
+      "this_month_energy_returned": {
+        "name": "{channel_name} This Month Energy Returned"
+      }
+    }
   }
 }
