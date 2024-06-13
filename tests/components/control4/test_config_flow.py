@@ -23,14 +23,13 @@ from tests.common import MockConfigEntry
 def _get_mock_c4_account():
     c4_account_mock = AsyncMock(C4Account)
 
-    c4_account_mock.getAccountControllers.return_value = (
-        {
-            "controllerCommonName": "control4_model_00AA00AA00AA",
-            "href": "https://apis.control4.com/account/v3/rest/accounts/000000",
-            "name": "Name",
-        },
-    )
-    c4_account_mock.getDirectorBearerToken.return_value = ({"token": "token"},)
+    c4_account_mock.getAccountControllers.return_value = {
+        "controllerCommonName": "control4_model_00AA00AA00AA",
+        "href": "https://apis.control4.com/account/v3/rest/accounts/000000",
+        "name": "Name",
+    }
+
+    c4_account_mock.getDirectorBearerToken.return_value = {"token": "token"}
 
     return c4_account_mock
 
