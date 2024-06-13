@@ -63,7 +63,7 @@ def test_bad_core_config(
     res = check_config.check(get_test_config_dir())
     assert res["except"].keys() == {"homeassistant"}
     assert res["except"]["homeassistant"][1] == {"unit_system": "bad"}
-    assert res["warn"] == {}
+    assert not res["warn"]
 
 
 @pytest.mark.parametrize("hass_config_yaml", [BASE_CONFIG + "light:\n  platform: demo"])
@@ -74,10 +74,10 @@ def test_config_platform_valid(
     res = check_config.check(get_test_config_dir())
     assert res["components"].keys() == {"homeassistant", "light"}
     assert res["components"]["light"] == [{"platform": "demo"}]
-    assert res["except"] == {}
-    assert res["secret_cache"] == {}
-    assert res["secrets"] == {}
-    assert res["warn"] == {}
+    assert not res["except"]
+    assert not res["secret_cache"]
+    assert not res["secrets"]
+    assert not res["warn"]
     assert len(res["yaml_files"]) == 1
 
 
@@ -110,9 +110,9 @@ def test_component_platform_not_found(
     # Make sure they don't exist
     res = check_config.check(get_test_config_dir())
     assert res["components"].keys() == platforms
-    assert res["except"] == {}
-    assert res["secret_cache"] == {}
-    assert res["secrets"] == {}
+    assert not res["except"]
+    assert not res["secret_cache"]
+    assert not res["secrets"]
     assert res["warn"] == {check_config.WARNING_STR: [error]}
     assert len(res["yaml_files"]) == 1
 
@@ -135,7 +135,7 @@ def test_secrets(
     """Test secrets config checking method."""
     res = check_config.check(get_test_config_dir(), True)
 
-    assert res["except"] == {}
+    assert not res["except"]
     assert res["components"].keys() == {"homeassistant", "http"}
     assert res["components"]["http"] == {
         "cors_allowed_origins": ["http://google.com"],
@@ -150,7 +150,7 @@ def test_secrets(
         get_test_config_dir("secrets.yaml"): {"http_pw": "http://google.com"}
     }
     assert res["secrets"] == {"http_pw": "http://google.com"}
-    assert res["warn"] == {}
+    assert not res["warn"]
     assert normalize_yaml_files(res) == [
         ".../configuration.yaml",
         ".../secrets.yaml",
@@ -166,10 +166,10 @@ def test_package_invalid(
     """Test an invalid package."""
     res = check_config.check(get_test_config_dir())
 
-    assert res["except"] == {}
+    assert not res["except"]
     assert res["components"].keys() == {"homeassistant"}
-    assert res["secret_cache"] == {}
-    assert res["secrets"] == {}
+    assert not res["secret_cache"]
+    assert not res["secrets"]
     assert res["warn"].keys() == {"homeassistant.packages.p1.group"}
     assert res["warn"]["homeassistant.packages.p1.group"][1] == {"group": ["a"]}
     assert len(res["yaml_files"]) == 1
@@ -185,9 +185,9 @@ def test_bootstrap_error(
     res = check_config.check(get_test_config_dir(YAML_CONFIG_FILE))
     err = res["except"].pop(check_config.ERROR_STR)
     assert len(err) == 1
-    assert res["except"] == {}
-    assert res["components"] == {}  # No components, load failed
-    assert res["secret_cache"] == {}
-    assert res["secrets"] == {}
-    assert res["warn"] == {}
-    assert res["yaml_files"] == {}
+    assert not res["except"]
+    assert not res["components"]  # No components, load failed
+    assert not res["secret_cache"]
+    assert not res["secrets"]
+    assert not res["warn"]
+    assert not res["yaml_files"]

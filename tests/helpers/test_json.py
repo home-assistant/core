@@ -280,9 +280,9 @@ def test_default_encoder_is_passed(tmp_path: Path) -> None:
 
 def test_find_unserializable_data() -> None:
     """Find unserializeable data."""
-    assert find_paths_unserializable_data(1) == {}
-    assert find_paths_unserializable_data([1, 2]) == {}
-    assert find_paths_unserializable_data({"something": "yo"}) == {}
+    assert not find_paths_unserializable_data(1)
+    assert not find_paths_unserializable_data([1, 2])
+    assert not find_paths_unserializable_data({"something": "yo"})
 
     assert find_paths_unserializable_data({"something": set()}) == {
         "$.something": set()

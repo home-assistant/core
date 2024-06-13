@@ -299,7 +299,6 @@ async def test_async_async_request_call_with_lock(hass: HomeAssistant) -> None:
         hass.async_create_task(job2)
 
         assert len(updates) == 0
-        assert updates == []
         assert test_semaphore._value == 0
 
         test_semaphore.release()
@@ -834,7 +833,7 @@ async def test_setup_source(hass: HomeAssistant) -> None:
 
     await platform.async_reset()
 
-    assert entity.entity_sources(hass) == {}
+    assert not entity.entity_sources(hass)
 
 
 async def test_removing_entity_unavailable(hass: HomeAssistant) -> None:

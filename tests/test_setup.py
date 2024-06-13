@@ -571,7 +571,7 @@ async def test_when_setup_already_loaded(hass: HomeAssistant) -> None:
 
     setup.async_when_setup(hass, "test", mock_callback)
     await hass.async_block_till_done()
-    assert calls == []
+    assert not calls
 
     hass.config.components.add("test")
     hass.bus.async_fire(EVENT_COMPONENT_LOADED, {"component": "test"})
@@ -599,7 +599,7 @@ async def test_async_when_setup_or_start_already_loaded(hass: HomeAssistant) -> 
 
     setup.async_when_setup_or_start(hass, "test", mock_callback)
     await hass.async_block_till_done()
-    assert calls == []
+    assert not calls
 
     hass.config.components.add("test")
     hass.bus.async_fire(EVENT_COMPONENT_LOADED, {"component": "test"})

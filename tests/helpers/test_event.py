@@ -1213,9 +1213,9 @@ async def test_track_template_result_super_template(hass: HomeAssistant) -> None
     assert specific_runs_availability == [False]
     assert wildcard_runs_availability == [False]
     assert wildercard_runs_availability == [False]
-    assert specific_runs == []
-    assert wildcard_runs == []
-    assert wildercard_runs == []
+    assert not specific_runs
+    assert not wildcard_runs
+    assert not wildercard_runs
 
     hass.states.async_set("sensor.test", 5)
     await hass.async_block_till_done()
@@ -1366,12 +1366,12 @@ async def test_track_template_result_super_template_initially_false(
     )
     await hass.async_block_till_done()
 
-    assert specific_runs_availability == []
-    assert wildcard_runs_availability == []
-    assert wildercard_runs_availability == []
-    assert specific_runs == []
-    assert wildcard_runs == []
-    assert wildercard_runs == []
+    assert not specific_runs_availability
+    assert not wildcard_runs_availability
+    assert not wildercard_runs_availability
+    assert not specific_runs
+    assert not wildcard_runs
+    assert not wildercard_runs
 
     hass.states.async_set("sensor.test", 5)
     await hass.async_block_till_done()
@@ -1549,9 +1549,9 @@ async def test_track_template_result_super_template_2(
     assert specific_runs_availability == [False]
     assert wildcard_runs_availability == [False]
     assert wildercard_runs_availability == [False]
-    assert specific_runs == []
-    assert wildcard_runs == []
-    assert wildercard_runs == []
+    assert not specific_runs
+    assert not wildcard_runs
+    assert not wildercard_runs
 
     hass.states.async_set("sensor.test", 5)
     hass.states.async_set("sensor.test2", "available")
@@ -1698,12 +1698,12 @@ async def test_track_template_result_super_template_2_initially_false(
     )
     await hass.async_block_till_done()
 
-    assert specific_runs_availability == []
-    assert wildcard_runs_availability == []
-    assert wildercard_runs_availability == []
-    assert specific_runs == []
-    assert wildcard_runs == []
-    assert wildercard_runs == []
+    assert not specific_runs_availability
+    assert not wildcard_runs_availability
+    assert not wildercard_runs_availability
+    assert not specific_runs
+    assert not wildcard_runs
+    assert not wildercard_runs
 
     hass.states.async_set("sensor.test", 5)
     hass.states.async_set("sensor.test2", "available")
@@ -2358,7 +2358,7 @@ async def test_track_template_result_transient_errors(
     )
     await hass.async_block_till_done()
 
-    assert sometimes_error_runs == []
+    assert not sometimes_error_runs
     assert "ValueError" in caplog.text
     assert "ValueError" in repr(info)
     caplog.clear()
@@ -2569,10 +2569,10 @@ async def test_track_template_rate_limit_super_2(hass: HomeAssistant) -> None:
     info.async_refresh()
     await hass.async_block_till_done()
 
-    assert refresh_runs == []
+    assert not refresh_runs
     hass.states.async_set("sensor.one", "any")
     await hass.async_block_till_done()
-    assert refresh_runs == []
+    assert not refresh_runs
     info.async_refresh()
     assert refresh_runs == [1]
     hass.states.async_set("sensor.two", "any")
@@ -2641,10 +2641,10 @@ async def test_track_template_rate_limit_super_3(hass: HomeAssistant) -> None:
     info.async_refresh()
     await hass.async_block_till_done()
 
-    assert refresh_runs == []
+    assert not refresh_runs
     hass.states.async_set("sensor.ONE", "any")
     await hass.async_block_till_done()
-    assert refresh_runs == []
+    assert not refresh_runs
     info.async_refresh()
     assert refresh_runs == [1]
     hass.states.async_set("sensor.two", "any")
@@ -3226,7 +3226,7 @@ async def test_async_track_template_result_multiple_templates_mixing_domain(
     hass.states.async_set("binary_sensor.test", "off")
     await hass.async_block_till_done()
 
-    assert refresh_runs == []
+    assert not refresh_runs
 
     refresh_runs = []
     hass.states.async_set("switch.new", "off")

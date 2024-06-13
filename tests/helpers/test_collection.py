@@ -118,7 +118,7 @@ def test_id_manager() -> None:
 async def test_observable_collection() -> None:
     """Test observerable collection."""
     coll = collection.ObservableCollection(None)
-    assert coll.async_items() == []
+    assert not coll.async_items()
     coll.data["bla"] = 1
     assert coll.async_items() == [1]
 

@@ -2410,14 +2410,14 @@ def test_extract_platform_integrations() -> None:
     assert config_util.extract_platform_integrations(config, {"zone"}) == {
         "zone": {"hello", "hello 2"}
     }
-    assert config_util.extract_platform_integrations(config, {"switch"}) == {}
-    assert config_util.extract_platform_integrations(config, {"zonex"}) == {}
-    assert config_util.extract_platform_integrations(config, {"zoney"}) == {}
+    assert not config_util.extract_platform_integrations(config, {"switch"})
+    assert not config_util.extract_platform_integrations(config, {"zonex"})
+    assert not config_util.extract_platform_integrations(config, {"zoney"})
     assert config_util.extract_platform_integrations(
         config, {"zone", "not_valid", "notzone"}
     ) == {"zone": {"hello 2", "hello"}, "notzone": {"nothello"}}
-    assert config_util.extract_platform_integrations(config, {"zoneq"}) == {}
-    assert config_util.extract_platform_integrations(config, {"zoneempty"}) == {}
+    assert not config_util.extract_platform_integrations(config, {"zoneq"})
+    assert not config_util.extract_platform_integrations(config, {"zoneempty"})
 
 
 @pytest.mark.parametrize("load_registries", [False])

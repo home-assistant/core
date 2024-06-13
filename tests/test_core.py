@@ -1922,13 +1922,13 @@ async def test_config_defaults() -> None:
     assert config.external_url is None
     assert config.config_source is ha.ConfigSource.DEFAULT
     assert config.skip_pip is False
-    assert config.skip_pip_packages == []
+    assert config.skip_pip_packages == []  # pylint: disable=use-implicit-booleaness-not-comparison
     assert config.components == set()
     assert config.api is None
     assert config.config_dir == "/test/ha-config"
     assert config.allowlist_external_dirs == set()
     assert config.allowlist_external_urls == set()
-    assert config.media_dirs == {}
+    assert config.media_dirs == {}  # pylint: disable=use-implicit-booleaness-not-comparison
     assert config.recovery_mode is False
     assert config.legacy_templates is False
     assert config.currency == "EUR"

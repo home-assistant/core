@@ -67,7 +67,7 @@ async def test_expand_entity_ids_recursive(hass: HomeAssistant) -> None:
 
 async def test_expand_entity_ids_ignores_non_strings(hass: HomeAssistant) -> None:
     """Test that non string elements in lists are ignored."""
-    assert group.expand_entity_ids(hass, [5, True]) == []
+    assert not group.expand_entity_ids(hass, [5, True])
 
 
 async def test_get_entity_ids(hass: HomeAssistant) -> None:
