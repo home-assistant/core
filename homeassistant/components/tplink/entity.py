@@ -158,7 +158,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""
         device = self._device
-        if self._feature is not None:
+        if not isinstance(self, SensorEntity) and self._feature is not None:
             feature_id = self._feature.id
             # Special handling for primary state attribute (backwards compat for the main switch).
             if feature_id == PRIMARY_STATE_ID:

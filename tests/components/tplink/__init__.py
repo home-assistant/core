@@ -234,56 +234,71 @@ def _mocked_strip_children(features=None) -> list[Device]:
     return [plug0, plug1]
 
 
-def _mocked_emeter_features(
+def _mocked_energy_features(
     power=None, total=None, voltage=None, current=None, today=None
 ) -> list[Feature]:
-    return [
+    feats = []
+    if power is not None:
+        feats.append(
+            _mocked_feature(
+                power,
+                "current_consumption",
+                name="Current consumption",
+                type_=Feature.Type.Sensor,
+                category=Feature.Category.Primary,
+                unit="W",
+                precision_hint=1,
+            )
+        )
+    if total is not None:
+        feats.append(
+            _mocked_feature(
+                total,
+                "consumption_total",
+                name="Total consumption",
+                type_=Feature.Type.Sensor,
+                category=Feature.Category.Info,
+                unit="kWh",
+                precision_hint=3,
+            )
+        )
+    if voltage is not None:
+        feats.append(
+            _mocked_feature(
+                voltage,
+                "voltage",
+                name="Voltage",
+                type_=Feature.Type.Sensor,
+                category=Feature.Category.Primary,
+                unit="V",
+                precision_hint=1,
+            )
+        )
+    if current is not None:
+        feats.append(
+            _mocked_feature(
+                current,
+                "current",
+                name="Current",
+                type_=Feature.Type.Sensor,
+                category=Feature.Category.Primary,
+                unit="A",
+                precision_hint=2,
+            )
+        )
+    # Today is always reported as 0 by the library rather than none
+    feats.append(
         _mocked_feature(
-            power,
-            "current_power_w",
-            name="Current consumption",
-            type_=Feature.Type.Sensor,
-            category=Feature.Category.Primary,
-            unit="W",
-            precision_hint=1,
-        ),
-        _mocked_feature(
-            total,
-            "total_energy_kwh",
-            name="Total consumption since reboot",
-            type_=Feature.Type.Sensor,
-            category=Feature.Category.Info,
-            unit="kWh",
-            precision_hint=3,
-        ),
-        _mocked_feature(
-            voltage,
-            "voltage",
-            name="Voltage",
-            type_=Feature.Type.Sensor,
-            category=Feature.Category.Primary,
-            unit="V",
-            precision_hint=1,
-        ),
-        _mocked_feature(
-            current,
-            "current_a",
-            name="Current",
-            type_=Feature.Type.Sensor,
-            category=Feature.Category.Primary,
-            unit="A",
-            precision_hint=2,
-        ),
-        _mocked_feature(
-            today,
-            "today_energy_kwh",
+            today if today is not None else 0.0,
+            "consumption_today",
             name="Today's consumption",
             type_=Feature.Type.Sensor,
             category=Feature.Category.Info,
             unit="kWh",
             precision_hint=3,
-        ),
-    ]
+        )
+    )
+    return feats
 
 
 MODULE_TO_MOCK_GEN = {

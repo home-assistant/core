@@ -206,8 +206,8 @@ class TPLinkSensor(CoordinatedTPLinkEntity, SensorEntity):
         parent: Device | None = None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(device, coordinator, feature=feature, parent=parent)
         self.entity_description = description
+        super().__init__(device, coordinator, feature=feature, parent=parent)
         self._feature: Feature
         self._async_call_update_attrs()
 

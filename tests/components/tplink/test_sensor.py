@@ -13,7 +13,7 @@ from . import (
     DEVICE_ID,
     MAC_ADDRESS,
     _mocked_device,
-    _mocked_emeter_features,
+    _mocked_energy_features,
     _patch_connect,
     _patch_discovery,
 )
@@ -27,7 +27,7 @@ async def test_color_light_with_an_emeter(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    emeter_features = _mocked_emeter_features(
+    emeter_features = _mocked_energy_features(
         power=None,
         total=None,
         voltage=None,
@@ -67,7 +67,7 @@ async def test_plug_with_an_emeter(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    emeter_features = _mocked_emeter_features(
+    emeter_features = _mocked_energy_features(
         power=100.06,
         total=30.0049,
         voltage=121.19,
@@ -129,7 +129,7 @@ async def test_sensor_unique_id(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    emeter_features = _mocked_emeter_features(
+    emeter_features = _mocked_energy_features(
         power=100,
         total=30,
         voltage=121,
