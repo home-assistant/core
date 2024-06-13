@@ -32,12 +32,12 @@ async def test_sensors(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) >= 4
 
-    for sensor, value, unit, state_class in [
+    for sensor, value, unit, state_class in (
         ("temperature", "7.2", "°C", "measurement"),
         ("humidity", "61.84", "%", "measurement"),
         ("pressure", "1013.54", "hPa", "measurement"),
         ("voltage", "2395", "mV", "measurement"),
-    ]:
+    ):
         state = hass.states.get(f"sensor.{CONFIGURED_PREFIX}_{sensor}")
         assert state is not None
         assert state.state == value

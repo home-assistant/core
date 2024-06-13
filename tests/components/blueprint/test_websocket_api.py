@@ -100,7 +100,7 @@ async def test_import_blueprint(
     """Test importing blueprints."""
     raw_data = Path(
         hass.config.path("blueprints/automation/test_event_service.yaml")
-    ).read_text()
+    ).read_text(encoding="utf8")
 
     aioclient_mock.get(
         "https://raw.githubusercontent.com/balloob/home-assistant-config/main/blueprints/automation/motion_light.yaml",
@@ -149,7 +149,7 @@ async def test_import_blueprint_update(
     """Test importing blueprints."""
     raw_data = Path(
         hass.config.path("blueprints/automation/in_folder/in_folder_blueprint.yaml")
-    ).read_text()
+    ).read_text(encoding="utf8")
 
     aioclient_mock.get(
         "https://raw.githubusercontent.com/in_folder/home-assistant-config/main/blueprints/automation/in_folder_blueprint.yaml",
@@ -192,7 +192,7 @@ async def test_save_blueprint(
     """Test saving blueprints."""
     raw_data = Path(
         hass.config.path("blueprints/automation/test_event_service.yaml")
-    ).read_text()
+    ).read_text(encoding="utf8")
 
     with patch("pathlib.Path.write_text") as write_mock:
         client = await hass_ws_client(hass)

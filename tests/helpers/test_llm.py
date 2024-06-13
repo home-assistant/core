@@ -49,9 +49,7 @@ async def test_register_api(hass: HomeAssistant, llm_context: llm.LLMContext) ->
     """Test registering an llm api."""
 
     class MyAPI(llm.API):
-        async def async_get_api_instance(
-            self, tool_context: llm.ToolInput
-        ) -> llm.APIInstance:
+        async def async_get_api_instance(self, _: llm.ToolInput) -> llm.APIInstance:
             """Return a list of tools."""
             return llm.APIInstance(self, "", [], llm_context)
 

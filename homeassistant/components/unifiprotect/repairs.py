@@ -11,11 +11,11 @@ import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 
 from .const import CONF_ALLOW_EA
+from .data import UFPConfigEntry
 from .utils import async_create_api_client
 
 
@@ -23,9 +23,9 @@ class ProtectRepair(RepairsFlow):
     """Handler for an issue fixing flow."""
 
     _api: ProtectApiClient
-    _entry: ConfigEntry
+    _entry: UFPConfigEntry
 
-    def __init__(self, *, api: ProtectApiClient, entry: ConfigEntry) -> None:
+    def __init__(self, *, api: ProtectApiClient, entry: UFPConfigEntry) -> None:
         """Create flow."""
 
         self._api = api
@@ -128,7 +128,7 @@ class RTSPRepair(ProtectRepair):
         self,
         *,
         api: ProtectApiClient,
-        entry: ConfigEntry,
+        entry: UFPConfigEntry,
         camera_id: str,
     ) -> None:
         """Create flow."""
