@@ -69,10 +69,11 @@ class ReolinkVODMediaSource(MediaSource):
             channel, filename, stream_res, vod_type
         )
         if _LOGGER.isEnabledFor(logging.DEBUG):
-            if "&user=" in url:
-                url_log = f"{url.split('&user=')[0]}&user=xxxxx&password=xxxxx"
-            if "&token=" in url:
-                url_log = f"{url.split('&token=')[0]}&token=xxxxx"
+            url_log = url
+            if "&user=" in url_log:
+                url_log = f"{url_log.split('&user=')[0]}&user=xxxxx&password=xxxxx"
+            if "&token=" in url_log:
+                url_log = f"{url_log.split('&token=')[0]}&token=xxxxx"
             _LOGGER.debug(
                 "Opening VOD stream from %s: %s", host.api.camera_name(channel), url_log
             )

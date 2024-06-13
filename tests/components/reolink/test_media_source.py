@@ -55,7 +55,9 @@ TEST_STREAM = "main"
 TEST_CHANNEL = "0"
 
 TEST_MIME_TYPE = "application/x-mpegURL"
-TEST_URL = "http:test_url"
+TEST_MIME_TYPE_MP4 = "video/mp4"
+TEST_URL = "http:test_url&user=admin&password=test"
+TEST_URL2 = "http:test_url&token=test"
 
 
 @pytest.fixture(autouse=True)
@@ -86,18 +88,22 @@ async def test_resolve(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE, TEST_URL)
     caplog.set_level(logging.DEBUG)
-
     file_id = (
         f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}"
     )
 
+    reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE, TEST_URL)
     play_media = await async_resolve_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
     )
-
     assert play_media.mime_type == TEST_MIME_TYPE
+
+    reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE_MP4, TEST_URL2)
+    play_media = await async_resolve_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
+    )
+    assert play_media.mime_type == TEST_MIME_TYPE_MP4
 
 
 async def test_browsing(
