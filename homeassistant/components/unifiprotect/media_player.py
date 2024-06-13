@@ -51,11 +51,9 @@ async def async_setup_entry(
 
     data.async_subscribe_adopt(_add_new_device)
     async_add_entities(
-        [
-            ProtectMediaPlayer(data, device)
-            for device in data.get_cameras()
-            if device.has_speaker or device.has_removable_speaker
-        ]
+        ProtectMediaPlayer(data, device)
+        for device in data.get_cameras()
+        if device.has_speaker or device.has_removable_speaker
     )
 
 
