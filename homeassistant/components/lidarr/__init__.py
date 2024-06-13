@@ -25,10 +25,12 @@ from .coordinator import (
     WantedDataUpdateCoordinator,
 )
 
+type LidarrConfigEntry = ConfigEntry[dict[str, LidarrDataUpdateCoordinator[Any]]]
+
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LidarrConfigEntry) -> bool:
     """Set up Lidarr from a config entry."""
     host_configuration = PyArrHostConfiguration(
         api_token=entry.data[CONF_API_KEY],
@@ -40,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session=async_get_clientsession(hass, host_configuration.verify_ssl),
         request_timeout=60,
     )
-    coordinators: dict[str, LidarrDataUpdateCoordinator[Any]] = {
+    entry.runtime_data = {
         "disk_space": DiskSpaceDataUpdateCoordinator(hass, host_configuration, lidarr),
         "queue": QueueDataUpdateCoordinator(hass, host_configuration, lidarr),
         "status": StatusDataUpdateCoordinator(hass, host_configuration, lidarr),
@@ -48,23 +50,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
     # Temporary, until we add diagnostic entities
     _version = None
-    for coordinator in coordinators.values():
+    for coordinator in entry.runtime_data.values():
         await coordinator.async_config_entry_first_refresh()
         if isinstance(coordinator, StatusDataUpdateCoordinator):
             _version = coordinator.data
         coordinator.system_version = _version
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LidarrConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class LidarrEntity(CoordinatorEntity[LidarrDataUpdateCoordinator[T]]):
