@@ -41,17 +41,7 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .climate import (
-    CONF_TEMP_HIGH_COMMAND_TEMPLATE,
-    CONF_TEMP_HIGH_COMMAND_TOPIC,
-    CONF_TEMP_HIGH_STATE_TEMPLATE,
-    CONF_TEMP_HIGH_STATE_TOPIC,
-    CONF_TEMP_LOW_COMMAND_TEMPLATE,
-    CONF_TEMP_LOW_COMMAND_TOPIC,
-    CONF_TEMP_LOW_STATE_TEMPLATE,
-    CONF_TEMP_LOW_STATE_TOPIC,
-    MqttTemperatureControlEntity,
-)
+from .climate import MqttTemperatureControlEntity
 from .config import DEFAULT_RETAIN, MQTT_BASE_SCHEMA
 from .const import (
     CONF_CURRENT_TEMP_TEMPLATE,
@@ -67,7 +57,11 @@ from .const import (
     CONF_RETAIN,
     CONF_TEMP_COMMAND_TEMPLATE,
     CONF_TEMP_COMMAND_TOPIC,
+    CONF_TEMP_HIGH_STATE_TEMPLATE,
+    CONF_TEMP_HIGH_STATE_TOPIC,
     CONF_TEMP_INITIAL,
+    CONF_TEMP_LOW_STATE_TEMPLATE,
+    CONF_TEMP_LOW_STATE_TOPIC,
     CONF_TEMP_MAX,
     CONF_TEMP_MIN,
     CONF_TEMP_STATE_TEMPLATE,
@@ -109,8 +103,6 @@ COMMAND_TEMPLATE_KEYS = {
     CONF_MODE_COMMAND_TEMPLATE,
     CONF_TEMP_COMMAND_TEMPLATE,
     CONF_POWER_COMMAND_TEMPLATE,
-    CONF_TEMP_HIGH_COMMAND_TEMPLATE,
-    CONF_TEMP_LOW_COMMAND_TEMPLATE,
 }
 
 
@@ -121,9 +113,7 @@ TOPIC_KEYS = (
     CONF_POWER_COMMAND_TOPIC,
     CONF_TEMP_COMMAND_TOPIC,
     CONF_TEMP_STATE_TOPIC,
-    CONF_TEMP_HIGH_COMMAND_TOPIC,
     CONF_TEMP_HIGH_STATE_TOPIC,
-    CONF_TEMP_LOW_COMMAND_TOPIC,
     CONF_TEMP_LOW_STATE_TOPIC,
 )
 
@@ -165,12 +155,8 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_TEMP_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_TEMP_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_TEMP_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_TEMP_HIGH_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_TEMP_HIGH_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_TEMP_HIGH_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_TEMP_HIGH_STATE_TEMPLATE): cv.template,
-        vol.Optional(CONF_TEMP_LOW_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_TEMP_LOW_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_TEMP_LOW_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_TEMP_LOW_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,

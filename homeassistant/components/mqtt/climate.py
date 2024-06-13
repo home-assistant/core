@@ -70,7 +70,11 @@ from .const import (
     CONF_RETAIN,
     CONF_TEMP_COMMAND_TEMPLATE,
     CONF_TEMP_COMMAND_TOPIC,
+    CONF_TEMP_HIGH_STATE_TEMPLATE,
+    CONF_TEMP_HIGH_STATE_TOPIC,
     CONF_TEMP_INITIAL,
+    CONF_TEMP_LOW_STATE_TEMPLATE,
+    CONF_TEMP_LOW_STATE_TOPIC,
     CONF_TEMP_MAX,
     CONF_TEMP_MIN,
     CONF_TEMP_STATE_TEMPLATE,
@@ -129,12 +133,8 @@ CONF_SWING_MODE_STATE_TEMPLATE = "swing_mode_state_template"
 CONF_SWING_MODE_STATE_TOPIC = "swing_mode_state_topic"
 CONF_TEMP_HIGH_COMMAND_TEMPLATE = "temperature_high_command_template"
 CONF_TEMP_HIGH_COMMAND_TOPIC = "temperature_high_command_topic"
-CONF_TEMP_HIGH_STATE_TEMPLATE = "temperature_high_state_template"
-CONF_TEMP_HIGH_STATE_TOPIC = "temperature_high_state_topic"
 CONF_TEMP_LOW_COMMAND_TEMPLATE = "temperature_low_command_template"
 CONF_TEMP_LOW_COMMAND_TOPIC = "temperature_low_command_topic"
-CONF_TEMP_LOW_STATE_TEMPLATE = "temperature_low_state_template"
-CONF_TEMP_LOW_STATE_TOPIC = "temperature_low_state_topic"
 CONF_TEMP_STEP = "temp_step"
 
 DEFAULT_INITIAL_TEMPERATURE = 21.0
