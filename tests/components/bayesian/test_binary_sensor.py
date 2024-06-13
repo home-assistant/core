@@ -325,6 +325,67 @@ async def test_sensor_value_template(hass: HomeAssistant) -> None:
     assert state.state == "off"
 
 
+async def test_mixed_states(hass: HomeAssistant) -> None:
+    """Test sensor on probability threshold limits."""
+    config = {
+        "binary_sensor": {
+            "name": "should_HVAC",
+            "platform": "bayesian",
+            "observations": [
+                {
+                    "platform": "template",
+                    "value_template": "{{states('sensor.guest_sensor') != 'off'}}",
+                    "prob_given_true": 0.3,
+                    "prob_given_false": 0.15,
+                },
+                {
+                    "platform": "state",
+                    "entity_id": "sensor.anyone_home",
+                    "to_state": "on",
+                    "prob_given_true": 0.6,
+                    "prob_given_false": 0.05,
+                },
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.temperature",
+                    "below": 24,
+                    "above": 19,
+                    "prob_given_true": 0.1,
+                    "prob_given_false": 0.6,
+                },
+            ],
+            "prior": 0.3,
+            "probability_threshold": 0.5,
+        }
+    }
+    assert await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.guest_sensor", "UNKNOWN")
+    hass.states.async_set("sensor.anyone_home", "on")
+    hass.states.async_set("sensor.temperature", 15)
+
+    state = hass.states.get("binary_sensor.should_HVAC")
+
+    assert set(state.attributes.get("occurred_observation_entities")) == {
+        "sensor.anyone_home",
+        "sensor.temperature",
+    }
+    template_obs = {
+        "platform": "template",
+        "value_template": "{{states('sensor.guest_sensor') != 'off'}}",
+        "prob_given_true": 0.3,
+        "prob_given_false": 0.15,
+        "observed": True,
+    }
+    assert template_obs in state.attributes.get("observations")
+
+    assert abs(0.95857988 - state.attributes.get("probability")) < 0.01
+    # Calculated using bayes theorum where P(A) = 0.3, P(B|A) = 0.3 , P(B|notA) = 0.15 = 0.46153846
+    # Step 2 0.91139240
+    # step 3 0.95857988 (negative observation)
+
+
 async def test_threshold(hass: HomeAssistant, issue_registry: ir.IssueRegistry) -> None:
     """Test sensor on probability threshold limits."""
     config = {
@@ -788,7 +849,7 @@ async def test_bad_multi_numeric(
     assert "they must not overlap" in caplog.text
 
 
-async def test_bad_numeric(
+async def test_inverted_numeric(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
     caplog: pytest.LogCaptureFixture,
@@ -815,6 +876,33 @@ async def test_bad_numeric(
 
     assert await async_setup_component(hass, "binary_sensor", config)
     assert "bayesian numeric state 'above' must be less than 'below'" in caplog.text
+
+
+async def test_no_value_numeric(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test whether missing prob_given_false are detected and appropriate logs are created."""
+
+    config = {
+        "binary_sensor": {
+            "platform": "bayesian",
+            "name": "goldilocks_zone",
+            "observations": [
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.temp",
+                    "prob_given_true": 0.9,
+                    "prob_given_false": 0.2,
+                },
+            ],
+            "prior": 0.4,
+        }
+    }
+
+    assert await async_setup_component(hass, "binary_sensor", config)
+    assert "For bayesian numeric state at least one of" in caplog.text
 
 
 async def test_probability_updates(hass: HomeAssistant) -> None:
