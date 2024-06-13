@@ -19,3 +19,5 @@ ATTR_DATA = "data"
 
 MANUFACTURER = "HabitRPG, Inc."
 NAME = "Habitica"
+
+ADDITIONAL_USER_FIELDS: set[str] = {"lastCron"}
