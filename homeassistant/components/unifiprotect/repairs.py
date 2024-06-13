@@ -238,23 +238,16 @@ async def async_create_fix_flow(
     """Create flow."""
     if (
         data is not None
-        and issue_id == "ea_channel_warning"
+        and "entity_id" in data
         and (entry := hass.config_entries.async_get_entry(cast(str, data["entry_id"])))
         and (api := _async_get_or_create_api_client(hass, entry))
     ):
-        return EAConfirmRepair(api=api, entry=entry)
-    if (
-        data is not None
-        and issue_id == "cloud_user"
-        and (entry := hass.config_entries.async_get_entry(cast(str, data["entry_id"])))
-        and (api := _async_get_or_create_api_client(hass, entry))
-    ):
-        return CloudAccountRepair(api=api, entry=entry)
-    if (
-        data is not None
-        and issue_id.startswith("rtsp_disabled_")
-        and (entry := hass.config_entries.async_get_entry(cast(str, data["entry_id"])))
-        and (api := _async_get_or_create_api_client(hass, entry))
-    ):
-        return RTSPRepair(api=api, entry=entry, camera_id=cast(str, data["camera_id"]))
+        if issue_id == "ea_channel_warning":
+            return EAConfirmRepair(api=api, entry=entry)
+        if issue_id == "cloud_user":
+            return CloudAccountRepair(api=api, entry=entry)
+        if issue_id.startswith("rtsp_disabled_"):
+            return RTSPRepair(
+                api=api, entry=entry, camera_id=cast(str, data["camera_id"])
+            )
     return ConfirmRepairFlow()
