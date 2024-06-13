@@ -108,6 +108,7 @@ async def test_observer_discovery(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
 
+    # pylint:disable-next=unnecessary-dunder-call
     assert mock_observer.mock_calls == [call.start(), call.__bool__(), call.stop()]
 
 

@@ -2816,7 +2816,7 @@ async def test_import_statistics(
             },
         ]
     }
-    statistic_ids = list_statistic_ids(hass)  # TODO
+    statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "display_unit_of_measurement": "kWh",
@@ -3034,7 +3034,7 @@ async def test_adjust_sum_statistics_energy(
             },
         ]
     }
-    statistic_ids = list_statistic_ids(hass)  # TODO
+    statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "display_unit_of_measurement": "kWh",
@@ -3227,7 +3227,7 @@ async def test_adjust_sum_statistics_gas(
             },
         ]
     }
-    statistic_ids = list_statistic_ids(hass)  # TODO
+    statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "display_unit_of_measurement": "m³",

@@ -26,7 +26,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .data import ProtectData
+from .data import ProtectData, async_get_ufp_entries
 from .views import async_generate_event_video_url, async_generate_thumbnail_url
 
 VIDEO_FORMAT = "video/mp4"
@@ -89,13 +89,13 @@ def get_ufp_event(event_type: SimpleEventType) -> set[EventType]:
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up UniFi Protect media source."""
-
-    data_sources: dict[str, ProtectData] = {}
-    for data in hass.data.get(DOMAIN, {}).values():
-        if isinstance(data, ProtectData):
-            data_sources[data.api.bootstrap.nvr.id] = data
-
-    return ProtectMediaSource(hass, data_sources)
+    return ProtectMediaSource(
+        hass,
+        {
+            entry.runtime_data.api.bootstrap.nvr.id: entry.runtime_data
+            for entry in async_get_ufp_entries(hass)
+        },
+    )
 
 
 @callback
@@ -543,21 +543,20 @@ class ProtectMediaSource(MediaSource):
             return source
 
         now = dt_util.now()
-
-        args = {
-            "data": data,
-            "start": now - timedelta(days=days),
-            "end": now,
-            "reserve": True,
-            "event_types": get_ufp_event(event_type),
-        }
-
         camera: Camera | None = None
+        event_camera_id: str | None = None
         if camera_id != "all":
             camera = data.api.bootstrap.cameras.get(camera_id)
-            args["camera_id"] = camera_id
+            event_camera_id = camera_id
 
-        events = await self._build_events(**args)  # type: ignore[arg-type]
+        events = await self._build_events(
+            data=data,
+            start=now - timedelta(days=days),
+            end=now,
+            camera_id=event_camera_id,
+            event_types=get_ufp_event(event_type),
+            reserve=True,
+        )
         source.children = events
         source.title = self._breadcrumb(
             data,
@@ -674,21 +673,21 @@ class ProtectMediaSource(MediaSource):
         else:
             end_dt = start_dt + timedelta(hours=24)
 
-        args = {
-            "data": data,
-            "start": start_dt,
-            "end": end_dt,
-            "reserve": False,
-            "event_types": get_ufp_event(event_type),
-        }
-
         camera: Camera | None = None
+        event_camera_id: str | None = None
         if camera_id != "all":
             camera = data.api.bootstrap.cameras.get(camera_id)
-            args["camera_id"] = camera_id
+            event_camera_id = camera_id
 
         title = f"{start.strftime('%B %Y')} > {title}"
-        events = await self._build_events(**args)  # type: ignore[arg-type]
+        events = await self._build_events(
+            data=data,
+            start=start_dt,
+            end=end_dt,
+            camera_id=event_camera_id,
+            reserve=False,
+            event_types=get_ufp_event(event_type),
+        )
         source.children = events
         source.title = self._breadcrumb(
             data,

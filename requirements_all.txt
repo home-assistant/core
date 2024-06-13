@@ -637,7 +637,7 @@ bthomehub5-devicelist==0.1.1
 btsmarthub-devicelist==0.2.3
 
 # homeassistant.components.buienradar
-buienradar==1.0.5
+buienradar==1.0.6
 
 # homeassistant.components.dhcp
 cached_ipaddress==0.3.0
@@ -2785,7 +2785,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==0.13.0
+uiprotect==1.1.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7

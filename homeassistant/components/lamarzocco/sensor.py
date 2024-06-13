@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from lmcloud.const import BoilerType, PhysicalKey
+from lmcloud.const import BoilerType, MachineModel, PhysicalKey
 from lmcloud.lm_machine import LaMarzoccoMachine
 
 from homeassistant.components.sensor import (
@@ -12,12 +12,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import LaMarzoccoConfigEntry
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
 
@@ -81,17 +80,19 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
         value_fn=lambda device: device.config.boilers[
             BoilerType.STEAM
         ].current_temperature,
+        supported_fn=lambda coordinator: coordinator.device.model
+        != MachineModel.LINEA_MINI,
     ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: LaMarzoccoConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensor entities."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         LaMarzoccoSensorEntity(coordinator, description)

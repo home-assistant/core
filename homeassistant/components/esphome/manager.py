@@ -491,7 +491,7 @@ class ESPHomeManager:
 
         entry_data.async_update_device_state()
         await entry_data.async_update_static_infos(
-            hass, entry, entity_infos, device_info.mac_address, late=True
+            hass, entry, entity_infos, device_info.mac_address
         )
         _setup_services(hass, entry_data, services)
 

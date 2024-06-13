@@ -1,9 +1,9 @@
 """Test fixtures for Azure DevOps."""
 
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant.components.azure_devops.const import DOMAIN
 
@@ -18,7 +18,8 @@ async def mock_devops_client() -> AsyncGenerator[MagicMock]:
 
     with (
         patch(
-            "homeassistant.components.azure_devops.DevOpsClient", autospec=True
+            "homeassistant.components.azure_devops.coordinator.DevOpsClient",
+            autospec=True,
         ) as mock_client,
         patch(
             "homeassistant.components.azure_devops.config_flow.DevOpsClient",
@@ -54,5 +55,5 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     with patch(
         "homeassistant.components.azure_devops.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
-        yield mock_setup_entry
+    ) as mock_entry:
+        yield mock_entry

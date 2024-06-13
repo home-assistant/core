@@ -138,7 +138,7 @@ async def test_fetch_blueprint_from_github_url(
         "https://raw.githubusercontent.com/balloob/home-assistant-config/main/blueprints/automation/motion_light.yaml",
         text=Path(
             hass.config.path("blueprints/automation/test_event_service.yaml")
-        ).read_text(),
+        ).read_text(encoding="utf8"),
     )
 
     imported_blueprint = await importer.fetch_blueprint_from_url(hass, url)
@@ -181,7 +181,7 @@ async def test_fetch_blueprint_from_website_url(
         "https://www.home-assistant.io/blueprints/awesome.yaml",
         text=Path(
             hass.config.path("blueprints/automation/test_event_service.yaml")
-        ).read_text(),
+        ).read_text(encoding="utf8"),
     )
 
     url = "https://www.home-assistant.io/blueprints/awesome.yaml"
