@@ -366,7 +366,7 @@ async def test_rtsp_writable_fix_when_not_setup(
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test RTSP disabled warning if the integration is no longer setup."""
+    """Test RTSP disabled warning if the integration is no longer set up."""
 
     for channel in doorbell.channels:
         channel.is_rtsp_enabled = False
