@@ -394,7 +394,7 @@ async def test_rtsp_writable_fix_when_not_setup(
     assert issue is not None
 
     # Unload the integration to ensure the fix flow still works
-    # if the integration is no longer setup
+    # if the integration is no longer set up
     await hass.config_entries.async_unload(ufp.entry.entry_id)
     await hass.async_block_till_done()
 
