@@ -184,8 +184,22 @@ async def test_assist_api(
             "success": [],
             "targets": [],
         },
+        "reprompt": {
+            "plain": {
+                "extra_data": None,
+                "reprompt": "Do it again",
+            },
+        },
         "response_type": "action_done",
-        "speech": {},
+        "speech": {
+            "plain": {
+                "extra_data": None,
+                "speech": "Some speech",
+            },
+        },
+        "speech_slots": {
+            "hello": 1,
+        },
     }
 
     # Call with a device/area/floor
