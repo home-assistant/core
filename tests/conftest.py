@@ -26,6 +26,7 @@ from aiohttp.test_utils import (
 )
 from aiohttp.typedefs import JSONDecoder
 from aiohttp.web import Application
+import bcrypt
 import freezegun
 import multidict
 import pytest
@@ -33,6 +34,8 @@ import pytest_socket
 import requests_mock
 from syrupy.assertion import SnapshotAssertion
 from typing_extensions import AsyncGenerator, Generator
+
+from homeassistant import block_async_io
 
 # Setup patching if dt_util time functions before any other Home Assistant imports
 from . import patch_time  # noqa: F401, isort:skip
@@ -51,7 +54,13 @@ from homeassistant.components.websocket_api.http import URL
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.config_entries import ConfigEntries, ConfigEntry, ConfigEntryState
 from homeassistant.const import HASSIO_USER_NAME
-from homeassistant.core import CoreState, HassJob, HomeAssistant, ServiceCall
+from homeassistant.core import (
+    CoreState,
+    HassJob,
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+)
 from homeassistant.helpers import (
     area_registry as ar,
     category_registry as cr,
@@ -64,6 +73,7 @@ from homeassistant.helpers import (
     recorder as recorder_helper,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.translation import _TranslationsCacheData
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import BASE_PLATFORMS, async_setup_component
 from homeassistant.util import location
@@ -388,8 +398,6 @@ def reset_hass_threading_local_object() -> Generator[None]:
 @pytest.fixture(scope="session", autouse=True)
 def bcrypt_cost() -> Generator[None]:
     """Run with reduced rounds during tests, to speed up uses."""
-    import bcrypt
-
     gensalt_orig = bcrypt.gensalt
 
     def gensalt_mock(rounds=12, prefix=b"2b"):
@@ -892,7 +900,7 @@ def fail_on_log_exception(
         return
 
     def log_exception(format_err, *args):
-        raise
+        raise  # pylint: disable=misplaced-bare-raise
 
     monkeypatch.setattr("homeassistant.util.logging.log_exception", log_exception)
 
@@ -1168,8 +1176,6 @@ def mock_get_source_ip() -> Generator[_patch]:
 @pytest.fixture(autouse=True, scope="session")
 def translations_once() -> Generator[_patch]:
     """Only load translations once per session."""
-    from homeassistant.helpers.translation import _TranslationsCacheData
-
     cache = _TranslationsCacheData({}, {})
     patcher = patch(
         "homeassistant.helpers.translation._TranslationsCacheData",
@@ -1680,10 +1686,11 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
     # We need to drop the stop method from the object since we patched
     # out start and this fixture will expire before the stop method is called
     # when EVENT_HOMEASSISTANT_STOP is fired.
+    # pylint: disable-next=c-extension-no-member
     bluetooth_scanner.OriginalBleakScanner.stop = AsyncMock()  # type: ignore[assignment]
     with (
         patch.object(
-            bluetooth_scanner.OriginalBleakScanner,
+            bluetooth_scanner.OriginalBleakScanner,  # pylint: disable=c-extension-no-member
             "start",
         ) as mock_bleak_scanner_start,
         patch.object(bluetooth_scanner, "HaScanner"),
@@ -1776,9 +1783,11 @@ def label_registry(hass: HomeAssistant) -> lr.LabelRegistry:
 
 
 @pytest.fixture
-def service_calls() -> Generator[None, None, list[ServiceCall]]:
+def service_calls(hass: HomeAssistant) -> Generator[None, None, list[ServiceCall]]:
     """Track all service calls."""
     calls = []
+
+    _original_async_call = hass.services.async_call
 
     async def _async_call(
         self,
@@ -1786,8 +1795,18 @@ def service_calls() -> Generator[None, None, list[ServiceCall]]:
         service: str,
         service_data: dict[str, Any] | None = None,
         **kwargs: Any,
-    ):
+    ) -> ServiceResponse:
         calls.append(ServiceCall(domain, service, service_data))
+        try:
+            return await _original_async_call(
+                domain,
+                service,
+                service_data,
+                **kwargs,
+            )
+        except ha.ServiceNotFound:
+            _LOGGER.debug("Ignoring unknown service call to %s.%s", domain, service)
+        return None
 
     with patch("homeassistant.core.ServiceRegistry.async_call", _async_call):
         yield calls
@@ -1797,3 +1816,15 @@ def service_calls() -> Generator[None, None, list[ServiceCall]]:
 def snapshot(snapshot: SnapshotAssertion) -> SnapshotAssertion:
     """Return snapshot assertion fixture with the Home Assistant extension."""
     return snapshot.use_extension(HomeAssistantSnapshotExtension)
+
+
+@pytest.fixture
+def disable_block_async_io() -> Generator[Any, Any, None]:
+    """Fixture to disable the loop protection from block_async_io."""
+    yield
+    calls = block_async_io._BLOCKED_CALLS.calls
+    for blocking_call in calls:
+        setattr(
+            blocking_call.object, blocking_call.function, blocking_call.original_func
+        )
+    calls.clear()

@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pycfdns
 
 from homeassistant.components.cloudflare.const import CONF_RECORDS, DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_ZONE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from tests.common import MockConfigEntry
 
@@ -54,18 +57,18 @@ MOCK_ZONE_RECORDS: list[pycfdns.RecordModel] = [
 
 
 async def init_integration(
-    hass,
+    hass: HomeAssistant,
     *,
-    data: dict = ENTRY_CONFIG,
-    options: dict = ENTRY_OPTIONS,
+    data: dict[str, Any] | UndefinedType = UNDEFINED,
+    options: dict[str, Any] | UndefinedType = UNDEFINED,
     unique_id: str = MOCK_ZONE["name"],
     skip_setup: bool = False,
 ) -> MockConfigEntry:
     """Set up the Cloudflare integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=data,
-        options=options,
+        data=ENTRY_CONFIG if data is UNDEFINED else data,
+        options=ENTRY_OPTIONS if options is UNDEFINED else options,
         unique_id=unique_id,
     )
     entry.add_to_hass(hass)
@@ -77,11 +80,18 @@ async def init_integration(
     return entry
 
 
-def _get_mock_client(zone: str = MOCK_ZONE, records: list = MOCK_ZONE_RECORDS):
+def _get_mock_client(
+    zone: pycfdns.ZoneModel | UndefinedType = UNDEFINED,
+    records: list[pycfdns.RecordModel] | UndefinedType = UNDEFINED,
+):
     client: pycfdns.Client = AsyncMock()
 
-    client.list_zones = AsyncMock(return_value=[zone])
-    client.list_dns_records = AsyncMock(return_value=records)
+    client.list_zones = AsyncMock(
+        return_value=[MOCK_ZONE if zone is UNDEFINED else zone]
+    )
+    client.list_dns_records = AsyncMock(
+        return_value=MOCK_ZONE_RECORDS if records is UNDEFINED else records
+    )
     client.update_dns_record = AsyncMock(return_value=None)
 
     return client

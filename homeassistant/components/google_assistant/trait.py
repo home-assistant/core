@@ -257,7 +257,7 @@ def _google_temp_unit(units):
 
 
 def _next_selected(items: list[str], selected: str | None) -> str | None:
-    """Return the next item in a item list starting at given value.
+    """Return the next item in an item list starting at given value.
 
     If selected is missing in items, None is returned
     """
@@ -1586,6 +1586,17 @@ class ArmDisArmTrait(_Trait):
             if features & required_feature != 0
         ]
 
+    def _default_arm_state(self):
+        states = self._supported_states()
+
+        if STATE_ALARM_TRIGGERED in states:
+            states.remove(STATE_ALARM_TRIGGERED)
+
+        if len(states) != 1:
+            raise SmartHomeError(ERR_NOT_SUPPORTED, "ArmLevel missing")
+
+        return states[0]
+
     def sync_attributes(self):
         """Return ArmDisarm attributes for a sync request."""
         response = {}
@@ -1609,10 +1620,13 @@ class ArmDisArmTrait(_Trait):
     def query_attributes(self):
         """Return ArmDisarm query attributes."""
         armed_state = self.state.attributes.get("next_state", self.state.state)
-        response = {"isArmed": armed_state in self.state_to_service}
-        if response["isArmed"]:
-            response.update({"currentArmLevel": armed_state})
-        return response
+
+        if armed_state in self.state_to_service:
+            return {"isArmed": True, "currentArmLevel": armed_state}
+        return {
+            "isArmed": False,
+            "currentArmLevel": self._default_arm_state(),
+        }
 
     async def execute(self, command, data, params, challenge):
         """Execute an ArmDisarm command."""
@@ -1620,15 +1634,7 @@ class ArmDisArmTrait(_Trait):
             # If no arm level given, we can only arm it if there is
             # only one supported arm type. We never default to triggered.
             if not (arm_level := params.get("armLevel")):
-                states = self._supported_states()
-
-                if STATE_ALARM_TRIGGERED in states:
-                    states.remove(STATE_ALARM_TRIGGERED)
-
-                if len(states) != 1:
-                    raise SmartHomeError(ERR_NOT_SUPPORTED, "ArmLevel missing")
-
-                arm_level = states[0]
+                arm_level = self._default_arm_state()
 
             if self.state.state == arm_level:
                 raise SmartHomeError(ERR_ALREADY_ARMED, "System is already armed")

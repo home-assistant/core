@@ -1931,7 +1931,10 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         }
     }
 
-    assert trt.query_attributes() == {"isArmed": False}
+    assert trt.query_attributes() == {
+        "currentArmLevel": "armed_custom_bypass",
+        "isArmed": False,
+    }
 
     assert trt.can_execute(trait.COMMAND_ARMDISARM, {"arm": False})
 
@@ -3983,7 +3986,7 @@ async def test_sensorstate(
         ),
     }
 
-    for sensor_type in sensor_types:
+    for sensor_type, item in sensor_types.items():
         assert helpers.get_google_type(sensor.DOMAIN, None) is not None
         assert trait.SensorStateTrait.supported(sensor.DOMAIN, None, sensor_type, None)
 
@@ -3999,8 +4002,8 @@ async def test_sensorstate(
             BASIC_CONFIG,
         )
 
-        name = sensor_types[sensor_type][0]
-        unit = sensor_types[sensor_type][1]
+        name = item[0]
+        unit = item[1]
 
         if sensor_type == sensor.SensorDeviceClass.AQI:
             assert trt.sync_attributes() == {

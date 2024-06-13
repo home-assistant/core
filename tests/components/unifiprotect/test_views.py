@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock, Mock
 
 from aiohttp import ClientResponse
 import pytest
-from pyunifiprotect.data import Camera, Event, EventType
-from pyunifiprotect.exceptions import ClientError
+from uiprotect.data import Camera, Event, EventType
+from uiprotect.exceptions import ClientError
 
 from homeassistant.components.unifiprotect.views import (
     async_generate_event_video_url,
@@ -147,6 +147,25 @@ async def test_thumbnail_entry_id(
     assert response.content_type == "image/jpeg"
     assert await response.content.read() == b"testtest"
     ufp.api.get_event_thumbnail.assert_called_with("test_id", width=None, height=None)
+
+
+async def test_thumbnail_invalid_entry_entry_id(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    ufp: MockUFPFixture,
+    camera: Camera,
+) -> None:
+    """Test invalid config entry ID in URL."""
+
+    ufp.api.get_event_thumbnail = AsyncMock(return_value=b"testtest")
+
+    await init_entry(hass, ufp, [camera])
+    url = async_generate_thumbnail_url("test_id", "invalid")
+
+    http_client = await hass_client()
+    response = cast(ClientResponse, await http_client.get(url))
+
+    assert response.status == 404
 
 
 async def test_video_bad_event(

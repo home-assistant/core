@@ -5,7 +5,7 @@ from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from pyunifiprotect.data import (
+from uiprotect.data import (
     Bootstrap,
     Camera,
     Event,
@@ -13,7 +13,7 @@ from pyunifiprotect.data import (
     Permission,
     SmartDetectObjectType,
 )
-from pyunifiprotect.exceptions import NvrError
+from uiprotect.exceptions import NvrError
 
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import MediaSourceItem

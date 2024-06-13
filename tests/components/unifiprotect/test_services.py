@@ -5,9 +5,9 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from pyunifiprotect.data import Camera, Chime, Color, Light, ModelType
-from pyunifiprotect.data.devices import CameraZone
-from pyunifiprotect.exceptions import BadRequest
+from uiprotect.data import Camera, Chime, Color, Light, ModelType
+from uiprotect.data.devices import CameraZone
+from uiprotect.exceptions import BadRequest
 
 from homeassistant.components.unifiprotect.const import ATTR_MESSAGE, DOMAIN
 from homeassistant.components.unifiprotect.services import (
@@ -17,6 +17,7 @@ from homeassistant.components.unifiprotect.services import (
     SERVICE_SET_CHIME_PAIRED,
     SERVICE_SET_DEFAULT_DOORBELL_TEXT,
 )
+from homeassistant.config_entries import ConfigEntryDisabler
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -142,6 +143,29 @@ async def test_set_default_doorbell_text(
     nvr.set_default_doorbell_message.assert_called_once_with("Test Message")
 
 
+async def test_add_doorbell_text_disabled_config_entry(
+    hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
+) -> None:
+    """Test add_doorbell_text service."""
+    nvr = ufp.api.bootstrap.nvr
+    nvr.__fields__["add_custom_doorbell_message"] = Mock(final=False)
+    nvr.add_custom_doorbell_message = AsyncMock()
+
+    await hass.config_entries.async_set_disabled_by(
+        ufp.entry.entry_id, ConfigEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_DOORBELL_TEXT,
+            {ATTR_DEVICE_ID: device.id, ATTR_MESSAGE: "Test Message"},
+            blocking=True,
+        )
+    assert not nvr.add_custom_doorbell_message.called
+
+
 async def test_set_chime_paired_doorbells(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -233,4 +257,4 @@ async def test_remove_privacy_zone(
         blocking=True,
     )
     ufp.api.update_device.assert_called()
-    assert not len(doorbell.privacy_zones)
+    assert not doorbell.privacy_zones

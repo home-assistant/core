@@ -178,40 +178,39 @@ async def test_cleanup_disconnected_cams(
     assert sorted(device_models) == sorted(expected_models)
 
 
-async def test_cleanup_deprecated_entities(
+async def test_migrate_entity_ids(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     reolink_connect: MagicMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test deprecated ir_lights light entity is cleaned."""
+    """Test entity ids that need to be migrated."""
     reolink_connect.channels = [0]
-    ir_id = f"{TEST_MAC}_0_ir_lights"
+    original_id = f"{TEST_MAC}"
+    new_id = f"{TEST_MAC}_firmware"
+    domain = Platform.UPDATE
 
     entity_registry.async_get_or_create(
-        domain=Platform.LIGHT,
+        domain=domain,
         platform=const.DOMAIN,
-        unique_id=ir_id,
+        unique_id=original_id,
         config_entry=config_entry,
-        suggested_object_id=ir_id,
+        suggested_object_id=original_id,
         disabled_by=None,
     )
 
-    assert entity_registry.async_get_entity_id(Platform.LIGHT, const.DOMAIN, ir_id)
-    assert (
-        entity_registry.async_get_entity_id(Platform.SWITCH, const.DOMAIN, ir_id)
-        is None
-    )
+    assert entity_registry.async_get_entity_id(domain, const.DOMAIN, original_id)
+    assert entity_registry.async_get_entity_id(domain, const.DOMAIN, new_id) is None
 
-    # setup CH 0 and NVR switch entities/device
-    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
+    # setup CH 0 and host entities/device
+    with patch("homeassistant.components.reolink.PLATFORMS", [domain]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert (
-        entity_registry.async_get_entity_id(Platform.LIGHT, const.DOMAIN, ir_id) is None
+        entity_registry.async_get_entity_id(domain, const.DOMAIN, original_id) is None
     )
-    assert entity_registry.async_get_entity_id(Platform.SWITCH, const.DOMAIN, ir_id)
+    assert entity_registry.async_get_entity_id(domain, const.DOMAIN, new_id)
 
 
 async def test_no_repair_issue(
