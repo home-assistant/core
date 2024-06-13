@@ -118,7 +118,7 @@ def test_id_manager() -> None:
 async def test_observable_collection() -> None:
     """Test observerable collection."""
     coll = collection.ObservableCollection(None)
-    assert not coll.async_items()
+    assert coll.async_items() == []  # pylint: disable=use-implicit-booleaness-not-comparison
     coll.data["bla"] = 1
     assert coll.async_items() == [1]
 
