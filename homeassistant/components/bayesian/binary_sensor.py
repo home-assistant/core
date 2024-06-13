@@ -100,13 +100,16 @@ def _above_greater_than_below(configs: list) -> list:
 
 
 def _no_overlaping(configs: list[dict]) -> list[dict]:
-    if configs[0].get(CONF_PLATFORM, None) != CONF_NUMERIC_STATE:
-        return configs
-    if len(configs) < 2:
+    numeric_configs = [
+        config
+        for config in configs
+        if config.get(CONF_PLATFORM, None) == CONF_NUMERIC_STATE
+    ]
+    if len(numeric_configs) < 2:
         return configs
     d: dict[str, list[tuple]] = {}
     index = 0
-    for index, config in enumerate(configs):
+    for index, config in enumerate(numeric_configs):
         above = config.get(CONF_ABOVE, -math.inf)
         below = config.get(CONF_BELOW, math.inf)
         entity_id: str = str(config.get(CONF_ENTITY_ID))
