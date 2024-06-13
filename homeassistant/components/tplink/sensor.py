@@ -98,16 +98,11 @@ ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
 
 def _new_sensor_description(feature: Feature) -> TPLinkSensorEntityDescription:
     """Create description for entities not yet added to the static description list."""
-    if isinstance(feature.value, datetime):
-        device_class = SensorDeviceClass.TIMESTAMP
-    else:
-        device_class = None
     return TPLinkSensorEntityDescription(
         key=feature.id,
         name=feature.name,
         native_unit_of_measurement=feature.unit,
         state_class=SensorStateClass.MEASUREMENT,
-        device_class=device_class,
         feature_id=feature.id,
         precision=feature.precision_hint,
         entity_registry_enabled_default=feature.category is not Feature.Category.Debug,

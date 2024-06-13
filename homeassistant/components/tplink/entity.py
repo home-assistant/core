@@ -275,7 +275,6 @@ def _entities_for_device_and_its_children[_E: CoordinatedTPLinkEntity](
     *,
     feature_type: Feature.Type,
     entity_class: type[_E],
-    children_coordinators: list[TPLinkDataUpdateCoordinator] | None = None,
     extra_filter: Callable[[Device, Feature], bool] | None = None,
 ) -> list[_E]:
     """Create entities for device and its children.
@@ -285,16 +284,11 @@ def _entities_for_device_and_its_children[_E: CoordinatedTPLinkEntity](
     entities: list[_E] = []
     if device.children:
         _LOGGER.debug("Initializing device with %s children", len(device.children))
-        for idx, child in enumerate(device.children):
-            # Only iot strips have child coordinators
-            if children_coordinators:
-                child_coordinator = children_coordinators[idx]
-            else:
-                child_coordinator = coordinator
+        for child in device.children:
             entities.extend(
                 _entities_for_device(
                     child,
-                    coordinator=child_coordinator,
+                    coordinator=coordinator,
                     feature_type=feature_type,
                     entity_class=entity_class,
                     parent=device,

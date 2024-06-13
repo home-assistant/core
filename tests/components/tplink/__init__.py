@@ -6,12 +6,12 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from kasa import (
-    ConnectionType,
     Device,
     DeviceConfig,
-    DeviceFamilyType,
+    DeviceConnectionParameters,
+    DeviceEncryptionType,
+    DeviceFamily,
     DeviceType,
-    EncryptType,
     Feature,
     KasaException,
     Module,
@@ -54,16 +54,16 @@ CREDENTIALS_HASH_AUTH = "abcdefghijklmnopqrstuv=="
 DEVICE_CONFIG_AUTH = DeviceConfig(
     IP_ADDRESS,
     credentials=CREDENTIALS,
-    connection_type=ConnectionType(
-        DeviceFamilyType.IotSmartPlugSwitch, EncryptType.Klap
+    connection_type=DeviceConnectionParameters(
+        DeviceFamily.IotSmartPlugSwitch, DeviceEncryptionType.Klap
     ),
     uses_http=True,
 )
 DEVICE_CONFIG_AUTH2 = DeviceConfig(
     IP_ADDRESS2,
     credentials=CREDENTIALS,
-    connection_type=ConnectionType(
-        DeviceFamilyType.IotSmartPlugSwitch, EncryptType.Klap
+    connection_type=DeviceConnectionParameters(
+        DeviceFamily.IotSmartPlugSwitch, DeviceEncryptionType.Klap
     ),
     uses_http=True,
 )
