@@ -69,7 +69,8 @@ class FullyImageEntity(FullyKioskEntity, ImageEntity):
             image_bytes = await self.entity_description.image_action(
                 self.coordinator.fully
             )
-            self._attr_image_last_updated = dt_util.utcnow()
-            return image_bytes
         except FullyKioskError as err:
             raise HomeAssistantError(err) from err
+        else:
+            self._attr_image_last_updated = dt_util.utcnow()
+            return image_bytes
