@@ -56,7 +56,7 @@ async def apply_stop_hass(stop_hass: None) -> None:
 
 
 @pytest.fixture(autouse=True)
-def unpatch_block_async_io(disable_block_async_io_after):
+def unpatch_block_async_io(disable_block_async_io):
     """Unpatch block_async_io after each test."""
 
 

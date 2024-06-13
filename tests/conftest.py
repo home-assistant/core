@@ -1817,8 +1817,8 @@ def snapshot(snapshot: SnapshotAssertion) -> SnapshotAssertion:
     return snapshot.use_extension(HomeAssistantSnapshotExtension)
 
 
-@pytest.fixture
-def disable_block_async_io_after() -> Generator[Any, Any, None]:
+@pytest.fixture(name="disable_block_async_io")
+def disable_block_async_io_after_test() -> Generator[Any, Any, None]:
     """Disable the block async io context manager."""
     yield
     disable_block_async_io()
