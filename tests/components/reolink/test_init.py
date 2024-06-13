@@ -200,10 +200,7 @@ async def test_migrate_entity_ids(
     )
 
     assert entity_registry.async_get_entity_id(domain, const.DOMAIN, original_id)
-    assert (
-        entity_registry.async_get_entity_id(domain, const.DOMAIN, new_id)
-        is None
-    )
+    assert entity_registry.async_get_entity_id(domain, const.DOMAIN, new_id) is None
 
     # setup CH 0 and host entities/device
     with patch("homeassistant.components.reolink.PLATFORMS", [domain]):
