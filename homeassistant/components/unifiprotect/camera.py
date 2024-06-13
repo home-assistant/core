@@ -27,7 +27,6 @@ from .const import (
     ATTR_FPS,
     ATTR_HEIGHT,
     ATTR_WIDTH,
-    DISPATCH_ADOPT,
     DISPATCH_CHANNELS,
     DOMAIN,
 )
@@ -153,9 +152,7 @@ async def async_setup_entry(
             return
         async_add_entities(_async_camera_entities(hass, entry, data, ufp_device=device))
 
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
-    )
+    data.async_subscribe_adopt(_add_new_device)
     entry.async_on_unload(
         async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_CHANNELS), _add_new_device)
     )
