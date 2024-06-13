@@ -30,9 +30,12 @@ async def test_setup(
 @pytest.mark.parametrize(
     ("exception", "expected_exception"),
     [
-        (CannotConnect, "connection_exception"),
-        (ParserError, "parse_exception"),
-        (InvalidAuth, "authentication_exception"),
+        (CannotConnect, "Unable to connect and retrieve data from pyLoad API"),
+        (ParserError, "Unable to parse data from pyLoad API"),
+        (
+            InvalidAuth,
+            "Authentication failed for username, check your login credentials",
+        ),
     ],
 )
 async def test_setup_exceptions(

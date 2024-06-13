@@ -35,7 +35,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,19 +92,13 @@ async def async_setup_platform(
         await pyloadapi.login()
     except CannotConnect as conn_err:
         raise PlatformNotReady(
-            translation_domain=DOMAIN,
-            translation_key="connection_exception",
+            "Unable to connect and retrieve data from pyLoad API"
         ) from conn_err
     except ParserError as e:
-        raise PlatformNotReady(
-            translation_domain=DOMAIN,
-            translation_key="parse_exception",
-        ) from e
+        raise PlatformNotReady("Unable to parse data from pyLoad API") from e
     except InvalidAuth as e:
         raise PlatformNotReady(
-            translation_domain=DOMAIN,
-            translation_key="authentication_exception",
-            translation_placeholders={CONF_USERNAME: config[CONF_USERNAME]},
+            f"Authentication failed for {config[CONF_USERNAME]}, check your login credentials"
         ) from e
 
     devices = []
