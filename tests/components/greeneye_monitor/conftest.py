@@ -19,13 +19,15 @@ def assert_sensor_state(
     hass: HomeAssistant,
     entity_id: str,
     expected_state: str,
-    attributes: dict[str, Any] = {},
+    attributes: dict[str, Any] | None = None,
 ) -> None:
     """Assert that the given entity has the expected state and at least the provided attributes."""
     state = hass.states.get(entity_id)
     assert state
     actual_state = state.state
     assert actual_state == expected_state
+    if not attributes:
+        return
     for key, value in attributes.items():
         assert key in state.attributes
         assert state.attributes[key] == value

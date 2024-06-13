@@ -71,7 +71,7 @@ async def setup_platform(hass, platform: str, *, devices=None, scenes=None):
 
     hass.data[DOMAIN] = {DATA_BROKERS: {config_entry.entry_id: broker}}
     config_entry.mock_state(hass, ConfigEntryState.LOADED)
-    await hass.config_entries.async_late_forward_entry_setups(config_entry, [platform])
+    await hass.config_entries.async_forward_entry_setups(config_entry, [platform])
     await hass.async_block_till_done()
     return config_entry
 

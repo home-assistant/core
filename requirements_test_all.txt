@@ -180,7 +180,7 @@ aioaseko==0.1.1
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.5.1
+aioautomower==2024.6.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.0.0
@@ -539,7 +539,7 @@ brunt==1.2.0
 bthome-ble==3.9.1
 
 # homeassistant.components.buienradar
-buienradar==1.0.5
+buienradar==1.0.6
 
 # homeassistant.components.dhcp
 cached_ipaddress==0.3.0
@@ -584,7 +584,7 @@ dbus-fast==2.21.3
 debugpy==1.8.1
 
 # homeassistant.components.ecovacs
-deebot-client==7.3.0
+deebot-client==8.0.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -2165,7 +2165,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==1.0.0
+uiprotect==1.2.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
