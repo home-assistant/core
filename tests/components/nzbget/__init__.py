@@ -77,17 +77,17 @@ def _patch_async_setup_entry(return_value=True):
     )
 
 
-def _patch_history(return_value=MOCK_HISTORY):
+def _patch_history():
     return patch(
         "homeassistant.components.nzbget.coordinator.NZBGetAPI.history",
-        return_value=return_value,
+        return_value=MOCK_HISTORY,
     )
 
 
-def _patch_status(return_value=MOCK_STATUS):
+def _patch_status():
     return patch(
         "homeassistant.components.nzbget.coordinator.NZBGetAPI.status",
-        return_value=return_value,
+        return_value=MOCK_STATUS,
     )
 
 
