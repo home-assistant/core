@@ -693,9 +693,9 @@ def mock_device_registry(
 class MockGroup(auth_models.Group):
     """Mock a group in Home Assistant."""
 
-    def __init__(self, id=None, name="Mock Group", policy=system_policies.ADMIN_POLICY):
+    def __init__(self, id=None, name="Mock Group"):
         """Mock a group."""
-        kwargs = {"name": name, "policy": policy}
+        kwargs = {"name": name, "policy": system_policies.ADMIN_POLICY}
         if id is not None:
             kwargs["id"] = id
 
