@@ -48,8 +48,10 @@ class KnockiConfigFlow(ConfigFlow, domain=DOMAIN):
                 try:
                     await client.link()
                 except KnockiConnectionError:
-                    LOGGER.exception("Error linking to the Knocki API")
                     errors["base"] = "cannot_connect"
+                except Exception:  # noqa: BLE001
+                    LOGGER.exception("Error logging into the Knocki API")
+                    errors["base"] = "unknown"
                 else:
                     return self.async_create_entry(
                         title=user_input[CONF_USERNAME],
