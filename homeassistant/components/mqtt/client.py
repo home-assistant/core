@@ -307,6 +307,7 @@ class MqttClientSetup:
             transport=self._transport,
             reconnect_on_failure=False,
         )
+        self._client.async_setup()
 
     def setup(self) -> None:
         """Set up the MQTT client.
@@ -314,7 +315,6 @@ class MqttClientSetup:
         The setup of the MQTT client should be run in an executor job,
         because it accesses files, so it does IO.
         """
-        self._client.async_setup()
         # Enable logging
         self._client.enable_logger()
 
