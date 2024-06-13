@@ -249,12 +249,12 @@ class ProtectData:
                 and (device := self.api.bootstrap.get_device_from_id(device_id))
             ):
                 self._async_add_device(device)
-            elif new_obj.camera is not None:
-                self._async_signal_device_update(new_obj.camera)
-            elif new_obj.light is not None:
-                self._async_signal_device_update(new_obj.light)
-            elif new_obj.sensor is not None:
-                self._async_signal_device_update(new_obj.sensor)
+            elif camera := new_obj.camera:
+                self._async_signal_device_update(camera)
+            elif light := new_obj.light:
+                self._async_signal_device_update(light)
+            elif sensor := new_obj.sensor:
+                self._async_signal_device_update(sensor)
             return
 
         if model_type is ModelType.LIVEVIEW and len(self.api.bootstrap.viewers) > 0:
