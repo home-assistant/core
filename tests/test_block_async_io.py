@@ -18,7 +18,8 @@ from .common import extract_stack_to_frame
 
 
 @pytest.fixture(autouse=True)
-def unpatch_block_async_io(disable_block_async_io_after):
+@pytest.mark.usefixtures("disable_block_async_io")
+def disable_block_async_io():
     """Unpatch block_async_io after each test."""
 
 
