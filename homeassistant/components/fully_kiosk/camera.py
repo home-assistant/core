@@ -36,7 +36,8 @@ class FullyCameraEntity(FullyKioskEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
-        return await self.coordinator.fully.getCamshot()
+        image_bytes: bytes = await self.coordinator.fully.getCamshot()
+        return image_bytes
 
     async def async_turn_on(self) -> None:
         """Turn on camera."""
