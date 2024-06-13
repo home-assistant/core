@@ -56,6 +56,11 @@
         "name": "Load start URL"
       }
     },
+    "image": {
+      "screenshot": {
+        "name": "Screenshot"
+      }
+    },
     "number": {
       "screensaver_time": {
         "name": "Screensaver timer"
