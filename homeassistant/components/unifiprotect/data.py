@@ -242,12 +242,13 @@ class ProtectData:
                 assert isinstance(new_obj, Event)
             if _LOGGER.isEnabledFor(logging.DEBUG):
                 log_event(new_obj)
-            if new_obj.type is EventType.DEVICE_ADOPTED:
-                metadata = new_obj.metadata
-                if metadata is not None and metadata.device_id is not None:
-                    device = self.api.bootstrap.get_device_from_id(metadata.device_id)
-                    if device is not None:
-                        self._async_add_device(device)
+            if (
+                (new_obj.type is EventType.DEVICE_ADOPTED)
+                and (metadata := new_obj.metadata)
+                and (device_id := metadata.device_id)
+                and (device := self.api.bootstrap.get_device_from_id(device_id))
+            ):
+                self._async_add_device(device)
             elif new_obj.camera is not None:
                 self._async_signal_device_update(new_obj.camera)
             elif new_obj.light is not None:
