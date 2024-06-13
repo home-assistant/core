@@ -6,10 +6,7 @@ from homeassistant.components.bthome.const import CONF_SUBTYPE, DOMAIN
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    async_get as async_get_dev_reg,
-)
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import make_bthome_v2_adv
@@ -87,7 +84,9 @@ async def test_event_rotate_dimmer(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-async def test_get_triggers_button(hass: HomeAssistant) -> None:
+async def test_get_triggers_button(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test that we get the expected triggers from a BTHome BLE sensor."""
     mac = "A4:C1:38:8D:18:B2"
     entry = await _async_setup_bthome_device(hass, mac)
@@ -103,8 +102,7 @@ async def test_get_triggers_button(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(events) == 1
 
-    dev_reg = async_get_dev_reg(hass)
-    device = dev_reg.async_get_device(identifiers={get_device_id(mac)})
+    device = device_registry.async_get_device(identifiers={get_device_id(mac)})
     assert device
     expected_trigger = {
         CONF_PLATFORM: "device",
@@ -123,7 +121,9 @@ async def test_get_triggers_button(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-async def test_get_triggers_dimmer(hass: HomeAssistant) -> None:
+async def test_get_triggers_dimmer(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test that we get the expected triggers from a BTHome BLE sensor."""
     mac = "A4:C1:38:8D:18:B2"
     entry = await _async_setup_bthome_device(hass, mac)
@@ -139,8 +139,7 @@ async def test_get_triggers_dimmer(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(events) == 1
 
-    dev_reg = async_get_dev_reg(hass)
-    device = dev_reg.async_get_device(identifiers={get_device_id(mac)})
+    device = device_registry.async_get_device(identifiers={get_device_id(mac)})
     assert device
     expected_trigger = {
         CONF_PLATFORM: "device",
@@ -159,7 +158,9 @@ async def test_get_triggers_dimmer(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-async def test_get_triggers_for_invalid_bthome_ble_device(hass: HomeAssistant) -> None:
+async def test_get_triggers_for_invalid_bthome_ble_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test that we don't get triggers for an invalid device."""
     mac = "A4:C1:38:8D:18:B2"
     entry = await _async_setup_bthome_device(hass, mac)
@@ -175,8 +176,7 @@ async def test_get_triggers_for_invalid_bthome_ble_device(hass: HomeAssistant) -
     await hass.async_block_till_done()
     assert len(events) == 0
 
-    dev_reg = async_get_dev_reg(hass)
-    invalid_device = dev_reg.async_get_or_create(
+    invalid_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "invdevmac")},
     )
@@ -190,7 +190,9 @@ async def test_get_triggers_for_invalid_bthome_ble_device(hass: HomeAssistant) -
     await hass.async_block_till_done()
 
 
-async def test_get_triggers_for_invalid_device_id(hass: HomeAssistant) -> None:
+async def test_get_triggers_for_invalid_device_id(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test that we don't get triggers when using an invalid device_id."""
     mac = "DE:70:E8:B2:39:0C"
     entry = await _async_setup_bthome_device(hass, mac)
@@ -204,11 +206,9 @@ async def test_get_triggers_for_invalid_device_id(hass: HomeAssistant) -> None:
     # wait for the event
     await hass.async_block_till_done()
 
-    dev_reg = async_get_dev_reg(hass)
-
-    invalid_device = dev_reg.async_get_or_create(
+    invalid_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={(CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     assert invalid_device
     triggers = await async_get_device_automations(
@@ -221,7 +221,9 @@ async def test_get_triggers_for_invalid_device_id(hass: HomeAssistant) -> None:
 
 
 async def test_if_fires_on_motion_detected(
-    hass: HomeAssistant, service_calls: list[ServiceCall]
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for motion event trigger firing."""
     mac = "DE:70:E8:B2:39:0C"
@@ -236,8 +238,7 @@ async def test_if_fires_on_motion_detected(
     #     # wait for the event
     await hass.async_block_till_done()
 
-    dev_reg = async_get_dev_reg(hass)
-    device = dev_reg.async_get_device(identifiers={get_device_id(mac)})
+    device = device_registry.async_get_device(identifiers={get_device_id(mac)})
     device_id = device.id
 
     assert await async_setup_component(

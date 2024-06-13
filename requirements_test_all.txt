@@ -158,7 +158,7 @@ aio-georss-gdacs==0.9
 aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.5.1
+aioairzone-cloud==0.5.2
 
 # homeassistant.components.airzone
 aioairzone==0.7.6
@@ -189,7 +189,7 @@ aioazuredevops==2.0.0
 aiobafi6==0.9.0
 
 # homeassistant.components.aws
-aiobotocore==2.12.1
+aiobotocore==2.13.0
 
 # homeassistant.components.comelit
 aiocomelit==0.9.0
@@ -219,7 +219,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==24.5.0
+aioesphomeapi==24.6.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -539,7 +539,7 @@ brunt==1.2.0
 bthome-ble==3.9.1
 
 # homeassistant.components.buienradar
-buienradar==1.0.5
+buienradar==1.0.6
 
 # homeassistant.components.dhcp
 cached_ipaddress==0.3.0
@@ -584,7 +584,7 @@ dbus-fast==2.21.3
 debugpy==1.8.1
 
 # homeassistant.components.ecovacs
-deebot-client==7.3.0
+deebot-client==8.0.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -892,7 +892,7 @@ hole==0.8.0
 holidays==0.50
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240605.0
+home-assistant-frontend==20240610.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.6.5
@@ -936,10 +936,10 @@ idasen-ha==2.5.3
 ifaddr==0.2.0
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.0.4
+imgw_pib==1.0.5
 
 # homeassistant.components.incomfort
-incomfort-client==0.6.1
+incomfort-client==0.6.2
 
 # homeassistant.components.influxdb
 influxdb-client==1.24.0
@@ -1017,7 +1017,7 @@ libsoundtouch==0.8
 linear-garage-door==0.2.9
 
 # homeassistant.components.lamarzocco
-lmcloud==0.4.35
+lmcloud==1.1.11
 
 # homeassistant.components.logi_circle
 logi-circle==0.2.3
@@ -1332,7 +1332,7 @@ pyControl4==1.1.0
 pyDuotecno==2024.5.1
 
 # homeassistant.components.electrasmart
-pyElectra==1.2.0
+pyElectra==1.2.3
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.31.1
@@ -2105,7 +2105,7 @@ temescal==0.5
 temperusb==1.6.1
 
 # homeassistant.components.teslemetry
-tesla-fleet-api==0.5.12
+tesla-fleet-api==0.6.1
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
@@ -2165,7 +2165,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==0.4.0
+uiprotect==1.1.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2292,7 +2292,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==2.4.2
 
 # homeassistant.components.august
-yalexs==5.2.0
+yalexs==6.0.0
 
 # homeassistant.components.yeelight
 yeelight==0.7.14

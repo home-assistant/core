@@ -131,6 +131,7 @@ async def test_custom_component_name(
     assert platform.__package__ == "custom_components.test"
 
     # Test custom components is mounted
+    # pylint: disable-next=import-outside-toplevel
     from custom_components.test_package import TEST
 
     assert TEST == 5
@@ -1247,14 +1248,16 @@ def test_import_executor_default(hass: HomeAssistant) -> None:
     assert built_in_comp.import_executor is True
 
 
-async def test_config_folder_not_in_path(hass):
+async def test_config_folder_not_in_path() -> None:
     """Test that config folder is not in path."""
 
     # Verify that we are unable to import this file from top level
     with pytest.raises(ImportError):
+        # pylint: disable-next=import-outside-toplevel
         import check_config_not_in_path  # noqa: F401
 
     # Verify that we are able to load the file with absolute path
+    # pylint: disable-next=import-outside-toplevel,hass-relative-import
     import tests.testing_config.check_config_not_in_path  # noqa: F401
 
 

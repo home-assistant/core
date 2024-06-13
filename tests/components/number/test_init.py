@@ -846,13 +846,10 @@ def test_device_classes_aligned() -> None:
         assert hasattr(NumberDeviceClass, device_class.name)
         assert getattr(NumberDeviceClass, device_class.name).value == device_class.value
 
-    for device_class in SENSOR_DEVICE_CLASS_UNITS:
+    for device_class, unit in SENSOR_DEVICE_CLASS_UNITS.items():
         if device_class in NON_NUMERIC_DEVICE_CLASSES:
             continue
-        assert (
-            SENSOR_DEVICE_CLASS_UNITS[device_class]
-            == NUMBER_DEVICE_CLASS_UNITS[device_class]
-        )
+        assert unit == NUMBER_DEVICE_CLASS_UNITS[device_class]
 
 
 class MockFlow(ConfigFlow):
