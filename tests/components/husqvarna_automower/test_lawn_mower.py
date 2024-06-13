@@ -1,5 +1,6 @@
 """Tests for lawn_mower module."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from aioautomower.exceptions import ApiException
@@ -101,7 +102,7 @@ async def test_lawn_mower_commands(
     [
         (
             "start_for",
-            180,
+            timedelta(hours=3),
             "override_schedule",
             {
                 "duration": {"days": 0, "hours": 3, "minutes": 0},
@@ -110,7 +111,7 @@ async def test_lawn_mower_commands(
         ),
         (
             "park_for",
-            2190,
+            timedelta(days=1, hours=12, minutes=30),
             "override_schedule",
             {
                 "duration": {"days": 1, "hours": 12, "minutes": 30},
