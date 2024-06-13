@@ -43,14 +43,20 @@ async def test_full_flow(
 
 
 @pytest.mark.parametrize(("field"), ["login", "link"])
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [(KnockiConnectionError, "cannot_connect"), (Exception, "unknown")],
+)
 async def test_exceptions(
     hass: HomeAssistant,
     mock_knocki_client: AsyncMock,
     mock_setup_entry: AsyncMock,
     field: str,
+    exception: Exception,
+    error: str,
 ) -> None:
     """Test exceptions."""
-    getattr(mock_knocki_client, field).side_effect = KnockiConnectionError
+    getattr(mock_knocki_client, field).side_effect = exception
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -62,7 +68,7 @@ async def test_exceptions(
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error}
 
     getattr(mock_knocki_client, field).side_effect = None
 

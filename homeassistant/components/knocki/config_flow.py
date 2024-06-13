@@ -31,7 +31,7 @@ class KnockiConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             session = async_get_clientsession(self.hass)
-            client = KnockiClient(session=session, staging=True)
+            client = KnockiClient(session=session)
             try:
                 token_response = await client.login(
                     user_input[CONF_USERNAME], user_input[CONF_PASSWORD]

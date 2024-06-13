@@ -28,9 +28,7 @@ class KnockiData:
 async def async_setup_entry(hass: HomeAssistant, entry: KnockiConfigEntry) -> bool:
     """Set up Knocki from a config entry."""
     client = KnockiClient(
-        session=async_get_clientsession(hass),
-        token=entry.data[CONF_TOKEN],
-        staging=True,
+        session=async_get_clientsession(hass), token=entry.data[CONF_TOKEN]
     )
 
     try:
@@ -41,6 +39,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: KnockiConfigEntry) -> bo
     entry.runtime_data = KnockiData(client=client, triggers=triggers)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    entry.async_create_background_task(
+        hass, client.start_websocket(), "knocki-websocket"
+    )
 
     return True
 
