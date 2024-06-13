@@ -199,7 +199,7 @@ def cleanup_disconnected_cams(
     devices = dr.async_entries_for_config_entry(device_reg, config_entry_id)
     for device in devices:
         device_id = [
-            dev_id[1].split("_ch")
+            dev_id[1].split("_")
             for dev_id in device.identifiers
             if dev_id[0] == DOMAIN
         ][0]
@@ -208,7 +208,11 @@ def cleanup_disconnected_cams(
             # Do not consider the NVR itself
             continue
 
-        ch = int(device_id[1])
+        if device_id[1].startswith("ch") and len(device_id[1]) <= 5:
+            ch = int(device_id[1][2:])
+        else:
+            ch = host.api.channel_for_uid(device_id[1])
+
         ch_model = host.api.camera_model(ch)
         remove = False
         if ch not in host.api.channels:
