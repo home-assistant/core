@@ -1820,7 +1820,7 @@ def snapshot(snapshot: SnapshotAssertion) -> SnapshotAssertion:
 
 @pytest.fixture
 def disable_block_async_io() -> Generator[Any, Any, None]:
-    """Disable the block async io context manager."""
+    """Context manager to disable the loop protection from block_async_io."""
     yield
     calls = block_async_io._BLOCKED_CALLS.calls
     for blocking_call in calls:
