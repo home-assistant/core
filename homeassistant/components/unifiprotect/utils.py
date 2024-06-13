@@ -2,24 +2,25 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator, Iterable
+from collections.abc import Iterable
 import contextlib
 from enum import Enum
 from pathlib import Path
 import socket
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import CookieJar
-from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data import (
+from typing_extensions import Generator
+from uiprotect import ProtectApiClient
+from uiprotect.data import (
     Bootstrap,
+    CameraChannel,
     Light,
     LightModeEnableType,
     LightModeType,
     ProtectAdoptableDeviceModel,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -38,6 +39,9 @@ from .const import (
     DOMAIN,
     ModelType,
 )
+
+if TYPE_CHECKING:
+    from .data import UFPConfigEntry
 
 _SENTINEL = object()
 
@@ -98,7 +102,7 @@ def async_get_devices_by_type(
 @callback
 def async_get_devices(
     bootstrap: Bootstrap, model_type: Iterable[ModelType]
-) -> Generator[ProtectAdoptableDeviceModel, None, None]:
+) -> Generator[ProtectAdoptableDeviceModel]:
     """Return all device by type."""
     return (
         device
@@ -120,7 +124,7 @@ def async_get_light_motion_current(obj: Light) -> str:
 
 
 @callback
-def async_dispatch_id(entry: ConfigEntry, dispatch: str) -> str:
+def async_dispatch_id(entry: UFPConfigEntry, dispatch: str) -> str:
     """Generate entry specific dispatch ID."""
 
     return f"{DOMAIN}.{entry.entry_id}.{dispatch}"
@@ -128,7 +132,7 @@ def async_dispatch_id(entry: ConfigEntry, dispatch: str) -> str:
 
 @callback
 def async_create_api_client(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: UFPConfigEntry
 ) -> ProtectApiClient:
     """Create ProtectApiClient from config entry."""
 
@@ -144,5 +148,17 @@ def async_create_api_client(
         override_connection_host=entry.options.get(CONF_OVERRIDE_CHOST, False),
         ignore_stats=not entry.options.get(CONF_ALL_UPDATES, False),
         ignore_unadopted=False,
-        cache_dir=Path(hass.config.path(STORAGE_DIR, "unifiprotect_cache")),
+        cache_dir=Path(hass.config.path(STORAGE_DIR, "unifiprotect")),
+        config_dir=Path(hass.config.path(STORAGE_DIR, "unifiprotect")),
     )
+
+
+@callback
+def get_camera_base_name(channel: CameraChannel) -> str:
+    """Get base name for cameras channel."""
+
+    camera_name = channel.name
+    if channel.name != "Package Camera":
+        camera_name = f"{channel.name} Resolution Channel"
+
+    return camera_name

@@ -55,10 +55,9 @@ class NukiDoorsensorEntity(NukiEntity[NukiDevice], BinarySensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the device specific state attributes."""
-        data = {
+        return {
             ATTR_NUKI_ID: self._nuki_device.nuki_id,
         }
-        return data
 
     @property
     def available(self) -> bool:
@@ -96,10 +95,9 @@ class NukiRingactionEntity(NukiEntity[NukiDevice], BinarySensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the device specific state attributes."""
-        data = {
+        return {
             ATTR_NUKI_ID: self._nuki_device.nuki_id,
         }
-        return data
 
     @property
     def is_on(self) -> bool:

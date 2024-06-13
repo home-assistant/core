@@ -74,7 +74,7 @@ async def _async_setup_entry_with_status(
     with _patch_status(status, client):
         await async_setup_component(hass, steamist.DOMAIN, {steamist.DOMAIN: {}})
         await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     return client, config_entry
 
 

@@ -99,13 +99,17 @@ async def test_update_access_token(hass: HomeAssistant) -> None:
     await config.async_initialize()
 
     base_time = datetime(2019, 10, 14, tzinfo=UTC)
-    with patch(
-        "homeassistant.components.google_assistant.http._get_homegraph_token"
-    ) as mock_get_token, patch(
-        "homeassistant.components.google_assistant.http._get_homegraph_jwt"
-    ) as mock_get_jwt, patch(
-        "homeassistant.core.dt_util.utcnow",
-    ) as mock_utcnow:
+    with (
+        patch(
+            "homeassistant.components.google_assistant.http._get_homegraph_token"
+        ) as mock_get_token,
+        patch(
+            "homeassistant.components.google_assistant.http._get_homegraph_jwt"
+        ) as mock_get_jwt,
+        patch(
+            "homeassistant.core.dt_util.utcnow",
+        ) as mock_utcnow,
+    ):
         mock_utcnow.return_value = base_time
         mock_get_jwt.return_value = jwt
         mock_get_token.return_value = MOCK_TOKEN
@@ -573,6 +577,8 @@ async def test_async_get_users_from_store(tmpdir: py.path.local) -> None:
 
         assert await async_get_users(hass) == ["agent_1"]
 
+        await hass.async_stop()
+
 
 VALID_STORE_DATA = json.dumps(
     {
@@ -649,7 +655,7 @@ async def test_async_get_users(
         )
         path = hass.config.config_dir / ".storage" / GoogleConfigStore._STORAGE_KEY
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w") as f:
+        with open(path, "w", encoding="utf8") as f:
             f.write(store_data)
 
         assert await async_get_users(hass) == expected_users

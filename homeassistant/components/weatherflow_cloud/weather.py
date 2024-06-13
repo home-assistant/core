@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from weatherflow4py.models.rest.unified import WeatherFlowData
+from weatherflow4py.models.rest.unified import WeatherFlowDataREST
 
 from homeassistant.components.weather import (
     Forecast,
@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_ATTRIBUTION, DOMAIN, MANUFACTURER
+from .const import ATTR_ATTRIBUTION, DOMAIN, MANUFACTURER, STATE_MAP
 from .coordinator import WeatherFlowCloudDataUpdateCoordinator
 
 
@@ -79,14 +79,14 @@ class WeatherFlowWeather(
         )
 
     @property
-    def local_data(self) -> WeatherFlowData:
+    def local_data(self) -> WeatherFlowDataREST:
         """Return the local weather data object for this station."""
         return self.coordinator.data[self.station_id]
 
     @property
     def condition(self) -> str | None:
         """Return current condition - required property."""
-        return self.local_data.weather.current_conditions.icon.ha_icon
+        return STATE_MAP[self.local_data.weather.current_conditions.icon.value]
 
     @property
     def native_temperature(self) -> float | None:

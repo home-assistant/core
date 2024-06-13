@@ -1,12 +1,12 @@
 """Test ZHA binary sensor."""
 
+from collections.abc import Callable
+from typing import Any
 from unittest.mock import patch
 
 import pytest
 import zigpy.profiles.zha
-import zigpy.zcl.clusters.general as general
-import zigpy.zcl.clusters.measurement as measurement
-import zigpy.zcl.clusters.security as security
+from zigpy.zcl.clusters import general, measurement, security
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -160,9 +160,9 @@ async def test_binary_sensor(
 async def test_onoff_binary_sensor_restore_state(
     hass: HomeAssistant,
     zigpy_device_mock,
-    core_rs,
+    core_rs: Callable[[str, Any, dict[str, Any]], None],
     zha_device_restored,
-    restored_state,
+    restored_state: str,
 ) -> None:
     """Test ZHA OnOff binary_sensor restores last state from HA."""
 

@@ -32,7 +32,7 @@
     },
     "deprecated_yaml_import_issue_cannot_connect": {
       "title": "The Suez water YAML configuration import failed",
-      "description": "Configuring Suez water using YAML is being removed but there was an connection error importing your YAML configuration.\n\nEnsure connection to Suez water works and restart Home Assistant to try again or remove the Suez water YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+      "description": "Configuring Suez water using YAML is being removed but there was a connection error importing your YAML configuration.\n\nEnsure connection to Suez water works and restart Home Assistant to try again or remove the Suez water YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
     },
     "deprecated_yaml_import_issue_unknown": {
       "title": "The Suez water YAML configuration import failed",

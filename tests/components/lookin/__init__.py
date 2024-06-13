@@ -31,13 +31,11 @@ ZEROCONF_DATA = ZeroconfServiceInfo(
 
 
 def _mocked_climate() -> Climate:
-    climate = MagicMock(auto_spec=Climate)
-    return climate
+    return MagicMock(auto_spec=Climate)
 
 
 def _mocked_remote() -> Remote:
-    remote = MagicMock(auto_spec=Remote)
-    return remote
+    return MagicMock(auto_spec=Remote)
 
 
 def _mocked_device() -> Device:

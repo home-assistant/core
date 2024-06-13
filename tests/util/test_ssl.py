@@ -15,8 +15,7 @@ from homeassistant.util.ssl import (
 @pytest.fixture
 def mock_sslcontext():
     """Mock the ssl lib."""
-    ssl_mock = MagicMock(set_ciphers=Mock(return_value=True))
-    return ssl_mock
+    return MagicMock(set_ciphers=Mock(return_value=True))
 
 
 def test_client_context(mock_sslcontext) -> None:

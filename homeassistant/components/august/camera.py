@@ -11,13 +11,12 @@ from yalexs.doorbell import ContentTokenExpired, Doorbell
 from yalexs.util import update_doorbell_image_from_activity
 
 from homeassistant.components.camera import Camera
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AugustData
-from .const import DEFAULT_NAME, DEFAULT_TIMEOUT, DOMAIN
+from . import AugustConfigEntry, AugustData
+from .const import DEFAULT_NAME, DEFAULT_TIMEOUT
 from .entity import AugustEntityMixin
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,11 +24,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AugustConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up August cameras."""
-    data: AugustData = hass.data[DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     # Create an aiohttp session instead of using the default one since the
     # default one is likely to trigger august's WAF if another integration
     # is also using Cloudflare

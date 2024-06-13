@@ -6,8 +6,8 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
-from zhaquirks.quirk_ids import TUYA_PLUG_ONOFF
-from zigpy.quirks.v2 import EntityMetadata, SwitchMetadata
+from zhaquirks.quirk_ids import DANFOSS_ALLY_THERMOSTAT, TUYA_PLUG_ONOFF
+from zigpy.quirks.v2 import SwitchMetadata
 from zigpy.zcl.clusters.closures import ConfigStatus, WindowCovering, WindowCoveringMode
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.foundation import Status
@@ -25,7 +25,8 @@ from .core.const import (
     CLUSTER_HANDLER_COVER,
     CLUSTER_HANDLER_INOVELLI,
     CLUSTER_HANDLER_ON_OFF,
-    QUIRK_METADATA,
+    CLUSTER_HANDLER_THERMOSTAT,
+    ENTITY_METADATA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -192,7 +193,7 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
         Return entity if it is a supported configuration, otherwise return None
         """
         cluster_handler = cluster_handlers[0]
-        if QUIRK_METADATA not in kwargs and (
+        if ENTITY_METADATA not in kwargs and (
             cls._attribute_name in cluster_handler.cluster.unsupported_attributes
             or cls._attribute_name not in cluster_handler.cluster.attributes_by_name
             or cluster_handler.cluster.get(cls._attribute_name) is None
@@ -215,21 +216,20 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
     ) -> None:
         """Init this number configuration entity."""
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
-        if QUIRK_METADATA in kwargs:
-            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
+        if ENTITY_METADATA in kwargs:
+            self._init_from_quirks_metadata(kwargs[ENTITY_METADATA])
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
-    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
+    def _init_from_quirks_metadata(self, entity_metadata: SwitchMetadata) -> None:
         """Init this entity from the quirks metadata."""
         super()._init_from_quirks_metadata(entity_metadata)
-        switch_metadata: SwitchMetadata = entity_metadata.entity_metadata
-        self._attribute_name = switch_metadata.attribute_name
-        if switch_metadata.invert_attribute_name:
-            self._inverter_attribute_name = switch_metadata.invert_attribute_name
-        if switch_metadata.force_inverted:
-            self._force_inverted = switch_metadata.force_inverted
-        self._off_value = switch_metadata.off_value
-        self._on_value = switch_metadata.on_value
+        self._attribute_name = entity_metadata.attribute_name
+        if entity_metadata.invert_attribute_name:
+            self._inverter_attribute_name = entity_metadata.invert_attribute_name
+        if entity_metadata.force_inverted:
+            self._force_inverted = entity_metadata.force_inverted
+        self._off_value = entity_metadata.off_value
+        self._on_value = entity_metadata.on_value
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
@@ -717,3 +717,95 @@ class AqaraE1CurtainMotorHooksLockedSwitch(ZHASwitchConfigurationEntity):
     _unique_id_suffix = "hooks_lock"
     _attribute_name = "hooks_lock"
     _attr_translation_key = "hooks_locked"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+class DanfossExternalOpenWindowDetected(ZHASwitchConfigurationEntity):
+    """Danfoss proprietary attribute for communicating an open window."""
+
+    _unique_id_suffix = "external_open_window_detected"
+    _attribute_name: str = "external_open_window_detected"
+    _attr_translation_key: str = "external_window_sensor"
+    _attr_icon: str = "mdi:window-open"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+class DanfossWindowOpenFeature(ZHASwitchConfigurationEntity):
+    """Danfoss proprietary attribute enabling open window detection."""
+
+    _unique_id_suffix = "window_open_feature"
+    _attribute_name: str = "window_open_feature"
+    _attr_translation_key: str = "use_internal_window_detection"
+    _attr_icon: str = "mdi:window-open"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+class DanfossMountingModeControl(ZHASwitchConfigurationEntity):
+    """Danfoss proprietary attribute for switching to mounting mode."""
+
+    _unique_id_suffix = "mounting_mode_control"
+    _attribute_name: str = "mounting_mode_control"
+    _attr_translation_key: str = "mounting_mode"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+class DanfossRadiatorCovered(ZHASwitchConfigurationEntity):
+    """Danfoss proprietary attribute for communicating full usage of the external temperature sensor."""
+
+    _unique_id_suffix = "radiator_covered"
+    _attribute_name: str = "radiator_covered"
+    _attr_translation_key: str = "prioritize_external_temperature_sensor"
+    _attr_icon: str = "mdi:thermometer"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+class DanfossHeatAvailable(ZHASwitchConfigurationEntity):
+    """Danfoss proprietary attribute for communicating available heat."""
+
+    _unique_id_suffix = "heat_available"
+    _attribute_name: str = "heat_available"
+    _attr_translation_key: str = "heat_available"
+    _attr_icon: str = "mdi:water-boiler"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+class DanfossLoadBalancingEnable(ZHASwitchConfigurationEntity):
+    """Danfoss proprietary attribute for enabling load balancing."""
+
+    _unique_id_suffix = "load_balancing_enable"
+    _attribute_name: str = "load_balancing_enable"
+    _attr_translation_key: str = "use_load_balancing"
+    _attr_icon: str = "mdi:scale-balance"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+class DanfossAdaptationRunSettings(ZHASwitchConfigurationEntity):
+    """Danfoss proprietary attribute for enabling daily adaptation run.
+
+    Actually a bitmap, but only the first bit is used.
+    """
+
+    _unique_id_suffix = "adaptation_run_settings"
+    _attribute_name: str = "adaptation_run_settings"
+    _attr_translation_key: str = "adaptation_run_enabled"

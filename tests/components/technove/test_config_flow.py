@@ -25,14 +25,14 @@ async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:
     )
 
     assert result.get("step_id") == "user"
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_HOST: "192.168.1.123"}
     )
 
     assert result.get("title") == "TechnoVE Station"
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert "data" in result
     assert result["data"][CONF_HOST] == "192.168.1.123"
     assert "result" in result
@@ -53,7 +53,7 @@ async def test_user_device_exists_abort(
         data={CONF_HOST: "192.168.1.123"},
     )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 
@@ -66,7 +66,7 @@ async def test_connection_error(hass: HomeAssistant, mock_technove: MagicMock) -
         data={CONF_HOST: "example.com"},
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
     assert result.get("errors") == {"base": "cannot_connect"}
 
@@ -83,13 +83,13 @@ async def test_full_user_flow_with_error(
     )
 
     assert result.get("step_id") == "user"
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_HOST: "192.168.1.123"}
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
     assert result.get("errors") == {"base": "cannot_connect"}
 
@@ -99,7 +99,7 @@ async def test_full_user_flow_with_error(
     )
 
     assert result.get("title") == "TechnoVE Station"
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert "data" in result
     assert result["data"][CONF_HOST] == "192.168.1.123"
     assert "result" in result
@@ -128,14 +128,14 @@ async def test_full_zeroconf_flow_implementation(hass: HomeAssistant) -> None:
 
     assert result.get("description_placeholders") == {CONF_NAME: "TechnoVE Station"}
     assert result.get("step_id") == "zeroconf_confirm"
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
 
     assert result2.get("title") == "TechnoVE Station"
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
 
     assert "data" in result2
     assert result2["data"][CONF_HOST] == "192.168.1.123"
@@ -165,7 +165,7 @@ async def test_zeroconf_during_onboarding(
     )
 
     assert result.get("title") == "TechnoVE Station"
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
 
     assert result.get("data") == {CONF_HOST: "192.168.1.123"}
     assert "result" in result
@@ -195,7 +195,7 @@ async def test_zeroconf_connection_error(
         ),
     )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "cannot_connect"
 
 
@@ -211,7 +211,7 @@ async def test_user_station_exists_abort(
         data={CONF_HOST: "192.168.1.123"},
     )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 
@@ -236,7 +236,7 @@ async def test_zeroconf_without_mac_station_exists_abort(
         ),
     )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 
@@ -262,5 +262,5 @@ async def test_zeroconf_with_mac_station_exists_abort(
     )
 
     mock_technove.update.assert_not_called()
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"

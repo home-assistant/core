@@ -737,10 +737,10 @@ class GTFSDepartureSensor(SensorEntity):
             self._attributes[ATTR_LOCATION_DESTINATION] = LOCATION_TYPE_OPTIONS.get(
                 self._destination.location_type, LOCATION_TYPE_DEFAULT
             )
-            self._attributes[
-                ATTR_WHEELCHAIR_DESTINATION
-            ] = WHEELCHAIR_BOARDING_OPTIONS.get(
-                self._destination.wheelchair_boarding, WHEELCHAIR_BOARDING_DEFAULT
+            self._attributes[ATTR_WHEELCHAIR_DESTINATION] = (
+                WHEELCHAIR_BOARDING_OPTIONS.get(
+                    self._destination.wheelchair_boarding, WHEELCHAIR_BOARDING_DEFAULT
+                )
             )
 
         # Manage Route metadata

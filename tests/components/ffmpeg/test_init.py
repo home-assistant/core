@@ -77,7 +77,7 @@ class MockFFmpegDev(ffmpeg.FFmpegBase):
         self.called_entities = entity_ids
 
 
-def test_setup_component():
+def test_setup_component() -> None:
     """Set up ffmpeg component."""
     with get_test_home_assistant() as hass:
         with assert_setup_component(1):
@@ -87,7 +87,7 @@ def test_setup_component():
         hass.stop()
 
 
-def test_setup_component_test_service():
+def test_setup_component_test_service() -> None:
     """Set up ffmpeg component test services."""
     with get_test_home_assistant() as hass:
         with assert_setup_component(1):
@@ -269,9 +269,13 @@ async def test_legacy_ffmpeg(
     hass: HomeAssistant,
 ) -> None:
     """Test legacy ffmpeg uses the old ffserver content type."""
-    with assert_setup_component(1), patch(
-        "homeassistant.components.ffmpeg.FFVersion.get_version", return_value="3.0"
-    ), patch("homeassistant.components.ffmpeg.is_official_image", return_value=False):
+    with (
+        assert_setup_component(1),
+        patch(
+            "homeassistant.components.ffmpeg.FFVersion.get_version", return_value="3.0"
+        ),
+        patch("homeassistant.components.ffmpeg.is_official_image", return_value=False),
+    ):
         await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
 
     manager = get_ffmpeg_manager(hass)
@@ -282,8 +286,9 @@ async def test_ffmpeg_using_official_image(
     hass: HomeAssistant,
 ) -> None:
     """Test ffmpeg using official image is the new ffmpeg content type."""
-    with assert_setup_component(1), patch(
-        "homeassistant.components.ffmpeg.is_official_image", return_value=True
+    with (
+        assert_setup_component(1),
+        patch("homeassistant.components.ffmpeg.is_official_image", return_value=True),
     ):
         await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
 

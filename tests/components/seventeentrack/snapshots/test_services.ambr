@@ -1,0 +1,53 @@
+# serializer version: 1
+# name: test_get_all_packages
+  dict({
+    'packages': list([
+      dict({
+        'friendly_name': 'friendly name 3',
+        'info_text': 'info text 1',
+        'location': 'location 1',
+        'status': 'Expired',
+        'timestamp': datetime.datetime(2020, 8, 10, 10, 32, tzinfo=<UTC>),
+        'tracking_number': '123',
+      }),
+      dict({
+        'friendly_name': 'friendly name 1',
+        'info_text': 'info text 1',
+        'location': 'location 1',
+        'status': 'In Transit',
+        'timestamp': datetime.datetime(2020, 8, 10, 10, 32, tzinfo=<UTC>),
+        'tracking_number': '456',
+      }),
+      dict({
+        'friendly_name': 'friendly name 2',
+        'info_text': 'info text 1',
+        'location': 'location 1',
+        'status': 'Delivered',
+        'timestamp': datetime.datetime(2020, 8, 10, 10, 32, tzinfo=<UTC>),
+        'tracking_number': '789',
+      }),
+    ]),
+  })
+# ---
+# name: test_get_packages_from_list
+  dict({
+    'packages': list([
+      dict({
+        'friendly_name': 'friendly name 1',
+        'info_text': 'info text 1',
+        'location': 'location 1',
+        'status': 'In Transit',
+        'timestamp': datetime.datetime(2020, 8, 10, 10, 32, tzinfo=<UTC>),
+        'tracking_number': '456',
+      }),
+      dict({
+        'friendly_name': 'friendly name 2',
+        'info_text': 'info text 1',
+        'location': 'location 1',
+        'status': 'Delivered',
+        'timestamp': datetime.datetime(2020, 8, 10, 10, 32, tzinfo=<UTC>),
+        'tracking_number': '789',
+      }),
+    ]),
+  })
+# ---

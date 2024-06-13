@@ -58,7 +58,7 @@ class CachingStaticResource(StaticResource):
                 raise
             except Exception as error:
                 # perm error or other kind!
-                request.app.logger.exception(error)
+                request.app.logger.exception("Unexpected exception")
                 raise HTTPNotFound from error
 
             content_type: str | None = None

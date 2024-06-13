@@ -39,8 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def get_files_list(folder_path: str, filter_term: str) -> list[str]:
     """Return the list of files, applying filter."""
     query = folder_path + filter_term
-    files_list = glob.glob(query)
-    return files_list
+    return glob.glob(query)
 
 
 def get_size(files_list: list[str]) -> int:

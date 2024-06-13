@@ -6,16 +6,15 @@ from datetime import timedelta
 import logging
 
 from aiohttp.client_exceptions import ServerDisconnectedError
-from pyunifiprotect.data import Bootstrap
-from pyunifiprotect.data.types import FirmwareReleaseChannel
-from pyunifiprotect.exceptions import ClientError, NotAuthorized
+from uiprotect.data import Bootstrap
+from uiprotect.data.types import FirmwareReleaseChannel
+from uiprotect.exceptions import ClientError, NotAuthorized
 
-# Import the test_util.anonymize module from the pyunifiprotect package
+# Import the test_util.anonymize module from the uiprotect package
 # in __init__ to ensure it gets imported in the executor since the
 # diagnostics module will not be imported in the executor.
-from pyunifiprotect.test_util.anonymize import anonymize_data  # noqa: F401
+from uiprotect.test_util.anonymize import anonymize_data  # noqa: F401
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -37,7 +36,7 @@ from .const import (
     OUTDATED_LOG_MESSAGE,
     PLATFORMS,
 )
-from .data import ProtectData, async_ufp_instance_for_config_entry_ids
+from .data import ProtectData, UFPConfigEntry
 from .discovery import async_start_discovery
 from .migrate import async_migrate_data
 from .services import async_cleanup_services, async_setup_services
@@ -62,7 +61,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     """Set up the UniFi Protect config entries."""
     protect = async_create_api_client(hass, entry)
     _LOGGER.debug("Connect to UniFi Protect")
@@ -107,12 +106,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=nvr_info.mac)
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data_service
+    entry.runtime_data = data_service
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     entry.async_on_unload(
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, data_service.async_stop, run_immediately=True
-        )
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, data_service.async_stop)
     )
 
     if not entry.options.get(CONF_ALLOW_EA, False) and (
@@ -154,7 +151,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 },
             )
             ir.async_delete_issue(hass, DOMAIN, "ea_channel_warning")
-            _LOGGER.exception("Error setting up UniFi Protect integration: %s", err)
+            _LOGGER.exception("Error setting up UniFi Protect integration")
         raise
 
     return True
@@ -162,7 +159,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: UFPConfigEntry,
     data_service: ProtectData,
     bootstrap: Bootstrap,
 ) -> None:
@@ -178,25 +175,24 @@ async def _async_setup_entry(
     hass.http.register_view(VideoProxyView(hass))
 
 
-async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_options_updated(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
     """Update options."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     """Unload UniFi Protect config entry."""
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        data: ProtectData = hass.data[DOMAIN][entry.entry_id]
+        data = entry.runtime_data
         await data.async_stop()
-        hass.data[DOMAIN].pop(entry.entry_id)
         async_cleanup_services(hass)
 
     return bool(unload_ok)
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: UFPConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove ufp config entry from a device."""
     unifi_macs = {
@@ -204,8 +200,7 @@ async def async_remove_config_entry_device(
         for connection in device_entry.connections
         if connection[0] == dr.CONNECTION_NETWORK_MAC
     }
-    api = async_ufp_instance_for_config_entry_ids(hass, {config_entry.entry_id})
-    assert api is not None
+    api = config_entry.runtime_data.api
     if api.bootstrap.nvr.mac in unifi_macs:
         return False
     for device in async_get_devices(api.bootstrap, DEVICES_THAT_ADOPT):

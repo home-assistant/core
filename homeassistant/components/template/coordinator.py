@@ -47,7 +47,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
             await self._attach_triggers()
         else:
             self._unsub_start = self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START, self._attach_triggers, run_immediately=True
+                EVENT_HOMEASSISTANT_START, self._attach_triggers
             )
 
         for platform_domain in PLATFORMS:
@@ -59,7 +59,8 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
                         DOMAIN,
                         {"coordinator": self, "entities": self.config[platform_domain]},
                         hass_config,
-                    )
+                    ),
+                    eager_start=True,
                 )
 
     async def _attach_triggers(self, start_event=None) -> None:

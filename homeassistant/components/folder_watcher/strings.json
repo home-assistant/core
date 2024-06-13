@@ -1,0 +1,61 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "not_dir": "Configured path is not a directory",
+      "not_readable_dir": "Configured path is not readable",
+      "not_allowed_dir": "Configured path is not in allowlist"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "folder": "Path to the watched folder",
+          "patterns": "Pattern(s) to monitor"
+        },
+        "data_description": {
+          "folder": "Path needs to be from root, as example `/config`",
+          "patterns": "Example: `*.yaml` to only see yaml files"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "patterns": "[%key:component::folder_watcher::config::step::user::data::patterns%]"
+        },
+        "data_description": {
+          "patterns": "[%key:component::folder_watcher::config::step::user::data_description::patterns%]"
+        }
+      }
+    }
+  },
+  "issues": {
+    "import_failed_not_allowed_path": {
+      "title": "The Folder Watcher YAML configuration could not be imported",
+      "description": "Configuring Folder Watcher using YAML is being removed but your configuration could not be imported as the folder {path} is not in the configured allowlist.\n\nPlease add it to `{config_variable}` in config.yaml and restart Home Assistant to import it and fix this issue."
+    },
+    "setup_not_allowed_path": {
+      "title": "The Folder Watcher configuration for {path} could not start",
+      "description": "The path {path} is not accessible or not allowed to be accessed.\n\nPlease check the path is accessible and add it to `{config_variable}` in config.yaml and restart Home Assistant to fix this issue."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "folder_watcher": {
+        "state_attributes": {
+          "event_type": { "name": "Event type" },
+          "path": { "name": "Path" },
+          "file": { "name": "File" },
+          "folder": { "name": "Folder" },
+          "dest_path": { "name": "Destination path" },
+          "dest_file": { "name": "Destination file" },
+          "dest_folder": { "name": "Destination folder" }
+        }
+      }
+    }
+  }
+}

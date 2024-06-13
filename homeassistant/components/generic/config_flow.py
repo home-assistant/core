@@ -291,7 +291,7 @@ async def async_test_stream(
             return {CONF_STREAM_SOURCE: "stream_no_route_to_host"}
         if err.errno == EIO:  # input/output error
             return {CONF_STREAM_SOURCE: "stream_io_error"}
-        raise err
+        raise
     return {}
 
 
@@ -361,6 +361,10 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.user_input = user_input
                     self.title = name
 
+                    if still_url is None:
+                        return self.async_create_entry(
+                            title=self.title, data={}, options=self.user_input
+                        )
                     # temporary preview for user to check the image
                     self.context["preview_cam"] = user_input
                     return await self.async_step_user_confirm_still()

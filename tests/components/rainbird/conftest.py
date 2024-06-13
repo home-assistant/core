@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from http import HTTPStatus
 import json
 from typing import Any
@@ -10,6 +9,7 @@ from unittest.mock import patch
 
 from pyrainbird import encryption
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.rainbird import DOMAIN
 from homeassistant.components.rainbird.const import (
@@ -157,7 +157,7 @@ def setup_platforms(
 
 
 @pytest.fixture(autouse=True)
-def aioclient_mock(hass: HomeAssistant) -> Generator[AiohttpClientMocker, None, None]:
+def aioclient_mock(hass: HomeAssistant) -> Generator[AiohttpClientMocker]:
     """Context manager to mock aiohttp client."""
     mocker = AiohttpClientMocker()
 
@@ -171,12 +171,15 @@ def aioclient_mock(hass: HomeAssistant) -> Generator[AiohttpClientMocker, None, 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, close_session)
         return session
 
-    with patch(
-        "homeassistant.components.rainbird.async_create_clientsession",
-        side_effect=create_session,
-    ), patch(
-        "homeassistant.components.rainbird.config_flow.async_create_clientsession",
-        side_effect=create_session,
+    with (
+        patch(
+            "homeassistant.components.rainbird.async_create_clientsession",
+            side_effect=create_session,
+        ),
+        patch(
+            "homeassistant.components.rainbird.config_flow.async_create_clientsession",
+            side_effect=create_session,
+        ),
     ):
         yield mocker
 
@@ -184,7 +187,7 @@ def aioclient_mock(hass: HomeAssistant) -> Generator[AiohttpClientMocker, None, 
 def rainbird_json_response(result: dict[str, str]) -> bytes:
     """Create a fake API response."""
     return encryption.encrypt(
-        '{"jsonrpc": "2.0", "result": %s, "id": 1} ' % json.dumps(result),
+        f'{{"jsonrpc": "2.0", "result": {json.dumps(result)}, "id": 1}} ',
         PASSWORD,
     )
 

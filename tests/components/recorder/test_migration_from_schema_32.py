@@ -12,9 +12,16 @@ import pytest
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+from typing_extensions import AsyncGenerator
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import core, db_schema, migration, statistics
+from homeassistant.components.recorder import (
+    Recorder,
+    core,
+    db_schema,
+    migration,
+    statistics,
+)
 from homeassistant.components.recorder.db_schema import (
     Events,
     EventTypes,
@@ -92,22 +99,27 @@ def db_schema_32():
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
 
-    with patch.object(recorder, "db_schema", old_db_schema), patch.object(
-        recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch.object(core, "StatesMeta", old_db_schema.StatesMeta), patch.object(
-        core, "EventTypes", old_db_schema.EventTypes
-    ), patch.object(core, "EventData", old_db_schema.EventData), patch.object(
-        core, "States", old_db_schema.States
-    ), patch.object(core, "Events", old_db_schema.Events), patch.object(
-        core, "StateAttributes", old_db_schema.StateAttributes
-    ), patch.object(migration.EntityIDMigration, "task", core.RecorderTask), patch(
-        CREATE_ENGINE_TARGET, new=_create_engine_test
+    with (
+        patch.object(recorder, "db_schema", old_db_schema),
+        patch.object(
+            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
+        ),
+        patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
+        patch.object(core, "EventTypes", old_db_schema.EventTypes),
+        patch.object(core, "EventData", old_db_schema.EventData),
+        patch.object(core, "States", old_db_schema.States),
+        patch.object(core, "Events", old_db_schema.Events),
+        patch.object(core, "StateAttributes", old_db_schema.StateAttributes),
+        patch.object(migration.EntityIDMigration, "task", core.RecorderTask),
+        patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
     ):
         yield
 
 
 @pytest.fixture(name="legacy_recorder_mock")
-async def legacy_recorder_mock_fixture(recorder_mock):
+async def legacy_recorder_mock_fixture(
+    recorder_mock: Recorder,
+) -> AsyncGenerator[Recorder]:
     """Fixture for legacy recorder mock."""
     with patch.object(recorder_mock.states_meta_manager, "active", False):
         yield recorder_mock
@@ -1294,14 +1306,17 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
     one_month_ago = now - datetime.timedelta(days=30)
 
     def _do_migration():
-        with patch.object(
-            migration,
-            "_migrate_statistics_columns_to_timestamp",
-            side_effect=IntegrityError("test", "test", "test"),
-        ), patch.object(
-            migration,
-            "migrate_single_statistics_row_to_timestamp",
-            side_effect=IntegrityError("test", "test", "test"),
+        with (
+            patch.object(
+                migration,
+                "_migrate_statistics_columns_to_timestamp",
+                side_effect=IntegrityError("test", "test", "test"),
+            ),
+            patch.object(
+                migration,
+                "migrate_single_statistics_row_to_timestamp",
+                side_effect=IntegrityError("test", "test", "test"),
+            ),
         ):
             migration._migrate_statistics_columns_to_timestamp_removing_duplicates(
                 hass, instance, instance.get_session, instance.engine

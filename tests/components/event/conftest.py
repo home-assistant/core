@@ -1,4 +1,5 @@
 """Fixtures for the event entity component tests."""
+
 import logging
 
 import pytest

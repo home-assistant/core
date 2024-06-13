@@ -12,8 +12,10 @@ import numbers
 import random
 from typing import TYPE_CHECKING, Any, Self
 
+from zhaquirks.danfoss import thermostat as danfoss_thermostat
+from zhaquirks.quirk_ids import DANFOSS_ALLY_THERMOSTAT
 from zigpy import types
-from zigpy.quirks.v2 import EntityMetadata, ZCLEnumMetadata, ZCLSensorMetadata
+from zigpy.quirks.v2 import ZCLEnumMetadata, ZCLSensorMetadata
 from zigpy.state import Counter, State
 from zigpy.zcl.clusters.closures import WindowCovering
 from zigpy.zcl.clusters.general import Basic
@@ -71,11 +73,11 @@ from .core.const import (
     CLUSTER_HANDLER_TEMPERATURE,
     CLUSTER_HANDLER_THERMOSTAT,
     DATA_ZHA,
-    QUIRK_METADATA,
+    ENTITY_METADATA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
-from .core.helpers import get_zha_data
+from .core.helpers import get_zha_data, validate_device_class, validate_unit
 from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES
 from .entity import BaseZhaEntity, ZhaEntity
 
@@ -154,7 +156,7 @@ class Sensor(ZhaEntity, SensorEntity):
         Return entity if it is a supported configuration, otherwise return None
         """
         cluster_handler = cluster_handlers[0]
-        if QUIRK_METADATA not in kwargs and (
+        if ENTITY_METADATA not in kwargs and (
             cls._attribute_name in cluster_handler.cluster.unsupported_attributes
             or cls._attribute_name not in cluster_handler.cluster.attributes_by_name
         ):
@@ -176,21 +178,29 @@ class Sensor(ZhaEntity, SensorEntity):
     ) -> None:
         """Init this sensor."""
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
-        if QUIRK_METADATA in kwargs:
-            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
+        if ENTITY_METADATA in kwargs:
+            self._init_from_quirks_metadata(kwargs[ENTITY_METADATA])
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
-    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
+    def _init_from_quirks_metadata(self, entity_metadata: ZCLSensorMetadata) -> None:
         """Init this entity from the quirks metadata."""
         super()._init_from_quirks_metadata(entity_metadata)
-        sensor_metadata: ZCLSensorMetadata = entity_metadata.entity_metadata
-        self._attribute_name = sensor_metadata.attribute_name
-        if sensor_metadata.divisor is not None:
-            self._divisor = sensor_metadata.divisor
-        if sensor_metadata.multiplier is not None:
-            self._multiplier = sensor_metadata.multiplier
-        if sensor_metadata.unit is not None:
-            self._attr_native_unit_of_measurement = sensor_metadata.unit
+        self._attribute_name = entity_metadata.attribute_name
+        if entity_metadata.divisor is not None:
+            self._divisor = entity_metadata.divisor
+        if entity_metadata.multiplier is not None:
+            self._multiplier = entity_metadata.multiplier
+        if entity_metadata.device_class is not None:
+            self._attr_device_class = validate_device_class(
+                SensorDeviceClass,
+                entity_metadata.device_class,
+                Platform.SENSOR.value,
+                _LOGGER,
+            )
+        if entity_metadata.device_class is None and entity_metadata.unit is not None:
+            self._attr_native_unit_of_measurement = validate_unit(
+                entity_metadata.unit
+            ).value
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
@@ -355,12 +365,22 @@ class EnumSensor(Sensor):
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.ENUM
     _enum: type[enum.Enum]
 
-    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZHADevice,
+        cluster_handlers: list[ClusterHandler],
+        **kwargs: Any,
+    ) -> None:
+        """Init this sensor."""
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+        self._attr_options = [e.name for e in self._enum]
+
+    def _init_from_quirks_metadata(self, entity_metadata: ZCLEnumMetadata) -> None:
         """Init this entity from the quirks metadata."""
-        ZhaEntity._init_from_quirks_metadata(self, entity_metadata)  # pylint: disable=protected-access
-        sensor_metadata: ZCLEnumMetadata = entity_metadata.entity_metadata
-        self._attribute_name = sensor_metadata.attribute_name
-        self._enum = sensor_metadata.enum
+        ZhaEntity._init_from_quirks_metadata(self, entity_metadata)  # noqa: SLF001
+        self._attribute_name = entity_metadata.attribute_name
+        self._enum = entity_metadata.enum
 
     def formatter(self, value: int) -> str | None:
         """Use name of enum."""
@@ -416,8 +436,7 @@ class Battery(Sensor):
         # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
         if not isinstance(value, numbers.Number) or value == -1 or value == 255:
             return None
-        value = round(value / 2)
-        return value
+        return round(value / 2)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -1481,4 +1500,130 @@ class AqaraCurtainHookStateSensor(EnumSensor):
     _unique_id_suffix = "hooks_state"
     _attr_translation_key: str = "hooks_state"
     _attr_icon: str = "mdi:hook"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class BitMapSensor(Sensor):
+    """A sensor with only state attributes.
+
+    The sensor value will be an aggregate of the state attributes.
+    """
+
+    _bitmap: types.bitmap8 | types.bitmap16
+
+    def formatter(self, _value: int) -> str:
+        """Summary of all attributes."""
+        binary_state_attributes = [
+            key for (key, elem) in self.extra_state_attributes.items() if elem
+        ]
+
+        return "something" if binary_state_attributes else "nothing"
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Bitmap."""
+        value = self._cluster_handler.cluster.get(self._attribute_name)
+
+        state_attr = {}
+
+        for bit in list(self._bitmap):
+            if value is None:
+                state_attr[bit.name] = False
+            else:
+                state_attr[bit.name] = bit in self._bitmap(value)
+
+        return state_attr
+
+
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class DanfossOpenWindowDetection(EnumSensor):
+    """Danfoss proprietary attribute.
+
+    Sensor that displays whether the TRV detects an open window using the temperature sensor.
+    """
+
+    _unique_id_suffix = "open_window_detection"
+    _attribute_name = "open_window_detection"
+    _attr_translation_key: str = "open_window_detected"
+    _attr_icon: str = "mdi:window-open"
+    _enum = danfoss_thermostat.DanfossOpenWindowDetectionEnum
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class DanfossLoadEstimate(Sensor):
+    """Danfoss proprietary attribute for communicating its estimate of the radiator load."""
+
+    _unique_id_suffix = "load_estimate"
+    _attribute_name = "load_estimate"
+    _attr_translation_key: str = "load_estimate"
+    _attr_icon: str = "mdi:scale-balance"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class DanfossAdaptationRunStatus(BitMapSensor):
+    """Danfoss proprietary attribute for showing the status of the adaptation run."""
+
+    _unique_id_suffix = "adaptation_run_status"
+    _attribute_name = "adaptation_run_status"
+    _attr_translation_key: str = "adaptation_run_status"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _bitmap = danfoss_thermostat.DanfossAdaptationRunStatusBitmap
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class DanfossPreheatTime(Sensor):
+    """Danfoss proprietary attribute for communicating the time when it starts pre-heating."""
+
+    _unique_id_suffix = "preheat_time"
+    _attribute_name = "preheat_time"
+    _attr_translation_key: str = "preheat_time"
+    _attr_icon: str = "mdi:radiator"
+    _attr_entity_registry_enabled_default = False
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="diagnostic",
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class DanfossSoftwareErrorCode(BitMapSensor):
+    """Danfoss proprietary attribute for communicating the error code."""
+
+    _unique_id_suffix = "sw_error_code"
+    _attribute_name = "sw_error_code"
+    _attr_translation_key: str = "software_error"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _bitmap = danfoss_thermostat.DanfossSoftwareErrorCodeBitmap
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="diagnostic",
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class DanfossMotorStepCounter(Sensor):
+    """Danfoss proprietary attribute for communicating the motor step counter."""
+
+    _unique_id_suffix = "motor_step_counter"
+    _attribute_name = "motor_step_counter"
+    _attr_translation_key: str = "motor_stepcount"
     _attr_entity_category = EntityCategory.DIAGNOSTIC

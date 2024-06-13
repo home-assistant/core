@@ -399,6 +399,20 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    OverkizSensorDescription(
+        key=OverkizState.CORE_BOTTOM_TANK_WATER_TEMPERATURE,
+        name="Bottom tank water temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OverkizSensorDescription(
+        key=OverkizState.CORE_CONTROL_WATER_TARGET_TEMPERATURE,
+        name="Control water target temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
     # Cover
     OverkizSensorDescription(
         key=OverkizState.CORE_TARGET_CLOSURE,

@@ -59,6 +59,9 @@ async def _title(hass: HomeAssistant, discovery_info: HassioServiceInfo) -> str:
     if device and "SkyConnect" in device:
         return f"Home Assistant SkyConnect ({discovery_info.name})"
 
+    if device and "Connect_ZBT-1" in device:
+        return f"Home Assistant Connect ZBT-1 ({discovery_info.name})"
+
     return discovery_info.name
 
 

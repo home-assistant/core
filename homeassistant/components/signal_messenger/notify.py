@@ -94,7 +94,7 @@ class SignalNotificationService(BaseNotificationService):
             data = DATA_SCHEMA(data)
         except vol.Invalid as ex:
             _LOGGER.error("Invalid message data: %s", ex)
-            raise ex
+            raise
 
         filenames = self.get_filenames(data)
         attachments_as_bytes = self.get_attachments_as_bytes(
@@ -107,7 +107,7 @@ class SignalNotificationService(BaseNotificationService):
             )
         except SignalCliRestApiError as ex:
             _LOGGER.error("%s", ex)
-            raise ex
+            raise
 
     @staticmethod
     def get_filenames(data: Any) -> list[str] | None:
@@ -174,7 +174,7 @@ class SignalNotificationService(BaseNotificationService):
                 attachments_as_bytes.append(chunks)
             except Exception as ex:
                 _LOGGER.error("%s", ex)
-                raise ex
+                raise
 
         if not attachments_as_bytes:
             return None

@@ -97,8 +97,9 @@ def test_isfile() -> None:
 
     # patching methods that allow us to fake a file existing
     # with write access
-    with patch("os.path.isfile", Mock(return_value=True)), patch(
-        "os.access", Mock(return_value=True)
+    with (
+        patch("os.path.isfile", Mock(return_value=True)),
+        patch("os.access", Mock(return_value=True)),
     ):
         schema("test.txt")
 
@@ -543,7 +544,7 @@ def test_string(hass: HomeAssistant) -> None:
 
     # Test subclasses of str are returned
     class MyString(str):
-        pass
+        __slots__ = ()
 
     my_string = MyString("hello")
     assert schema(my_string) is my_string
@@ -601,7 +602,9 @@ def test_x10_address() -> None:
     schema = vol.Schema(cv.x10_address)
     with pytest.raises(vol.Invalid):
         schema("Q1")
+    with pytest.raises(vol.Invalid):
         schema("q55")
+    with pytest.raises(vol.Invalid):
         schema("garbage_addr")
 
     schema("a1")
@@ -765,7 +768,7 @@ def test_date() -> None:
     """Test date validation."""
     schema = vol.Schema(cv.date)
 
-    for value in ["Not a date", "23:42", "2016-11-23T18:59:08"]:
+    for value in ("Not a date", "23:42", "2016-11-23T18:59:08"):
         with pytest.raises(vol.Invalid):
             schema(value)
 
@@ -777,7 +780,7 @@ def test_time() -> None:
     """Test date validation."""
     schema = vol.Schema(cv.time)
 
-    for value in ["Not a time", "2016-11-23", "2016-11-23T18:59:08"]:
+    for value in ("Not a time", "2016-11-23", "2016-11-23T18:59:08"):
         with pytest.raises(vol.Invalid):
             schema(value)
 
@@ -789,7 +792,7 @@ def test_time() -> None:
 def test_datetime() -> None:
     """Test date time validation."""
     schema = vol.Schema(cv.datetime)
-    for value in [date.today(), "Wrong DateTime"]:
+    for value in (date.today(), "Wrong DateTime"):
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
@@ -808,6 +811,7 @@ def test_multi_select() -> None:
 
     with pytest.raises(vol.Invalid):
         schema("robban")
+    with pytest.raises(vol.Invalid):
         schema(["paulus", "martinhj"])
 
     schema(["robban", "paulus"])
@@ -1303,7 +1307,7 @@ def test_uuid4_hex(caplog: pytest.LogCaptureFixture) -> None:
     """Test uuid validation."""
     schema = vol.Schema(cv.uuid4_hex)
 
-    for value in ["Not a hex string", "0", 0]:
+    for value in ("Not a hex string", "0", 0):
         with pytest.raises(vol.Invalid):
             schema(value)
 
@@ -1334,7 +1338,7 @@ def test_key_value_schemas() -> None:
 
     with pytest.raises(vol.Invalid) as excinfo:
         schema(True)
-        assert str(excinfo.value) == "Expected a dictionary"
+    assert str(excinfo.value) == "Expected a dictionary"
 
     for mode in None, {"a": "dict"}, "invalid":
         with pytest.raises(vol.Invalid) as excinfo:
@@ -1372,7 +1376,7 @@ def test_key_value_schemas_with_default() -> None:
 
     with pytest.raises(vol.Invalid) as excinfo:
         schema(True)
-        assert str(excinfo.value) == "Expected a dictionary"
+    assert str(excinfo.value) == "Expected a dictionary"
 
     for mode in None, {"a": "dict"}, "invalid":
         with pytest.raises(vol.Invalid) as excinfo:
@@ -1559,7 +1563,9 @@ def test_empty_schema_cant_find_module() -> None:
 
 
 def test_config_entry_only_schema(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test config_entry_only_config_schema."""
     expected_issue = "config_entry_only_test_domain"
@@ -1567,7 +1573,6 @@ def test_config_entry_only_schema(
         "The test_domain integration does not support YAML setup, please remove "
         "it from your configuration"
     )
-    issue_registry = ir.async_get(hass)
 
     cv.config_entry_only_config_schema("test_domain")({})
     assert expected_message not in caplog.text
@@ -1589,7 +1594,9 @@ def test_config_entry_only_schema_cant_find_module() -> None:
 
 
 def test_config_entry_only_schema_no_hass(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test if the hass context is not set in our context."""
     with patch(
@@ -1604,12 +1611,13 @@ def test_config_entry_only_schema_no_hass(
         "it from your configuration"
     )
     assert expected_message in caplog.text
-    issue_registry = ir.async_get(hass)
     assert not issue_registry.issues
 
 
 def test_platform_only_schema(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test config_entry_only_config_schema."""
     expected_issue = "platform_only_test_domain"
@@ -1617,8 +1625,6 @@ def test_platform_only_schema(
         "The test_domain integration does not support YAML setup, please remove "
         "it from your configuration"
     )
-    issue_registry = ir.async_get(hass)
-
     cv.platform_only_config_schema("test_domain")({})
     assert expected_message not in caplog.text
     assert not issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, expected_issue)
@@ -1671,3 +1677,25 @@ def test_color_hex() -> None:
 
     with pytest.raises(vol.Invalid, match=msg):
         cv.color_hex(123456)
+
+
+def test_determine_script_action_ambiguous():
+    """Test determine script action with ambiguous actions."""
+    assert (
+        cv.determine_script_action(
+            {
+                "type": "is_power",
+                "condition": "device",
+                "device_id": "9c2bda81bc7997c981f811c32cafdb22",
+                "entity_id": "2ee287ec70dd0c6db187b539bee429b7",
+                "domain": "sensor",
+                "below": "15",
+            }
+        )
+        == "condition"
+    )
+
+
+def test_determine_script_action_non_ambiguous():
+    """Test determine script action with a non ambiguous action."""
+    assert cv.determine_script_action({"delay": "00:00:05"}) == "delay"

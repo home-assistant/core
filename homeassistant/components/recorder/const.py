@@ -1,6 +1,7 @@
 """Recorder constants."""
 
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -10,8 +11,15 @@ from homeassistant.const import (
     EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,  # noqa: F401
 )
 from homeassistant.helpers.json import JSON_DUMP  # noqa: F401
+from homeassistant.util.hass_dict import HassKey
 
-DATA_INSTANCE = "recorder_instance"
+if TYPE_CHECKING:
+    from .core import Recorder  # noqa: F401
+
+
+DATA_INSTANCE: HassKey["Recorder"] = HassKey("recorder_instance")
+
+
 SQLITE_URL_PREFIX = "sqlite://"
 MARIADB_URL_PREFIX = "mariadb://"
 MARIADB_PYMYSQL_URL_PREFIX = "mariadb+pymysql://"
@@ -53,6 +61,7 @@ STATISTICS_ROWS_SCHEMA_VERSION = 23
 CONTEXT_ID_AS_BINARY_SCHEMA_VERSION = 36
 EVENT_TYPE_IDS_SCHEMA_VERSION = 37
 STATES_META_SCHEMA_VERSION = 38
+LAST_REPORTED_SCHEMA_VERSION = 43
 
 LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION = 28
 

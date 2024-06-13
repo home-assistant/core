@@ -28,6 +28,7 @@ from homeassistant.components.homekit.const import (
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
+    EMPTY_MAC,
     MANUFACTURER,
     SERV_ACCESSORY_INFO,
 )
@@ -47,7 +48,6 @@ from homeassistant.const import (
     __version__ as hass_version,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.event import TRACK_STATE_CHANGE_CALLBACKS
 
 from tests.common import async_mock_service
 
@@ -65,9 +65,7 @@ async def test_accessory_cancels_track_state_change_on_stop(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ):
         acc.run()
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS][entity_id]) == 1
     await acc.stop()
-    assert entity_id not in hass.data[TRACK_STATE_CHANGE_CALLBACKS]
 
 
 async def test_home_accessory(hass: HomeAssistant, hk_driver) -> None:
@@ -747,24 +745,32 @@ def test_home_driver(iid_storage) -> None:
             persist_file=path,
         )
 
-    mock_driver.assert_called_with(address=ip_address, port=port, persist_file=path)
+    mock_driver.assert_called_with(
+        address=ip_address, port=port, persist_file=path, mac=EMPTY_MAC
+    )
     driver.state = Mock(pincode=pin, paired=False)
     xhm_uri_mock = Mock(return_value="X-HM://0")
     driver.accessory = Mock(display_name="any", xhm_uri=xhm_uri_mock)
 
     # pair
-    with patch("pyhap.accessory_driver.AccessoryDriver.pair") as mock_pair, patch(
-        "homeassistant.components.homekit.accessories.async_dismiss_setup_message"
-    ) as mock_dissmiss_msg:
+    with (
+        patch("pyhap.accessory_driver.AccessoryDriver.pair") as mock_pair,
+        patch(
+            "homeassistant.components.homekit.accessories.async_dismiss_setup_message"
+        ) as mock_dissmiss_msg,
+    ):
         driver.pair("client_uuid", "client_public", b"1")
 
     mock_pair.assert_called_with("client_uuid", "client_public", b"1")
     mock_dissmiss_msg.assert_called_with("hass", "entry_id")
 
     # unpair
-    with patch("pyhap.accessory_driver.AccessoryDriver.unpair") as mock_unpair, patch(
-        "homeassistant.components.homekit.accessories.async_show_setup_message"
-    ) as mock_show_msg:
+    with (
+        patch("pyhap.accessory_driver.AccessoryDriver.unpair") as mock_unpair,
+        patch(
+            "homeassistant.components.homekit.accessories.async_show_setup_message"
+        ) as mock_show_msg,
+    ):
         driver.unpair("client_uuid")
 
     mock_unpair.assert_called_with("client_uuid")

@@ -3,12 +3,13 @@
 import asyncio
 from copy import deepcopy
 import logging
+from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 import pytest
 import voluptuous as vol
 
-from homeassistant import config_entries, loader
+from homeassistant import loader
 from homeassistant.components.device_automation import toggle_entity
 from homeassistant.components.websocket_api import const
 from homeassistant.components.websocket_api.auth import (
@@ -17,6 +18,7 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_REQUIRED,
 )
 from homeassistant.components.websocket_api.const import FEATURE_COALESCE_MESSAGES, URL
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
 from homeassistant.core import Context, HomeAssistant, State, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -203,7 +205,7 @@ async def test_return_response_error(hass: HomeAssistant, websocket_client) -> N
     assert msg["id"] == 8
     assert msg["type"] == const.TYPE_RESULT
     assert not msg["success"]
-    assert msg["error"]["code"] == "unknown_error"
+    assert msg["error"]["code"] == "service_validation_error"
 
 
 @pytest.mark.parametrize("command", ["call_service", "call_service_action"])
@@ -700,7 +702,7 @@ async def test_get_services(
         assert msg["id"] == id_
         assert msg["type"] == const.TYPE_RESULT
         assert msg["success"]
-        assert msg["result"] == hass.services.async_services()
+        assert msg["result"].keys() == hass.services.async_services().keys()
 
 
 async def test_get_config(
@@ -2433,7 +2435,7 @@ async def test_execute_script_with_dynamically_validated_action(
     )
 
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -2528,13 +2530,14 @@ async def test_integration_setup_info(
     ],
 )
 async def test_validate_config_works(
-    websocket_client: MockHAClientWebSocket, key, config
+    websocket_client: MockHAClientWebSocket,
+    key: str,
+    config: dict[str, Any] | list[dict[str, Any]],
 ) -> None:
     """Test config validation."""
-    await websocket_client.send_json({"id": 7, "type": "validate_config", key: config})
+    await websocket_client.send_json_auto_id({"type": "validate_config", key: config})
 
     msg = await websocket_client.receive_json()
-    assert msg["id"] == 7
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {key: {"valid": True, "error": None}}
@@ -2543,11 +2546,13 @@ async def test_validate_config_works(
 @pytest.mark.parametrize(
     ("key", "config", "error"),
     [
+        # Raises vol.Invalid
         (
             "trigger",
             {"platform": "non_existing", "event_type": "hello"},
             "Invalid platform 'non_existing' specified",
         ),
+        # Raises vol.Invalid
         (
             "condition",
             {
@@ -2561,6 +2566,20 @@ async def test_validate_config_works(
                 "@ data[0]"
             ),
         ),
+        # Raises HomeAssistantError
+        (
+            "condition",
+            {
+                "above": 50,
+                "condition": "device",
+                "device_id": "a51a57e5af051eb403d56eb9e6fd691c",
+                "domain": "sensor",
+                "entity_id": "7d18a157b7c00adbf2982ea7de0d0362",
+                "type": "is_carbon_dioxide",
+            },
+            "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+        ),
+        # Raises vol.Invalid
         (
             "action",
             {"non_existing": "domain_test.test_service"},
@@ -2569,13 +2588,15 @@ async def test_validate_config_works(
     ],
 )
 async def test_validate_config_invalid(
-    websocket_client: MockHAClientWebSocket, key, config, error
+    websocket_client: MockHAClientWebSocket,
+    key: str,
+    config: dict[str, Any],
+    error: str,
 ) -> None:
     """Test config validation."""
-    await websocket_client.send_json({"id": 7, "type": "validate_config", key: config})
+    await websocket_client.send_json_auto_id({"type": "validate_config", key: config})
 
     msg = await websocket_client.receive_json()
-    assert msg["id"] == 7
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {key: {"valid": False, "error": error}}

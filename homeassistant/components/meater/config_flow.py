@@ -84,7 +84,7 @@ class MeaterConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
         except ServiceUnavailableError:
             errors["base"] = "service_unavailable_error"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             errors["base"] = "unknown_auth_error"
         else:
             data = {"username": username, "password": password}

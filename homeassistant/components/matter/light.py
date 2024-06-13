@@ -43,6 +43,21 @@ COLOR_MODE_MAP = {
 }
 DEFAULT_TRANSITION = 0.2
 
+# there's a bug in (at least) Espressif's implementation of light transitions
+# on devices based on Matter 1.0. Mark potential devices with this issue.
+# https://github.com/home-assistant/core/issues/113775
+# vendorid (attributeKey 0/40/2)
+# productid (attributeKey 0/40/4)
+# hw version (attributeKey 0/40/8)
+# sw version (attributeKey 0/40/10)
+TRANSITION_BLOCKLIST = (
+    (4488, 514, "1.0", "1.0.0"),
+    (4488, 260, "1.0", "1.0.0"),
+    (5010, 769, "3.0", "1.0.0"),
+    (4999, 25057, "1.0", "27.0"),
+    (4448, 36866, "V1", "V1.0.0.5"),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -61,6 +76,7 @@ class MatterLight(MatterEntity, LightEntity):
     _supports_brightness = False
     _supports_color = False
     _supports_color_temperature = False
+    _transitions_disabled = False
 
     async def _set_xy_color(
         self, xy_color: tuple[float, float], transition: float = 0.0
@@ -260,6 +276,8 @@ class MatterLight(MatterEntity, LightEntity):
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         transition = kwargs.get(ATTR_TRANSITION, DEFAULT_TRANSITION)
+        if self._transitions_disabled:
+            transition = 0
 
         if self.supported_color_modes is not None:
             if hs_color is not None and ColorMode.HS in self.supported_color_modes:
@@ -295,7 +313,10 @@ class MatterLight(MatterEntity, LightEntity):
             # brightness support
             if self._entity_info.endpoint.has_attribute(
                 None, clusters.LevelControl.Attributes.CurrentLevel
-            ):
+            ) and self._entity_info.endpoint.device_types != {device_types.OnOffLight}:
+                # We need to filter out the OnOffLight device type here because
+                # that can have an optional LevelControl cluster present
+                # which we should ignore.
                 supported_color_modes.add(ColorMode.BRIGHTNESS)
                 self._supports_brightness = True
             # colormode(s)
@@ -333,8 +354,12 @@ class MatterLight(MatterEntity, LightEntity):
 
             supported_color_modes = filter_supported_color_modes(supported_color_modes)
             self._attr_supported_color_modes = supported_color_modes
+            self._check_transition_blocklist()
             # flag support for transition as soon as we support setting brightness and/or color
-            if supported_color_modes != {ColorMode.ONOFF}:
+            if (
+                supported_color_modes != {ColorMode.ONOFF}
+                and not self._transitions_disabled
+            ):
                 self._attr_supported_features |= LightEntityFeature.TRANSITION
 
             LOGGER.debug(
@@ -373,6 +398,23 @@ class MatterLight(MatterEntity, LightEntity):
         else:
             self._attr_color_mode = ColorMode.ONOFF
 
+    def _check_transition_blocklist(self) -> None:
+        """Check if this device is reported to have non working transitions."""
+        device_info = self._endpoint.device_info
+        if isinstance(device_info, clusters.BridgedDeviceBasicInformation):
+            return
+        if (
+            device_info.vendorID,
+            device_info.productID,
+            device_info.hardwareVersionString,
+            device_info.softwareVersionString,
+        ) in TRANSITION_BLOCKLIST:
+            self._transitions_disabled = True
+            LOGGER.warning(
+                "Detected a device that has been reported to have firmware issues "
+                "with light transitions. Transitions will be disabled for this light"
+            )
+
 
 # Discovery schema(s) to map Matter Attributes to HA entities
 DISCOVERY_SCHEMAS = [
@@ -393,6 +435,7 @@ DISCOVERY_SCHEMAS = [
         device_type=(
             device_types.ColorTemperatureLight,
             device_types.DimmableLight,
+            device_types.DimmablePlugInUnit,
             device_types.ExtendedColorLight,
             device_types.OnOffLight,
         ),
@@ -406,11 +449,11 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterLight,
         required_attributes=(
             clusters.OnOff.Attributes.OnOff,
-            clusters.LevelControl.Attributes.CurrentLevel,
             clusters.ColorControl.Attributes.CurrentHue,
             clusters.ColorControl.Attributes.CurrentSaturation,
         ),
         optional_attributes=(
+            clusters.LevelControl.Attributes.CurrentLevel,
             clusters.ColorControl.Attributes.ColorTemperatureMireds,
             clusters.ColorControl.Attributes.ColorMode,
             clusters.ColorControl.Attributes.CurrentX,
@@ -426,11 +469,11 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterLight,
         required_attributes=(
             clusters.OnOff.Attributes.OnOff,
-            clusters.LevelControl.Attributes.CurrentLevel,
             clusters.ColorControl.Attributes.CurrentX,
             clusters.ColorControl.Attributes.CurrentY,
         ),
         optional_attributes=(
+            clusters.LevelControl.Attributes.CurrentLevel,
             clusters.ColorControl.Attributes.ColorTemperatureMireds,
             clusters.ColorControl.Attributes.ColorMode,
             clusters.ColorControl.Attributes.CurrentHue,
@@ -450,37 +493,5 @@ DISCOVERY_SCHEMAS = [
             clusters.ColorControl.Attributes.ColorTemperatureMireds,
         ),
         optional_attributes=(clusters.ColorControl.Attributes.ColorMode,),
-    ),
-    # Additional schema to match generic dimmable lights with incorrect/missing device type
-    MatterDiscoverySchema(
-        platform=Platform.LIGHT,
-        entity_description=LightEntityDescription(
-            key="MatterDimmableLightFallback", name=None
-        ),
-        entity_class=MatterLight,
-        required_attributes=(
-            clusters.OnOff.Attributes.OnOff,
-            clusters.LevelControl.Attributes.CurrentLevel,
-        ),
-        optional_attributes=(
-            clusters.ColorControl.Attributes.ColorMode,
-            clusters.ColorControl.Attributes.CurrentHue,
-            clusters.ColorControl.Attributes.CurrentSaturation,
-            clusters.ColorControl.Attributes.CurrentX,
-            clusters.ColorControl.Attributes.CurrentY,
-            clusters.ColorControl.Attributes.ColorTemperatureMireds,
-        ),
-        # important: make sure to rule out all device types that are also based on the
-        # onoff and levelcontrol clusters !
-        not_device_type=(
-            device_types.Fan,
-            device_types.GenericSwitch,
-            device_types.OnOffPlugInUnit,
-            device_types.HeatingCoolingUnit,
-            device_types.Pump,
-            device_types.CastingVideoClient,
-            device_types.VideoRemoteControl,
-            device_types.Speaker,
-        ),
     ),
 ]

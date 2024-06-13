@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-import homeassistant.components.remote as remote
+from homeassistant.components import remote
 from homeassistant.components.remote import ATTR_COMMAND
 from homeassistant.const import (
     ATTR_ENTITY_ID,

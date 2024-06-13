@@ -6,7 +6,7 @@ from collections import OrderedDict
 from collections.abc import Mapping
 import json
 import logging
-from typing import Any
+from typing import Any, cast
 
 from aioesphomeapi import (
     APIClient,
@@ -31,6 +31,8 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
+from homeassistant.util.json import json_loads_object
 
 from .const import (
     CONF_ALLOW_SERVICE_CALLS,
@@ -250,6 +252,42 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_discovery_confirm()
 
+    async def async_step_mqtt(
+        self, discovery_info: MqttServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle MQTT discovery."""
+        device_info = json_loads_object(discovery_info.payload)
+        if "mac" not in device_info:
+            return self.async_abort(reason="mqtt_missing_mac")
+
+        # there will be no port if the API is not enabled
+        if "port" not in device_info:
+            return self.async_abort(reason="mqtt_missing_api")
+
+        if "ip" not in device_info:
+            return self.async_abort(reason="mqtt_missing_ip")
+
+        # mac address is lowercase and without :, normalize it
+        unformatted_mac = cast(str, device_info["mac"])
+        mac_address = format_mac(unformatted_mac)
+
+        device_name = cast(str, device_info["name"])
+
+        self._device_name = device_name
+        self._name = cast(str, device_info.get("friendly_name", device_name))
+        self._host = cast(str, device_info["ip"])
+        self._port = cast(int, device_info["port"])
+
+        self._noise_required = "api_encryption" in device_info
+
+        # Check if already configured
+        await self.async_set_unique_id(mac_address)
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: self._host, CONF_PORT: self._port}
+        )
+
+        return await self.async_step_discovery_confirm()
+
     async def async_step_dhcp(
         self, discovery_info: dhcp.DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -430,8 +468,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         except aiohttp.ClientError as err:
             _LOGGER.error("Error talking to the dashboard: %s", err)
             return False
-        except json.JSONDecodeError as err:
-            _LOGGER.exception("Error parsing response from dashboard: %s", err)
+        except json.JSONDecodeError:
+            _LOGGER.exception("Error parsing response from dashboard")
             return False
 
         self._noise_psk = noise_psk

@@ -1,11 +1,11 @@
 """The tests for MQTT tag scanner."""
 
-from collections.abc import Generator
 import copy
 import json
 from unittest.mock import ANY, AsyncMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN
@@ -47,7 +47,7 @@ DEFAULT_TAG_SCAN_JSON = (
 
 
 @pytest.fixture
-def tag_mock() -> Generator[AsyncMock, None, None]:
+def tag_mock() -> Generator[AsyncMock]:
     """Fixture to mock tag."""
     with patch("homeassistant.components.tag.async_scan_tag") as mock_tag:
         yield mock_tag
@@ -419,15 +419,9 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
 
     # Remove MQTT from the device
     mqtt_config_entry = hass.config_entries.async_entries(MQTT_DOMAIN)[0]
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": mqtt_config_entry.entry_id,
-            "device_id": device_entry.id,
-        }
+    response = await ws_client.remove_device(
+        device_entry.id, mqtt_config_entry.entry_id
     )
-    response = await ws_client.receive_json()
     assert response["success"]
     tag_mock.reset_mock()
 
@@ -612,15 +606,9 @@ async def test_cleanup_tag(
 
     # Remove MQTT from the device
     mqtt_config_entry = hass.config_entries.async_entries(MQTT_DOMAIN)[0]
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": mqtt_config_entry.entry_id,
-            "device_id": device_entry1.id,
-        }
+    response = await ws_client.remove_device(
+        device_entry1.id, mqtt_config_entry.entry_id
     )
-    response = await ws_client.receive_json()
     assert response["success"]
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -635,7 +623,7 @@ async def test_cleanup_tag(
 
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_called_once_with(
-        "homeassistant/tag/bla1/config", "", 0, True
+        "homeassistant/tag/bla1/config", None, 0, True
     )
 
 

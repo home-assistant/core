@@ -35,7 +35,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -58,7 +58,7 @@ async def test_form(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Workday Sensor"
     assert result3["options"] == {
         "name": "Workday Sensor",
@@ -78,7 +78,7 @@ async def test_form_no_country(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -99,7 +99,7 @@ async def test_form_no_country(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Workday Sensor"
     assert result3["options"] == {
         "name": "Workday Sensor",
@@ -117,7 +117,7 @@ async def test_form_no_subdivision(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -139,7 +139,7 @@ async def test_form_no_subdivision(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Workday Sensor"
     assert result3["options"] == {
         "name": "Workday Sensor",
@@ -185,7 +185,7 @@ async def test_options_form(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         "name": "Workday Sensor",
         "country": "DE",
@@ -205,7 +205,7 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -257,7 +257,7 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Workday Sensor"
     assert result3["options"] == {
         "name": "Workday Sensor",
@@ -333,7 +333,7 @@ async def test_options_form_incorrect_dates(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         "name": "Workday Sensor",
         "country": "DE",
@@ -392,7 +392,7 @@ async def test_options_form_abort_duplicate(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "already_configured"}
 
 
@@ -402,7 +402,7 @@ async def test_form_incorrect_date_range(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -454,7 +454,7 @@ async def test_form_incorrect_date_range(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Workday Sensor"
     assert result3["options"] == {
         "name": "Workday Sensor",
@@ -530,7 +530,7 @@ async def test_options_form_incorrect_date_ranges(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         "name": "Workday Sensor",
         "country": "DE",
@@ -563,7 +563,7 @@ async def test_language(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -586,7 +586,7 @@ async def test_language(
     )
     await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Workday Sensor"
     assert result3["options"] == {
         "name": "Workday Sensor",

@@ -6,7 +6,7 @@
       }
     },
     "error": {
-      "cannot_connect": "The directory could not be reached. Please check your settings."
+      "directory_does_not_exist": "The directory could not be reached. Please check your settings."
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
@@ -37,13 +37,9 @@
     }
   },
   "issues": {
-    "deprecated_yaml": {
-      "title": "The {integration_title} YAML configuration is being removed",
-      "description": "Configuring {integration_title} using YAML is being removed.\n\nYour configuration is already imported.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
-    },
-    "import_failed": {
+    "directory_does_not_exist": {
       "title": "The {integration_title} failed to import",
-      "description": "The {integration_title} integration failed to import.\n\nPlease check the logs for more details."
+      "description": "The {integration_title} integration failed to import because the configured directory does not exist.\n\nEnsure the directory exists and restart Home Assistant to try again or remove the {integration_title} configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
     }
   }
 }

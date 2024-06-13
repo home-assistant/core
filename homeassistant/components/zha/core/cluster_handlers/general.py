@@ -553,6 +553,13 @@ class OtaClientClusterHandler(ClientClusterHandler):
         Ota.AttributeDefs.current_file_version.name: True,
     }
 
+    @callback
+    def attribute_updated(self, attrid: int, value: Any, timestamp: Any) -> None:
+        """Handle an attribute updated on this cluster."""
+        # We intentionally avoid the `ClientClusterHandler` attribute update handler:
+        # it emits a logbook event on every update, which pollutes the logbook
+        ClusterHandler.attribute_updated(self, attrid, value, timestamp)
+
     @property
     def current_file_version(self) -> int | None:
         """Return cached value of current_file_version attribute."""

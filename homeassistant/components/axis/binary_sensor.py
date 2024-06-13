@@ -2,41 +2,33 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from functools import partial
 
-from axis.models.event import Event, EventOperation, EventTopic
-from axis.vapix.interfaces.applications.fence_guard import FenceGuardHandler
-from axis.vapix.interfaces.applications.loitering_guard import LoiteringGuardHandler
-from axis.vapix.interfaces.applications.motion_guard import MotionGuardHandler
-from axis.vapix.interfaces.applications.vmd4 import Vmd4Handler
+from axis.interfaces.applications.fence_guard import FenceGuardHandler
+from axis.interfaces.applications.loitering_guard import LoiteringGuardHandler
+from axis.interfaces.applications.motion_guard import MotionGuardHandler
+from axis.interfaces.applications.vmd4 import Vmd4Handler
+from axis.models.event import Event, EventTopic
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
-from .entity import AxisEventEntity
+from . import AxisConfigEntry
+from .entity import AxisEventDescription, AxisEventEntity
 from .hub import AxisHub
 
 
 @dataclass(frozen=True, kw_only=True)
-class AxisBinarySensorDescription(BinarySensorEntityDescription):
+class AxisBinarySensorDescription(AxisEventDescription, BinarySensorEntityDescription):
     """Axis binary sensor entity description."""
-
-    event_topic: tuple[EventTopic, ...] | EventTopic
-    """Event topic that provides state updates."""
-    name_fn: Callable[[AxisHub, Event], str] = lambda hub, event: ""
-    """Function providing the corresponding name to the event ID."""
-    supported_fn: Callable[[AxisHub, Event], bool] = lambda hub, event: True
-    """Function validating if event is supported."""
 
 
 @callback
@@ -185,46 +177,27 @@ ENTITY_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AxisConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Axis binary sensor."""
-    hub = AxisHub.get_hub(hass, config_entry)
-
-    @callback
-    def register_platform(descriptions: Iterable[AxisBinarySensorDescription]) -> None:
-        """Register entity platform to create entities on event initialized signal."""
-
-        @callback
-        def create_entity(
-            description: AxisBinarySensorDescription, event: Event
-        ) -> None:
-            """Create Axis entity."""
-            if description.supported_fn(hub, event):
-                async_add_entities([AxisBinarySensor(hub, description, event)])
-
-        for description in descriptions:
-            hub.api.event.subscribe(
-                partial(create_entity, description),
-                topic_filter=description.event_topic,
-                operation_filter=EventOperation.INITIALIZED,
-            )
-
-    register_platform(ENTITY_DESCRIPTIONS)
+    config_entry.runtime_data.entity_loader.register_platform(
+        async_add_entities, AxisBinarySensor, ENTITY_DESCRIPTIONS
+    )
 
 
 class AxisBinarySensor(AxisEventEntity, BinarySensorEntity):
     """Representation of a binary Axis event."""
 
+    entity_description: AxisBinarySensorDescription
+
     def __init__(
         self, hub: AxisHub, description: AxisBinarySensorDescription, event: Event
     ) -> None:
         """Initialize the Axis binary sensor."""
-        super().__init__(event, hub)
-        self.entity_description = description
-        self._attr_name = description.name_fn(hub, event) or self._attr_name
+        super().__init__(hub, description, event)
+
         self._attr_is_on = event.is_tripped
-        self._attr_device_class = description.device_class  # temporary
         self.cancel_scheduled_update: Callable[[], None] | None = None
 
     @callback

@@ -40,7 +40,7 @@ from .data import get_domain_data
 
 LOGGER = logging.getLogger(__name__)
 
-FlowInput = Mapping[str, Any] | None
+type FlowInput = Mapping[str, Any] | None
 
 
 class ConnectError(IntegrationError):
@@ -149,7 +149,7 @@ class DlnaDmrFlowHandler(ConfigFlow, domain=DOMAIN):
         # case the device doesn't have a static and unique UDN (breaking the
         # UPnP spec).
         for entry in self._async_current_entries(include_ignore=True):
-            if self._location == entry.data[CONF_URL]:
+            if self._location == entry.data.get(CONF_URL):
                 return self.async_abort(reason="already_configured")
             if self._mac and self._mac == entry.data.get(CONF_MAC):
                 return self.async_abort(reason="already_configured")
@@ -339,11 +339,7 @@ class DlnaDmrFlowHandler(ConfigFlow, domain=DOMAIN):
             entry.unique_id
             for entry in self._async_current_entries(include_ignore=False)
         }
-        discoveries = [
-            disc for disc in discoveries if disc.ssdp_udn not in current_unique_ids
-        ]
-
-        return discoveries
+        return [disc for disc in discoveries if disc.ssdp_udn not in current_unique_ids]
 
 
 class DlnaDmrOptionsFlowHandler(OptionsFlow):

@@ -7,15 +7,16 @@ from collections.abc import Callable, Iterable
 from concurrent.futures import CancelledError
 import contextlib
 from datetime import datetime, timedelta
+from functools import cached_property
 import logging
 import queue
 import sqlite3
 import threading
 import time
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import psutil_home_assistant as ha_psutil
-from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
+from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select, update
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.exc import SQLAlchemyError
@@ -30,7 +31,13 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     MATCH_ALL,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.helpers.event import (
     async_track_time_change,
     async_track_time_interval,
@@ -40,6 +47,7 @@ from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 import homeassistant.util.dt as dt_util
 from homeassistant.util.enum import try_parse_enum
+from homeassistant.util.event_type import EventType
 
 from . import migration, statistics
 from .const import (
@@ -47,6 +55,7 @@ from .const import (
     DOMAIN,
     ESTIMATED_QUEUE_ITEM_SIZE,
     KEEPALIVE_TIME,
+    LAST_REPORTED_SCHEMA_VERSION,
     LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION,
     MARIADB_PYMYSQL_URL_PREFIX,
     MARIADB_URL_PREFIX,
@@ -130,8 +139,6 @@ from .util import (
 
 _LOGGER = logging.getLogger(__name__)
 
-T = TypeVar("T")
-
 DEFAULT_URL = "sqlite:///{hass_config_path}"
 
 # Controls how often we clean up
@@ -172,13 +179,14 @@ class Recorder(threading.Thread):
         db_max_retries: int,
         db_retry_wait: int,
         entity_filter: Callable[[str], bool],
-        exclude_event_types: set[str],
+        exclude_event_types: set[EventType[Any] | str],
     ) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self, name="Recorder")
 
         self.hass = hass
         self.thread_id: int | None = None
+        self.recorder_and_worker_thread_ids: set[int] = set()
         self.auto_purge = auto_purge
         self.auto_repack = auto_repack
         self.keep_days = keep_days
@@ -251,7 +259,7 @@ class Recorder(threading.Thread):
         """Return the number of items in the recorder backlog."""
         return self._queue.qsize()
 
-    @property
+    @cached_property
     def dialect_name(self) -> SupportedDialect | None:
         """Return the dialect the recorder uses."""
         return self._dialect_name
@@ -286,6 +294,7 @@ class Recorder(threading.Thread):
     def async_start_executor(self) -> None:
         """Start the executor."""
         self._db_executor = DBInterruptibleThreadPoolExecutor(
+            self.recorder_and_worker_thread_ids,
             thread_name_prefix=DB_WORKER_PREFIX,
             max_workers=MAX_DB_EXECUTOR_WORKERS,
             shutdown_hook=self._shutdown_pool,
@@ -331,7 +340,6 @@ class Recorder(threading.Thread):
         self._event_listener = self.hass.bus.async_listen(
             MATCH_ALL,
             _event_listener,
-            run_immediately=True,
         )
         self._queue_watcher = async_track_time_interval(
             self.hass,
@@ -357,9 +365,9 @@ class Recorder(threading.Thread):
             self.queue_task(COMMIT_TASK)
 
     @callback
-    def async_add_executor_job(
-        self, target: Callable[..., T], *args: Any
-    ) -> asyncio.Future[T]:
+    def async_add_executor_job[_T](
+        self, target: Callable[..., _T], *args: Any
+    ) -> asyncio.Future[_T]:
         """Add an executor job from within the event loop."""
         return self.hass.loop.run_in_executor(self._db_executor, target, *args)
 
@@ -693,7 +701,7 @@ class Recorder(threading.Thread):
         self.is_running = True
         try:
             self._run()
-        except Exception:  # pylint: disable=broad-exception-caught
+        except Exception:
             _LOGGER.exception(
                 "Recorder._run threw unexpected exception, recorder shutting down"
             )
@@ -710,7 +718,10 @@ class Recorder(threading.Thread):
 
     def _run(self) -> None:
         """Start processing events to save."""
-        self.thread_id = threading.get_ident()
+        thread_id = threading.get_ident()
+        self.thread_id = thread_id
+        self.recorder_and_worker_thread_ids.add(thread_id)
+
         setup_result = self._setup_recorder()
 
         if not setup_result:
@@ -861,12 +872,12 @@ class Recorder(threading.Thread):
             self._guarded_process_one_task_or_event_or_recover(queue_.get())
 
     def _pre_process_startup_events(
-        self, startup_task_or_events: list[RecorderTask | Event]
+        self, startup_task_or_events: list[RecorderTask | Event[Any]]
     ) -> None:
         """Pre process startup events."""
         # Prime all the state_attributes and event_data caches
         # before we start processing events
-        state_change_events: list[Event] = []
+        state_change_events: list[Event[EventStateChangedData]] = []
         non_state_change_events: list[Event] = []
 
         for task_or_event in startup_task_or_events:
@@ -893,8 +904,8 @@ class Recorder(threading.Thread):
         _LOGGER.debug("Processing task: %s", task)
         try:
             self._process_one_task_or_event_or_recover(task)
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.exception("Error while processing event %s: %s", task, err)
+        except Exception:
+            _LOGGER.exception("Error while processing event %s", task)
 
     def _process_one_task_or_event_or_recover(self, task: RecorderTask | Event) -> None:
         """Process a task or event, reconnect, or recover a malformed database."""
@@ -912,15 +923,15 @@ class Recorder(threading.Thread):
                 assert isinstance(task, RecorderTask)
             if task.commit_before:
                 self._commit_event_session_or_retry()
-            return task.run(self)
+            task.run(self)
         except exc.DatabaseError as err:
             if self._handle_database_error(err):
                 return
-            _LOGGER.exception(
-                "Unhandled database error while processing task %s: %s", task, err
-            )
-        except SQLAlchemyError as err:
-            _LOGGER.exception("SQLAlchemyError error processing task %s: %s", task, err)
+            _LOGGER.exception("Unhandled database error while processing task %s", task)
+        except SQLAlchemyError:
+            _LOGGER.exception("SQLAlchemyError error processing task %s", task)
+        else:
+            return
 
         # Reset the session if an SQLAlchemyError (including DatabaseError)
         # happens to rollback and recover
@@ -936,10 +947,9 @@ class Recorder(threading.Thread):
                 return migration.initialize_database(self.get_session)
             except UnsupportedDialect:
                 break
-            except Exception as err:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception(
-                    "Error during connection setup: %s (retrying in %s seconds)",
-                    err,
+                    "Error during connection setup: (retrying in %s seconds)",
                     self.db_retry_wait,
                 )
             tries += 1
@@ -981,7 +991,7 @@ class Recorder(threading.Thread):
                 return True
             _LOGGER.exception("Database error during schema migration")
             return False
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error during schema migration")
             return False
         else:
@@ -1021,7 +1031,7 @@ class Recorder(threading.Thread):
             self.backlog,
         )
 
-    def _process_one_event(self, event: Event) -> None:
+    def _process_one_event(self, event: Event[Any]) -> None:
         if not self.enabled:
             return
         if event.event_type == EVENT_STATE_CHANGED:
@@ -1078,7 +1088,9 @@ class Recorder(threading.Thread):
 
         self._add_to_session(session, dbevent)
 
-    def _process_state_changed_event_into_session(self, event: Event) -> None:
+    def _process_state_changed_event_into_session(
+        self, event: Event[EventStateChangedData]
+    ) -> None:
         """Process a state_changed event into the session."""
         state_attributes_manager = self.state_attributes_manager
         states_meta_manager = self.states_meta_manager
@@ -1086,12 +1098,22 @@ class Recorder(threading.Thread):
         entity_id = event.data["entity_id"]
 
         dbstate = States.from_event(event)
+        old_state = event.data["old_state"]
+
+        assert self.event_session is not None
+        session = self.event_session
 
         states_manager = self.states_manager
-        if old_state := states_manager.pop_pending(entity_id):
-            dbstate.old_state = old_state
+        if pending_state := states_manager.pop_pending(entity_id):
+            dbstate.old_state = pending_state
+            if old_state:
+                pending_state.last_reported_ts = old_state.last_reported_timestamp
         elif old_state_id := states_manager.pop_committed(entity_id):
             dbstate.old_state_id = old_state_id
+            if old_state:
+                states_manager.update_pending_last_reported(
+                    old_state_id, old_state.last_reported_timestamp
+                )
         if entity_removed:
             dbstate.state = None
         else:
@@ -1105,8 +1127,6 @@ class Recorder(threading.Thread):
         ):
             return
 
-        assert self.event_session is not None
-        session = self.event_session
         # Map the entity_id to the StatesMeta table
         if pending_states_meta := states_meta_manager.get_pending(entity_id):
             dbstate.states_meta_rel = pending_states_meta
@@ -1169,7 +1189,6 @@ class Recorder(threading.Thread):
         while tries <= self.db_max_retries:
             try:
                 self._commit_event_session()
-                return
             except (exc.InternalError, exc.OperationalError) as err:
                 _LOGGER.error(
                     "%s: Error executing query: %s. (retrying in %s seconds)",
@@ -1182,13 +1201,31 @@ class Recorder(threading.Thread):
 
                 tries += 1
                 time.sleep(self.db_retry_wait)
+            else:
+                return
 
     def _commit_event_session(self) -> None:
         assert self.event_session is not None
         session = self.event_session
         self._commits_without_expire += 1
 
+        if (
+            pending_last_reported
+            := self.states_manager.get_pending_last_reported_timestamp()
+        ) and self.schema_version >= LAST_REPORTED_SCHEMA_VERSION:
+            with session.no_autoflush:
+                session.execute(
+                    update(States),
+                    [
+                        {
+                            "state_id": state_id,
+                            "last_reported_ts": last_reported_timestamp,
+                        }
+                        for state_id, last_reported_timestamp in pending_last_reported.items()
+                    ],
+                )
         session.commit()
+
         self._event_session_has_pending_writes = False
         # We just committed the state attributes to the database
         # and we now know the attributes_ids.  We can save
@@ -1233,10 +1270,8 @@ class Recorder(threading.Thread):
         try:
             self.event_session.rollback()
             self.event_session.close()
-        except SQLAlchemyError as err:
-            _LOGGER.exception(
-                "Error while rolling back and closing the event session: %s", err
-            )
+        except SQLAlchemyError:
+            _LOGGER.exception("Error while rolling back and closing the event session")
 
     def _reopen_event_session(self) -> None:
         """Rollback the event session and reopen it after a failure."""
@@ -1382,6 +1417,9 @@ class Recorder(threading.Thread):
             kwargs["pool_reset_on_return"] = None
         elif self.db_url.startswith(SQLITE_URL_PREFIX):
             kwargs["poolclass"] = RecorderPool
+            kwargs["recorder_and_worker_thread_ids"] = (
+                self.recorder_and_worker_thread_ids
+            )
         elif self.db_url.startswith(
             (
                 MARIADB_URL_PREFIX,
@@ -1409,6 +1447,7 @@ class Recorder(threading.Thread):
 
         self.engine = create_engine(self.db_url, **kwargs, future=True)
         self._dialect_name = try_parse_enum(SupportedDialect, self.engine.dialect.name)
+        self.__dict__.pop("dialect_name", None)
         sqlalchemy_event.listen(self.engine, "connect", self._setup_recorder_connection)
 
         Base.metadata.create_all(self.engine)
@@ -1444,8 +1483,8 @@ class Recorder(threading.Thread):
             self.recorder_runs_manager.end(self.event_session)
         try:
             self._commit_event_session_or_retry()
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.exception("Error saving the event session during shutdown: %s", err)
+        except Exception:
+            _LOGGER.exception("Error saving the event session during shutdown")
 
         self.event_session.close()
         self.recorder_runs_manager.clear()

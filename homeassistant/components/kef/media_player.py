@@ -79,11 +79,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def get_ip_mode(host):
     """Get the 'mode' used to retrieve the MAC address."""
     try:
-        if ipaddress.ip_address(host).version == 6:
-            return "ip6"
-        return "ip"
+        ip_address = ipaddress.ip_address(host)
     except ValueError:
         return "hostname"
+
+    if ip_address.version == 6:
+        return "ip6"
+    return "ip"
 
 
 async def async_setup_platform(

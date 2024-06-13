@@ -13,6 +13,7 @@ from homeassistant.components.config import config_entries
 from homeassistant.config_entries import HANDLERS, ConfigFlow
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
@@ -21,10 +22,11 @@ from tests.common import (
     MockConfigEntry,
     MockModule,
     MockUser,
+    mock_config_flow,
     mock_integration,
     mock_platform,
 )
-from tests.typing import WebSocketGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture
@@ -41,14 +43,34 @@ def mock_test_component(hass):
 
 
 @pytest.fixture
-async def client(hass, hass_client) -> TestClient:
+async def client(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> TestClient:
     """Fixture that can interact with the config manager API."""
     await async_setup_component(hass, "http", {})
     config_entries.async_setup(hass)
     return await hass_client()
 
 
-async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
+@pytest.fixture
+async def mock_flow():
+    """Mock a config flow."""
+
+    class Comp1ConfigFlow(ConfigFlow):
+        """Config flow with options flow."""
+
+        @staticmethod
+        @callback
+        def async_get_options_flow(config_entry):
+            """Get options flow."""
+
+    with mock_config_flow("comp1", Comp1ConfigFlow):
+        yield
+
+
+async def test_get_entries(
+    hass: HomeAssistant, client, clear_handlers, mock_flow
+) -> None:
     """Test get entries."""
     mock_integration(hass, MockModule("comp1"))
     mock_integration(
@@ -63,21 +85,6 @@ async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
     mock_integration(
         hass, MockModule("comp5", partial_manifest={"integration_type": "service"})
     )
-
-    @HANDLERS.register("comp1")
-    class Comp1ConfigFlow:
-        """Config flow with options flow."""
-
-        @staticmethod
-        @callback
-        def async_get_options_flow(config_entry):
-            """Get options flow."""
-
-        @classmethod
-        @callback
-        def async_supports_options_flow(cls, config_entry):
-            """Return options flow support for this handler."""
-            return True
 
     config_entry_flow.register_discovery_flow("comp2", "Comp 2", lambda: None)
 
@@ -119,74 +126,84 @@ async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
         entry.pop("entry_id")
     assert data == [
         {
+            "disabled_by": None,
             "domain": "comp1",
-            "title": "Test 1",
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
             "source": "bla",
             "state": core_ce.ConfigEntryState.NOT_LOADED.value,
-            "supports_reconfigure": False,
             "supports_options": True,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": True,
-            "pref_disable_new_entities": False,
-            "pref_disable_polling": False,
-            "disabled_by": None,
-            "reason": None,
+            "title": "Test 1",
         },
         {
+            "disabled_by": None,
             "domain": "comp2",
-            "title": "Test 2",
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": "Unsupported API",
             "source": "bla2",
             "state": core_ce.ConfigEntryState.SETUP_ERROR.value,
-            "supports_reconfigure": False,
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
-            "pref_disable_new_entities": False,
-            "pref_disable_polling": False,
-            "disabled_by": None,
-            "reason": "Unsupported API",
+            "title": "Test 2",
         },
         {
+            "disabled_by": core_ce.ConfigEntryDisabler.USER,
             "domain": "comp3",
-            "title": "Test 3",
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
             "source": "bla3",
             "state": core_ce.ConfigEntryState.NOT_LOADED.value,
-            "supports_reconfigure": False,
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
-            "pref_disable_new_entities": False,
-            "pref_disable_polling": False,
-            "disabled_by": core_ce.ConfigEntryDisabler.USER,
-            "reason": None,
+            "title": "Test 3",
         },
         {
+            "disabled_by": None,
             "domain": "comp4",
-            "title": "Test 4",
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
             "source": "bla4",
             "state": core_ce.ConfigEntryState.NOT_LOADED.value,
-            "supports_reconfigure": False,
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
-            "pref_disable_new_entities": False,
-            "pref_disable_polling": False,
-            "disabled_by": None,
-            "reason": None,
+            "title": "Test 4",
         },
         {
+            "disabled_by": None,
             "domain": "comp5",
-            "title": "Test 5",
-            "source": "bla5",
-            "state": core_ce.ConfigEntryState.NOT_LOADED.value,
-            "supports_reconfigure": False,
-            "supports_options": False,
-            "supports_remove_device": False,
-            "supports_unload": False,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
-            "disabled_by": None,
             "reason": None,
+            "source": "bla5",
+            "state": core_ce.ConfigEntryState.NOT_LOADED.value,
+            "supports_options": False,
+            "supports_reconfigure": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test 5",
         },
     ]
 
@@ -240,6 +257,7 @@ async def test_reload_entry(hass: HomeAssistant, client) -> None:
         domain="kitchen_sink", state=core_ce.ConfigEntryState.LOADED
     )
     entry.add_to_hass(hass)
+    hass.config.components.add("kitchen_sink")
     resp = await client.post(
         f"/api/config/config_entries/entry/{entry.entry_id}/reload"
     )
@@ -287,6 +305,7 @@ async def test_reload_entry_in_failed_state(
     """Test reloading an entry via the API that has already failed to unload."""
     entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.FAILED_UNLOAD)
     entry.add_to_hass(hass)
+    hass.config.components.add("demo")
     resp = await client.post(
         f"/api/config/config_entries/entry/{entry.entry_id}/reload"
     )
@@ -315,6 +334,7 @@ async def test_reload_entry_in_setup_retry(
     entry = MockConfigEntry(domain="comp", state=core_ce.ConfigEntryState.SETUP_RETRY)
     entry.supports_unload = True
     entry.add_to_hass(hass)
+    hass.config.components.add("comp")
 
     with patch.dict(HANDLERS, {"comp": ConfigFlow, "test": ConfigFlow}):
         resp = await client.post(
@@ -487,9 +507,8 @@ async def test_abort(hass: HomeAssistant, client) -> None:
     }
 
 
-async def test_create_account(
-    hass: HomeAssistant, client, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_create_account(hass: HomeAssistant, client) -> None:
     """Test a flow that creates an account."""
     mock_platform(hass, "test.config_flow", None)
 
@@ -526,16 +545,18 @@ async def test_create_account(
             "disabled_by": None,
             "domain": "test",
             "entry_id": entries[0].entry_id,
-            "source": core_ce.SOURCE_USER,
-            "state": core_ce.ConfigEntryState.LOADED.value,
-            "supports_reconfigure": False,
-            "supports_options": False,
-            "supports_remove_device": False,
-            "supports_unload": False,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
-            "title": "Test Entry",
             "reason": None,
+            "source": core_ce.SOURCE_USER,
+            "state": core_ce.ConfigEntryState.LOADED.value,
+            "supports_options": False,
+            "supports_reconfigure": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test Entry",
         },
         "description": None,
         "description_placeholders": None,
@@ -544,9 +565,8 @@ async def test_create_account(
     }
 
 
-async def test_two_step_flow(
-    hass: HomeAssistant, client, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_two_step_flow(hass: HomeAssistant, client) -> None:
     """Test we can finish a two step flow."""
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
@@ -605,16 +625,18 @@ async def test_two_step_flow(
                 "disabled_by": None,
                 "domain": "test",
                 "entry_id": entries[0].entry_id,
-                "source": core_ce.SOURCE_USER,
-                "state": core_ce.ConfigEntryState.LOADED.value,
-                "supports_reconfigure": False,
-                "supports_options": False,
-                "supports_remove_device": False,
-                "supports_unload": False,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
-                "title": "user-title",
                 "reason": None,
+                "source": core_ce.SOURCE_USER,
+                "state": core_ce.ConfigEntryState.LOADED.value,
+                "supports_options": False,
+                "supports_reconfigure": False,
+                "supports_remove_device": False,
+                "supports_unload": False,
+                "title": "user-title",
             },
             "description": None,
             "description_placeholders": None,
@@ -683,7 +705,7 @@ async def test_get_progress_index(
     class TestFlow(core_ce.ConfigFlow):
         VERSION = 5
 
-        async def async_step_hassio(self, info):
+        async def async_step_hassio(self, discovery_info):
             return await self.async_step_account()
 
         async def async_step_account(self, user_input=None):
@@ -1055,13 +1077,15 @@ async def test_get_single(
         "disabled_by": None,
         "domain": "test",
         "entry_id": entry.entry_id,
+        "error_reason_translation_key": None,
+        "error_reason_translation_placeholders": None,
         "pref_disable_new_entities": False,
         "pref_disable_polling": False,
         "reason": None,
         "source": "user",
         "state": "loaded",
-        "supports_reconfigure": False,
         "supports_options": False,
+        "supports_reconfigure": False,
         "supports_remove_device": False,
         "supports_unload": False,
         "title": "Mock Title",
@@ -1092,6 +1116,7 @@ async def test_update_prefrences(
         domain="kitchen_sink", state=core_ce.ConfigEntryState.LOADED
     )
     entry.add_to_hass(hass)
+    hass.config.components.add("kitchen_sink")
 
     assert entry.pref_disable_new_entities is False
     assert entry.pref_disable_polling is False
@@ -1192,6 +1217,7 @@ async def test_disable_entry(
     )
     entry.add_to_hass(hass)
     assert entry.disabled_by is None
+    hass.config.components.add("kitchen_sink")
 
     # Disable
     await ws_client.send_json(
@@ -1289,7 +1315,7 @@ async def test_ignore_flow(
         result = await hass.config_entries.flow.async_init(
             "test", context={"source": core_ce.SOURCE_USER}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         await ws_client.send_json(
             {
@@ -1390,13 +1416,15 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp1",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
             "source": "bla",
             "state": "not_loaded",
-            "supports_reconfigure": False,
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 1",
@@ -1405,13 +1433,15 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp2",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": "Unsupported API",
             "source": "bla2",
             "state": "setup_error",
-            "supports_reconfigure": False,
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 2",
@@ -1420,13 +1450,15 @@ async def test_get_matching_entries_ws(
             "disabled_by": "user",
             "domain": "comp3",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
             "source": "bla3",
             "state": "not_loaded",
-            "supports_reconfigure": False,
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 3",
@@ -1435,13 +1467,15 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp4",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
             "source": "bla4",
             "state": "not_loaded",
-            "supports_reconfigure": False,
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 4",
@@ -1450,13 +1484,15 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp5",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
             "source": "bla5",
             "state": "not_loaded",
-            "supports_reconfigure": False,
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 5",
@@ -1476,13 +1512,15 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp1",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
             "source": "bla",
             "state": "not_loaded",
-            "supports_reconfigure": False,
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 1",
@@ -1501,13 +1539,15 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp4",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
             "source": "bla4",
             "state": "not_loaded",
-            "supports_reconfigure": False,
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 4",
@@ -1516,13 +1556,15 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp5",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
             "source": "bla5",
             "state": "not_loaded",
-            "supports_reconfigure": False,
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 5",
@@ -1541,13 +1583,15 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp1",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
             "source": "bla",
             "state": "not_loaded",
-            "supports_reconfigure": False,
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 1",
@@ -1556,13 +1600,15 @@ async def test_get_matching_entries_ws(
             "disabled_by": "user",
             "domain": "comp3",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
             "source": "bla3",
             "state": "not_loaded",
-            "supports_reconfigure": False,
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 3",
@@ -1587,13 +1633,15 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp1",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
             "source": "bla",
             "state": "not_loaded",
-            "supports_reconfigure": False,
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 1",
@@ -1602,13 +1650,15 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp2",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": "Unsupported API",
             "source": "bla2",
             "state": "setup_error",
-            "supports_reconfigure": False,
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 2",
@@ -1617,13 +1667,15 @@ async def test_get_matching_entries_ws(
             "disabled_by": "user",
             "domain": "comp3",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
             "source": "bla3",
             "state": "not_loaded",
-            "supports_reconfigure": False,
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 3",
@@ -1632,13 +1684,15 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp4",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
             "source": "bla4",
             "state": "not_loaded",
-            "supports_reconfigure": False,
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 4",
@@ -1647,13 +1701,15 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp5",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
             "source": "bla5",
             "state": "not_loaded",
-            "supports_reconfigure": False,
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 5",
@@ -1746,13 +1802,15 @@ async def test_subscribe_entries_ws(
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supports_reconfigure": False,
                 "supports_options": False,
+                "supports_reconfigure": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
                 "title": "Test 1",
@@ -1764,13 +1822,15 @@ async def test_subscribe_entries_ws(
                 "disabled_by": None,
                 "domain": "comp2",
                 "entry_id": ANY,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": "Unsupported API",
                 "source": "bla2",
                 "state": "setup_error",
-                "supports_reconfigure": False,
                 "supports_options": False,
+                "supports_reconfigure": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
                 "title": "Test 2",
@@ -1782,13 +1842,15 @@ async def test_subscribe_entries_ws(
                 "disabled_by": "user",
                 "domain": "comp3",
                 "entry_id": ANY,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
                 "source": "bla3",
                 "state": "not_loaded",
-                "supports_reconfigure": False,
                 "supports_options": False,
+                "supports_reconfigure": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
                 "title": "Test 3",
@@ -1804,13 +1866,15 @@ async def test_subscribe_entries_ws(
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supports_reconfigure": False,
                 "supports_options": False,
+                "supports_reconfigure": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
                 "title": "changed",
@@ -1827,13 +1891,15 @@ async def test_subscribe_entries_ws(
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supports_reconfigure": False,
                 "supports_options": False,
+                "supports_reconfigure": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
                 "title": "changed",
@@ -1850,13 +1916,15 @@ async def test_subscribe_entries_ws(
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supports_reconfigure": False,
                 "supports_options": False,
+                "supports_reconfigure": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
                 "title": "changed",
@@ -1932,13 +2000,15 @@ async def test_subscribe_entries_ws_filtered(
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supports_reconfigure": False,
                 "supports_options": False,
+                "supports_reconfigure": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
                 "title": "Test 1",
@@ -1950,13 +2020,15 @@ async def test_subscribe_entries_ws_filtered(
                 "disabled_by": "user",
                 "domain": "comp3",
                 "entry_id": ANY,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
                 "source": "bla3",
                 "state": "not_loaded",
-                "supports_reconfigure": False,
                 "supports_options": False,
+                "supports_reconfigure": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
                 "title": "Test 3",
@@ -1974,13 +2046,15 @@ async def test_subscribe_entries_ws_filtered(
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supports_reconfigure": False,
                 "supports_options": False,
+                "supports_reconfigure": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
                 "title": "changed",
@@ -1996,13 +2070,15 @@ async def test_subscribe_entries_ws_filtered(
                 "disabled_by": "user",
                 "domain": "comp3",
                 "entry_id": ANY,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
                 "source": "bla3",
                 "state": "not_loaded",
-                "supports_reconfigure": False,
                 "supports_options": False,
+                "supports_reconfigure": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
                 "title": "changed too",
@@ -2020,13 +2096,15 @@ async def test_subscribe_entries_ws_filtered(
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supports_reconfigure": False,
                 "supports_options": False,
+                "supports_reconfigure": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
                 "title": "changed",
@@ -2043,13 +2121,15 @@ async def test_subscribe_entries_ws_filtered(
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supports_reconfigure": False,
                 "supports_options": False,
+                "supports_reconfigure": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
                 "title": "changed",
@@ -2145,9 +2225,8 @@ async def test_flow_with_multiple_schema_errors_base(
         }
 
 
-async def test_supports_reconfigure(
-    hass: HomeAssistant, client, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_supports_reconfigure(hass: HomeAssistant, client) -> None:
     """Test a flow that support reconfigure step."""
     mock_platform(hass, "test.config_flow", None)
 
@@ -2215,16 +2294,18 @@ async def test_supports_reconfigure(
             "disabled_by": None,
             "domain": "test",
             "entry_id": entries[0].entry_id,
-            "source": core_ce.SOURCE_RECONFIGURE,
-            "state": core_ce.ConfigEntryState.LOADED.value,
-            "supports_reconfigure": True,
-            "supports_options": False,
-            "supports_remove_device": False,
-            "supports_unload": False,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
-            "title": "Test Entry",
             "reason": None,
+            "source": core_ce.SOURCE_RECONFIGURE,
+            "state": core_ce.ConfigEntryState.LOADED.value,
+            "supports_options": False,
+            "supports_reconfigure": True,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test Entry",
         },
         "description": None,
         "description_placeholders": None,
@@ -2233,8 +2314,9 @@ async def test_supports_reconfigure(
     }
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_does_not_support_reconfigure(
-    hass: HomeAssistant, client: TestClient, enable_custom_integrations: None
+    hass: HomeAssistant, client: TestClient
 ) -> None:
     """Test a flow that does not support reconfigure step."""
     mock_platform(hass, "test.config_flow", None)

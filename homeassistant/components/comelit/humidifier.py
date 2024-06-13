@@ -148,12 +148,12 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
         return self._humidifier[3] == HumidifierComelitMode.AUTO
 
     @property
-    def target_humidity(self) -> int:
+    def target_humidity(self) -> float:
         """Set target humidity."""
         return self._humidifier[4] / 10
 
     @property
-    def current_humidity(self) -> int:
+    def current_humidity(self) -> float:
         """Return current humidity."""
         return self._humidifier[0] / 10
 

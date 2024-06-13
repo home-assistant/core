@@ -50,13 +50,13 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
 
             # Update the auth token in the config entry if applicable
             self._update_auth_token()
-
-            # Return the fetched data
-            return data
         except ValueError as error:
             raise UpdateFailed(f"API response was malformed: {error}") from error
         except PicnicAuthError as error:
             raise ConfigEntryAuthFailed from error
+
+        # Return the fetched data
+        return data
 
     def fetch_data(self):
         """Fetch the data from the Picnic API and return a flat dict with only needed sensor data."""

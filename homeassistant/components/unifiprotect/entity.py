@@ -6,19 +6,13 @@ from collections.abc import Callable, Sequence
 import logging
 from typing import TYPE_CHECKING, Any
 
-from pyunifiprotect.data import (
+from uiprotect.data import (
     NVR,
-    Camera,
-    Chime,
-    Doorlock,
     Event,
-    Light,
     ModelType,
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
-    Sensor,
     StateType,
-    Viewer,
 )
 
 from homeassistant.core import callback
@@ -43,52 +37,51 @@ _LOGGER = logging.getLogger(__name__)
 @callback
 def _async_device_entities(
     data: ProtectData,
-    klass: type[ProtectDeviceEntity],
+    klass: type[BaseProtectEntity],
     model_type: ModelType,
     descs: Sequence[ProtectRequiredKeysMixin],
-    unadopted_descs: Sequence[ProtectRequiredKeysMixin],
+    unadopted_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     ufp_device: ProtectAdoptableDeviceModel | None = None,
-) -> list[ProtectDeviceEntity]:
+) -> list[BaseProtectEntity]:
     if not descs and not unadopted_descs:
         return []
 
-    entities: list[ProtectDeviceEntity] = []
+    entities: list[BaseProtectEntity] = []
     devices = (
         [ufp_device]
         if ufp_device is not None
         else data.get_by_types({model_type}, ignore_unadopted=False)
     )
+    auth_user = data.api.bootstrap.auth_user
     for device in devices:
         if TYPE_CHECKING:
-            assert isinstance(device, (Camera, Light, Sensor, Viewer, Doorlock, Chime))
+            assert isinstance(device, ProtectAdoptableDeviceModel)
         if not device.is_adopted_by_us:
-            for description in unadopted_descs:
-                entities.append(
-                    klass(
-                        data,
-                        device=device,
-                        description=description,
+            if unadopted_descs:
+                for description in unadopted_descs:
+                    entities.append(
+                        klass(
+                            data,
+                            device=device,
+                            description=description,
+                        )
                     )
-                )
-                _LOGGER.debug(
-                    "Adding %s entity %s for %s",
-                    klass.__name__,
-                    description.name,
-                    device.display_name,
-                )
+                    _LOGGER.debug(
+                        "Adding %s entity %s for %s",
+                        klass.__name__,
+                        description.name,
+                        device.display_name,
+                    )
             continue
 
-        can_write = device.can_write(data.api.bootstrap.auth_user)
+        can_write = device.can_write(auth_user)
         for description in descs:
-            if description.ufp_perm is not None:
-                if description.ufp_perm is PermRequired.WRITE and not can_write:
+            if (perms := description.ufp_perm) is not None:
+                if perms is PermRequired.WRITE and not can_write:
                     continue
-                if description.ufp_perm is PermRequired.NO_WRITE and can_write:
+                if perms is PermRequired.NO_WRITE and can_write:
                     continue
-                if (
-                    description.ufp_perm is PermRequired.DELETE
-                    and not device.can_delete(data.api.bootstrap.auth_user)
-                ):
+                if perms is PermRequired.DELETE and not device.can_delete(auth_user):
                     continue
 
             if not description.has_required(device):
@@ -111,93 +104,77 @@ def _async_device_entities(
     return entities
 
 
+_ALL_MODEL_TYPES = (
+    ModelType.CAMERA,
+    ModelType.LIGHT,
+    ModelType.SENSOR,
+    ModelType.VIEWPORT,
+    ModelType.DOORLOCK,
+    ModelType.CHIME,
+)
+
+
+@callback
+def _combine_model_descs(
+    model_type: ModelType,
+    model_descriptions: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] | None,
+    all_descs: Sequence[ProtectRequiredKeysMixin] | None,
+) -> list[ProtectRequiredKeysMixin]:
+    """Combine all the descriptions with descriptions a model type."""
+    descs: list[ProtectRequiredKeysMixin] = list(all_descs) if all_descs else []
+    if model_descriptions and (model_descs := model_descriptions.get(model_type)):
+        descs.extend(model_descs)
+    return descs
+
+
 @callback
 def async_all_device_entities(
     data: ProtectData,
-    klass: type[ProtectDeviceEntity],
-    camera_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
-    light_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
-    sense_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
-    viewer_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
-    lock_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
-    chime_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
+    klass: type[BaseProtectEntity],
+    model_descriptions: dict[ModelType, Sequence[ProtectRequiredKeysMixin]]
+    | None = None,
     all_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
-    unadopted_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
+    unadopted_descs: list[ProtectRequiredKeysMixin] | None = None,
     ufp_device: ProtectAdoptableDeviceModel | None = None,
-) -> list[ProtectDeviceEntity]:
+) -> list[BaseProtectEntity]:
     """Generate a list of all the device entities."""
-    all_descs = list(all_descs or [])
-    unadopted_descs = list(unadopted_descs or [])
-    camera_descs = list(camera_descs or []) + all_descs
-    light_descs = list(light_descs or []) + all_descs
-    sense_descs = list(sense_descs or []) + all_descs
-    viewer_descs = list(viewer_descs or []) + all_descs
-    lock_descs = list(lock_descs or []) + all_descs
-    chime_descs = list(chime_descs or []) + all_descs
-
     if ufp_device is None:
-        return (
-            _async_device_entities(
-                data, klass, ModelType.CAMERA, camera_descs, unadopted_descs
+        entities: list[BaseProtectEntity] = []
+        for model_type in _ALL_MODEL_TYPES:
+            descs = _combine_model_descs(model_type, model_descriptions, all_descs)
+            entities.extend(
+                _async_device_entities(data, klass, model_type, descs, unadopted_descs)
             )
-            + _async_device_entities(
-                data, klass, ModelType.LIGHT, light_descs, unadopted_descs
-            )
-            + _async_device_entities(
-                data, klass, ModelType.SENSOR, sense_descs, unadopted_descs
-            )
-            + _async_device_entities(
-                data, klass, ModelType.VIEWPORT, viewer_descs, unadopted_descs
-            )
-            + _async_device_entities(
-                data, klass, ModelType.DOORLOCK, lock_descs, unadopted_descs
-            )
-            + _async_device_entities(
-                data, klass, ModelType.CHIME, chime_descs, unadopted_descs
-            )
-        )
+        return entities
 
-    descs = []
-    if ufp_device.model is ModelType.CAMERA:
-        descs = camera_descs
-    elif ufp_device.model is ModelType.LIGHT:
-        descs = light_descs
-    elif ufp_device.model is ModelType.SENSOR:
-        descs = sense_descs
-    elif ufp_device.model is ModelType.VIEWPORT:
-        descs = viewer_descs
-    elif ufp_device.model is ModelType.DOORLOCK:
-        descs = lock_descs
-    elif ufp_device.model is ModelType.CHIME:
-        descs = chime_descs
-
-    if not descs and not unadopted_descs or ufp_device.model is None:
-        return []
+    device_model_type = ufp_device.model
+    assert device_model_type is not None
+    descs = _combine_model_descs(device_model_type, model_descriptions, all_descs)
     return _async_device_entities(
-        data, klass, ufp_device.model, descs, unadopted_descs, ufp_device
+        data, klass, device_model_type, descs, unadopted_descs, ufp_device
     )
 
 
-class ProtectDeviceEntity(Entity):
+class BaseProtectEntity(Entity):
     """Base class for UniFi protect entities."""
 
-    device: ProtectAdoptableDeviceModel
+    device: ProtectAdoptableDeviceModel | NVR
 
     _attr_should_poll = False
 
     def __init__(
         self,
         data: ProtectData,
-        device: ProtectAdoptableDeviceModel,
+        device: ProtectAdoptableDeviceModel | NVR,
         description: EntityDescription | None = None,
     ) -> None:
         """Initialize the entity."""
         super().__init__()
         self.data: ProtectData = data
         self.device = device
-        self._async_get_ufp_enabled: Callable[
-            [ProtectAdoptableDeviceModel], bool
-        ] | None = None
+        self._async_get_ufp_enabled: (
+            Callable[[ProtectAdoptableDeviceModel], bool] | None
+        ) = None
 
         if description is None:
             self._attr_unique_id = f"{self.device.mac}"
@@ -267,7 +244,7 @@ class ProtectDeviceEntity(Entity):
         return (self._attr_available,)
 
     @callback
-    def _async_updated_event(self, device: ProtectModelWithId) -> None:
+    def _async_updated_event(self, device: ProtectAdoptableDeviceModel | NVR) -> None:
         """When device is updated from Protect."""
 
         previous_attrs = self._async_get_state_attrs()
@@ -275,7 +252,7 @@ class ProtectDeviceEntity(Entity):
         current_attrs = self._async_get_state_attrs()
         if previous_attrs != current_attrs:
             if _LOGGER.isEnabledFor(logging.DEBUG):
-                device_name = device.name
+                device_name = device.name or ""
                 if hasattr(self, "entity_description") and self.entity_description.name:
                     device_name += f" {self.entity_description.name}"
 
@@ -298,20 +275,16 @@ class ProtectDeviceEntity(Entity):
         )
 
 
-class ProtectNVREntity(ProtectDeviceEntity):
+class ProtectDeviceEntity(BaseProtectEntity):
+    """Base class for UniFi protect entities."""
+
+    device: ProtectAdoptableDeviceModel
+
+
+class ProtectNVREntity(BaseProtectEntity):
     """Base class for unifi protect entities."""
 
-    # separate subclass on purpose
     device: NVR
-
-    def __init__(
-        self,
-        entry: ProtectData,
-        device: NVR,
-        description: EntityDescription | None = None,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(entry, device, description)
 
     @callback
     def _async_set_device_info(self) -> None:

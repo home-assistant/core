@@ -25,6 +25,7 @@ from homeassistant.helpers.integration_platform import (
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.util.event_type import EventType
 
 from . import entity_registry, websocket_api
 from .const import (  # noqa: F401
@@ -128,8 +129,7 @@ def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
     """
     if DATA_INSTANCE not in hass.data:
         return False
-    instance = get_instance(hass)
-    return instance.entity_filter(entity_id)
+    return hass.data[DATA_INSTANCE].entity_filter(entity_id)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -146,7 +146,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass_config_path=hass.config.path(DEFAULT_DB_FILE)
     )
     exclude = conf[CONF_EXCLUDE]
-    exclude_event_types: set[str] = set(exclude.get(CONF_EVENT_TYPES, []))
+    exclude_event_types: set[EventType[Any] | str] = set(
+        exclude.get(CONF_EVENT_TYPES, [])
+    )
     if EVENT_STATE_CHANGED in exclude_event_types:
         _LOGGER.error("State change events cannot be excluded, use a filter instead")
         exclude_event_types.remove(EVENT_STATE_CHANGED)
@@ -162,6 +164,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         entity_filter=entity_filter,
         exclude_event_types=exclude_event_types,
     )
+    get_instance.cache_clear()
     instance.async_initialize()
     instance.async_register()
     instance.start()

@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from functools import cached_property
 import logging
-from typing import TYPE_CHECKING, final
+from typing import final
 
 import voluptuous as vol
 
@@ -22,11 +23,6 @@ from homeassistant.util import dt as dt_util
 
 from .const import ATTR_DATETIME, DOMAIN, SERVICE_SET_VALUE
 
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -40,9 +36,7 @@ async def _async_set_value(entity: DateTimeEntity, service_call: ServiceCall) ->
     """Service call wrapper to set a new date/time."""
     value: datetime = service_call.data[ATTR_DATETIME]
     if value.tzinfo is None:
-        value = value.replace(
-            tzinfo=dt_util.get_time_zone(entity.hass.config.time_zone)
-        )
+        value = value.replace(tzinfo=dt_util.get_default_time_zone())
     return await entity.async_set_value(value)
 
 

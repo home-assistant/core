@@ -101,12 +101,12 @@ async def async_turn_off(hass: HomeAssistant, entity_id=ENTITY_MATCH_ALL) -> Non
 
 
 async def async_set_mode(
-    hass: HomeAssistant, entity_id=ENTITY_MATCH_ALL, mode: str = None
+    hass: HomeAssistant, entity_id=ENTITY_MATCH_ALL, mode: str | None = None
 ) -> None:
     """Set mode for all or specified humidifier."""
     data = {
         key: value
-        for key, value in [(ATTR_ENTITY_ID, entity_id), (ATTR_MODE, mode)]
+        for key, value in ((ATTR_ENTITY_ID, entity_id), (ATTR_MODE, mode))
         if value is not None
     }
 
@@ -114,12 +114,12 @@ async def async_set_mode(
 
 
 async def async_set_humidity(
-    hass: HomeAssistant, entity_id=ENTITY_MATCH_ALL, humidity: int = None
+    hass: HomeAssistant, entity_id=ENTITY_MATCH_ALL, humidity: int | None = None
 ) -> None:
     """Set target humidity for all or specified humidifier."""
     data = {
         key: value
-        for key, value in [(ATTR_ENTITY_ID, entity_id), (ATTR_HUMIDITY, humidity)]
+        for key, value in ((ATTR_ENTITY_ID, entity_id), (ATTR_HUMIDITY, humidity))
         if value is not None
     }
 

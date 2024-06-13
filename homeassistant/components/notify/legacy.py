@@ -117,7 +117,7 @@ def async_setup_legacy(
                         )
                     return
 
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 LOGGER.exception("Error setting up platform %s", integration_name)
                 return
 

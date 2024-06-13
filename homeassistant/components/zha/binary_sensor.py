@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import functools
+import logging
 
-from zigpy.quirks.v2 import BinarySensorMetadata, EntityMetadata
+from zhaquirks.quirk_ids import DANFOSS_ALLY_THERMOSTAT
+from zigpy.quirks.v2 import BinarySensorMetadata
 import zigpy.types as t
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasZone
@@ -26,12 +28,13 @@ from .core.const import (
     CLUSTER_HANDLER_HUE_OCCUPANCY,
     CLUSTER_HANDLER_OCCUPANCY,
     CLUSTER_HANDLER_ON_OFF,
+    CLUSTER_HANDLER_THERMOSTAT,
     CLUSTER_HANDLER_ZONE,
-    QUIRK_METADATA,
+    ENTITY_METADATA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
-from .core.helpers import get_zha_data
+from .core.helpers import get_zha_data, validate_device_class
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
@@ -50,6 +53,8 @@ MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.BINARY_SE
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
     ZHA_ENTITIES.config_diagnostic_match, Platform.BINARY_SENSOR
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -79,15 +84,21 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
     def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs) -> None:
         """Initialize the ZHA binary sensor."""
         self._cluster_handler = cluster_handlers[0]
-        if QUIRK_METADATA in kwargs:
-            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
+        if ENTITY_METADATA in kwargs:
+            self._init_from_quirks_metadata(kwargs[ENTITY_METADATA])
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
-    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
+    def _init_from_quirks_metadata(self, entity_metadata: BinarySensorMetadata) -> None:
         """Init this entity from the quirks metadata."""
         super()._init_from_quirks_metadata(entity_metadata)
-        binary_sensor_metadata: BinarySensorMetadata = entity_metadata.entity_metadata
-        self._attribute_name = binary_sensor_metadata.attribute_name
+        self._attribute_name = entity_metadata.attribute_name
+        if entity_metadata.device_class is not None:
+            self._attr_device_class = validate_device_class(
+                BinarySensorDeviceClass,
+                entity_metadata.device_class,
+                Platform.BINARY_SENSOR.value,
+                _LOGGER,
+            )
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
@@ -327,4 +338,44 @@ class AqaraE1CurtainMotorOpenedByHandBinarySensor(BinarySensor):
     _unique_id_suffix = "hand_open"
     _attribute_name = "hand_open"
     _attr_translation_key = "hand_open"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+class DanfossMountingModeActive(BinarySensor):
+    """Danfoss TRV proprietary attribute exposing whether in mounting mode."""
+
+    _unique_id_suffix = "mounting_mode_active"
+    _attribute_name = "mounting_mode_active"
+    _attr_translation_key: str = "mounting_mode_active"
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OPENING
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+class DanfossHeatRequired(BinarySensor):
+    """Danfoss TRV proprietary attribute exposing whether heat is required."""
+
+    _unique_id_suffix = "heat_required"
+    _attribute_name = "heat_required"
+    _attr_translation_key: str = "heat_required"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+class DanfossPreheatStatus(BinarySensor):
+    """Danfoss TRV proprietary attribute exposing whether in pre-heating mode."""
+
+    _unique_id_suffix = "preheat_status"
+    _attribute_name = "preheat_status"
+    _attr_translation_key: str = "preheat_status"
+    _attr_entity_registry_enabled_default = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC

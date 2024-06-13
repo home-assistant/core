@@ -21,10 +21,10 @@ async def test_load_unload(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
 
-    assert todoist_config_entry.state == ConfigEntryState.LOADED
+    assert todoist_config_entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(todoist_config_entry.entry_id)
-    assert todoist_config_entry.state == ConfigEntryState.NOT_LOADED
+    assert todoist_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize("todoist_api_status", [HTTPStatus.INTERNAL_SERVER_ERROR])
@@ -35,4 +35,4 @@ async def test_init_failure(
     todoist_config_entry: MockConfigEntry | None,
 ) -> None:
     """Test an initialization error on integration load."""
-    assert todoist_config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert todoist_config_entry.state is ConfigEntryState.SETUP_RETRY

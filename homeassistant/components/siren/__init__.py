@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from functools import partial
+from functools import cached_property, partial
 import logging
-from typing import TYPE_CHECKING, Any, TypedDict, cast, final
+from typing import Any, TypedDict, cast, final
 
 import voluptuous as vol
 
@@ -39,11 +39,6 @@ from .const import (  # noqa: F401
     DOMAIN,
     SirenEntityFeature,
 )
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -18,9 +18,11 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 @pytest.fixture(autouse=True)
 def mock_ssdp():
     """Mock ssdp."""
-    with patch("homeassistant.components.ssdp.Scanner.async_scan"), patch(
-        "homeassistant.components.ssdp.Server.async_start"
-    ), patch("homeassistant.components.ssdp.Server.async_stop"):
+    with (
+        patch("homeassistant.components.ssdp.Scanner.async_scan"),
+        patch("homeassistant.components.ssdp.Server.async_start"),
+        patch("homeassistant.components.ssdp.Server.async_stop"),
+    ):
         yield
 
 
@@ -31,9 +33,8 @@ def recorder_url_mock():
         yield
 
 
-async def test_setup(
-    hass: HomeAssistant, mock_zeroconf: None, mock_get_source_ip, mock_bluetooth: None
-) -> None:
+@pytest.mark.usefixtures("mock_bluetooth", "mock_zeroconf")
+async def test_setup(hass: HomeAssistant) -> None:
     """Test setup."""
     recorder_helper.async_initialize_recorder(hass)
     # default_config needs the homeassistant integration, assert it will be

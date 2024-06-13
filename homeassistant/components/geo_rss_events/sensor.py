@@ -162,9 +162,9 @@ class GeoRssServiceSensor(SensorEntity):
             # And now compute the attributes from the filtered events.
             matrix = {}
             for entry in feed_entries:
-                matrix[
-                    entry.title
-                ] = f"{entry.distance_to_home:.0f}{UnitOfLength.KILOMETERS}"
+                matrix[entry.title] = (
+                    f"{entry.distance_to_home:.0f}{UnitOfLength.KILOMETERS}"
+                )
             self._state_attributes = matrix
         elif status == UPDATE_OK_NO_DATA:
             _LOGGER.debug("Update successful, but no data received from %s", self._feed)

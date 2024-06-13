@@ -2,6 +2,8 @@
 
 from unittest.mock import ANY, MagicMock, patch
 
+import pytest
+
 from homeassistant.components.homekit.const import (
     CONF_DEVICES,
     CONF_HOMEKIT_MODE,
@@ -20,11 +22,11 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_config_entry_not_running(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hk_driver,
-    mock_async_zeroconf: None,
 ) -> None:
     """Test generating diagnostics for a config entry."""
     entry = await async_init_integration(hass)
@@ -40,11 +42,11 @@ async def test_config_entry_not_running(
     }
 
 
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_config_entry_running(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hk_driver,
-    mock_async_zeroconf: None,
 ) -> None:
     """Test generating diagnostics for a bridge config entry."""
     entry = MockConfigEntry(
@@ -143,18 +145,20 @@ async def test_config_entry_running(
         "status": 1,
     }
 
-    with patch("pyhap.accessory_driver.AccessoryDriver.async_start"), patch(
-        "homeassistant.components.homekit.HomeKit.async_stop"
-    ), patch("homeassistant.components.homekit.async_port_is_available"):
+    with (
+        patch("pyhap.accessory_driver.AccessoryDriver.async_start"),
+        patch("homeassistant.components.homekit.HomeKit.async_stop"),
+        patch("homeassistant.components.homekit.async_port_is_available"),
+    ):
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_config_entry_accessory(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hk_driver,
-    mock_async_zeroconf: None,
 ) -> None:
     """Test generating diagnostics for an accessory config entry."""
     hass.states.async_set("light.demo", "on")
@@ -303,18 +307,20 @@ async def test_config_entry_accessory(
         },
         "status": 1,
     }
-    with patch("pyhap.accessory_driver.AccessoryDriver.async_start"), patch(
-        "homeassistant.components.homekit.HomeKit.async_stop"
-    ), patch("homeassistant.components.homekit.async_port_is_available"):
+    with (
+        patch("pyhap.accessory_driver.AccessoryDriver.async_start"),
+        patch("homeassistant.components.homekit.HomeKit.async_stop"),
+        patch("homeassistant.components.homekit.async_port_is_available"),
+    ):
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_config_entry_with_trigger_accessory(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hk_driver,
-    mock_async_zeroconf: None,
     events,
     demo_cleanup,
     device_registry: dr.DeviceRegistry,
@@ -622,8 +628,10 @@ async def test_config_entry_with_trigger_accessory(
         "pairing_id": ANY,
         "status": 1,
     }
-    with patch("pyhap.accessory_driver.AccessoryDriver.async_start"), patch(
-        "homeassistant.components.homekit.HomeKit.async_stop"
-    ), patch("homeassistant.components.homekit.async_port_is_available"):
+    with (
+        patch("pyhap.accessory_driver.AccessoryDriver.async_start"),
+        patch("homeassistant.components.homekit.HomeKit.async_stop"),
+        patch("homeassistant.components.homekit.async_port_is_available"),
+    ):
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()

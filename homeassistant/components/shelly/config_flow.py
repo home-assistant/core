@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions, get_info
@@ -11,7 +11,6 @@ from aioshelly.const import BLOCK_GENERATIONS, DEFAULT_HTTP_PORT, RPC_GENERATION
 from aioshelly.exceptions import (
     CustomPortNotSupported,
     DeviceConnectionError,
-    FirmwareUnsupported,
     InvalidAuthError,
 )
 from aioshelly.rpc_device import RpcDevice
@@ -24,7 +23,13 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
@@ -84,6 +89,7 @@ async def validate_input(
         ip_address=host,
         username=data.get(CONF_USERNAME),
         password=data.get(CONF_PASSWORD),
+        device_mac=info[CONF_MAC],
         port=port,
     )
 
@@ -96,6 +102,7 @@ async def validate_input(
             ws_context,
             options,
         )
+        await rpc_device.initialize()
         await rpc_device.shutdown()
 
         sleep_period = get_rpc_device_wakeup_period(rpc_device.status)
@@ -114,7 +121,8 @@ async def validate_input(
         coap_context,
         options,
     )
-    block_device.shutdown()
+    await block_device.initialize()
+    await block_device.shutdown()
     return {
         "title": block_device.name,
         CONF_SLEEP_PERIOD: get_block_device_sleep_period(block_device.settings),
@@ -147,13 +155,11 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.info = await self._async_get_info(host, port)
             except DeviceConnectionError:
                 errors["base"] = "cannot_connect"
-            except FirmwareUnsupported:
-                return self.async_abort(reason="unsupported_firmware")
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(self.info["mac"])
+                await self.async_set_unique_id(self.info[CONF_MAC])
                 self._abort_if_unique_id_configured({CONF_HOST: host})
                 self.host = host
                 self.port = port
@@ -168,7 +174,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "cannot_connect"
                 except CustomPortNotSupported:
                     errors["base"] = "custom_port_not_supported"
-                except Exception:  # pylint: disable=broad-except
+                except Exception:  # noqa: BLE001
                     LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
                 else:
@@ -205,7 +211,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except DeviceConnectionError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -250,6 +256,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if (
             current_entry := await self.async_set_unique_id(mac)
         ) and current_entry.data.get(CONF_HOST) == host:
+            LOGGER.debug("async_reconnect_soon: host: %s, mac: %s", host, mac)
             await async_reconnect_soon(self.hass, current_entry)
         if host == INTERNAL_WIFI_AP_IP:
             # If the device is broadcasting the internal wifi ap ip
@@ -280,13 +287,11 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             self.info = await self._async_get_info(host, DEFAULT_HTTP_PORT)
         except DeviceConnectionError:
             return self.async_abort(reason="cannot_connect")
-        except FirmwareUnsupported:
-            return self.async_abort(reason="unsupported_firmware")
 
         if not mac:
             # We could not get the mac address from the name
             # so need to check here since we just got the info
-            await self._async_discovered_mac(self.info["mac"], host)
+            await self._async_discovered_mac(self.info[CONF_MAC], host)
 
         self.host = host
         self.context.update(
@@ -359,14 +364,14 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await self._async_get_info(host, port)
-            except (DeviceConnectionError, InvalidAuthError, FirmwareUnsupported):
+            except (DeviceConnectionError, InvalidAuthError):
                 return self.async_abort(reason="reauth_unsuccessful")
 
             if get_device_entry_gen(self.entry) != 1:
                 user_input[CONF_USERNAME] = "admin"
             try:
                 await validate_input(self.hass, host, port, info, user_input)
-            except (DeviceConnectionError, InvalidAuthError, FirmwareUnsupported):
+            except (DeviceConnectionError, InvalidAuthError):
                 return self.async_abort(reason="reauth_unsuccessful")
 
             return self.async_update_reload_and_abort(
@@ -384,6 +389,60 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema(schema),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, _: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+
+        if TYPE_CHECKING:
+            assert entry is not None
+
+        self.host = entry.data[CONF_HOST]
+        self.port = entry.data.get(CONF_PORT, DEFAULT_HTTP_PORT)
+        self.entry = entry
+
+        return await self.async_step_reconfigure_confirm()
+
+    async def async_step_reconfigure_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        errors = {}
+
+        if TYPE_CHECKING:
+            assert self.entry is not None
+
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            port = user_input.get(CONF_PORT, DEFAULT_HTTP_PORT)
+            try:
+                info = await self._async_get_info(host, port)
+            except DeviceConnectionError:
+                errors["base"] = "cannot_connect"
+            except CustomPortNotSupported:
+                errors["base"] = "custom_port_not_supported"
+            else:
+                if info[CONF_MAC] != self.entry.unique_id:
+                    return self.async_abort(reason="another_device")
+
+                data = {**self.entry.data, CONF_HOST: host, CONF_PORT: port}
+                self.hass.config_entries.async_update_entry(self.entry, data=data)
+                await self.hass.config_entries.async_reload(self.entry.entry_id)
+                return self.async_abort(reason="reconfigure_successful")
+
+        return self.async_show_form(
+            step_id="reconfigure_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default=self.host): str,
+                    vol.Required(CONF_PORT, default=self.port): vol.Coerce(int),
+                }
+            ),
+            description_placeholders={"device_name": self.entry.title},
             errors=errors,
         )
 

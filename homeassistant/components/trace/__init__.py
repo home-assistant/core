@@ -40,7 +40,7 @@ TRACE_CONFIG_SCHEMA = {
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
-TraceData = dict[str, LimitedSizeDict[str, BaseTrace]]
+type TraceData = dict[str, LimitedSizeDict[str, BaseTrace]]
 
 
 @callback
@@ -68,9 +68,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.error("Error storing traces", exc_info=exc)
 
     # Store traces when stopping hass
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _async_store_traces_at_stop, run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_store_traces_at_stop)
 
     return True
 
@@ -175,7 +173,7 @@ async def async_restore_traces(hass: HomeAssistant) -> None:
         restored_traces = {}
 
     for key, traces in restored_traces.items():
-        # Add stored traces in reversed order to priorize the newest traces
+        # Add stored traces in reversed order to prioritize the newest traces
         for json_trace in reversed(traces):
             if (
                 (stored_traces := _get_data(hass).get(key))
@@ -187,7 +185,7 @@ async def async_restore_traces(hass: HomeAssistant) -> None:
             try:
                 trace = RestoredTrace(json_trace)
             # Catch any exception to not blow up if the stored trace is invalid
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Failed to restore trace")
                 continue
             _async_store_restored_trace(hass, trace)

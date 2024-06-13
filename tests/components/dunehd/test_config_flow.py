@@ -2,11 +2,11 @@
 
 from unittest.mock import patch
 
-from homeassistant import data_entry_flow
 from homeassistant.components.dunehd.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -69,22 +69,24 @@ async def test_duplicate_error(hass: HomeAssistant) -> None:
 
 async def test_create_entry(hass: HomeAssistant) -> None:
     """Test that the user step works."""
-    with patch("homeassistant.components.dunehd.async_setup_entry"), patch(
-        "pdunehd.DuneHDPlayer.update_state", return_value=DUNEHD_STATE
+    with (
+        patch("homeassistant.components.dunehd.async_setup_entry"),
+        patch("pdunehd.DuneHDPlayer.update_state", return_value=DUNEHD_STATE),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG_HOSTNAME
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "dunehd-host"
         assert result["data"] == {CONF_HOST: "dunehd-host"}
 
 
 async def test_create_entry_with_ipv6_address(hass: HomeAssistant) -> None:
     """Test that the user step works with device IPv6 address.."""
-    with patch("homeassistant.components.dunehd.async_setup_entry"), patch(
-        "pdunehd.DuneHDPlayer.update_state", return_value=DUNEHD_STATE
+    with (
+        patch("homeassistant.components.dunehd.async_setup_entry"),
+        patch("pdunehd.DuneHDPlayer.update_state", return_value=DUNEHD_STATE),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -92,6 +94,6 @@ async def test_create_entry_with_ipv6_address(hass: HomeAssistant) -> None:
             data={CONF_HOST: "2001:db8::1428:57ab"},
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "2001:db8::1428:57ab"
         assert result["data"] == {CONF_HOST: "2001:db8::1428:57ab"}

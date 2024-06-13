@@ -153,8 +153,10 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
     config_entry.add_to_hass(hass)
 
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -542,8 +544,10 @@ async def test_update_errors(
     config_entry.add_to_hass(hass)
 
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -590,8 +594,10 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: False}
     )
     config_entry.add_to_hass(hass)
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -770,7 +776,9 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
 
 
 async def test_device_types(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test different device types."""
     mocked_bulb = _mocked_bulb()
@@ -818,9 +826,8 @@ async def test_device_types(
         target_properties["music_mode"] = False
         assert dict(state.attributes) == target_properties
         await hass.config_entries.async_unload(config_entry.entry_id)
-        await config_entry.async_remove(hass)
-        registry = er.async_get(hass)
-        registry.async_clear_config_entry(config_entry.entry_id)
+        await hass.config_entries.async_remove(config_entry.entry_id)
+        entity_registry.async_clear_config_entry(config_entry.entry_id)
         mocked_bulb.last_properties["nl_br"] = original_nightlight_brightness
 
         # nightlight as a setting of the main entity
@@ -840,8 +847,8 @@ async def test_device_types(
             assert dict(state.attributes) == nightlight_mode_properties
 
             await hass.config_entries.async_unload(config_entry.entry_id)
-            await config_entry.async_remove(hass)
-            registry.async_clear_config_entry(config_entry.entry_id)
+            await hass.config_entries.async_remove(config_entry.entry_id)
+            entity_registry.async_clear_config_entry(config_entry.entry_id)
             await hass.async_block_till_done()
             mocked_bulb.last_properties.pop("active_mode")
 
@@ -863,8 +870,8 @@ async def test_device_types(
             assert dict(state.attributes) == nightlight_entity_properties
 
             await hass.config_entries.async_unload(config_entry.entry_id)
-            await config_entry.async_remove(hass)
-            registry.async_clear_config_entry(config_entry.entry_id)
+            await hass.config_entries.async_remove(config_entry.entry_id)
+            entity_registry.async_clear_config_entry(config_entry.entry_id)
             await hass.async_block_till_done()
 
     bright = round(255 * int(PROPERTIES["bright"]) / 100)
@@ -1407,13 +1414,16 @@ async def test_effects(hass: HomeAssistant) -> None:
             }
         },
     )
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -1574,8 +1584,9 @@ async def test_ambilight_with_nightlight_disabled(hass: HomeAssistant) -> None:
         options={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: False},
     )
     config_entry.add_to_hass(hass)
-    with _patch_discovery(capabilities=capabilities), patch(
-        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(capabilities=capabilities),
+        patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -1601,8 +1612,10 @@ async def test_state_fails_to_update_triggers_update(hass: HomeAssistant) -> Non
         domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: False}
     )
     config_entry.add_to_hass(hass)
-    with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    with (
+        _patch_discovery(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

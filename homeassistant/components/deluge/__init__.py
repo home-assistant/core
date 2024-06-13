@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await hass.async_add_executor_job(api.connect)
     except (ConnectionRefusedError, TimeoutError, SSLError) as ex:
         raise ConfigEntryNotReady("Connection to Deluge Daemon failed") from ex
-    except Exception as ex:  # pylint:disable=broad-except
+    except Exception as ex:  # noqa: BLE001
         if type(ex).__name__ == "BadLoginError":
             raise ConfigEntryAuthFailed(
                 "Credentials for Deluge client are not valid"

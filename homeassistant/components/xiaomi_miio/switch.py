@@ -805,20 +805,20 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
             result = await self.hass.async_add_executor_job(
                 partial(func, *args, **kwargs)
             )
-
-            _LOGGER.debug("Response received from plug: %s", result)
-
-            # The Chuangmi Plug V3 returns 0 on success on usb_on/usb_off.
-            if func in ["usb_on", "usb_off"] and result == 0:
-                return True
-
-            return result == SUCCESS
         except DeviceException as exc:
             if self._available:
                 _LOGGER.error(mask_error, exc)
                 self._available = False
 
             return False
+
+        _LOGGER.debug("Response received from plug: %s", result)
+
+        # The Chuangmi Plug V3 returns 0 on success on usb_on/usb_off.
+        if func in ["usb_on", "usb_off"] and result == 0:
+            return True
+
+        return result == SUCCESS
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the plug on."""

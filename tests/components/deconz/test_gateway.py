@@ -1,6 +1,7 @@
 """Test deCONZ gateway."""
 
 from copy import deepcopy
+from typing import Any
 from unittest.mock import patch
 
 import pydeconz
@@ -44,6 +45,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -105,12 +107,10 @@ def mock_deconz_put_request(aioclient_mock, config, path):
 
 
 async def setup_deconz_integration(
-    hass,
-    aioclient_mock=None,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker | None = None,
     *,
-    config=ENTRY_CONFIG,
-    options=ENTRY_OPTIONS,
-    get_state_response=DECONZ_WEB_REQUEST,
+    options: dict[str, Any] | UndefinedType = UNDEFINED,
     entry_id="1",
     unique_id=BRIDGEID,
     source=SOURCE_USER,
@@ -119,15 +119,15 @@ async def setup_deconz_integration(
     config_entry = MockConfigEntry(
         domain=DECONZ_DOMAIN,
         source=source,
-        data=deepcopy(config),
-        options=deepcopy(options),
+        data=deepcopy(ENTRY_CONFIG),
+        options=deepcopy(ENTRY_OPTIONS if options is UNDEFINED else options),
         entry_id=entry_id,
         unique_id=unique_id,
     )
     config_entry.add_to_hass(hass)
 
     if aioclient_mock:
-        mock_deconz_request(aioclient_mock, config, get_state_response)
+        mock_deconz_request(aioclient_mock, ENTRY_CONFIG, DECONZ_WEB_REQUEST)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -141,8 +141,10 @@ async def test_gateway_setup(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Successful setup."""
+    # Patching async_forward_entry_setup* is not advisable, and should be refactored
+    # in the future.
     with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup",
+        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
         return_value=True,
     ) as forward_entry_setup:
         config_entry = await setup_deconz_integration(hass, aioclient_mock)
@@ -158,24 +160,23 @@ async def test_gateway_setup(
 
         assert forward_entry_setup.mock_calls[0][1] == (
             config_entry,
-            ALARM_CONTROL_PANEL_DOMAIN,
+            [
+                ALARM_CONTROL_PANEL_DOMAIN,
+                BINARY_SENSOR_DOMAIN,
+                BUTTON_DOMAIN,
+                CLIMATE_DOMAIN,
+                COVER_DOMAIN,
+                FAN_DOMAIN,
+                LIGHT_DOMAIN,
+                LOCK_DOMAIN,
+                NUMBER_DOMAIN,
+                SCENE_DOMAIN,
+                SELECT_DOMAIN,
+                SENSOR_DOMAIN,
+                SIREN_DOMAIN,
+                SWITCH_DOMAIN,
+            ],
         )
-        assert forward_entry_setup.mock_calls[1][1] == (
-            config_entry,
-            BINARY_SENSOR_DOMAIN,
-        )
-        assert forward_entry_setup.mock_calls[2][1] == (config_entry, BUTTON_DOMAIN)
-        assert forward_entry_setup.mock_calls[3][1] == (config_entry, CLIMATE_DOMAIN)
-        assert forward_entry_setup.mock_calls[4][1] == (config_entry, COVER_DOMAIN)
-        assert forward_entry_setup.mock_calls[5][1] == (config_entry, FAN_DOMAIN)
-        assert forward_entry_setup.mock_calls[6][1] == (config_entry, LIGHT_DOMAIN)
-        assert forward_entry_setup.mock_calls[7][1] == (config_entry, LOCK_DOMAIN)
-        assert forward_entry_setup.mock_calls[8][1] == (config_entry, NUMBER_DOMAIN)
-        assert forward_entry_setup.mock_calls[9][1] == (config_entry, SCENE_DOMAIN)
-        assert forward_entry_setup.mock_calls[10][1] == (config_entry, SELECT_DOMAIN)
-        assert forward_entry_setup.mock_calls[11][1] == (config_entry, SENSOR_DOMAIN)
-        assert forward_entry_setup.mock_calls[12][1] == (config_entry, SIREN_DOMAIN)
-        assert forward_entry_setup.mock_calls[13][1] == (config_entry, SWITCH_DOMAIN)
 
     gateway_entry = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, gateway.bridgeid)}
@@ -191,8 +192,10 @@ async def test_gateway_device_configuration_url_when_addon(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Successful setup."""
+    # Patching async_forward_entry_setup* is not advisable, and should be refactored
+    # in the future.
     with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup",
+        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
         return_value=True,
     ):
         config_entry = await setup_deconz_integration(
@@ -306,8 +309,11 @@ async def test_get_deconz_api_fails(
 ) -> None:
     """Failed call."""
     config_entry = MockConfigEntry(domain=DECONZ_DOMAIN, data=ENTRY_CONFIG)
-    with patch(
-        "pydeconz.DeconzSession.refresh_state",
-        side_effect=side_effect,
-    ), pytest.raises(raised_exception):
+    with (
+        patch(
+            "pydeconz.DeconzSession.refresh_state",
+            side_effect=side_effect,
+        ),
+        pytest.raises(raised_exception),
+    ):
         assert await get_deconz_api(hass, config_entry)

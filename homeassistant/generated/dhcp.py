@@ -5,7 +5,9 @@ To update, run python3 -m script.hassfest
 
 from __future__ import annotations
 
-DHCP: list[dict[str, str | bool]] = [
+from typing import Final
+
+DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "airzone",
         "macaddress": "E84F25*",
@@ -57,6 +59,11 @@ DHCP: list[dict[str, str | bool]] = [
         "domain": "axis",
         "hostname": "axis-b8a44f*",
         "macaddress": "B8A44F*",
+    },
+    {
+        "domain": "axis",
+        "hostname": "axis-e82725*",
+        "macaddress": "E82725*",
     },
     {
         "domain": "blink",

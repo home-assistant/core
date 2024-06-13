@@ -1,9 +1,11 @@
 """Tests for the telegram_bot integration."""
 
+from datetime import datetime
 from unittest.mock import patch
 
 import pytest
-from telegram import User
+from telegram import Chat, Message, User
+from telegram.constants import ChatType
 
 from homeassistant.components.telegram_bot import (
     CONF_ALLOWED_CHAT_IDS,
@@ -62,12 +64,15 @@ def config_polling():
 @pytest.fixture
 def mock_register_webhook():
     """Mock calls made by telegram_bot when (de)registering webhook."""
-    with patch(
-        "homeassistant.components.telegram_bot.webhooks.PushBot.register_webhook",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.telegram_bot.webhooks.PushBot.deregister_webhook",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.webhooks.PushBot.register_webhook",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.telegram_bot.webhooks.PushBot.deregister_webhook",
+            return_value=True,
+        ),
     ):
         yield
 
@@ -76,16 +81,30 @@ def mock_register_webhook():
 def mock_external_calls():
     """Mock calls that make calls to the live Telegram API."""
     test_user = User(123456, "Testbot", True)
-    with patch(
-        "telegram.Bot.get_me",
-        return_value=test_user,
-    ), patch(
-        "telegram.Bot._bot_user",
-        test_user,
-    ), patch(
-        "telegram.Bot.bot",
-        test_user,
-    ), patch("telegram.ext.Updater._bootstrap"):
+    message = Message(
+        message_id=12345,
+        date=datetime.now(),
+        chat=Chat(id=123456, type=ChatType.PRIVATE),
+    )
+    with (
+        patch(
+            "telegram.Bot.get_me",
+            return_value=test_user,
+        ),
+        patch(
+            "telegram.Bot._bot_user",
+            test_user,
+        ),
+        patch(
+            "telegram.Bot.bot",
+            test_user,
+        ),
+        patch(
+            "telegram.Bot.send_message",
+            return_value=message,
+        ),
+        patch("telegram.ext.Updater._bootstrap"),
+    ):
         yield
 
 

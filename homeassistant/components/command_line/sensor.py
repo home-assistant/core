@@ -8,16 +8,12 @@ from datetime import datetime, timedelta
 import json
 from typing import Any, cast
 
-from homeassistant.components.sensor import CONF_STATE_CLASS, SensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.sensor.helpers import async_parse_date_datetime
 from homeassistant.const import (
     CONF_COMMAND,
-    CONF_DEVICE_CLASS,
-    CONF_ICON,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
-    CONF_UNIQUE_ID,
-    CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
@@ -25,30 +21,16 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.trigger_template_entity import (
-    CONF_AVAILABILITY,
-    CONF_PICTURE,
-    ManualTriggerSensorEntity,
-)
+from homeassistant.helpers.trigger_template_entity import ManualTriggerSensorEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_COMMAND_TIMEOUT, LOGGER
+from .const import CONF_COMMAND_TIMEOUT, LOGGER, TRIGGER_ENTITY_OPTIONS
 from .utils import async_check_output_or_log
 
 CONF_JSON_ATTRIBUTES = "json_attributes"
 
 DEFAULT_NAME = "Command Sensor"
-
-TRIGGER_ENTITY_OPTIONS = (
-    CONF_AVAILABILITY,
-    CONF_DEVICE_CLASS,
-    CONF_ICON,
-    CONF_PICTURE,
-    CONF_UNIQUE_ID,
-    CONF_STATE_CLASS,
-    CONF_UNIT_OF_MEASUREMENT,
-)
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -64,21 +46,19 @@ async def async_setup_platform(
     discovery_info = cast(DiscoveryInfoType, discovery_info)
     sensor_config = discovery_info
 
-    name: str = sensor_config[CONF_NAME]
     command: str = sensor_config[CONF_COMMAND]
-    value_template: Template | None = sensor_config.get(CONF_VALUE_TEMPLATE)
     command_timeout: int = sensor_config[CONF_COMMAND_TIMEOUT]
-    if value_template is not None:
-        value_template.hass = hass
     json_attributes: list[str] | None = sensor_config.get(CONF_JSON_ATTRIBUTES)
     scan_interval: timedelta = sensor_config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     data = CommandSensorData(hass, command, command_timeout)
 
-    trigger_entity_config = {CONF_NAME: Template(name, hass)}
-    for key in TRIGGER_ENTITY_OPTIONS:
-        if key not in sensor_config:
-            continue
-        trigger_entity_config[key] = sensor_config[key]
+    if value_template := sensor_config.get(CONF_VALUE_TEMPLATE):
+        value_template.hass = hass
+
+    trigger_entity_config = {
+        CONF_NAME: Template(sensor_config[CONF_NAME], hass),
+        **{k: v for k, v in sensor_config.items() if k in TRIGGER_ENTITY_OPTIONS},
+    }
 
     async_add_entities(
         [

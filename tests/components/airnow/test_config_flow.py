@@ -1,98 +1,114 @@
 """Test the AirNow config flow."""
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from pyairnow.errors import AirNowError, EmptyResponseError, InvalidKeyError
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.airnow.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant, config, options, setup_airnow) -> None:
+@pytest.mark.usefixtures("setup_airnow")
+async def test_form(
+    hass: HomeAssistant, config: dict[str, Any], options: dict[str, Any]
+) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == config
     assert result2["options"] == options
 
 
 @pytest.mark.parametrize("mock_api_get", [AsyncMock(side_effect=InvalidKeyError)])
-async def test_form_invalid_auth(hass: HomeAssistant, config, setup_airnow) -> None:
+@pytest.mark.usefixtures("setup_airnow")
+async def test_form_invalid_auth(hass: HomeAssistant, config: dict[str, Any]) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
 @pytest.mark.parametrize("data", [{}])
-async def test_form_invalid_location(hass: HomeAssistant, config, setup_airnow) -> None:
+@pytest.mark.usefixtures("setup_airnow")
+async def test_form_invalid_location(
+    hass: HomeAssistant, config: dict[str, Any]
+) -> None:
     """Test we handle invalid location."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_location"}
 
 
 @pytest.mark.parametrize("mock_api_get", [AsyncMock(side_effect=AirNowError)])
-async def test_form_cannot_connect(hass: HomeAssistant, config, setup_airnow) -> None:
+@pytest.mark.usefixtures("setup_airnow")
+async def test_form_cannot_connect(hass: HomeAssistant, config: dict[str, Any]) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
 @pytest.mark.parametrize("mock_api_get", [AsyncMock(side_effect=EmptyResponseError)])
-async def test_form_empty_result(hass: HomeAssistant, config, setup_airnow) -> None:
+@pytest.mark.usefixtures("setup_airnow")
+async def test_form_empty_result(hass: HomeAssistant, config: dict[str, Any]) -> None:
     """Test we handle empty response error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_location"}
 
 
 @pytest.mark.parametrize("mock_api_get", [AsyncMock(side_effect=RuntimeError)])
-async def test_form_unexpected(hass: HomeAssistant, config, setup_airnow) -> None:
+@pytest.mark.usefixtures("setup_airnow")
+async def test_form_unexpected(hass: HomeAssistant, config: dict[str, Any]) -> None:
     """Test we handle an unexpected error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_entry_already_exists(hass: HomeAssistant, config, config_entry) -> None:
+@pytest.mark.usefixtures("config_entry")
+async def test_entry_already_exists(
+    hass: HomeAssistant, config: dict[str, Any]
+) -> None:
     """Test that the form aborts if the Lat/Lng is already configured."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
 
-async def test_config_migration_v2(hass: HomeAssistant, setup_airnow) -> None:
+@pytest.mark.usefixtures("setup_airnow")
+async def test_config_migration_v2(hass: HomeAssistant) -> None:
     """Test that the config migration from Version 1 to Version 2 works."""
     config_entry = MockConfigEntry(
         version=1,
@@ -118,7 +134,8 @@ async def test_config_migration_v2(hass: HomeAssistant, setup_airnow) -> None:
     assert config_entry.options.get(CONF_RADIUS) == 25
 
 
-async def test_options_flow(hass: HomeAssistant, setup_airnow) -> None:
+@pytest.mark.usefixtures("setup_airnow")
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test that the options flow works."""
     config_entry = MockConfigEntry(
         version=2,
@@ -140,7 +157,7 @@ async def test_options_flow(hass: HomeAssistant, setup_airnow) -> None:
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     with patch(
@@ -153,7 +170,7 @@ async def test_options_flow(hass: HomeAssistant, setup_airnow) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         CONF_RADIUS: 25,
     }

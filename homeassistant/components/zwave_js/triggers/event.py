@@ -197,9 +197,9 @@ async def async_attach_trigger(
         else:
             payload["description"] = primary_desc
 
-        payload[
-            "description"
-        ] = f"{payload['description']} with event data: {event_data}"
+        payload["description"] = (
+            f"{payload['description']} with event data: {event_data}"
+        )
 
         hass.async_run_hass_job(job, {"trigger": payload})
 
@@ -219,7 +219,9 @@ async def async_attach_trigger(
         drivers: set[Driver] = set()
         if not (nodes := async_get_nodes_from_targets(hass, config, dev_reg=dev_reg)):
             entry_id = config[ATTR_CONFIG_ENTRY_ID]
-            client: Client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+            entry = hass.config_entries.async_get_entry(entry_id)
+            assert entry
+            client: Client = entry.runtime_data[DATA_CLIENT]
             driver = client.driver
             assert driver
             drivers.add(driver)

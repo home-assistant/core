@@ -165,8 +165,8 @@
     'platform': 'tessie',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'charge_state_battery_heater_on',
-    'unique_id': 'VINVINVIN-charge_state_battery_heater_on',
+    'translation_key': 'climate_state_battery_heater',
+    'unique_id': 'VINVINVIN-climate_state_battery_heater',
     'unit_of_measurement': None,
   })
 # ---

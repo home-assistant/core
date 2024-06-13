@@ -75,10 +75,13 @@ async def test_get_url_internal(hass: HomeAssistant) -> None:
         with pytest.raises(NoURLAvailableError):
             _get_internal_url(hass, require_current_request=True, require_ssl=True)
 
-    with patch(
-        "homeassistant.helpers.network._get_request_host",
-        return_value="no_match.example.local",
-    ), pytest.raises(NoURLAvailableError):
+    with (
+        patch(
+            "homeassistant.helpers.network._get_request_host",
+            return_value="no_match.example.local",
+        ),
+        pytest.raises(NoURLAvailableError),
+    ):
         _get_internal_url(hass, require_current_request=True)
 
     # Test with internal URL: https://example.local:8123
@@ -275,10 +278,13 @@ async def test_get_url_external(hass: HomeAssistant) -> None:
         with pytest.raises(NoURLAvailableError):
             _get_external_url(hass, require_current_request=True, require_ssl=True)
 
-    with patch(
-        "homeassistant.helpers.network._get_request_host",
-        return_value="no_match.example.com",
-    ), pytest.raises(NoURLAvailableError):
+    with (
+        patch(
+            "homeassistant.helpers.network._get_request_host",
+            return_value="no_match.example.com",
+        ),
+        pytest.raises(NoURLAvailableError),
+    ):
         _get_external_url(hass, require_current_request=True)
 
     # Test with external URL: http://example.com:80/
@@ -356,6 +362,18 @@ async def test_get_url_external(hass: HomeAssistant) -> None:
         with pytest.raises(NoURLAvailableError):
             _get_external_url(hass, require_current_request=True, require_ssl=True)
 
+    with pytest.raises(NoURLAvailableError):
+        _get_external_url(hass, require_cloud=True)
+
+    with patch(
+        "homeassistant.components.cloud.async_remote_ui_url",
+        return_value="https://example.nabu.casa",
+    ):
+        hass.config.components.add("cloud")
+        assert (
+            _get_external_url(hass, require_cloud=True) == "https://example.nabu.casa"
+        )
+
 
 async def test_get_cloud_url(hass: HomeAssistant) -> None:
     """Test getting an instance URL when the user has set an external URL."""
@@ -380,16 +398,22 @@ async def test_get_cloud_url(hass: HomeAssistant) -> None:
                 == "https://example.nabu.casa"
             )
 
-        with patch(
-            "homeassistant.helpers.network._get_request_host",
-            return_value="no_match.nabu.casa",
-        ), pytest.raises(NoURLAvailableError):
+        with (
+            patch(
+                "homeassistant.helpers.network._get_request_host",
+                return_value="no_match.nabu.casa",
+            ),
+            pytest.raises(NoURLAvailableError),
+        ):
             _get_cloud_url(hass, require_current_request=True)
 
-    with patch(
-        "homeassistant.components.cloud.async_remote_ui_url",
-        side_effect=cloud.CloudNotAvailable,
-    ), pytest.raises(NoURLAvailableError):
+    with (
+        patch(
+            "homeassistant.components.cloud.async_remote_ui_url",
+            side_effect=cloud.CloudNotAvailable,
+        ),
+        pytest.raises(NoURLAvailableError),
+    ):
         _get_cloud_url(hass)
 
 
@@ -506,9 +530,13 @@ async def test_get_url(hass: HomeAssistant) -> None:
     with pytest.raises(NoURLAvailableError):
         get_url(hass, require_current_request=True)
 
-    with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="example.com"
-    ), patch("homeassistant.components.http.current_request"):
+    with (
+        patch(
+            "homeassistant.helpers.network._get_request_host",
+            return_value="example.com",
+        ),
+        patch("homeassistant.components.http.current_request"),
+    ):
         assert get_url(hass, require_current_request=True) == "https://example.com"
         assert (
             get_url(hass, require_current_request=True, require_ssl=True)
@@ -518,9 +546,13 @@ async def test_get_url(hass: HomeAssistant) -> None:
         with pytest.raises(NoURLAvailableError):
             get_url(hass, require_current_request=True, allow_external=False)
 
-    with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="example.local"
-    ), patch("homeassistant.components.http.current_request"):
+    with (
+        patch(
+            "homeassistant.helpers.network._get_request_host",
+            return_value="example.local",
+        ),
+        patch("homeassistant.components.http.current_request"),
+    ):
         assert get_url(hass, require_current_request=True) == "http://example.local"
 
         with pytest.raises(NoURLAvailableError):
@@ -529,10 +561,13 @@ async def test_get_url(hass: HomeAssistant) -> None:
         with pytest.raises(NoURLAvailableError):
             get_url(hass, require_current_request=True, require_ssl=True)
 
-    with patch(
-        "homeassistant.helpers.network._get_request_host",
-        return_value="no_match.example.com",
-    ), pytest.raises(NoURLAvailableError):
+    with (
+        patch(
+            "homeassistant.helpers.network._get_request_host",
+            return_value="no_match.example.com",
+        ),
+        pytest.raises(NoURLAvailableError),
+    ):
         _get_internal_url(hass, require_current_request=True)
 
     # Test allow_ip defaults when SSL specified
@@ -615,9 +650,13 @@ async def test_get_current_request_url_with_known_host(
             get_url(hass, require_current_request=True) == "http://homeassistant:8123"
         )
 
-    with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="unknown.local"
-    ), pytest.raises(NoURLAvailableError):
+    with (
+        patch(
+            "homeassistant.helpers.network._get_request_host",
+            return_value="unknown.local",
+        ),
+        pytest.raises(NoURLAvailableError),
+    ):
         get_url(hass, require_current_request=True)
 
 

@@ -35,9 +35,6 @@ CHANGE_ADDED = "added"
 CHANGE_UPDATED = "updated"
 CHANGE_REMOVED = "removed"
 
-_ItemT = TypeVar("_ItemT")
-_StoreT = TypeVar("_StoreT", bound="SerializedStorageCollection")
-_StorageCollectionT = TypeVar("_StorageCollectionT", bound="StorageCollection")
 _EntityT = TypeVar("_EntityT", bound=Entity, default=Entity)
 
 
@@ -55,7 +52,7 @@ class CollectionChangeSet:
     item: Any
 
 
-ChangeListener = Callable[
+type ChangeListener = Callable[
     [
         # Change type
         str,
@@ -67,7 +64,7 @@ ChangeListener = Callable[
     Awaitable[None],
 ]
 
-ChangeSetListener = Callable[[Iterable[CollectionChangeSet]], Awaitable[None]]
+type ChangeSetListener = Callable[[Iterable[CollectionChangeSet]], Awaitable[None]]
 
 
 class CollectionError(HomeAssistantError):
@@ -129,7 +126,7 @@ class CollectionEntity(Entity):
         """Handle updated configuration."""
 
 
-class ObservableCollection(ABC, Generic[_ItemT]):
+class ObservableCollection[_ItemT](ABC):
     """Base collection type that can be observed."""
 
     def __init__(self, id_manager: IDManager | None) -> None:
@@ -236,7 +233,9 @@ class SerializedStorageCollection(TypedDict):
     items: list[dict[str, Any]]
 
 
-class StorageCollection(ObservableCollection[_ItemT], Generic[_ItemT, _StoreT]):
+class StorageCollection[_ItemT, _StoreT: SerializedStorageCollection](
+    ObservableCollection[_ItemT]
+):
     """Offer a CRUD interface on top of JSON storage."""
 
     def __init__(
@@ -512,7 +511,7 @@ def sync_entity_lifecycle(
     ).async_setup()
 
 
-class StorageCollectionWebsocket(Generic[_StorageCollectionT]):
+class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
     """Class to expose storage collection management over websocket."""
 
     def __init__(
@@ -610,7 +609,7 @@ class StorageCollectionWebsocket(Generic[_StorageCollectionT]):
     async def ws_create_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
-        """Create a item."""
+        """Create an item."""
         try:
             data = dict(msg)
             data.pop("id")
@@ -620,18 +619,16 @@ class StorageCollectionWebsocket(Generic[_StorageCollectionT]):
         except vol.Invalid as err:
             connection.send_error(
                 msg["id"],
-                websocket_api.const.ERR_INVALID_FORMAT,
+                websocket_api.ERR_INVALID_FORMAT,
                 humanize_error(data, err),
             )
         except ValueError as err:
-            connection.send_error(
-                msg["id"], websocket_api.const.ERR_INVALID_FORMAT, str(err)
-            )
+            connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
 
     async def ws_update_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
-        """Update a item."""
+        """Update an item."""
         data = dict(msg)
         msg_id = data.pop("id")
         item_id = data.pop(self.item_id_key)
@@ -643,30 +640,28 @@ class StorageCollectionWebsocket(Generic[_StorageCollectionT]):
         except ItemNotFound:
             connection.send_error(
                 msg["id"],
-                websocket_api.const.ERR_NOT_FOUND,
+                websocket_api.ERR_NOT_FOUND,
                 f"Unable to find {self.item_id_key} {item_id}",
             )
         except vol.Invalid as err:
             connection.send_error(
                 msg["id"],
-                websocket_api.const.ERR_INVALID_FORMAT,
+                websocket_api.ERR_INVALID_FORMAT,
                 humanize_error(data, err),
             )
         except ValueError as err:
-            connection.send_error(
-                msg_id, websocket_api.const.ERR_INVALID_FORMAT, str(err)
-            )
+            connection.send_error(msg_id, websocket_api.ERR_INVALID_FORMAT, str(err))
 
     async def ws_delete_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
-        """Delete a item."""
+        """Delete an item."""
         try:
             await self.storage_collection.async_delete_item(msg[self.item_id_key])
         except ItemNotFound:
             connection.send_error(
                 msg["id"],
-                websocket_api.const.ERR_NOT_FOUND,
+                websocket_api.ERR_NOT_FOUND,
                 f"Unable to find {self.item_id_key} {msg[self.item_id_key]}",
             )
 

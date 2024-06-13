@@ -1,4 +1,5 @@
 """Cover integration microBees."""
+
 from typing import Any
 
 from microBeesPy import Actuator
@@ -18,6 +19,8 @@ from .const import DOMAIN
 from .coordinator import MicroBeesUpdateCoordinator
 from .entity import MicroBeesEntity
 
+COVER_IDS = {47: "roller_shutter"}
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -31,11 +34,17 @@ async def async_setup_entry(
         MBCover(
             coordinator,
             bee_id,
-            next(filter(lambda x: x.deviceID == 551, bee.actuators)).id,
-            next(filter(lambda x: x.deviceID == 552, bee.actuators)).id,
+            next(
+                (actuator.id for actuator in bee.actuators if actuator.deviceID == 551),
+                None,
+            ),
+            next(
+                (actuator.id for actuator in bee.actuators if actuator.deviceID == 552),
+                None,
+            ),
         )
         for bee_id, bee in coordinator.data.bees.items()
-        if bee.productID == 47
+        if bee.productID in COVER_IDS
     )
 
 

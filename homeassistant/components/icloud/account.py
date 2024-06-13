@@ -150,9 +150,9 @@ class IcloudAccount:
         self._family_members_fullname = {}
         if user_info.get("membersInfo") is not None:
             for prs_id, member in user_info["membersInfo"].items():
-                self._family_members_fullname[
-                    prs_id
-                ] = f"{member['firstName']} {member['lastName']}"
+                self._family_members_fullname[prs_id] = (
+                    f"{member['firstName']} {member['lastName']}"
+                )
 
         self._devices = {}
         self.update_devices()
@@ -169,7 +169,7 @@ class IcloudAccount:
         api_devices = {}
         try:
             api_devices = self.api.devices
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             _LOGGER.error("Unknown iCloud error: %s", err)
             self._fetch_interval = 2
             dispatcher_send(self.hass, self.signal_device_update)

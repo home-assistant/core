@@ -1,6 +1,7 @@
 """The tests for the Home Assistant HTTP component."""
 
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
 from http import HTTPStatus
 from ipaddress import ip_network
@@ -13,7 +14,7 @@ import pytest
 from homeassistant.auth.providers.legacy_api_password import (
     LegacyApiPasswordAuthProvider,
 )
-import homeassistant.components.http as http
+from homeassistant.components import http
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.http import KEY_HASS
 from homeassistant.helpers.network import NoURLAvailableError
@@ -85,7 +86,9 @@ class TestView(http.HomeAssistantView):
 
 
 async def test_registering_view_while_running(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, unused_tcp_port_factory
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    unused_tcp_port_factory: Callable[[], int],
 ) -> None:
     """Test that we can register a view while the server is running."""
     await async_setup_component(
@@ -173,10 +176,13 @@ async def test_ssl_profile_defaults_modern(hass: HomeAssistant, tmp_path: Path) 
         _setup_empty_ssl_pem_files, tmp_path
     )
 
-    with patch("ssl.SSLContext.load_cert_chain"), patch(
-        "homeassistant.util.ssl.server_context_modern",
-        side_effect=server_context_modern,
-    ) as mock_context:
+    with (
+        patch("ssl.SSLContext.load_cert_chain"),
+        patch(
+            "homeassistant.util.ssl.server_context_modern",
+            side_effect=server_context_modern,
+        ) as mock_context,
+    ):
         assert (
             await async_setup_component(
                 hass,
@@ -200,10 +206,13 @@ async def test_ssl_profile_change_intermediate(
         _setup_empty_ssl_pem_files, tmp_path
     )
 
-    with patch("ssl.SSLContext.load_cert_chain"), patch(
-        "homeassistant.util.ssl.server_context_intermediate",
-        side_effect=server_context_intermediate,
-    ) as mock_context:
+    with (
+        patch("ssl.SSLContext.load_cert_chain"),
+        patch(
+            "homeassistant.util.ssl.server_context_intermediate",
+            side_effect=server_context_intermediate,
+        ) as mock_context,
+    ):
         assert (
             await async_setup_component(
                 hass,
@@ -231,10 +240,13 @@ async def test_ssl_profile_change_modern(hass: HomeAssistant, tmp_path: Path) ->
         _setup_empty_ssl_pem_files, tmp_path
     )
 
-    with patch("ssl.SSLContext.load_cert_chain"), patch(
-        "homeassistant.util.ssl.server_context_modern",
-        side_effect=server_context_modern,
-    ) as mock_context:
+    with (
+        patch("ssl.SSLContext.load_cert_chain"),
+        patch(
+            "homeassistant.util.ssl.server_context_modern",
+            side_effect=server_context_modern,
+        ) as mock_context,
+    ):
         assert (
             await async_setup_component(
                 hass,
@@ -261,12 +273,14 @@ async def test_peer_cert(hass: HomeAssistant, tmp_path: Path) -> None:
         _setup_empty_ssl_pem_files, tmp_path
     )
 
-    with patch("ssl.SSLContext.load_cert_chain"), patch(
-        "ssl.SSLContext.load_verify_locations"
-    ) as mock_load_verify_locations, patch(
-        "homeassistant.util.ssl.server_context_modern",
-        side_effect=server_context_modern,
-    ) as mock_context:
+    with (
+        patch("ssl.SSLContext.load_cert_chain"),
+        patch("ssl.SSLContext.load_verify_locations") as mock_load_verify_locations,
+        patch(
+            "homeassistant.util.ssl.server_context_modern",
+            side_effect=server_context_modern,
+        ) as mock_context,
+    ):
         assert (
             await async_setup_component(
                 hass,
@@ -454,7 +468,9 @@ async def test_cors_defaults(hass: HomeAssistant) -> None:
 
 
 async def test_storing_config(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, unused_tcp_port_factory
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    unused_tcp_port_factory: Callable[[], int],
 ) -> None:
     """Test that we store last working config."""
     config = {

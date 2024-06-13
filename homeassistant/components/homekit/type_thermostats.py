@@ -411,10 +411,10 @@ class Thermostat(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: mode}
         self.async_call_service(DOMAIN_CLIMATE, SERVICE_SET_FAN_MODE, params)
 
-    def _temperature_to_homekit(self, temp: float | int) -> float:
+    def _temperature_to_homekit(self, temp: float) -> float:
         return temperature_to_homekit(temp, self._unit)
 
-    def _temperature_to_states(self, temp: float | int) -> float:
+    def _temperature_to_states(self, temp: float) -> float:
         return temperature_to_states(temp, self._unit)
 
     def _set_chars(self, char_values: dict[str, Any]) -> None:

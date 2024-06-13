@@ -45,8 +45,8 @@ async def get_by_station_number(
         measuring_station = await client.get_by_station_number(station_number)
     except WAQIConnectionError:
         errors["base"] = "cannot_connect"
-    except Exception as exc:  # pylint: disable=broad-except
-        _LOGGER.exception(exc)
+    except Exception:
+        _LOGGER.exception("Unexpected exception")
         errors["base"] = "unknown"
     return measuring_station, errors
 
@@ -76,8 +76,8 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "invalid_auth"
                 except WAQIConnectionError:
                     errors["base"] = "cannot_connect"
-                except Exception as exc:  # pylint: disable=broad-except
-                    _LOGGER.exception(exc)
+                except Exception:
+                    _LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
                 else:
                     self.data = user_input
@@ -118,8 +118,8 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                 except WAQIConnectionError:
                     errors["base"] = "cannot_connect"
-                except Exception as exc:  # pylint: disable=broad-except
-                    _LOGGER.exception(exc)
+                except Exception:
+                    _LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
                 else:
                     return await self._async_create_entry(measuring_station)

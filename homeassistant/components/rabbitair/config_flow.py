@@ -8,8 +8,8 @@ from typing import Any
 from rabbitair import UdpClient
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -49,7 +49,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     return {"mac": info.mac}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class RabbitAirConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Rabbit Air."""
 
     VERSION = 1
@@ -58,7 +58,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
 
@@ -73,7 +73,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_host"
             except TimeoutConnect:
                 errors["base"] = "timeout_connect"
-            except Exception as err:  # pylint: disable=broad-except
+            except Exception as err:  # noqa: BLE001
                 _LOGGER.debug("Unexpected exception: %s", err)
                 errors["base"] = "unknown"
             else:
@@ -100,7 +100,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         mac = dr.format_mac(discovery_info.properties["id"])
         await self.async_set_unique_id(mac)

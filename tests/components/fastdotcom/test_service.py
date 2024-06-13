@@ -56,7 +56,7 @@ async def test_service_unloaded_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert config_entry
-    await config_entry.async_unload(hass)
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
     with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(DOMAIN, SERVICE_NAME, blocking=True)

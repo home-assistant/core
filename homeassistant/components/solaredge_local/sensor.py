@@ -232,7 +232,9 @@ def setup_platform(
 
     # Changing inverter temperature unit.
     inverter_temp_description = SENSOR_TYPE_INVERTER_TEMPERATURE
-    if status.inverters.primary.temperature.units.farenheit:
+    if (
+        status.inverters.primary.temperature.units.farenheit  # codespell:ignore farenheit
+    ):
         inverter_temp_description = dataclasses.replace(
             inverter_temp_description,
             native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,

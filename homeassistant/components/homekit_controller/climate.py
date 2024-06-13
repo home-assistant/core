@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from functools import cached_property
 import logging
-from typing import TYPE_CHECKING, Any, Final
+from typing import Any, Final
 
 from aiohomekit.model.characteristics import (
     ActivationStateValues,
@@ -48,12 +49,6 @@ from homeassistant.util.percentage import (
 from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import HomeKitEntity
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -637,7 +632,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         return self.service.value(CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET)
 
     @property
-    def min_humidity(self) -> int:
+    def min_humidity(self) -> float:
         """Return the minimum humidity."""
         min_humidity = self.service[
             CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET
@@ -647,7 +642,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         return super().min_humidity
 
     @property
-    def max_humidity(self) -> int:
+    def max_humidity(self) -> float:
         """Return the maximum humidity."""
         max_humidity = self.service[
             CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET

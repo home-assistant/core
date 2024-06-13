@@ -12,9 +12,9 @@ from homeassistant.util.decorator import Registry
 
 from .models import Event
 
-PARSERS: Registry[
-    str, Callable[[str, Any], Coroutine[Any, Any, Event | None]]
-] = Registry()
+PARSERS: Registry[str, Callable[[str, Any], Coroutine[Any, Any, Event | None]]] = (
+    Registry()
+)
 
 VIDEO_SOURCE_MAPPING = {
     "vsconf": "VideoSourceToken",
@@ -23,7 +23,7 @@ VIDEO_SOURCE_MAPPING = {
 
 def extract_message(msg: Any) -> tuple[str, Any]:
     """Extract the message content and the topic."""
-    return msg.Topic._value_1, msg.Message._value_1  # pylint: disable=protected-access
+    return msg.Topic._value_1, msg.Message._value_1  # noqa: SLF001
 
 
 def _normalize_video_source(source: str) -> str:
@@ -221,9 +221,9 @@ async def async_parse_field_detector(uid: str, msg) -> Event | None:
             None,
             payload.Data.SimpleItem[0].Value == "true",
         )
-        return evt
     except (AttributeError, KeyError):
         return None
+    return evt
 
 
 @PARSERS.register("tns1:RuleEngine/CellMotionDetector/Motion")

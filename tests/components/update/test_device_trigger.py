@@ -5,7 +5,7 @@ from datetime import timedelta
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.update import DOMAIN
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON, EntityCategory
@@ -14,12 +14,15 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from .common import MockUpdateEntity
+
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     async_get_device_automation_capabilities,
     async_get_device_automations,
     async_mock_service,
+    setup_test_component_platform,
 )
 
 
@@ -58,7 +61,7 @@ async def test_get_triggers(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
-        for trigger in ["changed_states", "turned_off", "turned_on"]
+        for trigger in ("changed_states", "turned_off", "turned_on")
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
@@ -106,7 +109,7 @@ async def test_get_triggers_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for trigger in ["changed_states", "turned_off", "turned_on"]
+        for trigger in ("changed_states", "turned_off", "turned_on")
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
@@ -180,12 +183,10 @@ async def test_if_fires_on_state_change(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls: list[ServiceCall],
-    enable_custom_integrations: None,
+    mock_update_entities: list[MockUpdateEntity],
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_update_entities)
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -214,15 +215,12 @@ async def test_if_fires_on_state_change(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "update_available {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "update_available {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -238,15 +236,12 @@ async def test_if_fires_on_state_change(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "no_update {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "no_update {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -282,12 +277,10 @@ async def test_if_fires_on_state_change_legacy(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls: list[ServiceCall],
-    enable_custom_integrations: None,
+    mock_update_entities: list[MockUpdateEntity],
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_update_entities)
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -316,15 +309,12 @@ async def test_if_fires_on_state_change_legacy(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "no_update {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "no_update {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -352,12 +342,10 @@ async def test_if_fires_on_state_change_with_for(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls: list[ServiceCall],
-    enable_custom_integrations: None,
+    mock_update_entities: list[MockUpdateEntity],
 ) -> None:
     """Test for triggers firing with delay."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_update_entities)
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -387,15 +375,12 @@ async def test_if_fires_on_state_change_with_for(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_off {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "turn_off {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },

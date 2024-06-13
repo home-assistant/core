@@ -2,8 +2,11 @@
 
 from binascii import unhexlify
 from http import HTTPStatus
-from unittest.mock import patch
+import json
+from unittest.mock import ANY, patch
 
+from nacl.encoding import Base64Encoder
+from nacl.secret import SecretBox
 import pytest
 
 from homeassistant.components.camera import CameraEntityFeature
@@ -24,10 +27,7 @@ from homeassistant.setup import async_setup_component
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
 
 from tests.common import async_capture_events, async_mock_service
-from tests.components.conversation.conftest import mock_agent
-
-# To avoid autoflake8 removing the import
-mock_agent = mock_agent
+from tests.components.conversation import MockAgent
 
 
 @pytest.fixture
@@ -38,15 +38,6 @@ async def homeassistant(hass):
 
 def encrypt_payload(secret_key, payload, encode_json=True):
     """Return a encrypted payload given a key and dictionary of data."""
-    try:
-        from nacl.encoding import Base64Encoder
-        from nacl.secret import SecretBox
-    except (ImportError, OSError):
-        pytest.skip("libnacl/libsodium is not installed")
-        return
-
-    import json
-
     prepped_key = unhexlify(secret_key)
 
     if encode_json:
@@ -60,15 +51,6 @@ def encrypt_payload(secret_key, payload, encode_json=True):
 
 def encrypt_payload_legacy(secret_key, payload, encode_json=True):
     """Return a encrypted payload given a key and dictionary of data."""
-    try:
-        from nacl.encoding import Base64Encoder
-        from nacl.secret import SecretBox
-    except (ImportError, OSError):
-        pytest.skip("libnacl/libsodium is not installed")
-        return
-
-    import json
-
     keylen = SecretBox.KEY_SIZE
     prepped_key = secret_key.encode("utf-8")
     prepped_key = prepped_key[:keylen]
@@ -85,15 +67,6 @@ def encrypt_payload_legacy(secret_key, payload, encode_json=True):
 
 def decrypt_payload(secret_key, encrypted_data):
     """Return a decrypted payload given a key and a string of encrypted data."""
-    try:
-        from nacl.encoding import Base64Encoder
-        from nacl.secret import SecretBox
-    except (ImportError, OSError):
-        pytest.skip("libnacl/libsodium is not installed")
-        return
-
-    import json
-
     prepped_key = unhexlify(secret_key)
 
     decrypted_data = SecretBox(prepped_key).decrypt(
@@ -106,15 +79,6 @@ def decrypt_payload(secret_key, encrypted_data):
 
 def decrypt_payload_legacy(secret_key, encrypted_data):
     """Return a decrypted payload given a key and a string of encrypted data."""
-    try:
-        from nacl.encoding import Base64Encoder
-        from nacl.secret import SecretBox
-    except (ImportError, OSError):
-        pytest.skip("libnacl/libsodium is not installed")
-        return
-
-    import json
-
     keylen = SecretBox.KEY_SIZE
     prepped_key = secret_key.encode("utf-8")
     prepped_key = prepped_key[:keylen]
@@ -321,7 +285,7 @@ async def test_webhook_handle_get_config(
         "time_zone": hass_config["time_zone"],
         "components": set(hass_config["components"]),
         "version": hass_config["version"],
-        "theme_color": "#03A9F4",  # Default frontend theme color
+        "theme_color": ANY,
         "entities": {
             "mock-device-id": {"disabled": False},
             "battery-state-id": {"disabled": False},
@@ -1027,14 +991,18 @@ async def test_reregister_sensor(
 
 
 async def test_webhook_handle_conversation_process(
-    hass: HomeAssistant, homeassistant, create_registrations, webhook_client, mock_agent
+    hass: HomeAssistant,
+    homeassistant,
+    create_registrations,
+    webhook_client,
+    mock_conversation_agent: MockAgent,
 ) -> None:
     """Test that we can converse."""
     webhook_client.server.app.router._frozen = False
 
     with patch(
-        "homeassistant.components.conversation.AgentManager.async_get_agent",
-        return_value=mock_agent,
+        "homeassistant.components.conversation.agent_manager.async_get_agent",
+        return_value=mock_conversation_agent,
     ):
         resp = await webhook_client.post(
             "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),

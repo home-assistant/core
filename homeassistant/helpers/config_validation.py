@@ -1,6 +1,8 @@
 """Helpers for config validation using voluptuous."""
 
-from __future__ import annotations
+# PEP 563 seems to break typing.get_type_hints when used
+# with PEP 695 syntax. Fixed in Python 3.13.
+# from __future__ import annotations
 
 from collections.abc import Callable, Hashable
 import contextlib
@@ -18,7 +20,7 @@ import re
 from socket import (  # type: ignore[attr-defined]  # private, not in typeshed
     _GLOBAL_DEFAULT_TIMEOUT,
 )
-from typing import Any, TypeVar, cast, overload
+from typing import Any, cast, overload
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -91,8 +93,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
-    HomeAssistant,
     async_get_hass,
+    async_get_hass_or_none,
     split_entity_id,
     valid_entity_id,
 )
@@ -139,9 +141,6 @@ longitude = vol.All(
 gps = vol.ExactSequence([latitude, longitude])
 sun_event = vol.All(vol.Lower, vol.Any(SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE))
 port = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
-
-# typing typevar
-_T = TypeVar("_T")
 
 
 def path(value: Any) -> str:
@@ -248,13 +247,13 @@ def is_regex(value: Any) -> re.Pattern[Any]:
     """Validate that a string is a valid regular expression."""
     try:
         r = re.compile(value)
-        return r
     except TypeError as err:
         raise vol.Invalid(
             f"value {value} is of the wrong type for a regular expression"
         ) from err
     except re.error as err:
         raise vol.Invalid(f"value {value} is not a valid regular expression") from err
+    return r
 
 
 def isfile(value: Any) -> str:
@@ -284,21 +283,18 @@ def isdir(value: Any) -> str:
 
 
 @overload
-def ensure_list(value: None) -> list[Any]:
-    ...
+def ensure_list(value: None) -> list[Any]: ...
 
 
 @overload
-def ensure_list(value: list[_T]) -> list[_T]:
-    ...
+def ensure_list[_T](value: list[_T]) -> list[_T]: ...
 
 
 @overload
-def ensure_list(value: list[_T] | _T) -> list[_T]:
-    ...
+def ensure_list[_T](value: list[_T] | _T) -> list[_T]: ...
 
 
-def ensure_list(value: _T | None) -> list[_T] | list[Any]:
+def ensure_list[_T](value: _T | None) -> list[_T] | list[Any]:
     """Wrap value in list if it is not one."""
     if value is None:
         return []
@@ -543,7 +539,7 @@ def time_period_seconds(value: float | str) -> timedelta:
 time_period = vol.Any(time_period_str, time_period_seconds, timedelta, time_period_dict)
 
 
-def match_all(value: _T) -> _T:
+def match_all[_T](value: _T) -> _T:
     """Validate that matches all values."""
     return value
 
@@ -559,7 +555,7 @@ positive_time_period_dict = vol.All(time_period_dict, positive_timedelta)
 positive_time_period = vol.All(time_period, positive_timedelta)
 
 
-def remove_falsy(value: list[_T]) -> list[_T]:
+def remove_falsy[_T](value: list[_T]) -> list[_T]:
     """Remove falsy values from a list."""
     return [v for v in value if v]
 
@@ -586,7 +582,7 @@ def slug(value: Any) -> str:
 
 
 def schema_with_slug_keys(
-    value_schema: _T | Callable, *, slug_validator: Callable[[Any], str] = slug
+    value_schema: dict | Callable, *, slug_validator: Callable[[Any], str] = slug
 ) -> Callable:
     """Ensure dicts have slugs as keys.
 
@@ -666,17 +662,13 @@ def template(value: Any | None) -> template_helper.Template:
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
 
-    hass: HomeAssistant | None = None
-    with contextlib.suppress(HomeAssistantError):
-        hass = async_get_hass()
-
-    template_value = template_helper.Template(str(value), hass)
+    template_value = template_helper.Template(str(value), async_get_hass_or_none())
 
     try:
         template_value.ensure_valid()
-        return template_value
     except TemplateError as ex:
         raise vol.Invalid(f"invalid template ({ex})") from ex
+    return template_value
 
 
 def dynamic_template(value: Any | None) -> template_helper.Template:
@@ -688,17 +680,13 @@ def dynamic_template(value: Any | None) -> template_helper.Template:
     if not template_helper.is_template_string(str(value)):
         raise vol.Invalid("template value does not contain a dynamic template")
 
-    hass: HomeAssistant | None = None
-    with contextlib.suppress(HomeAssistantError):
-        hass = async_get_hass()
-
-    template_value = template_helper.Template(str(value), hass)
+    template_value = template_helper.Template(str(value), async_get_hass_or_none())
 
     try:
         template_value.ensure_valid()
-        return template_value
     except TemplateError as ex:
         raise vol.Invalid(f"invalid template ({ex})") from ex
+    return template_value
 
 
 def template_complex(value: Any) -> Any:
@@ -1109,7 +1097,7 @@ def empty_config_schema(domain: str) -> Callable[[dict], dict]:
     """Return a config schema which logs if there are configuration parameters."""
 
     def validator(config: dict) -> dict:
-        if domain in config and config[domain]:
+        if config_domain := config.get(domain):
             get_integration_logger(__name__).error(
                 (
                     "The %s integration does not support any configuration parameters, "
@@ -1117,7 +1105,7 @@ def empty_config_schema(domain: str) -> Callable[[dict], dict]:
                     "configuration."
                 ),
                 domain,
-                config[domain],
+                config_domain,
             )
         return config
 
@@ -1314,7 +1302,7 @@ SCRIPT_SCHEMA = vol.All(ensure_list, [script_action])
 SCRIPT_ACTION_BASE_SCHEMA = {
     vol.Optional(CONF_ALIAS): string,
     vol.Optional(CONF_CONTINUE_ON_ERROR): boolean,
-    vol.Optional(CONF_ENABLED): boolean,
+    vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
 }
 
 EVENT_SCHEMA = vol.Schema(
@@ -1353,12 +1341,13 @@ SERVICE_SCHEMA = vol.All(
 )
 
 NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
-    vol.Coerce(float), vol.All(str, entity_domain(["input_number", "number", "sensor"]))
+    vol.Coerce(float),
+    vol.All(str, entity_domain(["input_number", "number", "sensor", "zone"])),
 )
 
 CONDITION_BASE_SCHEMA = {
     vol.Optional(CONF_ALIAS): string,
-    vol.Optional(CONF_ENABLED): boolean,
+    vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
 }
 
 NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
@@ -1650,7 +1639,7 @@ TRIGGER_BASE_SCHEMA = vol.Schema(
         vol.Required(CONF_PLATFORM): str,
         vol.Optional(CONF_ID): str,
         vol.Optional(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
-        vol.Optional(CONF_ENABLED): boolean,
+        vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
     }
 )
 
@@ -1786,7 +1775,7 @@ _SCRIPT_STOP_SCHEMA = vol.Schema(
     }
 )
 
-_SCRIPT_PARALLEL_SEQUENCE = vol.Schema(
+_SCRIPT_SEQUENCE_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
@@ -1805,7 +1794,7 @@ _SCRIPT_PARALLEL_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_PARALLEL): vol.All(
-            ensure_list, [vol.Any(_SCRIPT_PARALLEL_SEQUENCE, _parallel_sequence_action)]
+            ensure_list, [vol.Any(_SCRIPT_SEQUENCE_SCHEMA, _parallel_sequence_action)]
         ),
     }
 )
@@ -1821,6 +1810,7 @@ SCRIPT_ACTION_FIRE_EVENT = "event"
 SCRIPT_ACTION_IF = "if"
 SCRIPT_ACTION_PARALLEL = "parallel"
 SCRIPT_ACTION_REPEAT = "repeat"
+SCRIPT_ACTION_SEQUENCE = "sequence"
 SCRIPT_ACTION_SET_CONVERSATION_RESPONSE = "set_conversation_response"
 SCRIPT_ACTION_STOP = "stop"
 SCRIPT_ACTION_VARIABLES = "variables"
@@ -1847,6 +1837,7 @@ ACTIONS_MAP = {
     CONF_SERVICE_TEMPLATE: SCRIPT_ACTION_CALL_SERVICE,
     CONF_STOP: SCRIPT_ACTION_STOP,
     CONF_PARALLEL: SCRIPT_ACTION_PARALLEL,
+    CONF_SEQUENCE: SCRIPT_ACTION_SEQUENCE,
     CONF_SET_CONVERSATION_RESPONSE: SCRIPT_ACTION_SET_CONVERSATION_RESPONSE,
 }
 
@@ -1857,6 +1848,12 @@ def determine_script_action(action: dict[str, Any]) -> str:
     """Determine action type."""
     if not (actions := ACTIONS_SET.intersection(action)):
         raise ValueError("Unable to determine action")
+    if len(actions) > 1:
+        # Ambiguous action, select the first one in the
+        # order of the ACTIONS_MAP
+        for action_key, _script_action in ACTIONS_MAP.items():
+            if action_key in actions:
+                return _script_action
     return ACTIONS_MAP[actions.pop()]
 
 
@@ -1871,6 +1868,7 @@ ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_IF: _SCRIPT_IF_SCHEMA,
     SCRIPT_ACTION_PARALLEL: _SCRIPT_PARALLEL_SCHEMA,
     SCRIPT_ACTION_REPEAT: _SCRIPT_REPEAT_SCHEMA,
+    SCRIPT_ACTION_SEQUENCE: _SCRIPT_SEQUENCE_SCHEMA,
     SCRIPT_ACTION_SET_CONVERSATION_RESPONSE: _SCRIPT_SET_CONVERSATION_RESPONSE_SCHEMA,
     SCRIPT_ACTION_STOP: _SCRIPT_STOP_SCHEMA,
     SCRIPT_ACTION_VARIABLES: _SCRIPT_SET_SCHEMA,

@@ -111,9 +111,9 @@ class Connector:
                     entry[EVSE_ID], entry[MODEL_TYPE], entry[ATTR_NAME]
                 )
                 for entry in charge_points_data
-            )
+            ),
+            self.client.get_grid_status(charge_points_data[0][EVSE_ID]),
         )
-        await self.client.get_grid_status(charge_points_data[0][EVSE_ID])
 
     async def handle_charge_point(self, evse_id: str, model: str, name: str) -> None:
         """Add the chargepoint and request their data."""
@@ -127,22 +127,26 @@ class Connector:
     def update_charge_point(self, evse_id: str, data: dict) -> None:
         """Update the charge point data."""
         self.charge_points[evse_id].update(data)
-        self.dispatch_value_update_signal(evse_id)
+        self.dispatch_charge_point_update_signal(evse_id)
 
-    def dispatch_value_update_signal(self, evse_id: str) -> None:
-        """Dispatch a value signal."""
-        async_dispatcher_send(self.hass, f"{DOMAIN}_value_update_{evse_id}")
+    def dispatch_charge_point_update_signal(self, evse_id: str) -> None:
+        """Dispatch a charge point update signal."""
+        async_dispatcher_send(self.hass, f"{DOMAIN}_charge_point_update_{evse_id}")
 
     def dispatch_grid_update_signal(self) -> None:
-        """Dispatch a grid signal."""
+        """Dispatch a grid update signal."""
         async_dispatcher_send(self.hass, f"{DOMAIN}_grid_update")
+
+    async def on_open(self) -> None:
+        """Fetch data when connection is established."""
+        await self.client.get_charge_points()
 
     async def run_task(self) -> None:
         """Start the receive loop."""
         try:
             while True:
                 try:
-                    await self.client.connect(self.on_data)
+                    await self.client.connect(self.on_data, self.on_open)
                 except RequestLimitReached:
                     LOGGER.warning(
                         "Request limit reached. reconnecting at 00:00 (Europe/Amsterdam)"
@@ -160,7 +164,7 @@ class Connector:
     def _on_disconnect(self) -> None:
         """Dispatch signals to update entity states."""
         for evse_id in self.charge_points:
-            self.dispatch_value_update_signal(evse_id)
+            self.dispatch_charge_point_update_signal(evse_id)
         self.dispatch_grid_update_signal()
 
     async def _disconnect(self) -> None:

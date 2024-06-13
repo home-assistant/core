@@ -114,9 +114,12 @@ async def test_gvh5178_multi_sensor(hass: HomeAssistant) -> None:
     # Fastforward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch_bluetooth_time(
-        monotonic_now,
-    ), patch_all_discovered_devices([]):
+    with (
+        patch_bluetooth_time(
+            monotonic_now,
+        ),
+        patch_all_discovered_devices([]),
+    ):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()
@@ -140,9 +143,12 @@ async def test_gvh5178_multi_sensor(hass: HomeAssistant) -> None:
     assert primary_temp_sensor.state == "1.0"
 
     # Fastforward time without BLE advertisements
-    with patch_bluetooth_time(
-        monotonic_now,
-    ), patch_all_discovered_devices([]):
+    with (
+        patch_bluetooth_time(
+            monotonic_now,
+        ),
+        patch_all_discovered_devices([]),
+    ):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()

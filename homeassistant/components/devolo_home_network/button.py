@@ -13,12 +13,12 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import DevoloHomeNetworkConfigEntry
 from .const import DOMAIN, IDENTIFY, PAIRING, RESTART, START_WPS
 from .entity import DevoloEntity
 
@@ -55,10 +55,12 @@ BUTTON_TYPES: dict[str, DevoloButtonEntityDescription] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DevoloHomeNetworkConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Get all devices and buttons and setup them via config entry."""
-    device: Device = hass.data[DOMAIN][entry.entry_id]["device"]
+    device = entry.runtime_data.device
 
     entities: list[DevoloButtonEntity] = []
     if device.plcnet:
@@ -66,14 +68,12 @@ async def async_setup_entry(
             DevoloButtonEntity(
                 entry,
                 BUTTON_TYPES[IDENTIFY],
-                device,
             )
         )
         entities.append(
             DevoloButtonEntity(
                 entry,
                 BUTTON_TYPES[PAIRING],
-                device,
             )
         )
     if device.device and "restart" in device.device.features:
@@ -81,7 +81,6 @@ async def async_setup_entry(
             DevoloButtonEntity(
                 entry,
                 BUTTON_TYPES[RESTART],
-                device,
             )
         )
     if device.device and "wifi1" in device.device.features:
@@ -89,7 +88,6 @@ async def async_setup_entry(
             DevoloButtonEntity(
                 entry,
                 BUTTON_TYPES[START_WPS],
-                device,
             )
         )
     async_add_entities(entities)
@@ -102,13 +100,12 @@ class DevoloButtonEntity(DevoloEntity, ButtonEntity):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: DevoloHomeNetworkConfigEntry,
         description: DevoloButtonEntityDescription,
-        device: Device,
     ) -> None:
         """Initialize entity."""
         self.entity_description = description
-        super().__init__(entry, device)
+        super().__init__(entry)
 
     async def async_press(self) -> None:
         """Handle the button press."""

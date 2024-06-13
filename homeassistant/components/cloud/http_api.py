@@ -9,7 +9,7 @@ import dataclasses
 from functools import wraps
 from http import HTTPStatus
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 import aiohttp
 from aiohttp import web
@@ -115,11 +115,7 @@ def async_setup(hass: HomeAssistant) -> None:
     )
 
 
-_HassViewT = TypeVar("_HassViewT", bound=HomeAssistantView)
-_P = ParamSpec("_P")
-
-
-def _handle_cloud_errors(
+def _handle_cloud_errors[_HassViewT: HomeAssistantView, **_P](
     handler: Callable[
         Concatenate[_HassViewT, web.Request, _P], Awaitable[web.Response]
     ],
@@ -135,12 +131,12 @@ def _handle_cloud_errors(
         """Handle exceptions that raise from the wrapped request handler."""
         try:
             result = await handler(view, request, *args, **kwargs)
-            return result
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             status, msg = _process_cloud_exception(err, request.path)
             return view.json_message(
                 msg, status_code=status, message_code=err.__class__.__name__.lower()
             )
+        return result
 
     return error_handler
 
@@ -166,7 +162,7 @@ def _ws_handle_cloud_errors(
         try:
             return await handler(hass, connection, msg)
 
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             err_status, err_msg = _process_cloud_exception(err, msg["type"])
             connection.send_error(msg["id"], str(err_status), err_msg)
 
@@ -223,7 +219,10 @@ class CloudLoginView(HomeAssistantView):
         cloud: Cloud[CloudClient] = hass.data[DOMAIN]
         await cloud.login(data["email"], data["password"])
 
-        new_cloud_pipeline_id = await async_create_cloud_pipeline(hass)
+        if "assist_pipeline" in hass.config.components:
+            new_cloud_pipeline_id = await async_create_cloud_pipeline(hass)
+        else:
+            new_cloud_pipeline_id = None
         return self.json({"success": True, "cloud_pipeline": new_cloud_pipeline_id})
 
 
@@ -643,7 +642,7 @@ async def google_assistant_get(
     if not state:
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_FOUND,
+            websocket_api.ERR_NOT_FOUND,
             f"{entity_id} unknown",
         )
         return
@@ -652,7 +651,7 @@ async def google_assistant_get(
     if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES or not entity.is_supported():
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_SUPPORTED,
+            websocket_api.ERR_NOT_SUPPORTED,
             f"{entity_id} not supported by Google assistant",
         )
         return
@@ -756,7 +755,7 @@ async def alexa_get(
     ):
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_SUPPORTED,
+            websocket_api.ERR_NOT_SUPPORTED,
             f"{entity_id} not supported by Alexa",
         )
         return

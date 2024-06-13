@@ -16,10 +16,16 @@ from homeassistant.components import (
     script,
 )
 from homeassistant.const import CONF_ENTITIES, CONF_TYPE
-from homeassistant.core import Event, HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+    split_entity_id,
+)
 from homeassistant.helpers import storage
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     async_track_state_added_domain,
     async_track_state_removed_domain,
 )

@@ -10,6 +10,7 @@ import math
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -61,15 +62,25 @@ class StarlinkTimeEntity(StarlinkEntity, TimeEntity):
 
 def _utc_minutes_to_time(utc_minutes: int, timezone: tzinfo) -> time:
     hour = math.floor(utc_minutes / 60)
+    if hour > 23:
+        hour -= 24
     minute = utc_minutes % 60
-    utc = datetime.now(UTC).replace(hour=hour, minute=minute, second=0, microsecond=0)
+    try:
+        utc = datetime.now(UTC).replace(
+            hour=hour, minute=minute, second=0, microsecond=0
+        )
+    except ValueError as exc:
+        raise HomeAssistantError from exc
     return utc.astimezone(timezone).time()
 
 
 def _time_to_utc_minutes(t: time, timezone: tzinfo) -> int:
-    zoned_time = datetime.now(timezone).replace(
-        hour=t.hour, minute=t.minute, second=0, microsecond=0
-    )
+    try:
+        zoned_time = datetime.now(timezone).replace(
+            hour=t.hour, minute=t.minute, second=0, microsecond=0
+        )
+    except ValueError as exc:
+        raise HomeAssistantError from exc
     utc_time = zoned_time.astimezone(UTC).time()
     return (utc_time.hour * 60) + utc_time.minute
 

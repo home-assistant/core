@@ -18,7 +18,6 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -26,9 +25,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
 
+from . import AndroidTVConfigEntry
 from .const import (
-    ANDROID_DEV,
-    ANDROID_DEV_OPT,
     CONF_APPS,
     CONF_EXCLUDE_UNNAMED_APPS,
     CONF_GET_SOURCES,
@@ -39,7 +37,6 @@ from .const import (
     DEFAULT_GET_SOURCES,
     DEFAULT_SCREENCAP,
     DEVICE_ANDROIDTV,
-    DOMAIN,
     SIGNAL_CONFIG_ENTITY,
 )
 from .entity import AndroidTVEntity, adb_decorator
@@ -70,20 +67,16 @@ ANDROIDTV_STATES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AndroidTVConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Android Debug Bridge entity."""
-    entry_data = hass.data[DOMAIN][entry.entry_id]
-    aftv: AndroidTVAsync | FireTVAsync = entry_data[ANDROID_DEV]
-
-    device_class = aftv.DEVICE_CLASS
-    device_args = [aftv, entry, entry_data]
+    device_class = entry.runtime_data.aftv.DEVICE_CLASS
     async_add_entities(
         [
-            AndroidTVDevice(*device_args)
+            AndroidTVDevice(entry)
             if device_class == DEVICE_ANDROIDTV
-            else FireTVDevice(*device_args)
+            else FireTVDevice(entry)
         ]
     )
 
@@ -120,14 +113,9 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
     _attr_device_class = MediaPlayerDeviceClass.TV
     _attr_name = None
 
-    def __init__(
-        self,
-        aftv: AndroidTVAsync | FireTVAsync,
-        entry: ConfigEntry,
-        entry_data: dict[str, Any],
-    ) -> None:
+    def __init__(self, entry: AndroidTVConfigEntry) -> None:
         """Initialize the Android / Fire TV device."""
-        super().__init__(aftv, entry, entry_data)
+        super().__init__(entry)
         self._entry_id = entry.entry_id
 
         self._media_image: tuple[bytes | None, str | None] = None, None
@@ -153,7 +141,7 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
     def _process_config(self) -> None:
         """Load the config options."""
         _LOGGER.debug("Loading configuration options")
-        options = self._entry_data[ANDROID_DEV_OPT]
+        options = self._entry_runtime_data.dev_opt
 
         apps = options.get(CONF_APPS, {})
         self._app_id_to_name = APPS.copy()

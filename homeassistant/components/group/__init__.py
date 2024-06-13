@@ -277,11 +277,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 await group.async_update_tracked_entity_ids(entity_ids)
 
             if ATTR_NAME in service.data:
-                group.name = service.data[ATTR_NAME]
+                group.set_name(service.data[ATTR_NAME])
                 need_update = True
 
             if ATTR_ICON in service.data:
-                group.icon = service.data[ATTR_ICON]
+                group.set_icon(service.data[ATTR_ICON])
                 need_update = True
 
             if ATTR_ALL in service.data:

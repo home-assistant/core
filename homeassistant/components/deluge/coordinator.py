@@ -63,5 +63,5 @@ class DelugeDataUpdateCoordinator(
                     "Credentials for Deluge client are not valid"
                 ) from ex
             LOGGER.error("Unknown error connecting to Deluge: %s", ex)
-            raise ex
+            raise
         return data

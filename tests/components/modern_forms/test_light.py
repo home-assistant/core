@@ -119,7 +119,9 @@ async def test_light_error(
 
     aioclient_mock.post("http://192.168.1.123:80/mf", text="", status=400)
 
-    with patch("homeassistant.components.modern_forms.ModernFormsDevice.update"):
+    with patch(
+        "homeassistant.components.modern_forms.coordinator.ModernFormsDevice.update"
+    ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
@@ -138,9 +140,14 @@ async def test_light_connection_error(
     """Test error handling of the Moder Forms lights."""
     await init_integration(hass, aioclient_mock)
 
-    with patch("homeassistant.components.modern_forms.ModernFormsDevice.update"), patch(
-        "homeassistant.components.modern_forms.ModernFormsDevice.light",
-        side_effect=ModernFormsConnectionError,
+    with (
+        patch(
+            "homeassistant.components.modern_forms.coordinator.ModernFormsDevice.update"
+        ),
+        patch(
+            "homeassistant.components.modern_forms.coordinator.ModernFormsDevice.light",
+            side_effect=ModernFormsConnectionError,
+        ),
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,

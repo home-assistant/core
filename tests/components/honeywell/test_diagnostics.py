@@ -29,7 +29,7 @@ async def test_entry_diagnostics(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
-    assert hass.states.async_entity_ids_count() == 6
+    assert hass.states.async_entity_ids_count() == 8
 
     result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 

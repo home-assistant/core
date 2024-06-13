@@ -96,9 +96,7 @@ def get_model_detection_function(model):
 
         image, shapes = model.preprocess(image)
         prediction_dict = model.predict(image, shapes)
-        detections = model.postprocess(prediction_dict, shapes)
-
-        return detections
+        return model.postprocess(prediction_dict, shapes)
 
     return detect_fn
 
@@ -378,7 +376,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
 
         matches = {}
         total_matches = 0
-        for box, score, obj_class in zip(boxes, scores, classes):
+        for box, score, obj_class in zip(boxes, scores, classes, strict=False):
             score = score * 100
             boxes = box.tolist()
 

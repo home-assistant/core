@@ -25,11 +25,14 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import Event, State, callback
-from homeassistant.helpers.event import (
+from homeassistant.core import (
+    Event,
     EventStateChangedData,
-    async_track_state_change_event,
+    HassJobType,
+    State,
+    callback,
 )
+from homeassistant.helpers.event import async_track_state_change_event
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -187,6 +190,7 @@ class HumidifierDehumidifier(HomeAccessory):
                     self.hass,
                     [self.linked_humidity_sensor],
                     self.async_update_current_humidity_event,
+                    job_type=HassJobType.Callback,
                 )
             )
 

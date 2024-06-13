@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator, Iterable
+from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta
 from functools import partial
 import logging
 from typing import Any, cast
 
-from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data import (
+from typing_extensions import Generator
+from uiprotect import ProtectApiClient
+from uiprotect.data import (
     NVR,
     Bootstrap,
     Camera,
@@ -20,13 +21,16 @@ from pyunifiprotect.data import (
     ProtectAdoptableDeviceModel,
     WSSubscriptionMessage,
 )
-from pyunifiprotect.exceptions import ClientError, NotAuthorized
-from pyunifiprotect.utils import log_event
+from uiprotect.exceptions import ClientError, NotAuthorized
+from uiprotect.utils import log_event
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
@@ -43,17 +47,16 @@ from .const import (
 from .utils import async_dispatch_id as _ufpd, async_get_devices_by_type
 
 _LOGGER = logging.getLogger(__name__)
-ProtectDeviceType = ProtectAdoptableDeviceModel | NVR
+type ProtectDeviceType = ProtectAdoptableDeviceModel | NVR
+type UFPConfigEntry = ConfigEntry[ProtectData]
 
 
 @callback
-def async_last_update_was_successful(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+def async_last_update_was_successful(
+    hass: HomeAssistant, entry: UFPConfigEntry
+) -> bool:
     """Check if the last update was successful for a config entry."""
-    return bool(
-        DOMAIN in hass.data
-        and entry.entry_id in hass.data[DOMAIN]
-        and hass.data[DOMAIN][entry.entry_id].last_update_success
-    )
+    return hasattr(entry, "runtime_data") and entry.runtime_data.last_update_success
 
 
 class ProtectData:
@@ -64,7 +67,7 @@ class ProtectData:
         hass: HomeAssistant,
         protect: ProtectApiClient,
         update_interval: timedelta,
-        entry: ConfigEntry,
+        entry: UFPConfigEntry,
     ) -> None:
         """Initialize an subscriber."""
         super().__init__()
@@ -81,6 +84,7 @@ class ProtectData:
 
         self.last_update_success = False
         self.api = protect
+        self._adopt_signal = _ufpd(self._entry, DISPATCH_ADOPT)
 
     @property
     def disable_stream(self) -> bool:
@@ -92,9 +96,18 @@ class ProtectData:
         """Max number of events to load at once."""
         return self._entry.options.get(CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA)
 
+    @callback
+    def async_subscribe_adopt(
+        self, add_callback: Callable[[ProtectAdoptableDeviceModel], None]
+    ) -> None:
+        """Add an callback for on device adopt."""
+        self._entry.async_on_unload(
+            async_dispatcher_connect(self._hass, self._adopt_signal, add_callback)
+        )
+
     def get_by_types(
         self, device_types: Iterable[ModelType], ignore_unadopted: bool = True
-    ) -> Generator[ProtectAdoptableDeviceModel, None, None]:
+    ) -> Generator[ProtectAdoptableDeviceModel]:
         """Get all devices matching types."""
         for device_type in device_types:
             devices = async_get_devices_by_type(
@@ -104,6 +117,12 @@ class ProtectData:
                 if ignore_unadopted and not device.is_adopted_by_us:
                     continue
                 yield device
+
+    def get_cameras(self, ignore_unadopted: bool = True) -> Generator[Camera]:
+        """Get all cameras."""
+        return cast(
+            Generator[Camera], self.get_by_types({ModelType.CAMERA}, ignore_unadopted)
+        )
 
     async def async_setup(self) -> None:
         """Subscribe and do the refresh."""
@@ -206,8 +225,7 @@ class ProtectData:
                 "Doorbell messages updated. Updating devices with LCD screens"
             )
             self.api.bootstrap.nvr.update_all_messages()
-            for camera in self.get_by_types({ModelType.CAMERA}):
-                camera = cast(Camera, camera)
+            for camera in self.get_cameras():
                 if camera.feature_flags.has_lcd_screen:
                     self._async_signal_device_update(camera)
 
@@ -226,7 +244,7 @@ class ProtectData:
                 self._async_update_device(obj, message.changed_data)
 
         # trigger updates for camera that the event references
-        elif isinstance(obj, Event):  # type: ignore[unreachable]
+        elif isinstance(obj, Event):
             if _LOGGER.isEnabledFor(logging.DEBUG):
                 log_event(obj)
             if obj.type is EventType.DEVICE_ADOPTED:
@@ -269,7 +287,12 @@ class ProtectData:
         this will be a no-op. If the websocket is disconnected,
         this will trigger a reconnect and refresh.
         """
-        self._hass.async_create_task(self.async_refresh(), eager_start=True)
+        self._entry.async_create_background_task(
+            self._hass,
+            self.async_refresh(),
+            name=f"{DOMAIN} {self._entry.title} refresh",
+            eager_start=True,
+        )
 
     @callback
     def async_subscribe_device_id(
@@ -310,9 +333,50 @@ def async_ufp_instance_for_config_entry_ids(
     hass: HomeAssistant, config_entry_ids: set[str]
 ) -> ProtectApiClient | None:
     """Find the UFP instance for the config entry ids."""
-    domain_data = hass.data[DOMAIN]
-    for config_entry_id in config_entry_ids:
-        if config_entry_id in domain_data:
-            protect_data: ProtectData = domain_data[config_entry_id]
-            return protect_data.api
+    return next(
+        iter(
+            entry.runtime_data.api
+            for entry_id in config_entry_ids
+            if (entry := hass.config_entries.async_get_entry(entry_id))
+        ),
+        None,
+    )
+
+
+@callback
+def async_get_ufp_entries(hass: HomeAssistant) -> list[UFPConfigEntry]:
+    """Get all the UFP entries."""
+    return cast(
+        list[UFPConfigEntry],
+        [
+            entry
+            for entry in hass.config_entries.async_entries(
+                DOMAIN, include_ignore=True, include_disabled=True
+            )
+            if hasattr(entry, "runtime_data")
+        ],
+    )
+
+
+@callback
+def async_get_data_for_nvr_id(hass: HomeAssistant, nvr_id: str) -> ProtectData | None:
+    """Find the ProtectData instance for the NVR id."""
+    return next(
+        iter(
+            entry.runtime_data
+            for entry in async_get_ufp_entries(hass)
+            if entry.runtime_data.api.bootstrap.nvr.id == nvr_id
+        ),
+        None,
+    )
+
+
+@callback
+def async_get_data_for_entry_id(
+    hass: HomeAssistant, entry_id: str
+) -> ProtectData | None:
+    """Find the ProtectData instance for a config entry id."""
+    if entry := hass.config_entries.async_get_entry(entry_id):
+        entry = cast(UFPConfigEntry, entry)
+        return entry.runtime_data
     return None

@@ -7,11 +7,16 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
-from zhaquirks.quirk_ids import TUYA_PLUG_MANUFACTURER, TUYA_PLUG_ONOFF
+from zhaquirks.danfoss import thermostat as danfoss_thermostat
+from zhaquirks.quirk_ids import (
+    DANFOSS_ALLY_THERMOSTAT,
+    TUYA_PLUG_MANUFACTURER,
+    TUYA_PLUG_ONOFF,
+)
 from zhaquirks.xiaomi.aqara.magnet_ac01 import OppleCluster as MagnetAC01OppleCluster
 from zhaquirks.xiaomi.aqara.switch_acn047 import OppleCluster as T2RelayOppleCluster
 from zigpy import types
-from zigpy.quirks.v2 import EntityMetadata, ZCLEnumMetadata
+from zigpy.quirks.v2 import ZCLEnumMetadata
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasWd
 
@@ -29,7 +34,8 @@ from .core.const import (
     CLUSTER_HANDLER_INOVELLI,
     CLUSTER_HANDLER_OCCUPANCY,
     CLUSTER_HANDLER_ON_OFF,
-    QUIRK_METADATA,
+    CLUSTER_HANDLER_THERMOSTAT,
+    ENTITY_METADATA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     Strobe,
@@ -179,7 +185,7 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
         Return entity if it is a supported configuration, otherwise return None
         """
         cluster_handler = cluster_handlers[0]
-        if QUIRK_METADATA not in kwargs and (
+        if ENTITY_METADATA not in kwargs and (
             cls._attribute_name in cluster_handler.cluster.unsupported_attributes
             or cls._attribute_name not in cluster_handler.cluster.attributes_by_name
             or cluster_handler.cluster.get(cls._attribute_name) is None
@@ -202,17 +208,16 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
     ) -> None:
         """Init this select entity."""
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
-        if QUIRK_METADATA in kwargs:
-            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
+        if ENTITY_METADATA in kwargs:
+            self._init_from_quirks_metadata(kwargs[ENTITY_METADATA])
         self._attr_options = [entry.name.replace("_", " ") for entry in self._enum]
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
-    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
+    def _init_from_quirks_metadata(self, entity_metadata: ZCLEnumMetadata) -> None:
         """Init this entity from the quirks metadata."""
         super()._init_from_quirks_metadata(entity_metadata)
-        zcl_enum_metadata: ZCLEnumMetadata = entity_metadata.entity_metadata
-        self._attribute_name = zcl_enum_metadata.attribute_name
-        self._enum = zcl_enum_metadata.enum
+        self._attribute_name = entity_metadata.attribute_name
+        self._enum = entity_metadata.enum
 
     @property
     def current_option(self) -> str | None:
@@ -689,3 +694,105 @@ class KeypadLockout(ZCLEnumSelectEntity):
     _attribute_name: str = "keypad_lockout"
     _enum = KeypadLockoutEnum
     _attr_translation_key: str = "keypad_lockout"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+class DanfossExerciseDayOfTheWeek(ZCLEnumSelectEntity):
+    """Danfoss proprietary attribute for setting the day of the week for exercising."""
+
+    _unique_id_suffix = "exercise_day_of_week"
+    _attribute_name = "exercise_day_of_week"
+    _attr_translation_key: str = "exercise_day_of_week"
+    _enum = danfoss_thermostat.DanfossExerciseDayOfTheWeekEnum
+    _attr_icon: str = "mdi:wrench-clock"
+
+
+class DanfossOrientationEnum(types.enum8):
+    """Vertical or Horizontal."""
+
+    Horizontal = 0x00
+    Vertical = 0x01
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+class DanfossOrientation(ZCLEnumSelectEntity):
+    """Danfoss proprietary attribute for setting the orientation of the valve.
+
+    Needed for biasing the internal temperature sensor.
+    This is implemented as an enum here, but is a boolean on the device.
+    """
+
+    _unique_id_suffix = "orientation"
+    _attribute_name = "orientation"
+    _attr_translation_key: str = "valve_orientation"
+    _enum = DanfossOrientationEnum
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+class DanfossAdaptationRunControl(ZCLEnumSelectEntity):
+    """Danfoss proprietary attribute for controlling the current adaptation run."""
+
+    _unique_id_suffix = "adaptation_run_control"
+    _attribute_name = "adaptation_run_control"
+    _attr_translation_key: str = "adaptation_run_command"
+    _enum = danfoss_thermostat.DanfossAdaptationRunControlEnum
+
+
+class DanfossControlAlgorithmScaleFactorEnum(types.enum8):
+    """The time scale factor for changing the opening of the valve.
+
+    Not all values are given, therefore there are some extrapolated values with a margin of error of about 5 minutes.
+    This is implemented as an enum here, but is a number on the device.
+    """
+
+    quick_5min = 0x01
+
+    quick_10min = 0x02  # extrapolated
+    quick_15min = 0x03  # extrapolated
+    quick_25min = 0x04  # extrapolated
+
+    moderate_30min = 0x05
+
+    moderate_40min = 0x06  # extrapolated
+    moderate_50min = 0x07  # extrapolated
+    moderate_60min = 0x08  # extrapolated
+    moderate_70min = 0x09  # extrapolated
+
+    slow_80min = 0x0A
+
+    quick_open_disabled = 0x11  # not sure what it does; also requires lower 4 bits to be in [1, 10] I assume
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+class DanfossControlAlgorithmScaleFactor(ZCLEnumSelectEntity):
+    """Danfoss proprietary attribute for setting the scale factor of the setpoint filter time constant."""
+
+    _unique_id_suffix = "control_algorithm_scale_factor"
+    _attribute_name = "control_algorithm_scale_factor"
+    _attr_translation_key: str = "setpoint_response_time"
+    _enum = DanfossControlAlgorithmScaleFactorEnum
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="thermostat_ui",
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+class DanfossViewingDirection(ZCLEnumSelectEntity):
+    """Danfoss proprietary attribute for setting the viewing direction of the screen."""
+
+    _unique_id_suffix = "viewing_direction"
+    _attribute_name = "viewing_direction"
+    _attr_translation_key: str = "viewing_direction"
+    _enum = danfoss_thermostat.DanfossViewingDirectionEnum

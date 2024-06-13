@@ -6,12 +6,19 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
-from zigpy.quirks.v2 import EntityMetadata, NumberMetadata
+from zhaquirks.quirk_ids import DANFOSS_ALLY_THERMOSTAT
+from zigpy.quirks.v2 import NumberMetadata
 from zigpy.zcl.clusters.hvac import Thermostat
 
-from homeassistant.components.number import NumberEntity, NumberMode
+from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, Platform, UnitOfMass, UnitOfTemperature
+from homeassistant.const import (
+    EntityCategory,
+    Platform,
+    UnitOfMass,
+    UnitOfTemperature,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -26,11 +33,11 @@ from .core.const import (
     CLUSTER_HANDLER_LEVEL,
     CLUSTER_HANDLER_OCCUPANCY,
     CLUSTER_HANDLER_THERMOSTAT,
-    QUIRK_METADATA,
+    ENTITY_METADATA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
-from .core.helpers import get_zha_data
+from .core.helpers import get_zha_data, validate_device_class, validate_unit
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
@@ -403,7 +410,7 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
         Return entity if it is a supported configuration, otherwise return None
         """
         cluster_handler = cluster_handlers[0]
-        if QUIRK_METADATA not in kwargs and (
+        if ENTITY_METADATA not in kwargs and (
             cls._attribute_name in cluster_handler.cluster.unsupported_attributes
             or cls._attribute_name not in cluster_handler.cluster.attributes_by_name
             or cluster_handler.cluster.get(cls._attribute_name) is None
@@ -426,26 +433,34 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
     ) -> None:
         """Init this number configuration entity."""
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
-        if QUIRK_METADATA in kwargs:
-            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
+        if ENTITY_METADATA in kwargs:
+            self._init_from_quirks_metadata(kwargs[ENTITY_METADATA])
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
-    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
+    def _init_from_quirks_metadata(self, entity_metadata: NumberMetadata) -> None:
         """Init this entity from the quirks metadata."""
         super()._init_from_quirks_metadata(entity_metadata)
-        number_metadata: NumberMetadata = entity_metadata.entity_metadata
-        self._attribute_name = number_metadata.attribute_name
+        self._attribute_name = entity_metadata.attribute_name
 
-        if number_metadata.min is not None:
-            self._attr_native_min_value = number_metadata.min
-        if number_metadata.max is not None:
-            self._attr_native_max_value = number_metadata.max
-        if number_metadata.step is not None:
-            self._attr_native_step = number_metadata.step
-        if number_metadata.unit is not None:
-            self._attr_native_unit_of_measurement = number_metadata.unit
-        if number_metadata.multiplier is not None:
-            self._attr_multiplier = number_metadata.multiplier
+        if entity_metadata.min is not None:
+            self._attr_native_min_value = entity_metadata.min
+        if entity_metadata.max is not None:
+            self._attr_native_max_value = entity_metadata.max
+        if entity_metadata.step is not None:
+            self._attr_native_step = entity_metadata.step
+        if entity_metadata.multiplier is not None:
+            self._attr_multiplier = entity_metadata.multiplier
+        if entity_metadata.device_class is not None:
+            self._attr_device_class = validate_device_class(
+                NumberDeviceClass,
+                entity_metadata.device_class,
+                Platform.NUMBER.value,
+                _LOGGER,
+            )
+        if entity_metadata.device_class is None and entity_metadata.unit is not None:
+            self._attr_native_unit_of_measurement = validate_unit(
+                entity_metadata.unit
+            ).value
 
     @property
     def native_value(self) -> float:
@@ -1065,3 +1080,74 @@ class MinHeatSetpointLimit(ZCLHeatSetpointLimitEntity):
     _attr_entity_category = EntityCategory.CONFIG
 
     _max_source = Thermostat.AttributeDefs.max_heat_setpoint_limit.name
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class DanfossExerciseTriggerTime(ZHANumberConfigurationEntity):
+    """Danfoss proprietary attribute to set the time to exercise the valve."""
+
+    _unique_id_suffix = "exercise_trigger_time"
+    _attribute_name: str = "exercise_trigger_time"
+    _attr_translation_key: str = "exercise_trigger_time"
+    _attr_native_min_value: int = 0
+    _attr_native_max_value: int = 1439
+    _attr_mode: NumberMode = NumberMode.BOX
+    _attr_native_unit_of_measurement: str = UnitOfTime.MINUTES
+    _attr_icon: str = "mdi:clock"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class DanfossExternalMeasuredRoomSensor(ZCLTemperatureEntity):
+    """Danfoss proprietary attribute to communicate the value of the external temperature sensor."""
+
+    _unique_id_suffix = "external_measured_room_sensor"
+    _attribute_name: str = "external_measured_room_sensor"
+    _attr_translation_key: str = "external_temperature_sensor"
+    _attr_native_min_value: float = -80
+    _attr_native_max_value: float = 35
+    _attr_icon: str = "mdi:thermometer"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class DanfossLoadRoomMean(ZHANumberConfigurationEntity):
+    """Danfoss proprietary attribute to set a value for the load."""
+
+    _unique_id_suffix = "load_room_mean"
+    _attribute_name: str = "load_room_mean"
+    _attr_translation_key: str = "load_room_mean"
+    _attr_native_min_value: int = -8000
+    _attr_native_max_value: int = 2000
+    _attr_mode: NumberMode = NumberMode.BOX
+    _attr_icon: str = "mdi:scale-balance"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class DanfossRegulationSetpointOffset(ZHANumberConfigurationEntity):
+    """Danfoss proprietary attribute to set the regulation setpoint offset."""
+
+    _unique_id_suffix = "regulation_setpoint_offset"
+    _attribute_name: str = "regulation_setpoint_offset"
+    _attr_translation_key: str = "regulation_setpoint_offset"
+    _attr_mode: NumberMode = NumberMode.BOX
+    _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS
+    _attr_icon: str = "mdi:thermostat"
+    _attr_native_min_value: float = -2.5
+    _attr_native_max_value: float = 2.5
+    _attr_native_step: float = 0.1
+    _attr_multiplier = 1 / 10

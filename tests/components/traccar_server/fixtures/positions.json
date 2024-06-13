@@ -18,7 +18,8 @@
     "network": {},
     "geofenceIds": [0],
     "attributes": {
-      "custom_attr_1": "custom_attr_1_value"
+      "custom_attr_1": "custom_attr_1_value",
+      "batteryLevel": 15.00000867601
     }
   }
 ]

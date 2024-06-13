@@ -1,4 +1,5 @@
 """Tests for the Lutron Homeworks Series 4 and 8 binary sensor."""
+
 from unittest.mock import ANY, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
