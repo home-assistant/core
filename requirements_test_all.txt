@@ -981,7 +981,7 @@ justnimbus==0.7.3
 kegtron-ble==0.4.0
 
 # homeassistant.components.knocki
-knocki==0.1.3
+knocki==0.1.4
 
 # homeassistant.components.knx
 knx-frontend==2024.1.20.105944
