@@ -54,7 +54,7 @@ SCAN_INTERVAL = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 EARLY_ACCESS_URL = (
-    "https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access"
+    "https://www.home-assistant.io/integrations/unifiprotect#software-support"
 )
 
 
