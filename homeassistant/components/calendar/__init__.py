@@ -46,6 +46,7 @@ from homeassistant.util.json import JsonValueType
 
 from .const import (
     CONF_EVENT,
+    EVENT_ATTENDEES,
     EVENT_DESCRIPTION,
     EVENT_DURATION,
     EVENT_END,
@@ -204,6 +205,7 @@ CREATE_EVENT_SCHEMA = vol.All(
             vol.Required(EVENT_SUMMARY): cv.string,
             vol.Optional(EVENT_DESCRIPTION, default=""): cv.string,
             vol.Optional(EVENT_LOCATION): cv.string,
+            vol.Optional(EVENT_ATTENDEES): cv.string,
             vol.Inclusive(
                 EVENT_START_DATE, "dates", "Start and end dates must both be specified"
             ): cv.date,
@@ -242,6 +244,7 @@ WEBSOCKET_EVENT_SCHEMA = vol.Schema(
             vol.Required(EVENT_SUMMARY): cv.string,
             vol.Optional(EVENT_DESCRIPTION): cv.string,
             vol.Optional(EVENT_LOCATION): cv.string,
+            vol.Optional(EVENT_ATTENDEES): cv.string,
             vol.Optional(EVENT_RRULE): _validate_rrule,
         },
         _has_same_type(EVENT_START, EVENT_END),
@@ -359,6 +362,7 @@ class CalendarEvent:
     summary: str
     description: str | None = None
     location: str | None = None
+    attendees: str | None = None
 
     uid: str | None = None
     recurrence_id: str | None = None
@@ -399,7 +403,7 @@ class CalendarEvent:
                 f"Failed to validate CalendarEvent: {err}"
             ) from err
 
-        # It is common to set a start an end date to be the same thing for
+        # It is common to set a start and end date to be the same thing for
         # an all day event, but that is not a valid duration. Fix to have a
         # duration of one day.
         if (
@@ -518,6 +522,7 @@ class CalendarEntity(Entity):
             "start_time": event.start_datetime_local.strftime(DATE_STR_FORMAT),
             "end_time": event.end_datetime_local.strftime(DATE_STR_FORMAT),
             "location": event.location if event.location else "",
+            "attendees": event.attendees if event.attendees else "",
             "description": event.description if event.description else "",
         }
 

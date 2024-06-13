@@ -109,6 +109,8 @@ class LocalCalendarEntity(CalendarEntity):
         """Add a new event to calendar."""
         event = _parse_event(kwargs)
         EventStore(self._calendar).add(event)
+        ### Remove before commit
+        _LOGGER.debug("event: %s", event)
         await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
 
@@ -208,4 +210,5 @@ def _get_calendar_event(event: Event) -> CalendarEvent:
         rrule=event.rrule.as_rrule_str() if event.rrule else None,
         recurrence_id=event.recurrence_id,
         location=event.location,
+        attendees=event.attendees,
     )
