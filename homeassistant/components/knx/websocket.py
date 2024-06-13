@@ -131,7 +131,7 @@ async def ws_project_file_process(
     except (ValueError, XknxProjectException) as err:
         # ValueError could raise from file_upload integration
         connection.send_error(
-            msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)
+            msg["id"], websocket_api.ERR_HOME_ASSISTANT_ERROR, str(err)
         )
         return
 

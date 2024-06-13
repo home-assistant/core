@@ -19,11 +19,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from . import AzureDevOpsEntity
-from .const import CONF_ORG, DOMAIN
+from .const import DOMAIN
+from .coordinator import AzureDevOpsDataUpdateCoordinator
+from .entity import AzureDevOpsEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -132,15 +132,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Azure DevOps sensor based on a config entry."""
-    coordinator, project = hass.data[DOMAIN][entry.entry_id]
-    initial_builds: list[DevOpsBuild] = coordinator.data
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    initial_builds: list[DevOpsBuild] = coordinator.data.builds
 
     async_add_entities(
         AzureDevOpsBuildSensor(
             coordinator,
             description,
-            entry.data[CONF_ORG],
-            project.name,
             key,
         )
         for description in BASE_BUILD_SENSOR_DESCRIPTIONS
@@ -156,17 +154,15 @@ class AzureDevOpsBuildSensor(AzureDevOpsEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[list[DevOpsBuild]],
+        coordinator: AzureDevOpsDataUpdateCoordinator,
         description: AzureDevOpsBuildSensorEntityDescription,
-        organization: str,
-        project_name: str,
         item_key: int,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator, organization, project_name)
+        super().__init__(coordinator)
         self.entity_description = description
         self.item_key = item_key
-        self._attr_unique_id = f"{organization}_{self.build.project.project_id}_{self.build.definition.build_id}_{description.key}"
+        self._attr_unique_id = f"{self.coordinator.data.organization}_{self.build.project.project_id}_{self.build.definition.build_id}_{description.key}"
         self._attr_translation_placeholders = {
             "definition_name": self.build.definition.name
         }
@@ -174,7 +170,7 @@ class AzureDevOpsBuildSensor(AzureDevOpsEntity, SensorEntity):
     @property
     def build(self) -> DevOpsBuild:
         """Return the build."""
-        return self.coordinator.data[self.item_key]
+        return self.coordinator.data.builds[self.item_key]
 
     @property
     def native_value(self) -> datetime | StateType:

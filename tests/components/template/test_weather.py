@@ -68,7 +68,7 @@ ATTR_FORECAST = "forecast"
 )
 async def test_template_state_text(hass: HomeAssistant, start_ha) -> None:
     """Test the state text of a template."""
-    for attr, v_attr, value in [
+    for attr, v_attr, value in (
         (
             "sensor.attribution",
             ATTR_ATTRIBUTION,
@@ -85,7 +85,7 @@ async def test_template_state_text(hass: HomeAssistant, start_ha) -> None:
         ("sensor.cloud_coverage", ATTR_WEATHER_CLOUD_COVERAGE, 75),
         ("sensor.dew_point", ATTR_WEATHER_DEW_POINT, 2.2),
         ("sensor.apparent_temperature", ATTR_WEATHER_APPARENT_TEMPERATURE, 25),
-    ]:
+    ):
         hass.states.async_set(attr, value)
         await hass.async_block_till_done()
         state = hass.states.get("weather.test")
@@ -125,10 +125,10 @@ async def test_forecasts(
     hass: HomeAssistant, start_ha, snapshot: SnapshotAssertion, service: str
 ) -> None:
     """Test forecast service."""
-    for attr, _v_attr, value in [
+    for attr, _v_attr, value in (
         ("sensor.temperature", ATTR_WEATHER_TEMPERATURE, 22.3),
         ("sensor.humidity", ATTR_WEATHER_HUMIDITY, 60),
-    ]:
+    ):
         hass.states.async_set(attr, value)
         await hass.async_block_till_done()
 
@@ -254,10 +254,10 @@ async def test_forecast_invalid(
     expected: dict[str, Any],
 ) -> None:
     """Test invalid forecasts."""
-    for attr, _v_attr, value in [
+    for attr, _v_attr, value in (
         ("sensor.temperature", ATTR_WEATHER_TEMPERATURE, 22.3),
         ("sensor.humidity", ATTR_WEATHER_HUMIDITY, 60),
-    ]:
+    ):
         hass.states.async_set(attr, value)
         await hass.async_block_till_done()
 
@@ -337,10 +337,10 @@ async def test_forecast_invalid_is_daytime_missing_in_twice_daily(
     expected: dict[str, Any],
 ) -> None:
     """Test forecast service invalid when is_daytime missing in twice_daily forecast."""
-    for attr, _v_attr, value in [
+    for attr, _v_attr, value in (
         ("sensor.temperature", ATTR_WEATHER_TEMPERATURE, 22.3),
         ("sensor.humidity", ATTR_WEATHER_HUMIDITY, 60),
-    ]:
+    ):
         hass.states.async_set(attr, value)
         await hass.async_block_till_done()
 
@@ -406,10 +406,10 @@ async def test_forecast_invalid_datetime_missing(
     expected: dict[str, Any],
 ) -> None:
     """Test forecast service invalid when datetime missing."""
-    for attr, _v_attr, value in [
+    for attr, _v_attr, value in (
         ("sensor.temperature", ATTR_WEATHER_TEMPERATURE, 22.3),
         ("sensor.humidity", ATTR_WEATHER_HUMIDITY, 60),
-    ]:
+    ):
         hass.states.async_set(attr, value)
         await hass.async_block_till_done()
 
@@ -472,10 +472,10 @@ async def test_forecast_format_error(
     hass: HomeAssistant, start_ha, caplog: pytest.LogCaptureFixture, service: str
 ) -> None:
     """Test forecast service invalid on incorrect format."""
-    for attr, _v_attr, value in [
+    for attr, _v_attr, value in (
         ("sensor.temperature", ATTR_WEATHER_TEMPERATURE, 22.3),
         ("sensor.humidity", ATTR_WEATHER_HUMIDITY, 60),
-    ]:
+    ):
         hass.states.async_set(attr, value)
         await hass.async_block_till_done()
 

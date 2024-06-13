@@ -102,6 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 manufacturer="Tesla",
                 configuration_url="https://teslemetry.com/console",
                 name=product.get("site_name", "Energy Site"),
+                serial_number=str(site_id),
             )
 
             energysites.append(

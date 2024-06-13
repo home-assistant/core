@@ -642,7 +642,7 @@ async def google_assistant_get(
     if not state:
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_FOUND,
+            websocket_api.ERR_NOT_FOUND,
             f"{entity_id} unknown",
         )
         return
@@ -651,7 +651,7 @@ async def google_assistant_get(
     if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES or not entity.is_supported():
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_SUPPORTED,
+            websocket_api.ERR_NOT_SUPPORTED,
             f"{entity_id} not supported by Google assistant",
         )
         return
@@ -755,7 +755,7 @@ async def alexa_get(
     ):
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_SUPPORTED,
+            websocket_api.ERR_NOT_SUPPORTED,
             f"{entity_id} not supported by Alexa",
         )
         return

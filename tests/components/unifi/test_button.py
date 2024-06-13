@@ -123,7 +123,7 @@ async def _test_button_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
-    websocket_mock,
+    mock_websocket_state,
     config_entry: ConfigEntry,
     entity_count: int,
     entity_id: str,
@@ -164,11 +164,11 @@ async def _test_button_entity(
     # Availability signalling
 
     # Controller disconnects
-    await websocket_mock.disconnect()
+    await mock_websocket_state.disconnect()
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # Controller reconnects
-    await websocket_mock.reconnect()
+    await mock_websocket_state.reconnect()
     assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
 
@@ -218,8 +218,8 @@ async def test_device_button_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
-    config_entry_setup,
-    websocket_mock,
+    config_entry_setup: ConfigEntry,
+    mock_websocket_state,
     entity_count: int,
     entity_id: str,
     unique_id: str,
@@ -233,7 +233,7 @@ async def test_device_button_entities(
         hass,
         entity_registry,
         aioclient_mock,
-        websocket_mock,
+        mock_websocket_state,
         config_entry_setup,
         entity_count,
         entity_id,
@@ -279,8 +279,8 @@ async def test_wlan_button_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
-    config_entry_setup,
-    websocket_mock,
+    config_entry_setup: ConfigEntry,
+    mock_websocket_state,
     entity_count: int,
     entity_id: str,
     unique_id: str,
@@ -308,7 +308,7 @@ async def test_wlan_button_entities(
         hass,
         entity_registry,
         aioclient_mock,
-        websocket_mock,
+        mock_websocket_state,
         config_entry_setup,
         entity_count,
         entity_id,

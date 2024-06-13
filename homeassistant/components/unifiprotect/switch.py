@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 import logging
 from typing import Any
 
-from pyunifiprotect.data import (
+from uiprotect.data import (
     NVR,
     Camera,
+    ModelType,
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
     RecordingMode,
@@ -16,18 +18,14 @@ from pyunifiprotect.data import (
 )
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DISPATCH_ADOPT, DOMAIN
-from .data import ProtectData
+from .data import ProtectData, UFPConfigEntry
 from .entity import ProtectDeviceEntity, ProtectNVREntity, async_all_device_entities
-from .models import PermRequired, ProtectSetableKeysMixin, T
-from .utils import async_dispatch_id as _ufpd
+from .models import PermRequired, ProtectRequiredKeysMixin, ProtectSetableKeysMixin, T
 
 _LOGGER = logging.getLogger(__name__)
 ATTR_PREV_MIC = "prev_mic_level"
@@ -177,6 +175,17 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_value="is_vehicle_detection_on",
         ufp_enabled="is_recording_enabled",
         ufp_set_method="set_vehicle_detection",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectSwitchEntityDescription(
+        key="smart_animal",
+        name="Detections: Animal",
+        icon="mdi:paw",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="can_detect_animal",
+        ufp_value="is_animal_detection_on",
+        ufp_enabled="is_recording_enabled",
+        ufp_set_method="set_animal_detection",
         ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
@@ -445,52 +454,53 @@ NVR_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
     ),
 )
 
+_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] = {
+    ModelType.CAMERA: CAMERA_SWITCHES,
+    ModelType.LIGHT: LIGHT_SWITCHES,
+    ModelType.SENSOR: SENSE_SWITCHES,
+    ModelType.DOORLOCK: DOORLOCK_SWITCHES,
+    ModelType.VIEWPORT: VIEWER_SWITCHES,
+}
+
+_PRIVACY_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] = {
+    ModelType.CAMERA: [PRIVACY_MODE_SWITCH]
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: UFPConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for UniFi Protect integration."""
-    data: ProtectData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         entities = async_all_device_entities(
             data,
             ProtectSwitch,
-            camera_descs=CAMERA_SWITCHES,
-            light_descs=LIGHT_SWITCHES,
-            sense_descs=SENSE_SWITCHES,
-            lock_descs=DOORLOCK_SWITCHES,
-            viewer_descs=VIEWER_SWITCHES,
+            model_descriptions=_MODEL_DESCRIPTIONS,
             ufp_device=device,
         )
         entities += async_all_device_entities(
             data,
             ProtectPrivacyModeSwitch,
-            camera_descs=[PRIVACY_MODE_SWITCH],
+            model_descriptions=_PRIVACY_MODEL_DESCRIPTIONS,
             ufp_device=device,
         )
         async_add_entities(entities)
 
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
-    )
-
-    entities: list[ProtectDeviceEntity] = async_all_device_entities(
+    data.async_subscribe_adopt(_add_new_device)
+    entities = async_all_device_entities(
         data,
         ProtectSwitch,
-        camera_descs=CAMERA_SWITCHES,
-        light_descs=LIGHT_SWITCHES,
-        sense_descs=SENSE_SWITCHES,
-        lock_descs=DOORLOCK_SWITCHES,
-        viewer_descs=VIEWER_SWITCHES,
+        model_descriptions=_MODEL_DESCRIPTIONS,
     )
     entities += async_all_device_entities(
         data,
         ProtectPrivacyModeSwitch,
-        camera_descs=[PRIVACY_MODE_SWITCH],
+        model_descriptions=_PRIVACY_MODEL_DESCRIPTIONS,
     )
 
     if (
