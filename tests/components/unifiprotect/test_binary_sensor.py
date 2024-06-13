@@ -290,19 +290,21 @@ async def test_binary_sensor_update_motion(
         smart_detect_types=[],
         smart_detect_event_ids=[],
         camera_id=doorbell.id,
+        api=ufp.api,
     )
 
     new_camera = doorbell.copy()
     new_camera.is_motion_detected = True
     new_camera.last_motion_event_id = event.id
 
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = new_camera
-
     ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
     ufp.api.bootstrap.events = {event.id: event}
+
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = event
     ufp.ws_msg(mock_msg)
+
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
