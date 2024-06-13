@@ -11,14 +11,14 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVA
 from homeassistant.core import HomeAssistant
 from homeassistant.util import utcnow
 
+from .conftest import FakeHarmonyClient
 from .const import ENTITY_REMOTE, ENTITY_SELECT
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_connection_state_changes(
-    harmony_client,
-    mock_hc,
+    harmony_client: FakeHarmonyClient,
     hass: HomeAssistant,
     mock_write_config,
     mock_config_entry: MockConfigEntry,
@@ -50,7 +50,10 @@ async def test_connection_state_changes(
 
 
 async def test_options(
-    mock_hc, hass: HomeAssistant, mock_write_config, mock_config_entry: MockConfigEntry
+    harmony_client: FakeHarmonyClient,
+    hass: HomeAssistant,
+    mock_write_config,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Ensure calls to the switch modify the harmony state."""
 
@@ -69,7 +72,10 @@ async def test_options(
 
 
 async def test_select_option(
-    mock_hc, hass: HomeAssistant, mock_write_config, mock_config_entry: MockConfigEntry
+    harmony_client: FakeHarmonyClient,
+    hass: HomeAssistant,
+    mock_write_config,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Ensure calls to the switch modify the harmony state."""
     mock_config_entry.add_to_hass(hass)
