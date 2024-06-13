@@ -376,7 +376,9 @@ def async_get_data_for_entry_id(
     hass: HomeAssistant, entry_id: str
 ) -> ProtectData | None:
     """Find the ProtectData instance for a config entry id."""
-    if entry := hass.config_entries.async_get_entry(entry_id):
+    if (entry := hass.config_entries.async_get_entry(entry_id)) and hasattr(
+        entry, "runtime_data"
+    ):
         entry = cast(UFPConfigEntry, entry)
         return entry.runtime_data
     return None
