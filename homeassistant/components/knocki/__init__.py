@@ -28,7 +28,9 @@ class KnockiData:
 async def async_setup_entry(hass: HomeAssistant, entry: KnockiConfigEntry) -> bool:
     """Set up Knocki from a config entry."""
     client = KnockiClient(
-        session=async_get_clientsession(hass), token=entry.data[CONF_TOKEN]
+        session=async_get_clientsession(hass),
+        token=entry.data[CONF_TOKEN],
+        staging=True,
     )
 
     try:

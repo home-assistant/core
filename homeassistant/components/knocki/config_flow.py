@@ -31,14 +31,16 @@ class KnockiConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             session = async_get_clientsession(self.hass)
-            client = KnockiClient(session=session)
+            client = KnockiClient(session=session, staging=True)
             try:
                 token_response = await client.login(
                     user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                 )
             except KnockiConnectionError:
-                LOGGER.exception("Error connecting to the Knocki API")
                 errors["base"] = "cannot_connect"
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Error logging into the Knocki API")
+                errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(token_response.user_id)
                 self._abort_if_unique_id_configured()
