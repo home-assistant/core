@@ -40,7 +40,7 @@ HOST_UPDATE_ENTITIES = (
     ReolinkHostUpdateEntityDescription(
         key="firmware",
         supported=lambda api: api.supported(None, "firmware"),
-        device_class=UpdateDeviceClass.FIRMWARE
+        device_class=UpdateDeviceClass.FIRMWARE,
     ),
 )
 
