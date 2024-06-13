@@ -1813,8 +1813,8 @@ class ConfigEntries:
         if entry.state is not ConfigEntryState.NOT_LOADED:
             raise OperationNotAllowed(
                 f"The config entry '{entry.title}' ({entry.domain}) with entry_id"
-                f" {entry.entry_id} cannot be set up because it is in state "
-                f"{entry.state}, but needs to be in state {ConfigEntryState.NOT_LOADED}"
+                f" '{entry.entry_id}' cannot be set up because it is in state "
+                f"{entry.state}, but needs to be in the {ConfigEntryState.NOT_LOADED} state"
             )
 
         # Setup Component if not set up yet
@@ -1845,7 +1845,7 @@ class ConfigEntries:
         if not entry.state.recoverable:
             raise OperationNotAllowed(
                 f"The config entry '{entry.title}' ({entry.domain}) with entry_id"
-                f" {entry.entry_id} cannot be unloaded because it is in the non"
+                f" '{entry.entry_id}' cannot be unloaded because it is in the non"
                 f" recoverable state {entry.state}"
             )
 
@@ -2050,9 +2050,9 @@ class ConfigEntries:
                 if entry.state is not ConfigEntryState.LOADED:
                     raise OperationNotAllowed(
                         f"The config entry '{entry.title}' ({entry.domain}) with "
-                        f"entry_id {entry.entry_id} cannot forward setup for "
+                        f"entry_id '{entry.entry_id}' cannot forward setup for "
                         f"{platforms} because it is in state {entry.state}, but needs "
-                        f"to be in state {ConfigEntryState.LOADED}"
+                        f"to be in the {ConfigEntryState.LOADED} state"
                     )
                 await self._async_forward_entry_setups_locked(entry, platforms)
         else:
@@ -2110,9 +2110,9 @@ class ConfigEntries:
                 if entry.state is not ConfigEntryState.LOADED:
                     raise OperationNotAllowed(
                         f"The config entry '{entry.title}' ({entry.domain}) with "
-                        f"entry_id {entry.entry_id} cannot forward setup for "
+                        f"entry_id '{entry.entry_id}' cannot forward setup for "
                         f"{domain} because it is in state {entry.state}, but needs "
-                        f"to be in state {ConfigEntryState.LOADED}"
+                        f"to be in the {ConfigEntryState.LOADED} state"
                     )
                 return await self._async_forward_entry_setup(entry, domain, True)
         result = await self._async_forward_entry_setup(entry, domain, True)
