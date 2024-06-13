@@ -520,10 +520,10 @@ def network_backup() -> zigpy.backups.NetworkBackup:
 
 
 @pytest.fixture
-def core_rs(hass_storage: dict[str, Any]):
+def core_rs(hass_storage: dict[str, Any]) -> Callable[[str, Any, dict[str, Any]], None]:
     """Core.restore_state fixture."""
 
-    def _storage(entity_id, state, attributes={}):
+    def _storage(entity_id: str, state: str, attributes: dict[str, Any]) -> None:
         now = dt_util.utcnow().isoformat()
 
         hass_storage[restore_state.STORAGE_KEY] = {
