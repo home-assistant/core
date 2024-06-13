@@ -19,7 +19,7 @@ async def test_camera(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the camera entity."""
-    entity_camera = "camera.amazon_fire_camera"
+    entity_camera = "camera.amazon_fire"
     entity = hass.states.get(entity_camera)
     assert entity
     assert entity.state == "idle"
