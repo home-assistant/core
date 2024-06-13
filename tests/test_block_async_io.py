@@ -18,8 +18,8 @@ from .common import extract_stack_to_frame
 
 
 @pytest.fixture(autouse=True)
-def unpatch_block_async_io(disable_block_async_io):
-    """Unpatch block_async_io after each test."""
+def disable_block_async_io(disable_block_async_io):
+    """Disable the loop protection from block_async_io after each test."""
 
 
 async def test_protect_loop_debugger_sleep(caplog: pytest.LogCaptureFixture) -> None:
