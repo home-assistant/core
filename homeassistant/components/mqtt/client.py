@@ -277,9 +277,22 @@ class Subscription:
 class MqttClientSetup:
     """Helper class to setup the paho mqtt client from config."""
 
-    def __init__(self, config: ConfigType) -> None:
-        """Initialize the MQTT client setup helper."""
+    _client: AsyncMQTTClient
 
+    def __init__(self, config: ConfigType) -> None:
+        """Initialize the MQTT client setup helper.
+
+        self.setup must be run in an executor job.
+        """
+
+        self._config = config
+
+    def setup(self) -> None:
+        """Set up the MQTT client.
+
+        The setup of the MQTT client should be run in an executor job,
+        because it accesses files, so it does IO.
+        """
         # We don't import on the top because some integrations
         # should be able to optionally rely on MQTT.
         import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
@@ -287,8 +300,7 @@ class MqttClientSetup:
         # pylint: disable-next=import-outside-toplevel
         from .async_client import AsyncMQTTClient
 
-        self._config = config
-
+        config = self._config
         if (protocol := config.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)) == PROTOCOL_31:
             proto = mqtt.MQTTv31
         elif protocol == PROTOCOL_5:
@@ -300,25 +312,18 @@ class MqttClientSetup:
             # PAHO MQTT relies on the MQTT server to generate random client IDs.
             # However, that feature is not mandatory so we generate our own.
             client_id = mqtt.base62(uuid.uuid4().int, padding=22)
-        self._transport: str = config.get(CONF_TRANSPORT, DEFAULT_TRANSPORT)
+        transport: str = config.get(CONF_TRANSPORT, DEFAULT_TRANSPORT)
         self._client = AsyncMQTTClient(
             client_id,
             protocol=proto,
-            transport=self._transport,
+            transport=transport,
             reconnect_on_failure=False,
         )
-        self._client.async_setup()
+        self._client.setup()
 
-    def setup(self) -> None:
-        """Set up the MQTT client.
-
-        The setup of the MQTT client should be run in an executor job,
-        because it accesses files, so it does IO.
-        """
         # Enable logging
         self._client.enable_logger()
 
-        config = self._config
         username: str | None = config.get(CONF_USERNAME)
         password: str | None = config.get(CONF_PASSWORD)
         if username is not None:
@@ -332,7 +337,7 @@ class MqttClientSetup:
         client_key = get_file_path(CONF_CLIENT_KEY, config.get(CONF_CLIENT_KEY))
         client_cert = get_file_path(CONF_CLIENT_CERT, config.get(CONF_CLIENT_CERT))
         tls_insecure = config.get(CONF_TLS_INSECURE)
-        if self._transport == TRANSPORT_WEBSOCKETS:
+        if transport == TRANSPORT_WEBSOCKETS:
             ws_path: str = config.get(CONF_WS_PATH, DEFAULT_WS_PATH)
             ws_headers: dict[str, str] = config.get(CONF_WS_HEADERS, DEFAULT_WS_HEADERS)
             self._client.ws_set_options(ws_path, ws_headers)
