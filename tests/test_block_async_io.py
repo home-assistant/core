@@ -212,8 +212,11 @@ async def test_protect_loop_importlib_import_module_in_integration(
 async def test_protect_loop_open(caplog: pytest.LogCaptureFixture) -> None:
     """Test open of a file in /proc is not reported."""
     block_async_io.enable()
-    with contextlib.suppress(FileNotFoundError):
-        open("/proc/does_not_exist", encoding="utf8").close()
+    with (
+        contextlib.suppress(FileNotFoundError),
+        open("/proc/does_not_exist", encoding="utf8"),
+    ):
+        pass
     assert "Detected blocking call to open with args" not in caplog.text
 
 
@@ -221,8 +224,11 @@ async def test_protect_open(caplog: pytest.LogCaptureFixture) -> None:
     """Test opening a file in the event loop logs."""
     with patch.object(block_async_io, "_IN_TESTS", False):
         block_async_io.enable()
-    with contextlib.suppress(FileNotFoundError):
-        open("/config/data_not_exist", encoding="utf8").close()
+    with (
+        contextlib.suppress(FileNotFoundError),
+        open("/config/data_not_exist", encoding="utf8"),
+    ):
+        pass
 
     assert "Detected blocking call to open with args" in caplog.text
 
@@ -250,8 +256,8 @@ async def test_protect_open_path(path: Any, caplog: pytest.LogCaptureFixture) ->
     """Test opening a file by path in the event loop logs."""
     with patch.object(block_async_io, "_IN_TESTS", False):
         block_async_io.enable()
-    with contextlib.suppress(FileNotFoundError):
-        open(path, encoding="utf8").close()
+    with contextlib.suppress(FileNotFoundError), open(path, encoding="utf8"):
+        pass
 
     assert "Detected blocking call to open with args" in caplog.text
 
@@ -331,7 +337,10 @@ async def test_open_calls_ignored_in_tests(caplog: pytest.LogCaptureFixture) -> 
     """Test opening a file in tests is ignored."""
     assert block_async_io._IN_TESTS
     block_async_io.enable()
-    with contextlib.suppress(FileNotFoundError):
-        open("/config/data_not_exist", encoding="utf8").close()
+    with (
+        contextlib.suppress(FileNotFoundError),
+        open("/config/data_not_exist", encoding="utf8"),
+    ):
+        pass
 
     assert "Detected blocking call to open with args" not in caplog.text
