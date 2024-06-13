@@ -129,10 +129,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
             learn_more_url=EARLY_ACCESS_URL,
             severity=IssueSeverity.WARNING,
             translation_key="ea_channel_warning",
-            translation_placeholders={
-                "version": str(nvr_info.version),
-                "ea_url": EARLY_ACCESS_URL,
-            },
+            translation_placeholders={"version": str(nvr_info.version)},
             data={"entry_id": entry.entry_id},
         )
 
