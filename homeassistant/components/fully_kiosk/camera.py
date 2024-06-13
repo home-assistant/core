@@ -41,14 +41,6 @@ CAMERAS: tuple[FullyCameraEntityDescription, ...] = (
         off_action=lambda fully: fully.disableMotionDetection(),
         is_on_fn=lambda data: data["settings"].get("motionDetection"),
     ),
-    FullyCameraEntityDescription(
-        key="screenshot",
-        translation_key="screenshot",
-        image_action=lambda fully: fully.getScreenshot(),
-        on_action=None,
-        off_action=None,
-        is_on_fn=lambda data: True,
-    ),
 )
 
 

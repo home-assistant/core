@@ -59,9 +59,6 @@
     "camera": {
       "camera": {
         "name": "Camera"
-      },
-      "screenshot": {
-        "name": "Screenshot"
       }
     },
     "number": {
