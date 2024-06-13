@@ -31,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 class TPLinkSwitchEntityDescription(
     SwitchEntityDescription, TPLinkFeatureEntityDescription
 ):
-    """Describes TPLink sensor entity."""
+    """Describes TPLink switch entity."""
 
 
 def _new_switch_description(feature: Feature) -> TPLinkSwitchEntityDescription:
@@ -67,7 +67,7 @@ async def async_setup_entry(
 
 
 class TPLinkSwitch(CoordinatedTPLinkEntity, SwitchEntity):
-    """Representation of a feature-based TPLink sensor."""
+    """Representation of a feature-based TPLink switch."""
 
     def __init__(
         self,
