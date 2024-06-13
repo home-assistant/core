@@ -342,6 +342,7 @@ async def test_stream_open_fails(hass: HomeAssistant) -> None:
     )
     stream.add_provider(HLS_PROVIDER)
     with patch("av.open") as av_open:
+        # pylint: disable-next=c-extension-no-member
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
         with pytest.raises(StreamWorkerError):
             run_worker(hass, stream, STREAM_SOURCE)
@@ -770,6 +771,7 @@ async def test_worker_log(
     stream.add_provider(HLS_PROVIDER)
 
     with patch("av.open") as av_open:
+        # pylint: disable-next=c-extension-no-member
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
         with pytest.raises(StreamWorkerError) as err:
             run_worker(hass, stream, stream_url)

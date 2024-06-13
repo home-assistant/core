@@ -240,7 +240,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==24.5.0
+aioesphomeapi==24.6.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -637,7 +637,7 @@ bthomehub5-devicelist==0.1.1
 btsmarthub-devicelist==0.2.3
 
 # homeassistant.components.buienradar
-buienradar==1.0.5
+buienradar==1.0.6
 
 # homeassistant.components.dhcp
 cached_ipaddress==0.3.0
@@ -1149,10 +1149,10 @@ iglo==1.2.7
 ihcsdk==2.8.5
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.0.4
+imgw_pib==1.0.5
 
 # homeassistant.components.incomfort
-incomfort-client==0.6.1
+incomfort-client==0.6.2
 
 # homeassistant.components.influxdb
 influxdb-client==1.24.0
@@ -1673,7 +1673,7 @@ pyControl4==1.1.0
 pyDuotecno==2024.5.1
 
 # homeassistant.components.electrasmart
-pyElectra==1.2.0
+pyElectra==1.2.3
 
 # homeassistant.components.emby
 pyEmby==1.9
@@ -2788,7 +2788,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==0.4.1
+uiprotect==1.1.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7

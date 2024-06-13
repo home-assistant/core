@@ -278,7 +278,7 @@ async def setup_platform(
     await hass.async_block_till_done()
 
     config_entry.mock_state(hass, ConfigEntryState.LOADED)
-    await hass.config_entries.async_late_forward_entry_setups(config_entry, platforms)
+    await hass.config_entries.async_forward_entry_setups(config_entry, platforms)
 
     # and make sure it completes before going further
     await hass.async_block_till_done()

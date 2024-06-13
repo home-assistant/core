@@ -26,6 +26,7 @@ from aiohttp.test_utils import (
 )
 from aiohttp.typedefs import JSONDecoder
 from aiohttp.web import Application
+import bcrypt
 import freezegun
 import multidict
 import pytest
@@ -70,6 +71,7 @@ from homeassistant.helpers import (
     recorder as recorder_helper,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.translation import _TranslationsCacheData
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import BASE_PLATFORMS, async_setup_component
 from homeassistant.util import location
@@ -394,8 +396,6 @@ def reset_hass_threading_local_object() -> Generator[None]:
 @pytest.fixture(scope="session", autouse=True)
 def bcrypt_cost() -> Generator[None]:
     """Run with reduced rounds during tests, to speed up uses."""
-    import bcrypt
-
     gensalt_orig = bcrypt.gensalt
 
     def gensalt_mock(rounds=12, prefix=b"2b"):
@@ -898,7 +898,7 @@ def fail_on_log_exception(
         return
 
     def log_exception(format_err, *args):
-        raise
+        raise  # pylint: disable=misplaced-bare-raise
 
     monkeypatch.setattr("homeassistant.util.logging.log_exception", log_exception)
 
@@ -1174,8 +1174,6 @@ def mock_get_source_ip() -> Generator[_patch]:
 @pytest.fixture(autouse=True, scope="session")
 def translations_once() -> Generator[_patch]:
     """Only load translations once per session."""
-    from homeassistant.helpers.translation import _TranslationsCacheData
-
     cache = _TranslationsCacheData({}, {})
     patcher = patch(
         "homeassistant.helpers.translation._TranslationsCacheData",
@@ -1686,10 +1684,11 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
     # We need to drop the stop method from the object since we patched
     # out start and this fixture will expire before the stop method is called
     # when EVENT_HOMEASSISTANT_STOP is fired.
+    # pylint: disable-next=c-extension-no-member
     bluetooth_scanner.OriginalBleakScanner.stop = AsyncMock()  # type: ignore[assignment]
     with (
         patch.object(
-            bluetooth_scanner.OriginalBleakScanner,
+            bluetooth_scanner.OriginalBleakScanner,  # pylint: disable=c-extension-no-member
             "start",
         ) as mock_bleak_scanner_start,
         patch.object(bluetooth_scanner, "HaScanner"),
