@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from unittest.mock import Mock
 
-from uiprotect.data import Camera, Event, EventType, Light, MountType, Sensor
+from uiprotect.data import Camera, Event, EventType, Light, ModelType, MountType, Sensor
 from uiprotect.data.nvr import EventMetadata
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -281,6 +281,7 @@ async def test_binary_sensor_update_motion(
     )
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=1),
@@ -325,6 +326,7 @@ async def test_binary_sensor_update_light_motion(
 
     event_metadata = EventMetadata(light_id=light.id)
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.MOTION_LIGHT,
         start=fixed_now - timedelta(seconds=1),

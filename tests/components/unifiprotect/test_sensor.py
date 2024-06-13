@@ -6,7 +6,15 @@ from datetime import datetime, timedelta
 from unittest.mock import Mock
 
 import pytest
-from uiprotect.data import NVR, Camera, Event, EventType, Sensor, SmartDetectObjectType
+from uiprotect.data import (
+    NVR,
+    Camera,
+    Event,
+    EventType,
+    ModelType,
+    Sensor,
+    SmartDetectObjectType,
+)
 from uiprotect.data.nvr import EventMetadata, LicensePlateMetadata
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
@@ -438,6 +446,7 @@ async def test_sensor_update_alarm(
 
     event_metadata = EventMetadata(sensor_id=sensor_all.id, alarm_type="smoke")
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.SENSOR_ALARM,
         start=fixed_now - timedelta(seconds=1),
@@ -521,6 +530,7 @@ async def test_camera_update_licenseplate(
         license_plate=LicensePlateMetadata(name="ABCD1234", confidence_level=95)
     )
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.SMART_DETECT,
         start=fixed_now - timedelta(seconds=1),

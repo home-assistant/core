@@ -6,7 +6,7 @@ from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta
 from functools import partial
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from typing_extensions import Generator
 from uiprotect import ProtectApiClient
@@ -16,7 +16,6 @@ from uiprotect.data import (
     Camera,
     Event,
     EventType,
-    Liveview,
     ModelType,
     ProtectAdoptableDeviceModel,
     WSSubscriptionMessage,
@@ -231,41 +230,52 @@ class ProtectData:
 
     @callback
     def _async_process_ws_message(self, message: WSSubscriptionMessage) -> None:
-        if message.new_obj is None:
+        """Process a message from the websocket."""
+        if (new_obj := message.new_obj) is None:
             if isinstance(message.old_obj, ProtectAdoptableDeviceModel):
                 self._async_remove_device(message.old_obj)
             return
 
-        obj = message.new_obj
-        if isinstance(obj, (ProtectAdoptableDeviceModel, NVR)):
-            if message.old_obj is None and isinstance(obj, ProtectAdoptableDeviceModel):
-                self._async_add_device(obj)
-            elif getattr(obj, "is_adopted_by_us", True):
-                self._async_update_device(obj, message.changed_data)
-
-        # trigger updates for camera that the event references
-        elif isinstance(obj, Event):
+        model_type = new_obj.model
+        if model_type is ModelType.EVENT:
+            if TYPE_CHECKING:
+                assert isinstance(new_obj, Event)
             if _LOGGER.isEnabledFor(logging.DEBUG):
-                log_event(obj)
-            if obj.type is EventType.DEVICE_ADOPTED:
-                if obj.metadata is not None and obj.metadata.device_id is not None:
+                log_event(new_obj)
+            if new_obj.type is EventType.DEVICE_ADOPTED:
+                if (
+                    new_obj.metadata is not None
+                    and new_obj.metadata.device_id is not None
+                ):
                     device = self.api.bootstrap.get_device_from_id(
-                        obj.metadata.device_id
+                        new_obj.metadata.device_id
                     )
                     if device is not None:
                         self._async_add_device(device)
-            elif obj.camera is not None:
-                self._async_signal_device_update(obj.camera)
-            elif obj.light is not None:
-                self._async_signal_device_update(obj.light)
-            elif obj.sensor is not None:
-                self._async_signal_device_update(obj.sensor)
-        # alert user viewport needs restart so voice clients can get new options
-        elif len(self.api.bootstrap.viewers) > 0 and isinstance(obj, Liveview):
+            elif new_obj.camera is not None:
+                self._async_signal_device_update(new_obj.camera)
+            elif new_obj.light is not None:
+                self._async_signal_device_update(new_obj.light)
+            elif new_obj.sensor is not None:
+                self._async_signal_device_update(new_obj.sensor)
+            return
+
+        if model_type is ModelType.LIVEVIEW and len(self.api.bootstrap.viewers) > 0:
+            # alert user viewport needs restart so voice clients can get new options
             _LOGGER.warning(
                 "Liveviews updated. Restart Home Assistant to update Viewport select"
                 " options"
             )
+            return
+
+        if message.old_obj is None and isinstance(new_obj, ProtectAdoptableDeviceModel):
+            self._async_add_device(new_obj)
+            return
+
+        if getattr(new_obj, "is_adopted_by_us", True) and hasattr(new_obj, "mac"):
+            if TYPE_CHECKING:
+                assert isinstance(new_obj, (ProtectAdoptableDeviceModel, NVR))
+            self._async_update_device(new_obj, message.changed_data)
 
     @callback
     def _async_process_updates(self, updates: Bootstrap | None) -> None:
