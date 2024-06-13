@@ -24,14 +24,14 @@ from .entity import FullyKioskEntity
 class FullyImageEntityDescription(ImageEntityDescription):
     """Fully Kiosk Browser image entity description."""
 
-    image_action: Callable[[FullyKiosk], Coroutine[Any, Any, bytes]]
+    image_fn: Callable[[FullyKiosk], Coroutine[Any, Any, bytes]]
 
 
 IMAGES: tuple[FullyImageEntityDescription, ...] = (
     FullyImageEntityDescription(
         key="screenshot",
         translation_key="screenshot",
-        image_action=lambda fully: fully.getScreenshot(),
+        image_fn=lambda fully: fully.getScreenshot(),
     ),
 )
 
@@ -66,9 +66,7 @@ class FullyImageEntity(FullyKioskEntity, ImageEntity):
     async def async_image(self) -> bytes | None:
         """Return bytes of image."""
         try:
-            image_bytes = await self.entity_description.image_action(
-                self.coordinator.fully
-            )
+            image_bytes = await self.entity_description.image_fn(self.coordinator.fully)
         except FullyKioskError as err:
             raise HomeAssistantError(err) from err
         else:
