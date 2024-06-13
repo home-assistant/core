@@ -347,6 +347,7 @@ def test_cluster_handler_registry() -> None:
     all_quirk_ids = {}
     for cluster_id in CLUSTERS_BY_ID:
         all_quirk_ids[cluster_id] = {None}
+    # pylint: disable-next=too-many-nested-blocks
     for manufacturer in zigpy_quirks._DEVICE_REGISTRY.registry.values():
         for model_quirk_list in manufacturer.values():
             for quirk in model_quirk_list:
