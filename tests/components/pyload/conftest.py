@@ -19,8 +19,8 @@ from homeassistant.const import (
 from homeassistant.helpers.typing import ConfigType
 
 
-@pytest.fixture(name="pyload_config")
-def mock_pyload_config_entry() -> ConfigType:
+@pytest.fixture
+def pyload_config() -> ConfigType:
     """Mock pyload configuration entry."""
     return {
         "sensor": {

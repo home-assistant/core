@@ -140,9 +140,7 @@ class PyLoadSensor(SensorEntity):
                 await self.api.login()
             except InvalidAuth as e:
                 raise PlatformNotReady(
-                    translation_domain=DOMAIN,
-                    translation_key="authentication_exception",
-                    translation_placeholders={CONF_USERNAME: self.api.username},
+                    f"Authentication failed for {self.api.username}, check your login credentials"
                 ) from e
             else:
                 raise UpdateFailed(
