@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Generic
 
-from deebot_client.capabilities import Capabilities, CapabilityEvent, CapabilityLifeSpan
+from deebot_client.capabilities import CapabilityEvent, CapabilityLifeSpan
 from deebot_client.events import (
     BatteryEvent,
     ErrorEvent,
@@ -39,7 +39,6 @@ from homeassistant.helpers.typing import StateType
 from . import EcovacsConfigEntry
 from .const import SUPPORTED_LIFESPANS
 from .entity import (
-    CapabilityDevice,
     EcovacsCapabilityEntityDescription,
     EcovacsDescriptionEntity,
     EcovacsEntity,
@@ -63,7 +62,6 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
     # Stats
     EcovacsSensorEntityDescription[StatsEvent](
         key="stats_area",
-        device_capabilities=Capabilities,
         capability_fn=lambda caps: caps.stats.clean,
         value_fn=lambda e: e.area,
         translation_key="stats_area",
@@ -71,7 +69,6 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
     ),
     EcovacsSensorEntityDescription[StatsEvent](
         key="stats_time",
-        device_capabilities=Capabilities,
         capability_fn=lambda caps: caps.stats.clean,
         value_fn=lambda e: e.time,
         translation_key="stats_time",
@@ -81,7 +78,6 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
     ),
     # TotalStats
     EcovacsSensorEntityDescription[TotalStatsEvent](
-        device_capabilities=Capabilities,
         capability_fn=lambda caps: caps.stats.total,
         value_fn=lambda e: e.area,
         key="total_stats_area",
@@ -90,7 +86,6 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     EcovacsSensorEntityDescription[TotalStatsEvent](
-        device_capabilities=Capabilities,
         capability_fn=lambda caps: caps.stats.total,
         value_fn=lambda e: e.time,
         key="total_stats_time",
@@ -101,7 +96,6 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     EcovacsSensorEntityDescription[TotalStatsEvent](
-        device_capabilities=Capabilities,
         capability_fn=lambda caps: caps.stats.total,
         value_fn=lambda e: e.cleanings,
         key="total_stats_cleanings",
@@ -109,7 +103,6 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     EcovacsSensorEntityDescription[BatteryEvent](
-        device_capabilities=Capabilities,
         capability_fn=lambda caps: caps.battery,
         value_fn=lambda e: e.value,
         key=ATTR_BATTERY_LEVEL,
@@ -118,7 +111,6 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     EcovacsSensorEntityDescription[NetworkInfoEvent](
-        device_capabilities=Capabilities,
         capability_fn=lambda caps: caps.network,
         value_fn=lambda e: e.ip,
         key="network_ip",
@@ -127,7 +119,6 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     EcovacsSensorEntityDescription[NetworkInfoEvent](
-        device_capabilities=Capabilities,
         capability_fn=lambda caps: caps.network,
         value_fn=lambda e: e.rssi,
         key="network_rssi",
@@ -136,7 +127,6 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     EcovacsSensorEntityDescription[NetworkInfoEvent](
-        device_capabilities=Capabilities,
         capability_fn=lambda caps: caps.network,
         value_fn=lambda e: e.ssid,
         key="network_ssid",
@@ -181,13 +171,13 @@ async def async_setup_entry(
     )
     entities.extend(
         EcovacsLifespanSensor(device, device.capabilities.life_span, description)
-        for device in controller.devices(Capabilities)
+        for device in controller.devices
         for description in LIFESPAN_ENTITY_DESCRIPTIONS
         if description.component in device.capabilities.life_span.types
     )
     entities.extend(
         EcovacsErrorSensor(device, capability)
-        for device in controller.devices(Capabilities)
+        for device in controller.devices
         if (capability := device.capabilities.error)
     )
 
@@ -195,7 +185,7 @@ async def async_setup_entry(
 
 
 class EcovacsSensor(
-    EcovacsDescriptionEntity[CapabilityDevice, CapabilityEvent],
+    EcovacsDescriptionEntity[CapabilityEvent],
     SensorEntity,
 ):
     """Ecovacs sensor."""
@@ -218,7 +208,7 @@ class EcovacsSensor(
 
 
 class EcovacsLifespanSensor(
-    EcovacsDescriptionEntity[Capabilities, CapabilityLifeSpan],
+    EcovacsDescriptionEntity[CapabilityLifeSpan],
     SensorEntity,
 ):
     """Lifespan sensor."""
@@ -238,7 +228,7 @@ class EcovacsLifespanSensor(
 
 
 class EcovacsErrorSensor(
-    EcovacsEntity[Capabilities, CapabilityEvent[ErrorEvent]],
+    EcovacsEntity[CapabilityEvent[ErrorEvent]],
     SensorEntity,
 ):
     """Error sensor."""
