@@ -15,7 +15,7 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components import onboarding, websocket_api
-from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView, StaticPathConfig
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config import async_hass_config_yaml
 from homeassistant.const import (
@@ -366,6 +366,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     is_dev = repo_path is not None
     root_path = _frontend_root(repo_path)
 
+    static_paths_configs: list[StaticPathConfig] = []
+
     for path, should_cache in (
         ("service_worker.js", False),
         ("robots.txt", False),
@@ -374,10 +376,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ("frontend_latest", not is_dev),
         ("frontend_es5", not is_dev),
     ):
-        hass.http.register_static_path(f"/{path}", str(root_path / path), should_cache)
+        static_paths_configs.append(
+            StaticPathConfig(f"/{path}", str(root_path / path), should_cache)
+        )
 
-    hass.http.register_static_path(
-        "/auth/authorize", str(root_path / "authorize.html"), False
+    static_paths_configs.append(
+        StaticPathConfig("/auth/authorize", str(root_path / "authorize.html"), False)
     )
     # https://wicg.github.io/change-password-url/
     hass.http.register_redirect(
@@ -385,9 +389,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     local = hass.config.path("www")
-    if os.path.isdir(local):
-        hass.http.register_static_path("/local", local, not is_dev)
+    if await hass.async_add_executor_job(os.path.isdir, local):
+        static_paths_configs.append(StaticPathConfig("/local", local, not is_dev))
 
+    await hass.http.async_register_static_paths(static_paths_configs)
     # Shopping list panel was replaced by todo panel in 2023.11
     hass.http.register_redirect("/shopping-list", "/todo")
 
