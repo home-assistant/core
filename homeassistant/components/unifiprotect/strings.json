@@ -67,7 +67,7 @@
         "step": {
           "start": {
             "title": "UniFi Protect Early Access enabled",
-            "description": "You are either running an Early Access version of UniFi Protect (v{version}) or opt-ed into a release channel that is not the Official Release Channel. [Home Assistant does not support Early Access versions](https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access), so you should immediately switch to the Official Release Channel. Accidentally upgrading to an Early Access version can break your UniFi Protect integration.\n\nBy submitting this form, you have switched back to the Official Release Channel or agree to run an unsupported version of UniFi Protect, which may break your Home Assistant integration at any time."
+            "description": "You are either running an Early Access version of UniFi Protect (v{version}) or opt-ed into a release channel that is not the Official Release Channel. Accidentally or intentionally upgrading to an Early Access version can break your UniFi Protect integration. [Home Assistant does not support Early Access versions](https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access), and it’s suggested you immediately switch to the Official Release Channel.\n\nBy submitting this form, you are confirming you have switched back to the Official Release Channel or agree to run an unsupported version of UniFi Protect - which may break your Home Assistant integration at any time."
           },
           "confirm": {
             "title": "[%key:component::unifiprotect::issues::ea_channel_warning::fix_flow::step::start::title%]",
