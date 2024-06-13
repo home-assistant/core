@@ -70,6 +70,7 @@ class MockMediaPlayer(media_player.MediaPlayerEntity):
         self._media_image_url = None
         self._shuffle = False
         self._sound_mode = None
+        self._repeat = None
 
         self.service_calls = {
             "turn_on": async_mock_service(

@@ -195,9 +195,11 @@ def get_test_home_assistant() -> Generator[HomeAssistant]:
 
     threading.Thread(name="LoopThread", target=run_loop, daemon=False).start()
 
-    yield hass
-    loop.run_until_complete(context_manager.__aexit__(None, None, None))
-    loop.close()
+    try:
+        yield hass
+    finally:
+        loop.run_until_complete(context_manager.__aexit__(None, None, None))
+        loop.close()
 
 
 class StoreWithoutWriteLoad[_T: (Mapping[str, Any] | Sequence[Any])](storage.Store[_T]):
@@ -359,10 +361,11 @@ async def async_test_home_assistant(
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, clear_instance)
 
-    yield hass
-
-    # Restore timezone, it is set when creating the hass object
-    dt_util.set_default_time_zone(orig_tz)
+    try:
+        yield hass
+    finally:
+        # Restore timezone, it is set when creating the hass object
+        dt_util.set_default_time_zone(orig_tz)
 
 
 def async_mock_service(
@@ -413,10 +416,10 @@ def async_mock_intent(hass, intent_typ):
     class MockIntentHandler(intent.IntentHandler):
         intent_type = intent_typ
 
-        async def async_handle(self, intent):
+        async def async_handle(self, intent_obj):
             """Handle the intent."""
-            intents.append(intent)
-            return intent.create_response()
+            intents.append(intent_obj)
+            return intent_obj.create_response()
 
     intent.async_register(hass, MockIntentHandler())
 
@@ -555,7 +558,7 @@ def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.P
 @lru_cache
 def load_fixture(filename: str, integration: str | None = None) -> str:
     """Load a fixture."""
-    return get_fixture_path(filename, integration).read_text()
+    return get_fixture_path(filename, integration).read_text(encoding="utf8")
 
 
 def load_json_value_fixture(
@@ -600,7 +603,7 @@ def mock_state_change_event(
 def mock_component(hass: HomeAssistant, component: str) -> None:
     """Mock a component is setup."""
     if component in hass.config.components:
-        AssertionError(f"Integration {component} is already setup")
+        raise AssertionError(f"Integration {component} is already setup")
 
     hass.config.components.add(component)
 
@@ -1432,7 +1435,10 @@ def mock_config_flow(domain: str, config_flow: type[ConfigFlow]) -> None:
 
 
 def mock_integration(
-    hass: HomeAssistant, module: MockModule, built_in: bool = True
+    hass: HomeAssistant,
+    module: MockModule,
+    built_in: bool = True,
+    top_level_files: set[str] | None = None,
 ) -> loader.Integration:
     """Mock an integration."""
     integration = loader.Integration(
@@ -1442,7 +1448,7 @@ def mock_integration(
         else f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{module.DOMAIN}",
         pathlib.Path(""),
         module.mock_manifest(),
-        set(),
+        top_level_files,
     )
 
     def mock_import_platform(platform_name: str) -> NoReturn:
@@ -1680,7 +1686,7 @@ def import_and_test_deprecated_alias(
 def help_test_all(module: ModuleType) -> None:
     """Test module.__all__ is correctly set."""
     assert set(module.__all__) == {
-        itm for itm in module.__dir__() if not itm.startswith("_")
+        itm for itm in dir(module) if not itm.startswith("_")
     }
 
 

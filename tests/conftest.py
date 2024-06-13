@@ -26,6 +26,7 @@ from aiohttp.test_utils import (
 )
 from aiohttp.typedefs import JSONDecoder
 from aiohttp.web import Application
+import bcrypt
 import freezegun
 import multidict
 import pytest
@@ -33,6 +34,8 @@ import pytest_socket
 import requests_mock
 from syrupy.assertion import SnapshotAssertion
 from typing_extensions import AsyncGenerator, Generator
+
+from homeassistant import block_async_io
 
 # Setup patching if dt_util time functions before any other Home Assistant imports
 from . import patch_time  # noqa: F401, isort:skip
@@ -70,6 +73,7 @@ from homeassistant.helpers import (
     recorder as recorder_helper,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.translation import _TranslationsCacheData
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import BASE_PLATFORMS, async_setup_component
 from homeassistant.util import location
@@ -394,8 +398,6 @@ def reset_hass_threading_local_object() -> Generator[None]:
 @pytest.fixture(scope="session", autouse=True)
 def bcrypt_cost() -> Generator[None]:
     """Run with reduced rounds during tests, to speed up uses."""
-    import bcrypt
-
     gensalt_orig = bcrypt.gensalt
 
     def gensalt_mock(rounds=12, prefix=b"2b"):
@@ -898,7 +900,7 @@ def fail_on_log_exception(
         return
 
     def log_exception(format_err, *args):
-        raise
+        raise  # pylint: disable=misplaced-bare-raise
 
     monkeypatch.setattr("homeassistant.util.logging.log_exception", log_exception)
 
@@ -1174,8 +1176,6 @@ def mock_get_source_ip() -> Generator[_patch]:
 @pytest.fixture(autouse=True, scope="session")
 def translations_once() -> Generator[_patch]:
     """Only load translations once per session."""
-    from homeassistant.helpers.translation import _TranslationsCacheData
-
     cache = _TranslationsCacheData({}, {})
     patcher = patch(
         "homeassistant.helpers.translation._TranslationsCacheData",
@@ -1816,3 +1816,15 @@ def service_calls(hass: HomeAssistant) -> Generator[None, None, list[ServiceCall
 def snapshot(snapshot: SnapshotAssertion) -> SnapshotAssertion:
     """Return snapshot assertion fixture with the Home Assistant extension."""
     return snapshot.use_extension(HomeAssistantSnapshotExtension)
+
+
+@pytest.fixture
+def disable_block_async_io() -> Generator[Any, Any, None]:
+    """Fixture to disable the loop protection from block_async_io."""
+    yield
+    calls = block_async_io._BLOCKED_CALLS.calls
+    for blocking_call in calls:
+        setattr(
+            blocking_call.object, blocking_call.function, blocking_call.original_func
+        )
+    calls.clear()
