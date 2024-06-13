@@ -243,13 +243,9 @@ class ProtectData:
             if _LOGGER.isEnabledFor(logging.DEBUG):
                 log_event(new_obj)
             if new_obj.type is EventType.DEVICE_ADOPTED:
-                if (
-                    new_obj.metadata is not None
-                    and new_obj.metadata.device_id is not None
-                ):
-                    device = self.api.bootstrap.get_device_from_id(
-                        new_obj.metadata.device_id
-                    )
+                metadata = new_obj.metadata
+                if metadata is not None and metadata.device_id is not None:
+                    device = self.api.bootstrap.get_device_from_id(metadata.device_id)
                     if device is not None:
                         self._async_add_device(device)
             elif new_obj.camera is not None:
