@@ -143,10 +143,7 @@ class AutomowerLawnMowerEntity(AutomowerControlEntity, LawnMowerEntity):
         self, override_mode: str, duration: timedelta
     ) -> None:
         """Override the schedule with mowing or parking."""
-        duration_in_min = int(duration.total_seconds() / 60)
         if override_mode == MOW:
-            await self.coordinator.api.commands.start_for(
-                self.mower_id, duration_in_min
-            )
+            await self.coordinator.api.commands.start_for(self.mower_id, duration)
         if override_mode == PARK:
-            await self.coordinator.api.commands.park_for(self.mower_id, duration_in_min)
+            await self.coordinator.api.commands.park_for(self.mower_id, duration)
