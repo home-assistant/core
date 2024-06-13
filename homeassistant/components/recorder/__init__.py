@@ -134,10 +134,8 @@ def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
     conf = config[DOMAIN]
-    converted_filter = convert_include_exclude_filter(conf)
-    entity_filter = (
-        None if converted_filter.empty_filter else converted_filter.get_filter()
-    )
+    _filter = convert_include_exclude_filter(conf)
+    entity_filter = None if _filter.empty_filter else _filter.get_filter()
     auto_purge = conf[CONF_AUTO_PURGE]
     auto_repack = conf[CONF_AUTO_REPACK]
     keep_days = conf[CONF_PURGE_KEEP_DAYS]
