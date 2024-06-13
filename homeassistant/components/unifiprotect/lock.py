@@ -15,13 +15,10 @@ from uiprotect.data import (
 
 from homeassistant.components.lock import LockEntity, LockEntityDescription
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DISPATCH_ADOPT
 from .data import ProtectData, UFPConfigEntry
 from .entity import ProtectDeviceEntity
-from .utils import async_dispatch_id as _ufpd
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,9 +36,7 @@ async def async_setup_entry(
         if isinstance(device, Doorlock):
             async_add_entities([ProtectLock(data, device)])
 
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
-    )
+    data.async_subscribe_adopt(_add_new_device)
 
     async_add_entities(
         ProtectLock(data, cast(Doorlock, device))
