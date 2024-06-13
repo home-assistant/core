@@ -43,8 +43,8 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
         self.api = habitipy
 
     async def _async_update_data(self) -> HabiticaData:
-        user_fields = set(self.async_contexts())
-        user_fields.add("lastCron")
+        user_fields = set(self.async_contexts()) | {"lastCron"}
+
         try:
             user_response = await self.api.user.get(userFields=",".join(user_fields))
             tasks_response = await self.api.tasks.user.get()
