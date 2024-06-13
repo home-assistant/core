@@ -32,7 +32,9 @@ def platforms() -> list[str]:
     return ["camera"]
 
 
-def make_camera(device_id, name: str, traits: dict[str, Any]) -> dict[str, Any]:
+def make_camera(
+    device_id, name: str = DEVICE_NAME, *, traits: dict[str, Any]
+) -> dict[str, Any]:
     """Create a nest camera."""
     traits = traits.copy()
     traits.update(
