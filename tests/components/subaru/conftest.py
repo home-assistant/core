@@ -106,13 +106,19 @@ def advance_time_to_next_fetch(hass):
 async def setup_subaru_config_entry(
     hass,
     config_entry,
-    vehicle_list=[TEST_VIN_2_EV],
-    vehicle_data=VEHICLE_DATA[TEST_VIN_2_EV],
-    vehicle_status=VEHICLE_STATUS_EV,
+    vehicle_list=None,
+    vehicle_data=None,
+    vehicle_status=None,
     connect_effect=None,
     fetch_effect=None,
 ):
     """Run async_setup with API mocks in place."""
+    if vehicle_list is None:
+        vehicle_list = [TEST_VIN_2_EV]
+    if vehicle_data is None:
+        vehicle_data = VEHICLE_DATA[TEST_VIN_2_EV]
+    if vehicle_status is None:
+        vehicle_status = VEHICLE_STATUS_EV
     with (
         patch(
             MOCK_API_CONNECT,
