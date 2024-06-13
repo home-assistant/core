@@ -107,6 +107,8 @@ SERVICE_STOP_TORRENT_SCHEMA = vol.All(
     )
 )
 
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+
 type TransmissionConfigEntry = ConfigEntry[TransmissionDataUpdateCoordinator]
 
 
