@@ -330,4 +330,4 @@ async def test_firmware_repair_issue(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (const.DOMAIN, "firmware_update_host") in issue_registry.issues
+    assert (const.DOMAIN, "firmware_update") in issue_registry.issues
