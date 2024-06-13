@@ -12,5 +12,18 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "entity": {
+    "event": {
+      "knocki": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "triggered": "Triggered"
+            }
+          }
+        }
+      }
+    }
   }
 }

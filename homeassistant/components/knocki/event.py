@@ -29,6 +29,7 @@ class KnockiTrigger(EventEntity):
 
     _attr_event_types = ["triggered"]
     _attr_has_entity_name = True
+    _attr_translation_key = "knocki"
 
     def __init__(self, trigger: Trigger, client: KnockiClient) -> None:
         """Initialize the entity."""
