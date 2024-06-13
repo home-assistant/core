@@ -217,8 +217,4 @@ class TPLinkSensor(CoordinatedTPLinkEntity, SensorEntity):
         value = self._feature.value
         if value is not None and self._feature.precision_hint is not None:
             value = round(cast(float, value), self._feature.precision_hint)
-        # today's consumption not available, when device was off all the day
-        # so show it as zero
-        if self._feature.id == ATTR_TODAY_ENERGY_KWH and value is None:
-            value = 0.0
         self._attr_native_value = value
