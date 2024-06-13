@@ -117,7 +117,6 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
     ):
         """Initialize the alarm panel."""
         self._partition_number = partition_number
-        self._alarm_name = alarm_name
         self._code = code
         self._panic_type = panic_type
         self._attr_code_arm_required = not self._code
