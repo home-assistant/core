@@ -43,6 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=timedelta(minutes=1),
     )
 
+    hass.data[DOMAIN] = {}
     hass.data[DOMAIN][entry.entry_id] = {
         "client": client,
         "coordinator": coordinator,
@@ -63,12 +64,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     return True
 
-
-async def async_update_data(client, device_address):
+async def async_update_data(client, device_address) -> dict:
     """Fetch data from Kermi's IFM via modbus TCP."""
     data = {}
     for device, registers in MODBUS_REGISTERS.items():
-        sorted_registers = sorted(registers.items(), key=lambda x: x[1]["register"])
+        sorted_registers = sorted(registers.items(), key=lambda x: x[1]["register"] if isinstance(x[1]["register"], int) else float('inf'))
         bulk_read = []
         for i, sorted_register in enumerate(sorted_registers):
             if (
