@@ -40,6 +40,7 @@ HOST_UPDATE_ENTITIES = (
     ReolinkHostUpdateEntityDescription(
         key="firmware",
         supported=lambda api: api.supported(None, "firmware"),
+        device_class=UpdateDeviceClass.FIRMWARE
     ),
 )
 
@@ -67,7 +68,6 @@ class ReolinkHostUpdateEntity(
     """Update entity class for Reolink Host."""
 
     entity_description: ReolinkHostUpdateEntityDescription
-    _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_release_url = "https://reolink.com/download-center/"
 
     def __init__(
