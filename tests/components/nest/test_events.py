@@ -70,7 +70,7 @@ def event_view(d: Mapping[str, Any]) -> Mapping[str, Any]:
     return {key: value for key, value in d.items() if key in EVENT_KEYS}
 
 
-def create_device_traits(event_traits=[]):
+def create_device_traits(event_traits: dict[str, Any]) -> dict[str, Any]:
     """Create fake traits for a device."""
     result = {
         "sdm.devices.traits.Info": {
