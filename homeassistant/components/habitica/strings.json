@@ -69,28 +69,28 @@
   },
   "exceptions": {
     "delete_todos_failed": {
-      "message": "Failed to delete {count} Habitica to-do(s)"
+      "message": "Unable to delete {count} Habitica to-do(s), please try again"
     },
     "move_todos_item_failed": {
-      "message": "Failed to move your Habitica to-do to position {pos}"
+      "message": "Unable to move the Habitica to-do to position {pos}, please try again"
     },
     "move_dailys_item_failed": {
-      "message": "Failed to move your Habitica daily to position {pos}"
+      "message": "Unable to move the Habitica daily to position {pos}, please try again"
     },
     "update_todos_item_failed": {
-      "message": "Failed to update your Habitica to-do `{name}`"
+      "message": "Unable to update the Habitica to-do `{name}`, please try again"
     },
     "update_dailys_item_failed": {
-      "message": "Failed to update your Habitica daily `{name}`"
+      "message": "Unable to update the Habitica daily `{name}`, please try again"
     },
     "score_todos_item_failed": {
-      "message": "Failed to update the score for your Habitica to-do `{name}`"
+      "message": "Unable to update the score for your Habitica to-do `{name}`, please try again"
     },
     "score_dailys_item_failed": {
-      "message": "Failed to update the score for your Habitica daily `{name}`"
+      "message": "Unable to update the score for your Habitica daily `{name}`, please try again"
     },
     "create_todos_item_failed": {
-      "message": "Failed to create new to-do `{name}` for Habitica"
+      "message": "Unable to create new to-do `{name}` for Habitica, please try again"
     },
     "setup_rate_limit_exception": {
       "message": "Currently rate limited, try again later"
