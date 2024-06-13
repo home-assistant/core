@@ -310,7 +310,7 @@ class DashboardsCollectionWebSocket(collection.DictStorageCollectionWebsocket):
         connection: websocket_api.ActiveConnection,
         msg: dict[str, Any],
     ) -> None:
-        """Send Lovelace UI resources over WebSocket configuration."""
+        """Send Lovelace UI resources over WebSocket connection."""
         connection.send_result(
             msg["id"],
             [
