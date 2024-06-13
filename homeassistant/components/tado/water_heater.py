@@ -33,6 +33,7 @@ from .const import (
 )
 from .entity import TadoZoneEntity
 from .helper import decide_duration, decide_overlay_mode
+from .repairs import manage_water_heater_fallback_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,6 +80,12 @@ async def async_setup_entry(
     )
 
     async_add_entities(entities, True)
+
+    manage_water_heater_fallback_issue(
+        hass=hass,
+        water_heater_entities=entities,
+        integration_overlay_fallback=tado.fallback,
+    )
 
 
 def _generate_entities(tado: TadoConnector) -> list[WaterHeaterEntity]:
