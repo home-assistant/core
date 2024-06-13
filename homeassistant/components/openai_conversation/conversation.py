@@ -141,11 +141,25 @@ class OpenAIConversationEntity(
                 )
             tools = [_format_tool(tool) for tool in llm_api.tools]
 
-        if user_input.conversation_id in self.history:
+        if user_input.conversation_id is None:
+            conversation_id = ulid.ulid_now()
+            messages = []
+
+        elif user_input.conversation_id in self.history:
             conversation_id = user_input.conversation_id
             messages = self.history[conversation_id]
+
         else:
-            conversation_id = ulid.ulid_now()
+            # Conversation IDs are ULIDs. We generate a new one if not provided.
+            # If an old OLID is passed in, we will generate a new one to indicate
+            # a new conversation was started. If the user picks their own, they
+            # want to track a conversation and we respect it.
+            try:
+                ulid.ulid_to_bytes(user_input.conversation_id)
+                conversation_id = ulid.ulid_now()
+            except ValueError:
+                conversation_id = user_input.conversation_id
+
             messages = []
 
         if (

@@ -18,6 +18,13 @@
       "toggle": "[%key:common::device_automation::action_type::toggle%]",
       "turn_on": "[%key:common::device_automation::action_type::turn_on%]",
       "turn_off": "[%key:common::device_automation::action_type::turn_off%]"
+    },
+    "extra_fields": {
+      "above": "[%key:common::device_automation::extra_fields::above%]",
+      "below": "[%key:common::device_automation::extra_fields::below%]",
+      "for": "[%key:common::device_automation::extra_fields::for%]",
+      "mode": "Mode",
+      "humidity": "Humidity"
     }
   },
   "entity_component": {
