@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
 from typing import Any
 
@@ -136,9 +135,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
     conf = config[DOMAIN]
     converted_filter = convert_include_exclude_filter(conf)
-    entity_filter: Callable[[str], bool] | None = None
-    if not converted_filter.empty_filter:
-        entity_filter = converted_filter.get_filter()
+    entity_filter = (
+        None if converted_filter.empty_filter else converted_filter.get_filter()
+    )
     auto_purge = conf[CONF_AUTO_PURGE]
     auto_repack = conf[CONF_AUTO_REPACK]
     keep_days = conf[CONF_PURGE_KEEP_DAYS]
