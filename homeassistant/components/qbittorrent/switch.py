@@ -1,9 +1,8 @@
 """Support for monitoring the qBittorrent API."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
-
-from qbittorrent import Client
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -18,7 +17,7 @@ from .coordinator import QBittorrentDataCoordinator
 
 @dataclass(frozen=True, kw_only=True)
 class QBittorrentSwitchEntityDescription(SwitchEntityDescription):
-    """Describes qBittorren binary sensor entity."""
+    """Describes qBittorren switch."""
 
     is_on_func: Callable[[QBittorrentDataCoordinator], bool]
     turn_on_fn: Callable[["QBittorrentDataCoordinator"], None]
@@ -44,7 +43,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up qBittorrent sensor entries."""
+    """Set up qBittorrent switch entries."""
 
     coordinator: QBittorrentDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
@@ -59,7 +58,6 @@ class QBittorrentSwitch(CoordinatorEntity[QBittorrentDataCoordinator], SwitchEnt
 
     _attr_has_entity_name = True
     entity_description: QBittorrentSwitchEntityDescription
-    client: Client
 
     def __init__(
         self,

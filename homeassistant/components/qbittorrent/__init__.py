@@ -110,7 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     """Set up qBittorrent from a config entry."""
 
     try:
-        client, is_alternative_mode_enabled = await hass.async_add_executor_job(
+        client = await hass.async_add_executor_job(
             setup_client,
             config_entry.data[CONF_URL],
             config_entry.data[CONF_USERNAME],
@@ -124,7 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     except APIConnectionError as exc:
         raise ConfigEntryNotReady("Fail to connect to qBittorrent") from exc
 
-    coordinator = QBittorrentDataCoordinator(hass, client, is_alternative_mode_enabled)
+    coordinator = QBittorrentDataCoordinator(hass, client)
 
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator

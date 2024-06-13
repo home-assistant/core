@@ -6,16 +6,13 @@ from typing import Any, cast
 from qbittorrentapi import Client, TorrentDictionary, TorrentInfoList
 
 
-def setup_client(
-    url: str, username: str, password: str, verify_ssl: bool
-) -> tuple[Client, bool]:
+def setup_client(url: str, username: str, password: str, verify_ssl: bool) -> Client:
     """Create a qBittorrent client."""
     client = Client(
         url, username=username, password=password, VERIFY_WEBUI_CERTIFICATE=verify_ssl
     )
     client.auth_log_in(username, password)
-    is_alternative_mode_enabled = bool(client.get_alternative_speed_status())
-    return client, is_alternative_mode_enabled
+    return client
 
 
 def seconds_to_hhmmss(seconds) -> str:
