@@ -118,7 +118,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: TransmissionConfigEntry
+) -> bool:
     """Set up the Transmission Component."""
 
     @callback
@@ -159,21 +161,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Transmission Entry from config_entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    ):
-        loaded_entries = [
-            entry
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.state == ConfigEntryState.LOADED
-        ]
-        if len(loaded_entries) == 1:
-            hass.services.async_remove(DOMAIN, SERVICE_ADD_TORRENT)
-            hass.services.async_remove(DOMAIN, SERVICE_REMOVE_TORRENT)
-            hass.services.async_remove(DOMAIN, SERVICE_START_TORRENT)
-            hass.services.async_remove(DOMAIN, SERVICE_STOP_TORRENT)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -211,8 +199,8 @@ def setup_hass_services(hass: HomeAssistant) -> None:
     async def add_torrent(service: ServiceCall) -> None:
         """Add new torrent to download."""
         entry_id: str = service.data[CONF_ENTRY_ID]
-        if not (entry := hass.config_entries.async_get_entry(entry_id)) or not (
-            entry.state == ConfigEntryState.LOADED
+        if (entry := hass.config_entries.async_get_entry(entry_id)) is None or (
+            entry.state is ConfigEntryState.LOADED
         ):
             raise HomeAssistantError(
                 f"Config entry {entry_id} is not found or not loaded"
@@ -230,8 +218,8 @@ def setup_hass_services(hass: HomeAssistant) -> None:
     async def start_torrent(service: ServiceCall) -> None:
         """Start torrent."""
         entry_id: str = service.data[CONF_ENTRY_ID]
-        if not (entry := hass.config_entries.async_get_entry(entry_id)) or not (
-            entry.state == ConfigEntryState.LOADED
+        if (entry := hass.config_entries.async_get_entry(entry_id)) is None or (
+            entry.state is ConfigEntryState.LOADED
         ):
             raise HomeAssistantError(
                 f"Config entry {entry_id} is not found or not loaded"
@@ -244,8 +232,8 @@ def setup_hass_services(hass: HomeAssistant) -> None:
     async def stop_torrent(service: ServiceCall) -> None:
         """Stop torrent."""
         entry_id: str = service.data[CONF_ENTRY_ID]
-        if not (entry := hass.config_entries.async_get_entry(entry_id)) or not (
-            entry.state == ConfigEntryState.LOADED
+        if (entry := hass.config_entries.async_get_entry(entry_id)) is None or (
+            entry.state is ConfigEntryState.LOADED
         ):
             raise HomeAssistantError(
                 f"Config entry {entry_id} is not found or not loaded"
@@ -258,8 +246,8 @@ def setup_hass_services(hass: HomeAssistant) -> None:
     async def remove_torrent(service: ServiceCall) -> None:
         """Remove torrent."""
         entry_id: str = service.data[CONF_ENTRY_ID]
-        if not (entry := hass.config_entries.async_get_entry(entry_id)) or not (
-            entry.state == ConfigEntryState.LOADED
+        if (entry := hass.config_entries.async_get_entry(entry_id)) is None or (
+            entry.state is not ConfigEntryState.LOADED
         ):
             raise HomeAssistantError(
                 f"Config entry {entry_id} is not found or not loaded"
