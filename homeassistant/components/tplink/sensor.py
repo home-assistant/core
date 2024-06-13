@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from datetime import datetime
 from typing import cast
 
 from kasa import Device, Feature
-from kasa.iot import IotBulb
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -14,7 +15,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_VOLTAGE
+from homeassistant.const import (
+    ATTR_VOLTAGE,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -27,44 +34,126 @@ from .const import (
 )
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import (
+    DEVICETYPES_WITH_SPECIALIZED_PLATFORMS,
     CoordinatedTPLinkEntity,
-    _description_for_feature,
-    _entities_for_device_and_its_children,
+    _category_for_feature,
 )
 from .models import TPLinkData
 
-EMETER_FEATURE_IDS = {
-    ATTR_CURRENT_POWER_W,
-    ATTR_TOTAL_ENERGY_KWH,
-    ATTR_VOLTAGE,
-    ATTR_CURRENT_A,
-}
 
-FEATURE_INFO: dict[str, dict] = {
-    ATTR_CURRENT_POWER_W: {
-        "device_class": SensorDeviceClass.POWER,
-        "state_class": SensorStateClass.MEASUREMENT,
-        "translation_key": "current_consumption",
-    },
-    ATTR_TOTAL_ENERGY_KWH: {
-        "device_class": SensorDeviceClass.ENERGY,
-        "state_class": SensorStateClass.TOTAL_INCREASING,
-        "translation_key": "total_consumption",
-    },
-    ATTR_TODAY_ENERGY_KWH: {
-        "device_class": SensorDeviceClass.ENERGY,
-        "state_class": SensorStateClass.TOTAL_INCREASING,
-        "translation_key": "today_consumption",
-    },
-    ATTR_VOLTAGE: {
-        "device_class": SensorDeviceClass.VOLTAGE,
-        "state_class": SensorStateClass.MEASUREMENT,
-    },
-    ATTR_CURRENT_A: {
-        "device_class": SensorDeviceClass.CURRENT,
-        "state_class": SensorStateClass.MEASUREMENT,
-    },
-}
+@dataclass(frozen=True)
+class TPLinkSensorEntityDescription(SensorEntityDescription):
+    """Describes TPLink sensor entity."""
+
+    feature_id: str | None = None
+    precision: int | None = None
+
+
+ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
+    TPLinkSensorEntityDescription(
+        key=ATTR_CURRENT_POWER_W,
+        translation_key="current_consumption",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        feature_id="current_consumption",
+        precision=1,
+    ),
+    TPLinkSensorEntityDescription(
+        key=ATTR_TOTAL_ENERGY_KWH,
+        translation_key="total_consumption",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        feature_id="consumption_total",
+        precision=3,
+    ),
+    TPLinkSensorEntityDescription(
+        key=ATTR_TODAY_ENERGY_KWH,
+        translation_key="today_consumption",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        feature_id="consumption_today",
+        precision=3,
+    ),
+    TPLinkSensorEntityDescription(
+        key=ATTR_VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        feature_id="voltage",
+        precision=1,
+    ),
+    TPLinkSensorEntityDescription(
+        key=ATTR_CURRENT_A,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        feature_id="current",
+        precision=2,
+    ),
+)
+
+
+def _new_sensor_description(feature: Feature) -> TPLinkSensorEntityDescription:
+    """Create description for entities not yet added to the static description list."""
+    if isinstance(feature.value, datetime):
+        device_class = SensorDeviceClass.TIMESTAMP
+    else:
+        device_class = None
+    return TPLinkSensorEntityDescription(
+        key=feature.id,
+        name=feature.name,
+        native_unit_of_measurement=feature.unit,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=device_class,
+        feature_id=feature.id,
+        precision=feature.precision_hint,
+        entity_registry_enabled_default=feature.category is not Feature.Category.Debug,
+        entity_category=_category_for_feature(feature),
+    )
+
+
+def _async_sensors_for_device(
+    device: Device,
+    coordinator: TPLinkDataUpdateCoordinator,
+    expected_features: set[str | None],
+    parent: Device | None = None,
+) -> list[CoordinatedTPLinkEntity]:
+    """Generate the sensors for the device."""
+    sensors: list[CoordinatedTPLinkEntity] = []
+
+    sensors = [
+        TPLinkSensor(
+            device,
+            coordinator,
+            feature=device.features[description.feature_id],
+            description=description,
+            parent=parent,
+        )
+        for description in ENERGY_SENSORS
+        if description.feature_id in device.features
+    ]
+    new_sensors: list[CoordinatedTPLinkEntity] = [
+        TPLinkSensor(
+            device,
+            coordinator,
+            feature=feat,
+            description=_new_sensor_description(feat),
+            parent=parent,
+        )
+        for feat in device.features.values()
+        if feat.type == Feature.Sensor
+        and feat.id not in expected_features
+        # Timezone not currently supported in library
+        and not isinstance(feat.value, datetime)
+        and (
+            feat.category != Feature.Category.Primary
+            or device.device_type not in DEVICETYPES_WITH_SPECIALIZED_PLATFORMS
+        )
+    ]
+    return sensors + new_sensors
 
 
 async def async_setup_entry(
@@ -78,55 +167,48 @@ async def async_setup_entry(
     children_coordinators = data.children_coordinators
     entities: list[CoordinatedTPLinkEntity] = []
     device = parent_coordinator.device
-
+    expected_features = {description.feature_id for description in ENERGY_SENSORS}
     entities.extend(
-        _entities_for_device_and_its_children(
-            device,
-            feature_type=Feature.Sensor,
-            entity_class=TPLinkSensor,
-            coordinator=parent_coordinator,
-            extra_filter=_sensor_filter,
-            children_coordinators=children_coordinators,
+        _async_sensors_for_device(
+            device, parent_coordinator, expected_features=expected_features
         )
     )
+    for idx, child in enumerate(device.children):
+        # Only iot strips have child coordinators
+        if children_coordinators:
+            child_coordinator = children_coordinators[idx]
+        else:
+            child_coordinator = parent_coordinator
+        entities.extend(
+            _async_sensors_for_device(
+                child,
+                child_coordinator,
+                expected_features=expected_features,
+                parent=device,
+            )
+        )
 
     async_add_entities(entities)
-
-
-def _sensor_filter(device: Device, feature: Feature) -> bool:
-    "Filter sensors."
-    # today's consumption not available, when device was off all the day
-    if feature.id == ATTR_TODAY_ENERGY_KWH:
-        # iot bulb's do not report this information, so filter it out
-        if isinstance(device, IotBulb):
-            return False
-        return True
-    # By default do not show emeter features with None values
-    if feature.id in EMETER_FEATURE_IDS:
-        return feature.value is not None
-    return True
 
 
 class TPLinkSensor(CoordinatedTPLinkEntity, SensorEntity):
     """Representation of a feature-based TPLink sensor."""
 
+    entity_description: TPLinkSensorEntityDescription
+
     def __init__(
         self,
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
+        *,
+        description: TPLinkSensorEntityDescription,
         feature: Feature,
         parent: Device | None = None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(device, coordinator, feature=feature, parent=parent)
+        self.entity_description = description
         self._feature: Feature
-        feature_info = FEATURE_INFO.get(feature.id, {})
-        self.entity_description = _description_for_feature(
-            SensorEntityDescription,
-            feature,
-            native_unit_of_measurement=feature.unit,
-            **feature_info,
-        )
         self._async_call_update_attrs()
 
     @callback

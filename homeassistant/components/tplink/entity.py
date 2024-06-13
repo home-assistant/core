@@ -153,7 +153,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
             }
 
         self._attr_unique_id = self._get_unique_id()
-        self._attr_entity_category = self._category_for_feature(feature)
+        self._attr_entity_category = _category_for_feature(feature)
 
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""
@@ -183,22 +183,6 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         # For legacy sensors, we construct our IDs from the entity description
         if self.entity_description is not None:
             return f"{legacy_device_id(device)}_{self.entity_description.key}"
-
-    def _category_for_feature(self, feature: Feature | None) -> EntityCategory | None:
-        """Return entity category for a feature."""
-        # Main controls have no category
-        if feature is None or feature.category is Feature.Category.Primary:
-            return None
-
-        if (
-            entity_category := FEATURE_CATEGORY_TO_ENTITY_CATEGORY.get(feature.category)
-        ) is None:
-            _LOGGER.error(
-                "Unhandled category %s, fallback to DIAGNOSTIC", feature.category
-            )
-            entity_category = EntityCategory.DIAGNOSTIC
-
-        return entity_category
 
     @abstractmethod
     @callback
@@ -237,6 +221,21 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.last_update_success and self._attr_available
+
+
+def _category_for_feature(feature: Feature | None) -> EntityCategory | None:
+    """Return entity category for a feature."""
+    # Main controls have no category
+    if feature is None or feature.category is Feature.Category.Primary:
+        return None
+
+    if (
+        entity_category := FEATURE_CATEGORY_TO_ENTITY_CATEGORY.get(feature.category)
+    ) is None:
+        _LOGGER.error("Unhandled category %s, fallback to DIAGNOSTIC", feature.category)
+        entity_category = EntityCategory.DIAGNOSTIC
+
+    return entity_category
 
 
 def _entities_for_device[_E: CoordinatedTPLinkEntity](
