@@ -287,6 +287,8 @@ class MqttClientSetup:
         # pylint: disable-next=import-outside-toplevel
         from .async_client import AsyncMQTTClient
 
+        self._config = config
+
         if (protocol := config.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)) == PROTOCOL_31:
             proto = mqtt.MQTTv31
         elif protocol == PROTOCOL_5:
@@ -298,15 +300,25 @@ class MqttClientSetup:
             # PAHO MQTT relies on the MQTT server to generate random client IDs.
             # However, that feature is not mandatory so we generate our own.
             client_id = mqtt.base62(uuid.uuid4().int, padding=22)
-        transport = config.get(CONF_TRANSPORT, DEFAULT_TRANSPORT)
+        self._transport: str = config.get(CONF_TRANSPORT, DEFAULT_TRANSPORT)
         self._client = AsyncMQTTClient(
-            client_id, protocol=proto, transport=transport, reconnect_on_failure=False
+            client_id,
+            protocol=proto,
+            transport=self._transport,
+            reconnect_on_failure=False,
         )
-        self._client.async_setup()
 
+    def setup(self) -> None:
+        """Set up the MQTT client.
+
+        The setup of the MQTT client should be run in an executor job,
+        because it accesses files, so it does IO.
+        """
+        self._client.async_setup()
         # Enable logging
         self._client.enable_logger()
 
+        config = self._config
         username: str | None = config.get(CONF_USERNAME)
         password: str | None = config.get(CONF_PASSWORD)
         if username is not None:
@@ -320,7 +332,7 @@ class MqttClientSetup:
         client_key = get_file_path(CONF_CLIENT_KEY, config.get(CONF_CLIENT_KEY))
         client_cert = get_file_path(CONF_CLIENT_CERT, config.get(CONF_CLIENT_CERT))
         tls_insecure = config.get(CONF_TLS_INSECURE)
-        if transport == TRANSPORT_WEBSOCKETS:
+        if self._transport == TRANSPORT_WEBSOCKETS:
             ws_path: str = config.get(CONF_WS_PATH, DEFAULT_WS_PATH)
             ws_headers: dict[str, str] = config.get(CONF_WS_HEADERS, DEFAULT_WS_HEADERS)
             self._client.ws_set_options(ws_path, ws_headers)
@@ -544,7 +556,9 @@ class MQTT:
                 self.hass, "homeassistant.components.mqtt.async_client"
             )
 
-        mqttc = MqttClientSetup(self.conf).client
+        mqttc_setup = MqttClientSetup(self.conf)
+        await self.hass.async_add_executor_job(mqttc_setup.setup)
+        mqttc = mqttc_setup.client
         # on_socket_unregister_write and _async_on_socket_close
         # are only ever called in the event loop
         mqttc.on_socket_close = self._async_on_socket_close
