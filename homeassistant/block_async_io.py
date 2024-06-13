@@ -61,7 +61,7 @@ class BlockingCall:
     skip_for_tests: bool
 
 
-BLOCKING_CALLS: tuple[BlockingCall, ...] = (
+_BLOCKING_CALLS: tuple[BlockingCall, ...] = (
     BlockingCall(
         original_func=HTTPConnection.putrequest,
         object=HTTPConnection,
@@ -153,16 +153,17 @@ class BlockedCalls:
     calls: set[BlockingCall]
 
 
-BLOCKED_CALLS = BlockedCalls(set())
+_BLOCKED_CALLS = BlockedCalls(set())
 
 
 def enable() -> None:
     """Enable the detection of blocking calls in the event loop."""
-    if BLOCKED_CALLS.calls:
+    calls = _BLOCKED_CALLS.calls
+    if calls:
         raise RuntimeError("Blocking call detection is already enabled")
 
     loop_thread_id = threading.get_ident()
-    for blocking_call in BLOCKING_CALLS:
+    for blocking_call in _BLOCKING_CALLS:
         if _IN_TESTS and blocking_call.skip_for_tests:
             continue
 
@@ -174,4 +175,4 @@ def enable() -> None:
             loop_thread_id=loop_thread_id,
         )
         setattr(blocking_call.object, blocking_call.function, protected_function)
-        BLOCKED_CALLS.calls.add(blocking_call)
+        calls.add(blocking_call)

@@ -1771,8 +1771,9 @@ async def snapshot_platform(
 
 def disable_block_async_io() -> None:
     """Disable the detection of blocking calls in the event loop."""
-    for blocking_call in block_async_io.BLOCKED_CALLS.calls:
+    calls = block_async_io._BLOCKED_CALLS.calls
+    for blocking_call in calls:
         setattr(
             blocking_call.object, blocking_call.function, blocking_call.original_func
         )
-    block_async_io.BLOCKED_CALLS.calls.clear()
+    calls.clear()
