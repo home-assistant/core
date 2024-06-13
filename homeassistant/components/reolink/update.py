@@ -187,7 +187,7 @@ class ReolinkHostUpdateEntity(
     ReolinkHostCoordinatorEntity,
     UpdateEntity,
 ):
-    """Update entity class for Reolink NVR."""
+    """Update entity class for Reolink Host."""
 
     entity_description: ReolinkHostUpdateEntityDescription
     _attr_release_url = "https://reolink.com/download-center/"
