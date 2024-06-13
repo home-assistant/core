@@ -311,7 +311,11 @@ FEATURE_TO_MOCK_GEN = {
         True, "state", type_=Feature.Type.Switch, category=Feature.Category.Primary
     ),
     "led": lambda: _mocked_feature(
-        True, "led", type_=Feature.Type.Switch, category=Feature.Category.Config
+        True,
+        "led",
+        name="LED",
+        type_=Feature.Type.Switch,
+        category=Feature.Category.Config,
     ),
     "on_since": lambda: _mocked_feature(
         datetime.now() - timedelta(minutes=5),

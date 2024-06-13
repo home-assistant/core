@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
 from typing import cast
 
 from kasa import Device, Feature
@@ -34,18 +33,20 @@ from .const import (
 )
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import (
-    DEVICETYPES_WITH_SPECIALIZED_PLATFORMS,
     CoordinatedTPLinkEntity,
+    TPLinkFeatureEntityDescription,
     _category_for_feature,
+    _entities_for_device_and_its_children,
 )
 from .models import TPLinkData
 
 
 @dataclass(frozen=True)
-class TPLinkSensorEntityDescription(SensorEntityDescription):
+class TPLinkSensorEntityDescription(
+    SensorEntityDescription, TPLinkFeatureEntityDescription
+):
     """Describes TPLink sensor entity."""
 
-    feature_id: str | None = None
     precision: int | None = None
 
 
@@ -110,47 +111,6 @@ def _new_sensor_description(feature: Feature) -> TPLinkSensorEntityDescription:
     )
 
 
-def _async_sensors_for_device(
-    device: Device,
-    coordinator: TPLinkDataUpdateCoordinator,
-    expected_features: set[str | None],
-    parent: Device | None = None,
-) -> list[CoordinatedTPLinkEntity]:
-    """Generate the sensors for the device."""
-    sensors: list[CoordinatedTPLinkEntity] = []
-
-    sensors = [
-        TPLinkSensor(
-            device,
-            coordinator,
-            feature=device.features[description.feature_id],
-            description=description,
-            parent=parent,
-        )
-        for description in ENERGY_SENSORS
-        if description.feature_id in device.features
-    ]
-    new_sensors: list[CoordinatedTPLinkEntity] = [
-        TPLinkSensor(
-            device,
-            coordinator,
-            feature=feat,
-            description=_new_sensor_description(feat),
-            parent=parent,
-        )
-        for feat in device.features.values()
-        if feat.type == Feature.Sensor
-        and feat.id not in expected_features
-        # Timezone not currently supported in library
-        and not isinstance(feat.value, datetime)
-        and (
-            feat.category != Feature.Category.Primary
-            or device.device_type not in DEVICETYPES_WITH_SPECIALIZED_PLATFORMS
-        )
-    ]
-    return sensors + new_sensors
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -162,27 +122,16 @@ async def async_setup_entry(
     children_coordinators = data.children_coordinators
     entities: list[CoordinatedTPLinkEntity] = []
     device = parent_coordinator.device
-    expected_features = {description.feature_id for description in ENERGY_SENSORS}
-    entities.extend(
-        _async_sensors_for_device(
-            device, parent_coordinator, expected_features=expected_features
-        )
-    )
-    for idx, child in enumerate(device.children):
-        # Only iot strips have child coordinators
-        if children_coordinators:
-            child_coordinator = children_coordinators[idx]
-        else:
-            child_coordinator = parent_coordinator
-        entities.extend(
-            _async_sensors_for_device(
-                child,
-                child_coordinator,
-                expected_features=expected_features,
-                parent=device,
-            )
-        )
 
+    entities = _entities_for_device_and_its_children(
+        device=device,
+        coordinator=parent_coordinator,
+        feature_type=Feature.Type.Sensor,
+        entity_class=TPLinkSensor,
+        descriptions=ENERGY_SENSORS,
+        child_coordinators=children_coordinators,
+        new_description_generator=_new_sensor_description,
+    )
     async_add_entities(entities)
 
 
@@ -201,8 +150,9 @@ class TPLinkSensor(CoordinatedTPLinkEntity, SensorEntity):
         parent: Device | None = None,
     ) -> None:
         """Initialize the sensor."""
-        self.entity_description = description
-        super().__init__(device, coordinator, feature=feature, parent=parent)
+        super().__init__(
+            device, coordinator, description=description, feature=feature, parent=parent
+        )
         self._feature: Feature
         self._async_call_update_attrs()
 

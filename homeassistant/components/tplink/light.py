@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass
 import logging
 from typing import Any, Final
 
@@ -19,6 +20,7 @@ from homeassistant.components.light import (
     EFFECT_OFF,
     ColorMode,
     LightEntity,
+    LightEntityDescription,
     LightEntityFeature,
     filter_supported_color_modes,
 )
@@ -147,8 +149,9 @@ async def async_setup_entry(
                 TPLinkSmartLightStrip(
                     device,
                     parent_coordinator,
-                    device.modules[Module.Light],
-                    effect_module,
+                    description=TPLinkLightEntityDescription(key=""),
+                    light_module=device.modules[Module.Light],
+                    effect_module=effect_module,
                 )
             ]
         )
@@ -165,8 +168,20 @@ async def async_setup_entry(
         )
     elif Module.Light in device.modules:
         async_add_entities(
-            [TPLinkSmartBulb(device, parent_coordinator, device.modules[Module.Light])]
+            [
+                TPLinkSmartBulb(
+                    device,
+                    parent_coordinator,
+                    description=TPLinkLightEntityDescription(key=""),
+                    light_module=device.modules[Module.Light],
+                )
+            ]
         )
+
+
+@dataclass(frozen=True)
+class TPLinkLightEntityDescription(LightEntityDescription):
+    """Describes TPLink light entity."""
 
 
 class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
@@ -180,10 +195,12 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         self,
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
+        *,
+        description: LightEntityDescription,
         light_module: Light,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(device, coordinator)
+        super().__init__(device, coordinator, description=description)
         self._light_module = light_module
         modes: set[ColorMode] = {ColorMode.ONOFF}
         if light_module.is_variable_color_temp:
@@ -315,12 +332,16 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
         self,
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
+        *,
+        description: LightEntityDescription,
         light_module: Light,
         effect_module: LightEffect,
     ) -> None:
-        """Initialize the switch."""
+        """Initialize the light strip."""
         self._effect_module = effect_module
-        super().__init__(device, coordinator, light_module)
+        super().__init__(
+            device, coordinator, description=description, light_module=light_module
+        )
 
     _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
 

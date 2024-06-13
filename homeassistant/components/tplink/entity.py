@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable, Coroutine
+from dataclasses import dataclass
+from datetime import datetime
 import logging
-from typing import Any, Concatenate, TypedDict
+from typing import Any, Concatenate
 
 from kasa import (
     AuthenticationError,
@@ -50,10 +52,11 @@ DEVICETYPES_WITH_SPECIALIZED_PLATFORMS = {
 }
 
 
-class EntityDescriptionExtras(TypedDict, total=False):
-    """Extra kwargs that can be provided to entity descriptions."""
+@dataclass(frozen=True)
+class TPLinkFeatureEntityDescription(EntityDescription):
+    """Describes TPLink entity."""
 
-    entity_registry_enabled_default: bool
+    feature_id: str | None = None
 
 
 def async_refresh_after[_T: CoordinatedTPLinkEntity, **_P](
@@ -108,11 +111,13 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
         *,
+        description: EntityDescription,
         feature: Feature | None = None,
         parent: Device | None = None,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
+        self.entity_description = description
         self._device: Device = device
         self._feature = feature
 
@@ -153,7 +158,6 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
             }
 
         self._attr_unique_id = self._get_unique_id()
-        self._attr_entity_category = _category_for_feature(feature)
 
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""
@@ -245,28 +249,50 @@ def _entities_for_device[_E: CoordinatedTPLinkEntity](
     feature_type: Feature.Type,
     entity_class: type[_E],
     parent: Device | None = None,
-    extra_filter: Callable[[Device, Feature], bool] | None = None,
+    descriptions: tuple[TPLinkFeatureEntityDescription, ...] | None = None,
+    new_description_generator: Callable[[Feature], TPLinkFeatureEntityDescription]
+    | None = None,
 ) -> list[_E]:
     """Return a list of entities to add.
 
     This filters out unwanted features to avoid creating unnecessary entities
     for device features that are implemented by specialized platforms like light.
     """
-    return [
-        entity_class(
-            device,
-            coordinator,
-            feature=feat,
-            parent=parent,
+    described_features: set[str | None] = set()
+    entities: list[_E] = []
+    if descriptions:
+        described_features = {description.feature_id for description in descriptions}
+        entities.extend(
+            entity_class(
+                device,
+                coordinator,
+                feature=device.features[description.feature_id],
+                description=description,
+                parent=parent,
+            )
+            for description in descriptions
+            if description.feature_id in device.features
         )
-        for feat in device.features.values()
-        if feat.type == feature_type
-        and (
-            feat.category != Feature.Category.Primary
-            or device.device_type not in DEVICETYPES_WITH_SPECIALIZED_PLATFORMS
+    if new_description_generator:
+        entities.extend(
+            entity_class(
+                device,
+                coordinator,
+                feature=feat,
+                description=new_description_generator(feat),
+                parent=parent,
+            )
+            for feat in device.features.values()
+            if feat.type == feature_type
+            and feat.id not in described_features
+            # Timezone not currently supported in library
+            and not isinstance(feat.value, datetime)
+            and (
+                feat.category != Feature.Category.Primary
+                or device.device_type not in DEVICETYPES_WITH_SPECIALIZED_PLATFORMS
+            )
         )
-        and (not extra_filter or extra_filter(device, feat))
-    ]
+    return entities
 
 
 def _entities_for_device_and_its_children[_E: CoordinatedTPLinkEntity](
@@ -275,59 +301,44 @@ def _entities_for_device_and_its_children[_E: CoordinatedTPLinkEntity](
     *,
     feature_type: Feature.Type,
     entity_class: type[_E],
-    extra_filter: Callable[[Device, Feature], bool] | None = None,
+    descriptions: tuple[TPLinkFeatureEntityDescription, ...] | None = None,
+    new_description_generator: Callable[[Feature], TPLinkFeatureEntityDescription]
+    | None = None,
+    child_coordinators: list[TPLinkDataUpdateCoordinator] | None = None,
 ) -> list[_E]:
     """Create entities for device and its children.
 
     This is a helper that calls *_entities_for_device* for the device and its children.
     """
     entities: list[_E] = []
-    if device.children:
-        _LOGGER.debug("Initializing device with %s children", len(device.children))
-        for child in device.children:
-            entities.extend(
-                _entities_for_device(
-                    child,
-                    coordinator=coordinator,
-                    feature_type=feature_type,
-                    entity_class=entity_class,
-                    parent=device,
-                    extra_filter=extra_filter,
-                )
-            )
-
+    # Add parent entities before children so via_device id works.
     entities.extend(
         _entities_for_device(
             device,
             coordinator=coordinator,
             feature_type=feature_type,
             entity_class=entity_class,
-            extra_filter=extra_filter,
+            descriptions=descriptions,
+            new_description_generator=new_description_generator,
         )
     )
+    if device.children:
+        _LOGGER.debug("Initializing device with %s children", len(device.children))
+        for idx, child in enumerate(device.children):
+            if child_coordinators:
+                child_coordinator = child_coordinators[idx]
+            else:
+                child_coordinator = coordinator
+            entities.extend(
+                _entities_for_device(
+                    child,
+                    coordinator=child_coordinator,
+                    feature_type=feature_type,
+                    entity_class=entity_class,
+                    parent=device,
+                    descriptions=descriptions,
+                    new_description_generator=new_description_generator,
+                )
+            )
 
     return entities
-
-
-def _description_for_feature[_D: EntityDescription](
-    desc_cls: type[_D], feature: Feature, **kwargs: Any
-) -> _D:
-    """Return description object for the given feature.
-
-    This is responsible for setting the common parameters & deciding based on feature id
-    which additional parameters are passed.
-    """
-
-    # Disable all debug features that are not explicitly enabled.
-    if "entity_registry_enabled_default" not in kwargs:
-        kwargs["entity_registry_enabled_default"] = (
-            feature.category is not Feature.Category.Debug
-        )
-    if "translation_key" not in kwargs:
-        kwargs["translation_key"] = feature.id
-
-    return desc_cls(
-        key=feature.id,
-        name=feature.name,
-        **kwargs,
-    )

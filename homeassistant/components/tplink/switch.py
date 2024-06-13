@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -16,13 +17,32 @@ from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import (
     CoordinatedTPLinkEntity,
-    _description_for_feature,
+    TPLinkFeatureEntityDescription,
+    _category_for_feature,
     _entities_for_device_and_its_children,
     async_refresh_after,
 )
 from .models import TPLinkData
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class TPLinkSwitchEntityDescription(
+    SwitchEntityDescription, TPLinkFeatureEntityDescription
+):
+    """Describes TPLink sensor entity."""
+
+
+def _new_switch_description(feature: Feature) -> TPLinkSwitchEntityDescription:
+    """Create description for entities not yet added to the static description list."""
+    return TPLinkSwitchEntityDescription(
+        key=feature.id,
+        name=feature.name,
+        feature_id=feature.id,
+        entity_registry_enabled_default=feature.category is not Feature.Category.Debug,
+        entity_category=_category_for_feature(feature),
+    )
 
 
 async def async_setup_entry(
@@ -40,6 +60,7 @@ async def async_setup_entry(
         coordinator=parent_coordinator,
         feature_type=Feature.Switch,
         entity_class=TPLinkSwitch,
+        new_description_generator=_new_switch_description,
     )
 
     async_add_entities(entities)
@@ -53,6 +74,7 @@ class TPLinkSwitch(CoordinatedTPLinkEntity, SwitchEntity):
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
         *,
+        description: TPLinkSwitchEntityDescription,
         feature: Feature,
         parent: Device | None = None,
     ) -> None:
@@ -60,6 +82,7 @@ class TPLinkSwitch(CoordinatedTPLinkEntity, SwitchEntity):
         super().__init__(
             device,
             coordinator,
+            description=description,
             feature=feature,
             parent=parent,
         )
@@ -69,9 +92,6 @@ class TPLinkSwitch(CoordinatedTPLinkEntity, SwitchEntity):
         if feature.category is Feature.Category.Primary and not parent:
             self._attr_name = None
 
-        self.entity_description = _description_for_feature(
-            SwitchEntityDescription, feature
-        )
         self._async_call_update_attrs()
 
     @async_refresh_after
