@@ -90,4 +90,4 @@ class ZHAAlarmControlPanel(ZHAEntity, AlarmControlPanelEntity):
     @property
     def state(self) -> str | None:
         """Return the state of the entity."""
-        return self.entity_data.entity.state
+        return self.entity_data.entity.state["state"]
