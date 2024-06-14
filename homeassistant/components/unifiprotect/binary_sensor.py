@@ -26,19 +26,17 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DISPATCH_ADOPT
 from .data import ProtectData, UFPConfigEntry
 from .entity import (
+    BaseProtectEntity,
     EventEntityMixin,
     ProtectDeviceEntity,
     ProtectNVREntity,
     async_all_device_entities,
 )
 from .models import PermRequired, ProtectEventMixin, ProtectRequiredKeysMixin
-from .utils import async_dispatch_id as _ufpd
 
 _LOGGER = logging.getLogger(__name__)
 _KEY_DOOR = "door"
@@ -630,7 +628,7 @@ async def async_setup_entry(
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        entities: list[ProtectDeviceEntity] = async_all_device_entities(
+        entities = async_all_device_entities(
             data,
             ProtectDeviceBinarySensor,
             model_descriptions=_MODEL_DESCRIPTIONS,
@@ -640,11 +638,9 @@ async def async_setup_entry(
             entities += _async_event_entities(data, ufp_device=device)
         async_add_entities(entities)
 
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
-    )
+    data.async_subscribe_adopt(_add_new_device)
 
-    entities: list[ProtectDeviceEntity] = async_all_device_entities(
+    entities = async_all_device_entities(
         data, ProtectDeviceBinarySensor, model_descriptions=_MODEL_DESCRIPTIONS
     )
     entities += _async_event_entities(data)
@@ -659,9 +655,7 @@ def _async_event_entities(
     ufp_device: ProtectAdoptableDeviceModel | None = None,
 ) -> list[ProtectDeviceEntity]:
     entities: list[ProtectDeviceEntity] = []
-    devices = (
-        data.get_by_types({ModelType.CAMERA}) if ufp_device is None else [ufp_device]
-    )
+    devices = data.get_cameras() if ufp_device is None else [ufp_device]
     for device in devices:
         for description in EVENT_SENSORS:
             if not description.has_required(device):
@@ -679,8 +673,8 @@ def _async_event_entities(
 @callback
 def _async_nvr_entities(
     data: ProtectData,
-) -> list[ProtectDeviceEntity]:
-    entities: list[ProtectDeviceEntity] = []
+) -> list[BaseProtectEntity]:
+    entities: list[BaseProtectEntity] = []
     device = data.api.bootstrap.nvr
     if device.system_info.ustorage is None:
         return entities

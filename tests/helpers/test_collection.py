@@ -450,9 +450,8 @@ async def test_storage_collection_websocket(
     client = await hass_ws_client(hass)
 
     # Create invalid
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 1,
             "type": "test_item/collection/create",
             "name": 1,
             # Forgot to add immutable_string
@@ -464,9 +463,8 @@ async def test_storage_collection_websocket(
     assert len(changes) == 0
 
     # Create
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 2,
             "type": "test_item/collection/create",
             "name": "Initial Name",
             "immutable_string": "no-changes",
@@ -483,7 +481,7 @@ async def test_storage_collection_websocket(
     assert changes[0] == (collection.CHANGE_ADDED, "initial_name", response["result"])
 
     # List
-    await client.send_json({"id": 3, "type": "test_item/collection/list"})
+    await client.send_json_auto_id({"type": "test_item/collection/list"})
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == [
@@ -496,9 +494,8 @@ async def test_storage_collection_websocket(
     assert len(changes) == 1
 
     # Update invalid data
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 4,
             "type": "test_item/collection/update",
             "test_item_id": "initial_name",
             "immutable_string": "no-changes",
@@ -510,9 +507,8 @@ async def test_storage_collection_websocket(
     assert len(changes) == 1
 
     # Update invalid item
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 5,
             "type": "test_item/collection/update",
             "test_item_id": "non-existing",
             "name": "Updated name",
@@ -524,9 +520,8 @@ async def test_storage_collection_websocket(
     assert len(changes) == 1
 
     # Update
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "test_item/collection/update",
             "test_item_id": "initial_name",
             "name": "Updated name",
@@ -543,8 +538,8 @@ async def test_storage_collection_websocket(
     assert changes[1] == (collection.CHANGE_UPDATED, "initial_name", response["result"])
 
     # Delete invalid ID
-    await client.send_json(
-        {"id": 7, "type": "test_item/collection/update", "test_item_id": "non-existing"}
+    await client.send_json_auto_id(
+        {"type": "test_item/collection/update", "test_item_id": "non-existing"}
     )
     response = await client.receive_json()
     assert not response["success"]
@@ -552,8 +547,8 @@ async def test_storage_collection_websocket(
     assert len(changes) == 2
 
     # Delete
-    await client.send_json(
-        {"id": 8, "type": "test_item/collection/delete", "test_item_id": "initial_name"}
+    await client.send_json_auto_id(
+        {"type": "test_item/collection/delete", "test_item_id": "initial_name"}
     )
     response = await client.receive_json()
     assert response["success"]

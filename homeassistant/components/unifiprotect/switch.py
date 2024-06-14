@@ -20,15 +20,12 @@ from uiprotect.data import (
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DISPATCH_ADOPT
 from .data import ProtectData, UFPConfigEntry
 from .entity import ProtectDeviceEntity, ProtectNVREntity, async_all_device_entities
 from .models import PermRequired, ProtectRequiredKeysMixin, ProtectSetableKeysMixin, T
-from .utils import async_dispatch_id as _ufpd
 
 _LOGGER = logging.getLogger(__name__)
 ATTR_PREV_MIC = "prev_mic_level"
@@ -494,11 +491,8 @@ async def async_setup_entry(
         )
         async_add_entities(entities)
 
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
-    )
-
-    entities: list[ProtectDeviceEntity] = async_all_device_entities(
+    data.async_subscribe_adopt(_add_new_device)
+    entities = async_all_device_entities(
         data,
         ProtectSwitch,
         model_descriptions=_MODEL_DESCRIPTIONS,

@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Any, cast
+from typing import Any
 
 from uiprotect.data import (
     NVR,
@@ -37,19 +37,18 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DISPATCH_ADOPT
 from .data import ProtectData, UFPConfigEntry
 from .entity import (
+    BaseProtectEntity,
     EventEntityMixin,
     ProtectDeviceEntity,
     ProtectNVREntity,
     async_all_device_entities,
 )
 from .models import PermRequired, ProtectEventMixin, ProtectRequiredKeysMixin, T
-from .utils import async_dispatch_id as _ufpd, async_get_light_motion_current
+from .utils import async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
@@ -640,11 +639,8 @@ async def async_setup_entry(
             entities += _async_event_entities(data, ufp_device=device)
         async_add_entities(entities)
 
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
-    )
-
-    entities: list[ProtectDeviceEntity] = async_all_device_entities(
+    data.async_subscribe_adopt(_add_new_device)
+    entities = async_all_device_entities(
         data,
         ProtectDeviceSensor,
         all_descs=ALL_DEVICES_SENSORS,
@@ -662,31 +658,28 @@ def _async_event_entities(
     ufp_device: Camera | None = None,
 ) -> list[ProtectDeviceEntity]:
     entities: list[ProtectDeviceEntity] = []
-    devices = (
-        data.get_by_types({ModelType.CAMERA}) if ufp_device is None else [ufp_device]
-    )
-    for device in devices:
-        device = cast(Camera, device)
+    cameras = data.get_cameras() if ufp_device is None else [ufp_device]
+    for camera in cameras:
         for description in MOTION_TRIP_SENSORS:
-            entities.append(ProtectDeviceSensor(data, device, description))
+            entities.append(ProtectDeviceSensor(data, camera, description))
             _LOGGER.debug(
                 "Adding trip sensor entity %s for %s",
                 description.name,
-                device.display_name,
+                camera.display_name,
             )
 
-        if not device.feature_flags.has_smart_detect:
+        if not camera.feature_flags.has_smart_detect:
             continue
 
         for event_desc in LICENSE_PLATE_EVENT_SENSORS:
-            if not event_desc.has_required(device):
+            if not event_desc.has_required(camera):
                 continue
 
-            entities.append(ProtectLicensePlateEventSensor(data, device, event_desc))
+            entities.append(ProtectLicensePlateEventSensor(data, camera, event_desc))
             _LOGGER.debug(
                 "Adding sensor entity %s for %s",
                 description.name,
-                device.display_name,
+                camera.display_name,
             )
 
     return entities
@@ -695,8 +688,8 @@ def _async_event_entities(
 @callback
 def _async_nvr_entities(
     data: ProtectData,
-) -> list[ProtectDeviceEntity]:
-    entities: list[ProtectDeviceEntity] = []
+) -> list[BaseProtectEntity]:
+    entities: list[BaseProtectEntity] = []
     device = data.api.bootstrap.nvr
     for description in NVR_SENSORS + NVR_DISABLED_SENSORS:
         entities.append(ProtectNVRSensor(data, device, description))

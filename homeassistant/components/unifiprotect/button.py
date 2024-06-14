@@ -20,7 +20,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICES_THAT_ADOPT, DISPATCH_ADD, DISPATCH_ADOPT, DOMAIN
+from .const import DEVICES_THAT_ADOPT, DISPATCH_ADD, DOMAIN
 from .data import ProtectData, UFPConfigEntry
 from .entity import ProtectDeviceEntity, async_all_device_entities
 from .models import PermRequired, ProtectRequiredKeysMixin, ProtectSetableKeysMixin, T
@@ -138,32 +138,31 @@ async def async_setup_entry(
         if not device.can_adopt or not device.can_create(data.api.bootstrap.auth_user):
             _LOGGER.debug("Device is not adoptable: %s", device.id)
             return
-
-        entities = async_all_device_entities(
-            data,
-            ProtectButton,
-            unadopted_descs=[ADOPT_BUTTON],
-            ufp_device=device,
+        async_add_entities(
+            async_all_device_entities(
+                data,
+                ProtectButton,
+                unadopted_descs=[ADOPT_BUTTON],
+                ufp_device=device,
+            )
         )
-        async_add_entities(entities)
 
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
-    )
+    data.async_subscribe_adopt(_add_new_device)
     entry.async_on_unload(
         async_dispatcher_connect(
             hass, _ufpd(entry, DISPATCH_ADD), _async_add_unadopted_device
         )
     )
 
-    entities: list[ProtectDeviceEntity] = async_all_device_entities(
-        data,
-        ProtectButton,
-        all_descs=ALL_DEVICE_BUTTONS,
-        unadopted_descs=[ADOPT_BUTTON],
-        model_descriptions=_MODEL_DESCRIPTIONS,
+    async_add_entities(
+        async_all_device_entities(
+            data,
+            ProtectButton,
+            all_descs=ALL_DEVICE_BUTTONS,
+            unadopted_descs=[ADOPT_BUTTON],
+            model_descriptions=_MODEL_DESCRIPTIONS,
+        )
     )
-    async_add_entities(entities)
 
     for device in data.get_by_types(DEVICES_THAT_ADOPT):
         _async_remove_adopt_button(hass, device)

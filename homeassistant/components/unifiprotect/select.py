@@ -30,14 +30,13 @@ from uiprotect.data import (
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DISPATCH_ADOPT, TYPE_EMPTY_VALUE
+from .const import TYPE_EMPTY_VALUE
 from .data import ProtectData, UFPConfigEntry
 from .entity import ProtectDeviceEntity, async_all_device_entities
 from .models import PermRequired, ProtectRequiredKeysMixin, ProtectSetableKeysMixin, T
-from .utils import async_dispatch_id as _ufpd, async_get_light_motion_current
+from .utils import async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)
 _KEY_LIGHT_MOTION = "light_motion"
@@ -337,23 +336,21 @@ async def async_setup_entry(
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        entities = async_all_device_entities(
-            data,
-            ProtectSelects,
-            model_descriptions=_MODEL_DESCRIPTIONS,
-            ufp_device=device,
+        async_add_entities(
+            async_all_device_entities(
+                data,
+                ProtectSelects,
+                model_descriptions=_MODEL_DESCRIPTIONS,
+                ufp_device=device,
+            )
         )
-        async_add_entities(entities)
 
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+    data.async_subscribe_adopt(_add_new_device)
+    async_add_entities(
+        async_all_device_entities(
+            data, ProtectSelects, model_descriptions=_MODEL_DESCRIPTIONS
+        )
     )
-
-    entities: list[ProtectDeviceEntity] = async_all_device_entities(
-        data, ProtectSelects, model_descriptions=_MODEL_DESCRIPTIONS
-    )
-
-    async_add_entities(entities)
 
 
 class ProtectSelects(ProtectDeviceEntity, SelectEntity):
