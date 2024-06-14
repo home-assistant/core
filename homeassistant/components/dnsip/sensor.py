@@ -71,6 +71,7 @@ class WanIpSensor(SensorEntity):
 
     _attr_has_entity_name = True
     _attr_translation_key = "dnsip"
+    _unrecorded_attributes = frozenset({"Resolver", "Querytype"})
 
     def __init__(
         self,
