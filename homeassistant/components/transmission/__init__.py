@@ -193,19 +193,25 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     return True
 
 
+def _get_coordinator_from_service_data(
+    hass: HomeAssistant, entry_id: str
+) -> TransmissionDataUpdateCoordinator:
+    """Return coordinator for entry id."""
+    entry: TransmissionConfigEntry | None = hass.config_entries.async_get_entry(
+        entry_id
+    )
+    if entry is None or entry.state is not ConfigEntryState.LOADED:
+        raise HomeAssistantError(f"Config entry {entry_id} is not found or not loaded")
+    return entry.runtime_data
+
+
 def setup_hass_services(hass: HomeAssistant) -> None:
     """Home Assistant services."""
 
     async def add_torrent(service: ServiceCall) -> None:
         """Add new torrent to download."""
         entry_id: str = service.data[CONF_ENTRY_ID]
-        if (entry := hass.config_entries.async_get_entry(entry_id)) is None or (
-            entry.state is ConfigEntryState.LOADED
-        ):
-            raise HomeAssistantError(
-                f"Config entry {entry_id} is not found or not loaded"
-            )
-        coordinator: TransmissionDataUpdateCoordinator = entry.runtime_data
+        coordinator = _get_coordinator_from_service_data(hass, entry_id)
         torrent: str = service.data[ATTR_TORRENT]
         if torrent.startswith(
             ("http", "ftp:", "magnet:")
@@ -218,13 +224,7 @@ def setup_hass_services(hass: HomeAssistant) -> None:
     async def start_torrent(service: ServiceCall) -> None:
         """Start torrent."""
         entry_id: str = service.data[CONF_ENTRY_ID]
-        if (entry := hass.config_entries.async_get_entry(entry_id)) is None or (
-            entry.state is ConfigEntryState.LOADED
-        ):
-            raise HomeAssistantError(
-                f"Config entry {entry_id} is not found or not loaded"
-            )
-        coordinator: TransmissionDataUpdateCoordinator = entry.runtime_data
+        coordinator = _get_coordinator_from_service_data(hass, entry_id)
         torrent_id = service.data[CONF_ID]
         await hass.async_add_executor_job(coordinator.api.start_torrent, torrent_id)
         await coordinator.async_request_refresh()
@@ -232,13 +232,7 @@ def setup_hass_services(hass: HomeAssistant) -> None:
     async def stop_torrent(service: ServiceCall) -> None:
         """Stop torrent."""
         entry_id: str = service.data[CONF_ENTRY_ID]
-        if (entry := hass.config_entries.async_get_entry(entry_id)) is None or (
-            entry.state is ConfigEntryState.LOADED
-        ):
-            raise HomeAssistantError(
-                f"Config entry {entry_id} is not found or not loaded"
-            )
-        coordinator: TransmissionDataUpdateCoordinator = entry.runtime_data
+        coordinator = _get_coordinator_from_service_data(hass, entry_id)
         torrent_id = service.data[CONF_ID]
         await hass.async_add_executor_job(coordinator.api.stop_torrent, torrent_id)
         await coordinator.async_request_refresh()
@@ -246,13 +240,7 @@ def setup_hass_services(hass: HomeAssistant) -> None:
     async def remove_torrent(service: ServiceCall) -> None:
         """Remove torrent."""
         entry_id: str = service.data[CONF_ENTRY_ID]
-        if (entry := hass.config_entries.async_get_entry(entry_id)) is None or (
-            entry.state is not ConfigEntryState.LOADED
-        ):
-            raise HomeAssistantError(
-                f"Config entry {entry_id} is not found or not loaded"
-            )
-        coordinator: TransmissionDataUpdateCoordinator = entry.runtime_data
+        coordinator = _get_coordinator_from_service_data(hass, entry_id)
         torrent_id = service.data[CONF_ID]
         delete_data = service.data[ATTR_DELETE_DATA]
         await hass.async_add_executor_job(
