@@ -1466,7 +1466,11 @@ async def async_test_off_from_hass(hass, cluster, entity_id):
 
 
 async def async_test_level_on_off_from_hass(
-    hass, on_off_cluster, level_cluster, entity_id, expected_default_transition: int = 0
+    hass: HomeAssistant,
+    on_off_cluster,
+    level_cluster,
+    entity_id,
+    expected_default_transition: int = 0,
 ):
     """Test on off functionality from hass."""
 
