@@ -75,7 +75,7 @@ class ReolinkVODMediaSource(MediaSource):
             url_log = url
             if "&user=" in url_log:
                 url_log = f"{url_log.split('&user=')[0]}&user=xxxxx&password=xxxxx"
-            if "&token=" in url_log:
+            elif "&token=" in url_log:
                 url_log = f"{url_log.split('&token=')[0]}&token=xxxxx"
             _LOGGER.debug(
                 "Opening VOD stream from %s: %s", host.api.camera_name(channel), url_log
