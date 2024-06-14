@@ -1757,7 +1757,7 @@ python-bsblan==0.5.18
 python-ecobee-api==0.2.18
 
 # homeassistant.components.fully_kiosk
-python-fullykiosk==0.0.12
+python-fullykiosk==0.0.13
 
 # homeassistant.components.sms
 # python-gammu==3.2.4
