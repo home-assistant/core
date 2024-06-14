@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONF_CODE,
     CONF_HOST,
     CONF_TIMEOUT,
+    CONF_UNIQUE_ID,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
@@ -67,35 +68,41 @@ PARTITION_SCHEMA = vol.Schema({vol.Required(CONF_PARTITIONNAME): cv.string})
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Required(CONF_PANEL_TYPE): vol.All(
-                    cv.string, vol.In([PANEL_TYPE_HONEYWELL, PANEL_TYPE_DSC])
-                ),
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASS): cv.string,
-                vol.Optional(CONF_CODE): cv.string,
-                vol.Optional(CONF_PANIC, default=DEFAULT_PANIC): cv.string,
-                vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
-                vol.Optional(CONF_PARTITIONS): {vol.Coerce(int): PARTITION_SCHEMA},
-                vol.Optional(CONF_EVL_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Optional(CONF_EVL_VERSION, default=DEFAULT_EVL_VERSION): vol.All(
-                    vol.Coerce(int), vol.Range(min=3, max=4)
-                ),
-                vol.Optional(CONF_EVL_KEEPALIVE, default=DEFAULT_KEEPALIVE): vol.All(
-                    vol.Coerce(int), vol.Range(min=15)
-                ),
-                vol.Optional(
-                    CONF_ZONEDUMP_INTERVAL, default=DEFAULT_ZONEDUMP_INTERVAL
-                ): vol.Coerce(int),
-                vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
-            }
+        DOMAIN: vol.All(
+            # Deprecated in 2024.7, remove from config in 2025.1
+            cv.deprecated(CONF_CODE),
+            vol.Schema(
+                {
+                    vol.Required(CONF_HOST): cv.string,
+                    vol.Required(CONF_PANEL_TYPE): vol.All(
+                        cv.string, vol.In([PANEL_TYPE_HONEYWELL, PANEL_TYPE_DSC])
+                    ),
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Required(CONF_PASS): cv.string,
+                    vol.Optional(CONF_CODE): cv.string,
+                    vol.Optional(CONF_PANIC, default=DEFAULT_PANIC): cv.string,
+                    vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
+                    vol.Optional(CONF_PARTITIONS): {vol.Coerce(int): PARTITION_SCHEMA},
+                    vol.Optional(CONF_EVL_PORT, default=DEFAULT_PORT): cv.port,
+                    vol.Optional(
+                        CONF_EVL_VERSION, default=DEFAULT_EVL_VERSION
+                    ): vol.All(vol.Coerce(int), vol.Range(min=3, max=4)),
+                    vol.Optional(
+                        CONF_EVL_KEEPALIVE, default=DEFAULT_KEEPALIVE
+                    ): vol.All(vol.Coerce(int), vol.Range(min=15)),
+                    vol.Optional(
+                        CONF_ZONEDUMP_INTERVAL, default=DEFAULT_ZONEDUMP_INTERVAL
+                    ): vol.Coerce(int),
+                    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(
+                        int
+                    ),
+                    vol.Optional(CONF_UNIQUE_ID): cv.string,
+                }
+            ),
         )
     },
     extra=vol.ALLOW_EXTRA,
 )
-
 SERVICE_CUSTOM_FUNCTION = "invoke_custom_function"
 ATTR_CUSTOM_FUNCTION = "pgm"
 ATTR_PARTITION = "partition"
@@ -125,6 +132,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     zones = conf.get(CONF_ZONES)
     partitions = conf.get(CONF_PARTITIONS)
     connection_timeout = conf.get(CONF_TIMEOUT)
+    unique_id = conf.get(CONF_UNIQUE_ID)
     sync_connect: asyncio.Future[bool] = hass.loop.create_future()
 
     controller = EnvisalinkAlarmPanel(
@@ -186,7 +194,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     @callback
     def stop_envisalink(event):
         """Shutdown envisalink connection and thread on exit."""
-        _LOGGER.info("Shutting down Envisalink")
+        _LOGGER.debug("Shutting down Envisalink")
         controller.stop()
 
     async def handle_custom_function(call: ServiceCall) -> None:
@@ -203,7 +211,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     controller.callback_login_timeout = async_connection_fail_callback
     controller.callback_login_success = async_connection_success_callback
 
-    _LOGGER.info("Start envisalink")
+    _LOGGER.debug("Start envisalink")
     controller.start()
 
     if not await sync_connect:
@@ -216,7 +224,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 hass,
                 Platform.ALARM_CONTROL_PANEL,
                 "envisalink",
-                {CONF_PARTITIONS: partitions, CONF_CODE: code, CONF_PANIC: panic_type},
+                {
+                    CONF_PARTITIONS: partitions,
+                    CONF_CODE: code,
+                    CONF_PANIC: panic_type,
+                    CONF_UNIQUE_ID: unique_id,
+                },
                 config,
             )
         )
@@ -225,14 +238,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 hass,
                 Platform.SENSOR,
                 "envisalink",
-                {CONF_PARTITIONS: partitions, CONF_CODE: code},
+                {
+                    CONF_PARTITIONS: partitions,
+                    CONF_CODE: code,
+                    CONF_UNIQUE_ID: unique_id,
+                },
                 config,
             )
         )
     if zones:
         hass.async_create_task(
             async_load_platform(
-                hass, Platform.BINARY_SENSOR, "envisalink", {CONF_ZONES: zones}, config
+                hass,
+                Platform.BINARY_SENSOR,
+                "envisalink",
+                {CONF_ZONES: zones, CONF_UNIQUE_ID: unique_id},
+                config,
             )
         )
 

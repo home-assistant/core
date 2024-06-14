@@ -14,6 +14,7 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_CODE,
+    CONF_UNIQUE_ID,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
@@ -63,6 +64,7 @@ async def async_setup_platform(
     configured_partitions = discovery_info["partitions"]
     code = discovery_info[CONF_CODE]
     panic_type = discovery_info[CONF_PANIC]
+    unique_id = discovery_info[CONF_UNIQUE_ID]
 
     entities = []
     for part_num in configured_partitions:
@@ -75,6 +77,7 @@ async def async_setup_platform(
             panic_type,
             hass.data[DATA_EVL].alarm_state["partition"][part_num],
             hass.data[DATA_EVL],
+            unique_id,
         )
         entities.append(entity)
 
@@ -112,13 +115,22 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
     )
 
     def __init__(
-        self, hass, partition_number, alarm_name, code, panic_type, info, controller
+        self,
+        hass,
+        partition_number,
+        alarm_name,
+        code,
+        panic_type,
+        info,
+        controller,
+        unique_id,
     ):
         """Initialize the alarm panel."""
         self._partition_number = partition_number
         self._panic_type = panic_type
         self._alarm_control_panel_option_default_code = code
         self._attr_code_format = CodeFormat.NUMBER
+        self._attr_unique_id = f"{unique_id}-{partition_number}"
 
         _LOGGER.debug("Setting up alarm: %s", alarm_name)
         super().__init__(alarm_name, info, controller)

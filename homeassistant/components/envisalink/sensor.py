@@ -32,6 +32,7 @@ async def async_setup_platform(
     if not discovery_info:
         return
     configured_partitions = discovery_info["partitions"]
+    unique_id = discovery_info["unique_id"]
 
     entities = []
     for part_num in configured_partitions:
@@ -42,6 +43,7 @@ async def async_setup_platform(
             part_num,
             hass.data[DATA_EVL].alarm_state["partition"][part_num],
             hass.data[DATA_EVL],
+            unique_id,
         )
 
         entities.append(entity)
@@ -52,10 +54,13 @@ async def async_setup_platform(
 class EnvisalinkSensor(EnvisalinkDevice, SensorEntity):
     """Representation of an Envisalink keypad."""
 
-    def __init__(self, hass, partition_name, partition_number, info, controller):
+    def __init__(
+        self, hass, partition_name, partition_number, info, controller, unique_id
+    ):
         """Initialize the sensor."""
         self._icon = "mdi:alarm"
         self._partition_number = partition_number
+        self._attr_unique_id = f"{unique_id}-{partition_number}"
 
         _LOGGER.debug("Setting up sensor for partition: %s", partition_name)
         super().__init__(f"{partition_name} Keypad", info, controller)

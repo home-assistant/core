@@ -35,6 +35,7 @@ async def async_setup_platform(
     if not discovery_info:
         return
     configured_zones = discovery_info["zones"]
+    unique_id = discovery_info["unique_id"]
 
     entities = []
     for zone_num in configured_zones:
@@ -46,6 +47,7 @@ async def async_setup_platform(
             entity_config_data[CONF_ZONETYPE],
             hass.data[DATA_EVL].alarm_state["zone"][zone_num],
             hass.data[DATA_EVL],
+            unique_id,
         )
         entities.append(entity)
 
@@ -55,10 +57,13 @@ async def async_setup_platform(
 class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorEntity):
     """Representation of an Envisalink binary sensor."""
 
-    def __init__(self, hass, zone_number, zone_name, zone_type, info, controller):
+    def __init__(
+        self, hass, zone_number, zone_name, zone_type, info, controller, unique_id
+    ):
         """Initialize the binary_sensor."""
         self._zone_type = zone_type
         self._zone_number = zone_number
+        self._attr_unique_id = f"{unique_id}-{zone_number}"
 
         _LOGGER.debug("Setting up zone: %s", zone_name)
         super().__init__(zone_name, info, controller)
