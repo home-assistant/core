@@ -72,10 +72,10 @@ async def simulate_time(hass, mock_litejet, delta):
         "homeassistant.helpers.condition.dt_util.utcnow",
         return_value=mock_litejet.start_time + delta,
     ):
-        _LOGGER.info("now=%s", dt_util.utcnow())
+        _LOGGER.info("*** now=%s", dt_util.utcnow())
         async_fire_time_changed_exact(hass, mock_litejet.start_time + delta)
         await hass.async_block_till_done()
-        _LOGGER.info("done with now=%s", dt_util.utcnow())
+        _LOGGER.info("*** done with now=%s", dt_util.utcnow())
 
 
 async def setup_automation(hass, trigger):
