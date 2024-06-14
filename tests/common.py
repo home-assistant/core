@@ -901,7 +901,7 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
         platform=None,
         scan_interval=timedelta(seconds=15),
         entity_namespace=None,
-    ):
+    ) -> None:
         """Initialize a mock entity platform."""
         if logger is None:
             logger = logging.getLogger("homeassistant.helpers.entity_platform")

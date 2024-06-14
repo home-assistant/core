@@ -1873,7 +1873,7 @@ async def test_change_entity_id(
     assert len(ent.remove_calls) == 2
 
 
-def test_entity_description_as_dataclass(snapshot: SnapshotAssertion):
+def test_entity_description_as_dataclass(snapshot: SnapshotAssertion) -> None:
     """Test EntityDescription behaves like a dataclass."""
 
     obj = entity.EntityDescription("blah", device_class="test")
@@ -1888,7 +1888,7 @@ def test_entity_description_as_dataclass(snapshot: SnapshotAssertion):
     assert repr(obj) == snapshot
 
 
-def test_extending_entity_description(snapshot: SnapshotAssertion):
+def test_extending_entity_description(snapshot: SnapshotAssertion) -> None:
     """Test extending entity descriptions."""
 
     @dataclasses.dataclass(frozen=True)
