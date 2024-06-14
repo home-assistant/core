@@ -30,9 +30,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
             TextSelectorConfig(type=TextSelectorType.EMAIL, autocomplete="email")
         ),
         vol.Required(CONF_PASSWORD): TextSelector(
-            TextSelectorConfig(
-                type=TextSelectorType.PASSWORD, autocomplete="current-password"
-            )
+            TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
 )
@@ -92,96 +90,22 @@ class SensoterraConfigFlow(ConfigFlow, domain=DOMAIN):
         """Create hub entry based on config flow."""
         errors: dict[str, str] = {}
 
-        if user_input is not None:
-            try:
-                data = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+        try:
+            if user_input is not None:
                 return self.async_create_entry(
                     title=user_input[CONF_EMAIL],
-                    data=data,
+                    data=await validate_input(self.hass, user_input),
                 )
+        except CannotConnect:
+            errors["base"] = "cannot_connect"
+        except InvalidAuth:
+            errors["base"] = "invalid_auth"
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="user",
-            data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, user_input
-            ),
-            errors=errors,
-        )
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Update hub entry based on new config flow."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        if entry is None:
-            # Should never happen
-            return self.async_abort(reason="Nothing to reconfigure")
-
-        errors: dict[str, str] = {}
-
-        if user_input is None:
-            user_input = {CONF_EMAIL: entry.data[CONF_EMAIL]}
-        else:
-            try:
-                data = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                return self.async_update_reload_and_abort(
-                    entry,
-                    data=data,
-                )
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, user_input
-            ),
-            errors=errors,
-        )
-
-    async def async_step_reauth(
-        self, user_input: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Update hub entry based on reauthentication config flow."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        if entry is None:
-            # Should never happen
-            return self.async_abort(reason="Nothing to reconfigure")
-
-        errors: dict[str, str] = {}
-
-        if CONF_PASSWORD in user_input:
-            try:
-                data = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                return self.async_update_reload_and_abort(
-                    entry,
-                    data=data,
-                )
-
-        return self.async_show_form(
-            step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
                 STEP_USER_DATA_SCHEMA, user_input
             ),

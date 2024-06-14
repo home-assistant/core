@@ -21,54 +21,48 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
 class SensoterraSensor:
-    """Model Sensoterra probe data produced by the API.
+    """Model Sensoterra probe data produced by the API."""
 
-    A Sensoterra probe contains multiple sensors. Home Assistant prefers
-    to have a single list of sensors.
-    """
+    depth: int | None = None
+    soil: str | None = None
+    timestamp: datetime | None = None
+    value: float | None = None
+
+    BATTERY_LEVELS: dict[str, int] = {"NORMAL": 100, "FAIR": 50, "POOR": 10}
 
     def __init__(
         self,
-        expiration: datetime,
         probe: Probe,
-        type: str,
-        sensor: Sensor | None = None,
+        sensor: Sensor | str,
     ) -> None:
-        """Initialise SensoterraSensor."""
+        """Initialise Sensoterra sensor."""
         self.name = probe.name
         self.sku = probe.sku
         self.serial = probe.serial
         self.location = probe.location
-        self.type = type
-        self.depth = None
-        self.soil = None
-        if sensor is not None:
+        if isinstance(sensor, Sensor):
+            self.id = sensor.id
+            self.type = sensor.type
             self.depth = sensor.depth
             self.soil = sensor.soil
-            self.value = round(sensor.value, 1)
+            self.value = sensor.value
             self.timestamp = sensor.timestamp
-        elif type == "BATTERY":
-            if probe.battery == "NORMAL":
-                self.value = 100
-            elif probe.battery == "FAIR":
-                self.value = 50
-            elif probe.battery == "POOR":
-                self.value = 10
-            else:
-                self.value = None
-            if self.value is not None:
-                self.timestamp = probe.timestamp
-        elif type == "LASTSEEN":
-            self.value = probe.timestamp
-            self.timestamp = datetime.now(UTC)
-        elif type == "RSSI":
-            if probe.rssi is not None:
-                self.value = round(probe.rssi, 0)
-                self.timestamp = probe.timestamp
         else:
-            raise UpdateFailed(f"Unknown sensor type {type}")
-        if self.timestamp is None or self.timestamp < expiration:
-            self.value = None
+            self.id = f"{probe.serial}-{sensor}"
+            self.type = sensor
+            if self.type == "RSSI":
+                if probe.rssi is not None:
+                    self.value = probe.rssi
+                    self.timestamp = probe.timestamp
+            elif self.type == "BATTERY":
+                if probe.battery in self.BATTERY_LEVELS:
+                    self.value = self.BATTERY_LEVELS[probe.battery]
+                    self.timestamp = probe.timestamp
+            elif self.type == "LASTSEEN":
+                self.value = probe.timestamp
+                self.timestamp = datetime.now(UTC)
+            else:
+                raise UpdateFailed(f"Unknown sensor {sensor}")
 
 
 class SensoterraCoordinator(DataUpdateCoordinator):
@@ -83,7 +77,7 @@ class SensoterraCoordinator(DataUpdateCoordinator):
             _LOGGER,
             # Name of the data. For logging purposes.
             name="Sensoterra probe",
-            # Polling interval. Will only be polled if there are subscribers.
+            # Polling interval. Will only be polled if there are subscribers (sensors).
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
         self.api = api
@@ -95,42 +89,36 @@ class SensoterraCoordinator(DataUpdateCoordinator):
             current_sensors = set(self.async_contexts())
             probes = await self.api.poll()
         except ApiAuthError as err:
-            # Raising ConfigEntryAuthFailed will cancel future updates
-            # and start a config flow with SOURCE_REAUTH (async_step_reauth)
             raise ConfigEntryAuthFailed(err) from err
         except ApiTimeout as err:
             raise UpdateFailed("Timeout communicating with Sensotera API") from err
         else:
-            sensors = {}
-            expiration = datetime.now(UTC) - timedelta(seconds=SCAN_INTERVAL)
+            # Flatten API return probe/sensor data structure.
+            sensors: list[SensoterraSensor] = []
             for probe in probes:
-                for sensor in probe.sensors():
-                    if sensor.type == "MOISTURE" and sensor.unit == "SI":
-                        sensor_id = f"{sensor.id}-SI"
-                        sensor_type = "SI"
-                    else:
-                        sensor_id = sensor.id
-                        sensor_type = sensor.type
-                    sensors[sensor_id] = SensoterraSensor(
-                        expiration, probe, sensor_type, sensor
-                    )
+                sensors.extend(
+                    SensoterraSensor(probe, sensor) for sensor in probe.sensors()
+                )
                 if probe.battery is not None:
-                    sensor_id = f"{probe.serial}-BATTERY"
-                    sensors[sensor_id] = SensoterraSensor(expiration, probe, "BATTERY")
+                    sensors.append(SensoterraSensor(probe, "BATTERY"))
                 if probe.rssi is not None:
-                    sensor_id = f"{probe.serial}-RSSI"
-                    sensors[sensor_id] = SensoterraSensor(expiration, probe, "RSSI")
-                sensor_id = f"{probe.serial}-LASTSEEN"
-                sensors[sensor_id] = SensoterraSensor(expiration, probe, "LASTSEEN")
+                    sensors.append(SensoterraSensor(probe, "RSSI"))
+                sensors.append(SensoterraSensor(probe, "LASTSEEN"))
 
+            # Only consider readings updated after the last poll
+            expiration = datetime.now(UTC) - timedelta(seconds=SCAN_INTERVAL)
+            for sensor in sensors:
+                if sensor.timestamp is None or sensor.timestamp < expiration:
+                    sensor.value = None
+
+            # Add new devices
             if self.add_devices_callback is not None:
-                # Add new devices
                 self.add_devices_callback(
                     {
-                        sensor_id: sensor
-                        for (sensor_id, sensor) in sensors.items()
-                        if sensor_id not in current_sensors
+                        sensor.id: sensor
+                        for sensor in sensors
+                        if sensor.id not in current_sensors
                     }
                 )
 
-        return sensors
+        return {sensor.id: sensor for sensor in sensors}

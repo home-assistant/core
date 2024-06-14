@@ -3,13 +3,8 @@
   "name": "Sensoterra",
   "codeowners": ["@markruys"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/sensoterra",
-  "homekit": {},
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "requirements": ["sensoterra==1.0.0"],
-  "single_config_entry": false,
-  "ssdp": [],
-  "zeroconf": []
+  "requirements": ["sensoterra==1.0.0"]
 }
