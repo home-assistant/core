@@ -401,10 +401,10 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         self.async_write_ha_state()
 
     def _get_ac_mode_for_state(self, state):
-        # some samsung air conditioners appear to use the string "wind" for
-        # fan-only mode. handle this specially here, where we have access to
-        # supported_ac_modes, and fall back to the static mapping for all
-        # other states.
+        # Some Samsung air conditioners appear to use the string "wind" for
+        # fan-only mode. To handle this specifically here, where we have
+        # access to supported_ac_modes, and fall back to the static mapping
+        # for all other states.
         if state == HVACMode.FAN_ONLY:
             if "wind" in self._device.status.supported_ac_modes:
                 return "wind"
