@@ -65,6 +65,7 @@ class ReolinkVODMediaSource(MediaSource):
             if host.api.is_nvr:
                 return VodRequestType.FLV
             return VodRequestType.RTMP
+
         vod_type = get_vod_type()
 
         mime_type, url = await host.api.get_vod_source(
