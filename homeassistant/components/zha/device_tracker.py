@@ -66,20 +66,15 @@ class ZHADeviceScannerEntity(ScannerEntity, ZHAEntity):
         """
         return self.entity_data.entity.battery_level
 
-    @property  # type: ignore[misc]
-    def device_info(
-        self,
-    ) -> DeviceInfo:
+    @property  # type: ignore[explicit-override, misc]
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
         # We opt ZHA device tracker back into overriding this method because
         # it doesn't track IP-based devices.
-        # Call Super because ScannerEntity overrode it.
-        # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
-        return ZHAEntity.device_info.fget(self)  # type: ignore[attr-defined]
+        return ZHAEntity.device_info.__get__(self)
 
     @property
     def unique_id(self) -> str:
         """Return unique ID."""
         # Call Super because ScannerEntity overrode it.
-        # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
-        return ZHAEntity.unique_id.fget(self)  # type: ignore[attr-defined]
+        return ZHAEntity.unique_id.__get__(self)
