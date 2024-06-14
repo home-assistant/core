@@ -59,13 +59,13 @@ class ReolinkVODMediaSource(MediaSource):
         data: dict[str, ReolinkData] = self.hass.data[DOMAIN]
         host = data[config_entry_id].host
 
-    def get_vod_type() -> VodRequestType:
-        if filename.endswith(".mp4"):
-            return VodRequestType.PLAYBACK
-        if host.api.is_nvr:
-            return VodRequestType.FLV
-        return VodRequestType.RTMP
-    vod_type = get_vod_type()
+        def get_vod_type() -> VodRequestType:
+            if filename.endswith(".mp4"):
+                return VodRequestType.PLAYBACK
+            if host.api.is_nvr:
+                return VodRequestType.FLV
+            return VodRequestType.RTMP
+        vod_type = get_vod_type()
 
         mime_type, url = await host.api.get_vod_source(
             channel, filename, stream_res, vod_type
