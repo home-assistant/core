@@ -212,7 +212,7 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
 
     async def update_statistics(self) -> None:
         """Import ista EcoTrend historical statistics."""
-        statistic_id = f"{DOMAIN}:{self.entity_id.replace("sensor.", "")}"
+        statistic_id = f"{DOMAIN}:{self.entity_id.removeprefix("sensor.")}"
         statistics_sum = 0.0
         statistics_since = None
 
