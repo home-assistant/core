@@ -47,7 +47,7 @@ PLATFORMS: Final = [
 
 type TeslemetryConfigEntry = ConfigEntry[TeslemetryData]
 
-CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
