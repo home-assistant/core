@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from aiomealie import MealieClient, MealieConnectionError, Mealplan, MealplanEntryType
 
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_API_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -30,7 +30,9 @@ class MealieCoordinator(DataUpdateCoordinator[dict[MealplanEntryType, list[Mealp
             hass, logger=LOGGER, name="Mealie", update_interval=timedelta(hours=1)
         )
         self.client = MealieClient(
-            self.config_entry.data[CONF_HOST], session=async_get_clientsession(hass)
+            self.config_entry.data[CONF_HOST],
+            token=self.config_entry.data[CONF_API_TOKEN],
+            session=async_get_clientsession(hass),
         )
 
     async def _async_update_data(self) -> dict[MealplanEntryType, list[Mealplan]]:
