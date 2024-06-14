@@ -332,7 +332,9 @@ LIGHT_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
 )
 
-SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
+# The mountable sensors can be remounted at run-time which
+# means they can change their device class at run-time.
+MOUNTABLE_SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key=_KEY_DOOR,
         name="Contact",
@@ -340,6 +342,9 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         ufp_value="is_opened",
         ufp_enabled="is_contact_sensor_enabled",
     ),
+)
+
+SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="leak",
         name="Leak",
@@ -617,80 +622,9 @@ _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] = {
     ModelType.VIEWPORT: VIEWER_SENSORS,
 }
 
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: UFPConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up binary sensors for UniFi Protect integration."""
-    data = entry.runtime_data
-
-    @callback
-    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        entities = async_all_device_entities(
-            data,
-            ProtectDeviceBinarySensor,
-            model_descriptions=_MODEL_DESCRIPTIONS,
-            ufp_device=device,
-        )
-        if device.is_adopted and isinstance(device, Camera):
-            entities += _async_event_entities(data, ufp_device=device)
-        async_add_entities(entities)
-
-    data.async_subscribe_adopt(_add_new_device)
-
-    entities = async_all_device_entities(
-        data, ProtectDeviceBinarySensor, model_descriptions=_MODEL_DESCRIPTIONS
-    )
-    entities += _async_event_entities(data)
-    entities += _async_nvr_entities(data)
-
-    async_add_entities(entities)
-
-
-@callback
-def _async_event_entities(
-    data: ProtectData,
-    ufp_device: ProtectAdoptableDeviceModel | None = None,
-) -> list[ProtectDeviceEntity]:
-    entities: list[ProtectDeviceEntity] = []
-    devices = data.get_cameras() if ufp_device is None else [ufp_device]
-    for device in devices:
-        for description in EVENT_SENSORS:
-            if not description.has_required(device):
-                continue
-            entities.append(ProtectEventBinarySensor(data, device, description))
-            _LOGGER.debug(
-                "Adding binary sensor entity %s for %s",
-                description.name,
-                device.display_name,
-            )
-
-    return entities
-
-
-@callback
-def _async_nvr_entities(
-    data: ProtectData,
-) -> list[BaseProtectEntity]:
-    entities: list[BaseProtectEntity] = []
-    device = data.api.bootstrap.nvr
-    if device.system_info.ustorage is None:
-        return entities
-
-    for disk in device.system_info.ustorage.disks:
-        for description in DISK_SENSORS:
-            if not disk.has_disk:
-                continue
-
-            entities.append(ProtectDiskBinarySensor(data, device, description, disk))
-            _LOGGER.debug(
-                "Adding binary sensor entity %s",
-                f"{disk.type} {disk.slot}",
-            )
-
-    return entities
+_MOUNTABLE_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] = {
+    ModelType.SENSOR: MOUNTABLE_SENSE_SENSORS,
+}
 
 
 class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
@@ -702,16 +636,7 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
-        entity_description = self.entity_description
-        updated_device = self.device
-        self._attr_is_on = entity_description.get_ufp_value(updated_device)
-        # UP Sense can be any of the 3 contact sensor device classes
-        if entity_description.key == _KEY_DOOR and isinstance(updated_device, Sensor):
-            self._attr_device_class = MOUNT_DEVICE_CLASS_MAP.get(
-                updated_device.mount_type, BinarySensorDeviceClass.DOOR
-            )
-        else:
-            self._attr_device_class = self.entity_description.device_class
+        self._attr_is_on = self.entity_description.get_ufp_value(self.device)
 
     @callback
     def _async_get_state_attrs(self) -> tuple[Any, ...]:
@@ -720,7 +645,30 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
         Called before and after updating entity and state is only written if there
         is a change.
         """
+        return (self._attr_available, self._attr_is_on)
 
+
+class MountableProtectDeviceBinarySensor(ProtectDeviceBinarySensor):
+    """A UniFi Protect Device Binary Sensor that can change device class at runtime."""
+
+    device: Sensor
+
+    @callback
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
+        updated_device = self.device
+        # UP Sense can be any of the 3 contact sensor device classes
+        self._attr_device_class = MOUNT_DEVICE_CLASS_MAP.get(
+            updated_device.mount_type, BinarySensorDeviceClass.DOOR
+        )
+
+    @callback
+    def _async_get_state_attrs(self) -> tuple[Any, ...]:
+        """Retrieve data that goes into the current state of the entity.
+
+        Called before and after updating entity and state is only written if there
+        is a change.
+        """
         return (self._attr_available, self._attr_is_on, self._attr_device_class)
 
 
@@ -805,3 +753,67 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
             self._attr_is_on,
             self._attr_extra_state_attributes,
         )
+
+
+MODEL_DESCRIPTIONS_WITH_CLASS = (
+    (ProtectDeviceBinarySensor, _MODEL_DESCRIPTIONS),
+    (MountableProtectDeviceBinarySensor, _MOUNTABLE_MODEL_DESCRIPTIONS),
+)
+
+
+@callback
+def _async_event_entities(
+    data: ProtectData,
+    ufp_device: ProtectAdoptableDeviceModel | None = None,
+) -> list[ProtectDeviceEntity]:
+    return [
+        ProtectEventBinarySensor(data, device, description)
+        for device in (data.get_cameras() if ufp_device is None else [ufp_device])
+        for description in EVENT_SENSORS
+        if description.has_required(device)
+    ]
+
+
+@callback
+def _async_nvr_entities(
+    data: ProtectData,
+) -> list[BaseProtectEntity]:
+    device = data.api.bootstrap.nvr
+    if (ustorage := device.system_info.ustorage) is None:
+        return []
+    return [
+        ProtectDiskBinarySensor(data, device, description, disk)
+        for disk in ustorage.disks
+        for description in DISK_SENSORS
+        if disk.has_disk
+    ]
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: UFPConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up binary sensors for UniFi Protect integration."""
+    data = entry.runtime_data
+
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+        entities: list[BaseProtectEntity] = []
+        for klass, model_descriptions in MODEL_DESCRIPTIONS_WITH_CLASS:
+            entities += async_all_device_entities(
+                data, klass, model_descriptions=model_descriptions, ufp_device=device
+            )
+        if device.is_adopted and isinstance(device, Camera):
+            entities += _async_event_entities(data, ufp_device=device)
+        async_add_entities(entities)
+
+    data.async_subscribe_adopt(_add_new_device)
+    entities: list[BaseProtectEntity] = []
+    for klass, model_descriptions in MODEL_DESCRIPTIONS_WITH_CLASS:
+        entities += async_all_device_entities(
+            data, klass, model_descriptions=model_descriptions
+        )
+    entities += _async_event_entities(data)
+    entities += _async_nvr_entities(data)
+    async_add_entities(entities)
