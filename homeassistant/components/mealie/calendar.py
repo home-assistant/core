@@ -30,14 +30,18 @@ async def async_setup_entry(
 
 def get_event_from_mealplan(mealplan: Mealplan) -> CalendarEvent:
     """Create a CalendarEvent from a Mealplan."""
+    description: str | None
     if mealplan.recipe is None:
         name = "No recipe"
+        description = None
     else:
         name = mealplan.recipe.name
+        description = mealplan.recipe.description
     return CalendarEvent(
         start=mealplan.mealplan_date,
         end=mealplan.mealplan_date,
         summary=name,
+        description=description,
     )
 
 
