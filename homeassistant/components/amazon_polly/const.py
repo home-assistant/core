@@ -16,8 +16,6 @@ CONF_TEXT_TYPE: Final = "text_type"
 
 SUPPORTED_OUTPUT_FORMATS: Final[set[str]] = {"mp3", "ogg_vorbis", "pcm"}
 
-SUPPORTED_ENGINES: Final[set[str]] = {"generative", "long-form", "neural", "standard"}
-
 SUPPORTED_SAMPLE_RATES: Final[set[str]] = {"8000", "16000", "22050", "24000"}
 
 SUPPORTED_SAMPLE_RATES_MAP: Final[dict[str, set[str]]] = {
@@ -35,6 +33,7 @@ CONTENT_TYPE_EXTENSIONS: Final[dict[str, str]] = {
 }
 
 DEFAULT_REGION: Final = "us-east-1"
+
 DEFAULT_ENGINE: Final = "standard"
 DEFAULT_VOICE: Final = "Joanna"
 DEFAULT_OUTPUT_FORMAT: Final = "mp3"

@@ -948,7 +948,8 @@ def reduce_day_ts_factory() -> (
     ]
 ):
     """Return functions to match same day and day start end."""
-    _boundries: tuple[float, float] = (0, 0)
+    _lower_bound: float = 0
+    _upper_bound: float = 0
 
     # We have to recreate _local_from_timestamp in the closure in case the timezone changes
     _local_from_timestamp = partial(
@@ -957,10 +958,10 @@ def reduce_day_ts_factory() -> (
 
     def _same_day_ts(time1: float, time2: float) -> bool:
         """Return True if time1 and time2 are in the same date."""
-        nonlocal _boundries
-        if not _boundries[0] <= time1 < _boundries[1]:
-            _boundries = _day_start_end_ts_cached(time1)
-        return _boundries[0] <= time2 < _boundries[1]
+        nonlocal _lower_bound, _upper_bound
+        if not _lower_bound <= time1 < _upper_bound:
+            _lower_bound, _upper_bound = _day_start_end_ts_cached(time1)
+        return _lower_bound <= time2 < _upper_bound
 
     def _day_start_end_ts(time: float) -> tuple[float, float]:
         """Return the start and end of the period (day) time is within."""
@@ -968,8 +969,8 @@ def reduce_day_ts_factory() -> (
             hour=0, minute=0, second=0, microsecond=0
         )
         return (
-            start_local.astimezone(dt_util.UTC).timestamp(),
-            (start_local + timedelta(days=1)).astimezone(dt_util.UTC).timestamp(),
+            start_local.timestamp(),
+            (start_local + timedelta(days=1)).timestamp(),
         )
 
     # We create _day_start_end_ts_cached in the closure in case the timezone changes
@@ -996,7 +997,8 @@ def reduce_week_ts_factory() -> (
     ]
 ):
     """Return functions to match same week and week start end."""
-    _boundries: tuple[float, float] = (0, 0)
+    _lower_bound: float = 0
+    _upper_bound: float = 0
 
     # We have to recreate _local_from_timestamp in the closure in case the timezone changes
     _local_from_timestamp = partial(
@@ -1005,21 +1007,20 @@ def reduce_week_ts_factory() -> (
 
     def _same_week_ts(time1: float, time2: float) -> bool:
         """Return True if time1 and time2 are in the same year and week."""
-        nonlocal _boundries
-        if not _boundries[0] <= time1 < _boundries[1]:
-            _boundries = _week_start_end_ts_cached(time1)
-        return _boundries[0] <= time2 < _boundries[1]
+        nonlocal _lower_bound, _upper_bound
+        if not _lower_bound <= time1 < _upper_bound:
+            _lower_bound, _upper_bound = _week_start_end_ts_cached(time1)
+        return _lower_bound <= time2 < _upper_bound
 
     def _week_start_end_ts(time: float) -> tuple[float, float]:
         """Return the start and end of the period (week) time is within."""
-        nonlocal _boundries
         time_local = _local_from_timestamp(time)
         start_local = time_local.replace(
             hour=0, minute=0, second=0, microsecond=0
         ) - timedelta(days=time_local.weekday())
         return (
-            start_local.astimezone(dt_util.UTC).timestamp(),
-            (start_local + timedelta(days=7)).astimezone(dt_util.UTC).timestamp(),
+            start_local.timestamp(),
+            (start_local + timedelta(days=7)).timestamp(),
         )
 
     # We create _week_start_end_ts_cached in the closure in case the timezone changes
@@ -1054,7 +1055,8 @@ def reduce_month_ts_factory() -> (
     ]
 ):
     """Return functions to match same month and month start end."""
-    _boundries: tuple[float, float] = (0, 0)
+    _lower_bound: float = 0
+    _upper_bound: float = 0
 
     # We have to recreate _local_from_timestamp in the closure in case the timezone changes
     _local_from_timestamp = partial(
@@ -1063,10 +1065,10 @@ def reduce_month_ts_factory() -> (
 
     def _same_month_ts(time1: float, time2: float) -> bool:
         """Return True if time1 and time2 are in the same year and month."""
-        nonlocal _boundries
-        if not _boundries[0] <= time1 < _boundries[1]:
-            _boundries = _month_start_end_ts_cached(time1)
-        return _boundries[0] <= time2 < _boundries[1]
+        nonlocal _lower_bound, _upper_bound
+        if not _lower_bound <= time1 < _upper_bound:
+            _lower_bound, _upper_bound = _month_start_end_ts_cached(time1)
+        return _lower_bound <= time2 < _upper_bound
 
     def _month_start_end_ts(time: float) -> tuple[float, float]:
         """Return the start and end of the period (month) time is within."""
@@ -1074,10 +1076,7 @@ def reduce_month_ts_factory() -> (
             day=1, hour=0, minute=0, second=0, microsecond=0
         )
         end_local = _find_month_end_time(start_local)
-        return (
-            start_local.astimezone(dt_util.UTC).timestamp(),
-            end_local.astimezone(dt_util.UTC).timestamp(),
-        )
+        return (start_local.timestamp(), end_local.timestamp())
 
     # We create _month_start_end_ts_cached in the closure in case the timezone changes
     _month_start_end_ts_cached = lru_cache(maxsize=6)(_month_start_end_ts)

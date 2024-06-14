@@ -7,6 +7,13 @@ from __future__ import annotations
 
 from typing import Final
 
+SUPPORTED_ENGINES: Final[set[str]] = {
+    "generative",
+    "long-form",
+    "neural",
+    "standard",
+}
+
 SUPPORTED_REGIONS: Final[set[str]] = {
     "af-south-1",
     "ap-east-1",

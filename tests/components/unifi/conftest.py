@@ -7,10 +7,12 @@ from collections.abc import Callable
 from datetime import timedelta
 from types import MappingProxyType
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from aiounifi.models.message import MessageKey
+import orjson
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.unifi import STORAGE_KEY, STORAGE_VERSION
 from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN as UNIFI_DOMAIN
@@ -307,31 +309,33 @@ class WebsocketStateManager(asyncio.Event):
     Prepares disconnect and reconnect flows.
     """
 
-    def __init__(self, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
+    def __init__(
+        self, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    ) -> None:
         """Store hass object and initialize asyncio.Event."""
         self.hass = hass
         self.aioclient_mock = aioclient_mock
         super().__init__()
 
-    async def disconnect(self):
+    async def waiter(self, input: Callable[[bytes], None]) -> None:
+        """Consume message_handler new_data callback."""
+        await self.wait()
+
+    async def disconnect(self) -> None:
         """Mark future as done to make 'await self.api.start_websocket' return."""
         self.set()
         await self.hass.async_block_till_done()
 
-    async def reconnect(self, fail=False):
+    async def reconnect(self, fail: bool = False) -> None:
         """Set up new future to make 'await self.api.start_websocket' block.
 
         Mock api calls done by 'await self.api.login'.
         Fail will make 'await self.api.start_websocket' return immediately.
         """
-        hub = self.hass.config_entries.async_get_entry(
-            DEFAULT_CONFIG_ENTRY_ID
-        ).runtime_data
-        self.aioclient_mock.get(
-            f"https://{hub.config.host}:1234", status=302
-        )  # Check UniFi OS
+        # Check UniFi OS
+        self.aioclient_mock.get(f"https://{DEFAULT_HOST}:1234", status=302)
         self.aioclient_mock.post(
-            f"https://{hub.config.host}:1234/api/login",
+            f"https://{DEFAULT_HOST}:1234/api/login",
             json={"data": "login successful", "meta": {"rc": "ok"}},
             headers={"content-type": CONTENT_TYPE_JSON},
         )
@@ -343,36 +347,42 @@ class WebsocketStateManager(asyncio.Event):
         await self.hass.async_block_till_done()
 
 
-@pytest.fixture(autouse=True)
-def websocket_mock(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
-    """Mock 'await self.api.start_websocket' in 'UniFiController.start_websocket'."""
+@pytest.fixture(autouse=True, name="_mock_websocket")
+def fixture_aiounifi_websocket_method() -> Generator[AsyncMock]:
+    """Mock aiounifi websocket context manager."""
+    with patch("aiounifi.controller.Connectivity.websocket") as ws_mock:
+        yield ws_mock
+
+
+@pytest.fixture(autouse=True, name="mock_websocket_state")
+def fixture_aiounifi_websocket_state(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, _mock_websocket: AsyncMock
+) -> WebsocketStateManager:
+    """Provide a state manager for UniFi websocket."""
     websocket_state_manager = WebsocketStateManager(hass, aioclient_mock)
-    with patch("aiounifi.Controller.start_websocket") as ws_mock:
-        ws_mock.side_effect = websocket_state_manager.wait
-        yield websocket_state_manager
+    _mock_websocket.side_effect = websocket_state_manager.waiter
+    return websocket_state_manager
 
 
-@pytest.fixture(autouse=True)
-def mock_unifi_websocket(hass):
+@pytest.fixture(name="mock_websocket_message")
+def fixture_aiounifi_websocket_message(_mock_websocket: AsyncMock):
     """No real websocket allowed."""
 
     def make_websocket_call(
         *,
         message: MessageKey | None = None,
         data: list[dict] | dict | None = None,
-    ):
+    ) -> None:
         """Generate a websocket call."""
-        hub = hass.config_entries.async_get_entry(DEFAULT_CONFIG_ENTRY_ID).runtime_data
+        message_handler = _mock_websocket.call_args[0][0]
+
         if data and not message:
-            hub.api.messages.handler(data)
+            message_handler(orjson.dumps(data))
         elif data and message:
             if not isinstance(data, list):
                 data = [data]
-            hub.api.messages.handler(
-                {
-                    "meta": {"message": message.value},
-                    "data": data,
-                }
+            message_handler(
+                orjson.dumps({"meta": {"message": message.value}, "data": data})
             )
         else:
             raise NotImplementedError

@@ -886,14 +886,14 @@ async def test_switches(
 @pytest.mark.parametrize("dpi_app_payload", [DPI_APPS])
 @pytest.mark.parametrize("dpi_group_payload", [DPI_GROUPS])
 @pytest.mark.usefixtures("config_entry_setup")
-async def test_remove_switches(hass: HomeAssistant, mock_unifi_websocket) -> None:
+async def test_remove_switches(hass: HomeAssistant, mock_websocket_message) -> None:
     """Test the update_items function with some clients."""
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
 
     assert hass.states.get("switch.block_client_2") is not None
     assert hass.states.get("switch.block_media_streaming") is not None
 
-    mock_unifi_websocket(message=MessageKey.CLIENT_REMOVED, data=[UNBLOCKED])
+    mock_websocket_message(message=MessageKey.CLIENT_REMOVED, data=[UNBLOCKED])
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
@@ -901,7 +901,7 @@ async def test_remove_switches(hass: HomeAssistant, mock_unifi_websocket) -> Non
     assert hass.states.get("switch.block_client_2") is None
     assert hass.states.get("switch.block_media_streaming") is not None
 
-    mock_unifi_websocket(data=DPI_GROUP_REMOVED_EVENT)
+    mock_websocket_message(data=DPI_GROUP_REMOVED_EVENT)
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.block_media_streaming") is None
@@ -923,7 +923,7 @@ async def test_remove_switches(hass: HomeAssistant, mock_unifi_websocket) -> Non
 async def test_block_switches(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    mock_unifi_websocket,
+    mock_websocket_message,
     config_entry_setup,
 ) -> None:
     """Test the update_items function with some clients."""
@@ -939,7 +939,9 @@ async def test_block_switches(
     assert unblocked is not None
     assert unblocked.state == "on"
 
-    mock_unifi_websocket(message=MessageKey.EVENT, data=EVENT_BLOCKED_CLIENT_UNBLOCKED)
+    mock_websocket_message(
+        message=MessageKey.EVENT, data=EVENT_BLOCKED_CLIENT_UNBLOCKED
+    )
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
@@ -947,7 +949,7 @@ async def test_block_switches(
     assert blocked is not None
     assert blocked.state == "on"
 
-    mock_unifi_websocket(message=MessageKey.EVENT, data=EVENT_BLOCKED_CLIENT_BLOCKED)
+    mock_websocket_message(message=MessageKey.EVENT, data=EVENT_BLOCKED_CLIENT_BLOCKED)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
@@ -984,7 +986,7 @@ async def test_block_switches(
 @pytest.mark.parametrize("dpi_group_payload", [DPI_GROUPS])
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_dpi_switches(
-    hass: HomeAssistant, mock_unifi_websocket, websocket_mock
+    hass: HomeAssistant, mock_websocket_message, mock_websocket_state
 ) -> None:
     """Test the update_items function with some clients."""
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
@@ -994,7 +996,7 @@ async def test_dpi_switches(
     assert dpi_switch.state == STATE_ON
     assert dpi_switch.attributes["icon"] == "mdi:network"
 
-    mock_unifi_websocket(data=DPI_APP_DISABLED_EVENT)
+    mock_websocket_message(data=DPI_APP_DISABLED_EVENT)
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.block_media_streaming").state == STATE_OFF
@@ -1002,15 +1004,15 @@ async def test_dpi_switches(
     # Availability signalling
 
     # Controller disconnects
-    await websocket_mock.disconnect()
+    await mock_websocket_state.disconnect()
     assert hass.states.get("switch.block_media_streaming").state == STATE_UNAVAILABLE
 
     # Controller reconnects
-    await websocket_mock.reconnect()
+    await mock_websocket_state.reconnect()
     assert hass.states.get("switch.block_media_streaming").state == STATE_OFF
 
     # Remove app
-    mock_unifi_websocket(data=DPI_GROUP_REMOVE_APP)
+    mock_websocket_message(data=DPI_GROUP_REMOVE_APP)
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.block_media_streaming") is None
@@ -1021,7 +1023,7 @@ async def test_dpi_switches(
 @pytest.mark.parametrize("dpi_group_payload", [DPI_GROUPS])
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_dpi_switches_add_second_app(
-    hass: HomeAssistant, mock_unifi_websocket
+    hass: HomeAssistant, mock_websocket_message
 ) -> None:
     """Test the update_items function with some clients."""
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
@@ -1036,7 +1038,7 @@ async def test_dpi_switches_add_second_app(
         "site_id": "name",
         "_id": "61783e89c1773a18c0c61f00",
     }
-    mock_unifi_websocket(message=MessageKey.DPI_APP_ADDED, data=second_app_event)
+    mock_websocket_message(message=MessageKey.DPI_APP_ADDED, data=second_app_event)
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.block_media_streaming").state == STATE_ON
@@ -1047,7 +1049,7 @@ async def test_dpi_switches_add_second_app(
         "site_id": "name",
         "dpiapp_ids": ["5f976f62e3c58f018ec7e17d", "61783e89c1773a18c0c61f00"],
     }
-    mock_unifi_websocket(
+    mock_websocket_message(
         message=MessageKey.DPI_GROUP_UPDATED, data=add_second_app_to_group
     )
     await hass.async_block_till_done()
@@ -1063,7 +1065,7 @@ async def test_dpi_switches_add_second_app(
         "site_id": "name",
         "_id": "61783e89c1773a18c0c61f00",
     }
-    mock_unifi_websocket(
+    mock_websocket_message(
         message=MessageKey.DPI_APP_UPDATED, data=second_app_event_enabled
     )
     await hass.async_block_till_done()
@@ -1082,10 +1084,10 @@ async def test_dpi_switches_add_second_app(
 async def test_outlet_switches(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    mock_unifi_websocket,
+    mock_websocket_message,
     config_entry_setup,
     device_payload,
-    websocket_mock,
+    mock_websocket_state,
     entity_id: str,
     outlet_index: int,
     expected_switches: int,
@@ -1104,7 +1106,7 @@ async def test_outlet_switches(
     # Update state object
     device_1 = deepcopy(device_payload[0])
     device_1["outlet_table"][outlet_index - 1]["relay_state"] = False
-    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
     assert hass.states.get(f"switch.{entity_id}").state == STATE_OFF
 
@@ -1149,22 +1151,22 @@ async def test_outlet_switches(
     # Availability signalling
 
     # Controller disconnects
-    await websocket_mock.disconnect()
+    await mock_websocket_state.disconnect()
     assert hass.states.get(f"switch.{entity_id}").state == STATE_UNAVAILABLE
 
     # Controller reconnects
-    await websocket_mock.reconnect()
+    await mock_websocket_state.reconnect()
     assert hass.states.get(f"switch.{entity_id}").state == STATE_OFF
 
     # Device gets disabled
     device_1["disabled"] = True
-    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
     assert hass.states.get(f"switch.{entity_id}").state == STATE_UNAVAILABLE
 
     # Device gets re-enabled
     device_1["disabled"] = False
-    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
     assert hass.states.get(f"switch.{entity_id}").state == STATE_OFF
 
@@ -1191,13 +1193,13 @@ async def test_outlet_switches(
 )
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_new_client_discovered_on_block_control(
-    hass: HomeAssistant, mock_unifi_websocket
+    hass: HomeAssistant, mock_websocket_message
 ) -> None:
     """Test if 2nd update has a new client."""
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
     assert hass.states.get("switch.block_client_1") is None
 
-    mock_unifi_websocket(message=MessageKey.CLIENT, data=BLOCKED)
+    mock_websocket_message(message=MessageKey.CLIENT, data=BLOCKED)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
@@ -1281,8 +1283,8 @@ async def test_poe_port_switches(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
-    mock_unifi_websocket,
-    websocket_mock,
+    mock_websocket_message,
+    mock_websocket_state,
     config_entry_setup,
     device_payload,
 ) -> None:
@@ -1319,7 +1321,7 @@ async def test_poe_port_switches(
     # Update state object
     device_1 = deepcopy(device_payload[0])
     device_1["port_table"][0]["poe_mode"] = "off"
-    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
     assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_OFF
 
@@ -1369,22 +1371,22 @@ async def test_poe_port_switches(
     # Availability signalling
 
     # Controller disconnects
-    await websocket_mock.disconnect()
+    await mock_websocket_state.disconnect()
     assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_UNAVAILABLE
 
     # Controller reconnects
-    await websocket_mock.reconnect()
+    await mock_websocket_state.reconnect()
     assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_OFF
 
     # Device gets disabled
     device_1["disabled"] = True
-    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
     assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_UNAVAILABLE
 
     # Device gets re-enabled
     device_1["disabled"] = False
-    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
     assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_OFF
 
@@ -1394,8 +1396,8 @@ async def test_wlan_switches(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
-    mock_unifi_websocket,
-    websocket_mock,
+    mock_websocket_message,
+    mock_websocket_state,
     config_entry_setup,
     wlan_payload,
 ) -> None:
@@ -1417,7 +1419,7 @@ async def test_wlan_switches(
     # Update state object
     wlan = deepcopy(wlan_payload[0])
     wlan["enabled"] = False
-    mock_unifi_websocket(message=MessageKey.WLAN_CONF_UPDATED, data=wlan)
+    mock_websocket_message(message=MessageKey.WLAN_CONF_UPDATED, data=wlan)
     await hass.async_block_till_done()
     assert hass.states.get("switch.ssid_1").state == STATE_OFF
 
@@ -1450,11 +1452,11 @@ async def test_wlan_switches(
     # Availability signalling
 
     # Controller disconnects
-    await websocket_mock.disconnect()
+    await mock_websocket_state.disconnect()
     assert hass.states.get("switch.ssid_1").state == STATE_UNAVAILABLE
 
     # Controller reconnects
-    await websocket_mock.reconnect()
+    await mock_websocket_state.reconnect()
     assert hass.states.get("switch.ssid_1").state == STATE_OFF
 
 
@@ -1481,8 +1483,8 @@ async def test_port_forwarding_switches(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
-    mock_unifi_websocket,
-    websocket_mock,
+    mock_websocket_message,
+    mock_websocket_state,
     config_entry_setup,
     port_forward_payload,
 ) -> None:
@@ -1503,7 +1505,7 @@ async def test_port_forwarding_switches(
     # Update state object
     data = port_forward_payload[0].copy()
     data["enabled"] = False
-    mock_unifi_websocket(message=MessageKey.PORT_FORWARD_UPDATED, data=data)
+    mock_websocket_message(message=MessageKey.PORT_FORWARD_UPDATED, data=data)
     await hass.async_block_till_done()
     assert hass.states.get("switch.unifi_network_plex").state == STATE_OFF
 
@@ -1538,15 +1540,15 @@ async def test_port_forwarding_switches(
     # Availability signalling
 
     # Controller disconnects
-    await websocket_mock.disconnect()
+    await mock_websocket_state.disconnect()
     assert hass.states.get("switch.unifi_network_plex").state == STATE_UNAVAILABLE
 
     # Controller reconnects
-    await websocket_mock.reconnect()
+    await mock_websocket_state.reconnect()
     assert hass.states.get("switch.unifi_network_plex").state == STATE_OFF
 
     # Remove entity on deleted message
-    mock_unifi_websocket(
+    mock_websocket_message(
         message=MessageKey.PORT_FORWARD_DELETED, data=port_forward_payload[0]
     )
     await hass.async_block_till_done()
