@@ -33,7 +33,6 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT
 
@@ -132,20 +131,24 @@ class PyLoadSensor(SensorEntity):
             _LOGGER.info("Authentication failed, trying to reauthenticate")
             try:
                 await self.api.login()
-            except InvalidAuth as e:
-                raise PlatformNotReady(
-                    f"Authentication failed for {self.api.username}, check your login credentials"
-                ) from e
-            else:
-                raise UpdateFailed(
-                    "Unable to retrieve data due to cookie expiration but re-authentication was successful."
+            except InvalidAuth:
+                _LOGGER.error(
+                    "Authentication failed for %s, check your login credentials",
+                    self.api.username,
                 )
-        except CannotConnect as e:
-            raise UpdateFailed(
-                "Unable to connect and retrieve data from pyLoad API"
-            ) from e
-        except ParserError as e:
-            raise UpdateFailed("Unable to parse data from pyLoad API") from e
+                return
+            else:
+                _LOGGER.info(
+                    "Unable to retrieve data due to cookie expiration "
+                    "but re-authentication was successful"
+                )
+                return
+        except CannotConnect:
+            _LOGGER.debug("Unable to connect and retrieve data from pyLoad API")
+            return
+        except ParserError:
+            _LOGGER.error("Unable to parse data from pyLoad API")
+            return
 
         value = getattr(self.data, self.type)
 

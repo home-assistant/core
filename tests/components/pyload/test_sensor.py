@@ -60,9 +60,9 @@ async def test_setup_exceptions(
 @pytest.mark.parametrize(
     ("exception", "expected_exception"),
     [
-        (CannotConnect, "UpdateFailed"),
-        (ParserError, "UpdateFailed"),
-        (InvalidAuth, "UpdateFailed"),
+        (CannotConnect, "Unable to connect and retrieve data from pyLoad API"),
+        (ParserError, "Unable to parse data from pyLoad API"),
+        (InvalidAuth, "Authentication failed, trying to reauthenticate"),
     ],
 )
 async def test_sensor_update_exceptions(
@@ -80,5 +80,5 @@ async def test_sensor_update_exceptions(
     assert await async_setup_component(hass, DOMAIN, pyload_config)
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all(DOMAIN)) == 0
+    assert len(hass.states.async_all(DOMAIN)) == 1
     assert expected_exception in caplog.text
