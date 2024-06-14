@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
@@ -20,17 +19,7 @@ if TYPE_CHECKING:
     from . import MealieConfigEntry
 
 
-@dataclass
-class MealieMealPlan:
-    """Class to hold Mealie meal plan data."""
-
-    breakfast: list[Mealplan]
-    lunch: list[Mealplan]
-    dinner: list[Mealplan]
-    side: list[Mealplan]
-
-
-class MealieCoordinator(DataUpdateCoordinator[MealieMealPlan]):
+class MealieCoordinator(DataUpdateCoordinator[dict[MealplanEntryType, list[Mealplan]]]):
     """Class to manage fetching Mealie data."""
 
     config_entry: MealieConfigEntry
@@ -44,7 +33,7 @@ class MealieCoordinator(DataUpdateCoordinator[MealieMealPlan]):
             self.config_entry.data[CONF_HOST], session=async_get_clientsession(hass)
         )
 
-    async def _async_update_data(self) -> MealieMealPlan:
+    async def _async_update_data(self) -> dict[MealplanEntryType, list[Mealplan]]:
         next_week = dt_util.now() + timedelta(days=7)
         try:
             data = (
@@ -52,13 +41,12 @@ class MealieCoordinator(DataUpdateCoordinator[MealieMealPlan]):
             ).items
         except MealieConnectionError as error:
             raise UpdateFailed(error) from error
-        return MealieMealPlan(
-            breakfast=[
-                meal for meal in data if meal.entry_type is MealplanEntryType.BREAKFAST
-            ],
-            lunch=[meal for meal in data if meal.entry_type is MealplanEntryType.LUNCH],
-            dinner=[
-                meal for meal in data if meal.entry_type is MealplanEntryType.DINNER
-            ],
-            side=[meal for meal in data if meal.entry_type is MealplanEntryType.SIDE],
-        )
+        res: dict[MealplanEntryType, list[Mealplan]] = {
+            MealplanEntryType.BREAKFAST: [],
+            MealplanEntryType.LUNCH: [],
+            MealplanEntryType.DINNER: [],
+            MealplanEntryType.SIDE: [],
+        }
+        for meal in data:
+            res[meal.entry_type].append(meal)
+        return res
