@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any
 
 from typing_extensions import Generator
 from uiprotect.data import (
     Camera as UFPCamera,
     CameraChannel,
-    ModelType,
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
     StateType,
@@ -28,7 +27,6 @@ from .const import (
     ATTR_FPS,
     ATTR_HEIGHT,
     ATTR_WIDTH,
-    DISPATCH_ADOPT,
     DISPATCH_CHANNELS,
     DOMAIN,
 )
@@ -73,11 +71,8 @@ def _get_camera_channels(
 ) -> Generator[tuple[UFPCamera, CameraChannel, bool]]:
     """Get all the camera channels."""
 
-    devices = (
-        data.get_by_types({ModelType.CAMERA}) if ufp_device is None else [ufp_device]
-    )
-    for camera in devices:
-        camera = cast(UFPCamera, camera)
+    cameras = data.get_cameras() if ufp_device is None else [ufp_device]
+    for camera in cameras:
         if not camera.channels:
             if ufp_device is None:
                 # only warn on startup
@@ -157,9 +152,7 @@ async def async_setup_entry(
             return
         async_add_entities(_async_camera_entities(hass, entry, data, ufp_device=device))
 
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
-    )
+    data.async_subscribe_adopt(_add_new_device)
     entry.async_on_unload(
         async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_CHANNELS), _add_new_device)
     )

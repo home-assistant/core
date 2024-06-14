@@ -1,6 +1,8 @@
 """Test ZHA light."""
 
+from collections.abc import Callable
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, call, patch, sentinel
 
 import pytest
@@ -1962,10 +1964,10 @@ async def test_group_member_assume_state(
 async def test_restore_light_state(
     hass: HomeAssistant,
     zigpy_device_mock,
-    core_rs,
+    core_rs: Callable[[str, Any, dict[str, Any]], None],
     zha_device_restored,
-    restored_state,
-    expected_state,
+    restored_state: str,
+    expected_state: dict[str, Any],
 ) -> None:
     """Test ZHA light restores without throwing an error when attributes are None."""
 

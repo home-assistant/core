@@ -35,6 +35,8 @@ import requests_mock
 from syrupy.assertion import SnapshotAssertion
 from typing_extensions import AsyncGenerator, Generator
 
+from homeassistant import block_async_io
+
 # Setup patching if dt_util time functions before any other Home Assistant imports
 from . import patch_time  # noqa: F401, isort:skip
 
@@ -1814,3 +1816,15 @@ def service_calls(hass: HomeAssistant) -> Generator[None, None, list[ServiceCall
 def snapshot(snapshot: SnapshotAssertion) -> SnapshotAssertion:
     """Return snapshot assertion fixture with the Home Assistant extension."""
     return snapshot.use_extension(HomeAssistantSnapshotExtension)
+
+
+@pytest.fixture
+def disable_block_async_io() -> Generator[Any, Any, None]:
+    """Fixture to disable the loop protection from block_async_io."""
+    yield
+    calls = block_async_io._BLOCKED_CALLS.calls
+    for blocking_call in calls:
+        setattr(
+            blocking_call.object, blocking_call.function, blocking_call.original_func
+        )
+    calls.clear()
