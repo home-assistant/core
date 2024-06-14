@@ -28,5 +28,22 @@
     "error": {
       "invalid_resolver": "Invalid IP address for resolver"
     }
+  },
+  "entity": {
+    "sensor": {
+      "dnsip": {
+        "state_attributes": {
+          "resolver": {
+            "name": "Resolver"
+          },
+          "querytype": {
+            "name": "Query type"
+          },
+          "ip_addresses": {
+            "name": "IP addresses"
+          }
+        }
+      }
+    }
   }
 }

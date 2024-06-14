@@ -85,8 +85,8 @@ class WanIpSensor(SensorEntity):
         self.querytype = "AAAA" if ipv6 else "A"
         self._retries = DEFAULT_RETRIES
         self._attr_extra_state_attributes = {
-            "Resolver": resolver,
-            "Querytype": self.querytype,
+            "resolver": resolver,
+            "querytype": self.querytype,
         }
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
