@@ -7,9 +7,9 @@ import functools
 from typing import Any, cast
 
 from pydantic import ValidationError
-from pyunifiprotect.api import ProtectApiClient
-from pyunifiprotect.data import Camera, Chime
-from pyunifiprotect.exceptions import ClientError
+from uiprotect.api import ProtectApiClient
+from uiprotect.data import Camera, Chime
+from uiprotect.exceptions import ClientError
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -32,13 +32,11 @@ SERVICE_ADD_DOORBELL_TEXT = "add_doorbell_text"
 SERVICE_REMOVE_DOORBELL_TEXT = "remove_doorbell_text"
 SERVICE_SET_PRIVACY_ZONE = "set_privacy_zone"
 SERVICE_REMOVE_PRIVACY_ZONE = "remove_privacy_zone"
-SERVICE_SET_DEFAULT_DOORBELL_TEXT = "set_default_doorbell_text"
 SERVICE_SET_CHIME_PAIRED = "set_chime_paired_doorbells"
 
 ALL_GLOBAL_SERIVCES = [
     SERVICE_ADD_DOORBELL_TEXT,
     SERVICE_REMOVE_DOORBELL_TEXT,
-    SERVICE_SET_DEFAULT_DOORBELL_TEXT,
     SERVICE_SET_CHIME_PAIRED,
     SERVICE_REMOVE_PRIVACY_ZONE,
 ]
@@ -145,12 +143,6 @@ async def remove_doorbell_text(hass: HomeAssistant, call: ServiceCall) -> None:
     await _async_service_call_nvr(hass, call, "remove_custom_doorbell_message", message)
 
 
-async def set_default_doorbell_text(hass: HomeAssistant, call: ServiceCall) -> None:
-    """Set the default doorbell text message."""
-    message: str = call.data[ATTR_MESSAGE]
-    await _async_service_call_nvr(hass, call, "set_default_doorbell_message", message)
-
-
 async def remove_privacy_zone(hass: HomeAssistant, call: ServiceCall) -> None:
     """Remove privacy zone from camera."""
 
@@ -229,11 +221,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         (
             SERVICE_REMOVE_DOORBELL_TEXT,
             functools.partial(remove_doorbell_text, hass),
-            DOORBELL_TEXT_SCHEMA,
-        ),
-        (
-            SERVICE_SET_DEFAULT_DOORBELL_TEXT,
-            functools.partial(set_default_doorbell_text, hass),
             DOORBELL_TEXT_SCHEMA,
         ),
         (

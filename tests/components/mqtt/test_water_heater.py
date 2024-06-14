@@ -1286,7 +1286,7 @@ async def test_skipped_async_ha_write_state(
                 },
             ),
         )
-        for value_template in ["value_template", "mode_state_template"]
+        for value_template in ("value_template", "mode_state_template")
     ],
     ids=["value_template", "mode_state_template"],
 )

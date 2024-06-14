@@ -58,7 +58,6 @@ class AccuWeatherSensorDescription(SensorEntityDescription):
 FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
         key="AirQuality",
-        icon="mdi:air-filter",
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
         device_class=SensorDeviceClass.ENUM,
         options=["good", "hazardous", "high", "low", "moderate", "unhealthy"],
@@ -66,7 +65,6 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="CloudCoverDay",
-        icon="mdi:weather-cloudy",
         entity_registry_enabled_default=False,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: cast(int, data),
@@ -74,7 +72,6 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="CloudCoverNight",
-        icon="mdi:weather-cloudy",
         entity_registry_enabled_default=False,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: cast(int, data),
@@ -82,7 +79,6 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="Grass",
-        icon="mdi:grass",
         entity_registry_enabled_default=False,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
         value_fn=lambda data: cast(int, data[ATTR_VALUE]),
@@ -91,7 +87,6 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="HoursOfSun",
-        icon="mdi:weather-partly-cloudy",
         native_unit_of_measurement=UnitOfTime.HOURS,
         value_fn=lambda data: cast(float, data),
         translation_key="hours_of_sun",
@@ -108,7 +103,6 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="Mold",
-        icon="mdi:blur",
         entity_registry_enabled_default=False,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
         value_fn=lambda data: cast(int, data[ATTR_VALUE]),
@@ -117,7 +111,6 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="Ragweed",
-        icon="mdi:sprout",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
         entity_registry_enabled_default=False,
         value_fn=lambda data: cast(int, data[ATTR_VALUE]),
@@ -156,7 +149,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="SolarIrradianceDay",
-        icon="mdi:weather-sunny",
+        device_class=SensorDeviceClass.IRRADIANCE,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
         value_fn=lambda data: cast(float, data[ATTR_VALUE]),
@@ -164,7 +157,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="SolarIrradianceNight",
-        icon="mdi:weather-sunny",
+        device_class=SensorDeviceClass.IRRADIANCE,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
         value_fn=lambda data: cast(float, data[ATTR_VALUE]),
@@ -172,21 +165,18 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="ThunderstormProbabilityDay",
-        icon="mdi:weather-lightning",
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: cast(int, data),
         translation_key="thunderstorm_probability_day",
     ),
     AccuWeatherSensorDescription(
         key="ThunderstormProbabilityNight",
-        icon="mdi:weather-lightning",
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: cast(int, data),
         translation_key="thunderstorm_probability_night",
     ),
     AccuWeatherSensorDescription(
         key="Tree",
-        icon="mdi:tree-outline",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
         entity_registry_enabled_default=False,
         value_fn=lambda data: cast(int, data[ATTR_VALUE]),
@@ -195,7 +185,6 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="UVIndex",
-        icon="mdi:weather-sunny",
         native_unit_of_measurement=UV_INDEX,
         value_fn=lambda data: cast(int, data[ATTR_VALUE]),
         attr_fn=lambda data: {ATTR_LEVEL: data[ATTR_CATEGORY]},
@@ -250,7 +239,6 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
         key="Ceiling",
         device_class=SensorDeviceClass.DISTANCE,
-        icon="mdi:weather-fog",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfLength.METERS,
         value_fn=lambda data: cast(float, data[API_METRIC][ATTR_VALUE]),
@@ -259,7 +247,6 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="CloudCover",
-        icon="mdi:weather-cloudy",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
@@ -304,14 +291,12 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
         key="PressureTendency",
         device_class=SensorDeviceClass.ENUM,
-        icon="mdi:gauge",
         options=["falling", "rising", "steady"],
         value_fn=lambda data: cast(str, data["LocalizedText"]).lower(),
         translation_key="pressure_tendency",
     ),
     AccuWeatherSensorDescription(
         key="UVIndex",
-        icon="mdi:weather-sunny",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UV_INDEX,
         value_fn=lambda data: cast(int, data),

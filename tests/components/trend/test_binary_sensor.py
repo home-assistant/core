@@ -197,7 +197,7 @@ async def test_max_samples(
         },
     )
 
-    for val in [0, 1, 2, 3, 2, 1]:
+    for val in (0, 1, 2, 3, 2, 1):
         hass.states.async_set("sensor.test_state", val)
         await hass.async_block_till_done()
 
@@ -212,7 +212,7 @@ async def test_non_numeric(
     """Test for non-numeric sensor."""
     await setup_component({"entity_id": "sensor.test_state"})
 
-    for val in ["Non", "Numeric"]:
+    for val in ("Non", "Numeric"):
         hass.states.async_set("sensor.test_state", val)
         await hass.async_block_till_done()
 
@@ -230,7 +230,7 @@ async def test_missing_attribute(
         },
     )
 
-    for val in [1, 2]:
+    for val in (1, 2):
         hass.states.async_set("sensor.test_state", "State", {"attr": val})
         await hass.async_block_till_done()
 
@@ -311,7 +311,7 @@ async def test_restore_state(
     assert hass.states.get("binary_sensor.test_trend_sensor").state == restored_state
 
     # add not enough samples to trigger calculation
-    for val in [10, 20, 30, 40]:
+    for val in (10, 20, 30, 40):
         freezer.tick(timedelta(seconds=2))
         hass.states.async_set("sensor.test_state", val)
         await hass.async_block_till_done()
@@ -320,7 +320,7 @@ async def test_restore_state(
     assert hass.states.get("binary_sensor.test_trend_sensor").state == restored_state
 
     # add more samples to trigger calculation
-    for val in [50, 60, 70, 80]:
+    for val in (50, 60, 70, 80):
         freezer.tick(timedelta(seconds=2))
         hass.states.async_set("sensor.test_state", val)
         await hass.async_block_till_done()

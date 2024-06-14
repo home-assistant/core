@@ -41,10 +41,10 @@ async def test_switch_states(
     )
     await setup_integration(hass, mock_config_entry)
 
-    for state, restricted_reson, expected_state in [
+    for state, restricted_reson, expected_state in (
         (MowerStates.RESTRICTED, RestrictedReasons.NOT_APPLICABLE, "off"),
         (MowerStates.IN_OPERATION, RestrictedReasons.NONE, "on"),
-    ]:
+    ):
         values[TEST_MOWER_ID].mower.state = state
         values[TEST_MOWER_ID].planner.restricted_reason = restricted_reson
         mock_automower_client.get_status.return_value = values

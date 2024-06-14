@@ -15,7 +15,7 @@ from transmission_rpc.error import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
@@ -102,8 +102,12 @@ SERVICE_STOP_TORRENT_SCHEMA = vol.All(
     )
 )
 
+type TransmissionConfigEntry = ConfigEntry[TransmissionDataUpdateCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: TransmissionConfigEntry
+) -> bool:
     """Set up the Transmission Component."""
 
     @callback
@@ -135,7 +139,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     await hass.async_add_executor_job(coordinator.init_torrent_list)
 
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
+    config_entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -204,13 +208,16 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     if unload_ok := await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     ):
-        hass.data[DOMAIN].pop(config_entry.entry_id)
-
-    if not hass.data[DOMAIN]:
-        hass.services.async_remove(DOMAIN, SERVICE_ADD_TORRENT)
-        hass.services.async_remove(DOMAIN, SERVICE_REMOVE_TORRENT)
-        hass.services.async_remove(DOMAIN, SERVICE_START_TORRENT)
-        hass.services.async_remove(DOMAIN, SERVICE_STOP_TORRENT)
+        loaded_entries = [
+            entry
+            for entry in hass.config_entries.async_entries(DOMAIN)
+            if entry.state == ConfigEntryState.LOADED
+        ]
+        if len(loaded_entries) == 1:
+            hass.services.async_remove(DOMAIN, SERVICE_ADD_TORRENT)
+            hass.services.async_remove(DOMAIN, SERVICE_REMOVE_TORRENT)
+            hass.services.async_remove(DOMAIN, SERVICE_START_TORRENT)
+            hass.services.async_remove(DOMAIN, SERVICE_STOP_TORRENT)
 
     return unload_ok
 
