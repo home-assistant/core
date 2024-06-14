@@ -11,9 +11,9 @@ from homeassistant.core import HomeAssistant
 from .const import CONF_PAT, CONF_PROJECT
 from .coordinator import AzureDevOpsDataUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
 type AzureDevOpsConfigEntry = ConfigEntry[AzureDevOpsDataUpdateCoordinator]
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
 
