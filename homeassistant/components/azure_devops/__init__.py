@@ -13,6 +13,8 @@ from .coordinator import AzureDevOpsDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+type AzureDevOpsConfigEntry = ConfigEntry[AzureDevOpsDataUpdateCoordinator]
+
 PLATFORMS = [Platform.SENSOR]
 
 
