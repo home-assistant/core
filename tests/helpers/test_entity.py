@@ -1601,7 +1601,7 @@ async def test_translation_key(hass: HomeAssistant) -> None:
     assert mock_entity2.translation_key == "from_entity_description"
 
 
-async def test_repr(hass) -> None:
+async def test_repr(hass: HomeAssistant) -> None:
     """Test Entity.__repr__."""
 
     class MyEntity(MockEntity):

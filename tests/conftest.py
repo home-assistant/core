@@ -743,7 +743,7 @@ async def hass_supervisor_user(
 @pytest.fixture
 async def hass_supervisor_access_token(
     hass: HomeAssistant,
-    hass_supervisor_user,
+    hass_supervisor_user: MockUser,
     local_auth: homeassistant.HassAuthProvider,
 ) -> str:
     """Return a Home Assistant Supervisor access token."""
@@ -836,7 +836,7 @@ def current_request_with_host(current_request: MagicMock) -> None:
 @pytest.fixture
 def hass_ws_client(
     aiohttp_client: ClientSessionGenerator,
-    hass_access_token: str | None,
+    hass_access_token: str,
     hass: HomeAssistant,
     socket_enabled: None,
 ) -> WebSocketGenerator:
@@ -1372,7 +1372,7 @@ def hass_recorder(
     enable_migrate_context_ids: bool,
     enable_migrate_event_type_ids: bool,
     enable_migrate_entity_ids: bool,
-    hass_storage,
+    hass_storage: dict[str, Any],
 ) -> Generator[Callable[..., HomeAssistant]]:
     """Home Assistant fixture with in-memory recorder."""
     # pylint: disable-next=import-outside-toplevel

@@ -1125,7 +1125,10 @@ CUSTOM_ISSUE_TRACKER = "https://blablabla.com"
     ],
 )
 async def test_async_get_issue_tracker(
-    hass, domain: str | None, module: str | None, issue_tracker: str | None
+    hass: HomeAssistant,
+    domain: str | None,
+    module: str | None,
+    issue_tracker: str | None,
 ) -> None:
     """Test async_get_issue_tracker."""
     mock_integration(hass, MockModule("bla_built_in"))
@@ -1187,7 +1190,7 @@ async def test_async_get_issue_tracker(
     ],
 )
 async def test_async_get_issue_tracker_no_hass(
-    hass, domain: str | None, module: str | None, issue_tracker: str
+    hass: HomeAssistant, domain: str | None, module: str | None, issue_tracker: str
 ) -> None:
     """Test async_get_issue_tracker."""
     mock_integration(hass, MockModule("bla_built_in"))
@@ -1220,7 +1223,7 @@ REPORT_CUSTOM_UNKNOWN = "report it to the custom integration author"
     ],
 )
 async def test_async_suggest_report_issue(
-    hass, domain: str | None, module: str | None, report_issue: str
+    hass: HomeAssistant, domain: str | None, module: str | None, report_issue: str
 ) -> None:
     """Test async_suggest_report_issue."""
     mock_integration(hass, MockModule("bla_built_in"))
@@ -1952,7 +1955,8 @@ async def test_integration_warnings(
     assert "configured to to import its code in the event loop" in caplog.text
 
 
-async def test_has_services(hass: HomeAssistant, enable_custom_integrations) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_has_services(hass: HomeAssistant) -> None:
     """Test has_services."""
     integration = await loader.async_get_integration(hass, "test")
     assert integration.has_services is False
