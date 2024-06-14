@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.exceptions import ConfigEntryNotReady
+
 from .const import DOMAIN, PLATFORMS
 from hscloud.const import DEVICE_TYPE, FAN_DEVICE
 from hscloud.hscloud import HsCloud
@@ -30,25 +32,25 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry):
     try:
         await hass.async_add_executor_job(manager.login)
 
-    except HsCloudException as exc:
+    except HsCloudException as ex:
         _LOGGER.exception("unable to connect")
-        return False
+        raise ConfigEntryNotReady(f"unable to connect") from ex
 
-    except HsCloudBusinessException as exc:
+    except HsCloudBusinessException as ex:
         _LOGGER.exception("invalid username or password")
-        return False
+        raise ConfigEntryNotReady(f"invalid username or password") from ex
 
-    except Exception:  # pylint: disable=broad-except
+    except Exception as ex:  # pylint: disable=broad-except
         _LOGGER.exception("Unexpected exception")
-        return False
-
-    fans = []
+        raise ConfigEntryNotReady(f"Unexpected exception") from ex
 
     devices = await hass.async_add_executor_job(manager.get_devices)
-    for device in devices:
-        _device_type = DEVICE_TYPE.get(device.get("model"))
-        if _device_type == FAN_DEVICE.get("type"):
-            fans.append(device)
+
+    fans = [
+        device
+        for device in devices
+        if DEVICE_TYPE.get(device.get("model")) == FAN_DEVICE.get("type")
+    ]
 
     config_entry.runtime_data = MyData(manager, fans)
 

@@ -11,6 +11,12 @@ from hscloud.hscloudexception import HsCloudException, HsCloudBusinessException
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str
+    }
+)
 
 class DreoFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Dreo config flow."""
@@ -18,15 +24,8 @@ class DreoFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _show_form(self, errors=None):
         """Show form to the user."""
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str
-            }
-        )
-
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors if errors else {}
+            step_id="user", data_schema=DATA_SCHEMA, errors=errors if errors else {}
         )
 
     async def async_step_user(self, user_input=None):

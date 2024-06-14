@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import logging
 import math
+from typing import Any
+
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -11,9 +13,9 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage, int_states_in_range
 )
 from hscloud.const import FAN_DEVICE
-from .entity import DreoEntity
-from typing import Any
+
 from . import MyConfigEntry
+from .entity import DreoEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +32,12 @@ async def async_setup_entry(
 
 class DreoFanHA(DreoEntity, FanEntity):
     """Dreo fan."""
+    _state = False
+    _mode = None
+    _speed = 0
+    _direction = None
+    _oscillate = False
+    _available = True
 
     _attr_supported_features = (FanEntityFeature.PRESET_MODE
                                 | FanEntityFeature.SET_SPEED
@@ -38,13 +46,6 @@ class DreoFanHA(DreoEntity, FanEntity):
     def __init__(self, device, config_entry) -> None:
         """Initialize the Dreo fan."""
         super().__init__(device, config_entry)
-
-        self._state = False
-        self._mode = None
-        self._speed = 0
-        self._direction = None
-        self._oscillate = False
-        self._available = True
 
     @property
     def is_on(self) -> bool | None:

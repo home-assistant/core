@@ -1,4 +1,5 @@
 """Dreo for device."""
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from hscloud.hscloudexception import HsCloudException, HsCloudBusinessException, HsCloudAccessDeniedException, HsCloudFlowControlException
@@ -14,7 +15,6 @@ class DreoEntity(Entity):
 
     def __init__(self, device, config_entry):
         """Initialize the coordinated Dreo Device."""
-        self._name = device.get("deviceName")
         self._device = device
         self._config_entry = config_entry
         self._model = device.get("model")
@@ -23,12 +23,12 @@ class DreoEntity(Entity):
         self._mcuFirmwareVersion = device.get("mcuFirmwareVersion")
         self._moduleFirmwareVersion = device.get("moduleFirmwareVersion")
         self._attr_unique_id = self._unique_id
-        self._attr_name = self._name
+        self._attr_name = device.get("deviceName")
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
             manufacturer="Dreo",
             model=self._model,
-            name=self._name,
+            name=self._attr_name,
             sw_version=self._moduleFirmwareVersion,
             hw_version=self._mcuFirmwareVersion
         )
@@ -40,22 +40,22 @@ class DreoEntity(Entity):
             self._config_entry.runtime_data.client.update_status(self._device_id, **kwargs)
             return True
 
-        except HsCloudException as exc:
+        except HsCloudException as ex:
             _LOGGER.error(mask_error)
-            return False
+            raise HomeAssistantError(f"{mask_error}") from ex
 
-        except HsCloudBusinessException as exc:
+        except HsCloudBusinessException as ex:
             _LOGGER.error(mask_error)
-            return False
+            raise HomeAssistantError(f"{mask_error}") from ex
 
-        except HsCloudAccessDeniedException as exc:
+        except HsCloudAccessDeniedException as ex:
             _LOGGER.error(mask_error)
-            return False
+            raise HomeAssistantError(f"{mask_error}") from ex
 
-        except HsCloudFlowControlException as exc:
+        except HsCloudFlowControlException as ex:
             _LOGGER.error(mask_error)
-            return False
+            raise HomeAssistantError(f"{mask_error}") from ex
 
-        except Exception:  # pylint: disable=broad-except
+        except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.error(mask_error)
-            return False
+            raise HomeAssistantError(f"{mask_error}") from ex
