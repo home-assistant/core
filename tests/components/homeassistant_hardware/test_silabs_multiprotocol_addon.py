@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.hassio import AddonError, AddonInfo, AddonState, HassIO
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
-from homeassistant.components.zha.core.const import DOMAIN as ZHA_DOMAIN
+from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import HomeAssistant, callback
@@ -95,8 +95,8 @@ class FakeOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandler):
 
 @pytest.fixture(autouse=True)
 def config_flow_handler(
-    hass: HomeAssistant, current_request_with_host: Any
-) -> Generator[FakeConfigFlow, None, None]:
+    hass: HomeAssistant, current_request_with_host: None
+) -> Generator[None]:
     """Fixture for a test config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
     with mock_config_flow(TEST_DOMAIN, FakeConfigFlow):
@@ -104,7 +104,7 @@ def config_flow_handler(
 
 
 @pytest.fixture
-def options_flow_poll_addon_state() -> Generator[None, None, None]:
+def options_flow_poll_addon_state() -> Generator[None]:
     """Fixture for patching options flow addon state polling."""
     with patch(
         "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.WaitingAddonManager.async_wait_until_addon_state"
@@ -113,7 +113,7 @@ def options_flow_poll_addon_state() -> Generator[None, None, None]:
 
 
 @pytest.fixture(autouse=True)
-def hassio_integration(hass: HomeAssistant) -> Generator[None, None, None]:
+def hassio_integration(hass: HomeAssistant) -> Generator[None]:
     """Fixture to mock the `hassio` integration."""
     mock_component(hass, "hassio")
     hass.data["hassio"] = Mock(spec_set=HassIO)
@@ -148,7 +148,7 @@ class MockMultiprotocolPlatform(MockPlatform):
 @pytest.fixture
 def mock_multiprotocol_platform(
     hass: HomeAssistant,
-) -> Generator[FakeConfigFlow, None, None]:
+) -> Generator[FakeConfigFlow]:
     """Fixture for a test silabs multiprotocol platform."""
     hass.config.components.add(TEST_DOMAIN)
     platform = MockMultiprotocolPlatform()
@@ -164,20 +164,17 @@ def get_suggested(schema, key):
                 return None
             return k.description["suggested_value"]
     # Wanted key absent from schema
-    raise Exception
+    raise KeyError("Wanted key absent from schema")
 
 
 @patch(
     "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.ADDON_STATE_POLL_INTERVAL",
     0,
 )
-async def test_uninstall_addon_waiting(
-    hass: HomeAssistant,
-    addon_store_info,
-    addon_info,
-    install_addon,
-    uninstall_addon,
-):
+@pytest.mark.usefixtures(
+    "addon_store_info", "addon_info", "install_addon", "uninstall_addon"
+)
+async def test_uninstall_addon_waiting(hass: HomeAssistant) -> None:
     """Test the synchronous addon uninstall helper."""
 
     multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
@@ -587,7 +584,7 @@ async def test_option_flow_addon_installed_same_device_reconfigure_expected_user
     config_entry.add_to_hass(hass)
 
     mock_multiprotocol_platforms = {}
-    for domain in ["otbr", "zha"]:
+    for domain in ("otbr", "zha"):
         mock_multiprotocol_platform = MockMultiprotocolPlatform()
         mock_multiprotocol_platforms[domain] = mock_multiprotocol_platform
         mock_multiprotocol_platform.channel = configured_channel
@@ -622,7 +619,7 @@ async def test_option_flow_addon_installed_same_device_reconfigure_expected_user
     result = await hass.config_entries.options.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
-    for domain in ["otbr", "zha"]:
+    for domain in ("otbr", "zha"):
         assert mock_multiprotocol_platforms[domain].change_channel_calls == [(14, 300)]
     assert multipan_manager._channel == 14
 

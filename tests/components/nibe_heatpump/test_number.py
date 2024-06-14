@@ -43,6 +43,7 @@ async def fixture_single_platform():
         (Model.F750, 47062, "number.hw_charge_offset_47062", None),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_update(
     hass: HomeAssistant,
     model: Model,
@@ -50,7 +51,6 @@ async def test_update(
     address: int,
     value: Any,
     coils: dict[int, Any],
-    entity_registry_enabled_by_default: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test setting of value."""
@@ -73,6 +73,7 @@ async def test_update(
         (Model.F750, 47062, "number.hw_charge_offset_47062", 10),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_set_value(
     hass: HomeAssistant,
     mock_connection: AsyncMock,
@@ -81,7 +82,6 @@ async def test_set_value(
     address: int,
     value: Any,
     coils: dict[int, Any],
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test setting of value."""
     coils[address] = 0

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import contextlib
 from typing import Final
 
 from aioshelly.block_device import BlockDevice
@@ -55,9 +54,10 @@ from .utils import (
     get_ws_context,
 )
 
-BLOCK_PLATFORMS: Final = [
+PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CLIMATE,
     Platform.COVER,
     Platform.EVENT,
     Platform.LIGHT,
@@ -72,17 +72,6 @@ BLOCK_SLEEPING_PLATFORMS: Final = [
     Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
-]
-RPC_PLATFORMS: Final = [
-    Platform.BINARY_SENSOR,
-    Platform.BUTTON,
-    Platform.CLIMATE,
-    Platform.COVER,
-    Platform.EVENT,
-    Platform.LIGHT,
-    Platform.SENSOR,
-    Platform.SWITCH,
-    Platform.UPDATE,
 ]
 RPC_SLEEPING_PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
@@ -195,7 +184,7 @@ async def _async_setup_block_entry(
         shelly_entry_data.block = ShellyBlockCoordinator(hass, entry, device)
         shelly_entry_data.block.async_setup()
         shelly_entry_data.rest = ShellyRestCoordinator(hass, device, entry)
-        await hass.config_entries.async_forward_entry_setups(entry, BLOCK_PLATFORMS)
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     elif sleep_period is None or device_entry is None:
         # Need to get sleep info or first time sleeping device setup, wait for device
         LOGGER.debug(
@@ -265,7 +254,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         shelly_entry_data.rpc = ShellyRpcCoordinator(hass, entry, device)
         shelly_entry_data.rpc.async_setup()
         shelly_entry_data.rpc_poll = ShellyRpcPollingCoordinator(hass, entry, device)
-        await hass.config_entries.async_forward_entry_setups(entry, RPC_PLATFORMS)
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     elif sleep_period is None or device_entry is None:
         # Need to get sleep info or first time sleeping device setup, wait for device
         LOGGER.debug(
@@ -291,23 +280,17 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
 async def async_unload_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> bool:
     """Unload a config entry."""
     shelly_entry_data = entry.runtime_data
-
-    platforms = RPC_SLEEPING_PLATFORMS
-    if not entry.data.get(CONF_SLEEP_PERIOD):
-        platforms = RPC_PLATFORMS
+    platforms = PLATFORMS
 
     if get_device_entry_gen(entry) in RPC_GENERATIONS:
+        if entry.data.get(CONF_SLEEP_PERIOD):
+            platforms = RPC_SLEEPING_PLATFORMS
+
         if unload_ok := await hass.config_entries.async_unload_platforms(
             entry, platforms
         ):
             if shelly_entry_data.rpc:
-                with contextlib.suppress(DeviceConnectionError):
-                    # If the device is restarting or has gone offline before
-                    # the ping/pong timeout happens, the shutdown command
-                    # will fail, but we don't care since we are unloading
-                    # and if we setup again, we will fix anything that is
-                    # in an inconsistent state at that time.
-                    await shelly_entry_data.rpc.shutdown()
+                await shelly_entry_data.rpc.shutdown()
 
         return unload_ok
 
@@ -319,11 +302,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> b
         hass, DOMAIN, PUSH_UPDATE_ISSUE_ID.format(unique=entry.unique_id)
     )
 
-    platforms = BLOCK_SLEEPING_PLATFORMS
-
-    if not entry.data.get(CONF_SLEEP_PERIOD):
-        shelly_entry_data.rest = None
-        platforms = BLOCK_PLATFORMS
+    if entry.data.get(CONF_SLEEP_PERIOD):
+        platforms = BLOCK_SLEEPING_PLATFORMS
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, platforms):
         if shelly_entry_data.block:

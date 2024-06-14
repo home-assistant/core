@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pybalboa.enums import HeatMode, LowHighRange
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.core import HomeAssistant
 
@@ -22,7 +23,7 @@ async def integration_fixture(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture(name="client")
-def client_fixture() -> Generator[MagicMock, None, None]:
+def client_fixture() -> Generator[MagicMock]:
     """Mock balboa spa client."""
     with patch(
         "homeassistant.components.balboa.SpaClient", autospec=True

@@ -1,11 +1,11 @@
 """Tests configuration for Govee Local API."""
 
 from asyncio import Event
-from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from govee_local_api import GoveeLightCapability
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.govee_light_local.coordinator import GoveeController
 
@@ -25,7 +25,7 @@ def fixture_mock_govee_api():
 
 
 @pytest.fixture(name="mock_setup_entry")
-def fixture_mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def fixture_mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.govee_light_local.async_setup_entry",

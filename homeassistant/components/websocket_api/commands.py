@@ -862,7 +862,10 @@ async def handle_validate_config(
 
         try:
             await validator(hass, schema(msg[key]))
-        except vol.Invalid as err:
+        except (
+            vol.Invalid,
+            HomeAssistantError,
+        ) as err:
             result[key] = {"valid": False, "error": str(err)}
         else:
             result[key] = {"valid": True, "error": None}

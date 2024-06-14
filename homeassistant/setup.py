@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Awaitable, Callable, Generator, Mapping
+from collections.abc import Awaitable, Callable, Mapping
 import contextlib
 import contextvars
 from enum import StrEnum
@@ -13,6 +13,8 @@ import logging.handlers
 import time
 from types import ModuleType
 from typing import Any, Final, TypedDict
+
+from typing_extensions import Generator
 
 from . import config as conf_util, core, loader, requirements
 from .const import (
@@ -674,9 +676,7 @@ def _setup_started(
 
 
 @contextlib.contextmanager
-def async_pause_setup(
-    hass: core.HomeAssistant, phase: SetupPhases
-) -> Generator[None, None, None]:
+def async_pause_setup(hass: core.HomeAssistant, phase: SetupPhases) -> Generator[None]:
     """Keep track of time we are blocked waiting for other operations.
 
     We want to count the time we wait for importing and
@@ -724,7 +724,7 @@ def async_start_setup(
     integration: str,
     phase: SetupPhases,
     group: str | None = None,
-) -> Generator[None, None, None]:
+) -> Generator[None]:
     """Keep track of when setup starts and finishes.
 
     :param hass: Home Assistant instance

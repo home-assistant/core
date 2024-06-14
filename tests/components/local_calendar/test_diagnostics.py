@@ -48,6 +48,7 @@ async def setup_diag(hass):
 
 
 @freeze_time("2023-03-13 12:05:00-07:00")
+@pytest.mark.usefixtures("socket_enabled")
 async def test_empty_calendar(
     hass: HomeAssistant,
     setup_integration: None,
@@ -55,7 +56,6 @@ async def test_empty_calendar(
     hass_admin_credential: Credentials,
     config_entry: MockConfigEntry,
     aiohttp_client: ClientSessionGenerator,
-    socket_enabled: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics against an empty calendar."""
@@ -76,6 +76,7 @@ async def test_empty_calendar(
 
 
 @freeze_time("2023-03-13 12:05:00-07:00")
+@pytest.mark.usefixtures("socket_enabled")
 async def test_api_date_time_event(
     hass: HomeAssistant,
     setup_integration: None,
@@ -84,7 +85,6 @@ async def test_api_date_time_event(
     config_entry: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
     aiohttp_client: ClientSessionGenerator,
-    socket_enabled: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test an event with a start/end date time."""

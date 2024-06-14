@@ -98,9 +98,7 @@ async def test_migration(
     await client.send_json_auto_id({"type": f"{DOMAIN}/list"})
     resp = await client.receive_json()
     assert resp["success"]
-    assert resp["result"] == [
-        {"id": TEST_TAG_ID, "name": "test tag name", "tag_id": TEST_TAG_ID}
-    ]
+    assert resp["result"] == [{"id": TEST_TAG_ID, "name": "test tag name"}]
 
     # Scan a new tag
     await async_scan_tag(hass, "new tag", "some_scanner")

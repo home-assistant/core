@@ -153,5 +153,10 @@
       "name": "[%key:common::action::reload%]",
       "description": "Reloads template entities from the YAML-configuration."
     }
+  },
+  "exceptions": {
+    "code_format_template_error": {
+      "message": "Error evaluating code format template \"{code_format_template}\" for {entity_id}: {cause}"
+    }
   }
 }

@@ -4,21 +4,19 @@ import logging
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-import requests_mock
 
 from homeassistant.components.ring.const import SCAN_INTERVAL
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
 
-from tests.common import async_fire_time_changed, load_fixture
-
-WIFI_ENABLED = False
+from tests.common import async_fire_time_changed
 
 
-async def test_sensor(hass: HomeAssistant, requests_mock: requests_mock.Mocker) -> None:
+async def test_sensor(hass: HomeAssistant, mock_ring_client) -> None:
     """Test the Ring sensors."""
     await setup_platform(hass, "sensor")
 
@@ -41,10 +39,6 @@ async def test_sensor(hass: HomeAssistant, requests_mock: requests_mock.Mocker) 
     assert downstairs_volume_state is not None
     assert downstairs_volume_state.state == "2"
 
-    downstairs_wifi_signal_strength_state = hass.states.get(
-        "sensor.downstairs_wifi_signal_strength"
-    )
-
     ingress_mic_volume_state = hass.states.get("sensor.ingress_mic_volume")
     assert ingress_mic_volume_state.state == "11"
 
@@ -54,56 +48,118 @@ async def test_sensor(hass: HomeAssistant, requests_mock: requests_mock.Mocker) 
     ingress_voice_volume_state = hass.states.get("sensor.ingress_voice_volume")
     assert ingress_voice_volume_state.state == "11"
 
-    if not WIFI_ENABLED:
-        return
 
-    assert downstairs_wifi_signal_strength_state is not None
-    assert downstairs_wifi_signal_strength_state.state == "-39"
-
-    front_door_wifi_signal_category_state = hass.states.get(
-        "sensor.front_door_wifi_signal_category"
-    )
-    assert front_door_wifi_signal_category_state is not None
-    assert front_door_wifi_signal_category_state.state == "good"
-
-    front_door_wifi_signal_strength_state = hass.states.get(
-        "sensor.front_door_wifi_signal_strength"
-    )
-    assert front_door_wifi_signal_strength_state is not None
-    assert front_door_wifi_signal_strength_state.state == "-58"
-
-
-async def test_history(
+@pytest.mark.parametrize(
+    ("device_id", "device_name", "sensor_name", "expected_value"),
+    [
+        (987654, "front_door", "wifi_signal_category", "good"),
+        (987654, "front_door", "wifi_signal_strength", "-58"),
+        (123456, "downstairs", "wifi_signal_category", "good"),
+        (123456, "downstairs", "wifi_signal_strength", "-39"),
+        (765432, "front", "wifi_signal_category", "good"),
+        (765432, "front", "wifi_signal_strength", "-58"),
+    ],
+    ids=[
+        "doorbell-category",
+        "doorbell-strength",
+        "chime-category",
+        "chime-strength",
+        "stickup_cam-category",
+        "stickup_cam-strength",
+    ],
+)
+async def test_health_sensor(
     hass: HomeAssistant,
+    mock_ring_client,
     freezer: FrozenDateTimeFactory,
-    requests_mock: requests_mock.Mocker,
+    entity_registry: er.EntityRegistry,
+    device_id,
+    device_name,
+    sensor_name,
+    expected_value,
 ) -> None:
-    """Test history derived sensors."""
-    await setup_platform(hass, Platform.SENSOR)
+    """Test the Ring health sensors."""
+    entity_id = f"sensor.{device_name}_{sensor_name}"
+    # Enable the sensor as the health sensors are disabled by default
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor",
+        "ring",
+        f"{device_id}-{sensor_name}",
+        suggested_object_id=f"{device_name}_{sensor_name}",
+        disabled_by=None,
+    )
+    assert entity_entry.disabled is False
+    assert entity_entry.entity_id == entity_id
+
+    await setup_platform(hass, "sensor")
+    await hass.async_block_till_done()
+
+    sensor_state = hass.states.get(entity_id)
+    assert sensor_state is not None
+    assert sensor_state.state == "unknown"
+
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done(True)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    sensor_state = hass.states.get(entity_id)
+    assert sensor_state is not None
+    assert sensor_state.state == expected_value
 
-    front_door_last_activity_state = hass.states.get("sensor.front_door_last_activity")
-    assert front_door_last_activity_state.state == "2017-03-05T15:03:40+00:00"
 
-    ingress_last_activity_state = hass.states.get("sensor.ingress_last_activity")
-    assert ingress_last_activity_state.state == "2024-02-02T11:21:24+00:00"
+@pytest.mark.parametrize(
+    ("device_name", "sensor_name", "expected_value"),
+    [
+        ("front_door", "last_motion", "2017-03-05T15:03:40+00:00"),
+        ("front_door", "last_ding", "2018-03-05T15:03:40+00:00"),
+        ("front_door", "last_activity", "2018-03-05T15:03:40+00:00"),
+        ("front", "last_motion", "2017-03-05T15:03:40+00:00"),
+        ("ingress", "last_activity", "2024-02-02T11:21:24+00:00"),
+    ],
+    ids=[
+        "doorbell-motion",
+        "doorbell-ding",
+        "doorbell-activity",
+        "stickup_cam-motion",
+        "other-activity",
+    ],
+)
+async def test_history_sensor(
+    hass: HomeAssistant,
+    mock_ring_client,
+    freezer: FrozenDateTimeFactory,
+    device_name,
+    sensor_name,
+    expected_value,
+) -> None:
+    """Test the Ring sensors."""
+    await setup_platform(hass, "sensor")
+
+    entity_id = f"sensor.{device_name}_{sensor_name}"
+    sensor_state = hass.states.get(entity_id)
+    assert sensor_state is not None
+    assert sensor_state.state == "unknown"
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    sensor_state = hass.states.get(entity_id)
+    assert sensor_state is not None
+    assert sensor_state.state == expected_value
 
 
 async def test_only_chime_devices(
     hass: HomeAssistant,
-    requests_mock: requests_mock.Mocker,
+    mock_ring_client,
+    mock_ring_devices,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Tests the update service works correctly if only chimes are returned."""
     await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
-    requests_mock.get(
-        "https://api.ring.com/clients_api/ring_devices",
-        text=load_fixture("chime_devices.json", "ring"),
-    )
+
+    mock_ring_devices.all_devices = mock_ring_devices.chimes
+
     await setup_platform(hass, Platform.SENSOR)
     await hass.async_block_till_done()
     caplog.set_level(logging.DEBUG)

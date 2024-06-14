@@ -5,8 +5,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
+from functools import cache, partial
 from typing import Any
 
+import slugify as unicode_slug
 import voluptuous as vol
 
 from homeassistant.components.climate.intent import INTENT_GET_TEMPERATURE
@@ -29,14 +31,15 @@ from . import (
     entity_registry as er,
     floor_registry as fr,
     intent,
+    service,
 )
 from .singleton import singleton
 
 LLM_API_ASSIST = "assist"
 
 BASE_PROMPT = (
-    'Current time is {{ now().strftime("%X") }}. '
-    'Today\'s date is {{ now().strftime("%x") }}.\n'
+    'Current time is {{ now().strftime("%H:%M:%S") }}. '
+    'Today\'s date is {{ now().strftime("%Y-%m-%d") }}.\n'
 )
 
 DEFAULT_INSTRUCTIONS_PROMPT = """You are a voice assistant for Home Assistant.
@@ -174,10 +177,11 @@ class IntentTool(Tool):
 
     def __init__(
         self,
+        name: str,
         intent_handler: intent.IntentHandler,
     ) -> None:
         """Init the class."""
-        self.name = intent_handler.intent_type
+        self.name = name
         self.description = (
             intent_handler.description or f"Execute Home Assistant {self.name} intent"
         )
@@ -259,6 +263,9 @@ class AssistAPI(API):
             hass=hass,
             id=LLM_API_ASSIST,
             name="Assist",
+        )
+        self.cached_slugify = cache(
+            partial(unicode_slug.slugify, separator="_", lowercase=False)
         )
 
     async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
@@ -372,7 +379,10 @@ class AssistAPI(API):
                 or intent_handler.platforms & exposed_domains
             ]
 
-        return [IntentTool(intent_handler) for intent_handler in intent_handlers]
+        return [
+            IntentTool(self.cached_slugify(intent_handler.intent_type), intent_handler)
+            for intent_handler in intent_handlers
+        ]
 
 
 def _get_exposed_entities(
@@ -407,6 +417,7 @@ def _get_exposed_entities(
         entity_entry = entity_registry.async_get(state.entity_id)
         names = [state.name]
         area_names = []
+        description: str | None = None
 
         if entity_entry is not None:
             names.extend(entity_entry.aliases)
@@ -426,10 +437,24 @@ def _get_exposed_entities(
                     area_names.append(area.name)
                     area_names.extend(area.aliases)
 
+            if (
+                state.domain == "script"
+                and entity_entry.unique_id
+                and (
+                    service_desc := service.async_get_cached_service_description(
+                        hass, "script", entity_entry.unique_id
+                    )
+                )
+            ):
+                description = service_desc.get("description")
+
         info: dict[str, Any] = {
             "names": ", ".join(names),
             "state": state.state,
         }
+
+        if description:
+            info["description"] = description
 
         if area_names:
             info["areas"] = ", ".join(area_names)

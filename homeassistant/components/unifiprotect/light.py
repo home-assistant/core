@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pyunifiprotect.data import (
+from uiprotect.data import (
     Light,
     ModelType,
     ProtectAdoptableDeviceModel,
@@ -13,26 +13,22 @@ from pyunifiprotect.data import (
 )
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DISPATCH_ADOPT, DOMAIN
-from .data import ProtectData
+from .data import UFPConfigEntry
 from .entity import ProtectDeviceEntity
-from .utils import async_dispatch_id as _ufpd
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: UFPConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up lights for UniFi Protect integration."""
-    data: ProtectData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
@@ -41,10 +37,7 @@ async def async_setup_entry(
         ):
             async_add_entities([ProtectLight(data, device)])
 
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
-    )
-
+    data.async_subscribe_adopt(_add_new_device)
     async_add_entities(
         ProtectLight(data, device)
         for device in data.get_by_types({ModelType.LIGHT})

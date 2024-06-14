@@ -11,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -24,7 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
+from . import AirGradientConfigEntry
 from .coordinator import AirGradientMeasurementCoordinator
 from .entity import AirGradientEntity
 
@@ -103,6 +102,7 @@ SENSOR_TYPES: tuple[AirGradientSensorEntityDescription, ...] = (
     AirGradientSensorEntityDescription(
         key="pm003",
         translation_key="pm003_count",
+        native_unit_of_measurement="particles/dL",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.pm003_count,
     ),
@@ -126,13 +126,13 @@ SENSOR_TYPES: tuple[AirGradientSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AirGradientConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AirGradient sensor entities based on a config entry."""
 
-    coordinator: AirGradientMeasurementCoordinator = hass.data[DOMAIN][entry.entry_id][
-        "measurement"
-    ]
+    coordinator = entry.runtime_data.measurement
     listener: Callable[[], None] | None = None
     not_setup: set[AirGradientSensorEntityDescription] = set(SENSOR_TYPES)
 

@@ -1,6 +1,7 @@
 """The tests for the integration sensor platform."""
 
 from datetime import timedelta
+from typing import Any
 
 from freezegun import freeze_time
 import pytest
@@ -32,6 +33,8 @@ from tests.common import (
     mock_restore_cache,
     mock_restore_cache_with_extra_data,
 )
+
+DEFAULT_MAX_SUB_INTERVAL = {"minutes": 1}
 
 
 @pytest.mark.parametrize("method", ["trapezoidal", "left", "right"])
@@ -326,7 +329,7 @@ async def test_trapezoidal(hass: HomeAssistant) -> None:
     start_time = dt_util.utcnow()
     with freeze_time(start_time) as freezer:
         # Testing a power sensor with non-monotonic intervals and values
-        for time, value in [(20, 10), (30, 30), (40, 5), (50, 0)]:
+        for time, value in ((20, 10), (30, 30), (40, 5), (50, 0)):
             freezer.move_to(start_time + timedelta(minutes=time))
             hass.states.async_set(
                 entity_id,
@@ -365,7 +368,7 @@ async def test_left(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     # Testing a power sensor with non-monotonic intervals and values
-    for time, value in [(20, 10), (30, 30), (40, 5), (50, 0)]:
+    for time, value in ((20, 10), (30, 30), (40, 5), (50, 0)):
         now = dt_util.utcnow() + timedelta(minutes=time)
         with freeze_time(now):
             hass.states.async_set(
@@ -405,7 +408,7 @@ async def test_right(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     # Testing a power sensor with non-monotonic intervals and values
-    for time, value in [(20, 10), (30, 30), (40, 5), (50, 0)]:
+    for time, value in ((20, 10), (30, 30), (40, 5), (50, 0)):
         now = dt_util.utcnow() + timedelta(minutes=time)
         with freeze_time(now):
             hass.states.async_set(
@@ -752,7 +755,7 @@ async def test_device_id(
     assert integration_entity.device_id == source_entity.device_id
 
 
-def _integral_sensor_config(max_sub_interval: dict[str, int] | None = {"minutes": 1}):
+def _integral_sensor_config(max_sub_interval: dict[str, int] | None) -> dict[str, Any]:
     sensor = {
         "platform": "integration",
         "name": "integration",
@@ -765,7 +768,7 @@ def _integral_sensor_config(max_sub_interval: dict[str, int] | None = {"minutes"
 
 
 async def _setup_integral_sensor(
-    hass: HomeAssistant, max_sub_interval: dict[str, int] | None = {"minutes": 1}
+    hass: HomeAssistant, max_sub_interval: dict[str, int] | None
 ) -> None:
     await async_setup_component(
         hass, "sensor", _integral_sensor_config(max_sub_interval=max_sub_interval)
@@ -775,7 +778,9 @@ async def _setup_integral_sensor(
 
 async def _update_source_sensor(hass: HomeAssistant, value: int | str) -> None:
     hass.states.async_set(
-        _integral_sensor_config()["sensor"]["source"],
+        _integral_sensor_config(max_sub_interval=DEFAULT_MAX_SUB_INTERVAL)["sensor"][
+            "source"
+        ],
         value,
         {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT},
         force_update=True,
@@ -790,7 +795,7 @@ async def test_on_valid_source_expect_update_on_time(
     start_time = dt_util.utcnow()
 
     with freeze_time(start_time) as freezer:
-        await _setup_integral_sensor(hass)
+        await _setup_integral_sensor(hass, max_sub_interval=DEFAULT_MAX_SUB_INTERVAL)
         await _update_source_sensor(hass, 100)
         state_before_max_sub_interval_exceeded = hass.states.get("sensor.integration")
 
@@ -816,7 +821,7 @@ async def test_on_unvailable_source_expect_no_update_on_time(
 
     start_time = dt_util.utcnow()
     with freeze_time(start_time) as freezer:
-        await _setup_integral_sensor(hass)
+        await _setup_integral_sensor(hass, max_sub_interval=DEFAULT_MAX_SUB_INTERVAL)
         await _update_source_sensor(hass, 100)
         freezer.tick(61)
         async_fire_time_changed(hass, dt_util.now())
@@ -843,7 +848,7 @@ async def test_on_statechanges_source_expect_no_update_on_time(
 
     start_time = dt_util.utcnow()
     with freeze_time(start_time) as freezer:
-        await _setup_integral_sensor(hass)
+        await _setup_integral_sensor(hass, max_sub_interval=DEFAULT_MAX_SUB_INTERVAL)
         await _update_source_sensor(hass, 100)
 
         freezer.tick(30)

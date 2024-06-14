@@ -93,7 +93,7 @@ def get_suggested(schema, key):
                 return None
             return k.description["suggested_value"]
     # Wanted key absent from schema
-    raise Exception
+    raise KeyError("Wanted key absent from schema")
 
 
 async def test_options(hass: HomeAssistant) -> None:
@@ -129,6 +129,7 @@ async def test_options(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
+            "entity_id": input_sensor,
             "hysteresis": 0.0,
             "upper": 20.0,
         },

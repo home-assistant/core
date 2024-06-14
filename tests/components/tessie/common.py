@@ -7,10 +7,12 @@ from aiohttp import ClientConnectionError, ClientResponseError
 from aiohttp.client import RequestInfo
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.tessie import PLATFORMS
 from homeassistant.components.tessie.const import DOMAIN, TessieStatus
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -20,7 +22,7 @@ TEST_VEHICLE_STATUS_AWAKE = {"status": TessieStatus.AWAKE}
 TEST_VEHICLE_STATUS_ASLEEP = {"status": TessieStatus.ASLEEP}
 
 TEST_RESPONSE = {"result": True}
-TEST_RESPONSE_ERROR = {"result": False, "reason": "reason why"}
+TEST_RESPONSE_ERROR = {"result": False, "reason": "reason_why"}
 
 TEST_CONFIG = {CONF_ACCESS_TOKEN: "1234567890"}
 TESSIE_URL = "https://api.tessie.com/"
@@ -47,7 +49,7 @@ ERROR_CONNECTION = ClientConnectionError()
 
 
 async def setup_platform(
-    hass: HomeAssistant, platforms: list[Platform] = [], side_effect=None
+    hass: HomeAssistant, platforms: list[Platform] | UndefinedType = UNDEFINED
 ) -> MockConfigEntry:
     """Set up the Tessie platform."""
 
@@ -57,13 +59,9 @@ async def setup_platform(
     )
     mock_entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.tessie.get_state_of_all_vehicles",
-            return_value=TEST_STATE_OF_ALL_VEHICLES,
-            side_effect=side_effect,
-        ),
-        patch("homeassistant.components.tessie.PLATFORMS", platforms),
+    with patch(
+        "homeassistant.components.tessie.PLATFORMS",
+        PLATFORMS if platforms is UNDEFINED else platforms,
     ):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()

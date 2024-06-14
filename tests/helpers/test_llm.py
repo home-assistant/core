@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 import voluptuous as vol
 
+from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -48,9 +49,7 @@ async def test_register_api(hass: HomeAssistant, llm_context: llm.LLMContext) ->
     """Test registering an llm api."""
 
     class MyAPI(llm.API):
-        async def async_get_api_instance(
-            self, tool_context: llm.ToolInput
-        ) -> llm.APIInstance:
+        async def async_get_api_instance(self, _: llm.ToolInput) -> llm.APIInstance:
             """Return a list of tools."""
             return llm.APIInstance(self, "", [], llm_context)
 
@@ -248,6 +247,39 @@ async def test_assist_api_get_timer_tools(
     assert "HassStartTimer" in [tool.name for tool in api.tools]
 
 
+async def test_assist_api_tools(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test getting timer tools with Assist API."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    llm_context.device_id = "test_device"
+
+    async_register_timer_handler(hass, "test_device", lambda *args: None)
+
+    class MyIntentHandler(intent.IntentHandler):
+        intent_type = "Super crazy intent with unique nåme"
+        description = "my intent handler"
+
+    intent.async_register(hass, MyIntentHandler())
+
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    assert [tool.name for tool in api.tools] == [
+        "HassTurnOn",
+        "HassTurnOff",
+        "HassSetPosition",
+        "HassStartTimer",
+        "HassCancelTimer",
+        "HassIncreaseTimer",
+        "HassDecreaseTimer",
+        "HassPauseTimer",
+        "HassUnpauseTimer",
+        "HassTimerStatus",
+        "Super_crazy_intent_with_unique_name",
+    ]
+
+
 async def test_assist_api_description(
     hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> None:
@@ -293,6 +325,26 @@ async def test_assist_api_prompt(
     )
 
     # Expose entities
+
+    # Create a script with a unique ID
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "test_script": {
+                    "description": "This is a test script",
+                    "sequence": [],
+                    "fields": {
+                        "beer": {"description": "Number of beers"},
+                        "wine": {},
+                    },
+                }
+            }
+        },
+    )
+    async_expose_entity(hass, "conversation", "script.test_script", True)
+
     entry = MockConfigEntry(title=None)
     entry.add_to_hass(hass)
     device = device_registry.async_get_or_create(
@@ -470,6 +522,11 @@ async def test_assist_api_prompt(
             "areas": "Test Area 2",
             "names": "Unnamed Device",
             "state": "unavailable",
+        },
+        "script.test_script": {
+            "description": "This is a test script",
+            "names": "test_script",
+            "state": "off",
         },
     }
     exposed_entities_prompt = (
