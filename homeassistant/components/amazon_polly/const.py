@@ -8,8 +8,6 @@ CONF_REGION: Final = "region_name"
 CONF_ACCESS_KEY_ID: Final = "aws_access_key_id"
 CONF_SECRET_ACCESS_KEY: Final = "aws_secret_access_key"
 
-DEFAULT_REGION: Final = "us-east-1"
-
 CONF_ENGINE: Final = "engine"
 CONF_VOICE: Final = "voice"
 CONF_OUTPUT_FORMAT: Final = "output_format"
@@ -33,6 +31,8 @@ CONTENT_TYPE_EXTENSIONS: Final[dict[str, str]] = {
     "audio/ogg": "ogg",
     "audio/pcm": "pcm",
 }
+
+DEFAULT_REGION: Final = "us-east-1"
 
 DEFAULT_ENGINE: Final = "standard"
 DEFAULT_VOICE: Final = "Joanna"
