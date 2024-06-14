@@ -13,6 +13,7 @@ from unittest.mock import MagicMock, patch
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import system_log
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.typing import ConfigType
 
 from tests.common import async_capture_events
 from tests.typing import WebSocketGenerator
@@ -89,7 +90,9 @@ class WatchLogErrorHandler(system_log.LogErrorHandler):
             self.watch_event.set()
 
 
-async def async_setup_system_log(hass, config) -> WatchLogErrorHandler:
+async def async_setup_system_log(
+    hass: HomeAssistant, config: ConfigType
+) -> WatchLogErrorHandler:
     """Set up the system_log component."""
     WatchLogErrorHandler.instances = []
     with patch(
