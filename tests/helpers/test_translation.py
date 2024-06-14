@@ -549,7 +549,7 @@ async def test_get_cached_translations(
     }
 
 
-async def test_setup(hass: HomeAssistant):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test the setup load listeners helper."""
     translation.async_setup(hass)
 
@@ -577,7 +577,7 @@ async def test_setup(hass: HomeAssistant):
         mock.assert_not_called()
 
 
-async def test_translate_state(hass: HomeAssistant):
+async def test_translate_state(hass: HomeAssistant) -> None:
     """Test the state translation helper."""
     result = translation.async_translate_state(
         hass, "unavailable", "binary_sensor", "platform", "translation_key", None
