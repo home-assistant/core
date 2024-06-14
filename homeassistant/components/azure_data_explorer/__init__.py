@@ -62,13 +62,12 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
 
     Adds an empty filter to hass data.
     Tries to get a filter from yaml, if present set to hass data.
-    If config is empty after getting the filter, return, otherwise emit
-    deprecated warning and pass the rest to the config flow.
     """
 
-    hass.data.setdefault(DOMAIN, {DATA_FILTER: {}})
+    hass.data.setdefault(DOMAIN, {DATA_FILTER: FILTER_SCHEMA({})})
     if DOMAIN in yaml_config:
-        hass.data[DOMAIN][DATA_FILTER] = yaml_config[DOMAIN][CONF_FILTER]
+        hass.data[DOMAIN][DATA_FILTER] = yaml_config[DOMAIN].pop(CONF_FILTER)
+
     return True
 
 
@@ -207,6 +206,6 @@ class AzureDataExplorer:
         if "\n" in state.state:
             return None, dropped + 1
 
-        json_event = str(json.dumps(obj=state, cls=JSONEncoder).encode("utf-8"))
+        json_event = json.dumps(obj=state, cls=JSONEncoder)
 
         return (json_event, dropped)

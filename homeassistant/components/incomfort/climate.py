@@ -86,8 +86,12 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
 
     @property
     def target_temperature(self) -> float | None:
-        """Return the temperature we try to reach."""
-        return self._room.setpoint
+        """Return the (override)temperature we try to reach.
+
+        As we set the override, we report back the override. The actual set point is
+        is returned at a later time.
+        """
+        return self._room.override
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature for this zone."""

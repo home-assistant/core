@@ -61,8 +61,8 @@ DEFAULT_CONFIG = {
 
 async def async_turn_on(
     hass: HomeAssistant,
-    entity_id: str = ENTITY_MATCH_ALL,
-    parameters: dict[str, Any] = {},
+    entity_id: str,
+    parameters: dict[str, Any],
 ) -> None:
     """Turn all or specified siren on."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
@@ -144,7 +144,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await async_turn_on(hass, entity_id="siren.test")
+    await async_turn_on(hass, entity_id="siren.test", parameters={})
 
     mqtt_mock.async_publish.assert_called_once_with(
         "command-topic", '{"state":"beer on"}', 2, False
