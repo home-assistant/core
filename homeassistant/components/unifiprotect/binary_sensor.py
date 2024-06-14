@@ -717,8 +717,8 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
 
 
 MODEL_DESCRIPTIONS_WITH_CLASS = (
-    (ProtectDeviceBinarySensor, _MODEL_DESCRIPTIONS),
-    (MountableProtectDeviceBinarySensor, _MOUNTABLE_MODEL_DESCRIPTIONS),
+    (_MODEL_DESCRIPTIONS, ProtectDeviceBinarySensor),
+    (_MOUNTABLE_MODEL_DESCRIPTIONS, MountableProtectDeviceBinarySensor),
 )
 
 
@@ -761,7 +761,7 @@ async def async_setup_entry(
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         entities: list[BaseProtectEntity] = []
-        for klass, model_descriptions in MODEL_DESCRIPTIONS_WITH_CLASS:
+        for model_descriptions, klass in MODEL_DESCRIPTIONS_WITH_CLASS:
             entities += async_all_device_entities(
                 data, klass, model_descriptions=model_descriptions, ufp_device=device
             )
@@ -771,7 +771,7 @@ async def async_setup_entry(
 
     data.async_subscribe_adopt(_add_new_device)
     entities: list[BaseProtectEntity] = []
-    for klass, model_descriptions in MODEL_DESCRIPTIONS_WITH_CLASS:
+    for model_descriptions, klass in MODEL_DESCRIPTIONS_WITH_CLASS:
         entities += async_all_device_entities(
             data, klass, model_descriptions=model_descriptions
         )
