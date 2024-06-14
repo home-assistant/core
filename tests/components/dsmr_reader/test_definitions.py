@@ -13,7 +13,6 @@ from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, async_fire_mqtt_message
-from tests.typing import MqttMockHAClient
 
 
 @pytest.mark.parametrize(
@@ -40,10 +39,8 @@ async def test_tariff_transform(input, expected) -> None:
     assert tariff_transform(input) == expected
 
 
-async def test_entity_tariff(
-    hass: HomeAssistant,
-    mqtt_mock: MqttMockHAClient,
-):
+@pytest.mark.usefixtures("mqtt_mock")
+async def test_entity_tariff(hass: HomeAssistant) -> None:
     """Test the state attribute of DSMRReaderSensorEntityDescription when a tariff transform is needed."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -74,7 +71,8 @@ async def test_entity_tariff(
     assert hass.states.get(electricity_tariff).state == "low"
 
 
-async def test_entity_dsmr_transform(hass: HomeAssistant, mqtt_mock: MqttMockHAClient):
+@pytest.mark.usefixtures("mqtt_mock")
+async def test_entity_dsmr_transform(hass: HomeAssistant) -> None:
     """Test the state attribute of DSMRReaderSensorEntityDescription when a dsmr transform is needed."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

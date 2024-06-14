@@ -7,14 +7,14 @@ from airgradient import AirGradientClient, Config
 from airgradient.models import ConfigurationControl, TemperatureUnit
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import AirGradientConfigEntry
 from .const import DOMAIN
-from .coordinator import AirGradientConfigCoordinator, AirGradientMeasurementCoordinator
+from .coordinator import AirGradientConfigCoordinator
 from .entity import AirGradientEntity
 
 
@@ -22,7 +22,7 @@ from .entity import AirGradientEntity
 class AirGradientSelectEntityDescription(SelectEntityDescription):
     """Describes AirGradient select entity."""
 
-    value_fn: Callable[[Config], str]
+    value_fn: Callable[[Config], str | None]
     set_value_fn: Callable[[AirGradientClient, str], Awaitable[None]]
     requires_display: bool = False
 
@@ -30,9 +30,11 @@ class AirGradientSelectEntityDescription(SelectEntityDescription):
 CONFIG_CONTROL_ENTITY = AirGradientSelectEntityDescription(
     key="configuration_control",
     translation_key="configuration_control",
-    options=[x.value for x in ConfigurationControl],
+    options=[ConfigurationControl.CLOUD.value, ConfigurationControl.LOCAL.value],
     entity_category=EntityCategory.CONFIG,
-    value_fn=lambda config: config.configuration_control,
+    value_fn=lambda config: config.configuration_control
+    if config.configuration_control is not ConfigurationControl.NOT_INITIALIZED
+    else None,
     set_value_fn=lambda client, value: client.set_configuration_control(
         ConfigurationControl(value)
     ),
@@ -54,16 +56,14 @@ PROTECTED_SELECT_TYPES: tuple[AirGradientSelectEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AirGradientConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AirGradient select entities based on a config entry."""
 
-    config_coordinator: AirGradientConfigCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ]["config"]
-    measurement_coordinator: AirGradientMeasurementCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ]["measurement"]
+    config_coordinator = entry.runtime_data.config
+    measurement_coordinator = entry.runtime_data.measurement
 
     entities = [AirGradientSelect(config_coordinator, CONFIG_CONTROL_ENTITY)]
 
@@ -96,7 +96,7 @@ class AirGradientSelect(AirGradientEntity, SelectEntity):
         self._attr_unique_id = f"{coordinator.serial_number}-{description.key}"
 
     @property
-    def current_option(self) -> str:
+    def current_option(self) -> str | None:
         """Return the state of the select."""
         return self.entity_description.value_fn(self.coordinator.data)
 

@@ -88,7 +88,7 @@ async def websocket_lovelace_config(
     msg: dict[str, Any],
     config: LovelaceStorage,
 ) -> json_fragment:
-    """Send Lovelace UI config over WebSocket configuration."""
+    """Send Lovelace UI config over WebSocket connection."""
     return await config.async_json(msg["force"])
 
 

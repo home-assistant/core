@@ -782,8 +782,8 @@ async def test_import_expose_settings_1(
     expose_settings = exposed_entities.async_get_entity_settings(
         hass, entity_entry.entity_id
     )
-    for assistant in EXPOSE_SETTINGS:
-        assert expose_settings[assistant]["should_expose"] == EXPOSE_SETTINGS[assistant]
+    for assistant, settings in EXPOSE_SETTINGS.items():
+        assert expose_settings[assistant]["should_expose"] == settings
 
     # Check the switch is no longer exposed
     expose_settings = exposed_entities.async_get_entity_settings(
@@ -856,18 +856,15 @@ async def test_import_expose_settings_2(
     expose_settings = exposed_entities.async_get_entity_settings(
         hass, entity_entry.entity_id
     )
-    for assistant in EXPOSE_SETTINGS:
-        assert (
-            expose_settings[assistant]["should_expose"]
-            is not EXPOSE_SETTINGS[assistant]
-        )
+    for assistant, settings in EXPOSE_SETTINGS.items():
+        assert expose_settings[assistant]["should_expose"] is not settings
 
     # Check the switch settings were not modified
     expose_settings = exposed_entities.async_get_entity_settings(
         hass, switch_entity_entry.entity_id
     )
-    for assistant in EXPOSE_SETTINGS:
-        assert expose_settings[assistant]["should_expose"] == EXPOSE_SETTINGS[assistant]
+    for assistant, settings in EXPOSE_SETTINGS.items():
+        assert expose_settings[assistant]["should_expose"] == settings
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
@@ -922,8 +919,8 @@ async def test_restore_expose_settings(
     expose_settings = exposed_entities.async_get_entity_settings(
         hass, switch_entity_entry.entity_id
     )
-    for assistant in EXPOSE_SETTINGS:
-        assert expose_settings[assistant]["should_expose"] == EXPOSE_SETTINGS[assistant]
+    for assistant, settings in EXPOSE_SETTINGS.items():
+        assert expose_settings[assistant]["should_expose"] == settings
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)

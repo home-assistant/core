@@ -85,9 +85,8 @@ async def test_update_entity(
         "homeassistant.components.esphome.update.DomainData.get_entry_data",
         return_value=Mock(available=True, device_info=mock_device_info),
     ):
-        assert await hass.config_entries.async_forward_entry_setup(
-            mock_config_entry, "update"
-        )
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     state = hass.states.get("update.none_firmware")
     assert state is not None
@@ -275,9 +274,8 @@ async def test_update_entity_dashboard_not_available_startup(
         ),
     ):
         await async_get_dashboard(hass).async_refresh()
-        assert await hass.config_entries.async_forward_entry_setup(
-            mock_config_entry, "update"
-        )
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     # We have a dashboard but it is not available
     state = hass.states.get("update.none_firmware")
@@ -362,9 +360,8 @@ async def test_update_entity_not_present_without_dashboard(
         "homeassistant.components.esphome.update.DomainData.get_entry_data",
         return_value=Mock(available=True, device_info=mock_device_info),
     ):
-        assert await hass.config_entries.async_forward_entry_setup(
-            mock_config_entry, "update"
-        )
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     state = hass.states.get("update.none_firmware")
     assert state is None

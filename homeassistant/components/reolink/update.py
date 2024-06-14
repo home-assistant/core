@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
-import logging
-from typing import Any, Literal
+from typing import Any
 
 from reolink_aio.exceptions import ReolinkError
 from reolink_aio.software_version import NewSoftwareVersion
@@ -12,6 +12,7 @@ from reolink_aio.software_version import NewSoftwareVersion
 from homeassistant.components.update import (
     UpdateDeviceClass,
     UpdateEntity,
+    UpdateEntityDescription,
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -22,11 +23,26 @@ from homeassistant.helpers.event import async_call_later
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkBaseCoordinatorEntity
-
-LOGGER = logging.getLogger(__name__)
+from .entity import ReolinkHostCoordinatorEntity, ReolinkHostEntityDescription
 
 POLL_AFTER_INSTALL = 120
+
+
+@dataclass(frozen=True, kw_only=True)
+class ReolinkHostUpdateEntityDescription(
+    UpdateEntityDescription,
+    ReolinkHostEntityDescription,
+):
+    """A class that describes host update entities."""
+
+
+HOST_UPDATE_ENTITIES = (
+    ReolinkHostUpdateEntityDescription(
+        key="firmware",
+        supported=lambda api: api.supported(None, "firmware"),
+        device_class=UpdateDeviceClass.FIRMWARE,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -36,26 +52,32 @@ async def async_setup_entry(
 ) -> None:
     """Set up update entities for Reolink component."""
     reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([ReolinkUpdateEntity(reolink_data)])
+
+    entities: list[ReolinkHostUpdateEntity] = [
+        ReolinkHostUpdateEntity(reolink_data, entity_description)
+        for entity_description in HOST_UPDATE_ENTITIES
+        if entity_description.supported(reolink_data.host.api)
+    ]
+    async_add_entities(entities)
 
 
-class ReolinkUpdateEntity(
-    ReolinkBaseCoordinatorEntity[str | Literal[False] | NewSoftwareVersion],
+class ReolinkHostUpdateEntity(
+    ReolinkHostCoordinatorEntity,
     UpdateEntity,
 ):
-    """Update entity for a Netgear device."""
+    """Update entity class for Reolink Host."""
 
-    _attr_device_class = UpdateDeviceClass.FIRMWARE
+    entity_description: ReolinkHostUpdateEntityDescription
     _attr_release_url = "https://reolink.com/download-center/"
 
     def __init__(
         self,
         reolink_data: ReolinkData,
+        entity_description: ReolinkHostUpdateEntityDescription,
     ) -> None:
-        """Initialize a Netgear device."""
+        """Initialize Reolink update entity."""
+        self.entity_description = entity_description
         super().__init__(reolink_data, reolink_data.firmware_coordinator)
-
-        self._attr_unique_id = f"{self._host.unique_id}"
         self._cancel_update: CALLBACK_TYPE | None = None
 
     @property
@@ -66,32 +88,35 @@ class ReolinkUpdateEntity(
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
-        if not self.coordinator.data:
+        new_firmware = self._host.api.firmware_update_available()
+        if not new_firmware:
             return self.installed_version
 
-        if isinstance(self.coordinator.data, str):
-            return self.coordinator.data
+        if isinstance(new_firmware, str):
+            return new_firmware
 
-        return self.coordinator.data.version_string
+        return new_firmware.version_string
 
     @property
     def supported_features(self) -> UpdateEntityFeature:
         """Flag supported features."""
         supported_features = UpdateEntityFeature.INSTALL
-        if isinstance(self.coordinator.data, NewSoftwareVersion):
+        new_firmware = self._host.api.firmware_update_available()
+        if isinstance(new_firmware, NewSoftwareVersion):
             supported_features |= UpdateEntityFeature.RELEASE_NOTES
         return supported_features
 
     async def async_release_notes(self) -> str | None:
         """Return the release notes."""
-        if not isinstance(self.coordinator.data, NewSoftwareVersion):
+        new_firmware = self._host.api.firmware_update_available()
+        if not isinstance(new_firmware, NewSoftwareVersion):
             return None
 
         return (
             "If the install button fails, download this"
-            f" [firmware zip file]({self.coordinator.data.download_url})."
+            f" [firmware zip file]({new_firmware.download_url})."
             " Then, follow the installation guide (PDF in the zip file).\n\n"
-            f"## Release notes\n\n{self.coordinator.data.release_notes}"
+            f"## Release notes\n\n{new_firmware.release_notes}"
         )
 
     async def async_install(

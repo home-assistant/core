@@ -1,10 +1,10 @@
 """Test Matter binary sensors."""
 
-from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 from matter_server.client.models.node import MatterNode
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.matter.binary_sensor import (
     DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS,
@@ -21,7 +21,7 @@ from .common import (
 
 
 @pytest.fixture(autouse=True)
-def binary_sensor_platform() -> Generator[None, None, None]:
+def binary_sensor_platform() -> Generator[None]:
     """Load only the binary sensor platform."""
     with patch(
         "homeassistant.components.matter.discovery.DISCOVERY_SCHEMAS",

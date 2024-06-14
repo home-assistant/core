@@ -15,13 +15,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
+from . import V2CConfigEntry
 from .coordinator import V2CUpdateCoordinator
 from .entity import V2CBaseEntity
 
@@ -35,7 +34,12 @@ class V2CSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[TrydanData], StateType]
 
 
-_SLAVE_ERROR_OPTIONS = [error.name.lower() for error in SlaveCommunicationState]
+def get_meter_value(value: SlaveCommunicationState) -> str:
+    """Return the value of the enum and replace slave by meter."""
+    return value.name.lower().replace("slave", "meter")
+
+
+_METER_ERROR_OPTIONS = [get_meter_value(error) for error in SlaveCommunicationState]
 
 TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
@@ -80,12 +84,12 @@ TRYDAN_SENSORS = (
         value_fn=lambda evse_data: evse_data.fv_power,
     ),
     V2CSensorEntityDescription(
-        key="slave_error",
-        translation_key="slave_error",
-        value_fn=lambda evse_data: evse_data.slave_error.name.lower(),
+        key="meter_error",
+        translation_key="meter_error",
+        value_fn=lambda evse_data: get_meter_value(evse_data.slave_error),
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
-        options=_SLAVE_ERROR_OPTIONS,
+        options=_METER_ERROR_OPTIONS,
     ),
     V2CSensorEntityDescription(
         key="battery_power",
@@ -101,11 +105,11 @@ TRYDAN_SENSORS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: V2CConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up V2C sensor platform."""
-    coordinator: V2CUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         V2CSensorBaseEntity(coordinator, description, config_entry.entry_id)

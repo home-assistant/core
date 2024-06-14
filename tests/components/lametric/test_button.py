@@ -227,7 +227,6 @@ async def test_button_error(
             {ATTR_ENTITY_ID: "button.frenck_s_lametric_next_app"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("button.frenck_s_lametric_next_app")
     assert state
@@ -250,7 +249,6 @@ async def test_button_connection_error(
             {ATTR_ENTITY_ID: "button.frenck_s_lametric_next_app"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("button.frenck_s_lametric_next_app")
     assert state

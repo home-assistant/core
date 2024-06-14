@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from influxdb_client.rest import ApiException
 import pytest
+from typing_extensions import Generator
 from voluptuous import Invalid
 
 from homeassistant.components import sensor
@@ -79,7 +80,9 @@ class Table:
 
 
 @pytest.fixture(name="mock_client")
-def mock_client_fixture(request):
+def mock_client_fixture(
+    request: pytest.FixtureRequest,
+) -> Generator[MagicMock]:
     """Patch the InfluxDBClient object with mock for version under test."""
     if request.param == API_VERSION_2:
         client_target = f"{INFLUXDB_CLIENT_PATH}V2"
@@ -108,7 +111,7 @@ def _make_v1_resultset(*args):
 
 def _make_v1_databases_resultset():
     """Create a mock V1 'show databases' resultset."""
-    for name in [DEFAULT_DATABASE, "db2"]:
+    for name in (DEFAULT_DATABASE, "db2"):
         yield {"name": name}
 
 
@@ -126,7 +129,7 @@ def _make_v2_resultset(*args):
 
 def _make_v2_buckets_resultset():
     """Create a mock V2 'buckets()' resultset."""
-    records = [Record({"name": name}) for name in [DEFAULT_BUCKET, "bucket2"]]
+    records = [Record({"name": name}) for name in (DEFAULT_BUCKET, "bucket2")]
 
     return [Table(records)]
 

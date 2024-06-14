@@ -76,12 +76,12 @@ async def test_zeroconf_abort_if_existing_entry(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     component_setup,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Check a full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -143,12 +143,12 @@ async def test_full_flow(
     }
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_abort_if_spotify_error(
     hass: HomeAssistant,
     component_setup,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Check Spotify errors causes flow to abort."""
     result = await hass.config_entries.flow.async_init(
@@ -185,12 +185,12 @@ async def test_abort_if_spotify_error(
     assert result["reason"] == "connection_error"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauthentication(
     hass: HomeAssistant,
     component_setup,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Test Spotify reauthentication."""
     old_entry = MockConfigEntry(
@@ -253,12 +253,12 @@ async def test_reauthentication(
     }
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth_account_mismatch(
     hass: HomeAssistant,
     component_setup,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Test Spotify reauthentication with different account."""
     old_entry = MockConfigEntry(

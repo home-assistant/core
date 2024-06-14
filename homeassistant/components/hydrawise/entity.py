@@ -70,3 +70,8 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
         self.controller = self.coordinator.data.controllers[self.controller.id]
         self._update_attrs()
         super()._handle_coordinator_update()
+
+    @property
+    def available(self) -> bool:
+        """Set the entity availability."""
+        return super().available and self.controller.online

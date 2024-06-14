@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from copy import deepcopy
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.freedompro.const import DOMAIN
 
@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.freedompro.async_setup_entry", return_value=True

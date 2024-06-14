@@ -309,6 +309,7 @@ async def test_stream_retries(
 
     def av_open_side_effect(*args, **kwargs):
         hass.loop.call_soon_threadsafe(futures.pop().set_result, None)
+        # pylint: disable-next=c-extension-no-member
         raise av.error.InvalidDataError(-2, "error")
 
     with (
