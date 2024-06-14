@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from aiomealie import Mealplan, MealplanEntryType
 
@@ -30,13 +30,14 @@ async def async_setup_entry(
 
 def get_event_from_mealplan(mealplan: Mealplan) -> CalendarEvent:
     """Create a CalendarEvent from a Mealplan."""
-    mealplan_date = mealplan.mealplan_date
-    start_of_day = datetime(mealplan_date.year, mealplan_date.month, mealplan_date.day)
-    end_of_day = start_of_day + timedelta(days=1)
+    if mealplan.recipe is None:
+        name = "No recipe"
+    else:
+        name = mealplan.recipe.name
     return CalendarEvent(
-        start=start_of_day,
-        end=end_of_day,
-        summary=mealplan.recipe.name,
+        start=mealplan.mealplan_date,
+        end=mealplan.mealplan_date,
+        summary=name,
     )
 
 
@@ -50,6 +51,9 @@ class MealieMealplanCalendarEntity(MealieEntity, CalendarEntity):
         super().__init__(coordinator)
         self._entry_type = entry_type
         self._attr_translation_key = entry_type.name.lower()
+        self._attr_unique_id = (
+            f"{self.coordinator.config_entry.entry_id}_{entry_type.name.lower()}"
+        )
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -68,4 +72,8 @@ class MealieMealplanCalendarEntity(MealieEntity, CalendarEntity):
                 start_date.date(), end_date.date()
             )
         ).items
-        return [get_event_from_mealplan(mealplan) for mealplan in mealplans]
+        return [
+            get_event_from_mealplan(mealplan)
+            for mealplan in mealplans
+            if mealplan.entry_type is self._entry_type
+        ]
