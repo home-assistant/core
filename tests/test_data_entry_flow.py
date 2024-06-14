@@ -556,7 +556,9 @@ async def test_show_progress_hidden_from_frontend(hass: HomeAssistant, manager) 
     assert async_show_progress_done_called
 
 
-async def test_show_progress_legacy(hass: HomeAssistant, manager, caplog) -> None:
+async def test_show_progress_legacy(
+    hass: HomeAssistant, manager, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test show progress logic.
 
     This tests the deprecated version where the config flow is responsible for

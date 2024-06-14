@@ -647,7 +647,9 @@ async def test_stage_shutdown_timeouts(hass: HomeAssistant) -> None:
     assert hass.state is CoreState.stopped
 
 
-async def test_stage_shutdown_generic_error(hass: HomeAssistant, caplog) -> None:
+async def test_stage_shutdown_generic_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Simulate a shutdown, test that a generic error at the final stage doesn't prevent it."""
 
     task = asyncio.Future()
