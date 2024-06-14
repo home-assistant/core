@@ -339,7 +339,7 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         key="work_area",
         translation_key="work_area",
         device_class=SensorDeviceClass.ENUM,
-        exists_fn=lambda data: data.capabilities.work_areas is not None,
+        exists_fn=lambda data: data.capabilities.work_areas,
         option_fn=_get_work_area_names,
         value_fn=_get_current_work_area_name,
     ),
