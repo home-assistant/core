@@ -14,13 +14,10 @@ from uiprotect.data import (
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DISPATCH_ADOPT
 from .data import UFPConfigEntry
 from .entity import ProtectDeviceEntity
-from .utils import async_dispatch_id as _ufpd
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,10 +37,7 @@ async def async_setup_entry(
         ):
             async_add_entities([ProtectLight(data, device)])
 
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
-    )
-
+    data.async_subscribe_adopt(_add_new_device)
     async_add_entities(
         ProtectLight(data, device)
         for device in data.get_by_types({ModelType.LIGHT})

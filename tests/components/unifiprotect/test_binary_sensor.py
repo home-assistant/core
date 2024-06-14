@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from unittest.mock import Mock
 
-from uiprotect.data import Camera, Event, EventType, Light, MountType, Sensor
+from uiprotect.data import Camera, Event, EventType, Light, ModelType, MountType, Sensor
 from uiprotect.data.nvr import EventMetadata
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -281,6 +281,7 @@ async def test_binary_sensor_update_motion(
     )
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=1),
@@ -289,19 +290,21 @@ async def test_binary_sensor_update_motion(
         smart_detect_types=[],
         smart_detect_event_ids=[],
         camera_id=doorbell.id,
+        api=ufp.api,
     )
 
     new_camera = doorbell.copy()
     new_camera.is_motion_detected = True
     new_camera.last_motion_event_id = event.id
 
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = new_camera
-
     ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
     ufp.api.bootstrap.events = {event.id: event}
+
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = event
     ufp.ws_msg(mock_msg)
+
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -325,6 +328,7 @@ async def test_binary_sensor_update_light_motion(
 
     event_metadata = EventMetadata(light_id=light.id)
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.MOTION_LIGHT,
         start=fixed_now - timedelta(seconds=1),

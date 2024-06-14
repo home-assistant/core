@@ -63,7 +63,7 @@ def globally_load_quirks():
     run.
     """
 
-    import zhaquirks
+    import zhaquirks  # pylint: disable=import-outside-toplevel
 
     zhaquirks.setup()
 
