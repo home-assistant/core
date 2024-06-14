@@ -247,6 +247,12 @@ class ZHAGroupProxy(LogMixin):
 
         return entity_info
 
+    def log(self, level: int, msg: str, *args: Any, **kwargs) -> None:
+        """Log a message."""
+        msg = f"[%s](%s): {msg}"
+        args = (f"0x{self.group.group_id:04x}", self.group.endpoint.id, *args)
+        _LOGGER.log(level, msg, *args, **kwargs)
+
 
 class ZHADeviceProxy(EventBase):
     """Proxy class to interact with the ZHA device instances."""
@@ -472,7 +478,7 @@ class ZHAGatewayProxy(EventBase):
             # zha_device_proxy.async_cleanup_handles()
             async_dispatcher_send(
                 self.hass,
-                f"{SIGNAL_REMOVE_ENTITIES}_{str(zha_device_proxy.device.ieee)}",
+                f"{SIGNAL_REMOVE_ENTITIES}_{zha_device_proxy.device.ieee!s}",
             )
             self.hass.async_create_task(
                 self._async_remove_device(zha_device_proxy, entity_refs),
