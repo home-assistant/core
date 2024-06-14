@@ -108,11 +108,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         cond_configs = self.config[CONF_CONDITION]
         checks: list[condition.ConditionCheckerType] = []
         for cond_config in cond_configs:
-            try:
-                checks.append(await condition.async_from_config(self.hass, cond_config))
-            except HomeAssistantError as ex:
-                _LOGGER.warning("Invalid condition: %s", ex)
-                return None
+            checks.append(await condition.async_from_config(self.hass, cond_config))
 
         def check_conditions(variables: TemplateVarsType | None = None) -> bool:
             """AND all conditions."""
