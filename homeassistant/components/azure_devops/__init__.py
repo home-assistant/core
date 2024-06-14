@@ -18,7 +18,7 @@ type AzureDevOpsConfigEntry = ConfigEntry[AzureDevOpsDataUpdateCoordinator]
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AzureDevOpsConfigEntry) -> bool:
     """Set up Azure DevOps from a config entry."""
 
     # Create the data update coordinator
