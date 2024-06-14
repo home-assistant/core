@@ -67,13 +67,13 @@ AC_MODE_TO_STATE = {
     "heat": HVACMode.HEAT,
     "heatClean": HVACMode.HEAT,
     "fanOnly": HVACMode.FAN_ONLY,
+    "wind": HVACMode.FAN_ONLY,
 }
 STATE_TO_AC_MODE = {
     HVACMode.HEAT_COOL: "auto",
     HVACMode.COOL: "cool",
     HVACMode.DRY: "dry",
     HVACMode.HEAT: "heat",
-    HVACMode.FAN_ONLY: "fanOnly",
 }
 
 SWING_TO_FAN_OSCILLATION = {
@@ -392,13 +392,25 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             tasks.append(self._device.switch_on(set_status=True))
         tasks.append(
             self._device.set_air_conditioner_mode(
-                STATE_TO_AC_MODE[hvac_mode], set_status=True
+                self._get_ac_mode_for_state(hvac_mode), set_status=True
             )
         )
         await asyncio.gather(*tasks)
         # State is set optimistically in the command above, therefore update
         # the entity state ahead of receiving the confirming push updates
         self.async_write_ha_state()
+
+    def _get_ac_mode_for_state(self, state):
+        # some samsung air conditioners appear to use the string "wind" for
+        # fan-only mode. handle this specially here, where we have access to
+        # supported_ac_modes, and fall back to the static mapping for all
+        # other states.
+        if state == HVACMode.FAN_ONLY:
+            if "wind" in self._device.status.supported_ac_modes:
+                return "wind"
+            return "fanOnly"
+
+        return STATE_TO_AC_MODE[state]
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
