@@ -9,7 +9,6 @@ from homeassistant.exceptions import (
     ConditionError,
     ConditionErrorContainer,
     ConditionErrorIndex,
-    HomeAssistantError,
 )
 from homeassistant.helpers import condition, discovery, trigger as trigger_helper
 from homeassistant.helpers.script import Script
@@ -106,9 +105,10 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         self,
     ) -> Callable[[TemplateVarsType | None], bool] | None:
         cond_configs = self.config[CONF_CONDITION]
-        checks: list[condition.ConditionCheckerType] = []
-        for cond_config in cond_configs:
-            checks.append(await condition.async_from_config(self.hass, cond_config))
+        checks: list[condition.ConditionCheckerType] = [
+            await condition.async_from_config(self.hass, cond_config)
+            for cond_config in cond_configs
+        ]
 
         def check_conditions(variables: TemplateVarsType | None = None) -> bool:
             """AND all conditions."""
