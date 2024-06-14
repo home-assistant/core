@@ -36,6 +36,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, aliased, mapped_column, rela
 from sqlalchemy.types import TypeDecorator
 
 from homeassistant.const import (
+    MATCH_ALL,
     MAX_LENGTH_EVENT_EVENT_TYPE,
     MAX_LENGTH_STATE_ENTITY_ID,
     MAX_LENGTH_STATE_STATE,
@@ -588,6 +589,10 @@ class StateAttributes(Base):
                 *ALL_DOMAIN_EXCLUDE_ATTRS,
                 *state_info["unrecorded_attributes"],
             }
+            if MATCH_ALL in state_info["unrecorded_attributes"]:
+                for attribute in state.attributes:
+                    exclude_attrs.add(attribute)
+
         else:
             exclude_attrs = ALL_DOMAIN_EXCLUDE_ATTRS
         encoder = json_bytes_strip_null if dialect == PSQL_DIALECT else json_bytes
