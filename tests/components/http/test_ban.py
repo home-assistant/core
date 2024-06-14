@@ -488,9 +488,10 @@ async def test_unban_service_errors(
     setup_bans(hass, app, 2)
 
     m_open = mock_open()
-    with patch(
-        "homeassistant.components.http.ban.open", m_open, create=True
-    ), pytest.raises(expected_error, match=match):
+    with (
+        patch("homeassistant.components.http.ban.open", m_open, create=True),
+        pytest.raises(expected_error, match=match),
+    ):
         await hass.services.async_call(
             DOMAIN,
             "unban_ip",
