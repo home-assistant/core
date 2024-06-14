@@ -1012,7 +1012,10 @@ async def test_template_triggers(hass: HomeAssistant) -> None:
 
     events = []
     async_track_state_change_event(
-        hass, "binary_sensor.test_binary", callback(lambda event: events.append(event))
+        hass,
+        "binary_sensor.test_binary",
+        # pylint: disable-next=unnecessary-lambda
+        callback(lambda event: events.append(event)),
     )
 
     context = Context()
@@ -1051,7 +1054,10 @@ async def test_state_triggers(hass: HomeAssistant) -> None:
 
     events = []
     async_track_state_change_event(
-        hass, "binary_sensor.test_binary", callback(lambda event: events.append(event))
+        hass,
+        "binary_sensor.test_binary",
+        # pylint: disable-next=unnecessary-lambda
+        callback(lambda event: events.append(event)),
     )
 
     context = Context()

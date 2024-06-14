@@ -55,6 +55,11 @@ async def apply_stop_hass(stop_hass: None) -> None:
     """Make sure all hass are stopped."""
 
 
+@pytest.fixture(autouse=True)
+def disable_block_async_io(disable_block_async_io):
+    """Disable the loop protection from block_async_io after each test."""
+
+
 @pytest.fixture(scope="module", autouse=True)
 def mock_http_start_stop() -> Generator[None]:
     """Mock HTTP start and stop."""

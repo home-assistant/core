@@ -50,6 +50,9 @@ PyFlume==0.6.5
 # homeassistant.components.fronius
 PyFronius==0.7.3
 
+# homeassistant.components.pyload
+PyLoadAPI==1.1.0
+
 # homeassistant.components.met_eireann
 PyMetEireann==2021.8.0
 
@@ -180,7 +183,7 @@ aioaseko==0.1.1
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.5.1
+aioautomower==2024.6.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.0.0
@@ -539,7 +542,7 @@ brunt==1.2.0
 bthome-ble==3.9.1
 
 # homeassistant.components.buienradar
-buienradar==1.0.5
+buienradar==1.0.6
 
 # homeassistant.components.dhcp
 cached_ipaddress==0.3.0
@@ -584,7 +587,7 @@ dbus-fast==2.21.3
 debugpy==1.8.1
 
 # homeassistant.components.ecovacs
-deebot-client==7.3.0
+deebot-client==8.0.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -892,7 +895,7 @@ hole==0.8.0
 holidays==0.50
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240610.0
+home-assistant-frontend==20240610.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.6.5
@@ -1332,7 +1335,7 @@ pyControl4==1.1.0
 pyDuotecno==2024.5.1
 
 # homeassistant.components.electrasmart
-pyElectra==1.2.1
+pyElectra==1.2.3
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.31.1
@@ -1754,7 +1757,7 @@ python-bsblan==0.5.18
 python-ecobee-api==0.2.18
 
 # homeassistant.components.fully_kiosk
-python-fullykiosk==0.0.12
+python-fullykiosk==0.0.13
 
 # homeassistant.components.sms
 # python-gammu==3.2.4
@@ -2165,7 +2168,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==0.13.0
+uiprotect==1.4.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
