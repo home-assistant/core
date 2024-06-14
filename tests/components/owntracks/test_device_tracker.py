@@ -290,7 +290,9 @@ BAD_JSON_SUFFIX = "** and it ends here ^^"
 
 @pytest.fixture
 def setup_comp(
-    hass, mock_device_tracker_conf: list[Device], mqtt_mock: MqttMockHAClient
+    hass: HomeAssistant,
+    mock_device_tracker_conf: list[Device],
+    mqtt_mock: MqttMockHAClient,
 ):
     """Initialize components."""
     hass.loop.run_until_complete(async_setup_component(hass, "device_tracker", {}))

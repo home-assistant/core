@@ -1071,9 +1071,8 @@ async def test_check_ha_config_file_wrong(mock_check, hass: HomeAssistant) -> No
         }
     ],
 )
-async def test_async_hass_config_yaml_merge(
-    merge_log_err, hass: HomeAssistant, mock_hass_config: None
-) -> None:
+@pytest.mark.usefixtures("mock_hass_config")
+async def test_async_hass_config_yaml_merge(merge_log_err, hass: HomeAssistant) -> None:
     """Test merge during async config reload."""
     conf = await config_util.async_hass_config_yaml(hass)
 

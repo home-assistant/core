@@ -6,7 +6,6 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
 
 from uiprotect.data import (
     Camera,
@@ -257,6 +256,7 @@ class ProtectNumbers(ProtectDeviceEntity, NumberEntity):
 
     device: Camera | Light
     entity_description: ProtectNumberEntityDescription
+    _state_attrs = ("_attr_available", "_attr_native_value")
 
     def __init__(
         self,
@@ -278,13 +278,3 @@ class ProtectNumbers(ProtectDeviceEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self.entity_description.ufp_set(self.device, value)
-
-    @callback
-    def _async_get_state_attrs(self) -> tuple[Any, ...]:
-        """Retrieve data that goes into the current state of the entity.
-
-        Called before and after updating entity and state is only written if there
-        is a change.
-        """
-
-        return (self._attr_available, self._attr_native_value)

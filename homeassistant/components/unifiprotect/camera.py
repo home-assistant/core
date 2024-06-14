@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from typing_extensions import Generator
 from uiprotect.data import (
@@ -163,6 +162,11 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
     """A Ubiquiti UniFi Protect Camera."""
 
     device: UFPCamera
+    _state_attrs = (
+        "_attr_available",
+        "_attr_is_recording",
+        "_attr_motion_detection_enabled",
+    )
 
     def __init__(
         self,
@@ -209,20 +213,6 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
             self._attr_supported_features = CameraEntityFeature.STREAM
         else:
             self._attr_supported_features = CameraEntityFeature(0)
-
-    @callback
-    def _async_get_state_attrs(self) -> tuple[Any, ...]:
-        """Retrieve data that goes into the current state of the entity.
-
-        Called before and after updating entity and state is only written if there
-        is a change.
-        """
-
-        return (
-            self._attr_available,
-            self._attr_is_recording,
-            self._attr_motion_detection_enabled,
-        )
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
