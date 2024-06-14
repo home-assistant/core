@@ -827,6 +827,7 @@ build.json @home-assistant/supervisor
 /tests/components/matrix/ @PaarthShah
 /homeassistant/components/matter/ @home-assistant/matter
 /tests/components/matter/ @home-assistant/matter
+/homeassistant/components/mealie/ @joostlek
 /homeassistant/components/meater/ @Sotolotl @emontnemery
 /tests/components/meater/ @Sotolotl @emontnemery
 /homeassistant/components/medcom_ble/ @elafargue
