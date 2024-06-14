@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
+from functools import partial
 import logging
+from operator import attrgetter
 from typing import TYPE_CHECKING, Any
 
 from uiprotect.data import (
@@ -162,6 +164,8 @@ class BaseProtectEntity(Entity):
 
     _attr_should_poll = False
 
+    _state_attrs: tuple[str, ...] = ("_attr_available",)
+
     def __init__(
         self,
         data: ProtectData,
@@ -194,6 +198,9 @@ class BaseProtectEntity(Entity):
         self._attr_attribution = DEFAULT_ATTRIBUTION
         self._async_set_device_info()
         self._async_update_device_from_protect(device)
+        self._state_getters = tuple(
+            partial(attrgetter(attr), self) for attr in self._state_attrs
+        )
 
     async def async_update(self) -> None:
         """Update the entity.
@@ -234,23 +241,17 @@ class BaseProtectEntity(Entity):
         )
 
     @callback
-    def _async_get_state_attrs(self) -> tuple[Any, ...]:
-        """Retrieve data that goes into the current state of the entity.
-
-        Called before and after updating entity and state is only written if there
-        is a change.
-        """
-
-        return (self._attr_available,)
-
-    @callback
     def _async_updated_event(self, device: ProtectAdoptableDeviceModel | NVR) -> None:
         """When device is updated from Protect."""
-
-        previous_attrs = self._async_get_state_attrs()
+        previous_attrs = [getter() for getter in self._state_getters]
         self._async_update_device_from_protect(device)
-        current_attrs = self._async_get_state_attrs()
-        if previous_attrs != current_attrs:
+        changed = False
+        for idx, getter in enumerate(self._state_getters):
+            if previous_attrs[idx] != getter():
+                changed = True
+                break
+
+        if changed:
             if _LOGGER.isEnabledFor(logging.DEBUG):
                 device_name = device.name or ""
                 if hasattr(self, "entity_description") and self.entity_description.name:
@@ -261,7 +262,7 @@ class BaseProtectEntity(Entity):
                     device_name,
                     device.mac,
                     previous_attrs,
-                    current_attrs,
+                    tuple((getattr(self, attr)) for attr in self._state_attrs),
                 )
             self.async_write_ha_state()
 

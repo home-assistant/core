@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Sequence
 import dataclasses
 import logging
-from typing import Any
 
 from uiprotect.data import (
     NVR,
@@ -632,26 +631,19 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
 
     device: Camera | Light | Sensor
     entity_description: ProtectBinaryEntityDescription
+    _state_attrs = ("_attr_available", "_attr_is_on")
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
         self._attr_is_on = self.entity_description.get_ufp_value(self.device)
 
-    @callback
-    def _async_get_state_attrs(self) -> tuple[Any, ...]:
-        """Retrieve data that goes into the current state of the entity.
-
-        Called before and after updating entity and state is only written if there
-        is a change.
-        """
-        return (self._attr_available, self._attr_is_on)
-
 
 class MountableProtectDeviceBinarySensor(ProtectDeviceBinarySensor):
     """A UniFi Protect Device Binary Sensor that can change device class at runtime."""
 
     device: Sensor
+    _state_attrs = ("_attr_available", "_attr_is_on", "_attr_device_class")
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
@@ -662,21 +654,13 @@ class MountableProtectDeviceBinarySensor(ProtectDeviceBinarySensor):
             updated_device.mount_type, BinarySensorDeviceClass.DOOR
         )
 
-    @callback
-    def _async_get_state_attrs(self) -> tuple[Any, ...]:
-        """Retrieve data that goes into the current state of the entity.
-
-        Called before and after updating entity and state is only written if there
-        is a change.
-        """
-        return (self._attr_available, self._attr_is_on, self._attr_device_class)
-
 
 class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
     """A UniFi Protect NVR Disk Binary Sensor."""
 
     _disk: UOSDisk
     entity_description: ProtectBinaryEntityDescription
+    _state_attrs = ("_attr_available", "_attr_is_on")
 
     def __init__(
         self,
@@ -715,21 +699,12 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
 
         self._attr_is_on = not self._disk.is_healthy
 
-    @callback
-    def _async_get_state_attrs(self) -> tuple[Any, ...]:
-        """Retrieve data that goes into the current state of the entity.
-
-        Called before and after updating entity and state is only written if there
-        is a change.
-        """
-
-        return (self._attr_available, self._attr_is_on)
-
 
 class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
     """A UniFi Protect Device Binary Sensor for events."""
 
     entity_description: ProtectBinaryEventEntityDescription
+    _state_attrs = ("_attr_available", "_attr_is_on", "_attr_extra_state_attributes")
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
@@ -740,24 +715,10 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
             self._event = None
             self._attr_extra_state_attributes = {}
 
-    @callback
-    def _async_get_state_attrs(self) -> tuple[Any, ...]:
-        """Retrieve data that goes into the current state of the entity.
-
-        Called before and after updating entity and state is only written if there
-        is a change.
-        """
-
-        return (
-            self._attr_available,
-            self._attr_is_on,
-            self._attr_extra_state_attributes,
-        )
-
 
 MODEL_DESCRIPTIONS_WITH_CLASS = (
-    (_MODEL_DESCRIPTIONS, ProtectDeviceBinarySensor),
-    (_MOUNTABLE_MODEL_DESCRIPTIONS, MountableProtectDeviceBinarySensor),
+    (ProtectDeviceBinarySensor, _MODEL_DESCRIPTIONS),
+    (MountableProtectDeviceBinarySensor, _MOUNTABLE_MODEL_DESCRIPTIONS),
 )
 
 
@@ -800,7 +761,7 @@ async def async_setup_entry(
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         entities: list[BaseProtectEntity] = []
-        for model_descriptions, klass in MODEL_DESCRIPTIONS_WITH_CLASS:
+        for klass, model_descriptions in MODEL_DESCRIPTIONS_WITH_CLASS:
             entities += async_all_device_entities(
                 data, klass, model_descriptions=model_descriptions, ufp_device=device
             )
@@ -810,7 +771,7 @@ async def async_setup_entry(
 
     data.async_subscribe_adopt(_add_new_device)
     entities: list[BaseProtectEntity] = []
-    for model_descriptions, klass in MODEL_DESCRIPTIONS_WITH_CLASS:
+    for klass, model_descriptions in MODEL_DESCRIPTIONS_WITH_CLASS:
         entities += async_all_device_entities(
             data, klass, model_descriptions=model_descriptions
         )
