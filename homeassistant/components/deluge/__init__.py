@@ -50,7 +50,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: DelugeConfigEntry) -> bo
             ) from ex
         _LOGGER.error("Unknown error connecting to Deluge: %s", ex)
 
-    entry.runtime_data = DelugeDataUpdateCoordinator(hass, api, entry)
+    coordinator = DelugeDataUpdateCoordinator(hass, api, entry)
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
     await entry.runtime_data.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
