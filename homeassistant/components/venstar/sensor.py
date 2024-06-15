@@ -36,6 +36,9 @@ RUNTIME_AUX2 = "aux2"
 RUNTIME_FC = "fc"
 RUNTIME_OV = "ov"
 
+CONSUMABLE_FILTER_HOURS = "filterHours"
+CONSUMABLE_FILTER_DAYS = "filterDays"
+
 RUNTIME_DEVICES = [
     RUNTIME_HEAT1,
     RUNTIME_HEAT2,
@@ -47,6 +50,8 @@ RUNTIME_DEVICES = [
     RUNTIME_OV,
 ]
 
+CONSUMABLE_DEVICES = [CONSUMABLE_FILTER_HOURS, CONSUMABLE_FILTER_DAYS]
+
 RUNTIME_ATTRIBUTES = {
     RUNTIME_HEAT1: "Heating Stage 1",
     RUNTIME_HEAT2: "Heating Stage 2",
@@ -56,6 +61,11 @@ RUNTIME_ATTRIBUTES = {
     RUNTIME_AUX2: "Aux Stage 2",
     RUNTIME_FC: "Free Cooling",
     RUNTIME_OV: "Override",
+}
+
+CONSUMABLE_ATTRIBUTES = {
+    CONSUMABLE_FILTER_HOURS: {"name": "Filter Used Hours", "uom": UnitOfTime.HOURS},
+    CONSUMABLE_FILTER_DAYS: {"name": "Filter Used Days", "uom": UnitOfTime.DAYS},
 }
 
 SCHEDULE_PARTS: dict[int, str] = {
@@ -75,7 +85,7 @@ class VenstarSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[VenstarDataUpdateCoordinator, str], Any]
     name_fn: Callable[[str], str] | None
-    uom_fn: Callable[[Any], str | None]
+    uom_fn: Callable[[VenstarDataUpdateCoordinator, str], str | None]
 
 
 async def async_setup_entry(
@@ -99,11 +109,19 @@ async def async_setup_entry(
             )
 
         runtimes = coordinator.runtimes[-1]
-        entities.extend(
-            VenstarSensor(coordinator, config_entry, RUNTIME_ENTITY, sensor_name)
-            for sensor_name in runtimes
-            if sensor_name in RUNTIME_DEVICES
-        )
+        for sensor_name in runtimes:
+            if sensor_name in RUNTIME_DEVICES:
+                entities.append(
+                    VenstarSensor(
+                        coordinator, config_entry, RUNTIME_ENTITY, sensor_name
+                    )
+                )
+            if sensor_name in CONSUMABLE_DEVICES:
+                entities.append(
+                    VenstarSensor(
+                        coordinator, config_entry, CONSUMABLE_ENTITY, sensor_name
+                    )
+                )
 
     for description in INFO_ENTITIES:
         try:
@@ -119,7 +137,7 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-def temperature_unit(coordinator: VenstarDataUpdateCoordinator) -> str:
+def temperature_unit(coordinator: VenstarDataUpdateCoordinator, _) -> str:
     """Return the correct unit for temperature."""
     unit = UnitOfTemperature.CELSIUS
     if coordinator.client.tempunits == coordinator.client.TEMPUNITS_F:
@@ -160,7 +178,7 @@ class VenstarSensor(VenstarEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return unit of measurement the value is expressed in."""
-        return self.entity_description.uom_fn(self.coordinator)
+        return self.entity_description.uom_fn(self.coordinator, self.sensor_name)
 
 
 SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
@@ -168,7 +186,7 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         key="hum",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        uom_fn=lambda _: PERCENTAGE,
+        uom_fn=lambda *_: PERCENTAGE,
         value_fn=lambda coordinator, sensor_name: coordinator.client.get_sensor(
             sensor_name, "hum"
         ),
@@ -188,7 +206,7 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         key="co2",
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
-        uom_fn=lambda _: CONCENTRATION_PARTS_PER_MILLION,
+        uom_fn=lambda *_: CONCENTRATION_PARTS_PER_MILLION,
         value_fn=lambda coordinator, sensor_name: coordinator.client.get_sensor(
             sensor_name, "co2"
         ),
@@ -198,7 +216,7 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         key="iaq",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
-        uom_fn=lambda _: None,
+        uom_fn=lambda *_: None,
         value_fn=lambda coordinator, sensor_name: coordinator.client.get_sensor(
             sensor_name, "iaq"
         ),
@@ -208,7 +226,7 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         key="battery",
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
-        uom_fn=lambda _: PERCENTAGE,
+        uom_fn=lambda *_: PERCENTAGE,
         value_fn=lambda coordinator, sensor_name: coordinator.client.get_sensor(
             sensor_name, "battery"
         ),
@@ -219,9 +237,17 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
 RUNTIME_ENTITY = VenstarSensorEntityDescription(
     key="runtime",
     state_class=SensorStateClass.MEASUREMENT,
-    uom_fn=lambda _: UnitOfTime.MINUTES,
+    uom_fn=lambda *_: UnitOfTime.MINUTES,
     value_fn=lambda coordinator, sensor_name: coordinator.runtimes[-1][sensor_name],
     name_fn=lambda sensor_name: f"{RUNTIME_ATTRIBUTES[sensor_name]} Runtime",
+)
+
+CONSUMABLE_ENTITY = VenstarSensorEntityDescription(
+    key="consumable",
+    state_class=SensorStateClass.MEASUREMENT,
+    uom_fn=lambda _, sensor_name: CONSUMABLE_ATTRIBUTES[sensor_name]["uom"],
+    value_fn=lambda coordinator, sensor_name: coordinator.runtimes[-1][sensor_name],
+    name_fn=lambda sensor_name: f"{CONSUMABLE_ATTRIBUTES[sensor_name]['name']}",
 )
 
 INFO_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
@@ -230,7 +256,7 @@ INFO_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=list(SCHEDULE_PARTS.values()),
         translation_key="schedule_part",
-        uom_fn=lambda _: None,
+        uom_fn=lambda *_: None,
         value_fn=lambda coordinator, sensor_name: SCHEDULE_PARTS[
             coordinator.client.get_info(sensor_name)
         ],
@@ -241,7 +267,7 @@ INFO_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=list(STAGES.values()),
         translation_key="active_stage",
-        uom_fn=lambda _: None,
+        uom_fn=lambda *_: None,
         value_fn=lambda coordinator, sensor_name: STAGES[
             coordinator.client.get_info(sensor_name)
         ],
