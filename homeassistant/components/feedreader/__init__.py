@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
-
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -14,13 +12,12 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import CONF_MAX_ENTRIES, DEFAULT_MAX_ENTRIES, DOMAIN
+from .const import CONF_MAX_ENTRIES, DEFAULT_MAX_ENTRIES, DEFAULT_SCAN_INTERVAL, DOMAIN
 from .coordinator import FeedReaderCoordinator, StoredData
 
 type FeedReaderConfigEntry = ConfigEntry[FeedReaderCoordinator]
 
 CONF_URLS = "urls"
-DEFAULT_SCAN_INTERVAL = timedelta(hours=1)
 
 MY_KEY: HassKey[StoredData] = HassKey(DOMAIN)
 
@@ -90,7 +87,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) -
     coordinator = FeedReaderCoordinator(
         hass,
         entry.data[CONF_URL],
-        DEFAULT_SCAN_INTERVAL,
         entry.data[CONF_MAX_ENTRIES],
         storage,
     )

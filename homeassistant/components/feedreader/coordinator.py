@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from calendar import timegm
-from datetime import datetime, timedelta
+from datetime import datetime
 from logging import getLogger
 from time import gmtime, struct_time
 from urllib.error import URLError
@@ -15,7 +15,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 DELAY_SAVE = 30
 EVENT_FEEDREADER = "feedreader"
@@ -32,7 +32,6 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
         self,
         hass: HomeAssistant,
         url: str,
-        scan_interval: timedelta,
         max_entries: int,
         storage: StoredData,
     ) -> None:
@@ -41,7 +40,7 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
             hass=hass,
             logger=_LOGGER,
             name=f"{DOMAIN} {url}",
-            update_interval=scan_interval,
+            update_interval=DEFAULT_SCAN_INTERVAL,
         )
         self._url = url
         self._max_entries = max_entries
