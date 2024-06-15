@@ -44,7 +44,6 @@ async def test_manage_water_heater_fallback_issue_created(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test water heater fallback issue created cases."""
-    # Case 1 when integration fallback is TADO_DEFAULT
     zone_name = "Hot Water"
     expected_issue_id = f"{WATER_HEATER_FALLBACK_REPAIR}_{zone_name}"
     water_heater_entities = [MockWaterHeater(zone_name)]
