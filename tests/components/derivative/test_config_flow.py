@@ -107,6 +107,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
+            "source": "sensor.input2",
             "round": 2.0,
             "time_window": {"seconds": 10.0},
             "unit_time": "h",
@@ -115,8 +116,8 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "name": "My derivative",
+        "source": "sensor.input2",
         "round": 2.0,
-        "source": "sensor.input",
         "time_window": {"seconds": 10.0},
         "unit_time": "h",
     }
@@ -124,7 +125,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     assert config_entry.options == {
         "name": "My derivative",
         "round": 2.0,
-        "source": "sensor.input",
+        "source": "sensor.input2",
         "time_window": {"seconds": 10.0},
         "unit_time": "h",
     }
