@@ -202,6 +202,36 @@ def air_conditioner_fixture(device_factory):
     return device
 
 
+@pytest.fixture(name="air_conditioner_wind_mode")
+def air_conditioner_wind_mode_fixture(device_factory):
+    """Fixture returns a air conditioner in 'wind' mode."""
+    device = device_factory(
+        "Air Conditioner",
+        capabilities=[
+            Capability.air_conditioner_mode,
+            Capability.air_conditioner_fan_mode,
+            Capability.switch,
+            Capability.temperature_measurement,
+            Capability.thermostat_cooling_setpoint,
+        ],
+        status={
+            Attribute.air_conditioner_mode: "wind",
+            Attribute.supported_ac_modes: [
+                "cool",
+                "dry",
+                "wind",
+                "auto",
+                "heat",
+                "wind",
+            ],
+            Attribute.switch: "on",
+            Attribute.cooling_setpoint: 23,
+        },
+    )
+    device.status.attributes[Attribute.temperature] = Status(24, "C", None)
+    return device
+
+
 async def test_legacy_thermostat_entity_state(
     hass: HomeAssistant, legacy_thermostat
 ) -> None:
@@ -354,6 +384,15 @@ async def test_air_conditioner_entity_state(
     assert state.attributes["drlc_status_level"] == -1
     assert state.attributes["drlc_status_start"] == "1970-01-01T00:00:00Z"
     assert state.attributes["drlc_status_override"] is False
+
+
+async def test_air_conditioner_wind_state(
+    hass: HomeAssistant, air_conditioner_wind_mode
+) -> None:
+    """Tests an air conditioner in wind mode returns the correct state."""
+    await setup_platform(hass, CLIMATE_DOMAIN, devices=[air_conditioner_wind_mode])
+    state = hass.states.get("climate.air_conditioner")
+    assert state.state == HVACMode.FAN_ONLY
 
 
 async def test_set_fan_mode(hass: HomeAssistant, thermostat, air_conditioner) -> None:
