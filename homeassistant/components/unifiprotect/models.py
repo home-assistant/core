@@ -31,7 +31,7 @@ class PermRequired(int, Enum):
 
 @dataclass(frozen=True, kw_only=True)
 class ProtectEntityDescription(EntityDescription, Generic[T]):
-    """Mixin for required keys."""
+    """Base class for protect entity descriptions."""
 
     ufp_required_field: str | None = None
     ufp_value: str | None = None
