@@ -181,8 +181,8 @@ class DnsIPOptionsFlowHandler(OptionsFlowWithConfigEntry):
             validate = await async_validate_hostname(
                 self.config_entry.data[CONF_HOSTNAME],
                 resolver,
-                port,
                 resolver_ipv6,
+                port,
                 port_ipv6,
             )
 
