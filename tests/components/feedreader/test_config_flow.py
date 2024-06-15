@@ -36,7 +36,7 @@ def feedparser_fixture(feed_one_event: bytes) -> Mock:
 
 
 @pytest.fixture(name="setup_entry")
-def fsetup_entry_fixture(feed_one_event: bytes) -> Mock:
+def setup_entry_fixture(feed_one_event: bytes) -> Mock:
     """Patch libraries."""
     with (
         patch("homeassistant.components.feedreader.async_setup_entry") as setup_entry,
@@ -61,23 +61,6 @@ async def test_user(hass: HomeAssistant, feedparser, setup_entry) -> None:
     assert result["title"] == FEED_TITLE
     assert result["data"][CONF_URL] == URL
     assert result["data"][CONF_MAX_ENTRIES] == 5
-
-
-async def test_import(hass: HomeAssistant, feedparser, setup_entry) -> None:
-    """Test starting an import flow."""
-    config_entries = hass.config_entries.async_entries(DOMAIN)
-    assert not config_entries
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_URLS: [URL]}})
-
-    config_entries = hass.config_entries.async_entries(DOMAIN)
-    assert config_entries
-    assert len(config_entries) == 1
-    assert config_entries[0].title == FEED_TITLE
-    assert config_entries[0].data[CONF_URL] == URL
-    assert config_entries[0].data[CONF_MAX_ENTRIES] == DEFAULT_MAX_ENTRIES
-
-    assert ir.async_get(hass).async_get_issue(HA_DOMAIN, "deprecated_yaml_feedreader")
 
 
 async def test_user_errors(
@@ -121,6 +104,61 @@ async def test_user_errors(
     assert result["title"] == FEED_TITLE
     assert result["data"][CONF_URL] == URL
     assert result["data"][CONF_MAX_ENTRIES] == 5
+
+
+async def test_import(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, feedparser, setup_entry
+) -> None:
+    """Test starting an import flow."""
+    config_entries = hass.config_entries.async_entries(DOMAIN)
+    assert not config_entries
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_URLS: [URL]}})
+
+    config_entries = hass.config_entries.async_entries(DOMAIN)
+    assert config_entries
+    assert len(config_entries) == 1
+    assert config_entries[0].title == FEED_TITLE
+    assert config_entries[0].data[CONF_URL] == URL
+    assert config_entries[0].data[CONF_MAX_ENTRIES] == DEFAULT_MAX_ENTRIES
+
+    assert issue_registry.async_get_issue(HA_DOMAIN, "deprecated_yaml_feedreader")
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "return_value", "expected_issue_id"),
+    [
+        (
+            urllib.error.URLError("Test"),
+            None,
+            "import_yaml_error_feedreader_url_error_http_some_rss_local_rss_feed_xml",
+        ),
+        (
+            None,
+            None,
+            "import_yaml_error_feedreader_no_feed_entries_http_some_rss_local_rss_feed_xml",
+        ),
+    ],
+)
+async def test_import_errors(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    feedparser,
+    setup_entry,
+    feed_one_event,
+    side_effect,
+    return_value,
+    expected_issue_id,
+) -> None:
+    """Test starting an import flow which results in an URL error."""
+    config_entries = hass.config_entries.async_entries(DOMAIN)
+    assert not config_entries
+
+    # raise URLError
+    feedparser.side_effect = side_effect
+    feedparser.return_value = return_value
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_URLS: [URL]}})
+    assert issue_registry.async_get_issue(DOMAIN, expected_issue_id)
 
 
 async def test_reconfigure(hass: HomeAssistant, feedparser) -> None:

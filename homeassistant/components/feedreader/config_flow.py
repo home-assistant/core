@@ -9,15 +9,22 @@ import urllib.error
 import feedparser
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_IMPORT,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.util import slugify
 
 from .const import CONF_MAX_ENTRIES, DEFAULT_MAX_ENTRIES, DOMAIN
 
@@ -62,6 +69,21 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    def abort_on_import_error(self, url: str, error: str) -> ConfigFlowResult:
+        """Abort import flow on error."""
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"import_yaml_error_{DOMAIN}_{error}_{slugify(url)}",
+            breaks_in_ha_version="2025.1.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key=f"import_yaml_error_{error}",
+            translation_placeholders={"url": url},
+        )
+        return self.async_abort(reason=error)
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -76,9 +98,15 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
         if feed.bozo:
             LOGGER.debug("feed bozo_exception: %s", feed.bozo_exception)
             if isinstance(feed.bozo_exception, urllib.error.URLError):
+                if self.context["source"] == SOURCE_IMPORT:
+                    return self.abort_on_import_error(user_input[CONF_URL], "url_error")
                 return self.show_user_form(user_input, {"base": "url_error"})
 
         if not feed.entries:
+            if self.context["source"] == SOURCE_IMPORT:
+                return self.abort_on_import_error(
+                    user_input[CONF_URL], "no_feed_entries"
+                )
             return self.show_user_form(user_input, {"base": "no_feed_entries"})
 
         feed_title = feed["feed"]["title"]
