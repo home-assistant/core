@@ -21,7 +21,7 @@ type EfergyConfigEntry = ConfigEntry[Efergy]
 
 async def async_setup_entry(hass: HomeAssistant, entry: EfergyConfigEntry) -> bool:
     """Set up Efergy from a config entry."""
-    entry.runtime_data = Efergy(
+    api = Efergy(
         entry.data[CONF_API_KEY],
         session=async_get_clientsession(hass),
         utc_offset=hass.config.time_zone,
@@ -29,13 +29,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: EfergyConfigEntry) -> bo
     )
 
     try:
-        await entry.runtime_data.async_status(get_sids=True)
+        await api.async_status(get_sids=True)
     except (exceptions.ConnectError, exceptions.DataError) as ex:
         raise ConfigEntryNotReady(f"Failed to connect to device: {ex}") from ex
     except exceptions.InvalidAuth as ex:
         raise ConfigEntryAuthFailed(
             "API Key is no longer valid. Please reauthenticate"
         ) from ex
+
+    entry.runtime_data = api
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
