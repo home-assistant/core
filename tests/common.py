@@ -195,9 +195,11 @@ def get_test_home_assistant() -> Generator[HomeAssistant]:
 
     threading.Thread(name="LoopThread", target=run_loop, daemon=False).start()
 
-    yield hass
-    loop.run_until_complete(context_manager.__aexit__(None, None, None))
-    loop.close()
+    try:
+        yield hass
+    finally:
+        loop.run_until_complete(context_manager.__aexit__(None, None, None))
+        loop.close()
 
 
 class StoreWithoutWriteLoad[_T: (Mapping[str, Any] | Sequence[Any])](storage.Store[_T]):
@@ -359,10 +361,11 @@ async def async_test_home_assistant(
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, clear_instance)
 
-    yield hass
-
-    # Restore timezone, it is set when creating the hass object
-    dt_util.set_default_time_zone(orig_tz)
+    try:
+        yield hass
+    finally:
+        # Restore timezone, it is set when creating the hass object
+        dt_util.set_default_time_zone(orig_tz)
 
 
 def async_mock_service(
@@ -690,9 +693,9 @@ def mock_device_registry(
 class MockGroup(auth_models.Group):
     """Mock a group in Home Assistant."""
 
-    def __init__(self, id=None, name="Mock Group", policy=system_policies.ADMIN_POLICY):
+    def __init__(self, id=None, name="Mock Group"):
         """Mock a group."""
-        kwargs = {"name": name, "policy": policy}
+        kwargs = {"name": name, "policy": system_policies.ADMIN_POLICY}
         if id is not None:
             kwargs["id"] = id
 
@@ -815,6 +818,7 @@ class MockModule:
 
         if setup:
             # We run this in executor, wrap it in function
+            # pylint: disable-next=unnecessary-lambda
             self.setup = lambda *args: setup(*args)
 
         if async_setup is not None:
@@ -872,6 +876,7 @@ class MockPlatform:
 
         if setup_platform is not None:
             # We run this in executor, wrap it in function
+            # pylint: disable-next=unnecessary-lambda
             self.setup_platform = lambda *args: setup_platform(*args)
 
         if async_setup_platform is not None:
@@ -896,7 +901,7 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
         platform=None,
         scan_interval=timedelta(seconds=15),
         entity_namespace=None,
-    ):
+    ) -> None:
         """Initialize a mock entity platform."""
         if logger is None:
             logger = logging.getLogger("homeassistant.helpers.entity_platform")

@@ -209,7 +209,7 @@ async def test_setup_when_certificate_changed(
     class WrongCertHostnameException(requests.exceptions.SSLError):
         """Mock the exception showing a mismatched hostname."""
 
-        def __init__(self):
+        def __init__(self):  # pylint: disable=super-init-not-called
             self.__context__ = ssl.SSLCertVerificationError(
                 f"hostname '{old_domain}' doesn't match"
             )
@@ -270,7 +270,7 @@ async def test_setup_when_certificate_changed(
     assert old_entry.data[const.PLEX_SERVER_CONFIG][CONF_URL] == new_url
 
 
-async def test_tokenless_server(hass, entry, setup_plex_server) -> None:
+async def test_tokenless_server(hass: HomeAssistant, entry, setup_plex_server) -> None:
     """Test setup with a server with token auth disabled."""
     TOKENLESS_DATA = copy.deepcopy(DEFAULT_DATA)
     TOKENLESS_DATA[const.PLEX_SERVER_CONFIG].pop(CONF_TOKEN, None)

@@ -79,7 +79,7 @@ async def test_login_flow_works(hass: HomeAssistant, manager) -> None:
 
 async def test_create_repair_issue(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
-):
+) -> None:
     """Test legacy api password auth provider creates a reapir issue."""
     hass.auth = await auth.auth_manager_from_config(hass, [CONFIG], [])
     ensure_auth_manager_loaded(hass.auth)

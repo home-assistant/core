@@ -61,7 +61,10 @@ async def test_track_point_in_time(hass: HomeAssistant) -> None:
     runs = []
 
     async_track_point_in_utc_time(
-        hass, callback(lambda x: runs.append(x)), birthday_paulus
+        hass,
+        # pylint: disable-next=unnecessary-lambda
+        callback(lambda x: runs.append(x)),
+        birthday_paulus,
     )
 
     async_fire_time_changed(hass, before_birthday)
@@ -78,7 +81,10 @@ async def test_track_point_in_time(hass: HomeAssistant) -> None:
     assert len(runs) == 1
 
     async_track_point_in_utc_time(
-        hass, callback(lambda x: runs.append(x)), birthday_paulus
+        hass,
+        # pylint: disable-next=unnecessary-lambda
+        callback(lambda x: runs.append(x)),
+        birthday_paulus,
     )
 
     async_fire_time_changed(hass, after_birthday)
@@ -86,7 +92,10 @@ async def test_track_point_in_time(hass: HomeAssistant) -> None:
     assert len(runs) == 2
 
     unsub = async_track_point_in_time(
-        hass, callback(lambda x: runs.append(x)), birthday_paulus
+        hass,
+        # pylint: disable-next=unnecessary-lambda
+        callback(lambda x: runs.append(x)),
+        birthday_paulus,
     )
     unsub()
 
@@ -107,6 +116,7 @@ async def test_track_point_in_time_drift_rearm(hass: HomeAssistant) -> None:
 
     async_track_point_in_utc_time(
         hass,
+        # pylint: disable-next=unnecessary-lambda
         callback(lambda x: specific_runs.append(x)),
         time_that_will_not_match_right_away,
     )
@@ -3546,7 +3556,10 @@ async def test_track_time_interval(hass: HomeAssistant) -> None:
 
     utc_now = dt_util.utcnow()
     unsub = async_track_time_interval(
-        hass, callback(lambda x: specific_runs.append(x)), timedelta(seconds=10)
+        hass,
+        # pylint: disable-next=unnecessary-lambda
+        callback(lambda x: specific_runs.append(x)),
+        timedelta(seconds=10),
     )
 
     async_fire_time_changed(hass, utc_now + timedelta(seconds=5))
@@ -3578,6 +3591,7 @@ async def test_track_time_interval_name(hass: HomeAssistant) -> None:
     unique_string = "xZ13"
     unsub = async_track_time_interval(
         hass,
+        # pylint: disable-next=unnecessary-lambda
         callback(lambda x: specific_runs.append(x)),
         timedelta(seconds=10),
         name=unique_string,
@@ -3808,12 +3822,20 @@ async def test_async_track_time_change(
     )
     freezer.move_to(time_that_will_not_match_right_away)
 
-    unsub = async_track_time_change(hass, callback(lambda x: none_runs.append(x)))
+    unsub = async_track_time_change(
+        hass,
+        # pylint: disable-next=unnecessary-lambda
+        callback(lambda x: none_runs.append(x)),
+    )
     unsub_utc = async_track_utc_time_change(
-        hass, callback(lambda x: specific_runs.append(x)), second=[0, 30]
+        hass,
+        # pylint: disable-next=unnecessary-lambda
+        callback(lambda x: specific_runs.append(x)),
+        second=[0, 30],
     )
     unsub_wildcard = async_track_time_change(
         hass,
+        # pylint: disable-next=unnecessary-lambda
         callback(lambda x: wildcard_runs.append(x)),
         second="*",
         minute="*",
@@ -3872,7 +3894,11 @@ async def test_periodic_task_minute(
     freezer.move_to(time_that_will_not_match_right_away)
 
     unsub = async_track_utc_time_change(
-        hass, callback(lambda x: specific_runs.append(x)), minute="/5", second=0
+        hass,
+        # pylint: disable-next=unnecessary-lambda
+        callback(lambda x: specific_runs.append(x)),
+        minute="/5",
+        second=0,
     )
 
     async_fire_time_changed(
@@ -3918,6 +3944,7 @@ async def test_periodic_task_hour(
 
     unsub = async_track_utc_time_change(
         hass,
+        # pylint: disable-next=unnecessary-lambda
         callback(lambda x: specific_runs.append(x)),
         hour="/2",
         minute=0,
@@ -3971,7 +3998,10 @@ async def test_periodic_task_wrong_input(hass: HomeAssistant) -> None:
 
     with pytest.raises(ValueError):
         async_track_utc_time_change(
-            hass, callback(lambda x: specific_runs.append(x)), hour="/two"
+            hass,
+            # pylint: disable-next=unnecessary-lambda
+            callback(lambda x: specific_runs.append(x)),
+            hour="/two",
         )
 
     async_fire_time_changed(
@@ -3995,6 +4025,7 @@ async def test_periodic_task_clock_rollback(
 
     unsub = async_track_utc_time_change(
         hass,
+        # pylint: disable-next=unnecessary-lambda
         callback(lambda x: specific_runs.append(x)),
         hour="/2",
         minute=0,
@@ -4064,6 +4095,7 @@ async def test_periodic_task_duplicate_time(
 
     unsub = async_track_utc_time_change(
         hass,
+        # pylint: disable-next=unnecessary-lambda
         callback(lambda x: specific_runs.append(x)),
         hour="/2",
         minute=0,
@@ -4109,6 +4141,7 @@ async def test_periodic_task_entering_dst(
 
     unsub = async_track_time_change(
         hass,
+        # pylint: disable-next=unnecessary-lambda
         callback(lambda x: specific_runs.append(x)),
         hour=2,
         minute=30,
@@ -4160,6 +4193,7 @@ async def test_periodic_task_entering_dst_2(
 
     unsub = async_track_time_change(
         hass,
+        # pylint: disable-next=unnecessary-lambda
         callback(lambda x: specific_runs.append(x)),
         second=list(range(59)),
     )
@@ -4210,6 +4244,7 @@ async def test_periodic_task_leaving_dst(
 
     unsub = async_track_time_change(
         hass,
+        # pylint: disable-next=unnecessary-lambda
         callback(lambda x: specific_runs.append(x)),
         hour=2,
         minute=30,
@@ -4285,6 +4320,7 @@ async def test_periodic_task_leaving_dst_2(
 
     unsub = async_track_time_change(
         hass,
+        # pylint: disable-next=unnecessary-lambda
         callback(lambda x: specific_runs.append(x)),
         minute=30,
         second=0,
