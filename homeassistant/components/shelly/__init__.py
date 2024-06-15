@@ -279,21 +279,6 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> bool:
     """Unload a config entry."""
-    shelly_entry_data = entry.runtime_data
-    platforms = PLATFORMS
-
-    if get_device_entry_gen(entry) in RPC_GENERATIONS:
-        if entry.data.get(CONF_SLEEP_PERIOD):
-            platforms = RPC_SLEEPING_PLATFORMS
-
-        if unload_ok := await hass.config_entries.async_unload_platforms(
-            entry, platforms
-        ):
-            if shelly_entry_data.rpc:
-                await shelly_entry_data.rpc.shutdown()
-
-        return unload_ok
-
     # delete push update issue if it exists
     LOGGER.debug(
         "Deleting issue %s", PUSH_UPDATE_ISSUE_ID.format(unique=entry.unique_id)
@@ -302,11 +287,19 @@ async def async_unload_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> b
         hass, DOMAIN, PUSH_UPDATE_ISSUE_ID.format(unique=entry.unique_id)
     )
 
-    if entry.data.get(CONF_SLEEP_PERIOD):
-        platforms = BLOCK_SLEEPING_PLATFORMS
+    platforms = PLATFORMS
+    coordinator: ShellyBlockCoordinator | ShellyRpcCoordinator | None
 
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, platforms):
-        if shelly_entry_data.block:
-            await shelly_entry_data.block.shutdown()
+    if get_device_entry_gen(entry) in RPC_GENERATIONS:
+        coordinator = entry.runtime_data.rpc
+        if entry.data.get(CONF_SLEEP_PERIOD):
+            platforms = RPC_SLEEPING_PLATFORMS
+    else:
+        coordinator = entry.runtime_data.block
+        if entry.data.get(CONF_SLEEP_PERIOD):
+            platforms = BLOCK_SLEEPING_PLATFORMS
 
-    return unload_ok
+    if coordinator:
+        await coordinator.shutdown()
+
+    return await hass.config_entries.async_unload_platforms(entry, platforms)
