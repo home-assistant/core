@@ -33,6 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MadVRConfigEntry) -> boo
     )
     coordinator = MadVRCoordinator(
         hass,
+        entry,
         madVRClient,
         mac=entry.data.get("mac", ""),
         name=name,

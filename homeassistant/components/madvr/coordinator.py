@@ -4,6 +4,7 @@ import logging
 
 from madvr.madvr import Madvr
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -18,6 +19,7 @@ class MadVRCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         my_api: Madvr,
         mac: str,
         name: str,
@@ -28,7 +30,7 @@ class MadVRCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name="My API Coordinator",
         )
-        self.entry_id = hass.data[DOMAIN]["entry_id"]
+        self.entry_id = config_entry.entry_id
         self.my_api = my_api
         self.mac = mac
         self.name = name
