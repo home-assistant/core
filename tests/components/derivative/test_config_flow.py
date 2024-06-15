@@ -138,8 +138,8 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     assert len(hass.states.async_all()) == 1
 
     # Check the state of the entity has changed as expected
-    hass.states.async_set("sensor.input", 10, {"unit_of_measurement": "cat"})
-    hass.states.async_set("sensor.input", 11, {"unit_of_measurement": "cat"})
+    hass.states.async_set("sensor.input2", 10, {"unit_of_measurement": "cat"})
+    hass.states.async_set("sensor.input2", 11, {"unit_of_measurement": "cat"})
     await hass.async_block_till_done()
     state = hass.states.get(f"{platform}.my_derivative")
     assert state.attributes["unit_of_measurement"] == "cat/h"
