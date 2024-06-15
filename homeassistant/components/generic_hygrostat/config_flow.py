@@ -13,7 +13,6 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import CONF_NAME, PERCENTAGE
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
-    SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
     SchemaFlowFormStep,
 )
@@ -36,114 +35,103 @@ from . import (
     DOMAIN,
 )
 
+OPTIONS_SCHEMA = {
+    vol.Required(CONF_SENSOR): selector.EntitySelector(
+        selector.EntitySelectorConfig(
+            domain=SENSOR_DOMAIN, device_class=SensorDeviceClass.HUMIDITY
+        )
+    ),
+    vol.Required(CONF_HUMIDIFIER): selector.EntitySelector(
+        selector.EntitySelectorConfig(domain=SWITCH_DOMAIN)
+    ),
+    vol.Required(CONF_DEVICE_CLASS): selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=[
+                HumidifierDeviceClass.HUMIDIFIER,
+                HumidifierDeviceClass.DEHUMIDIFIER,
+            ],
+            translation_key=CONF_DEVICE_CLASS,
+        ),
+    ),
+    vol.Required(
+        CONF_DRY_TOLERANCE, default=DEFAULT_TOLERANCE
+    ): selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            min=0,
+            max=100,
+            step=0.5,
+            unit_of_measurement=PERCENTAGE,
+            mode=selector.NumberSelectorMode.BOX,
+        )
+    ),
+    vol.Required(
+        CONF_WET_TOLERANCE, default=DEFAULT_TOLERANCE
+    ): selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            min=0,
+            max=100,
+            step=0.5,
+            unit_of_measurement=PERCENTAGE,
+            mode=selector.NumberSelectorMode.BOX,
+        )
+    ),
+    vol.Optional(CONF_INITIAL_STATE): selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            min=0,
+            max=100,
+            unit_of_measurement=PERCENTAGE,
+            mode=selector.NumberSelectorMode.BOX,
+        )
+    ),
+    vol.Optional(CONF_MIN_DUR): selector.DurationSelector(
+        selector.DurationSelectorConfig(allow_negative=False)
+    ),
+    vol.Optional(CONF_MIN_HUMIDITY): selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            min=0,
+            max=100,
+            unit_of_measurement=PERCENTAGE,
+            mode=selector.NumberSelectorMode.BOX,
+        )
+    ),
+    vol.Optional(CONF_MAX_HUMIDITY): selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            min=0,
+            max=100,
+            unit_of_measurement=PERCENTAGE,
+            mode=selector.NumberSelectorMode.BOX,
+        )
+    ),
+    vol.Optional(CONF_AWAY_HUMIDITY): selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            min=0,
+            max=100,
+            step=0.5,
+            unit_of_measurement=PERCENTAGE,
+            mode=selector.NumberSelectorMode.BOX,
+        )
+    ),
+    vol.Optional(CONF_AWAY_FIXED): selector.BooleanSelector(),
+    vol.Optional(CONF_KEEP_ALIVE): selector.DurationSelector(
+        selector.DurationSelectorConfig(allow_negative=False, enable_day=False)
+    ),
+    vol.Optional(CONF_STALE_DURATION): selector.DurationSelector(
+        selector.DurationSelectorConfig(allow_negative=False, enable_day=False)
+    ),
+}
 
-async def _get_options_dict(handler: SchemaCommonFlowHandler | None) -> dict:
-    return {
-        vol.Required(CONF_SENSOR): selector.EntitySelector(
-            selector.EntitySelectorConfig(
-                domain=SENSOR_DOMAIN, device_class=SensorDeviceClass.HUMIDITY
-            )
-        ),
-        vol.Required(CONF_HUMIDIFIER): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain=SWITCH_DOMAIN)
-        ),
-        vol.Required(CONF_DEVICE_CLASS): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=[
-                    HumidifierDeviceClass.HUMIDIFIER,
-                    HumidifierDeviceClass.DEHUMIDIFIER,
-                ],
-                translation_key=CONF_DEVICE_CLASS,
-            ),
-        ),
-        vol.Required(
-            CONF_DRY_TOLERANCE, default=DEFAULT_TOLERANCE
-        ): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=0,
-                max=100,
-                step=0.5,
-                unit_of_measurement=PERCENTAGE,
-                mode=selector.NumberSelectorMode.BOX,
-            )
-        ),
-        vol.Required(
-            CONF_WET_TOLERANCE, default=DEFAULT_TOLERANCE
-        ): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=0,
-                max=100,
-                step=0.5,
-                unit_of_measurement=PERCENTAGE,
-                mode=selector.NumberSelectorMode.BOX,
-            )
-        ),
-        vol.Optional(CONF_INITIAL_STATE): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=0,
-                max=100,
-                unit_of_measurement=PERCENTAGE,
-                mode=selector.NumberSelectorMode.BOX,
-            )
-        ),
-        vol.Optional(CONF_MIN_DUR): selector.DurationSelector(
-            selector.DurationSelectorConfig(allow_negative=False)
-        ),
-        vol.Optional(CONF_MIN_HUMIDITY): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=0,
-                max=100,
-                unit_of_measurement=PERCENTAGE,
-                mode=selector.NumberSelectorMode.BOX,
-            )
-        ),
-        vol.Optional(CONF_MAX_HUMIDITY): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=0,
-                max=100,
-                unit_of_measurement=PERCENTAGE,
-                mode=selector.NumberSelectorMode.BOX,
-            )
-        ),
-        vol.Optional(CONF_AWAY_HUMIDITY): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=0,
-                max=100,
-                step=0.5,
-                unit_of_measurement=PERCENTAGE,
-                mode=selector.NumberSelectorMode.BOX,
-            )
-        ),
-        vol.Optional(CONF_AWAY_FIXED): selector.BooleanSelector(),
-        vol.Optional(CONF_KEEP_ALIVE): selector.DurationSelector(
-            selector.DurationSelectorConfig(allow_negative=False, enable_day=False)
-        ),
-        vol.Optional(CONF_STALE_DURATION): selector.DurationSelector(
-            selector.DurationSelectorConfig(allow_negative=False, enable_day=False)
-        ),
-    }
-
-
-async def _get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
-    return vol.Schema(await _get_options_dict(handler))
-
-
-async def _get_config_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
-    options = await _get_options_dict(handler)
-    return vol.Schema(
-        {
-            vol.Required(CONF_NAME): selector.TextSelector(),
-            **options,
-        },
-    )
+CONFIG_SCHEMA = {
+    vol.Required(CONF_NAME): selector.TextSelector(),
+    **OPTIONS_SCHEMA,
+}
 
 
 CONFIG_FLOW = {
-    "user": SchemaFlowFormStep(_get_config_schema),
+    "user": SchemaFlowFormStep(vol.Schema(CONFIG_SCHEMA)),
 }
 
 OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(_get_options_schema),
+    "init": SchemaFlowFormStep(vol.Schema(OPTIONS_SCHEMA)),
 }
 
 
