@@ -32,6 +32,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -133,6 +134,34 @@ async def async_setup_entry(
 ) -> None:
     """Set up trend sensor from config entry."""
 
+    registry = er.async_get(hass)
+    # Validate + resolve entity registry id to entity_id
+    source_entity_id = er.async_validate_entity_id(
+        registry, entry.options[CONF_ENTITY_ID]
+    )
+
+    source_entity = registry.async_get(source_entity_id)
+    dev_reg = dr.async_get(hass)
+    # Resolve source entity device
+    if (
+        (source_entity is not None)
+        and (source_entity.device_id is not None)
+        and (
+            (
+                device := dev_reg.async_get(
+                    device_id=source_entity.device_id,
+                )
+            )
+            is not None
+        )
+    ):
+        device_info = dr.DeviceInfo(
+            identifiers=device.identifiers,
+            connections=device.connections,
+        )
+    else:
+        device_info = None
+
     async_add_entities(
         [
             SensorTrend(
@@ -147,6 +176,7 @@ async def async_setup_entry(
                 min_samples=entry.options.get(CONF_MIN_SAMPLES, DEFAULT_MIN_SAMPLES),
                 max_samples=entry.options.get(CONF_MAX_SAMPLES, DEFAULT_MAX_SAMPLES),
                 unique_id=entry.entry_id,
+                device_info=device_info,
             )
         ]
     )
@@ -172,6 +202,7 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
         unique_id: str | None = None,
         device_class: BinarySensorDeviceClass | None = None,
         sensor_entity_id: str | None = None,
+        device_info: dr.DeviceInfo | None = None,
     ) -> None:
         """Initialize the sensor."""
         self._entity_id = entity_id
@@ -185,6 +216,7 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
         self._attr_name = name
         self._attr_device_class = device_class
         self._attr_unique_id = unique_id
+        self._attr_device_info = device_info
 
         if sensor_entity_id:
             self.entity_id = sensor_entity_id
