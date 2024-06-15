@@ -245,6 +245,11 @@ def migrate_entity_ids(
 
         ch = host.api.channel_for_uid(device.serial_number)
         ch_device_ids[device.id] = ch
+        
+        if host.api.supported(ch, "UID") and device_uid[1] != host.api.camera_uid(ch):
+            new_device_id = f"{device_uid[0]}_{host.api.camera_uid(ch)}"
+            new_identifiers = {(DOMAIN, new_device_id)}
+            device_reg.async_update_device(device.id, new_identifiers=new_identifiers)
 
     entity_reg = er.async_get(hass)
     entities = er.async_entries_for_config_entry(entity_reg, config_entry_id)
@@ -254,6 +259,8 @@ def migrate_entity_ids(
             entity_reg.async_update_entity(
                 entity.entity_id, new_unique_id=f"{host.unique_id}_firmware"
             )
+            continue
+
         if host.api.supported(None, "UID") and not entity.unique_id.startswith(host.unique_id):
             new_id = f"{host.unique_id}_{entity.unique_id.split("_", 1)[1]}"
             entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_id)
@@ -261,6 +268,6 @@ def migrate_entity_ids(
         if entity.device_id in ch_device_ids:
             ch = ch_device_ids[entity.device_id]
             id_parts = entity.unique_id.split("_", 2)
-            if host.api.supported(ch, "UID") and id_parts[1] != self._host.api.camera_uid(ch):
-                new_id = f"{host.unique_id}_{self._host.api.camera_uid(ch)}_{id_parts[2]}"
+            if host.api.supported(ch, "UID") and id_parts[1] != host.api.camera_uid(ch):
+                new_id = f"{host.unique_id}_{host.api.camera_uid(ch)}_{id_parts[2]}"
                 entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_id)
