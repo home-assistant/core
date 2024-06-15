@@ -29,8 +29,9 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from . import HomeAssistantSpotifyData, SpotifyConfigEntry
+from . import SpotifyConfigEntry
 from .browse_media import async_browse_media_internal
+from .config_entry import HomeAssistantSpotifyData
 from .const import DOMAIN, MEDIA_PLAYER_PREFIX, PLAYABLE_MEDIA_TYPES, SPOTIFY_SCOPES
 from .util import fetch_image_url
 
