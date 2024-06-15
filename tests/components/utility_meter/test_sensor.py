@@ -55,9 +55,9 @@ from tests.common import (
 
 
 @pytest.fixture(autouse=True)
-def set_utc(hass: HomeAssistant):
+async def set_utc(hass: HomeAssistant):
     """Set timezone to UTC."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
 
 
 @pytest.mark.parametrize(
@@ -351,7 +351,7 @@ async def test_state_always_available(
     ],
 )
 async def test_not_unique_tariffs(hass: HomeAssistant, yaml_config) -> None:
-    """Test utility sensor state initializtion."""
+    """Test utility sensor state initialization."""
     assert not await async_setup_component(hass, DOMAIN, yaml_config)
 
 
@@ -385,7 +385,7 @@ async def test_not_unique_tariffs(hass: HomeAssistant, yaml_config) -> None:
     ],
 )
 async def test_init(hass: HomeAssistant, yaml_config, config_entry_config) -> None:
-    """Test utility sensor state initializtion."""
+    """Test utility sensor state initialization."""
     if yaml_config:
         assert await async_setup_component(hass, DOMAIN, yaml_config)
         await hass.async_block_till_done()
@@ -497,7 +497,7 @@ async def test_unique_id(
     ],
 )
 async def test_entity_name(hass: HomeAssistant, yaml_config, entity_id, name) -> None:
-    """Test utility sensor state initializtion."""
+    """Test utility sensor state initialization."""
     assert await async_setup_component(hass, DOMAIN, yaml_config)
     await hass.async_block_till_done()
 
@@ -1950,11 +1950,12 @@ async def test_unit_of_measurement_missing_invalid_new_state(
     )
 
 
-async def test_device_id(hass: HomeAssistant) -> None:
+async def test_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test for source entity device for Utility Meter."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
     source_config_entry = MockConfigEntry()
     source_config_entry.add_to_hass(hass)
     source_device_entry = device_registry.async_get_or_create(

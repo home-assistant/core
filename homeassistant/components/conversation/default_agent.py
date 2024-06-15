@@ -354,11 +354,12 @@ class DefaultAgent(ConversationEntity):
                 language,
                 assistant=DOMAIN,
                 device_id=user_input.device_id,
+                conversation_agent_id=user_input.agent_id,
             )
         except intent.MatchFailedError as match_error:
             # Intent was valid, but no entities matched the constraints.
             error_response_type, error_response_args = _get_match_error_response(
-                match_error
+                self.hass, match_error
             )
             return _make_error_result(
                 language,
@@ -428,8 +429,15 @@ class DefaultAgent(ConversationEntity):
             intent_context=intent_context,
             language=language,
         ):
-            if ("name" in result.entities) and (
-                not result.entities["name"].is_wildcard
+            # Prioritize results with a "name" slot, but still prefer ones with
+            # more literal text matched.
+            if (
+                ("name" in result.entities)
+                and (not result.entities["name"].is_wildcard)
+                and (
+                    (name_result is None)
+                    or (result.text_chunks_matched > name_result.text_chunks_matched)
+                )
             ):
                 name_result = result
 
@@ -870,7 +878,7 @@ class DefaultAgent(ConversationEntity):
         if device_area is None:
             return None
 
-        return {"area": {"value": device_area.id, "text": device_area.name}}
+        return {"area": {"value": device_area.name, "text": device_area.name}}
 
     def _get_error_text(
         self,
@@ -1037,6 +1045,7 @@ def _get_unmatched_response(result: RecognizeResult) -> tuple[ErrorKey, dict[str
 
 
 def _get_match_error_response(
+    hass: core.HomeAssistant,
     match_error: intent.MatchFailedError,
 ) -> tuple[ErrorKey, dict[str, Any]]:
     """Return key and template arguments for error when target matching fails."""
@@ -1102,6 +1111,23 @@ def _get_match_error_response(
     if reason == intent.MatchFailedReason.INVALID_FLOOR:
         # Invalid floor name
         return ErrorKey.NO_FLOOR, {"floor": result.no_match_name}
+
+    if reason == intent.MatchFailedReason.FEATURE:
+        # Feature not supported by entity
+        return ErrorKey.FEATURE_NOT_SUPPORTED, {}
+
+    if reason == intent.MatchFailedReason.STATE:
+        # Entity is not in correct state
+        assert match_error.constraints.states
+        state = next(iter(match_error.constraints.states))
+        if match_error.constraints.domains:
+            # Translate if domain is available
+            domain = next(iter(match_error.constraints.domains))
+            state = translation.async_translate_state(
+                hass, state, domain, None, None, None
+            )
+
+        return ErrorKey.ENTITY_WRONG_STATE, {"state": state}
 
     # Default error
     return ErrorKey.NO_INTENT, {}

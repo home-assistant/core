@@ -104,6 +104,7 @@ async def async_handle(
     language: str | None = None,
     assistant: str | None = None,
     device_id: str | None = None,
+    conversation_agent_id: str | None = None,
 ) -> IntentResponse:
     """Handle an intent."""
     handler = hass.data.get(DATA_KEY, {}).get(intent_type)
@@ -127,6 +128,7 @@ async def async_handle(
         language=language,
         assistant=assistant,
         device_id=device_id,
+        conversation_agent_id=conversation_agent_id,
     )
 
     try:
@@ -138,6 +140,7 @@ async def async_handle(
     except IntentError:
         raise  # bubble up intent related errors
     except Exception as err:
+        _LOGGER.exception("Error handling %s", intent_type)
         raise IntentUnexpectedError(f"Error handling {intent_type}") from err
     return result
 
@@ -242,6 +245,19 @@ class MatchTargetsConstraints:
 
     allow_duplicate_names: bool = False
     """True if entities with duplicate names are allowed in result."""
+
+    @property
+    def has_constraints(self) -> bool:
+        """Returns True if at least one constraint is set (ignores assistant)."""
+        return bool(
+            self.name
+            or self.area_name
+            or self.floor_name
+            or self.domains
+            or self.device_classes
+            or self.features
+            or self.states
+        )
 
 
 @dataclass
@@ -697,6 +713,7 @@ def async_match_states(
     domains: Collection[str] | None = None,
     device_classes: Collection[str] | None = None,
     states: list[State] | None = None,
+    assistant: str | None = None,
 ) -> Iterable[State]:
     """Simplified interface to async_match_targets that returns states matching the constraints."""
     result = async_match_targets(
@@ -707,6 +724,7 @@ def async_match_states(
             floor_name=floor_name,
             domains=domains,
             device_classes=device_classes,
+            assistant=assistant,
         ),
         states=states,
     )
@@ -724,7 +742,8 @@ class IntentHandler:
     """Intent handler registration."""
 
     intent_type: str
-    platforms: Iterable[str] | None = []
+    platforms: set[str] | None = None
+    description: str | None = None
 
     @property
     def slot_schema(self) -> dict | None:
@@ -765,6 +784,15 @@ class IntentHandler:
         return f"<{self.__class__.__name__} - {self.intent_type}>"
 
 
+def non_empty_string(value: Any) -> str:
+    """Coerce value to string and fail if string is empty or whitespace."""
+    value_str = cv.string(value)
+    if not value_str.strip():
+        raise vol.Invalid("string value is empty")
+
+    return value_str
+
+
 class DynamicServiceIntentHandler(IntentHandler):
     """Service Intent handler registration (dynamic).
 
@@ -784,6 +812,8 @@ class DynamicServiceIntentHandler(IntentHandler):
         required_domains: set[str] | None = None,
         required_features: int | None = None,
         required_states: set[str] | None = None,
+        description: str | None = None,
+        platforms: set[str] | None = None,
     ) -> None:
         """Create Service Intent Handler."""
         self.intent_type = intent_type
@@ -791,6 +821,8 @@ class DynamicServiceIntentHandler(IntentHandler):
         self.required_domains = required_domains
         self.required_features = required_features
         self.required_states = required_states
+        self.description = description
+        self.platforms = platforms
 
         self.required_slots: dict[tuple[str, str], vol.Schema] = {}
         if required_slots:
@@ -814,7 +846,7 @@ class DynamicServiceIntentHandler(IntentHandler):
     def slot_schema(self) -> dict:
         """Return a slot schema."""
         slot_schema = {
-            vol.Any("name", "area", "floor"): cv.string,
+            vol.Any("name", "area", "floor"): non_empty_string,
             vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional("preferred_area_id"): cv.string,
@@ -889,6 +921,10 @@ class DynamicServiceIntentHandler(IntentHandler):
             features=self.required_features,
             states=self.required_states,
         )
+        if not match_constraints.has_constraints:
+            # Fail if attempting to target all devices in the house
+            raise IntentHandleError("Service handler cannot target all devices")
+
         match_preferences = MatchTargetsPreferences(
             area_id=slots.get("preferred_area_id", {}).get("value"),
             floor_id=slots.get("preferred_floor_id", {}).get("value"),
@@ -1076,6 +1112,8 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
         required_domains: set[str] | None = None,
         required_features: int | None = None,
         required_states: set[str] | None = None,
+        description: str | None = None,
+        platforms: set[str] | None = None,
     ) -> None:
         """Create service handler."""
         super().__init__(
@@ -1086,6 +1124,8 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
             required_domains=required_domains,
             required_features=required_features,
             required_states=required_states,
+            description=description,
+            platforms=platforms,
         )
         self.domain = domain
         self.service = service
@@ -1121,6 +1161,7 @@ class Intent:
         "category",
         "assistant",
         "device_id",
+        "conversation_agent_id",
     ]
 
     def __init__(
@@ -1135,6 +1176,7 @@ class Intent:
         category: IntentCategory | None = None,
         assistant: str | None = None,
         device_id: str | None = None,
+        conversation_agent_id: str | None = None,
     ) -> None:
         """Initialize an intent."""
         self.hass = hass
@@ -1147,6 +1189,7 @@ class Intent:
         self.category = category
         self.assistant = assistant
         self.device_id = device_id
+        self.conversation_agent_id = conversation_agent_id
 
     @callback
     def create_response(self) -> IntentResponse:
@@ -1320,6 +1363,8 @@ class IntentResponse:
 
         if self.reprompt:
             response_dict["reprompt"] = self.reprompt
+        if self.speech_slots:
+            response_dict["speech_slots"] = self.speech_slots
 
         response_data: dict[str, Any] = {}
 

@@ -27,10 +27,9 @@ from homeassistant.core import (
     HassJob,
     HomeAssistant,
     ServiceCall,
-    async_get_hass,
+    async_get_hass_or_none,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -74,6 +73,7 @@ from .const import (
     DATA_HOST_INFO,
     DATA_INFO,
     DATA_KEY_SUPERVISOR_ISSUES,
+    DATA_NETWORK_INFO,
     DATA_OS_INFO,
     DATA_STORE,
     DATA_SUPERVISOR_INFO,
@@ -160,10 +160,7 @@ VALID_ADDON_SLUG = vol.Match(re.compile(r"^[-_.A-Za-z0-9]+$"))
 def valid_addon(value: Any) -> str:
     """Validate value is a valid addon slug."""
     value = VALID_ADDON_SLUG(value)
-
-    hass: HomeAssistant | None = None
-    with suppress(HomeAssistantError):
-        hass = async_get_hass()
+    hass = async_get_hass_or_none()
 
     if hass and (addons := get_addons_info(hass)) is not None and value not in addons:
         raise vol.Invalid("Not a valid add-on slug")
@@ -433,6 +430,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 hass.data[DATA_CORE_INFO],
                 hass.data[DATA_SUPERVISOR_INFO],
                 hass.data[DATA_OS_INFO],
+                hass.data[DATA_NETWORK_INFO],
             ) = await asyncio.gather(
                 create_eager_task(hassio.get_info()),
                 create_eager_task(hassio.get_host_info()),
@@ -440,6 +438,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 create_eager_task(hassio.get_core_info()),
                 create_eager_task(hassio.get_supervisor_info()),
                 create_eager_task(hassio.get_os_info()),
+                create_eager_task(hassio.get_network_info()),
             )
 
         except HassioAPIError as err:

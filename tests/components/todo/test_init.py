@@ -1,14 +1,16 @@
 """Tests for the todo integration."""
 
-from collections.abc import Generator
 import datetime
 from typing import Any
 from unittest.mock import AsyncMock
 import zoneinfo
 
 import pytest
+from typing_extensions import Generator
 import voluptuous as vol
 
+from homeassistant.components import conversation
+from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.todo import (
     DOMAIN,
     TodoItem,
@@ -23,6 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import intent
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
@@ -75,7 +78,7 @@ class MockTodoListEntity(TodoListEntity):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -91,7 +94,7 @@ def mock_setup_integration(hass: HomeAssistant) -> None:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
         return True
 
     async def async_unload_entry_init(
@@ -113,9 +116,9 @@ def mock_setup_integration(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture(autouse=True)
-def set_time_zone(hass: HomeAssistant) -> None:
+async def set_time_zone(hass: HomeAssistant) -> None:
     """Set the time zone for the tests that keesp UTC-6 all year round."""
-    hass.config.set_time_zone("America/Regina")
+    await hass.config.async_set_time_zone("America/Regina")
 
 
 async def create_mock_platform(
@@ -1110,6 +1113,7 @@ async def test_add_item_intent(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test adding items to lists using an intent."""
+    assert await async_setup_component(hass, "homeassistant", {})
     await todo_intent.async_setup_intents(hass)
 
     entity1 = MockTodoListEntity()
@@ -1128,6 +1132,7 @@ async def test_add_item_intent(
         "test",
         todo_intent.INTENT_LIST_ADD_ITEM,
         {"item": {"value": "beer"}, "name": {"value": "list 1"}},
+        assistant=conversation.DOMAIN,
     )
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -1143,6 +1148,7 @@ async def test_add_item_intent(
         "test",
         todo_intent.INTENT_LIST_ADD_ITEM,
         {"item": {"value": "cheese"}, "name": {"value": "List 2"}},
+        assistant=conversation.DOMAIN,
     )
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -1157,6 +1163,7 @@ async def test_add_item_intent(
         "test",
         todo_intent.INTENT_LIST_ADD_ITEM,
         {"item": {"value": "wine"}, "name": {"value": "lIST 2"}},
+        assistant=conversation.DOMAIN,
     )
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -1165,13 +1172,46 @@ async def test_add_item_intent(
     assert entity2.items[1].summary == "wine"
     assert entity2.items[1].status == TodoItemStatus.NEEDS_ACTION
 
+    # Should fail if lists are not exposed
+    async_expose_entity(hass, conversation.DOMAIN, entity1.entity_id, False)
+    async_expose_entity(hass, conversation.DOMAIN, entity2.entity_id, False)
+    with pytest.raises(intent.MatchFailedError) as err:
+        await intent.async_handle(
+            hass,
+            "test",
+            todo_intent.INTENT_LIST_ADD_ITEM,
+            {"item": {"value": "cookies"}, "name": {"value": "list 1"}},
+            assistant=conversation.DOMAIN,
+        )
+    assert err.value.result.no_match_reason == intent.MatchFailedReason.ASSISTANT
+
     # Missing list
-    with pytest.raises(intent.IntentHandleError):
+    with pytest.raises(intent.MatchFailedError):
         await intent.async_handle(
             hass,
             "test",
             todo_intent.INTENT_LIST_ADD_ITEM,
             {"item": {"value": "wine"}, "name": {"value": "This list does not exist"}},
+            assistant=conversation.DOMAIN,
+        )
+
+    # Fail with empty name/item
+    with pytest.raises(intent.InvalidSlotInfo):
+        await intent.async_handle(
+            hass,
+            "test",
+            todo_intent.INTENT_LIST_ADD_ITEM,
+            {"item": {"value": "wine"}, "name": {"value": ""}},
+            assistant=conversation.DOMAIN,
+        )
+
+    with pytest.raises(intent.InvalidSlotInfo):
+        await intent.async_handle(
+            hass,
+            "test",
+            todo_intent.INTENT_LIST_ADD_ITEM,
+            {"item": {"value": ""}, "name": {"value": "list 1"}},
+            assistant=conversation.DOMAIN,
         )
 
 

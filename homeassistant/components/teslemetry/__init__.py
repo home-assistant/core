@@ -18,7 +18,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN, MODELS
+from .const import DOMAIN, LOGGER, MODELS
 from .coordinator import (
     TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergySiteLiveCoordinator,
@@ -27,13 +27,24 @@ from .coordinator import (
 from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
 
 PLATFORMS: Final = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.CLIMATE,
+    Platform.COVER,
+    Platform.DEVICE_TRACKER,
+    Platform.LOCK,
+    Platform.MEDIA_PLAYER,
+    Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.UPDATE,
 ]
 
+type TeslemetryConfigEntry = ConfigEntry[TeslemetryData]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Set up Teslemetry config."""
 
     access_token = entry.data[CONF_ACCESS_TOKEN]
@@ -91,6 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 manufacturer="Tesla",
                 configuration_url="https://teslemetry.com/console",
                 name=product.get("site_name", "Energy Site"),
+                serial_number=str(site_id),
             )
 
             energysites.append(
@@ -119,6 +131,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
     )
 
+    # Add energy device models
+    for energysite in energysites:
+        models = set()
+        for gateway in energysite.info_coordinator.data.get("components_gateways", []):
+            if gateway.get("part_name"):
+                models.add(gateway["part_name"])
+        for battery in energysite.info_coordinator.data.get("components_batteries", []):
+            if battery.get("part_name"):
+                models.add(battery["part_name"])
+        if models:
+            energysite.device["model"] = ", ".join(sorted(models))
+
     # Setup Platforms
     entry.runtime_data = TeslemetryData(vehicles, energysites, scopes)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -126,6 +150,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Unload Teslemetry Config."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate config entry."""
+    if config_entry.version > 1:
+        return False
+
+    if config_entry.version == 1 and config_entry.minor_version < 2:
+        # Add unique_id to existing entry
+        teslemetry = Teslemetry(
+            session=async_get_clientsession(hass),
+            access_token=config_entry.data[CONF_ACCESS_TOKEN],
+        )
+        try:
+            metadata = await teslemetry.metadata()
+        except TeslaFleetError as e:
+            LOGGER.error(e.message)
+            return False
+
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=metadata["uid"], version=1, minor_version=2
+        )
+    return True

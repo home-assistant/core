@@ -80,7 +80,7 @@ class KNXDateTime(KnxEntity, DateTimeEntity, RestoreEntity):
         ):
             self._device.remote_value.value = (
                 datetime.fromisoformat(last_state.state)
-                .astimezone(dt_util.DEFAULT_TIME_ZONE)
+                .astimezone(dt_util.get_default_time_zone())
                 .timetuple()
             )
 
@@ -96,9 +96,11 @@ class KNXDateTime(KnxEntity, DateTimeEntity, RestoreEntity):
             hour=time_struct.tm_hour,
             minute=time_struct.tm_min,
             second=min(time_struct.tm_sec, 59),  # account for leap seconds
-            tzinfo=dt_util.DEFAULT_TIME_ZONE,
+            tzinfo=dt_util.get_default_time_zone(),
         )
 
     async def async_set_value(self, value: datetime) -> None:
         """Change the value."""
-        await self._device.set(value.astimezone(dt_util.DEFAULT_TIME_ZONE).timetuple())
+        await self._device.set(
+            value.astimezone(dt_util.get_default_time_zone()).timetuple()
+        )

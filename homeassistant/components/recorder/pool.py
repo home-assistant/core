@@ -1,5 +1,7 @@
 """A pool for sqlite connections."""
 
+from __future__ import annotations
+
 import asyncio
 import logging
 import threading
@@ -51,7 +53,7 @@ class RecorderPool(SingletonThreadPool, NullPool):
         self.recorder_and_worker_thread_ids = recorder_and_worker_thread_ids
         SingletonThreadPool.__init__(self, creator, **kw)
 
-    def recreate(self) -> "RecorderPool":
+    def recreate(self) -> RecorderPool:
         """Recreate the pool."""
         self.logger.info("Pool recreating")
         return self.__class__(

@@ -483,14 +483,19 @@ def test_check_if_deprecated_constant_integration_not_found(
 def test_test_check_if_deprecated_constant_invalid(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test check_if_deprecated_constant will raise an attribute error and create an log entry on an invalid deprecation type."""
+    """Test check_if_deprecated_constant error handling.
+
+    Test check_if_deprecated_constant raises an attribute error and creates a log entry
+    on an invalid deprecation type.
+    """
     module_name = "homeassistant.components.hue.light"
     module_globals = {"__name__": module_name, "_DEPRECATED_TEST_CONSTANT": 1}
     name = "TEST_CONSTANT"
 
     excepted_msg = (
-        f"Value of _DEPRECATED_{name} is an instance of <class 'int'> "
-        "but an instance of DeprecatedConstant or DeprecatedConstantEnum is required"
+        f"Value of _DEPRECATED_{name} is an instance of <class 'int'> but an instance "
+        "of DeprecatedAlias, DeferredDeprecatedAlias, DeprecatedConstant or "
+        "DeprecatedConstantEnum is required"
     )
 
     with pytest.raises(AttributeError, match=excepted_msg):
