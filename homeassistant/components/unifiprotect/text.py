@@ -18,7 +18,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .data import ProtectData, UFPConfigEntry
+from .data import UFPConfigEntry
 from .entity import ProtectDeviceEntity, async_all_device_entities
 from .models import PermRequired, ProtectEntityDescription, ProtectSetableKeysMixin, T
 
@@ -87,15 +87,6 @@ class ProtectDeviceText(ProtectDeviceEntity, TextEntity):
 
     entity_description: ProtectTextEntityDescription
     _state_attrs = ("_attr_available", "_attr_native_value")
-
-    def __init__(
-        self,
-        data: ProtectData,
-        device: ProtectAdoptableDeviceModel,
-        description: ProtectTextEntityDescription,
-    ) -> None:
-        """Initialize an UniFi Protect sensor."""
-        super().__init__(data, device, description)
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
