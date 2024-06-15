@@ -22,7 +22,7 @@
       }),
       'hvac_status': dict({
         'externalTemperature': 8.0,
-        'hvacStatus': 'off',
+        'hvacStatus': 1,
       }),
       'res_state': dict({
       }),
@@ -227,7 +227,7 @@
           }),
           'hvac_status': dict({
             'externalTemperature': 8.0,
-            'hvacStatus': 'off',
+            'hvacStatus': 1,
           }),
           'res_state': dict({
           }),

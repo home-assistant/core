@@ -9,7 +9,7 @@ from lru import LRU
 from sqlalchemy.orm.session import Session
 
 from homeassistant.core import Event
-from homeassistant.util.collection import chunked
+from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.event_type import EventType
 
 from ..db_schema import EventTypes
@@ -88,7 +88,7 @@ class EventTypeManager(BaseLRUTableManager[EventTypes]):
             return results
 
         with session.no_autoflush:
-            for missing_chunk in chunked(missing, self.recorder.max_bind_vars):
+            for missing_chunk in chunked_or_all(missing, self.recorder.max_bind_vars):
                 for event_type_id, event_type in execute_stmt_lambda_element(
                     session, find_event_type_ids(missing_chunk), orm_rows=False
                 ):

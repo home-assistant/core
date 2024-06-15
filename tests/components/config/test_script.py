@@ -24,7 +24,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture(autouse=True)
-async def setup_script(hass, script_config, stub_blueprint_populate):
+async def setup_script(hass: HomeAssistant, script_config: dict[str, Any]) -> None:
     """Set up script integration."""
     assert await async_setup_component(hass, "script", {"script": script_config})
 
