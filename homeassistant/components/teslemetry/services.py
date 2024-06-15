@@ -8,7 +8,7 @@ from voluptuous import All, Range
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import DOMAIN
@@ -53,7 +53,11 @@ def async_get_device_for_service_call(
     device_id = call.data[CONF_DEVICE_ID]
     device_registry = dr.async_get(hass)
     if (device_entry := device_registry.async_get(device_id)) is None:
-        raise ServiceValidationError(f"Invalid device: {device_id}")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_device",
+            translation_placeholders={"device_id": device_id},
+        )
 
     return device_entry
 
@@ -66,7 +70,11 @@ def async_get_config_for_device(
         if entry := hass.config_entries.async_get_entry(entry_id):
             if entry.domain == DOMAIN:
                 return entry
-    raise ServiceValidationError(f"No config entry for device: {device_entry.id}")
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="no_config_entry_for_device",
+        translation_placeholders={"device_id": device_entry.id},
+    )
 
 
 def async_get_vehicle_for_entry(
@@ -77,7 +85,11 @@ def async_get_vehicle_for_entry(
     for vehicle in config.runtime_data.vehicles:
         if vehicle.vin == device.serial_number:
             return vehicle
-    raise ServiceValidationError(f"No vehicle data for device ATTR_ID: {device.id}")
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="no_vehicle_data_for_device",
+        translation_placeholders={"device_id": device.id},
+    )
 
 
 def async_get_energy_site_for_entry(
@@ -88,13 +100,16 @@ def async_get_energy_site_for_entry(
     for energysite in config.runtime_data.energysites:
         if str(energysite.id) == device.serial_number:
             return energysite
-    raise ServiceValidationError(f"No energy site for device ATTR_ID: {device.id}")
+    raise ServiceValidationError(
+        f"No energy site for device ATTR_ID: {device.id}",
+        translation_domain=DOMAIN,
+        translation_key="no_energy_site_data_for_device",
+        translation_placeholders={"device_id": device.id},
+    )
 
 
 def async_register_services(hass: HomeAssistant) -> None:  # noqa: C901
     """Set up the Teslemetry services."""
-
-    _LOGGER.info("Registering services")
 
     async def navigate_gps_request(call: ServiceCall) -> None:
         """Send lat,lon,order with a vehicle."""
@@ -297,7 +312,7 @@ def async_register_services(hass: HomeAssistant) -> None:  # noqa: C901
             site.api.time_of_use_settings(call.data.get(ATTR_TOU_SETTINGS))
         )
         if "error" in resp:
-            raise ServiceValidationError(resp["error"])
+            raise HomeAssistantError(resp["error"])
 
     hass.services.async_register(
         DOMAIN,

@@ -481,7 +481,19 @@
       "message": "Departure time required to enable preconditioning"
     },
     "set_scheduled_departure_off_peak": {
-      "message": "End off peak time required to enable off peak charging"
+      "message": "To enable scheduled departure, end off peak time is required."
+    },
+    "invalid_device": {
+      "message": "Invalid device ID: {device_id}"
+    },
+    "no_config_entry_for_device": {
+      "message": "No config entry for device ID: {device_id}"
+    },
+    "no_vehicle_data_for_device": {
+      "message": "No vehicle data for device ID: {device_id}"
+    },
+    "no_energy_site_data_for_device": {
+      "message": "No energy site data for device ID: {device_id}"
     }
   },
   "services": {
