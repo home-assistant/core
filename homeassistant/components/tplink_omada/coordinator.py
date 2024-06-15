@@ -18,6 +18,7 @@ POLL_SWITCH_PORT = 300
 POLL_GATEWAY = 300
 POLL_CLIENTS = 300
 
+
 class OmadaCoordinator[_T](DataUpdateCoordinator[dict[str, _T]]):
     """Coordinator for synchronizing bulk Omada data."""
 
@@ -91,7 +92,7 @@ class OmadaGatewayCoordinator(OmadaCoordinator[OmadaGateway]):
 
 
 class OmadaClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
-    """Coordinator for gettings details about the site's connected clients."""
+    """Coordinator for getting details about the site's connected clients."""
 
     def __init__(self, hass: HomeAssistant, omada_client: OmadaSiteClient) -> None:
         """Initialize my coordinator."""
