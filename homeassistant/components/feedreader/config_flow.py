@@ -29,7 +29,7 @@ async def async_fetch_feed(hass: HomeAssistant, url: str) -> feedparser.FeedPars
     return await hass.async_add_executor_job(feedparser.parse, url)
 
 
-class FlowHandler(ConfigFlow, domain=DOMAIN):
+class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
