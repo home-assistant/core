@@ -494,6 +494,9 @@
     },
     "no_energy_site_data_for_device": {
       "message": "No energy site data for device ID: {device_id}"
+    },
+    "command_error": {
+      "message": "Command returned error: {error}"
     }
   },
   "services": {

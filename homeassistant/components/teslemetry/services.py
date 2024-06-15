@@ -312,7 +312,11 @@ def async_register_services(hass: HomeAssistant) -> None:  # noqa: C901
             site.api.time_of_use_settings(call.data.get(ATTR_TOU_SETTINGS))
         )
         if "error" in resp:
-            raise HomeAssistantError(resp["error"])
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_error",
+                translation_placeholders={"error": resp["error"]},
+            )
 
     hass.services.async_register(
         DOMAIN,
