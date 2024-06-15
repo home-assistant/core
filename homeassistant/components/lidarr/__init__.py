@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LidarrConfigEntry) -> bo
         session=async_get_clientsession(hass, host_configuration.verify_ssl),
         request_timeout=60,
     )
-    entry.runtime_data = {
+    coordinators: dict[str, LidarrDataUpdateCoordinator[Any]] = {
         "disk_space": DiskSpaceDataUpdateCoordinator(hass, host_configuration, lidarr),
         "queue": QueueDataUpdateCoordinator(hass, host_configuration, lidarr),
         "status": StatusDataUpdateCoordinator(hass, host_configuration, lidarr),
@@ -50,11 +50,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: LidarrConfigEntry) -> bo
     }
     # Temporary, until we add diagnostic entities
     _version = None
-    for coordinator in entry.runtime_data.values():
+    for coordinator in coordinators.values():
         await coordinator.async_config_entry_first_refresh()
         if isinstance(coordinator, StatusDataUpdateCoordinator):
             _version = coordinator.data
         coordinator.system_version = _version
+    entry.runtime_data = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
