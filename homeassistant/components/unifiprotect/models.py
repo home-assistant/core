@@ -64,8 +64,17 @@ class ProtectEntityDescription(EntityDescription, Generic[T]):
         return True
 
     def __post_init__(self) -> None:
-        """Pre-convert strings to tuples for faster get_nested_attr."""
+        """Pre-convert strings to tuples for faster get_nested_attr.
+
+        get_ufp_value/has_required/get_ufp_enabled are overridden based
+        on what is defined in the dataclass so they only have to be
+        worked out once.
+        """
+
+        # Setter to be able to mutate the frozen dataclass
+        # in __post_init__.
         _setter = partial(object.__setattr__, self)
+
         if (_ufp_value := self.ufp_value) is not None:
             ufp_value = split_tuple(_ufp_value)
             _setter("get_ufp_value", partial(get_nested_attr, attrs=ufp_value))
