@@ -1,5 +1,5 @@
 {
-  "title": "Generic hygrostat",
+  "title": "Generic thermostat",
   "config": {
     "step": {
       "user": {

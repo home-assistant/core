@@ -131,11 +131,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def _async_get_device_info_from_entity_id(
     hass: HomeAssistant, entity_id_or_uuid: str
 ) -> dr.DeviceInfo | None:
+    """Return device information for a linked entity."""
+
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
     entity_id = er.async_validate_entity_id(entity_registry, entity_id_or_uuid)
-
     entity = entity_registry.async_get(entity_id)
     if not entity or not entity.device_id:
         return None
@@ -150,6 +151,36 @@ def _async_get_device_info_from_entity_id(
     )
 
 
+def _async_remove_stale_device_links(
+    hass: HomeAssistant, entry_id: str, entity_id_or_uuid: str
+) -> None:
+    """Remove device link for entry, the source device may have changed."""
+
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+
+    # Resolve source entity device
+    entity_id = er.async_validate_entity_id(entity_registry, entity_id_or_uuid)
+    entity = entity_registry.async_get(entity_id)
+
+    device_id = None
+    if entity:
+        device_id = entity.device_id
+
+    # Removes all devices from the config entry that are not the same as the current device
+    devices = device_registry.devices.get_devices_for_config_entry_id(entry_id)
+    for device in devices:
+        if device.id == device_id:
+            continue
+        device_registry.async_update_device(device.id, remove_config_entry_id=entry_id)
+
+
+def _time_period_or_none(value: Any) -> timedelta | None:
+    if value is None:
+        return None
+    return cast(timedelta, cv.time_period(value))
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -157,6 +188,9 @@ async def async_setup_entry(
 ) -> None:
     """Initialize config entry."""
 
+    _async_remove_stale_device_links(
+        hass, config_entry.entry_id, config_entry.options[CONF_HEATER]
+    )
     device_info = _async_get_device_info_from_entity_id(
         hass, config_entry.options[CONF_HEATER]
     )
@@ -168,12 +202,6 @@ async def async_setup_entry(
         async_add_entities,
         device_info,
     )
-
-
-def _time_period_or_none(value: Any) -> timedelta | None:
-    if value is None:
-        return None
-    return cast(timedelta, cv.time_period(value))
 
 
 async def async_setup_platform(
