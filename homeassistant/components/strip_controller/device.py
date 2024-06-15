@@ -1,11 +1,7 @@
 """TOD."""
 
-import asyncio
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-
-from .const import CONF_IP_ADDRESS, CONF_PORT
 
 
 class ScRpiDevice:
@@ -43,9 +39,4 @@ async def async_create_sc_rpi_device(
     # upnp_device = await factory.async_create_device(location)
 
     # Create profile wrapper.
-    reader, writer = await asyncio.open_connection(
-        config_entry.data[CONF_IP_ADDRESS], config_entry.data[CONF_PORT]
-    )
-    device = ScRpiDevice()
-
-    return device
+    return ScRpiDevice()

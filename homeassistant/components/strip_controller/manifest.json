@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/strip_controller",
   "homekit": {},
   "iot_class": "local_push",
-  "requirements": ["voluptuous==0.13.1", "typing==3.7.4.3"],
+  "requirements": ["voluptuous==0.13.1"],
   "ssdp": [],
   "zeroconf": []
 }

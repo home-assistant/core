@@ -3,8 +3,7 @@
     "step": {
       "user": {
         "data": {
-          "ip": "[%key:common::config_flow::data::ip%]",
-          "port": "[%key:common::config_flow::data::port%]",
+          "url": "[%key:common::config_flow::data::url%]",
           "name": "[%key:common::config_flow::data::name%]",
           "number_of_sections": "Number of sections"
         }

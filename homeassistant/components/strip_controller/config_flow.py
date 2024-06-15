@@ -1,25 +1,27 @@
 """Config flow for Strip Controller integration."""
+
 from __future__ import annotations
 
-import asyncio
+from collections.abc import Mapping
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
-    CONF_IP_ADDRESS,
     CONF_NUMBER_OF_SECTIONS,
     CONF_SECTION_END,
     CONF_SECTION_START,
     CONF_SECTIONS,
     DOMAIN,
 )
+from .scrpi_client import ScRpiClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +37,14 @@ def validate_section(section: tuple[int, int]):
         raise InvalidSection
 
 
+class ConfigFlowResult(FlowResult, total=False):
+    """Typed result dict for config flow."""
+
+    minor_version: int
+    options: Mapping[str, Any]
+    version: int
+
+
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Strip Controller."""
 
@@ -46,14 +56,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._current_step: int = 0
         self._number_of_led: int
         self._device_name: str
-        self._device_address: Optional[str] = None
-        self._device_port: Optional[int] = None
+        self._device_url: str | None = None
         self._number_of_sections: int
         self._sections: list[tuple[int, int]] = []
 
     async def async_step_section(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle configuration of each section in the strip."""
         if user_input is not None:
             try:
@@ -71,8 +80,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 data = {
                     CONF_SECTIONS: self._sections,
-                    CONF_IP_ADDRESS: self._device_address,
-                    CONF_PORT: self._device_port,
+                    CONF_URL: self._device_url,
                 }
                 return self.async_create_entry(title=self._device_name, data=data)
 
@@ -85,25 +93,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
             # TOD: device duplication should be check by MAC address or get IP associated to a hostname in order to raise AbortFlow("already_configured") in case of duplication
-            self._async_abort_entries_match(
-                {
-                    CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
-                    CONF_PORT: user_input[CONF_PORT],
-                }
-            )
+            self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
 
-            await self._async_get_device(
-                user_input[CONF_IP_ADDRESS], user_input[CONF_PORT]
-            )
+            await self._async_get_device(user_input[CONF_URL])
 
             self._number_of_sections = user_input[CONF_NUMBER_OF_SECTIONS]
             self._device_name = user_input[CONF_NAME]
-            self._device_address = user_input[CONF_IP_ADDRESS]
-            self._device_port = user_input[CONF_PORT]
+            self._device_url = user_input[CONF_URL]
             self._number_of_led = await self._get_number_of_led()
             return self._next_step()
 
@@ -114,13 +114,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             last_step=False,
         )
 
-    async def _async_get_device(self, host: str, port: int):
+    async def _async_get_device(self, url: str):
         """Get device information from WLED device."""
-        reader, writer = await asyncio.open_connection(host, port)
         # implement similar to wled but using websockets with the session for HTTP obtained as in _async_get_device of wled config flow
         # wled = WLED(host, session=session)
         # TOD: CONTINUE https://developers.home-assistant.io/docs/integration_fetching_data/
-        # TOD: check only one TCP socket is open
+        session = async_get_clientsession(self.hass)
+        scrpi_client = ScRpiClient(session)
+        await scrpi_client.connect()
 
     async def _get_number_of_led(self):
         # TOD: obtain number of led to set default section length with it (0 to number_of_led)
@@ -132,7 +133,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _is_last_step(self):
         return self._current_step == self._number_of_sections
 
-    def _next_step(self) -> FlowResult:
+    def _next_step(self) -> ConfigFlowResult:
         self._current_step = self._current_step + 1
         return self.async_show_form(
             step_id="section",
@@ -159,8 +160,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return vol.Schema(
             {
                 vol.Required(CONF_NAME, default=None): str,
-                vol.Required(CONF_IP_ADDRESS, default=None): str,
-                vol.Required(CONF_PORT, default=None): int,
+                vol.Required(CONF_URL, default=None): str,
                 vol.Required(CONF_NUMBER_OF_SECTIONS, default=None): int,
             }
         )
