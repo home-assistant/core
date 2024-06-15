@@ -97,6 +97,17 @@ class MadvrRemote(CoordinatorEntity, RemoteEntity):
         """Return true if the device is on."""
         return self.madvr_client.connected()
 
+    @property
+    def should_poll(self) -> bool:
+        """Poll."""
+        return False
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return extra state attributes."""
+        # Useful for making sensors
+        return self.madvr_client.msg_dict
+
     async def handle_queue(self):
         """Handle command queue."""
         while True:

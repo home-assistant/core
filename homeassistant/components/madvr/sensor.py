@@ -80,7 +80,7 @@ class MadvrIncomingResSensor(MadvrBaseSensor):
             coordinator,
             f"{coordinator.name} Incoming Resolution",
             "incoming_res",
-            entry_id,
+            f"{entry_id}_incoming_res",
         )
 
 
@@ -92,7 +92,7 @@ class MadvrIncomingFrameRateSensor(MadvrBaseSensor):
             coordinator,
             f"{coordinator.name} Incoming Frame Rate",
             "incoming_frame_rate",
-            entry_id,
+            f"{entry_id}_incoming_frame_rate",
         )
 
 
@@ -104,7 +104,7 @@ class MadvrIncomingColorSpaceSensor(MadvrBaseSensor):
             coordinator,
             f"{coordinator.name} Incoming Color Space",
             "incoming_color_space",
-            entry_id,
+            f"{entry_id}_incoming_color_space",
         )
 
 
@@ -116,7 +116,7 @@ class MadvrIncomingBitDepthSensor(MadvrBaseSensor):
             coordinator,
             f"{coordinator.name} Incoming Bit Depth",
             "incoming_bit_depth",
-            entry_id,
+            f"{entry_id}_incoming_bit_depth",
         )
 
 
@@ -128,7 +128,7 @@ class MadvrIncomingColorimetrySensor(MadvrBaseSensor):
             coordinator,
             f"{coordinator.name} Incoming Colorimetry",
             "incoming_colorimetry",
-            entry_id,
+            f"{entry_id}_incoming_colorimetry",
         )
 
 
@@ -140,7 +140,7 @@ class MadvrIncomingBlackLevelsSensor(MadvrBaseSensor):
             coordinator,
             f"{coordinator.name} Incoming Black Levels",
             "incoming_black_levels",
-            entry_id,
+            f"{entry_id}_incoming_black_levels",
         )
 
 
@@ -152,7 +152,7 @@ class MadvrIncomingAspectRatioSensor(MadvrBaseSensor):
             coordinator,
             f"{coordinator.name} Incoming Aspect Ratio",
             "incoming_aspect_ratio",
-            entry_id,
+            f"{entry_id}_incoming_aspect_ratio",
         )
 
 
@@ -164,7 +164,7 @@ class MadvrOutgoingResSensor(MadvrBaseSensor):
             coordinator,
             f"{coordinator.name} Outgoing Resolution",
             "outgoing_res",
-            entry_id,
+            f"{entry_id}_outgoing_res",
         )
 
 
@@ -176,7 +176,7 @@ class MadvrOutgoingFrameRateSensor(MadvrBaseSensor):
             coordinator,
             f"{coordinator.name} Outgoing Frame Rate",
             "outgoing_frame_rate",
-            entry_id,
+            f"{entry_id}_outgoing_frame_rate",
         )
 
 
@@ -188,7 +188,7 @@ class MadvrOutgoingColorSpaceSensor(MadvrBaseSensor):
             coordinator,
             f"{coordinator.name} Outgoing Color Space",
             "outgoing_color_space",
-            entry_id,
+            f"{entry_id}_outgoing_color_space",
         )
 
 
@@ -200,7 +200,7 @@ class MadvrOutgoingBitDepthSensor(MadvrBaseSensor):
             coordinator,
             f"{coordinator.name} Outgoing Bit Depth",
             "outgoing_bit_depth",
-            entry_id,
+            f"{entry_id}_outgoing_bit_depth",
         )
 
 
@@ -212,7 +212,7 @@ class MadvrOutgoingHDRFlagSensor(MadvrBaseSensor):
             coordinator,
             f"{coordinator.name} Outgoing HDR Flag",
             "outgoing_hdr_flag",
-            entry_id,
+            f"{entry_id}_outgoing_hdr_flag",
         )
 
 
@@ -224,7 +224,7 @@ class MadvrOutgoingColorimetrySensor(MadvrBaseSensor):
             coordinator,
             f"{coordinator.name} Outgoing Colorimetry",
             "outgoing_colorimetry",
-            entry_id,
+            f"{entry_id}_outgoing_colorimetry",
         )
 
 
@@ -236,7 +236,7 @@ class MadvrOutgoingBlackLevelsSensor(MadvrBaseSensor):
             coordinator,
             f"{coordinator.name} Outgoing Black Levels",
             "outgoing_black_levels",
-            entry_id,
+            f"{entry_id}_outgoing_black_levels",
         )
 
 
@@ -248,7 +248,7 @@ class MadvrAspectResSensor(MadvrBaseSensor):
             coordinator,
             f"{coordinator.name} Aspect Ratio Resolution",
             "aspect_res",
-            entry_id,
+            f"{entry_id}_aspect_res",
         )
 
 
@@ -260,7 +260,7 @@ class MadvrAspectDecSensor(MadvrBaseSensor):
             coordinator,
             f"{coordinator.name} Aspect Ratio Decimal",
             "aspect_dec",
-            entry_id,
+            f"{entry_id}_aspect_dec",
         )
 
 
@@ -272,7 +272,7 @@ class MadvrAspectIntSensor(MadvrBaseSensor):
             coordinator,
             f"{coordinator.name} Aspect Ratio Integer",
             "aspect_int",
-            entry_id,
+            f"{entry_id}_aspect_int",
         )
 
 
@@ -284,7 +284,7 @@ class MadvrAspectNameSensor(MadvrBaseSensor):
             coordinator,
             f"{coordinator.name} Aspect Ratio Name",
             "aspect_name",
-            entry_id,
+            f"{entry_id}_aspect_name",
         )
 
 
@@ -296,7 +296,7 @@ class MadvrMaskingResSensor(MadvrBaseSensor):
             coordinator,
             f"{coordinator.name} Masking Resolution",
             "masking_res",
-            entry_id,
+            f"{entry_id}_masking_res",
         )
 
 
@@ -305,7 +305,10 @@ class MadvrMaskingDecSensor(MadvrBaseSensor):
 
     def __init__(self, coordinator: MadVRCoordinator, entry_id: str) -> None:
         super().__init__(
-            coordinator, f"{coordinator.name} Masking Decimal", "masking_dec", entry_id
+            coordinator,
+            f"{coordinator.name} Masking Decimal",
+            "masking_dec",
+            f"{entry_id}_masking_dec",
         )
 
 
@@ -314,7 +317,10 @@ class MadvrMaskingIntSensor(MadvrBaseSensor):
 
     def __init__(self, coordinator: MadVRCoordinator, entry_id: str) -> None:
         super().__init__(
-            coordinator, f"{coordinator.name} Masking Integer", "masking_int", entry_id
+            coordinator,
+            f"{coordinator.name} Masking Integer",
+            "masking_int",
+            f"{entry_id}_masking_int",
         )
 
 
@@ -323,7 +329,10 @@ class MadvrProfileNameSensor(MadvrBaseSensor):
 
     def __init__(self, coordinator: MadVRCoordinator, entry_id: str) -> None:
         super().__init__(
-            coordinator, f"{coordinator.name} Profile Name", "profile_name", entry_id
+            coordinator,
+            f"{coordinator.name} Profile Name",
+            "profile_name",
+            f"{entry_id}_profile_name",
         )
 
 
@@ -332,5 +341,8 @@ class MadvrProfileNumSensor(MadvrBaseSensor):
 
     def __init__(self, coordinator: MadVRCoordinator, entry_id: str) -> None:
         super().__init__(
-            coordinator, f"{coordinator.name} Profile Number", "profile_num", entry_id
+            coordinator,
+            f"{coordinator.name} Profile Number",
+            "profile_num",
+            f"{entry_id}_profile_num",
         )
