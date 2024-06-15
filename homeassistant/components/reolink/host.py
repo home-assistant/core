@@ -77,6 +77,7 @@ class ReolinkHost:
         self._update_cmd: defaultdict[str, defaultdict[int | None, int]] = defaultdict(
             lambda: defaultdict(int)
         )
+        self.firmware_ch_list: list[int | None] = []
 
         self.webhook_id: str | None = None
         self._onvif_push_supported: bool = True

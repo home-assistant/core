@@ -423,11 +423,11 @@ async def test_async_get_hass_can_be_called(hass: HomeAssistant) -> None:
         try:
             if ha.async_get_hass() is hass:
                 return True
-            raise Exception
+            raise Exception  # pylint: disable=broad-exception-raised
         except HomeAssistantError:
             return False
 
-        raise Exception
+        raise Exception  # pylint: disable=broad-exception-raised
 
     # Test scheduling a coroutine which calls async_get_hass via hass.async_create_task
     async def _async_create_task() -> None:
@@ -647,7 +647,9 @@ async def test_stage_shutdown_timeouts(hass: HomeAssistant) -> None:
     assert hass.state is CoreState.stopped
 
 
-async def test_stage_shutdown_generic_error(hass: HomeAssistant, caplog) -> None:
+async def test_stage_shutdown_generic_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Simulate a shutdown, test that a generic error at the final stage doesn't prevent it."""
 
     task = asyncio.Future()
@@ -2230,7 +2232,7 @@ async def test_async_run_job_starts_coro_eagerly(hass: HomeAssistant) -> None:
 
 def test_valid_entity_id() -> None:
     """Test valid entity ID."""
-    for invalid in [
+    for invalid in (
         "_light.kitchen",
         ".kitchen",
         ".light.kitchen",
@@ -2243,10 +2245,10 @@ def test_valid_entity_id() -> None:
         "Light.kitchen",
         "light.Kitchen",
         "lightkitchen",
-    ]:
+    ):
         assert not ha.valid_entity_id(invalid), invalid
 
-    for valid in [
+    for valid in (
         "1.a",
         "1light.kitchen",
         "a.1",
@@ -2255,13 +2257,13 @@ def test_valid_entity_id() -> None:
         "light.1kitchen",
         "light.kitchen",
         "light.something_yoo",
-    ]:
+    ):
         assert ha.valid_entity_id(valid), valid
 
 
 def test_valid_domain() -> None:
     """Test valid domain."""
-    for invalid in [
+    for invalid in (
         "_light",
         ".kitchen",
         ".light.kitchen",
@@ -2272,16 +2274,16 @@ def test_valid_domain() -> None:
         "light.kitchen_yo_",
         "light.kitchen.",
         "Light",
-    ]:
+    ):
         assert not ha.valid_domain(invalid), invalid
 
-    for valid in [
+    for valid in (
         "1",
         "1light",
         "a",
         "input_boolean",
         "light",
-    ]:
+    ):
         assert ha.valid_domain(valid), valid
 
 
