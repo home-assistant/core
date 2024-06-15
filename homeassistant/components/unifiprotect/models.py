@@ -7,7 +7,8 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from operator import attrgetter
+from typing import Any, Generic, TypeVar
 
 from uiprotect.data import NVR, Event, ProtectAdoptableDeviceModel
 
@@ -18,13 +19,6 @@ from .utils import get_nested_attr
 _LOGGER = logging.getLogger(__name__)
 
 T = TypeVar("T", bound=ProtectAdoptableDeviceModel | NVR)
-
-
-def split_tuple(value: tuple[str, ...] | str) -> tuple[str, ...]:
-    """Split string to tuple."""
-    if TYPE_CHECKING:
-        assert isinstance(value, str)
-    return tuple(value.split("."))
 
 
 class PermRequired(int, Enum):
@@ -39,21 +33,20 @@ class PermRequired(int, Enum):
 class ProtectEntityDescription(EntityDescription, Generic[T]):
     """Mixin for required keys."""
 
-    # `ufp_required_field`, `ufp_value`, and `ufp_enabled` are defined as
-    # a `str` in the dataclass, but `__post_init__` converts it to a
-    # `tuple[str, ...]` to avoid doing it at run time in `get_nested_attr`
-    # which is usually called millions of times per day.
-    ufp_required_field: tuple[str, ...] | str | None = None
-    ufp_value: tuple[str, ...] | str | None = None
+    ufp_required_field: str | None = None
+    ufp_value: str | None = None
     ufp_value_fn: Callable[[T], Any] | None = None
-    ufp_enabled: tuple[str, ...] | str | None = None
+    ufp_enabled: str | None = None
     ufp_perm: PermRequired | None = None
 
     def get_ufp_value(self, obj: T) -> Any:
         """Return value from UniFi Protect device."""
-        raise RuntimeError(
+        # ufp_value or ufp_value_fn is required, the
+        # RuntimeError is to catch any issues in the code
+        # with new descriptions.
+        raise RuntimeError(  # pragma: no cover
             "`ufp_value` or `ufp_value_fn` is required"
-        )  # pragma: no cover
+        )
 
     def has_required(self, obj: T) -> bool:
         """Return if required field is set."""
@@ -76,17 +69,17 @@ class ProtectEntityDescription(EntityDescription, Generic[T]):
         _setter = partial(object.__setattr__, self)
 
         if (_ufp_value := self.ufp_value) is not None:
-            ufp_value = split_tuple(_ufp_value)
+            ufp_value = tuple(_ufp_value.split("."))
             _setter("get_ufp_value", partial(get_nested_attr, attrs=ufp_value))
         elif (ufp_value_fn := self.ufp_value_fn) is not None:
             _setter("get_ufp_value", ufp_value_fn)
 
         if (_ufp_enabled := self.ufp_enabled) is not None:
-            ufp_enabled = split_tuple(_ufp_enabled)
+            ufp_enabled = tuple(_ufp_enabled.split("."))
             _setter("get_ufp_enabled", partial(get_nested_attr, attrs=ufp_enabled))
 
         if (_ufp_required_field := self.ufp_required_field) is not None:
-            ufp_required_field = split_tuple(_ufp_required_field)
+            ufp_required_field = tuple(_ufp_required_field.split("."))
             _setter(
                 "has_required",
                 lambda obj: bool(get_nested_attr(obj, ufp_required_field)),
@@ -101,15 +94,16 @@ class ProtectEventMixin(ProtectEntityDescription[T]):
 
     def get_event_obj(self, obj: T) -> Event | None:
         """Return value from UniFi Protect device."""
-
-        if self.ufp_event_obj is not None:
-            event: Event | None = getattr(obj, self.ufp_event_obj, None)
-            return event
         return None
+
+    def __post_init__(self) -> None:
+        """Override get_event_obj if ufp_event_obj is set."""
+        if (_ufp_event_obj := self.ufp_event_obj) is not None:
+            object.__setattr__(self, "get_event_obj", attrgetter(_ufp_event_obj))
+        super().__post_init__()
 
     def get_is_on(self, obj: T, event: Event | None) -> bool:
         """Return value if event is active."""
-
         return event is not None and self.get_ufp_value(obj)
 
 

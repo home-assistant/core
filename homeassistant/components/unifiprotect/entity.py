@@ -301,8 +301,7 @@ class ProtectNVREntity(BaseProtectEntity):
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         data = self.data
-        last_update_success = data.last_update_success
-        if last_update_success:
+        if last_update_success := data.last_update_success:
             self.device = data.api.bootstrap.nvr
 
         self._attr_available = last_update_success
@@ -315,24 +314,19 @@ class EventEntityMixin(ProtectDeviceEntity):
 
     entity_description: ProtectEventMixin
 
-    def __init__(
-        self,
-        *args: Any,
-        **kwarg: Any,
-    ) -> None:
+    def __init__(self, *args: Any, **kwarg: Any) -> None:
         """Init an sensor that has event thumbnails."""
         super().__init__(*args, **kwarg)
         self._event: Event | None = None
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        event = self.entity_description.get_event_obj(device)
-        if event is not None:
+        if (event := self.entity_description.get_event_obj(device)) is None:
+            self._attr_extra_state_attributes = {}
+        else:
             self._attr_extra_state_attributes = {
                 ATTR_EVENT_ID: event.id,
                 ATTR_EVENT_SCORE: event.score,
             }
-        else:
-            self._attr_extra_state_attributes = {}
         self._event = event
         super()._async_update_device_from_protect(device)
