@@ -4,7 +4,6 @@ from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant.components.radarr.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -22,7 +21,7 @@ async def test_calendar(
     """Test for successfully setting up the Radarr platform."""
     freezer.move_to("2021-12-02 00:00:00-08:00")
     entry = await setup_integration(hass, aioclient_mock)
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]["calendar"]
+    coordinator: DataUpdateCoordinator = entry.runtime_data.calendar
 
     state = hass.states.get("calendar.mock_title")
     assert state.state == STATE_ON
