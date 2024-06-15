@@ -40,7 +40,10 @@ class ProtectEntityDescription(EntityDescription, Generic[T]):
     ufp_perm: PermRequired | None = None
 
     def get_ufp_value(self, obj: T) -> Any:
-        """Return value from UniFi Protect device."""
+        """Return value from UniFi Protect device.
+
+        May be overridden by ufp_value or ufp_value_fn.
+        """
         # ufp_value or ufp_value_fn is required, the
         # RuntimeError is to catch any issues in the code
         # with new descriptions.
@@ -49,11 +52,17 @@ class ProtectEntityDescription(EntityDescription, Generic[T]):
         )
 
     def has_required(self, obj: T) -> bool:
-        """Return if required field is set."""
+        """Return if required field is set.
+
+        May be overridden by ufp_required_field.
+        """
         return True
 
     def get_ufp_enabled(self, obj: T) -> bool:
-        """Return if entity is enabled."""
+        """Return if entity is enabled.
+
+        May be overridden by ufp_enabled.
+        """
         return True
 
     def __post_init__(self) -> None:
