@@ -23,7 +23,7 @@ def manage_water_heater_fallback_issue(
                 domain=DOMAIN,
                 issue_id=f"water_heater_fallback_{water_heater_entity.zone_name}",
                 is_fixable=False,
-                is_persistent=True,
+                is_persistent=False,
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="water_heater_fallback",
             )
