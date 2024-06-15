@@ -445,7 +445,7 @@ class KNXModule:
         if tasks := [device.after_update() for device in self.xknx.devices]:
             await asyncio.gather(*tasks)
 
-    async def telegram_received_cb(self, telegram: Telegram) -> None:
+    def telegram_received_cb(self, telegram: Telegram) -> None:
         """Call invoked after a KNX telegram was received."""
         # Not all telegrams have serializable data.
         data: int | tuple[int, ...] | None = None

@@ -93,7 +93,7 @@ class Telegrams:
         if self.recent_telegrams:
             await self._history_store.async_save(list(self.recent_telegrams))
 
-    async def _xknx_telegram_cb(self, telegram: Telegram) -> None:
+    def _xknx_telegram_cb(self, telegram: Telegram) -> None:
         """Handle incoming and outgoing telegrams from xknx."""
         telegram_dict = self.telegram_to_dict(telegram)
         self.recent_telegrams.append(telegram_dict)
