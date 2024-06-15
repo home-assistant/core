@@ -487,7 +487,6 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
         """Initialize an UniFi Protect Switch."""
         super().__init__(data, device, description)
         self._attr_name = f"{self.device.display_name} {self.entity_description.name}"
-        self._switch_type = self.entity_description.key
 
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
