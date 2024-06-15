@@ -86,12 +86,12 @@ class KNXSelect(KnxEntity, SelectEntity, RestoreEntity):
                     self._option_payloads.get(last_state.state)
                 )
 
-    async def after_update_callback(self, device: XknxDevice) -> None:
+    def after_update_callback(self, device: XknxDevice) -> None:
         """Call after device was updated."""
         self._attr_current_option = self.option_from_payload(
             self._device.remote_value.value
         )
-        await super().after_update_callback(device)
+        super().after_update_callback(device)
 
     def option_from_payload(self, payload: int | None) -> str | None:
         """Return the option a given payload is assigned to."""
