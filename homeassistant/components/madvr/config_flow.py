@@ -48,12 +48,9 @@ class MadVRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Test if we can connect to the device."""
         try:
             madvr_client = Madvr(host=host, port=port)
-            await asyncio.wait_for(madvr_client.open_connection(), timeout=5)
+            await asyncio.wait_for(madvr_client.open_connection(), timeout=10)
             madvr_client.stop()
             await madvr_client.close_connection()
-            # dont want it pinging until added
-            if madvr_client.ping_task:
-                madvr_client.ping_task.cancel()
         except (TimeoutError, aiohttp.ClientError, OSError) as err:
             raise CannotConnect from err
 

@@ -4,6 +4,7 @@
 taken from https://github.com/remcohaszing/pywakeonlan/blob/main/wakeonlan/__init__.py
 """
 
+import logging
 import socket
 
 BROADCAST_IP = "255.255.255.255"
@@ -37,6 +38,7 @@ def send_magic_packet(
     ip_address: str = BROADCAST_IP,
     port: int = DEFAULT_PORT,
     interface: str | None = None,
+    logger: logging.Logger | None = None,
 ) -> None:
     """Wake up computers having any of the given mac addresses.
 
@@ -49,6 +51,7 @@ def send_magic_packet(
         ip_address: the ip address of the host to send the magic packet to.
         port: the port of the host to send the magic packet to.
         interface: the ip address of the network adapter to route the magic packet through.
+        logger: a logger
 
     """
     packets = [create_magic_packet(mac) for mac in macs]
@@ -59,4 +62,6 @@ def send_magic_packet(
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         sock.connect((ip_address, port))
         for packet in packets:
+            if logger:
+                logger.debug("Sending magic packet to %s", macs)
             sock.send(packet)

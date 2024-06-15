@@ -51,7 +51,7 @@ class MadvrPowerStateBinarySensor(MadvrBaseBinarySensor):
     @property
     def is_on(self) -> bool:
         """Return true if the device is on."""
-        return self.coordinator.my_api.device_on
+        return self.coordinator.my_api.is_on
 
 
 class MadvrSignalStateBinarySensor(MadvrBaseBinarySensor):

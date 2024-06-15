@@ -66,13 +66,7 @@ class MadvrRemote(CoordinatorEntity, RemoteEntity):
         """Run when entity about to be added to hass."""
         # open connection if not already connected
         await super().async_added_to_hass()
-        try:
-            if not self.madvr_client.connected():
-                _LOGGER.debug("Opening connection because not connected")
-                await self.madvr_client.open_connection()
-        except (TimeoutError, OSError) as err:
-            _LOGGER.error("Unexpected error when opening connection: %s", err)
-            raise ConnectionError from err
+
         # handle queue
         task_queue = self.hass.loop.create_task(self.handle_queue())
         self.tasks.append(task_queue)
@@ -95,7 +89,7 @@ class MadvrRemote(CoordinatorEntity, RemoteEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the device is on."""
-        return self.madvr_client.connected()
+        return self.madvr_client.is_on
 
     @property
     def should_poll(self) -> bool:
@@ -163,10 +157,11 @@ class MadvrRemote(CoordinatorEntity, RemoteEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
-        send_magic_packet(self.mac)
+        _LOGGER.debug("Turning on with mac %s", self.mac)
+        send_magic_packet(self.mac, logger=_LOGGER)
         await asyncio.sleep(5)
         self.stop_processing_commands.clear()
-
+        _LOGGER.debug("Firing event to turn on")
         # Fire power state change event
         event_data = {
             "device_id": self.entry_id,
