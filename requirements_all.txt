@@ -547,7 +547,7 @@ beautifulsoup4==4.12.3
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.39.0
+bellows==0.39.1
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected[china]==0.15.3
@@ -634,7 +634,7 @@ bthomehub5-devicelist==0.1.1
 btsmarthub-devicelist==0.2.3
 
 # homeassistant.components.buienradar
-buienradar==1.0.5
+buienradar==1.0.6
 
 # homeassistant.components.dhcp
 cached_ipaddress==0.3.0
@@ -961,7 +961,7 @@ glances-api==0.8.0
 goalzero==0.2.2
 
 # homeassistant.components.goodwe
-goodwe==0.3.5
+goodwe==0.3.6
 
 # homeassistant.components.google_mail
 # homeassistant.components.google_tasks
@@ -1087,7 +1087,7 @@ hole==0.8.0
 holidays==0.50
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240610.0
+home-assistant-frontend==20240610.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.6.5
@@ -2779,7 +2779,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==0.4.1
+uiprotect==1.7.2
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2981,7 +2981,7 @@ zigpy-zigate==0.12.0
 zigpy-znp==0.12.1
 
 # homeassistant.components.zha
-zigpy==0.64.0
+zigpy==0.64.1
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4

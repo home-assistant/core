@@ -32,7 +32,8 @@ from .const import (
     TYPE_HOT_WATER,
 )
 from .entity import TadoZoneEntity
-from .helper import decide_overlay_mode
+from .helper import decide_duration, decide_overlay_mode
+from .repairs import manage_water_heater_fallback_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,6 +80,12 @@ async def async_setup_entry(
     )
 
     async_add_entities(entities, True)
+
+    manage_water_heater_fallback_issue(
+        hass=hass,
+        water_heater_entities=entities,
+        integration_overlay_fallback=tado.fallback,
+    )
 
 
 def _generate_entities(tado: TadoConnector) -> list[WaterHeaterEntity]:
@@ -283,7 +290,12 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
             duration=duration,
             zone_id=self.zone_id,
         )
-
+        duration = decide_duration(
+            tado=self._tado,
+            duration=duration,
+            zone_id=self.zone_id,
+            overlay_mode=overlay_mode,
+        )
         _LOGGER.debug(
             "Switching to %s for zone %s (%d) with temperature %s",
             self._current_tado_hvac_mode,
