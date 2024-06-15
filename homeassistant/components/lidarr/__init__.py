@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from dataclasses import dataclass, fields
 
 from aiopyarr.lidarr_client import LidarrClient
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
@@ -25,9 +25,19 @@ from .coordinator import (
     WantedDataUpdateCoordinator,
 )
 
-type LidarrConfigEntry = ConfigEntry[dict[str, LidarrDataUpdateCoordinator[Any]]]
+type LidarrConfigEntry = ConfigEntry[LidarrData]
 
 PLATFORMS = [Platform.SENSOR]
+
+
+@dataclass(kw_only=True, slots=True)
+class LidarrData:
+    """Lidarr data type."""
+
+    disk_space: DiskSpaceDataUpdateCoordinator
+    queue: QueueDataUpdateCoordinator
+    status: StatusDataUpdateCoordinator
+    wanted: WantedDataUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LidarrConfigEntry) -> bool:
@@ -42,20 +52,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: LidarrConfigEntry) -> bo
         session=async_get_clientsession(hass, host_configuration.verify_ssl),
         request_timeout=60,
     )
-    coordinators: dict[str, LidarrDataUpdateCoordinator[Any]] = {
-        "disk_space": DiskSpaceDataUpdateCoordinator(hass, host_configuration, lidarr),
-        "queue": QueueDataUpdateCoordinator(hass, host_configuration, lidarr),
-        "status": StatusDataUpdateCoordinator(hass, host_configuration, lidarr),
-        "wanted": WantedDataUpdateCoordinator(hass, host_configuration, lidarr),
-    }
+    data = LidarrData(
+        disk_space=DiskSpaceDataUpdateCoordinator(hass, host_configuration, lidarr),
+        queue=QueueDataUpdateCoordinator(hass, host_configuration, lidarr),
+        status=StatusDataUpdateCoordinator(hass, host_configuration, lidarr),
+        wanted=WantedDataUpdateCoordinator(hass, host_configuration, lidarr),
+    )
     # Temporary, until we add diagnostic entities
     _version = None
-    for coordinator in coordinators.values():
+    for field in fields(data):
+        coordinator = getattr(data, field.name)
         await coordinator.async_config_entry_first_refresh()
         if isinstance(coordinator, StatusDataUpdateCoordinator):
             _version = coordinator.data
         coordinator.system_version = _version
-    entry.runtime_data = coordinators
+    entry.runtime_data = data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

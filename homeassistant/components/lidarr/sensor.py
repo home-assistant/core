@@ -111,7 +111,7 @@ async def async_setup_entry(
     """Set up Lidarr sensors based on a config entry."""
     entities: list[LidarrSensor[Any]] = []
     for coordinator_type, description in SENSOR_TYPES.items():
-        coordinator = entry.runtime_data[coordinator_type]
+        coordinator = getattr(entry.runtime_data, coordinator_type)
         if coordinator_type != "disk_space":
             entities.append(LidarrSensor(coordinator, description))
         else:
