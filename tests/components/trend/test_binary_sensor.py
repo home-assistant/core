@@ -392,6 +392,6 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(trend_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    trend_entity = entity_registry.async_get("sensor.trend")
+    trend_entity = entity_registry.async_get("binary_sensor.trend")
     assert trend_entity is not None
     assert trend_entity.device_id == source_entity.device_id
