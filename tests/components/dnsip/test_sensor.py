@@ -12,13 +12,14 @@ from homeassistant.components.dnsip.const import (
     CONF_HOSTNAME,
     CONF_IPV4,
     CONF_IPV6,
+    CONF_PORT_IPV6,
     CONF_RESOLVER,
     CONF_RESOLVER_IPV6,
     DOMAIN,
 )
 from homeassistant.components.dnsip.sensor import SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE
+from homeassistant.const import CONF_NAME, CONF_PORT, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import RetrieveDNS
@@ -40,6 +41,8 @@ async def test_sensor(hass: HomeAssistant) -> None:
         options={
             CONF_RESOLVER: "208.67.222.222",
             CONF_RESOLVER_IPV6: "2620:119:53::53",
+            CONF_PORT: 53,
+            CONF_PORT_IPV6: 53,
         },
         entry_id="1",
         unique_id="home-assistant.io",
@@ -83,6 +86,8 @@ async def test_sensor_no_response(
         options={
             CONF_RESOLVER: "208.67.222.222",
             CONF_RESOLVER_IPV6: "2620:119:53::53",
+            CONF_PORT: 53,
+            CONF_PORT_IPV6: 53,
         },
         entry_id="1",
         unique_id="home-assistant.io",
