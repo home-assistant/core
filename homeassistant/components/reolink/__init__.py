@@ -229,6 +229,23 @@ def migrate_entity_ids(
     hass: HomeAssistant, config_entry_id: str, host: ReolinkHost
 ) -> None:
     """Migrate entity IDs if needed."""
+    device_reg = dr.async_get(hass)
+    devices = dr.async_entries_for_config_entry(device_reg, config_entry_id)
+    ch_device_ids = {}
+    for device in devices:
+        device_uid = [
+            dev_id[1].split("_")
+            for dev_id in device.identifiers
+            if dev_id[0] == DOMAIN
+        ][0]
+        
+        if len(device_uid) < 2:
+            # Do not consider the NVR itself
+            continue
+
+        ch = host.api.channel_for_uid(device.serial_number)
+        ch_device_ids[device.id] = ch
+
     entity_reg = er.async_get(hass)
     entities = er.async_entries_for_config_entry(entity_reg, config_entry_id)
     for entity in entities:
@@ -237,3 +254,13 @@ def migrate_entity_ids(
             entity_reg.async_update_entity(
                 entity.entity_id, new_unique_id=f"{host.unique_id}_firmware"
             )
+        if host.api.supported(None, "UID") and not entity.unique_id.startswith(host.unique_id):
+            new_id = f"{host.unique_id}_{entity.unique_id.split("_", 1)[1]}"
+            entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_id)
+
+        if entity.device_id in ch_device_ids:
+            ch = ch_device_ids[entity.device_id]
+            id_parts = entity.unique_id.split("_", 2)
+            if host.api.supported(ch, "UID") and id_parts[1] != self._host.api.camera_uid(ch):
+                new_id = f"{host.unique_id}_{self._host.api.camera_uid(ch)}_{id_parts[2]}"
+                entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_id)
