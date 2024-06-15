@@ -20,7 +20,14 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from .conftest import TEST_CAM_MODEL, TEST_HOST_MODEL, TEST_MAC, TEST_NVR_NAME
+from .conftest import (
+    TEST_CAM_MODEL,
+    TEST_HOST_MODEL,
+    TEST_MAC,
+    TEST_NVR_NAME,
+    TEST_UID,
+    TEST_UID_CAM,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -178,17 +185,104 @@ async def test_cleanup_disconnected_cams(
     assert sorted(device_models) == sorted(expected_models)
 
 
+@pytest.mark.parametrize(
+    (
+        "original_id",
+        "new_id",
+        "original_dev_id",
+        "new_dev_id",
+        "domain",
+        "support_uid",
+        "support_ch_uid",
+    ),
+    [
+        (
+            TEST_MAC,
+            f"{TEST_MAC}_firmware",
+            f"{TEST_MAC}",
+            f"{TEST_MAC}",
+            Platform.UPDATE,
+            False,
+            False,
+        ),
+        (
+            TEST_MAC,
+            f"{TEST_UID}_firmware",
+            f"{TEST_MAC}",
+            f"{TEST_UID}",
+            Platform.UPDATE,
+            True,
+            False,
+        ),
+        (
+            f"{TEST_MAC}_0_record_audio",
+            f"{TEST_UID}_0_record_audio",
+            f"{TEST_MAC}_ch0",
+            f"{TEST_UID}_ch0",
+            Platform.SWITCH,
+            True,
+            False,
+        ),
+        (
+            f"{TEST_MAC}_0_record_audio",
+            f"{TEST_MAC}_{TEST_UID_CAM}_record_audio",
+            f"{TEST_MAC}_ch0",
+            f"{TEST_MAC}_{TEST_UID_CAM}",
+            Platform.SWITCH,
+            False,
+            True,
+        ),
+        (
+            f"{TEST_MAC}_0_record_audio",
+            f"{TEST_UID}_{TEST_UID_CAM}_record_audio",
+            f"{TEST_MAC}_ch0",
+            f"{TEST_UID}_{TEST_UID_CAM}",
+            Platform.SWITCH,
+            True,
+            True,
+        ),
+        (
+            f"{TEST_UID}_0_record_audio",
+            f"{TEST_UID}_{TEST_UID_CAM}_record_audio",
+            f"{TEST_UID}_ch0",
+            f"{TEST_UID}_{TEST_UID_CAM}",
+            Platform.SWITCH,
+            True,
+            True,
+        ),
+    ],
+)
 async def test_migrate_entity_ids(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     reolink_connect: MagicMock,
     entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    original_id: str,
+    new_id: str,
+    original_dev_id: str,
+    new_dev_id: str,
+    domain: Platform,
+    support_uid: bool,
+    support_ch_uid: bool,
 ) -> None:
     """Test entity ids that need to be migrated."""
+
+    def mock_supported(ch, capability):
+        if capability == "UID" and ch is None:
+            return support_uid
+        if capability == "UID":
+            return support_ch_uid
+        return True
+
     reolink_connect.channels = [0]
-    original_id = f"{TEST_MAC}"
-    new_id = f"{TEST_MAC}_firmware"
-    domain = Platform.UPDATE
+    reolink_connect.supported = mock_supported
+
+    dev_entry = device_registry.async_get_or_create(
+        identifiers={(const.DOMAIN, original_dev_id)},
+        config_entry_id=config_entry.entry_id,
+        disabled_by=None,
+    )
 
     entity_registry.async_get_or_create(
         domain=domain,
@@ -197,10 +291,20 @@ async def test_migrate_entity_ids(
         config_entry=config_entry,
         suggested_object_id=original_id,
         disabled_by=None,
+        device_id=dev_entry.id,
     )
 
     assert entity_registry.async_get_entity_id(domain, const.DOMAIN, original_id)
     assert entity_registry.async_get_entity_id(domain, const.DOMAIN, new_id) is None
+
+    assert device_registry.async_get_device(
+        identifiers={(const.DOMAIN, original_dev_id)}
+    )
+    if new_dev_id != original_dev_id:
+        assert (
+            device_registry.async_get_device(identifiers={(const.DOMAIN, new_dev_id)})
+            is None
+        )
 
     # setup CH 0 and host entities/device
     with patch("homeassistant.components.reolink.PLATFORMS", [domain]):
@@ -211,6 +315,15 @@ async def test_migrate_entity_ids(
         entity_registry.async_get_entity_id(domain, const.DOMAIN, original_id) is None
     )
     assert entity_registry.async_get_entity_id(domain, const.DOMAIN, new_id)
+
+    if new_dev_id != original_dev_id:
+        assert (
+            device_registry.async_get_device(
+                identifiers={(const.DOMAIN, original_dev_id)}
+            )
+            is None
+        )
+    assert device_registry.async_get_device(identifiers={(const.DOMAIN, new_dev_id)})
 
 
 async def test_no_repair_issue(

@@ -243,12 +243,24 @@ def migrate_entity_ids(
     ch_device_ids = {}
     for device in devices:
         (device_uid, ch) = get_device_uid_and_ch(device, host)
+
+        if host.api.supported(None, "UID") and device_uid[0] != host.unique_id:
+            if ch is None:
+                new_device_id = f"{host.unique_id}"
+            else:
+                new_device_id = f"{host.unique_id}_{device_uid[1]}"
+            new_identifiers = {(DOMAIN, new_device_id)}
+            device_reg.async_update_device(device.id, new_identifiers=new_identifiers)
+
         if ch is None:
             continue  # Do not consider the NVR itself
 
         ch_device_ids[device.id] = ch
         if host.api.supported(ch, "UID") and device_uid[1] != host.api.camera_uid(ch):
-            new_device_id = f"{device_uid[0]}_{host.api.camera_uid(ch)}"
+            if host.api.supported(None, "UID"):
+                new_device_id = f"{host.unique_id}_{host.api.camera_uid(ch)}"
+            else:
+                new_device_id = f"{device_uid[0]}_{host.api.camera_uid(ch)}"
             new_identifiers = {(DOMAIN, new_device_id)}
             device_reg.async_update_device(device.id, new_identifiers=new_identifiers)
 
