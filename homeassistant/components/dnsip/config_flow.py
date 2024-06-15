@@ -203,7 +203,7 @@ class DnsIPOptionsFlowHandler(OptionsFlowWithConfigEntry):
                         CONF_RESOLVER: resolver,
                         CONF_PORT: port,
                         CONF_RESOLVER_IPV6: resolver_ipv6,
-                        CONF_PORT_IPV6: port_ipv6
+                        CONF_PORT_IPV6: port_ipv6,
                     },
                 )
 
@@ -217,7 +217,6 @@ class DnsIPOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 }
             ),
             self.config_entry.options,
-
         )
 
         return self.async_show_form(step_id="init", data_schema=schema, errors=errors)
