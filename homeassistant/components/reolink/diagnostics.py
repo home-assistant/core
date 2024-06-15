@@ -25,7 +25,7 @@ async def async_get_config_entry_diagnostics(
         IPC_cam[ch]["model"] = api.camera_model(ch)
         IPC_cam[ch]["hardware version"] = api.camera_hardware_version(ch)
         IPC_cam[ch]["firmware version"] = api.camera_sw_version(ch)
-        IPC_cam[ch]["encoding main"] = api.get_encoding(ch)
+        IPC_cam[ch]["encoding main"] = await api.get_encoding(ch)
 
     return {
         "model": api.model,
