@@ -173,6 +173,24 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
+def get_device_uid_and_ch(
+    device: dr.DeviceEntry, host: ReolinkHost
+) -> tuple[list[str], int | None]:
+    """Get the channel and the split device_uid from a reolink DeviceEntry."""
+    device_uid = [
+        dev_id[1].split("_") for dev_id in device.identifiers if dev_id[0] == DOMAIN
+    ][0]
+
+    if len(device_uid) < 2:
+        # NVR itself
+        ch = None
+    elif device_uid[1].startswith("ch") and len(device_uid[1]) <= 5:
+        ch = int(device_uid[1][2:])
+    else:
+        ch = host.api.channel_for_uid(device_uid[1])
+    return (device_uid, ch)
+
+
 def cleanup_disconnected_cams(
     hass: HomeAssistant, config_entry_id: str, host: ReolinkHost
 ) -> None:
@@ -183,20 +201,9 @@ def cleanup_disconnected_cams(
     device_reg = dr.async_get(hass)
     devices = dr.async_entries_for_config_entry(device_reg, config_entry_id)
     for device in devices:
-        device_id = [
-            dev_id[1].split("_")
-            for dev_id in device.identifiers
-            if dev_id[0] == DOMAIN
-        ][0]
-
-        if len(device_id) < 2:
-            # Do not consider the NVR itself
-            continue
-
-        if device_id[1].startswith("ch") and len(device_id[1]) <= 5:
-            ch = int(device_id[1][2:])
-        else:
-            ch = host.api.channel_for_uid(device_id[1])
+        (device_uid, ch) = get_device_uid_and_ch(device, host)
+        if ch is None:
+            continue  # Do not consider the NVR itself
 
         ch_model = host.api.camera_model(ch)
         remove = False
@@ -233,19 +240,11 @@ def migrate_entity_ids(
     devices = dr.async_entries_for_config_entry(device_reg, config_entry_id)
     ch_device_ids = {}
     for device in devices:
-        device_uid = [
-            dev_id[1].split("_")
-            for dev_id in device.identifiers
-            if dev_id[0] == DOMAIN
-        ][0]
-        
-        if len(device_uid) < 2:
-            # Do not consider the NVR itself
-            continue
+        (device_uid, ch) = get_device_uid_and_ch(device, host)
+        if ch is None:
+            continue  # Do not consider the NVR itself
 
-        ch = host.api.channel_for_uid(device.serial_number)
         ch_device_ids[device.id] = ch
-        
         if host.api.supported(ch, "UID") and device_uid[1] != host.api.camera_uid(ch):
             new_device_id = f"{device_uid[0]}_{host.api.camera_uid(ch)}"
             new_identifiers = {(DOMAIN, new_device_id)}
@@ -261,7 +260,9 @@ def migrate_entity_ids(
             )
             continue
 
-        if host.api.supported(None, "UID") and not entity.unique_id.startswith(host.unique_id):
+        if host.api.supported(None, "UID") and not entity.unique_id.startswith(
+            host.unique_id
+        ):
             new_id = f"{host.unique_id}_{entity.unique_id.split("_", 1)[1]}"
             entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_id)
 
