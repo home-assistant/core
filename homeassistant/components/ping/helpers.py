@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Any
 from icmplib import NameLookupError, async_ping
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import ICMP_TIMEOUT, PING_TIMEOUT
 
@@ -59,9 +58,10 @@ class PingDataICMPLib(PingData):
                 timeout=ICMP_TIMEOUT,
                 privileged=self._privileged,
             )
-        except NameLookupError as err:
+        except NameLookupError:
+            _LOGGER.debug("Error resolving host: %s", self.ip_address)
             self.is_alive = False
-            raise UpdateFailed(f"Error resolving host: {self.ip_address}") from err
+            return
 
         _LOGGER.debug(
             "async_ping returned: reachable=%s sent=%i received=%s",
@@ -152,17 +152,22 @@ class PingDataSubProcess(PingData):
             if TYPE_CHECKING:
                 assert match is not None
             rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
-        except TimeoutError as err:
+        except TimeoutError:
+            _LOGGER.debug(
+                "Timed out running command: `%s`, after: %s",
+                " ".join(self._ping_cmd),
+                self._count + PING_TIMEOUT,
+            )
+
             if pinger:
                 with suppress(TypeError):
                     await pinger.kill()  # type: ignore[func-returns-value]
                 del pinger
 
-            raise UpdateFailed(
-                f"Timed out running command: `{self._ping_cmd}`, after: {self._count + PING_TIMEOUT}s"
-            ) from err
+            return None
         except AttributeError as err:
-            raise UpdateFailed from err
+            _LOGGER.debug("Error matching ping output: %s", err)
+            return None
         return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": rtt_mdev}
 
     async def async_update(self) -> None:
