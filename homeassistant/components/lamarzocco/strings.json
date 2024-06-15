@@ -139,6 +139,9 @@
       }
     },
     "switch": {
+      "auto_on_off": {
+        "name": "Auto on/off ({id})"
+      },
       "steam_boiler": {
         "name": "Steam boiler"
       }
