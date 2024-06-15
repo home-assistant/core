@@ -31,8 +31,8 @@ from homeassistant.util.dt import utcnow
 
 from . import SpotifyConfigEntry
 from .browse_media import async_browse_media_internal
-from .config_entry import HomeAssistantSpotifyData
 from .const import DOMAIN, MEDIA_PLAYER_PREFIX, PLAYABLE_MEDIA_TYPES, SPOTIFY_SCOPES
+from .models import HomeAssistantSpotifyData
 from .util import fetch_image_url
 
 _LOGGER = logging.getLogger(__name__)

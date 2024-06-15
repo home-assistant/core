@@ -20,8 +20,8 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .browse_media import async_browse_media
-from .config_entry import HomeAssistantSpotifyData
 from .const import DOMAIN, LOGGER, SPOTIFY_SCOPES
+from .models import HomeAssistantSpotifyData
 from .util import (
     is_spotify_media_type,
     resolve_spotify_media_type,
