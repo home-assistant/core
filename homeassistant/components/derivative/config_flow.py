@@ -44,6 +44,11 @@ TIME_UNITS = [
 
 OPTIONS_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_SOURCE): selector.EntitySelector(
+            selector.EntitySelectorConfig(
+                domain=[COUNTER_DOMAIN, INPUT_NUMBER_DOMAIN, SENSOR_DOMAIN]
+            ),
+        ),
         vol.Required(CONF_ROUND_DIGITS, default=2): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=0,
@@ -67,11 +72,6 @@ OPTIONS_SCHEMA = vol.Schema(
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): selector.TextSelector(),
-        vol.Required(CONF_SOURCE): selector.EntitySelector(
-            selector.EntitySelectorConfig(
-                domain=[COUNTER_DOMAIN, INPUT_NUMBER_DOMAIN, SENSOR_DOMAIN]
-            ),
-        ),
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
