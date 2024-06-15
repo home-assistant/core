@@ -162,7 +162,7 @@ class ReolinkVODMediaSource(MediaSource):
                 channels.append(ch_id)
 
                 ch: int | str = ch_id
-                if len(ch_id)>3:
+                if len(ch_id) > 3:
                     ch = host.api.channel_for_uid(ch_id)
 
                 if (
