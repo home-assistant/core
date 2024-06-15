@@ -6,22 +6,23 @@ from datetime import datetime, timedelta
 from unittest.mock import Mock
 
 import pytest
-from pyunifiprotect.data import (
+from uiprotect.data import (
     NVR,
     Camera,
     Event,
     EventType,
+    ModelType,
     Sensor,
     SmartDetectObjectType,
 )
-from pyunifiprotect.data.nvr import EventMetadata, LicensePlateMetadata
+from uiprotect.data.nvr import EventMetadata, LicensePlateMetadata
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.components.unifiprotect.sensor import (
     ALL_DEVICES_SENSORS,
     CAMERA_DISABLED_SENSORS,
     CAMERA_SENSORS,
-    EVENT_SENSORS,
+    LICENSE_PLATE_EVENT_SENSORS,
     MOTION_TRIP_SENSORS,
     NVR_DISABLED_SENSORS,
     NVR_SENSORS,
@@ -445,6 +446,7 @@ async def test_sensor_update_alarm(
 
     event_metadata = EventMetadata(sensor_id=sensor_all.id, alarm_type="smoke")
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.SENSOR_ALARM,
         start=fixed_now - timedelta(seconds=1),
@@ -521,13 +523,14 @@ async def test_camera_update_licenseplate(
     assert_entity_counts(hass, Platform.SENSOR, 23, 13)
 
     _, entity_id = ids_from_device_description(
-        Platform.SENSOR, camera, EVENT_SENSORS[0]
+        Platform.SENSOR, camera, LICENSE_PLATE_EVENT_SENSORS[0]
     )
 
     event_metadata = EventMetadata(
         license_plate=LicensePlateMetadata(name="ABCD1234", confidence_level=95)
     )
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.SMART_DETECT,
         start=fixed_now - timedelta(seconds=1),

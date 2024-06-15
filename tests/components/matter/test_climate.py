@@ -7,8 +7,7 @@ from matter_server.client.models.node import MatterNode
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 import pytest
 
-from homeassistant.components.climate import HVACAction, HVACMode
-from homeassistant.components.climate.const import ClimateEntityFeature
+from homeassistant.components.climate import ClimateEntityFeature, HVACAction, HVACMode
 from homeassistant.core import HomeAssistant
 
 from .common import (

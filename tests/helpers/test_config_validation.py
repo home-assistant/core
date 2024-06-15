@@ -602,7 +602,9 @@ def test_x10_address() -> None:
     schema = vol.Schema(cv.x10_address)
     with pytest.raises(vol.Invalid):
         schema("Q1")
+    with pytest.raises(vol.Invalid):
         schema("q55")
+    with pytest.raises(vol.Invalid):
         schema("garbage_addr")
 
     schema("a1")
@@ -766,7 +768,7 @@ def test_date() -> None:
     """Test date validation."""
     schema = vol.Schema(cv.date)
 
-    for value in ["Not a date", "23:42", "2016-11-23T18:59:08"]:
+    for value in ("Not a date", "23:42", "2016-11-23T18:59:08"):
         with pytest.raises(vol.Invalid):
             schema(value)
 
@@ -778,7 +780,7 @@ def test_time() -> None:
     """Test date validation."""
     schema = vol.Schema(cv.time)
 
-    for value in ["Not a time", "2016-11-23", "2016-11-23T18:59:08"]:
+    for value in ("Not a time", "2016-11-23", "2016-11-23T18:59:08"):
         with pytest.raises(vol.Invalid):
             schema(value)
 
@@ -790,7 +792,7 @@ def test_time() -> None:
 def test_datetime() -> None:
     """Test date time validation."""
     schema = vol.Schema(cv.datetime)
-    for value in [date.today(), "Wrong DateTime"]:
+    for value in (date.today(), "Wrong DateTime"):
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
@@ -809,6 +811,7 @@ def test_multi_select() -> None:
 
     with pytest.raises(vol.Invalid):
         schema("robban")
+    with pytest.raises(vol.Invalid):
         schema(["paulus", "martinhj"])
 
     schema(["robban", "paulus"])
@@ -1304,7 +1307,7 @@ def test_uuid4_hex(caplog: pytest.LogCaptureFixture) -> None:
     """Test uuid validation."""
     schema = vol.Schema(cv.uuid4_hex)
 
-    for value in ["Not a hex string", "0", 0]:
+    for value in ("Not a hex string", "0", 0):
         with pytest.raises(vol.Invalid):
             schema(value)
 
@@ -1335,7 +1338,7 @@ def test_key_value_schemas() -> None:
 
     with pytest.raises(vol.Invalid) as excinfo:
         schema(True)
-        assert str(excinfo.value) == "Expected a dictionary"
+    assert str(excinfo.value) == "Expected a dictionary"
 
     for mode in None, {"a": "dict"}, "invalid":
         with pytest.raises(vol.Invalid) as excinfo:
@@ -1373,7 +1376,7 @@ def test_key_value_schemas_with_default() -> None:
 
     with pytest.raises(vol.Invalid) as excinfo:
         schema(True)
-        assert str(excinfo.value) == "Expected a dictionary"
+    assert str(excinfo.value) == "Expected a dictionary"
 
     for mode in None, {"a": "dict"}, "invalid":
         with pytest.raises(vol.Invalid) as excinfo:

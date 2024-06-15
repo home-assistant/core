@@ -16,6 +16,7 @@ from .connection import ActiveConnection, current_connection  # noqa: F401
 from .const import (  # noqa: F401
     ERR_HOME_ASSISTANT_ERROR,
     ERR_INVALID_FORMAT,
+    ERR_NOT_ALLOWED,
     ERR_NOT_FOUND,
     ERR_NOT_SUPPORTED,
     ERR_SERVICE_VALIDATION_ERROR,
@@ -24,6 +25,7 @@ from .const import (  # noqa: F401
     ERR_UNAUTHORIZED,
     ERR_UNKNOWN_COMMAND,
     ERR_UNKNOWN_ERROR,
+    TYPE_RESULT,
     AsyncWebSocketCommandHandler,
     WebSocketCommandHandler,
 )

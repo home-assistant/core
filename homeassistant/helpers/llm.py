@@ -5,8 +5,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
+from functools import cache, partial
 from typing import Any
 
+import slugify as unicode_slug
 import voluptuous as vol
 
 from homeassistant.components.climate.intent import INTENT_GET_TEMPERATURE
@@ -175,10 +177,11 @@ class IntentTool(Tool):
 
     def __init__(
         self,
+        name: str,
         intent_handler: intent.IntentHandler,
     ) -> None:
         """Init the class."""
-        self.name = intent_handler.intent_type
+        self.name = name
         self.description = (
             intent_handler.description or f"Execute Home Assistant {self.name} intent"
         )
@@ -260,6 +263,9 @@ class AssistAPI(API):
             hass=hass,
             id=LLM_API_ASSIST,
             name="Assist",
+        )
+        self.cached_slugify = cache(
+            partial(unicode_slug.slugify, separator="_", lowercase=False)
         )
 
     async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
@@ -373,7 +379,10 @@ class AssistAPI(API):
                 or intent_handler.platforms & exposed_domains
             ]
 
-        return [IntentTool(intent_handler) for intent_handler in intent_handlers]
+        return [
+            IntentTool(self.cached_slugify(intent_handler.intent_type), intent_handler)
+            for intent_handler in intent_handlers
+        ]
 
 
 def _get_exposed_entities(

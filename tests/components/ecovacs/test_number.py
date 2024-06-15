@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 
-from deebot_client.capabilities import Capabilities
 from deebot_client.command import Command
 from deebot_client.commands.json import SetVolume
 from deebot_client.events import Event, VolumeEvent
@@ -11,7 +10,7 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
-from homeassistant.components.number.const import (
+from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as PLATFORM_DOMAIN,
     SERVICE_SET_VALUE,
@@ -66,7 +65,7 @@ async def test_number_entities(
     tests: list[NumberTestCase],
 ) -> None:
     """Test that number entity snapshots match."""
-    device = next(controller.devices(Capabilities))
+    device = controller.devices[0]
     event_bus = device.events
 
     assert sorted(hass.states.async_entity_ids()) == sorted(
@@ -131,7 +130,7 @@ async def test_volume_maximum(
     controller: EcovacsController,
 ) -> None:
     """Test volume maximum."""
-    device = next(controller.devices(Capabilities))
+    device = controller.devices[0]
     event_bus = device.events
     entity_id = "number.ozmo_950_volume"
     assert (state := hass.states.get(entity_id))
