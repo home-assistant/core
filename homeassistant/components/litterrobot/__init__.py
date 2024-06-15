@@ -41,8 +41,9 @@ def get_platforms_for_robots(robots: list[Robot]) -> set[Platform]:
 
 async def async_setup_entry(hass: HomeAssistant, entry: LitterRobotConfigEntry) -> bool:
     """Set up Litter-Robot from a config entry."""
-    hub = entry.runtime_data = LitterRobotHub(hass, entry.data)
+    hub = LitterRobotHub(hass, entry.data)
     await hub.login(load_robots=True, subscribe_for_updates=True)
+    entry.runtime_data = hub
 
     if platforms := get_platforms_for_robots(hub.account.robots):
         await hass.config_entries.async_forward_entry_setups(entry, platforms)
