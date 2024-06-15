@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .data import ProtectData, UFPConfigEntry
 from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import PermRequired, ProtectRequiredKeysMixin, ProtectSetableKeysMixin, T
+from .models import PermRequired, ProtectEntityDescription, ProtectSetableKeysMixin, T
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -50,7 +50,7 @@ CAMERA: tuple[ProtectTextEntityDescription, ...] = (
     ),
 )
 
-_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] = {
+_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.CAMERA: CAMERA,
 }
 

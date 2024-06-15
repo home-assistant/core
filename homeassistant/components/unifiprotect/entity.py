@@ -31,7 +31,7 @@ from .const import (
     DOMAIN,
 )
 from .data import ProtectData
-from .models import PermRequired, ProtectEventMixin, ProtectRequiredKeysMixin
+from .models import PermRequired, ProtectEntityDescription, ProtectEventMixin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,8 +41,8 @@ def _async_device_entities(
     data: ProtectData,
     klass: type[BaseProtectEntity],
     model_type: ModelType,
-    descs: Sequence[ProtectRequiredKeysMixin],
-    unadopted_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
+    descs: Sequence[ProtectEntityDescription],
+    unadopted_descs: Sequence[ProtectEntityDescription] | None = None,
     ufp_device: ProtectAdoptableDeviceModel | None = None,
 ) -> list[BaseProtectEntity]:
     if not descs and not unadopted_descs:
@@ -119,11 +119,11 @@ _ALL_MODEL_TYPES = (
 @callback
 def _combine_model_descs(
     model_type: ModelType,
-    model_descriptions: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] | None,
-    all_descs: Sequence[ProtectRequiredKeysMixin] | None,
-) -> list[ProtectRequiredKeysMixin]:
+    model_descriptions: dict[ModelType, Sequence[ProtectEntityDescription]] | None,
+    all_descs: Sequence[ProtectEntityDescription] | None,
+) -> list[ProtectEntityDescription]:
     """Combine all the descriptions with descriptions a model type."""
-    descs: list[ProtectRequiredKeysMixin] = list(all_descs) if all_descs else []
+    descs: list[ProtectEntityDescription] = list(all_descs) if all_descs else []
     if model_descriptions and (model_descs := model_descriptions.get(model_type)):
         descs.extend(model_descs)
     return descs
@@ -133,10 +133,10 @@ def _combine_model_descs(
 def async_all_device_entities(
     data: ProtectData,
     klass: type[BaseProtectEntity],
-    model_descriptions: dict[ModelType, Sequence[ProtectRequiredKeysMixin]]
+    model_descriptions: dict[ModelType, Sequence[ProtectEntityDescription]]
     | None = None,
-    all_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
-    unadopted_descs: list[ProtectRequiredKeysMixin] | None = None,
+    all_descs: Sequence[ProtectEntityDescription] | None = None,
+    unadopted_descs: list[ProtectEntityDescription] | None = None,
     ufp_device: ProtectAdoptableDeviceModel | None = None,
 ) -> list[BaseProtectEntity]:
     """Generate a list of all the device entities."""
@@ -191,7 +191,7 @@ class BaseProtectEntity(Entity):
                 else ""
             )
             self._attr_name = f"{self.device.display_name} {name.title()}"
-            if isinstance(description, ProtectRequiredKeysMixin):
+            if isinstance(description, ProtectEntityDescription):
                 self._async_get_ufp_enabled = description.get_ufp_enabled
 
         self._attr_attribution = DEFAULT_ATTRIBUTION

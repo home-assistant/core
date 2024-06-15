@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .data import ProtectData, UFPConfigEntry
 from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import PermRequired, ProtectRequiredKeysMixin, ProtectSetableKeysMixin, T
+from .models import PermRequired, ProtectEntityDescription, ProtectSetableKeysMixin, T
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -213,7 +213,7 @@ CHIME_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_perm=PermRequired.WRITE,
     ),
 )
-_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] = {
+_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.CAMERA: CAMERA_NUMBERS,
     ModelType.LIGHT: LIGHT_NUMBERS,
     ModelType.SENSOR: SENSE_NUMBERS,
