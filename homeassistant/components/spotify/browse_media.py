@@ -5,7 +5,7 @@ from __future__ import annotations
 from enum import StrEnum
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from spotipy import Spotify
 import yarl
@@ -19,11 +19,9 @@ from homeassistant.components.media_player import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 
+from .config_entry import HomeAssistantSpotifyData
 from .const import DOMAIN, MEDIA_PLAYER_PREFIX, MEDIA_TYPE_SHOW, PLAYABLE_MEDIA_TYPES
 from .util import fetch_image_url
-
-if TYPE_CHECKING:
-    from . import HomeAssistantSpotifyData
 
 BROWSE_LIMIT = 48
 

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
@@ -21,6 +20,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .browse_media import async_browse_media
+from .config_entry import HomeAssistantSpotifyData
 from .const import DOMAIN, LOGGER, SPOTIFY_SCOPES
 from .util import (
     is_spotify_media_type,
@@ -37,16 +37,6 @@ __all__ = [
     "is_spotify_media_type",
     "resolve_spotify_media_type",
 ]
-
-
-@dataclass
-class HomeAssistantSpotifyData:
-    """Spotify data stored in the Home Assistant data object."""
-
-    client: Spotify
-    current_user: dict[str, Any]
-    devices: DataUpdateCoordinator[list[dict[str, Any]]]
-    session: OAuth2Session
 
 
 type SpotifyConfigEntry = ConfigEntry[HomeAssistantSpotifyData]
