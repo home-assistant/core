@@ -125,7 +125,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
             DOMAIN,
             "ea_channel_warning",
             is_fixable=True,
-            is_persistent=True,
+            is_persistent=False,
             learn_more_url=EARLY_ACCESS_URL,
             severity=IssueSeverity.WARNING,
             translation_key="ea_channel_warning",
