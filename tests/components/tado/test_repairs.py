@@ -1,5 +1,7 @@
 """Repair tests."""
 
+import pytest
+
 from homeassistant.components.tado.const import (
     CONST_OVERLAY_MANUAL,
     CONST_OVERLAY_TADO_DEFAULT,
@@ -39,29 +41,21 @@ async def test_manage_water_heater_fallback_issue_not_created(
     )
 
 
+@pytest.mark.parametrize(
+    "integration_overlay_fallback", [CONST_OVERLAY_TADO_DEFAULT, CONST_OVERLAY_MANUAL]
+)
 async def test_manage_water_heater_fallback_issue_created(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
+    integration_overlay_fallback: str,
 ) -> None:
     """Test water heater fallback issue created cases."""
     zone_name = "Hot Water"
     expected_issue_id = f"{WATER_HEATER_FALLBACK_REPAIR}_{zone_name}"
     water_heater_entities = [MockWaterHeater(zone_name)]
-    # Case 1 when integration fallback is TADO_DEFAULT
     manage_water_heater_fallback_issue(
         water_heater_entities=water_heater_entities,
-        integration_overlay_fallback=CONST_OVERLAY_TADO_DEFAULT,
-        hass=hass,
-    )
-    assert (
-        issue_registry.async_get_issue(issue_id=expected_issue_id, domain=DOMAIN)
-        is not None
-    )
-    # Case 2 when integration fallback is MANUAL
-
-    manage_water_heater_fallback_issue(
-        water_heater_entities=water_heater_entities,
-        integration_overlay_fallback=CONST_OVERLAY_MANUAL,
+        integration_overlay_fallback=integration_overlay_fallback,
         hass=hass,
     )
     assert (
