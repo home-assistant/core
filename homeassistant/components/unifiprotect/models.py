@@ -63,21 +63,17 @@ class ProtectEntityDescription(EntityDescription, Generic[T]):
         on what is defined in the dataclass so they only have to be
         worked out once.
         """
-
-        # Setter to be able to mutate the frozen dataclass
-        # in __post_init__.
+        # Setter to be able to mutate the frozen dataclass methods
+        # but not the data itself.
         _setter = partial(object.__setattr__, self)
-
         if (_ufp_value := self.ufp_value) is not None:
             ufp_value = tuple(_ufp_value.split("."))
             _setter("get_ufp_value", partial(get_nested_attr, attrs=ufp_value))
         elif (ufp_value_fn := self.ufp_value_fn) is not None:
             _setter("get_ufp_value", ufp_value_fn)
-
         if (_ufp_enabled := self.ufp_enabled) is not None:
             ufp_enabled = tuple(_ufp_enabled.split("."))
             _setter("get_ufp_enabled", partial(get_nested_attr, attrs=ufp_enabled))
-
         if (_ufp_required_field := self.ufp_required_field) is not None:
             ufp_required_field = tuple(_ufp_required_field.split("."))
             _setter(
