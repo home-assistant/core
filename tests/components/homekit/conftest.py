@@ -5,7 +5,7 @@ from collections.abc import Generator
 from contextlib import suppress
 import os
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -88,7 +88,7 @@ def mock_hap(
     hass: HomeAssistant,
     event_loop: AbstractEventLoop,
     iid_storage: AccessoryIIDStorage,
-    mock_zeroconf: None,
+    mock_zeroconf: MagicMock,
 ) -> Generator[HomeDriver, Any, None]:
     """Return a custom AccessoryDriver instance for HomeKit accessory init."""
     with (

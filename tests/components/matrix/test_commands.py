@@ -11,7 +11,7 @@ import pytest
 from homeassistant.components.matrix import MatrixBot, RoomID
 from homeassistant.core import Event, HomeAssistant
 
-from tests.components.matrix.conftest import (
+from .conftest import (
     MOCK_EXPRESSION_COMMANDS,
     MOCK_WORD_COMMANDS,
     TEST_MXID,

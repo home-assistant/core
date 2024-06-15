@@ -54,7 +54,7 @@ async def test_get_actions(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
-        for action in ["turn_off", "turn_on", "toggle"]
+        for action in ("turn_off", "turn_on", "toggle")
     ]
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
@@ -102,7 +102,7 @@ async def test_get_actions_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for action in ["turn_off", "turn_on", "toggle"]
+        for action in ("turn_off", "turn_on", "toggle")
     ]
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id

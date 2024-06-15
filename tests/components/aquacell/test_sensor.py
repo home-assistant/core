@@ -9,8 +9,9 @@ from syrupy import SnapshotAssertion
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from . import setup_integration
+
 from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.aquacell import setup_integration
 
 
 async def test_sensors(

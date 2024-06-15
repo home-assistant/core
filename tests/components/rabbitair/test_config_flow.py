@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from ipaddress import ip_address
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from rabbitair import Mode, Model, Speed
@@ -38,7 +38,7 @@ ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
 
 
 @pytest.fixture(autouse=True)
-def use_mocked_zeroconf(mock_async_zeroconf):
+def use_mocked_zeroconf(mock_async_zeroconf: MagicMock) -> None:
     """Mock zeroconf in all tests."""
 
 

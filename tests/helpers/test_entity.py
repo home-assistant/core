@@ -107,6 +107,7 @@ async def test_async_update_support(hass: HomeAssistant) -> None:
         """Async update."""
         async_update.append(1)
 
+    # pylint: disable-next=attribute-defined-outside-init
     ent.async_update = async_update_func
 
     await ent.async_update_ha_state(True)
@@ -1600,7 +1601,7 @@ async def test_translation_key(hass: HomeAssistant) -> None:
     assert mock_entity2.translation_key == "from_entity_description"
 
 
-async def test_repr(hass) -> None:
+async def test_repr(hass: HomeAssistant) -> None:
     """Test Entity.__repr__."""
 
     class MyEntity(MockEntity):
@@ -1872,7 +1873,7 @@ async def test_change_entity_id(
     assert len(ent.remove_calls) == 2
 
 
-def test_entity_description_as_dataclass(snapshot: SnapshotAssertion):
+def test_entity_description_as_dataclass(snapshot: SnapshotAssertion) -> None:
     """Test EntityDescription behaves like a dataclass."""
 
     obj = entity.EntityDescription("blah", device_class="test")
@@ -1887,7 +1888,7 @@ def test_entity_description_as_dataclass(snapshot: SnapshotAssertion):
     assert repr(obj) == snapshot
 
 
-def test_extending_entity_description(snapshot: SnapshotAssertion):
+def test_extending_entity_description(snapshot: SnapshotAssertion) -> None:
     """Test extending entity descriptions."""
 
     @dataclasses.dataclass(frozen=True)
