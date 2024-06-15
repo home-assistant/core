@@ -186,7 +186,7 @@ aioasuswrt==1.4.0
 aioautomower==2024.6.0
 
 # homeassistant.components.azure_devops
-aioazuredevops==2.0.0
+aioazuredevops==2.1.1
 
 # homeassistant.components.baf
 aiobafi6==0.9.0
