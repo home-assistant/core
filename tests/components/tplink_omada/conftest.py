@@ -1,5 +1,6 @@
 """Test fixtures for TP-Link Omada integration."""
 
+from collections.abc import AsyncIterable
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -16,7 +17,7 @@ from tplink_omada_client.devices import (
     OmadaSwitch,
     OmadaSwitchPortDetails,
 )
-from typing_extensions import Generator, AsyncIterable
+from typing_extensions import Generator
 
 from homeassistant.components.tplink_omada.config_flow import CONF_SITE
 from homeassistant.components.tplink_omada.const import DOMAIN
@@ -94,53 +95,6 @@ def mock_omada_clients_only_site_client() -> Generator[AsyncMock]:
     site_client.get_switch_ports = AsyncMock(return_value=[])
     site_client.get_client = AsyncMock(side_effect=_get_mock_client)
 
-    site_client.get_known_clients.return_value = _get_mock_known_clients()
-    site_client.get_connected_clients.return_value = _get_mock_connected_clients()
-
-    return site_client
-
-
-async def _get_mock_known_clients() -> AsyncIterable[OmadaNetworkClient]:
-    """Mock known clients of the Omada network."""
-    known_clients_data = json.loads(load_fixture("known-clients.json", DOMAIN))
-    for c in known_clients_data:
-        if c["wireless"]:
-            yield OmadaWirelessClient(c)
-        else:
-            yield OmadaWiredClient(c)
-
-
-async def _get_mock_connected_clients() -> AsyncIterable[OmadaConnectedClient]:
-    """Mock connected clients of the Omada network."""
-    connected_clients_data = json.loads(load_fixture("connected-clients.json", DOMAIN))
-    for c in connected_clients_data:
-        if c["wireless"]:
-            yield OmadaWirelessClient(c)
-        else:
-            yield OmadaWiredClient(c)
-
-
-def _get_mock_client(mac: str) -> OmadaNetworkClient:
-    """Mock an Omada client."""
-    connected_clients_data = json.loads(load_fixture("connected-clients.json", DOMAIN))
-
-    for c in connected_clients_data:
-        if c["mac"] == mac:
-            if c["wireless"]:
-                return OmadaWirelessClient(c)
-            return OmadaWiredClient(c)
-
-
-@pytest.fixture
-def mock_omada_clients_only_site_client() -> Generator[AsyncMock, None, None]:
-    """Mock Omada site client containing only client connection data."""
-    site_client = MagicMock()
-
-    site_client.get_switches = AsyncMock(return_value=[])
-    site_client.get_devices = AsyncMock(return_value=[])
-    site_client.get_switch_ports = AsyncMock(return_value=[])
-    site_client.get_client = AsyncMock(side_effect=_get_mock_client)
-
     site_client.get_known_clients.side_effect = _get_mock_known_clients
     site_client.get_connected_clients.side_effect = _get_mock_connected_clients
 
@@ -194,7 +148,7 @@ def mock_omada_client(mock_omada_site_client: AsyncMock) -> Generator[MagicMock]
 @pytest.fixture
 def mock_omada_clients_only_client(
     mock_omada_clients_only_site_client: AsyncMock,
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Mock Omada client."""
     with patch(
         "homeassistant.components.tplink_omada.create_omada_client",

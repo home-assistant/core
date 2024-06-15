@@ -60,8 +60,6 @@ async def test_device_scanner_created(
     entity_registry = er.async_get(hass)
     updated_entity = entity_registry.async_update_entity(entity_id, disabled_by=None)
     assert not updated_entity.disabled
-    # await hass.config_entries.async_reload(init_integration.entry_id)
-    # await hass.async_block_till_done()
     async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
     await hass.async_block_till_done()
 
