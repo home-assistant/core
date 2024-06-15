@@ -80,6 +80,28 @@ ATTR_SAVED_HUMIDITY = "saved_humidity"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(HYGROSTAT_SCHEMA.schema)
 
 
+def _async_get_device_info_from_entity_id(
+    hass: HomeAssistant, entity_id_or_uuid: str
+) -> dr.DeviceInfo | None:
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+
+    entity_id = er.async_validate_entity_id(entity_registry, entity_id_or_uuid)
+
+    entity = entity_registry.async_get(entity_id)
+    if not entity or not entity.device_id:
+        return None
+
+    device = device_registry.async_get(entity.device_id)
+    if not device:
+        return None
+
+    return dr.DeviceInfo(
+        identifiers=device.identifiers,
+        connections=device.connections,
+    )
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -101,32 +123,9 @@ async def async_setup_entry(
 ) -> None:
     """Initialize config entry."""
 
-    registry = er.async_get(hass)
-    entity_id = er.async_validate_entity_id(
-        registry, config_entry.options[CONF_HUMIDIFIER]
+    device_info = _async_get_device_info_from_entity_id(
+        hass, config_entry.options[CONF_HUMIDIFIER]
     )
-
-    source_entity = registry.async_get(entity_id)
-    dev_reg = dr.async_get(hass)
-    # Resolve source entity device
-    if (
-        (source_entity is not None)
-        and (source_entity.device_id is not None)
-        and (
-            (
-                device := dev_reg.async_get(
-                    device_id=source_entity.device_id,
-                )
-            )
-            is not None
-        )
-    ):
-        device_info = dr.DeviceInfo(
-            identifiers=device.identifiers,
-            connections=device.connections,
-        )
-    else:
-        device_info = None
 
     await _async_setup_config(
         hass,
