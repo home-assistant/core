@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from datetime import datetime, timedelta
 import logging
 import math
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 
@@ -101,7 +101,7 @@ CONF_PRESETS = {
     )
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA_COMMON = vol.Schema(
     {
         vol.Required(CONF_HEATER): cv.entity_id,
         vol.Required(CONF_SENSOR): cv.entity_id,
@@ -117,15 +117,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_INITIAL_HVAC_MODE): vol.In(
             [HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF]
         ),
-        vol.Optional(CONF_PRECISION): vol.In(
-            [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
+        vol.Optional(CONF_PRECISION): vol.All(
+            vol.Coerce(float),
+            vol.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]),
         ),
-        vol.Optional(CONF_TEMP_STEP): vol.In(
-            [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
+        vol.Optional(CONF_TEMP_STEP): vol.All(
+            vol.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE])
         ),
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        **{vol.Optional(v): vol.Coerce(float) for v in CONF_PRESETS.values()},
     }
-).extend({vol.Optional(v): vol.Coerce(float) for (k, v) in CONF_PRESETS.items()})
+)
+
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_COMMON.schema)
 
 
 def _async_get_device_info_from_entity_id(
@@ -175,12 +180,6 @@ def _async_remove_stale_device_links(
         device_registry.async_update_device(device.id, remove_config_entry_id=entry_id)
 
 
-def _time_period_or_none(value: Any) -> timedelta | None:
-    if value is None:
-        return None
-    return cast(timedelta, cv.time_period(value))
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -197,7 +196,7 @@ async def async_setup_entry(
 
     await _async_setup_config(
         hass,
-        config_entry.options,
+        PLATFORM_SCHEMA_COMMON(dict(config_entry.options)),
         config_entry.entry_id,
         async_add_entities,
         device_info,
@@ -234,9 +233,7 @@ async def _async_setup_config(
     max_temp: float | None = config.get(CONF_MAX_TEMP)
     target_temp: float | None = config.get(CONF_TARGET_TEMP)
     ac_mode: bool | None = config.get(CONF_AC_MODE)
-    min_cycle_duration: timedelta | None = _time_period_or_none(
-        config.get(CONF_MIN_DUR)
-    )
+    min_cycle_duration: timedelta | None = config.get(CONF_MIN_DUR)
     cold_tolerance: float = config[CONF_COLD_TOLERANCE]
     hot_tolerance: float = config[CONF_HOT_TOLERANCE]
     keep_alive: timedelta | None = config.get(CONF_KEEP_ALIVE)

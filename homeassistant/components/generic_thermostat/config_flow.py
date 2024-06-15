@@ -12,6 +12,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDevic
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     CONF_NAME,
+    DEGREE,
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
@@ -33,12 +34,19 @@ from .climate import (
     CONF_MIN_DUR,
     CONF_MIN_TEMP,
     CONF_PRECISION,
+    CONF_PRESETS,
     CONF_SENSOR,
     CONF_TARGET_TEMP,
     CONF_TEMP_STEP,
     DEFAULT_TOLERANCE,
     DOMAIN,
 )
+
+PRECISION_STRINGS = [
+    str(PRECISION_TENTHS),
+    str(PRECISION_HALVES),
+    str(PRECISION_WHOLE),
+]
 
 OPTIONS_SCHEMA = {
     vol.Required(CONF_SENSOR): selector.EntitySelector(
@@ -54,31 +62,66 @@ OPTIONS_SCHEMA = {
     ),
     vol.Required(
         CONF_COLD_TOLERANCE, default=DEFAULT_TOLERANCE
-    ): selector.NumberSelector(),
+    ): selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE
+        )
+    ),
     vol.Required(
         CONF_HOT_TOLERANCE, default=DEFAULT_TOLERANCE
-    ): selector.NumberSelector(),
-    vol.Optional(CONF_TARGET_TEMP): selector.NumberSelector(),
+    ): selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE
+        )
+    ),
+    vol.Optional(CONF_TARGET_TEMP): selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE
+        )
+    ),
     vol.Optional(CONF_MIN_DUR): selector.DurationSelector(
         selector.DurationSelectorConfig(allow_negative=False)
     ),
-    vol.Optional(CONF_MIN_TEMP): selector.NumberSelector(),
-    vol.Optional(CONF_MAX_TEMP): selector.NumberSelector(),
+    vol.Optional(CONF_MIN_TEMP): selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE
+        )
+    ),
+    vol.Optional(CONF_MAX_TEMP): selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE
+        )
+    ),
     vol.Optional(CONF_INITIAL_HVAC_MODE): selector.SelectSelector(
         selector.SelectSelectorConfig(
             options=[HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF],
             translation_key=CONF_INITIAL_HVAC_MODE,
+            mode=selector.SelectSelectorMode.DROPDOWN,
         )
     ),
-    vol.Optional(CONF_PRECISION): vol.In(
-        [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
+    vol.Optional(CONF_PRECISION): selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=PRECISION_STRINGS,
+            mode=selector.SelectSelectorMode.DROPDOWN,
+        )
     ),
     vol.Optional(CONF_KEEP_ALIVE): selector.DurationSelector(
         selector.DurationSelectorConfig(allow_negative=False, enable_day=False)
     ),
-    vol.Optional(CONF_TEMP_STEP): vol.In(
-        [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
+    vol.Optional(CONF_TEMP_STEP): selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=PRECISION_STRINGS,
+            mode=selector.SelectSelectorMode.DROPDOWN,
+        )
     ),
+    **{
+        vol.Optional(v): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE
+            )
+        )
+        for v in CONF_PRESETS.values()
+    },
 }
 
 CONFIG_SCHEMA = {
@@ -88,11 +131,11 @@ CONFIG_SCHEMA = {
 
 
 CONFIG_FLOW = {
-    "user": SchemaFlowFormStep(vol.Schema(OPTIONS_SCHEMA)),
+    "user": SchemaFlowFormStep(vol.Schema(CONFIG_SCHEMA)),
 }
 
 OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(vol.Schema(CONFIG_SCHEMA)),
+    "init": SchemaFlowFormStep(vol.Schema(OPTIONS_SCHEMA)),
 }
 
 
