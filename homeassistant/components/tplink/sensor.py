@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import cast
 
 from kasa import Device, Feature
@@ -99,11 +100,21 @@ ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
 
 def _new_sensor_description(feature: Feature) -> TPLinkSensorEntityDescription:
     """Create description for entities not yet added to the static description list."""
+
+    if isinstance(feature.value, datetime):
+        device_class = SensorDeviceClass.TIMESTAMP
+        state_class = None
+        native_unit_of_measurement = None
+    else:
+        device_class = None
+        state_class = SensorStateClass.MEASUREMENT
+        native_unit_of_measurement = feature.unit
     return TPLinkSensorEntityDescription(
         key=feature.id,
         name=feature.name,
-        native_unit_of_measurement=feature.unit,
-        state_class=SensorStateClass.MEASUREMENT,
+        device_class=device_class,
+        state_class=state_class,
+        native_unit_of_measurement=native_unit_of_measurement,
         feature_id=feature.id,
         precision=feature.precision_hint,
         entity_registry_enabled_default=feature.category is not Feature.Category.Debug,

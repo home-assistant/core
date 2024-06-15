@@ -1,7 +1,7 @@
 """Tests for the TP-Link component."""
 
 from collections import namedtuple
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -318,8 +318,9 @@ FEATURE_TO_MOCK_GEN = {
         category=Feature.Category.Config,
     ),
     "on_since": lambda: _mocked_feature(
-        datetime.now() - timedelta(minutes=5),
+        datetime.now(UTC).astimezone() - timedelta(minutes=5),
         "on_since",
+        name="On since",
         type_=Feature.Type.Sensor,
         category=Feature.Category.Info,
     ),

@@ -227,3 +227,25 @@ async def test_sensor_children(
         child_device = device_registry.async_get(child_entity.device_id)
         assert child_device
         assert child_device.via_device_id == device.id
+
+
+async def test_new_datetime_sensor(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a sensor unique ids."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    plug = _mocked_device(alias="my_plug", features=["on_since"])
+    with _patch_discovery(device=plug), _patch_connect(device=plug):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "sensor.my_plug_on_since"
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+    assert entity.unique_id == f"{DEVICE_ID}_on_since"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["device_class"] == "timestamp"

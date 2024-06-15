@@ -286,7 +286,7 @@ def _entities_for_device[_E: CoordinatedTPLinkEntity](
             if feat.type == feature_type
             and feat.id not in described_features
             # Timezone not currently supported in library
-            and not isinstance(feat.value, datetime)
+            and (not isinstance(feat.value, datetime) or feat.value.tzinfo is not None)
             and (
                 feat.category != Feature.Category.Primary
                 or device.device_type not in DEVICETYPES_WITH_SPECIALIZED_PLATFORMS
