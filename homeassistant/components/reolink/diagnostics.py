@@ -43,9 +43,9 @@ async def async_get_config_entry_diagnostics(
         "channels": api.channels,
         "stream channels": api.stream_channels,
         "IPC cams": IPC_cam,
+        "capabilities": api.capabilities,
         "cmd list": host.update_cmd,
         "firmware ch list": host.firmware_ch_list,
-        "capabilities": api.capabilities,
         "api versions": api.checked_api_versions,
         "abilities": api.abilities,
     }
