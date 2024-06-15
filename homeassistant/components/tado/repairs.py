@@ -3,7 +3,12 @@
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
-from .const import CONST_OVERLAY_MANUAL, CONST_OVERLAY_TADO_DEFAULT, DOMAIN
+from .const import (
+    CONST_OVERLAY_MANUAL,
+    CONST_OVERLAY_TADO_DEFAULT,
+    DOMAIN,
+    WATER_HEATER_FALLBACK_REPAIR,
+)
 
 
 def manage_water_heater_fallback_issue(
@@ -21,9 +26,9 @@ def manage_water_heater_fallback_issue(
             ir.async_create_issue(
                 hass=hass,
                 domain=DOMAIN,
-                issue_id=f"water_heater_fallback_{water_heater_entity.zone_name}",
+                issue_id=f"{WATER_HEATER_FALLBACK_REPAIR}_{water_heater_entity.zone_name}",
                 is_fixable=False,
                 is_persistent=False,
                 severity=ir.IssueSeverity.WARNING,
-                translation_key="water_heater_fallback",
+                translation_key=WATER_HEATER_FALLBACK_REPAIR,
             )
