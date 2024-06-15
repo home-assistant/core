@@ -1,0 +1,34 @@
+{
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
+      "user": {
+        "title": "Setup MadVR Envy",
+        "description": "Make sure your device is ON so we can test the connection.",
+        "data": {
+          "host": "Host",
+          "name": "Name",
+          "mac": "MAC Address",
+          "port": "Port"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the device. Please ensure the device is ON or check the connection settings."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Edit Configuration",
+        "description": "Adjust the settings for your device."
+      }
+    }
+  }
+}
