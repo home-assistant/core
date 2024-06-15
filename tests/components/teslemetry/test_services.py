@@ -27,7 +27,7 @@ from homeassistant.components.teslemetry.services import (
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
@@ -207,7 +207,7 @@ async def test_services(
             "homeassistant.components.teslemetry.EnergySpecific.time_of_use_settings",
             return_value=COMMAND_ERROR,
         ) as set_time_of_use,
-        pytest.raises(ServiceValidationError),
+        pytest.raises(HomeAssistantError),
     ):
         await hass.services.async_call(
             DOMAIN,
