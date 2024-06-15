@@ -6,12 +6,12 @@
         "title": "Add generic hygrostat sensor",
         "description": "Create a entity that control the humidity via a switch and sensor.",
         "data": {
-          "heater": "Heater or AC",
+          "heater": "Heater or A/C",
           "target_sensor": "Temperature sensor",
-          "ac_mode": "A/C mode active",
+          "ac_mode": "Cooling mode",
           "max_temp": "Maximum set point",
-          "min_cycle_duration": "Minumum cycle duration",
-          "min_temp": "Minumum set point",
+          "min_cycle_duration": "Minimum cycle duration",
+          "min_temp": "Minimum set point",
           "name": "[%key:common::config_flow::data::name%]",
           "cold_tolerance": "Cold tolerance",
           "hot_tolerance": "Hot tolerance",
@@ -19,13 +19,7 @@
           "keep_alive": "Keep alive",
           "initial_hvac_mode": "Initial mode",
           "precision": "Precision",
-          "target_temp_step": "Temperature step",
-          "away_temp": "Preset away temperature",
-          "comfort_temp": "Preset comfort_temp",
-          "eco_temp": "Preset eco temperature",
-          "home_temp": "Preset home temperature",
-          "sleep_temp": "Preset sleep temperature",
-          "activity_temp": "Preset activity temperature"
+          "target_temp_step": "Temperature step"
         },
         "data_description": {
           "heater": "Switch entity used to cool or heat depending on A/C mode.",
@@ -41,6 +35,17 @@
           "initial_hvac_mode": "Set the initial HVAC mode. If this parameter is not set, it is preferable to set a keep_alive value. This is helpful to align any discrepancies between generic_thermostat and heater state.",
           "precision": "The desired precision for this device. Can be used to match your actual thermostat's precision. Supported values are 0.1, 0.5 and 1.0. This value is also used as the step size for setting the target temperature.",
           "target_temp_step": "The desired step size for setting the target temperature. Supported values are 0.1, 0.5 and 1.0."
+        }
+      },
+      "presets": {
+        "title": "Temperature presets",
+        "data": {
+          "away_temp": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::away%]",
+          "comfort_temp": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]",
+          "eco_temp": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]",
+          "home_temp": "[%common::state::home%]",
+          "sleep_temp": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::sleep%]",
+          "activity_temp": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::activity%]"
         }
       }
     }
@@ -61,13 +66,7 @@
           "keep_alive": "[%key:component::generic_thermostat::config::step::user::data::keep_alive%]",
           "initial_hvac_mode": "[%key:component::generic_thermostat::config::step::user::data::initial_hvac_mode%]",
           "precision": "[%key:component::generic_thermostat::config::step::user::data::precision%]",
-          "target_temp_step": "[%key:component::generic_thermostat::config::step::user::data::target_temp_step%]",
-          "away_temp": "[%key:component::generic_thermostat::config::step::user::data::away_temp%]",
-          "comfort_temp": "[%key:component::generic_thermostat::config::step::user::data::comfort_temp%]",
-          "eco_temp": "[%key:component::generic_thermostat::config::step::user::data::eco_temp%]",
-          "home_temp": "[%key:component::generic_thermostat::config::step::user::data::home_temp%]",
-          "sleep_temp": "[%key:component::generic_thermostat::config::step::user::data::sleep_temp%]",
-          "activity_temp": "[%key:component::generic_thermostat::config::step::user::data::activity_temp%]"
+          "target_temp_step": "[%key:component::generic_thermostat::config::step::user::data::target_temp_step%]"
         },
         "data_description": {
           "heater": "[%key:component::generic_thermostat::config::step::user::data_description::heater%]",
@@ -83,6 +82,17 @@
           "initial_hvac_mode": "[%key:component::generic_thermostat::config::step::user::data_description::initial_hvac_mode%]",
           "precision": "[%key:component::generic_thermostat::config::step::user::data_description::precision%]",
           "target_temp_step": "[%key:component::generic_thermostat::config::step::user::data_description::target_temp_step%]"
+        }
+      },
+      "presets": {
+        "title": "[%key:component::generic_thermostat::config::step::presets::title%]",
+        "data": {
+          "away_temp": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::away%]",
+          "comfort_temp": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]",
+          "eco_temp": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]",
+          "home_temp": "[%key:common::state::home%]",
+          "sleep_temp": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::sleep%]",
+          "activity_temp": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::activity%]"
         }
       }
     }

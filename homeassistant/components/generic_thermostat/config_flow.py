@@ -114,14 +114,15 @@ OPTIONS_SCHEMA = {
             mode=selector.SelectSelectorMode.DROPDOWN,
         )
     ),
-    **{
-        vol.Optional(v): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE
-            )
+}
+
+PRESETS_SCHEMA = {
+    vol.Optional(v): selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE
         )
-        for v in CONF_PRESETS.values()
-    },
+    )
+    for v in CONF_PRESETS.values()
 }
 
 CONFIG_SCHEMA = {
@@ -131,11 +132,13 @@ CONFIG_SCHEMA = {
 
 
 CONFIG_FLOW = {
-    "user": SchemaFlowFormStep(vol.Schema(CONFIG_SCHEMA)),
+    "user": SchemaFlowFormStep(vol.Schema(CONFIG_SCHEMA), next_step="presets"),
+    "presets": SchemaFlowFormStep(vol.Schema(PRESETS_SCHEMA)),
 }
 
 OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(vol.Schema(OPTIONS_SCHEMA)),
+    "init": SchemaFlowFormStep(vol.Schema(OPTIONS_SCHEMA), next_step="presets"),
+    "presets": SchemaFlowFormStep(vol.Schema(PRESETS_SCHEMA)),
 }
 
 
