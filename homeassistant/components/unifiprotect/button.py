@@ -20,7 +20,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICES_THAT_ADOPT, DISPATCH_ADD, DISPATCH_ADOPT, DOMAIN
+from .const import DEVICES_THAT_ADOPT, DISPATCH_ADD, DOMAIN
 from .data import ProtectData, UFPConfigEntry
 from .entity import ProtectDeviceEntity, async_all_device_entities
 from .models import PermRequired, ProtectRequiredKeysMixin, ProtectSetableKeysMixin, T
@@ -147,9 +147,7 @@ async def async_setup_entry(
             )
         )
 
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
-    )
+    data.async_subscribe_adopt(_add_new_device)
     entry.async_on_unload(
         async_dispatcher_connect(
             hass, _ufpd(entry, DISPATCH_ADD), _async_add_unadopted_device
@@ -188,7 +186,6 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
-
         if self.entity_description.key == KEY_ADOPT:
             device = self.device
             self._attr_available = device.can_adopt and device.can_create(
@@ -197,6 +194,5 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-
         if self.entity_description.ufp_press is not None:
             await getattr(self.device, self.entity_description.ufp_press)()

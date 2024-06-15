@@ -254,7 +254,7 @@ class MockLight(MockToggleEntity, LightEntity):
         state,
         unique_id=None,
         supported_color_modes: set[ColorMode] | None = None,
-    ):
+    ) -> None:
         """Initialize the mock light."""
         super().__init__(name, state, unique_id)
         if supported_color_modes is None:

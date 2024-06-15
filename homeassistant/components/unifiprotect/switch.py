@@ -20,15 +20,17 @@ from uiprotect.data import (
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DISPATCH_ADOPT
 from .data import ProtectData, UFPConfigEntry
-from .entity import ProtectDeviceEntity, ProtectNVREntity, async_all_device_entities
+from .entity import (
+    BaseProtectEntity,
+    ProtectDeviceEntity,
+    ProtectNVREntity,
+    async_all_device_entities,
+)
 from .models import PermRequired, ProtectRequiredKeysMixin, ProtectSetableKeysMixin, T
-from .utils import async_dispatch_id as _ufpd
 
 _LOGGER = logging.getLogger(__name__)
 ATTR_PREV_MIC = "prev_mic_level"
@@ -470,62 +472,11 @@ _PRIVACY_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]]
 }
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: UFPConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up sensors for UniFi Protect integration."""
-    data = entry.runtime_data
-
-    @callback
-    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        entities = async_all_device_entities(
-            data,
-            ProtectSwitch,
-            model_descriptions=_MODEL_DESCRIPTIONS,
-            ufp_device=device,
-        )
-        entities += async_all_device_entities(
-            data,
-            ProtectPrivacyModeSwitch,
-            model_descriptions=_PRIVACY_MODEL_DESCRIPTIONS,
-            ufp_device=device,
-        )
-        async_add_entities(entities)
-
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
-    )
-
-    entities = async_all_device_entities(
-        data,
-        ProtectSwitch,
-        model_descriptions=_MODEL_DESCRIPTIONS,
-    )
-    entities += async_all_device_entities(
-        data,
-        ProtectPrivacyModeSwitch,
-        model_descriptions=_PRIVACY_MODEL_DESCRIPTIONS,
-    )
-
-    if (
-        data.api.bootstrap.nvr.can_write(data.api.bootstrap.auth_user)
-        and data.api.bootstrap.nvr.is_insights_enabled is not None
-    ):
-        for switch in NVR_SWITCHES:
-            entities.append(
-                ProtectNVRSwitch(
-                    data, device=data.api.bootstrap.nvr, description=switch
-                )
-            )
-    async_add_entities(entities)
-
-
 class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
     """A UniFi Protect Switch."""
 
     entity_description: ProtectSwitchEntityDescription
+    _state_attrs = ("_attr_available", "_attr_is_on")
 
     def __init__(
         self,
@@ -550,21 +501,12 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
         """Turn the device off."""
         await self.entity_description.ufp_set(self.device, False)
 
-    @callback
-    def _async_get_state_attrs(self) -> tuple[Any, ...]:
-        """Retrieve data that goes into the current state of the entity.
-
-        Called before and after updating entity and state is only written if there
-        is a change.
-        """
-
-        return (self._attr_available, self._attr_is_on)
-
 
 class ProtectNVRSwitch(ProtectNVREntity, SwitchEntity):
     """A UniFi Protect NVR Switch."""
 
     entity_description: ProtectSwitchEntityDescription
+    _state_attrs = ("_attr_available", "_attr_is_on")
 
     def __init__(
         self,
@@ -576,19 +518,16 @@ class ProtectNVRSwitch(ProtectNVREntity, SwitchEntity):
         super().__init__(data, device, description)
         self._attr_name = f"{self.device.display_name} {self.entity_description.name}"
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if device is on."""
-        return self.entity_description.get_ufp_value(self.device) is True
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
+        self._attr_is_on = self.entity_description.get_ufp_value(self.device) is True
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-
         await self.entity_description.ufp_set(self.device, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-
         await self.entity_description.ufp_set(self.device, False)
 
 
@@ -629,21 +568,18 @@ class ProtectPrivacyModeSwitch(RestoreEntity, ProtectSwitch):
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
-
         # do not add extra state attribute on initialize
         if self.entity_id:
             self._update_previous_attr()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-
         self._previous_mic_level = self.device.mic_volume
         self._previous_record_mode = self.device.recording_settings.mode
         await self.device.set_privacy(True, 0, RecordingMode.NEVER)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-
         extra_state = self.extra_state_attributes or {}
         prev_mic = extra_state.get(ATTR_PREV_MIC, self._previous_mic_level)
         prev_record = extra_state.get(ATTR_PREV_RECORD, self._previous_record_mode)
@@ -652,14 +588,53 @@ class ProtectPrivacyModeSwitch(RestoreEntity, ProtectSwitch):
     async def async_added_to_hass(self) -> None:
         """Restore extra state attributes on startp up."""
         await super().async_added_to_hass()
-
         if not (last_state := await self.async_get_last_state()):
             return
-
-        self._previous_mic_level = last_state.attributes.get(
+        last_attrs = last_state.attributes
+        self._previous_mic_level = last_attrs.get(
             ATTR_PREV_MIC, self._previous_mic_level
         )
-        self._previous_record_mode = last_state.attributes.get(
+        self._previous_record_mode = last_attrs.get(
             ATTR_PREV_RECORD, self._previous_record_mode
         )
         self._update_previous_attr()
+
+
+MODEL_DESCRIPTIONS_WITH_CLASS = (
+    (_MODEL_DESCRIPTIONS, ProtectSwitch),
+    (_PRIVACY_MODEL_DESCRIPTIONS, ProtectPrivacyModeSwitch),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: UFPConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up sensors for UniFi Protect integration."""
+    data = entry.runtime_data
+
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+        entities: list[BaseProtectEntity] = []
+        for model_descriptions, klass in MODEL_DESCRIPTIONS_WITH_CLASS:
+            entities += async_all_device_entities(
+                data, klass, model_descriptions=model_descriptions, ufp_device=device
+            )
+        async_add_entities(entities)
+
+    data.async_subscribe_adopt(_add_new_device)
+    entities: list[BaseProtectEntity] = []
+    for model_descriptions, klass in MODEL_DESCRIPTIONS_WITH_CLASS:
+        entities += async_all_device_entities(
+            data, klass, model_descriptions=model_descriptions
+        )
+
+    bootstrap = data.api.bootstrap
+    nvr = bootstrap.nvr
+    if nvr.can_write(bootstrap.auth_user) and nvr.is_insights_enabled is not None:
+        entities.extend(
+            ProtectNVRSwitch(data, device=nvr, description=switch)
+            for switch in NVR_SWITCHES
+        )
+    async_add_entities(entities)

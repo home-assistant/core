@@ -188,7 +188,7 @@ async def test_block_set_value_connection_error(
 
     # Make device online
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(

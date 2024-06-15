@@ -6,7 +6,6 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
 
 from uiprotect.data import (
     Camera,
@@ -20,14 +19,11 @@ from uiprotect.data import (
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DISPATCH_ADOPT
 from .data import ProtectData, UFPConfigEntry
 from .entity import ProtectDeviceEntity, async_all_device_entities
 from .models import PermRequired, ProtectRequiredKeysMixin, ProtectSetableKeysMixin, T
-from .utils import async_dispatch_id as _ufpd
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -245,10 +241,7 @@ async def async_setup_entry(
             )
         )
 
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
-    )
-
+    data.async_subscribe_adopt(_add_new_device)
     async_add_entities(
         async_all_device_entities(
             data,
@@ -263,6 +256,7 @@ class ProtectNumbers(ProtectDeviceEntity, NumberEntity):
 
     device: Camera | Light
     entity_description: ProtectNumberEntityDescription
+    _state_attrs = ("_attr_available", "_attr_native_value")
 
     def __init__(
         self,
@@ -284,13 +278,3 @@ class ProtectNumbers(ProtectDeviceEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self.entity_description.ufp_set(self.device, value)
-
-    @callback
-    def _async_get_state_attrs(self) -> tuple[Any, ...]:
-        """Retrieve data that goes into the current state of the entity.
-
-        Called before and after updating entity and state is only written if there
-        is a change.
-        """
-
-        return (self._attr_available, self._attr_native_value)

@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any
 
 from uiprotect.data import (
     Camera,
-    ModelType,
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
     StateType,
@@ -27,13 +26,10 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DISPATCH_ADOPT
 from .data import ProtectData, UFPConfigEntry
 from .entity import ProtectDeviceEntity
-from .utils import async_dispatch_id as _ufpd
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,17 +49,12 @@ async def async_setup_entry(
         ):
             async_add_entities([ProtectMediaPlayer(data, device)])
 
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+    data.async_subscribe_adopt(_add_new_device)
+    async_add_entities(
+        ProtectMediaPlayer(data, device)
+        for device in data.get_cameras()
+        if device.has_speaker or device.has_removable_speaker
     )
-
-    entities = []
-    for device in data.get_by_types({ModelType.CAMERA}):
-        device = cast(Camera, device)
-        if device.has_speaker or device.has_removable_speaker:
-            entities.append(ProtectMediaPlayer(data, device))
-
-    async_add_entities(entities)
 
 
 class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
@@ -78,6 +69,7 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
+    _state_attrs = ("_attr_available", "_attr_state", "_attr_volume_level")
 
     def __init__(
         self,
@@ -115,16 +107,6 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             or (not updated_device.is_adopted_by_us and updated_device.can_adopt)
         )
         self._attr_available = is_connected and updated_device.feature_flags.has_speaker
-
-    @callback
-    def _async_get_state_attrs(self) -> tuple[Any, ...]:
-        """Retrieve data that goes into the current state of the entity.
-
-        Called before and after updating entity and state is only written if there
-        is a change.
-        """
-
-        return (self._attr_available, self._attr_state, self._attr_volume_level)
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""

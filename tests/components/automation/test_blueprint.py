@@ -4,6 +4,7 @@ import asyncio
 import contextlib
 from datetime import timedelta
 import pathlib
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -56,12 +57,12 @@ async def test_notify_leaving_zone(
         connections={(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:01")},
     )
 
-    def set_person_state(state, extra={}):
+    def set_person_state(state: str, extra: dict[str, Any]) -> None:
         hass.states.async_set(
             "person.test_person", state, {"friendly_name": "Paulus", **extra}
         )
 
-    set_person_state("School")
+    set_person_state("School", {})
 
     assert await async_setup_component(
         hass, "zone", {"zone": {"name": "School", "latitude": 1, "longitude": 2}}
@@ -92,7 +93,7 @@ async def test_notify_leaving_zone(
         "homeassistant.components.mobile_app.device_action.async_call_action_from_config"
     ) as mock_call_action:
         # Leaving zone to no zone
-        set_person_state("not_home")
+        set_person_state("not_home", {})
         await hass.async_block_till_done()
 
         assert len(mock_call_action.mock_calls) == 1
@@ -108,13 +109,13 @@ async def test_notify_leaving_zone(
         assert message_tpl.async_render(variables) == "Paulus has left School"
 
         # Should not increase when we go to another zone
-        set_person_state("bla")
+        set_person_state("bla", {})
         await hass.async_block_till_done()
 
         assert len(mock_call_action.mock_calls) == 1
 
         # Should not increase when we go into the zone
-        set_person_state("School")
+        set_person_state("School", {})
         await hass.async_block_till_done()
 
         assert len(mock_call_action.mock_calls) == 1
@@ -126,7 +127,7 @@ async def test_notify_leaving_zone(
         assert len(mock_call_action.mock_calls) == 1
 
         # Should increase when leaving zone for another zone
-        set_person_state("Just Outside School")
+        set_person_state("Just Outside School", {})
         await hass.async_block_till_done()
 
         assert len(mock_call_action.mock_calls) == 2
