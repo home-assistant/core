@@ -6,7 +6,7 @@ from collections.abc import Callable, Sequence
 from functools import partial
 import logging
 from operator import attrgetter
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from uiprotect.data import (
     NVR,
@@ -310,14 +310,9 @@ class ProtectNVREntity(BaseProtectEntity):
 class EventEntityMixin(ProtectDeviceEntity):
     """Adds motion event attributes to sensor."""
 
-    _unrecorded_attributes = frozenset({ATTR_EVENT_ID, ATTR_EVENT_SCORE})
-
     entity_description: ProtectEventMixin
-
-    def __init__(self, *args: Any, **kwarg: Any) -> None:
-        """Init an sensor that has event thumbnails."""
-        super().__init__(*args, **kwarg)
-        self._event: Event | None = None
+    _unrecorded_attributes = frozenset({ATTR_EVENT_ID, ATTR_EVENT_SCORE})
+    _event: Event | None = None
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
