@@ -8,7 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import setup
-from homeassistant.components import trend
+from homeassistant.components.trend.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -379,7 +379,7 @@ async def test_device_id(
 
     trend_config_entry = MockConfigEntry(
         data={},
-        domain=trend.DOMAIN,
+        domain=DOMAIN,
         options={
             "name": "Trend",
             "entity_id": "sensor.test_source",
