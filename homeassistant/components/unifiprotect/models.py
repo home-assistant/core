@@ -20,10 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 T = TypeVar("T", bound=ProtectAdoptableDeviceModel | NVR)
 
 
-def split_tuple(value: tuple[str, ...] | str | None) -> tuple[str, ...] | None:
+def split_tuple(value: tuple[str, ...] | str) -> tuple[str, ...]:
     """Split string to tuple."""
-    if value is None:
-        return None
     if TYPE_CHECKING:
         assert isinstance(value, str)
     return tuple(value.split("."))
@@ -70,19 +68,16 @@ class ProtectEntityDescription(EntityDescription, Generic[T]):
         _setter = partial(object.__setattr__, self)
         if (_ufp_value := self.ufp_value) is not None:
             ufp_value = split_tuple(_ufp_value)
-            assert isinstance(ufp_value, tuple)
             _setter("get_ufp_value", partial(get_nested_attr, attrs=ufp_value))
         elif (ufp_value_fn := self.ufp_value_fn) is not None:
             _setter("get_ufp_value", ufp_value_fn)
 
         if (_ufp_enabled := self.ufp_enabled) is not None:
             ufp_enabled = split_tuple(_ufp_enabled)
-            assert isinstance(ufp_enabled, tuple)
             _setter("get_ufp_enabled", partial(get_nested_attr, attrs=ufp_enabled))
 
         if (_ufp_required_field := self.ufp_required_field) is not None:
             ufp_required_field = split_tuple(_ufp_required_field)
-            assert isinstance(ufp_required_field, tuple)
             _setter(
                 "has_required",
                 lambda obj: bool(get_nested_attr(obj, ufp_required_field)),
