@@ -1,4 +1,4 @@
-"""Config entry helpers for Spotify."""
+"""Models for use in Spotify integration."""
 
 from dataclasses import dataclass
 from typing import Any
