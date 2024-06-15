@@ -163,6 +163,7 @@ class BaseProtectEntity(Entity):
     device: ProtectAdoptableDeviceModel | NVR
 
     _attr_should_poll = False
+    _attr_attribution = DEFAULT_ATTRIBUTION
     _state_attrs: tuple[str, ...] = ("_attr_available",)
 
     def __init__(
@@ -194,7 +195,6 @@ class BaseProtectEntity(Entity):
             if isinstance(description, ProtectEntityDescription):
                 self._async_get_ufp_enabled = description.get_ufp_enabled
 
-        self._attr_attribution = DEFAULT_ATTRIBUTION
         self._async_set_device_info()
         self._async_update_device_from_protect(device)
         self._state_getters = tuple(
