@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from datetime import datetime, timedelta
 import logging
 import math
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -25,6 +26,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -51,8 +53,12 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import ConditionError
-from homeassistant.helpers import condition
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import (
+    condition,
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_state_change_event,
@@ -122,6 +128,54 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 ).extend({vol.Optional(v): vol.Coerce(float) for (k, v) in CONF_PRESETS.items()})
 
 
+def _async_get_device_info_from_entity_id(
+    hass: HomeAssistant, entity_id_or_uuid: str
+) -> dr.DeviceInfo | None:
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+
+    entity_id = er.async_validate_entity_id(entity_registry, entity_id_or_uuid)
+
+    entity = entity_registry.async_get(entity_id)
+    if not entity or not entity.device_id:
+        return None
+
+    device = device_registry.async_get(entity.device_id)
+    if not device:
+        return None
+
+    return dr.DeviceInfo(
+        identifiers=device.identifiers,
+        connections=device.connections,
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+
+    device_info = _async_get_device_info_from_entity_id(
+        hass, config_entry.options[CONF_HEATER]
+    )
+
+    await _async_setup_config(
+        hass,
+        config_entry.options,
+        config_entry.entry_id,
+        async_add_entities,
+        device_info,
+    )
+
+
+def _time_period_or_none(value: Any) -> timedelta | None:
+    if value is None:
+        return None
+    return cast(timedelta, cv.time_period(value))
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -131,6 +185,19 @@ async def async_setup_platform(
     """Set up the generic thermostat platform."""
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    await _async_setup_config(
+        hass, config, config.get(CONF_UNIQUE_ID), async_add_entities
+    )
+
+
+async def _async_setup_config(
+    hass: HomeAssistant,
+    config: Mapping[str, Any],
+    unique_id: str | None,
+    async_add_entities: AddEntitiesCallback,
+    device_info: dr.DeviceInfo | None = None,
+) -> None:
+    """Set up the generic thermostat platform."""
 
     name: str = config[CONF_NAME]
     heater_entity_id: str = config[CONF_HEATER]
@@ -139,7 +206,9 @@ async def async_setup_platform(
     max_temp: float | None = config.get(CONF_MAX_TEMP)
     target_temp: float | None = config.get(CONF_TARGET_TEMP)
     ac_mode: bool | None = config.get(CONF_AC_MODE)
-    min_cycle_duration: timedelta | None = config.get(CONF_MIN_DUR)
+    min_cycle_duration: timedelta | None = _time_period_or_none(
+        config.get(CONF_MIN_DUR)
+    )
     cold_tolerance: float = config[CONF_COLD_TOLERANCE]
     hot_tolerance: float = config[CONF_HOT_TOLERANCE]
     keep_alive: timedelta | None = config.get(CONF_KEEP_ALIVE)
@@ -150,7 +219,6 @@ async def async_setup_platform(
     precision: float | None = config.get(CONF_PRECISION)
     target_temperature_step: float | None = config.get(CONF_TEMP_STEP)
     unit = hass.config.units.temperature_unit
-    unique_id: str | None = config.get(CONF_UNIQUE_ID)
 
     async_add_entities(
         [
@@ -172,6 +240,7 @@ async def async_setup_platform(
                 target_temperature_step,
                 unit,
                 unique_id,
+                device_info,
             )
         ]
     )
@@ -202,6 +271,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         target_temperature_step: float | None,
         unit: UnitOfTemperature,
         unique_id: str | None,
+        device_info: dr.DeviceInfo | None = None,
     ) -> None:
         """Initialize the thermostat."""
         self._attr_name = name
@@ -234,6 +304,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             | ClimateEntityFeature.TURN_OFF
             | ClimateEntityFeature.TURN_ON
         )
+        self._attr_device_info = device_info
         if len(presets):
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
             self._attr_preset_modes = [PRESET_NONE, *presets.keys()]
