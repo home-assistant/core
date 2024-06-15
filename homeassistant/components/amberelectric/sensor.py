@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from amberelectric.model.actual_interval import ActualInterval
 from amberelectric.model.channel import ChannelType
 from amberelectric.model.current_interval import CurrentInterval
 from amberelectric.model.forecast_interval import ForecastInterval
@@ -41,6 +42,27 @@ def friendly_channel_type(channel_type: str) -> str:
     if channel_type == "feed_in":
         return "Feed In"
     return "General"
+
+
+def interval_to_datum(
+    interval: ActualInterval | CurrentInterval | ForecastInterval,
+) -> dict[str, Any]:
+    """Return a data item with shared fields among different interval types."""
+    datum = {}
+    datum["duration"] = interval.duration
+    datum["spot_per_kwh"] = format_cents_to_dollars(interval.spot_per_kwh)
+    datum["per_kwh"] = format_cents_to_dollars(interval.per_kwh)
+    if interval.channel_type == ChannelType.FEED_IN:
+        datum["per_kwh"] = datum["per_kwh"] * -1
+    datum["date"] = interval.date.isoformat()
+    datum["nem_date"] = interval.nem_time.isoformat()
+    datum["start_time"] = interval.start_time.isoformat()
+    datum["end_time"] = interval.end_time.isoformat()
+    datum["renewables"] = round(interval.renewables)
+    datum["channel_type"] = interval.channel_type.value
+    datum["spike_status"] = interval.spike_status.value
+    datum["descriptor"] = normalize_descriptor(interval.descriptor)
+    return datum
 
 
 class AmberSensor(CoordinatorEntity[AmberUpdateCoordinator], SensorEntity):
@@ -82,27 +104,21 @@ class AmberPriceSensor(AmberSensor):
         """Return additional pieces of information about the price."""
         interval = self.coordinator.data[self.entity_description.key][self.channel_type]
 
-        data: dict[str, Any] = {}
         if interval is None:
-            return data
+            return {}
 
-        data["duration"] = interval.duration
-        data["date"] = interval.date.isoformat()
-        data["per_kwh"] = format_cents_to_dollars(interval.per_kwh)
-        if interval.channel_type == ChannelType.FEED_IN:
-            data["per_kwh"] = data["per_kwh"] * -1
-        data["nem_date"] = interval.nem_time.isoformat()
-        data["spot_per_kwh"] = format_cents_to_dollars(interval.spot_per_kwh)
-        data["start_time"] = interval.start_time.isoformat()
-        data["end_time"] = interval.end_time.isoformat()
-        data["renewables"] = round(interval.renewables)
+        data = interval_to_datum(interval)
         data["estimate"] = interval.estimate
-        data["spike_status"] = interval.spike_status.value
-        data["channel_type"] = interval.channel_type.value
 
         if interval.range is not None:
             data["range_min"] = format_cents_to_dollars(interval.range.min)
             data["range_max"] = format_cents_to_dollars(interval.range.max)
+
+        actual_intervals = self.coordinator.data["actuals"].get(self.channel_type)
+        if actual_intervals:
+            data["actuals"] = [
+                interval_to_datum(interval) for interval in actual_intervals
+            ]
 
         return data
 
@@ -140,24 +156,10 @@ class AmberForecastSensor(AmberSensor):
         }
 
         for interval in intervals:
-            datum = {}
-            datum["duration"] = interval.duration
-            datum["date"] = interval.date.isoformat()
-            datum["nem_date"] = interval.nem_time.isoformat()
-            datum["per_kwh"] = format_cents_to_dollars(interval.per_kwh)
-            if interval.channel_type == ChannelType.FEED_IN:
-                datum["per_kwh"] = datum["per_kwh"] * -1
-            datum["spot_per_kwh"] = format_cents_to_dollars(interval.spot_per_kwh)
-            datum["start_time"] = interval.start_time.isoformat()
-            datum["end_time"] = interval.end_time.isoformat()
-            datum["renewables"] = round(interval.renewables)
-            datum["spike_status"] = interval.spike_status.value
-            datum["descriptor"] = normalize_descriptor(interval.descriptor)
-
+            datum = interval_to_datum(interval)
             if interval.range is not None:
                 datum["range_min"] = format_cents_to_dollars(interval.range.min)
                 datum["range_max"] = format_cents_to_dollars(interval.range.max)
-
             data["forecasts"].append(datum)
 
         return data

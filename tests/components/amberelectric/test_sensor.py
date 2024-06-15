@@ -125,8 +125,20 @@ async def test_general_price_sensor(hass: HomeAssistant, setup_general: Mock) ->
     assert attributes.get("range_min") is None
     assert attributes.get("range_max") is None
 
+    first_actual = attributes["actuals"][0]
+    assert first_actual["duration"] == 30
+    assert first_actual["date"] == "2021-09-21"
+    assert first_actual["per_kwh"] == 0.08
+    assert first_actual["nem_date"] == "2021-09-21T07:30:00+10:00"
+    assert first_actual["spot_per_kwh"] == 0.01
+    assert first_actual["start_time"] == "2021-09-21T07:00:00+10:00"
+    assert first_actual["end_time"] == "2021-09-21T07:30:00+10:00"
+    assert first_actual["renewables"] == 50
+    assert first_actual["spike_status"] == "none"
+    assert first_actual["descriptor"] == "low"
+
     with_range: list[CurrentInterval] = GENERAL_CHANNEL
-    with_range[0].range = Range(7.8, 12.4)
+    with_range[2].range = Range(7.8, 12.4)
 
     setup_general.get_current_price.return_value = with_range
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -161,6 +173,18 @@ async def test_general_and_controlled_load_price_sensor(hass: HomeAssistant) -> 
     assert attributes["channel_type"] == "controlledLoad"
     assert attributes["attribution"] == "Data provided by Amber Electric"
 
+    first_actual = attributes["actuals"][0]
+    assert first_actual["duration"] == 30
+    assert first_actual["date"] == "2021-09-21"
+    assert first_actual["per_kwh"] == 0.08
+    assert first_actual["nem_date"] == "2021-09-21T07:30:00+10:00"
+    assert first_actual["spot_per_kwh"] == 0.01
+    assert first_actual["start_time"] == "2021-09-21T07:00:00+10:00"
+    assert first_actual["end_time"] == "2021-09-21T07:30:00+10:00"
+    assert first_actual["renewables"] == 50
+    assert first_actual["spike_status"] == "none"
+    assert first_actual["descriptor"] == "low"
+
 
 @pytest.mark.usefixtures("setup_general_and_feed_in")
 async def test_general_and_feed_in_price_sensor(hass: HomeAssistant) -> None:
@@ -182,6 +206,18 @@ async def test_general_and_feed_in_price_sensor(hass: HomeAssistant) -> None:
     assert attributes["spike_status"] == "none"
     assert attributes["channel_type"] == "feedIn"
     assert attributes["attribution"] == "Data provided by Amber Electric"
+
+    first_actual = attributes["actuals"][0]
+    assert first_actual["duration"] == 30
+    assert first_actual["date"] == "2021-09-21"
+    assert first_actual["per_kwh"] == -0.08
+    assert first_actual["nem_date"] == "2021-09-21T07:30:00+10:00"
+    assert first_actual["spot_per_kwh"] == 0.01
+    assert first_actual["start_time"] == "2021-09-21T07:00:00+10:00"
+    assert first_actual["end_time"] == "2021-09-21T07:30:00+10:00"
+    assert first_actual["renewables"] == 50
+    assert first_actual["spike_status"] == "none"
+    assert first_actual["descriptor"] == "low"
 
 
 async def test_general_forecast_sensor(
@@ -212,7 +248,7 @@ async def test_general_forecast_sensor(
     assert first_forecast.get("range_max") is None
 
     with_range: list[CurrentInterval] = GENERAL_CHANNEL
-    with_range[1].range = Range(7.8, 12.4)
+    with_range[3].range = Range(7.8, 12.4)
 
     setup_general.get_current_price.return_value = with_range
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]

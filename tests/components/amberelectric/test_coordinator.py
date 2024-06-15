@@ -100,20 +100,26 @@ async def test_fetch_general_site(hass: HomeAssistant, current_price_api: Mock) 
     result = await data_service._async_update_data()
 
     current_price_api.get_current_price.assert_called_with(
-        GENERAL_ONLY_SITE_ID, next=48
+        GENERAL_ONLY_SITE_ID, previous=48, next=48
     )
 
-    assert result["current"].get("general") == GENERAL_CHANNEL[0]
-    assert result["forecasts"].get("general") == [
+    assert result["current"].get("general") == GENERAL_CHANNEL[2]
+    assert result["actuals"].get("general") == [
+        GENERAL_CHANNEL[0],
         GENERAL_CHANNEL[1],
-        GENERAL_CHANNEL[2],
+    ]
+    assert result["forecasts"].get("general") == [
         GENERAL_CHANNEL[3],
+        GENERAL_CHANNEL[4],
+        GENERAL_CHANNEL[5],
     ]
     assert result["current"].get("controlled_load") is None
+    assert result["actuals"].get("controlled_load") is None
     assert result["forecasts"].get("controlled_load") is None
     assert result["current"].get("feed_in") is None
+    assert result["actuals"].get("feed_in") is None
     assert result["forecasts"].get("feed_in") is None
-    assert result["grid"]["renewables"] == round(GENERAL_CHANNEL[0].renewables)
+    assert result["grid"]["renewables"] == round(GENERAL_CHANNEL[2].renewables)
     assert result["grid"]["price_spike"] == "none"
 
 
@@ -128,7 +134,7 @@ async def test_fetch_no_general_site(
         await data_service._async_update_data()
 
     current_price_api.get_current_price.assert_called_with(
-        GENERAL_ONLY_SITE_ID, next=48
+        GENERAL_ONLY_SITE_ID, previous=48, next=48
     )
 
 
@@ -140,36 +146,48 @@ async def test_fetch_api_error(hass: HomeAssistant, current_price_api: Mock) -> 
     result = await data_service._async_update_data()
 
     current_price_api.get_current_price.assert_called_with(
-        GENERAL_ONLY_SITE_ID, next=48
+        GENERAL_ONLY_SITE_ID, previous=48, next=48
     )
 
-    assert result["current"].get("general") == GENERAL_CHANNEL[0]
-    assert result["forecasts"].get("general") == [
+    assert result["current"].get("general") == GENERAL_CHANNEL[2]
+    assert result["actuals"].get("general") == [
+        GENERAL_CHANNEL[0],
         GENERAL_CHANNEL[1],
-        GENERAL_CHANNEL[2],
+    ]
+    assert result["forecasts"].get("general") == [
         GENERAL_CHANNEL[3],
+        GENERAL_CHANNEL[4],
+        GENERAL_CHANNEL[5],
     ]
     assert result["current"].get("controlled_load") is None
+    assert result["actuals"].get("controlled_load") is None
     assert result["forecasts"].get("controlled_load") is None
     assert result["current"].get("feed_in") is None
+    assert result["actuals"].get("feed_in") is None
     assert result["forecasts"].get("feed_in") is None
-    assert result["grid"]["renewables"] == round(GENERAL_CHANNEL[0].renewables)
+    assert result["grid"]["renewables"] == round(GENERAL_CHANNEL[2].renewables)
 
     current_price_api.get_current_price.side_effect = ApiException(status=403)
     with pytest.raises(UpdateFailed):
         await data_service._async_update_data()
 
-    assert result["current"].get("general") == GENERAL_CHANNEL[0]
-    assert result["forecasts"].get("general") == [
+    assert result["current"].get("general") == GENERAL_CHANNEL[2]
+    assert result["actuals"].get("general") == [
+        GENERAL_CHANNEL[0],
         GENERAL_CHANNEL[1],
-        GENERAL_CHANNEL[2],
+    ]
+    assert result["forecasts"].get("general") == [
         GENERAL_CHANNEL[3],
+        GENERAL_CHANNEL[4],
+        GENERAL_CHANNEL[5],
     ]
     assert result["current"].get("controlled_load") is None
+    assert result["actuals"].get("controlled_load") is None
     assert result["forecasts"].get("controlled_load") is None
     assert result["current"].get("feed_in") is None
+    assert result["actuals"].get("feed_in") is None
     assert result["forecasts"].get("feed_in") is None
-    assert result["grid"]["renewables"] == round(GENERAL_CHANNEL[0].renewables)
+    assert result["grid"]["renewables"] == round(GENERAL_CHANNEL[2].renewables)
     assert result["grid"]["price_spike"] == "none"
 
 
@@ -187,24 +205,33 @@ async def test_fetch_general_and_controlled_load_site(
     result = await data_service._async_update_data()
 
     current_price_api.get_current_price.assert_called_with(
-        GENERAL_AND_CONTROLLED_SITE_ID, next=48
+        GENERAL_AND_CONTROLLED_SITE_ID, previous=48, next=48
     )
 
-    assert result["current"].get("general") == GENERAL_CHANNEL[0]
-    assert result["forecasts"].get("general") == [
+    assert result["current"].get("general") == GENERAL_CHANNEL[2]
+    assert result["actuals"].get("general") == [
+        GENERAL_CHANNEL[0],
         GENERAL_CHANNEL[1],
-        GENERAL_CHANNEL[2],
-        GENERAL_CHANNEL[3],
     ]
-    assert result["current"].get("controlled_load") is CONTROLLED_LOAD_CHANNEL[0]
-    assert result["forecasts"].get("controlled_load") == [
+    assert result["forecasts"].get("general") == [
+        GENERAL_CHANNEL[3],
+        GENERAL_CHANNEL[4],
+        GENERAL_CHANNEL[5],
+    ]
+    assert result["current"].get("controlled_load") is CONTROLLED_LOAD_CHANNEL[2]
+    assert result["actuals"].get("controlled_load") == [
+        CONTROLLED_LOAD_CHANNEL[0],
         CONTROLLED_LOAD_CHANNEL[1],
-        CONTROLLED_LOAD_CHANNEL[2],
+    ]
+    assert result["forecasts"].get("controlled_load") == [
         CONTROLLED_LOAD_CHANNEL[3],
+        CONTROLLED_LOAD_CHANNEL[4],
+        CONTROLLED_LOAD_CHANNEL[5],
     ]
     assert result["current"].get("feed_in") is None
+    assert result["actuals"].get("feed_in") is None
     assert result["forecasts"].get("feed_in") is None
-    assert result["grid"]["renewables"] == round(GENERAL_CHANNEL[0].renewables)
+    assert result["grid"]["renewables"] == round(GENERAL_CHANNEL[2].renewables)
     assert result["grid"]["price_spike"] == "none"
 
 
@@ -220,24 +247,33 @@ async def test_fetch_general_and_feed_in_site(
     result = await data_service._async_update_data()
 
     current_price_api.get_current_price.assert_called_with(
-        GENERAL_AND_FEED_IN_SITE_ID, next=48
+        GENERAL_AND_FEED_IN_SITE_ID, previous=48, next=48
     )
 
-    assert result["current"].get("general") == GENERAL_CHANNEL[0]
-    assert result["forecasts"].get("general") == [
+    assert result["current"].get("general") == GENERAL_CHANNEL[2]
+    assert result["actuals"].get("general") == [
+        GENERAL_CHANNEL[0],
         GENERAL_CHANNEL[1],
-        GENERAL_CHANNEL[2],
+    ]
+    assert result["forecasts"].get("general") == [
         GENERAL_CHANNEL[3],
+        GENERAL_CHANNEL[4],
+        GENERAL_CHANNEL[5],
     ]
     assert result["current"].get("controlled_load") is None
+    assert result["actuals"].get("controlled_load") is None
     assert result["forecasts"].get("controlled_load") is None
-    assert result["current"].get("feed_in") is FEED_IN_CHANNEL[0]
-    assert result["forecasts"].get("feed_in") == [
+    assert result["current"].get("feed_in") is FEED_IN_CHANNEL[2]
+    assert result["actuals"].get("feed_in") == [
+        FEED_IN_CHANNEL[0],
         FEED_IN_CHANNEL[1],
-        FEED_IN_CHANNEL[2],
-        FEED_IN_CHANNEL[3],
     ]
-    assert result["grid"]["renewables"] == round(GENERAL_CHANNEL[0].renewables)
+    assert result["forecasts"].get("feed_in") == [
+        FEED_IN_CHANNEL[3],
+        FEED_IN_CHANNEL[4],
+        FEED_IN_CHANNEL[5],
+    ]
+    assert result["grid"]["renewables"] == round(GENERAL_CHANNEL[2].renewables)
     assert result["grid"]["price_spike"] == "none"
 
 
