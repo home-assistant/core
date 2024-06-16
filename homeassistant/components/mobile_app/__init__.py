@@ -37,14 +37,11 @@ from .const import (
     CONF_CLOUDHOOK_URL,
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
-    DATA_DEVICES,
-    DATA_PUSH_CHANNEL,
-    DATA_STORE,
     DOMAIN,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
-from .helpers import savable_state
+from .helpers import MobileApp, MobileAppConfigEntry, MobileAppData, savable_state
 from .http_api import RegistrationsView
 from .util import async_create_cloud_hook
 from .webhook import handle_webhook
@@ -65,17 +62,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             DATA_DELETED_IDS: [],
         }
 
-    hass.data[DOMAIN] = {
-        DATA_CONFIG_ENTRIES: {},
-        DATA_DELETED_IDS: app_config.get(DATA_DELETED_IDS, []),
-        DATA_DEVICES: {},
-        DATA_PUSH_CHANNEL: {},
-        DATA_STORE: store,
-    }
+    hass.data[MobileApp] = MobileAppData(
+        deleted_ids=app_config.get(DATA_DELETED_IDS, []), store=store
+    )
 
     hass.http.register_view(RegistrationsView())
 
-    for deleted_id in hass.data[DOMAIN][DATA_DELETED_IDS]:
+    for deleted_id in hass.data[MobileApp].deleted_ids:
         with suppress(ValueError):
             webhook_register(
                 hass, DOMAIN, "Deleted Webhook", deleted_id, handle_webhook
@@ -97,10 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     webhook_id = registration[CONF_WEBHOOK_ID]
 
-    hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id] = entry
-
     device_registry = dr.async_get(hass)
-
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, registration[ATTR_DEVICE_ID])},
@@ -110,7 +100,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sw_version=registration[ATTR_OS_VERSION],
     )
 
-    hass.data[DOMAIN][DATA_DEVICES][webhook_id] = device
+    hass.data.setdefault(MobileAppConfigEntry, {})[entry.entry_id] = MobileAppData(
+        config_entries={webhook_id: entry}, devices={webhook_id: device}
+    )
 
     registration_name = f"Mobile App: {registration[ATTR_DEVICE_NAME]}"
     webhook_register(hass, DOMAIN, registration_name, webhook_id, handle_webhook)
@@ -147,18 +139,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     webhook_id = entry.data[CONF_WEBHOOK_ID]
 
     webhook_unregister(hass, webhook_id)
-    del hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
-    del hass.data[DOMAIN][DATA_DEVICES][webhook_id]
-    await hass_notify.async_reload(hass, DOMAIN)
+
+    data = hass.data[MobileApp]
+    del data.config_entries[webhook_id]
+    del data.devices[webhook_id]
 
     return True
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Cleanup when entry is removed."""
-    hass.data[DOMAIN][DATA_DELETED_IDS].append(entry.data[CONF_WEBHOOK_ID])
-    store = hass.data[DOMAIN][DATA_STORE]
-    await store.async_save(savable_state(hass))
+    data = hass.data[MobileApp]
+    data.deleted_ids.append(entry.data[CONF_WEBHOOK_ID])
+    if data.store:
+        await data.store.async_save(savable_state(hass))
 
     if CONF_CLOUDHOOK_URL in entry.data:
         with suppress(cloud.CloudNotAvailable, ValueError):

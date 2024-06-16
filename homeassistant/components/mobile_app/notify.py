@@ -37,11 +37,8 @@ from .const import (
     ATTR_PUSH_TOKEN,
     ATTR_PUSH_URL,
     ATTR_WEBHOOK_ID,
-    DATA_CONFIG_ENTRIES,
-    DATA_NOTIFY,
-    DATA_PUSH_CHANNEL,
-    DOMAIN,
 )
+from .helpers import MobileApp
 from .util import supports_push
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,8 +47,7 @@ _LOGGER = logging.getLogger(__name__)
 def push_registrations(hass):
     """Return a dictionary of push enabled registrations."""
     targets = {}
-
-    for webhook_id, entry in hass.data[DOMAIN][DATA_CONFIG_ENTRIES].items():
+    for webhook_id, entry in hass.data[MobileApp].config_entries.items():
         if not supports_push(hass, webhook_id):
             continue
 
@@ -90,7 +86,7 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> MobileAppNotificationService:
     """Get the mobile_app notification service."""
-    service = hass.data[DOMAIN][DATA_NOTIFY] = MobileAppNotificationService(hass)
+    service = hass.data[MobileApp].notify = MobileAppNotificationService(hass)
     return service
 
 
@@ -109,6 +105,7 @@ class MobileAppNotificationService(BaseNotificationService):
     async def async_send_message(self, message="", **kwargs):
         """Send a message to the Lambda APNS gateway."""
         data = {ATTR_MESSAGE: message}
+        my_data = self.hass.data[MobileApp]
 
         # Remove default title from notifications.
         if (
@@ -123,10 +120,10 @@ class MobileAppNotificationService(BaseNotificationService):
         if kwargs.get(ATTR_DATA) is not None:
             data[ATTR_DATA] = kwargs.get(ATTR_DATA)
 
-        local_push_channels = self.hass.data[DOMAIN][DATA_PUSH_CHANNEL]
+        local_push_channels = my_data.push_channel
 
         for target in targets:
-            registration = self.hass.data[DOMAIN][DATA_CONFIG_ENTRIES][target].data
+            registration = my_data.config_entries[target].data
 
             if target in local_push_channels:
                 local_push_channels[target].async_send_notification(

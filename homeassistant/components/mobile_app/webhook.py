@@ -95,9 +95,6 @@ from .const import (
     CONF_CLOUDHOOK_URL,
     CONF_REMOTE_UI_URL,
     CONF_SECRET,
-    DATA_CONFIG_ENTRIES,
-    DATA_DELETED_IDS,
-    DATA_DEVICES,
     DOMAIN,
     ERR_ENCRYPTION_ALREADY_ENABLED,
     ERR_ENCRYPTION_REQUIRED,
@@ -108,6 +105,7 @@ from .const import (
     SIGNAL_SENSOR_UPDATE,
 )
 from .helpers import (
+    MobileApp,
     decrypt_payload,
     decrypt_payload_legacy,
     empty_okay_response,
@@ -183,10 +181,10 @@ async def handle_webhook(
     hass: HomeAssistant, webhook_id: str, request: Request
 ) -> Response:
     """Handle webhook callback."""
-    if webhook_id in hass.data[DOMAIN][DATA_DELETED_IDS]:
+    if webhook_id in hass.data[MobileApp].deleted_ids:
         return Response(status=410)
 
-    config_entry: ConfigEntry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
+    config_entry: ConfigEntry = hass.data[MobileApp].config_entries[webhook_id]
 
     device_name: str = config_entry.data[ATTR_DEVICE_NAME]
 
@@ -765,7 +763,7 @@ async def webhook_scan_tag(
     await tag.async_scan_tag(
         hass,
         data["tag_id"],
-        hass.data[DOMAIN][DATA_DEVICES][config_entry.data[CONF_WEBHOOK_ID]].id,
+        hass.data[MobileApp].devices[config_entry.data[CONF_WEBHOOK_ID]].id,
         registration_context(config_entry.data),
     )
     return empty_okay_response()

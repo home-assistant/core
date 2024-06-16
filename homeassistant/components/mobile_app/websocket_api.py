@@ -10,7 +10,8 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
-from .const import CONF_USER_ID, DATA_CONFIG_ENTRIES, DATA_PUSH_CHANNEL, DOMAIN
+from .const import CONF_USER_ID
+from .helpers import MobileApp
 from .push_notification import PushChannel
 
 
@@ -28,7 +29,7 @@ def _ensure_webhook_access(func):
     @wraps(func)
     def with_webhook_access(hass, connection, msg):
         # Validate that the webhook ID is registered to the user of the websocket connection
-        config_entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES].get(msg["webhook_id"])
+        config_entry = hass.data[MobileApp].config_entries.get(msg["webhook_id"])
 
         if config_entry is None:
             connection.send_error(
@@ -64,7 +65,7 @@ def handle_push_notification_confirm(
     msg: dict[str, Any],
 ) -> None:
     """Confirm receipt of a push notification."""
-    channel: PushChannel | None = hass.data[DOMAIN][DATA_PUSH_CHANNEL].get(
+    channel: PushChannel | None = hass.data[MobileApp].push_channel.get(
         msg["webhook_id"]
     )
     if channel is None:
@@ -101,7 +102,7 @@ async def handle_push_notification_channel(
 ) -> None:
     """Set up a direct push notification channel."""
     webhook_id = msg["webhook_id"]
-    registered_channels: dict[str, PushChannel] = hass.data[DOMAIN][DATA_PUSH_CHANNEL]
+    registered_channels: dict[str, PushChannel] = hass.data[MobileApp].push_channel
 
     if webhook_id in registered_channels:
         await registered_channels[webhook_id].async_teardown()

@@ -1,7 +1,8 @@
 """The tests for Mobile App device actions."""
 
 from homeassistant.components import automation, device_automation
-from homeassistant.components.mobile_app import DATA_DEVICES, DOMAIN, util
+from homeassistant.components.mobile_app import DOMAIN, util
+from homeassistant.components.mobile_app.helpers import MobileApp
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -11,7 +12,7 @@ from tests.common import async_get_device_automations, patch
 async def test_get_actions(hass: HomeAssistant, push_registration) -> None:
     """Test we get the expected actions from a mobile_app."""
     webhook_id = push_registration["webhook_id"]
-    device_id = hass.data[DOMAIN][DATA_DEVICES][webhook_id].id
+    device_id = hass.data[MobileApp].devices[webhook_id].id
 
     assert await async_get_device_automations(
         hass, device_automation.DeviceAutomationType.ACTION, device_id
@@ -43,7 +44,7 @@ async def test_action(hass: HomeAssistant, push_registration) -> None:
                         {"variables": {"name": "Paulus"}},
                         {
                             "domain": DOMAIN,
-                            "device_id": hass.data[DOMAIN]["devices"][webhook_id].id,
+                            "device_id": hass.data[MobileApp].devices[webhook_id].id,
                             "type": "notify",
                             "message": "Hello {{ name }}",
                         },

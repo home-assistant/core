@@ -11,9 +11,9 @@ from homeassistant.components.mobile_app.const import (
     ATTR_DEVICE_NAME,
     CONF_CLOUDHOOK_URL,
     CONF_USER_ID,
-    DATA_DELETED_IDS,
     DOMAIN,
 )
+from homeassistant.components.mobile_app.helpers import MobileApp
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
@@ -57,7 +57,7 @@ async def test_remove_entry(
     """Test we clean up when we remove entry."""
     for config_entry in hass.config_entries.async_entries("mobile_app"):
         await hass.config_entries.async_remove(config_entry.entry_id)
-        assert config_entry.data["webhook_id"] in hass.data[DOMAIN][DATA_DELETED_IDS]
+        assert config_entry.data["webhook_id"] in hass.data[MobileApp].deleted_ids
 
     assert len(device_registry.devices) == 0
     assert len(entity_registry.entities) == 0

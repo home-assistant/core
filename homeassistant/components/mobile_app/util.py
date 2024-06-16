@@ -15,14 +15,12 @@ from .const import (
     ATTR_PUSH_URL,
     ATTR_PUSH_WEBSOCKET_CHANNEL,
     CONF_CLOUDHOOK_URL,
-    DATA_CONFIG_ENTRIES,
-    DATA_DEVICES,
-    DATA_NOTIFY,
     DOMAIN,
 )
+from .helpers import MobileApp
 
 if TYPE_CHECKING:
-    from .notify import MobileAppNotificationService
+    pass
 
 
 @callback
@@ -31,7 +29,7 @@ def webhook_id_from_device_id(hass: HomeAssistant, device_id: str) -> str | None
     if DOMAIN not in hass.data:
         return None
 
-    for cur_webhook_id, cur_device in hass.data[DOMAIN][DATA_DEVICES].items():
+    for cur_webhook_id, cur_device in hass.data[MobileApp].devices.items():
         if cur_device.id == device_id:
             return cur_webhook_id
 
@@ -41,7 +39,7 @@ def webhook_id_from_device_id(hass: HomeAssistant, device_id: str) -> str | None
 @callback
 def supports_push(hass: HomeAssistant, webhook_id: str) -> bool:
     """Return if push notifications is supported."""
-    config_entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
+    config_entry = hass.data[MobileApp].config_entries[webhook_id]
     app_data = config_entry.data[ATTR_APP_DATA]
     return (
         ATTR_PUSH_TOKEN in app_data and ATTR_PUSH_URL in app_data
@@ -51,11 +49,14 @@ def supports_push(hass: HomeAssistant, webhook_id: str) -> bool:
 @callback
 def get_notify_service(hass: HomeAssistant, webhook_id: str) -> str | None:
     """Return the notify service for this webhook ID."""
-    notify_service: MobileAppNotificationService = hass.data[DOMAIN][DATA_NOTIFY]
-
-    for target_service, target_webhook_id in notify_service.registered_targets.items():
-        if target_webhook_id == webhook_id:
-            return target_service
+    my_data = hass.data[MobileApp]
+    if my_data.notify:
+        for (
+            target_service,
+            target_webhook_id,
+        ) in my_data.notify.registered_targets.items():
+            if target_webhook_id == webhook_id:
+                return target_service
 
     return None
 
