@@ -38,33 +38,33 @@ async def test_device_info_to_link(
     assert entity_registry.async_get("sensor.test_source") is not None
 
     # Only with the entity id
-    result = await du.async_device_info_to_link(hass, entity_id=source_entity.entity_id)
+    result = du.async_device_info_to_link(hass, entity_id=source_entity.entity_id)
     assert result == {
         "identifiers": {("test", "my_device")},
         "connections": {("mac", "30:31:32:33:34:00")},
     }
 
     # Only with the device id
-    result = await du.async_device_info_to_link(hass, device_id=device.id)
+    result = du.async_device_info_to_link(hass, device_id=device.id)
     assert result == {
         "identifiers": {("test", "my_device")},
         "connections": {("mac", "30:31:32:33:34:00")},
     }
 
     # With a non-existent entity id
-    result = await du.async_device_info_to_link(hass, entity_id="sensor.invalid")
+    result = du.async_device_info_to_link(hass, entity_id="sensor.invalid")
     assert result is None
 
     # With a non-existent device id
-    result = await du.async_device_info_to_link(hass, device_id="abcdefghi")
+    result = du.async_device_info_to_link(hass, device_id="abcdefghi")
     assert result is None
 
     # Without informing one of the entity_id or device_id parameters
-    result = await du.async_device_info_to_link(hass)
+    result = du.async_device_info_to_link(hass)
     assert result is None
 
 
-async def test_remove_stale_device_links_helpers(
+async def test_remove_stale_device_links_keep_entity_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -111,7 +111,7 @@ async def test_remove_stale_device_links_helpers(
     assert len(devices_config_entry) == 3
 
     # Manual cleanup should unlink stales devices from the config entry
-    await du.async_remove_stale_device_links_helpers(
+    du.async_remove_stale_devices_links_keep_entity_device(
         hass,
         entry_id=config_entry.entry_id,
         source_entity_id=source_entity.entity_id,
@@ -123,3 +123,56 @@ async def test_remove_stale_device_links_helpers(
 
     # After cleanup, only one device is expected to be linked to the configuration entry if at least source_entity_id or device_id was given, else zero
     assert len(devices_config_entry) == 1
+
+    assert current_device in devices_config_entry
+
+
+async def test_remove_stale_devices_links_keep_current_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test cleanup works."""
+    config_entry = MockConfigEntry(domain="hue")
+    config_entry.add_to_hass(hass)
+
+    current_device = device_registry.async_get_or_create(
+        identifiers={("test", "current_device")},
+        connections={("mac", "30:31:32:33:34:00")},
+        config_entry_id=config_entry.entry_id,
+    )
+    assert current_device is not None
+
+    device_registry.async_get_or_create(
+        identifiers={("test", "stale_device_1")},
+        connections={("mac", "30:31:32:33:34:01")},
+        config_entry_id=config_entry.entry_id,
+    )
+
+    device_registry.async_get_or_create(
+        identifiers={("test", "stale_device_2")},
+        connections={("mac", "30:31:32:33:34:02")},
+        config_entry_id=config_entry.entry_id,
+    )
+
+    devices_config_entry = device_registry.devices.get_devices_for_config_entry_id(
+        config_entry.entry_id
+    )
+
+    # 3 devices linked to the config entry are expected (1 current device + 2 stales)
+    assert len(devices_config_entry) == 3
+
+    # Manual cleanup should unlink stales devices from the config entry
+    du.async_remove_stale_devices_links_keep_current_device(
+        hass,
+        entry_id=config_entry.entry_id,
+        current_device_id=current_device.id,
+    )
+
+    devices_config_entry = device_registry.devices.get_devices_for_config_entry_id(
+        config_entry.entry_id
+    )
+
+    # After cleanup, only one device is expected to be linked to the configuration entry if at least source_entity_id or device_id was given, else zero
+    assert len(devices_config_entry) == 1
+
+    assert current_device in devices_config_entry

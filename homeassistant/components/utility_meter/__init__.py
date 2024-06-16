@@ -188,7 +188,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Utility Meter from a config entry."""
 
-    await du.async_remove_stale_device_links_helpers(
+    du.async_remove_stale_devices_links_keep_entity_device(
         hass, entry.entry_id, entry.options[CONF_SOURCE_SENSOR]
     )
 

@@ -19,7 +19,7 @@ def async_entity_id_to_device_id(
 
 
 @callback
-async def async_device_info_to_link(
+def async_device_info_to_link(
     hass: HomeAssistant,
     device_id: str | None = None,
     entity_id: str | None = None,
@@ -47,18 +47,37 @@ async def async_device_info_to_link(
 
 
 @callback
-async def async_remove_stale_device_links_helpers(
+def async_remove_stale_devices_links_keep_entity_device(
     hass: HomeAssistant,
     entry_id: str,
     source_entity_id: str,
 ) -> None:
-    """Remove obsolete devices from helper config entries that inherit from source entity."""
+    """Remove the link between stales devices and a configuration entry, keeping only the device that the informed entity is linked to."""
 
-    device_id = async_entity_id_to_device_id(hass, entity_id=source_entity_id)
+    async_remove_stale_devices_links_keep_current_device(
+        hass=hass,
+        entry_id=entry_id,
+        current_device_id=async_entity_id_to_device_id(
+            hass, entity_id=source_entity_id
+        ),
+    )
+
+
+@callback
+def async_remove_stale_devices_links_keep_current_device(
+    hass: HomeAssistant,
+    entry_id: str,
+    current_device_id: str | None,
+) -> None:
+    """Remove the link between stales devices and a configuration entry, keeping only those informed.
+
+    Devices passed in the currents_device_id parameter will be kept linked
+    to the configuration entry.
+    """
 
     dev_reg = dr.async_get(hass)
     # Removes all devices from the config entry that are not the same as the current device
     for device in dev_reg.devices.get_devices_for_config_entry_id(entry_id):
-        if device.id == device_id:
+        if device.id == current_device_id:
             continue
         dev_reg.async_update_device(device.id, remove_config_entry_id=entry_id)
