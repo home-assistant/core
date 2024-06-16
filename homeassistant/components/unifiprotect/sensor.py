@@ -73,11 +73,9 @@ class ProtectSensorEntityDescription(
                 partial(self._rounded_value, precision, self.get_ufp_value),
             )
 
-    def _rounded_value(
-        self, precision: int, get_ufp_value: Callable[[T], Any], obj: ProtectDeviceModel
-    ) -> Any:
+    def _rounded_value(self, precision: int, getter: Callable[[T], Any], obj: T) -> Any:
         """Round value to precision if set."""
-        return None if (v := get_ufp_value(obj)) is None else round(v, precision)
+        return None if (v := getter(obj)) is None else round(v, precision)
 
 
 @dataclass(frozen=True, kw_only=True)
