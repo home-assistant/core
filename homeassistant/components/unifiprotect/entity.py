@@ -175,7 +175,7 @@ class BaseProtectEntity(Entity):
     ) -> None:
         """Initialize the entity."""
         super().__init__()
-        self.data: ProtectData = data
+        self.data = data
         self.device = device
 
         if description is None:
