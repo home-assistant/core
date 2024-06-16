@@ -941,9 +941,7 @@ class MQTT:
 
         # Only subscribe if currently connected.
         if self.connected:
-            self._async_queue_subscriptions(
-                ((topic, qos),),
-            )
+            self._async_queue_subscriptions(((topic, qos),))
 
         return partial(self._async_remove, subscription)
 
