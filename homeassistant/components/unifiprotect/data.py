@@ -69,9 +69,6 @@ class ProtectData:
         entry: UFPConfigEntry,
     ) -> None:
         """Initialize an subscriber."""
-        super().__init__()
-
-        self._hass = hass
         self._entry = entry
         self._hass = hass
         self._update_interval = update_interval
@@ -80,7 +77,6 @@ class ProtectData:
         self._unsub_interval: CALLBACK_TYPE | None = None
         self._unsub_websocket: CALLBACK_TYPE | None = None
         self._auth_failures = 0
-
         self.last_update_success = False
         self.api = protect
         self._adopt_signal = _ufpd(self._entry, DISPATCH_ADOPT)
