@@ -13,11 +13,9 @@ def async_entity_id_to_device_id(
     """Resolve the device id to the entity id."""
 
     ent_reg = er.async_get(hass)
-    if ((entity := ent_reg.async_get(entity_id)) is not None) and (
-        entity.device_id is not None
-    ):
-        return entity.device_id
-    return None
+    if (entity := ent_reg.async_get(entity_id)) is None:
+        return None
+    return entity.device_id
 
 
 @callback
@@ -36,10 +34,10 @@ async def async_device_info_to_link(
     if device_id is None and entity_id is not None:
         device_id = async_entity_id_to_device_id(hass, entity_id=entity_id)
 
-    if (
-        device_id is not None
-        and (device := dev_reg.async_get(device_id=device_id)) is not None
-    ):
+    if device_id is None:
+        return None
+
+    if (device := dev_reg.async_get(device_id=device_id)) is not None:
         return dr.DeviceInfo(
             identifiers=device.identifiers,
             connections=device.connections,
