@@ -79,7 +79,7 @@ class MatterEventEntity(MatterEntity, EventEntity):
             clusters.FixedLabel.Attributes.LabelList
         ):
             for label in labels:
-                if label.label == "Label":
+                if label.label in ["Label", "Button"]:
                     label_value: str = label.value
                     # in the case the label is only the label id, prettify it a bit
                     if label_value.isnumeric():
