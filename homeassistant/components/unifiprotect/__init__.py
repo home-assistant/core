@@ -53,6 +53,10 @@ SCAN_INTERVAL = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
+EARLY_ACCESS_URL = (
+    "https://www.home-assistant.io/integrations/unifiprotect#software-support"
+)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the UniFi Protect."""
@@ -121,8 +125,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
             DOMAIN,
             "ea_channel_warning",
             is_fixable=True,
-            is_persistent=True,
-            learn_more_url="https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access",
+            is_persistent=False,
+            learn_more_url=EARLY_ACCESS_URL,
             severity=IssueSeverity.WARNING,
             translation_key="ea_channel_warning",
             translation_placeholders={"version": str(nvr_info.version)},
