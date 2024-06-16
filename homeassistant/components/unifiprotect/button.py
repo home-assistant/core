@@ -20,11 +20,10 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICES_THAT_ADOPT, DISPATCH_ADD, DOMAIN
+from .const import DEVICES_THAT_ADOPT, DOMAIN
 from .data import UFPConfigEntry
 from .entity import ProtectDeviceEntity, async_all_device_entities
 from .models import PermRequired, ProtectEntityDescription, ProtectSetableKeysMixin, T
-from .utils import async_dispatch_id as _ufpd
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -149,9 +148,7 @@ async def async_setup_entry(
 
     data.async_subscribe_adopt(_add_new_device)
     entry.async_on_unload(
-        async_dispatcher_connect(
-            hass, _ufpd(entry, DISPATCH_ADD), _async_add_unadopted_device
-        )
+        async_dispatcher_connect(hass, data.add_signal, _async_add_unadopted_device)
     )
 
     async_add_entities(
