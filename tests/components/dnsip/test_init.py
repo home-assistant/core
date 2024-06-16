@@ -77,6 +77,8 @@ async def test_port_migration(
         },
         entry_id="1",
         unique_id="home-assistant.io",
+        version=1,
+        minor_version=1,
     )
     entry.add_to_hass(hass)
     with patch("homeassistant.components.dnsip.async_setup_entry", return_value=True):
