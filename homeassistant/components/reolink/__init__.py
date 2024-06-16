@@ -267,7 +267,7 @@ def migrate_entity_ids(
     entity_reg = er.async_get(hass)
     entities = er.async_entries_for_config_entry(entity_reg, config_entry_id)
     for entity in entities:
-        # Can be remove in HA 2025.1.0
+        # Can be removed in HA 2025.1.0
         if entity.domain == "update" and entity.unique_id in [
             host.unique_id,
             format_mac(host.api.mac_address),
