@@ -95,3 +95,38 @@ async def test_port_migration(
     assert entry.options[CONF_PORT] == DEFAULT_PORT
     assert entry.options[CONF_PORT_IPV6] == DEFAULT_PORT
     assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_migrate_error_from_future(hass: HomeAssistant) -> None:
+    """Test a future version isn't migrated."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data={
+            CONF_HOSTNAME: "home-assistant.io",
+            CONF_NAME: "home-assistant.io",
+            CONF_IPV4: True,
+            CONF_IPV6: True,
+            "some_new_data": "new_value",
+        },
+        options={
+            CONF_RESOLVER: "208.67.222.222",
+            CONF_RESOLVER_IPV6: "2620:119:53::53",
+        },
+        entry_id="1",
+        unique_id="home-assistant.io",
+        version=2,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.dnsip.sensor.aiodns.DNSResolver",
+        return_value=RetrieveDNS(),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_get_entry(entry.entry_id)
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
