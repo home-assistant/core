@@ -44,13 +44,12 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             minor_version,
         )
 
-        new_data = {**config_entry.data}
         new_options = {**config_entry.options}
         new_options[CONF_PORT] = DEFAULT_PORT
         new_options[CONF_PORT_IPV6] = DEFAULT_PORT_IPV6
 
         hass.config_entries.async_update_entry(
-            config_entry, data=new_data, options=new_options, minor_version=2, version=1
+            config_entry, options=new_options, minor_version=2
         )
 
         _LOGGER.debug(
