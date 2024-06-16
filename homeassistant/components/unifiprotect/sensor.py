@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
+from functools import partial
 import logging
 from typing import Any
 
@@ -62,12 +63,21 @@ class ProtectSensorEntityDescription(
 
     precision: int | None = None
 
-    def get_ufp_value(self, obj: T) -> Any:
-        """Return value from UniFi Protect device."""
-        value = super().get_ufp_value(obj)
-        if self.precision and value is not None:
-            return round(value, self.precision)
-        return value
+    def __post_init__(self) -> None:
+        """Ensure values are rounded if precision is set."""
+        super().__post_init__()
+        if precision := self.precision:
+            object.__setattr__(
+                self,
+                "get_ufp_value",
+                partial(self._rounded_value, precision, self.get_ufp_value),
+            )
+
+    def _rounded_value(
+        self, precision: int, get_ufp_value: Callable[[T], Any], obj: ProtectDeviceModel
+    ) -> Any:
+        """Round value to precision if set."""
+        return None if (v := get_ufp_value(obj)) is None else round(v, precision)
 
 
 @dataclass(frozen=True, kw_only=True)
