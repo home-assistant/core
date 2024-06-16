@@ -262,12 +262,6 @@ class Group(Entity):
         """Test if any member has an assumed state."""
         return self._assumed_state
 
-    def update_tracked_entity_ids(self, entity_ids: Collection[str] | None) -> None:
-        """Update the member entity IDs."""
-        self.hass.loop.call_soon_threadsafe(
-            self.async_update_tracked_entity_ids, entity_ids
-        )
-
     @callback
     def async_update_tracked_entity_ids(
         self, entity_ids: Collection[str] | None
