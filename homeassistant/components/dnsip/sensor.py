@@ -54,9 +54,9 @@ async def async_setup_entry(
 
     resolver_ipv4 = entry.options[CONF_RESOLVER]
     resolver_ipv6 = entry.options[CONF_RESOLVER_IPV6]
-
     port_ipv4 = entry.options[CONF_PORT]
     port_ipv6 = entry.options[CONF_PORT_IPV6]
+
     entities = []
     if entry.data[CONF_IPV4]:
         entities.append(
