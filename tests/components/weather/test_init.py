@@ -22,7 +22,6 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     ATTR_WEATHER_WIND_SPEED_UNIT,
     DOMAIN,
-    LEGACY_SERVICE_GET_FORECAST,
     ROUNDING_PRECISION,
     SERVICE_GET_FORECASTS,
     Forecast,
@@ -719,10 +718,7 @@ async def test_get_forecast_no_forecast(
 
 @pytest.mark.parametrize(
     ("service"),
-    [
-        SERVICE_GET_FORECASTS,
-        LEGACY_SERVICE_GET_FORECAST,
-    ],
+    [SERVICE_GET_FORECASTS],
 )
 @pytest.mark.parametrize(
     ("supported_features", "forecast_types"),
