@@ -14,8 +14,10 @@ from aioesphomeapi import (
 import pytest
 
 from homeassistant.components.esphome.dashboard import async_get_dashboard
-from homeassistant.components.update import UpdateEntityFeature
+from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, UpdateEntityFeature
+from homeassistant.components.update.const import SERVICE_INSTALL
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
     STATE_ON,
@@ -491,7 +493,12 @@ async def test_generic_device_update_entity_has_update(
     assert state is not None
     assert state.state == STATE_ON
 
-    mock_client.update_command(key=1, install=True)
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: "update.test_myupdate"},
+        blocking=True,
+    )
 
     mock_device.set_state(
         UpdateState(
