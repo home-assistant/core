@@ -29,7 +29,8 @@ from tests.common import MockConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _wait_for_cond(predicate) -> None:
+async def _wait_for_cond(predicate: Callable[[], bool]) -> None:
+    """Wait for `predicate` to return True."""
     while True:
         if predicate():
             break
@@ -37,6 +38,15 @@ async def _wait_for_cond(predicate) -> None:
 
 
 class _FakeEvolutionClient(BryantEvolutionClient):
+    """Fake version of `BryantEvolutionClient.
+
+    Important design point: this type provides a `set_reads_allowed` method.
+    When False, all read_ calls will hang. This allows testing that service
+    call handlers on the BryantEvolutionClient type properly call
+    async_write_ha_state (since async_update cannot complete when reads are
+    paused).
+    """
+
     def __init__(self) -> None:
         super().__init__("UNUSED", 1, 1)
         self._temp = 75
@@ -170,7 +180,8 @@ async def test_set_temperature(
         assert await case.temp_reader(client) == case.initial_temp
         assert await client.read_hvac_mode() == (case.mode.lower(), False)
 
-        # Change the setpoint.
+        # Change the setpoint, pausing reads to the device so that we
+        # verify that changes are locally committed.
         await mock_evolution_entry.runtime_data.set_allow_reads(False)
         data = {"temperature": case.new_temp}
         data[ATTR_ENTITY_ID] = "climate.bryant_evolution_system_1_zone_1"
@@ -213,6 +224,8 @@ async def test_set_temperature_mode_heat_cool(
     assert await client.read_heating_setpoint() == 50
     assert await client.read_hvac_mode() == ("auto", False)
 
+    # Change the setpoint, pausing reads to the device so that we
+    # verify that changes are locally committed.
     await mock_evolution_entry.runtime_data.set_allow_reads(False)
     data = {"target_temp_low": 70, "target_temp_high": 80}
     data[ATTR_ENTITY_ID] = "climate.bryant_evolution_system_1_zone_1"
@@ -236,6 +249,8 @@ async def test_set_fan_mode(
     fan_modes = ["AUTO", "LOW", "MED", "HIGH"]
     client = mock_evolution_entry.runtime_data
     for mode in fan_modes:
+        # Change the fan mode, pausing reads to the device so that we
+        # verify that changes are locally committed.
         await mock_evolution_entry.runtime_data.set_allow_reads(False)
         data = {ATTR_FAN_MODE: mode}
         data[ATTR_ENTITY_ID] = "climate.bryant_evolution_system_1_zone_1"
