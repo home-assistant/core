@@ -94,6 +94,7 @@ class DnsIPConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for dnsip integration."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback

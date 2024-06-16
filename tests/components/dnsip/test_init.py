@@ -11,6 +11,8 @@ from homeassistant.components.dnsip.const import (
     CONF_PORT_IPV6,
     CONF_RESOLVER,
     CONF_RESOLVER_IPV6,
+    DEFAULT_PORT,
+    DEFAULT_PORT_IPV6,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
@@ -81,12 +83,16 @@ async def test_port_migration(
         minor_version=1,
     )
     entry.add_to_hass(hass)
-    with patch("homeassistant.components.dnsip.async_setup_entry", return_value=True):
+
+    with patch(
+        "homeassistant.components.dnsip.sensor.aiodns.DNSResolver",
+        return_value=RetrieveDNS(),
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert entry.version == 1
     assert entry.minor_version == 2
-    assert entry.options[CONF_PORT] == 53
-    assert entry.options[CONF_PORT_IPV6] == 53
+    assert entry.options[CONF_PORT] == DEFAULT_PORT
+    assert entry.options[CONF_PORT_IPV6] == DEFAULT_PORT_IPV6
     assert entry.state is ConfigEntryState.LOADED

@@ -87,6 +87,8 @@ async def test_legacy_sensor(hass: HomeAssistant) -> None:
         },
         entry_id="1",
         unique_id="home-assistant.io",
+        version=1,
+        minor_version=1,
     )
     entry.add_to_hass(hass)
 
