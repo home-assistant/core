@@ -36,7 +36,6 @@ from .const import (
     CONF_ALL_UPDATES,
     CONF_OVERRIDE_CHOST,
     DEVICES_FOR_SUBSCRIBE,
-    DOMAIN,
     ModelType,
 )
 
@@ -119,13 +118,6 @@ def async_get_light_motion_current(obj: Light) -> str:
     ):
         return f"{LightModeType.MOTION.value}Dark"
     return obj.light_mode_settings.mode.value
-
-
-@callback
-def async_dispatch_id(entry: UFPConfigEntry, dispatch: str) -> str:
-    """Generate entry specific dispatch ID."""
-
-    return f"{DOMAIN}.{entry.entry_id}.{dispatch}"
 
 
 @callback

@@ -43,7 +43,7 @@ from .const import (
     DISPATCH_CHANNELS,
     DOMAIN,
 )
-from .utils import async_dispatch_id as _ufpd, async_get_devices_by_type
+from .utils import async_get_devices_by_type
 
 _LOGGER = logging.getLogger(__name__)
 type ProtectDeviceType = ProtectAdoptableDeviceModel | NVR
@@ -56,6 +56,12 @@ def async_last_update_was_successful(
 ) -> bool:
     """Check if the last update was successful for a config entry."""
     return hasattr(entry, "runtime_data") and entry.runtime_data.last_update_success
+
+
+@callback
+def _async_dispatch_id(entry: UFPConfigEntry, dispatch: str) -> str:
+    """Generate entry specific dispatch ID."""
+    return f"{DOMAIN}.{entry.entry_id}.{dispatch}"
 
 
 class ProtectData:
@@ -79,7 +85,9 @@ class ProtectData:
         self._auth_failures = 0
         self.last_update_success = False
         self.api = protect
-        self._adopt_signal = _ufpd(self._entry, DISPATCH_ADOPT)
+        self.adopt_signal = _async_dispatch_id(entry, DISPATCH_ADOPT)
+        self.add_signal = _async_dispatch_id(entry, DISPATCH_ADD)
+        self.channels_signal = _async_dispatch_id(entry, DISPATCH_CHANNELS)
 
     @property
     def disable_stream(self) -> bool:
@@ -97,7 +105,7 @@ class ProtectData:
     ) -> None:
         """Add an callback for on device adopt."""
         self._entry.async_on_unload(
-            async_dispatcher_connect(self._hass, self._adopt_signal, add_callback)
+            async_dispatcher_connect(self._hass, self.adopt_signal, add_callback)
         )
 
     def get_by_types(
@@ -180,12 +188,10 @@ class ProtectData:
     def _async_add_device(self, device: ProtectAdoptableDeviceModel) -> None:
         if device.is_adopted_by_us:
             _LOGGER.debug("Device adopted: %s", device.id)
-            async_dispatcher_send(
-                self._hass, _ufpd(self._entry, DISPATCH_ADOPT), device
-            )
+            async_dispatcher_send(self._hass, self.adopt_signal, device)
         else:
             _LOGGER.debug("New device detected: %s", device.id)
-            async_dispatcher_send(self._hass, _ufpd(self._entry, DISPATCH_ADD), device)
+            async_dispatcher_send(self._hass, self.add_signal, device)
 
     @callback
     def _async_remove_device(self, device: ProtectAdoptableDeviceModel) -> None:
@@ -210,9 +216,7 @@ class ProtectData:
             and "channels" in changed_data
         ):
             self._pending_camera_ids.remove(device.id)
-            async_dispatcher_send(
-                self._hass, _ufpd(self._entry, DISPATCH_CHANNELS), device
-            )
+            async_dispatcher_send(self._hass, self.channels_signal, device)
 
         # trigger update for all Cameras with LCD screens when NVR Doorbell settings updates
         if "doorbell_settings" in changed_data:
