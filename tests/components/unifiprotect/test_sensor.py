@@ -508,10 +508,10 @@ async def test_sensor_update_alarm_with_last_trip_time(
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
-async def test_camera_update_licenseplate(
+async def test_camera_update_license_plate(
     hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera, fixed_now: datetime
 ) -> None:
-    """Test sensor motion entity."""
+    """Test license plate sensor."""
 
     camera.feature_flags.smart_detect_types.append(SmartDetectObjectType.LICENSE_PLATE)
     camera.feature_flags.has_smart_detect = True
@@ -560,3 +560,17 @@ async def test_camera_update_licenseplate(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "ABCD1234"
+
+
+async def test_sensor_precision(
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor, fixed_now: datetime
+) -> None:
+    """Test sensor precision value is respected."""
+
+    await init_entry(hass, ufp, [sensor_all])
+    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
+    nvr: NVR = ufp.api.bootstrap.nvr
+
+    _, entity_id = ids_from_device_description(Platform.SENSOR, nvr, NVR_SENSORS[6])
+
+    assert hass.states.get(entity_id).state == "17.49"
