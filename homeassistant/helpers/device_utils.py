@@ -6,7 +6,7 @@ from . import device_registry as dr, entity_registry as er
 
 
 @callback
-def async_device_id_to_entity_id(
+def async_entity_id_to_device_id(
     hass: HomeAssistant,
     entity_id: str,
 ) -> str | None:
@@ -34,7 +34,7 @@ async def async_device_info_to_link(
     dev_reg = dr.async_get(hass)
 
     if device_id is None and entity_id is not None:
-        device_id = async_device_id_to_entity_id(hass, entity_id=entity_id)
+        device_id = async_entity_id_to_device_id(hass, entity_id=entity_id)
 
     if (
         device_id is not None
@@ -64,7 +64,7 @@ async def async_remove_stale_device_links_helpers(
     """
 
     if device_id is None and source_entity_id is not None:
-        device_id = async_device_id_to_entity_id(hass, entity_id=source_entity_id)
+        device_id = async_entity_id_to_device_id(hass, entity_id=source_entity_id)
 
     dev_reg = dr.async_get(hass)
     # Removes all devices from the config entry that are not the same as the current device
