@@ -165,6 +165,7 @@ class BaseProtectEntity(Entity):
     _attr_attribution = DEFAULT_ATTRIBUTION
     _state_attrs: tuple[str, ...] = ("_attr_available",)
     _attr_has_entity_name = True
+    _async_get_ufp_enabled: Callable[[ProtectAdoptableDeviceModel], bool] | None = None
 
     def __init__(
         self,
@@ -176,9 +177,6 @@ class BaseProtectEntity(Entity):
         super().__init__()
         self.data: ProtectData = data
         self.device = device
-        self._async_get_ufp_enabled: (
-            Callable[[ProtectAdoptableDeviceModel], bool] | None
-        ) = None
 
         if description is None:
             self._attr_unique_id = self.device.mac
