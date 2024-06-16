@@ -18,6 +18,7 @@ from homeassistant.core import (
     SupportsResponse,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.service import async_set_service_schema
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import JsonObjectType
 
@@ -37,7 +38,7 @@ MONTH_INPUT_MAP = {
     if m.english != "Adar"
     for name in (m.english, m.hebrew)
 }
-# Maps Hebrew & English holiday names to Holiday)
+# Maps Hebrew & English holiday names to Holiday.
 HOLIDAY_INPUT_MAP = {
     name: holiday
     for holiday in htables.HOLIDAYS
@@ -54,6 +55,12 @@ OUTPUT_SCHEMA = {
     vol.Required("include_hebrew_date_info", default=False): cv.boolean,
     vol.Required("include_holiday_info", default=False): cv.boolean,
     vol.Required("include_zmanim", default=False): cv.boolean,
+}
+
+OUTPUT_FIELDS = {
+    "include_hebrew_date_info": {"default": True, "selector": {"boolean": {}}},
+    "include_holiday_info": {"default": False, "selector": {"boolean": {}}},
+    "include_zmanim": {"default": False, "selector": {"boolean": {}}},
 }
 
 
@@ -256,6 +263,34 @@ def async_setup_services(hass: HomeAssistant, config_entry: ConfigEntry) -> None
             return date.date() + dt.timedelta(days=1)
         return date.date()
 
+    YEAR_FIELD = {"example": 5780, "selector": {"number": {"mode": "box"}}}
+    DATE_FIELD = {
+        "example": "2023-01-01",
+        "selector": {"date": {}},
+    }
+    TYPES_FIELD = {
+        "selector": {
+            "select": {
+                "multiple": True,
+                "options": list(htables.HolidayTypes.__members__.keys()),
+            }
+        }
+    }
+    month_names = [
+        month.hebrew if hebrew else month.english
+        for month in htables.MONTHS
+        # Require users to specify which Adar they want in case of leap year.
+        if month.english != "Adar"
+    ]
+    holiday_names = [
+        e
+        for h in htables.HOLIDAYS
+        for e in (
+            h.name,
+            h.description.hebrew.long if hebrew else h.description.english,
+        )
+    ]
+
     hass.services.async_register(
         DOMAIN,
         "get_gregorian_date",
@@ -268,6 +303,18 @@ def async_setup_services(hass: HomeAssistant, config_entry: ConfigEntry) -> None
         ),
         supports_response=SupportsResponse.ONLY,
     )
+    async_set_service_schema(
+        hass,
+        DOMAIN,
+        "get_gregorian_date",
+        {
+            "fields": {
+                "date": DATE_FIELD,
+                **OUTPUT_FIELDS,
+            },
+        },
+    )
+
     hass.services.async_register(
         DOMAIN,
         "get_gregorian_date_range",
@@ -283,6 +330,23 @@ def async_setup_services(hass: HomeAssistant, config_entry: ConfigEntry) -> None
         ),
         supports_response=SupportsResponse.ONLY,
     )
+    async_set_service_schema(
+        hass,
+        DOMAIN,
+        "get_gregorian_date_range",
+        {
+            "fields": {
+                "date": DATE_FIELD,
+                "number_of_days": {
+                    "example": 3,
+                    "required": True,
+                    "selector": {"number": {"min": 1, "mode": "box"}},
+                },
+                **OUTPUT_FIELDS,
+            },
+        },
+    )
+
     hass.services.async_register(
         DOMAIN,
         "get_hebrew_date",
@@ -299,6 +363,28 @@ def async_setup_services(hass: HomeAssistant, config_entry: ConfigEntry) -> None
         ),
         supports_response=SupportsResponse.ONLY,
     )
+    async_set_service_schema(
+        hass,
+        DOMAIN,
+        "get_hebrew_date",
+        {
+            "fields": {
+                "year": YEAR_FIELD,
+                "month": {
+                    "example": month_names[0],
+                    "required": True,
+                    "selector": {"select": {"options": month_names}},
+                },
+                "day": {
+                    "example": 1,
+                    "required": True,
+                    "selector": {"number": {"min": 1, "max": 30, "mode": "box"}},
+                },
+                **OUTPUT_FIELDS,
+            },
+        },
+    )
+
     hass.services.async_register(
         DOMAIN,
         "get_holidays",
@@ -326,6 +412,27 @@ def async_setup_services(hass: HomeAssistant, config_entry: ConfigEntry) -> None
         ),
         supports_response=SupportsResponse.ONLY,
     )
+    async_set_service_schema(
+        hass,
+        DOMAIN,
+        "get_holidays",
+        {
+            "fields": {
+                "year": YEAR_FIELD,
+                "types": TYPES_FIELD,
+                "holidays": {
+                    "selector": {
+                        "select": {
+                            "multiple": True,
+                            "options": holiday_names,
+                        }
+                    }
+                },
+                **OUTPUT_FIELDS,
+            },
+        },
+    )
+
     hass.services.async_register(
         DOMAIN,
         "get_next_holiday",
@@ -341,4 +448,16 @@ def async_setup_services(hass: HomeAssistant, config_entry: ConfigEntry) -> None
             }
         ),
         supports_response=SupportsResponse.ONLY,
+    )
+    async_set_service_schema(
+        hass,
+        DOMAIN,
+        "get_next_holiday",
+        {
+            "fields": {
+                "date": DATE_FIELD,
+                "types": TYPES_FIELD,
+                **OUTPUT_FIELDS,
+            },
+        },
     )
