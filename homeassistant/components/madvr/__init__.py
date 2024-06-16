@@ -42,13 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MadVRConfigEntry) -> boo
     hass.data[DOMAIN][entry.entry_id] = coordinator
     hass.data[DOMAIN]["entry_id"] = entry.entry_id
 
-    try:
-        await madVRClient.open_connection()
-        _LOGGER.debug("Successfully connected to MadVR device")
-    except (TimeoutError, OSError) as e:
-        _LOGGER.error("Failed to connect to MadVR device: %s", e)
-        raise ConnectionError from e
-
     await coordinator.async_config_entry_first_refresh()
 
     # Forward the entry setup to the platforms
@@ -62,3 +55,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: MadVRConfigEntry) -> bo
     await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     hass.data[DOMAIN].pop(entry.entry_id)
     return True
+
+
+async def async_reload_entry(hass: HomeAssistant, entry: MadVRConfigEntry) -> None:
+    """Reload a config entry."""
+    await async_unload_entry(hass, entry)
+    await async_setup_entry(hass, entry)

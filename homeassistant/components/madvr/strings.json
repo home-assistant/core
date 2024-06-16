@@ -6,12 +6,13 @@
       },
       "user": {
         "title": "Setup MadVR Envy",
-        "description": "Make sure your device is ON so we can test the connection.",
+        "description": "Your device will be turned on so we can test the connection.",
         "data": {
-          "host": "Host",
           "name": "Name",
+          "host": "Host or IP Address",
           "mac": "MAC Address",
-          "port": "Port"
+          "port": "Port",
+          "keep_power_on": "Keep device powered on after testing connection"
         }
       }
     },
@@ -26,8 +27,14 @@
   "options": {
     "step": {
       "init": {
-        "title": "Edit Configuration",
-        "description": "Adjust the settings for your device."
+        "title": "MadVR Options",
+        "description": "Update the configuration options for MadVR.",
+        "data": {
+          "name": "Name",
+          "host": "Host or IP Address",
+          "mac": "MAC Address",
+          "port": "Port"
+        }
       }
     }
   }
