@@ -12,9 +12,10 @@ from aiohttp.web import Response, json_response
 from nacl.encoding import Base64Encoder, HexEncoder, RawEncoder
 from nacl.secret import SecretBox
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, CONTENT_TYPE_JSON
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
 from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.storage import Store
 from homeassistant.util.hass_dict import HassEntryKey, HassKey
@@ -50,9 +51,9 @@ MobileAppConfigEntry: HassEntryKey[MobileAppData] = HassEntryKey(DOMAIN)
 class MobileAppData:
     """Data for mobile app."""
 
-    config_entries: dict[str, Any] = field(default_factory=dict)
+    config_entries: dict[str, ConfigEntry] = field(default_factory=dict)
     deleted_ids: list[str] = field(default_factory=list)
-    devices: dict[str, Any] = field(default_factory=dict)
+    devices: dict[str, DeviceEntry] = field(default_factory=dict)
     push_channel: dict[str, Any] = field(default_factory=dict)
     notify: MobileAppNotificationService | None = None
     store: Store | None = None
