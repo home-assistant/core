@@ -205,7 +205,7 @@ class ESPHomeDashboardUpdateEntity(
 
 
 class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
-    "A update implementation for esphome."
+    """A update implementation for esphome."""
 
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
