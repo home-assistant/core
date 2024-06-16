@@ -8,12 +8,13 @@ from homeassistant.components.dnsip.const import (
     CONF_HOSTNAME,
     CONF_IPV4,
     CONF_IPV6,
+    CONF_PORT_IPV6,
     CONF_RESOLVER,
     CONF_RESOLVER_IPV6,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from . import RetrieveDNS
@@ -35,6 +36,8 @@ async def test_load_unload_entry(hass: HomeAssistant) -> None:
         options={
             CONF_RESOLVER: "208.67.222.222",
             CONF_RESOLVER_IPV6: "2620:119:53::53",
+            CONF_PORT: 53,
+            CONF_PORT_IPV6: 53,
         },
         entry_id="1",
         unique_id="home-assistant.io",
@@ -52,3 +55,36 @@ async def test_load_unload_entry(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_port_migration(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration of the config entry from no ports to with ports."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data={
+            CONF_HOSTNAME: "home-assistant.io",
+            CONF_NAME: "home-assistant.io",
+            CONF_IPV4: True,
+            CONF_IPV6: True,
+        },
+        options={
+            CONF_RESOLVER: "208.67.222.222",
+            CONF_RESOLVER_IPV6: "2620:119:53::53",
+        },
+        entry_id="1",
+        unique_id="home-assistant.io",
+    )
+    entry.add_to_hass(hass)
+    with patch("homeassistant.components.dnsip.async_setup_entry", return_value=True):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.version == 1
+    assert entry.minor_version == 2
+    assert entry.options[CONF_PORT] == 53
+    assert entry.options[CONF_PORT_IPV6] == 53
+    assert entry.state is ConfigEntryState.LOADED
