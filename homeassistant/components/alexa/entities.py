@@ -29,6 +29,7 @@ from homeassistant.components import (
     lock,
     media_player,
     number,
+    remote,
     scene,
     script,
     sensor,
@@ -643,6 +644,24 @@ class FanCapabilities(AlexaEntity):
                 self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}"
             )
 
+        yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.entity)
+
+
+@ENTITY_ADAPTERS.register(remote.DOMAIN)
+class RemoteCapabilities(AlexaEntity):
+    """Class to represent Remote capabilities."""
+
+    def default_display_categories(self) -> list[str]:
+        """Return the display categories for this entity."""
+        return [DisplayCategory.TV]
+
+    def interfaces(self) -> Generator[AlexaCapability]:
+        """Yield the supported interfaces."""
+        yield AlexaPowerController(self.entity)
+        yield AlexaModeController(
+            self.entity, instance=f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}"
+        )
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.entity)
 

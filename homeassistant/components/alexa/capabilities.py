@@ -19,6 +19,7 @@ from homeassistant.components import (
     light,
     media_player,
     number,
+    remote,
     timer,
     vacuum,
     valve,
@@ -439,6 +440,8 @@ class AlexaPowerController(AlexaCapability):
             is_on = self.entity.state == fan.STATE_ON
         elif self.entity.domain == humidifier.DOMAIN:
             is_on = self.entity.state == humidifier.STATE_ON
+        elif self.entity.domain == remote.DOMAIN:
+            is_on = self.entity.state == remote.STATE_ON
         elif self.entity.domain == vacuum.DOMAIN:
             is_on = self.entity.state == vacuum.STATE_CLEANING
         elif self.entity.domain == timer.DOMAIN:
@@ -1436,6 +1439,12 @@ class AlexaModeController(AlexaCapability):
             if mode in modes:
                 return f"{humidifier.ATTR_MODE}.{mode}"
 
+        # Remote Activity
+        if self.instance == f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}":
+            mode = self.entity.attributes.get(remote.ATTR_CURRENT_ACTIVITY, None)
+            if mode in self.entity.attributes.get(remote.ATTR_ACTIVITY_LIST, None):
+                return f"{remote.ATTR_ACTIVITY}.{mode}"
+
         # Water heater operation mode
         if self.instance == f"{water_heater.DOMAIN}.{water_heater.ATTR_OPERATION_MODE}":
             operation_mode = self.entity.attributes.get(
@@ -1547,6 +1556,22 @@ class AlexaModeController(AlexaCapability):
                 self._resource.add_mode(
                     f"{water_heater.ATTR_OPERATION_MODE}.{PRESET_MODE_NA}",
                     [PRESET_MODE_NA],
+                )
+            return self._resource.serialize_capability_resources()
+
+        # Remote Resource
+        if self.instance == f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}":
+            self._resource = AlexaModeResource([AlexaGlobalCatalog.SETTING_MODE], False)
+            activities = self.entity.attributes.get(remote.ATTR_ACTIVITY_LIST) or []
+            for activity in activities:
+                self._resource.add_mode(
+                    f"{remote.ATTR_ACTIVITY}.{activity}", [activity]
+                )
+            # Remotes with a single preset_mode completely break Alexa discovery, add a
+            # fake preset (see issue #53832).
+            if len(activities) == 1:
+                self._resource.add_mode(
+                    f"{remote.ATTR_PRESET_MODE}.{PRESET_MODE_NA}", [PRESET_MODE_NA]
                 )
             return self._resource.serialize_capability_resources()
 
