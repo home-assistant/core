@@ -19,7 +19,6 @@ from .lock import DISCOVERY_SCHEMAS as LOCK_SCHEMAS
 from .models import MatterDiscoverySchema, MatterEntityInfo
 from .sensor import DISCOVERY_SCHEMAS as SENSOR_SCHEMAS
 from .switch import DISCOVERY_SCHEMAS as SWITCH_SCHEMAS
-from .select import DISCOVERY_SCHEMAS as SELECT_SCHEMAS
 from .number import DISCOVERY_SCHEMAS as NUMBER_SCHEMAS
 
 DISCOVERY_SCHEMAS: dict[Platform, list[MatterDiscoverySchema]] = {
@@ -32,7 +31,6 @@ DISCOVERY_SCHEMAS: dict[Platform, list[MatterDiscoverySchema]] = {
     Platform.LOCK: LOCK_SCHEMAS,
     Platform.SENSOR: SENSOR_SCHEMAS,
     Platform.SWITCH: SWITCH_SCHEMAS,
-    Platform.SELECT: SELECT_SCHEMAS,
     Platform.NUMBER: NUMBER_SCHEMAS,
 }
 SUPPORTED_PLATFORMS = tuple(DISCOVERY_SCHEMAS)
