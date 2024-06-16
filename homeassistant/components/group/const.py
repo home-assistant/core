@@ -6,6 +6,7 @@ CONF_IGNORE_NON_NUMERIC = "ignore_non_numeric"
 DOMAIN = "group"
 
 REG_KEY = f"{DOMAIN}_registry"
+REG_DISPATCHER = f"{DOMAIN}_domain_registered"
 
 GROUP_ORDER = "group_order"
 

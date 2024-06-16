@@ -10,11 +10,12 @@ from typing import Protocol
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
 
-from .const import DOMAIN, REG_KEY
+from .const import DOMAIN, REG_DISPATCHER, REG_KEY
 
 
 async def async_setup(hass: HomeAssistant) -> None:
@@ -42,6 +43,7 @@ def _process_group_platform(
     """Process a group platform."""
     registry: GroupIntegrationRegistry = hass.data[REG_KEY]
     platform.async_describe_on_off_states(hass, registry)
+    async_dispatcher_send(hass, REG_DISPATCHER, domain)
 
 
 @dataclass(frozen=True, slots=True)
