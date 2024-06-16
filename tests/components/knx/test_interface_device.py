@@ -105,7 +105,6 @@ async def test_removed_entity(
             "sensor.knx_interface_connection_established",
             disabled_by=er.RegistryEntryDisabler.USER,
         )
-        await hass.async_block_till_done()
         unregister_mock.assert_called_once()
 
 

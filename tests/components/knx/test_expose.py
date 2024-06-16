@@ -37,17 +37,14 @@ async def test_binary_expose(hass: HomeAssistant, knx: KNXTestKit) -> None:
 
     # Change state to on
     hass.states.async_set(entity_id, "on", {})
-    await hass.async_block_till_done()
     await knx.assert_write("1/1/8", True)
 
     # Change attribute; keep state
     hass.states.async_set(entity_id, "on", {"brightness": 180})
-    await hass.async_block_till_done()
     await knx.assert_no_telegram()
 
     # Change attribute and state
     hass.states.async_set(entity_id, "off", {"brightness": 0})
-    await hass.async_block_till_done()
     await knx.assert_write("1/1/8", False)
 
 
@@ -72,12 +69,10 @@ async def test_expose_attribute(hass: HomeAssistant, knx: KNXTestKit) -> None:
 
     # Change state to "on"; no attribute
     hass.states.async_set(entity_id, "on", {})
-    await hass.async_block_till_done()
     await knx.assert_telegram_count(0)
 
     # Change attribute; keep state
     hass.states.async_set(entity_id, "on", {attribute: 1})
-    await hass.async_block_till_done()
     await knx.assert_write("1/1/8", (1,))
 
     # Read in between
@@ -86,27 +81,22 @@ async def test_expose_attribute(hass: HomeAssistant, knx: KNXTestKit) -> None:
 
     # Change state keep attribute
     hass.states.async_set(entity_id, "off", {attribute: 1})
-    await hass.async_block_till_done()
     await knx.assert_telegram_count(0)
 
     # Change state and attribute
     hass.states.async_set(entity_id, "on", {attribute: 0})
-    await hass.async_block_till_done()
     await knx.assert_write("1/1/8", (0,))
 
     # Change state to "off"; no attribute
     hass.states.async_set(entity_id, "off", {})
-    await hass.async_block_till_done()
     await knx.assert_telegram_count(0)
 
     # Change attribute; keep state
     hass.states.async_set(entity_id, "on", {attribute: 1})
-    await hass.async_block_till_done()
     await knx.assert_write("1/1/8", (1,))
 
     # Change state to "off"; null attribute
     hass.states.async_set(entity_id, "off", {attribute: None})
-    await hass.async_block_till_done()
     await knx.assert_telegram_count(0)
 
 
@@ -134,22 +124,18 @@ async def test_expose_attribute_with_default(
 
     # Change state to "on"; no attribute
     hass.states.async_set(entity_id, "on", {})
-    await hass.async_block_till_done()
     await knx.assert_write("1/1/8", (0,))
 
     # Change attribute; keep state
     hass.states.async_set(entity_id, "on", {attribute: 1})
-    await hass.async_block_till_done()
     await knx.assert_write("1/1/8", (1,))
 
     # Change state keep attribute
     hass.states.async_set(entity_id, "off", {attribute: 1})
-    await hass.async_block_till_done()
     await knx.assert_no_telegram()
 
     # Change state and attribute
     hass.states.async_set(entity_id, "on", {attribute: 3})
-    await hass.async_block_till_done()
     await knx.assert_write("1/1/8", (3,))
 
     # Read in between
@@ -158,17 +144,14 @@ async def test_expose_attribute_with_default(
 
     # Change state to "off"; no attribute
     hass.states.async_set(entity_id, "off", {})
-    await hass.async_block_till_done()
     await knx.assert_write("1/1/8", (0,))
 
     # Change state and attribute
     hass.states.async_set(entity_id, "on", {attribute: 1})
-    await hass.async_block_till_done()
     await knx.assert_write("1/1/8", (1,))
 
     # Change state to "off"; null attribute
     hass.states.async_set(entity_id, "off", {attribute: None})
-    await hass.async_block_till_done()
     await knx.assert_write("1/1/8", (0,))
 
 
@@ -201,7 +184,6 @@ async def test_expose_string(hass: HomeAssistant, knx: KNXTestKit) -> None:
         "on",
         {attribute: "This is a very long string that is larger than 14 bytes"},
     )
-    await hass.async_block_till_done()
     await knx.assert_write(
         "1/1/8", (84, 104, 105, 115, 32, 105, 115, 32, 97, 32, 118, 101, 114, 121)
     )
@@ -223,16 +205,13 @@ async def test_expose_cooldown(hass: HomeAssistant, knx: KNXTestKit) -> None:
     )
     # Change state to 1
     hass.states.async_set(entity_id, "1", {})
-    await hass.async_block_till_done()
     await knx.assert_write("1/1/8", (1,))
     # Change state to 2 - skip because of cooldown
     hass.states.async_set(entity_id, "2", {})
-    await hass.async_block_till_done()
     await knx.assert_no_telegram()
 
     # Change state to 3
     hass.states.async_set(entity_id, "3", {})
-    await hass.async_block_till_done()
     await knx.assert_no_telegram()
     # Wait for cooldown to pass
     async_fire_time_changed_exact(
@@ -272,19 +251,16 @@ async def test_expose_value_template(
 
     # Change attribute to 0
     hass.states.async_set(entity_id, "on", {attribute: 0})
-    await hass.async_block_till_done()
     await knx.assert_write(binary_address, False)
     await knx.assert_write(percent_address, (255,))
 
     # Change attribute to 255
     hass.states.async_set(entity_id, "off", {attribute: 255})
-    await hass.async_block_till_done()
     await knx.assert_write(binary_address, True)
     await knx.assert_write(percent_address, (0,))
 
     # Change attribute to null (eg. light brightness)
     hass.states.async_set(entity_id, "off", {attribute: None})
-    await hass.async_block_till_done()
     # without explicit `None`-handling or default value this fails with
     # TypeError: unsupported operand type(s) for -: 'int' and 'NoneType'
     assert "Error rendering value template for KNX expose" in caplog.text
@@ -319,7 +295,6 @@ async def test_expose_conversion_exception(
         "on",
         {attribute: 101},
     )
-    await hass.async_block_till_done()
     await knx.assert_no_telegram()
     assert (
         'Could not expose fake.entity fake_attribute value "101.0" to KNX:'

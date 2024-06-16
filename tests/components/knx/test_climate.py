@@ -80,8 +80,6 @@ async def test_climate_on_off(
             )
         }
     )
-
-    await hass.async_block_till_done()
     # read temperature state
     await knx.assert_read("1/2/3")
     await knx.receive_response("1/2/3", RAW_FLOAT_20_0)
@@ -171,8 +169,6 @@ async def test_climate_hvac_mode(
             )
         }
     )
-
-    await hass.async_block_till_done()
     # read states state updater
     # StateUpdater semaphore allows 2 concurrent requests
     await knx.assert_read("1/2/3")
@@ -253,7 +249,6 @@ async def test_climate_preset_mode(
     )
     events = async_capture_events(hass, "state_changed")
 
-    await hass.async_block_till_done()
     # StateUpdater initialize state
     # StateUpdater semaphore allows 2 concurrent requests
     await knx.assert_read("1/2/3")
@@ -291,8 +286,6 @@ async def test_climate_preset_mode(
     assert len(knx.xknx.devices[1].device_updated_cbs) == 2
     # test removing also removes hooks
     entity_registry.async_remove("climate.test")
-    await hass.async_block_till_done()
-
     # If we remove the entity the underlying devices should disappear too
     assert len(knx.xknx.devices) == 0
 
@@ -312,9 +305,7 @@ async def test_update_entity(hass: HomeAssistant, knx: KNXTestKit) -> None:
         }
     )
     assert await async_setup_component(hass, "homeassistant", {})
-    await hass.async_block_till_done()
 
-    await hass.async_block_till_done()
     # read states state updater
     await knx.assert_read("1/2/3")
     await knx.assert_read("1/2/5")
@@ -350,8 +341,6 @@ async def test_command_value_idle_mode(hass: HomeAssistant, knx: KNXTestKit) -> 
             }
         }
     )
-
-    await hass.async_block_till_done()
     # read states state updater
     await knx.assert_read("1/2/3")
     await knx.assert_read("1/2/5")
