@@ -441,7 +441,7 @@ class AlexaPowerController(AlexaCapability):
         elif self.entity.domain == humidifier.DOMAIN:
             is_on = self.entity.state == humidifier.STATE_ON
         elif self.entity.domain == remote.DOMAIN:
-            is_on = self.entity.state == remote.STATE_ON
+            is_on = self.entity.state not in (STATE_OFF, STATE_UNKNOWN)
         elif self.entity.domain == vacuum.DOMAIN:
             is_on = self.entity.state == vacuum.STATE_CLEANING
         elif self.entity.domain == timer.DOMAIN:
