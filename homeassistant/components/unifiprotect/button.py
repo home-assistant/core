@@ -21,9 +21,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DEVICES_THAT_ADOPT, DISPATCH_ADD, DOMAIN
-from .data import ProtectData, UFPConfigEntry
+from .data import UFPConfigEntry
 from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import PermRequired, ProtectRequiredKeysMixin, ProtectSetableKeysMixin, T
+from .models import PermRequired, ProtectEntityDescription, ProtectSetableKeysMixin, T
 from .utils import async_dispatch_id as _ufpd
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,14 +47,14 @@ ALL_DEVICE_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
         key="reboot",
         entity_registry_enabled_default=False,
         device_class=ButtonDeviceClass.RESTART,
-        name="Reboot Device",
+        name="Reboot device",
         ufp_press="reboot",
         ufp_perm=PermRequired.WRITE,
     ),
     ProtectButtonEntityDescription(
         key="unadopt",
         entity_registry_enabled_default=False,
-        name="Unadopt Device",
+        name="Unadopt device",
         icon="mdi:delete",
         ufp_press="unadopt",
         ufp_perm=PermRequired.DELETE,
@@ -63,7 +63,7 @@ ALL_DEVICE_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
 
 ADOPT_BUTTON = ProtectButtonEntityDescription[ProtectAdoptableDeviceModel](
     key=KEY_ADOPT,
-    name="Adopt Device",
+    name="Adopt device",
     icon="mdi:plus-circle",
     ufp_press="adopt",
 )
@@ -71,7 +71,7 @@ ADOPT_BUTTON = ProtectButtonEntityDescription[ProtectAdoptableDeviceModel](
 SENSOR_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
     ProtectButtonEntityDescription(
         key="clear_tamper",
-        name="Clear Tamper",
+        name="Clear tamper",
         icon="mdi:notification-clear-all",
         ufp_press="clear_tamper",
         ufp_perm=PermRequired.WRITE,
@@ -81,21 +81,21 @@ SENSOR_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
 CHIME_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
     ProtectButtonEntityDescription(
         key="play",
-        name="Play Chime",
+        name="Play chime",
         device_class=DEVICE_CLASS_CHIME_BUTTON,
         icon="mdi:play",
         ufp_press="play",
     ),
     ProtectButtonEntityDescription(
         key="play_buzzer",
-        name="Play Buzzer",
+        name="Play buzzer",
         icon="mdi:play",
         ufp_press="play_buzzer",
     ),
 )
 
 
-_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] = {
+_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.CHIME: CHIME_BUTTONS,
     ModelType.SENSOR: SENSOR_BUTTONS,
 }
@@ -172,16 +172,6 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
     """A Ubiquiti UniFi Protect Reboot button."""
 
     entity_description: ProtectButtonEntityDescription
-
-    def __init__(
-        self,
-        data: ProtectData,
-        device: ProtectAdoptableDeviceModel,
-        description: ProtectButtonEntityDescription,
-    ) -> None:
-        """Initialize an UniFi camera."""
-        super().__init__(data, device, description)
-        self._attr_name = f"{self.device.display_name} {self.entity_description.name}"
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
