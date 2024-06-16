@@ -12,7 +12,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     CONF_NUMBER_OF_SECTIONS,
@@ -21,7 +20,6 @@ from .const import (
     CONF_SECTIONS,
     DOMAIN,
 )
-from .scrpi_client import ScRpiClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,8 +77,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     return self._next_step()
 
                 data = {
-                    CONF_SECTIONS: self._sections,
                     CONF_URL: self._device_url,
+                    CONF_NAME: self._device_name,
+                    CONF_SECTIONS: self._sections,
                 }
                 return self.async_create_entry(title=self._device_name, data=data)
 
@@ -119,9 +118,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # implement similar to wled but using websockets with the session for HTTP obtained as in _async_get_device of wled config flow
         # wled = WLED(host, session=session)
         # TOD: CONTINUE https://developers.home-assistant.io/docs/integration_fetching_data/
-        session = async_get_clientsession(self.hass)
-        scrpi_client = ScRpiClient(session)
-        await scrpi_client.connect()
+        # session = async_get_clientsession(self.hass)
+        # scrpi_client = ScRpiClient(session)
+        # await scrpi_client.connect()
 
     async def _get_number_of_led(self):
         # TOD: obtain number of led to set default section length with it (0 to number_of_led)
