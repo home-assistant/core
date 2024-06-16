@@ -1,7 +1,6 @@
 """Config flow for swiss_public_transport."""
 
 import logging
-from types import MappingProxyType
 from typing import Any
 
 from opendata_transport import OpendataTransport
@@ -51,7 +50,7 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
         """Async user step to set up the connection."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            unique_id = unique_id_from_config(MappingProxyType(user_input))
+            unique_id = unique_id_from_config(user_input)
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
 

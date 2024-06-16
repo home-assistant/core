@@ -33,7 +33,6 @@ async def async_setup_entry(
     start = config[CONF_START]
     destination = config[CONF_DESTINATION]
 
-    unique_id = unique_id_from_config(config)
     session = async_get_clientsession(hass)
     opendata = OpendataTransport(start, destination, session, via=config.get(CONF_VIA))
 
@@ -41,13 +40,19 @@ async def async_setup_entry(
         await opendata.async_get_data()
     except OpendataTransportConnectionError as e:
         raise ConfigEntryNotReady(
-            f"Timeout while connecting for entry '{unique_id}'"
+            translation_domain=DOMAIN,
+            translation_key="request_timeout",
+            translation_placeholders={
+                "config_title": entry.title,
+            },
         ) from e
     except OpendataTransportError as e:
         raise ConfigEntryError(
-            f"Setup failed for entry '{unique_id}' with invalid data, check "
-            "at http://transport.opendata.ch/examples/stationboard.html if your "
-            "station names are valid"
+            translation_domain=DOMAIN,
+            translation_key="invalid_data",
+            translation_placeholders={
+                "config_title": entry.title,
+            },
         ) from e
 
     coordinator = SwissPublicTransportDataUpdateCoordinator(hass, opendata)
@@ -74,7 +79,7 @@ async def async_migrate_entry(
     """Migrate config entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
-    if config_entry.minor_version > 3:
+    if config_entry.version > 2:
         # This means the user has downgraded from a future version
         return False
 
@@ -109,7 +114,7 @@ async def async_migrate_entry(
             config_entry, unique_id=new_unique_id, minor_version=2
         )
 
-    if config_entry.version == 1 and config_entry.minor_version == 2:
+    if config_entry.version < 2 and config_entry.minor_version < 3:
         # Via stations now available, migrate to version 2.1
         hass.config_entries.async_update_entry(config_entry, version=2, minor_version=1)
 

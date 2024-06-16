@@ -48,5 +48,13 @@
         "name": "Delay"
       }
     }
+  },
+  "exceptions": {
+    "invalid_data": {
+      "message": "Setup failed for entry {config_title} with invalid data, check at http://transport.opendata.ch/examples/stationboard.html if your station names are valid"
+    },
+    "request_timeout": {
+      "message": "Timeout while connecting for entry {config_title}"
+    }
   }
 }

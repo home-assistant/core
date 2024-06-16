@@ -11,6 +11,7 @@ from homeassistant.components.swiss_public_transport.const import (
     DOMAIN,
 )
 from homeassistant.components.swiss_public_transport.helper import unique_id_from_config
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -119,3 +120,29 @@ async def test_migration_from(
                 (Platform.SENSOR, DOMAIN, "None_departure")
             )
         )
+
+
+async def test_migrate_error_from_future(hass: HomeAssistant) -> None:
+    """Test a future version isn't migrated."""
+
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=3,
+        minor_version=1,
+        unique_id="some_crazy_future_unique_id",
+        data=MOCK_DATA_STEP_BASE,
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.swiss_public_transport.OpendataTransport",
+        return_value=AsyncMock(),
+    ) as mock:
+        mock().connections = CONNECTIONS
+
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+        entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+        assert entry.state is ConfigEntryState.MIGRATION_ERROR
