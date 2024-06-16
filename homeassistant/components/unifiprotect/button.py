@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DEVICES_THAT_ADOPT, DISPATCH_ADD, DOMAIN
 from .data import ProtectData, UFPConfigEntry
 from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import PermRequired, ProtectRequiredKeysMixin, ProtectSetableKeysMixin, T
+from .models import PermRequired, ProtectEntityDescription, ProtectSetableKeysMixin, T
 from .utils import async_dispatch_id as _ufpd
 
 _LOGGER = logging.getLogger(__name__)
@@ -95,7 +95,7 @@ CHIME_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
 )
 
 
-_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] = {
+_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.CHIME: CHIME_BUTTONS,
     ModelType.SENSOR: SENSOR_BUTTONS,
 }

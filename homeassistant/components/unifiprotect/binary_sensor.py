@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 import dataclasses
-import logging
 
 from uiprotect.data import (
     NVR,
@@ -35,15 +34,14 @@ from .entity import (
     ProtectNVREntity,
     async_all_device_entities,
 )
-from .models import PermRequired, ProtectEventMixin, ProtectRequiredKeysMixin
+from .models import PermRequired, ProtectEntityDescription, ProtectEventMixin
 
-_LOGGER = logging.getLogger(__name__)
 _KEY_DOOR = "door"
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class ProtectBinaryEntityDescription(
-    ProtectRequiredKeysMixin, BinarySensorEntityDescription
+    ProtectEntityDescription, BinarySensorEntityDescription
 ):
     """Describes UniFi Protect Binary Sensor entity."""
 
@@ -613,7 +611,7 @@ DISK_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
 )
 
-_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] = {
+_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.CAMERA: CAMERA_SENSORS,
     ModelType.LIGHT: LIGHT_SENSORS,
     ModelType.SENSOR: SENSE_SENSORS,
@@ -621,7 +619,7 @@ _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] = {
     ModelType.VIEWPORT: VIEWER_SENSORS,
 }
 
-_MOUNTABLE_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] = {
+_MOUNTABLE_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.SENSOR: MOUNTABLE_SENSE_SENSORS,
 }
 
@@ -652,10 +650,9 @@ class MountableProtectDeviceBinarySensor(ProtectDeviceBinarySensor):
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
-        updated_device = self.device
         # UP Sense can be any of the 3 contact sensor device classes
         self._attr_device_class = MOUNT_DEVICE_CLASS_MAP.get(
-            updated_device.mount_type, BinarySensorDeviceClass.DOOR
+            self.device.mount_type, BinarySensorDeviceClass.DOOR
         )
 
 
@@ -688,7 +685,6 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
-
         slot = self._disk.slot
         self._attr_available = False
 
@@ -714,7 +710,7 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
         is_on = self.entity_description.get_is_on(self.device, self._event)
-        self._attr_is_on: bool | None = is_on
+        self._attr_is_on = is_on
         if not is_on:
             self._event = None
             self._attr_extra_state_attributes = {}
