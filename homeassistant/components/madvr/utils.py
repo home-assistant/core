@@ -7,5 +7,7 @@ from madvr.madvr import Madvr
 
 async def cancel_tasks(client: Madvr) -> None:
     """Cancel all tasks."""
-    client.ping_task.cancel()
-    client.heartbeat_task.cancel()
+    if client.ping_task:
+        client.ping_task.cancel()
+    if client.heartbeat_task:
+        client.heartbeat_task.cancel()

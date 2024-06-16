@@ -71,11 +71,13 @@ class MadVRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await asyncio.wait_for(madvr_client.open_connection(), timeout=10)
 
             # don't need tasks running
+            await asyncio.sleep(2)  # let them run once
             await cancel_tasks(madvr_client)
 
-            # send a test heartbeat
-            await madvr_client.send_heartbeat(once=True)
-            await asyncio.sleep(2)
+            # check if we are connected
+            if not madvr_client.connected():
+                raise CannotConnect("Connection failed")
+
             _LOGGER.debug("Connection test successful")
             if not keep_power_on:
                 _LOGGER.debug("Turning off device")
