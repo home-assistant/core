@@ -71,8 +71,7 @@ def async_remove_stale_devices_links_keep_current_device(
 ) -> None:
     """Remove the link between stales devices and a configuration entry, keeping only those informed.
 
-    Devices passed in the currents_device_id parameter will be kept linked
-    to the configuration entry.
+    Device passed in the current_device_id parameter will be kept linked to the configuration entry.
     """
 
     dev_reg = dr.async_get(hass)
