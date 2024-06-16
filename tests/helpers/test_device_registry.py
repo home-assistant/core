@@ -1688,7 +1688,7 @@ async def test_remove_stale_device_links_helpers(
     assert len(devices_config_entry) == 3
 
     # Manual cleanup should unlink stales devices from the config entry
-    dr.async_remove_stale_device_links_helpers(
+    await dr.async_remove_stale_device_links_helpers(
         hass, config_entry.entry_id, source_entity.entity_id
     )
 
