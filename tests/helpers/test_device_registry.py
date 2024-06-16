@@ -2628,3 +2628,39 @@ async def test_async_remove_device_thread_safety(
         await hass.async_add_executor_job(
             device_registry.async_remove_device, device.id
         )
+
+
+async def test_primary_integration(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the primary integration field."""
+    # Update existing
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers=set(),
+        manufacturer="manufacturer",
+        model="model",
+    )
+    assert device.primary_integration is None
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        model="model 2",
+        domain="test_domain",
+    )
+    assert device.primary_integration == "test_domain"
+
+    # Create new
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers=set(),
+        manufacturer="manufacturer",
+        model="model",
+        domain="test_domain",
+    )
+    assert device.primary_integration == "test_domain"

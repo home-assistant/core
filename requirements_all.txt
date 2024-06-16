@@ -59,6 +59,9 @@ PyFlume==0.6.5
 # homeassistant.components.fronius
 PyFronius==0.7.3
 
+# homeassistant.components.pyload
+PyLoadAPI==1.1.0
+
 # homeassistant.components.mvglive
 PyMVGLive==1.1.4
 
@@ -201,10 +204,10 @@ aioaseko==0.1.1
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.5.1
+aioautomower==2024.6.0
 
 # homeassistant.components.azure_devops
-aioazuredevops==2.0.0
+aioazuredevops==2.1.1
 
 # homeassistant.components.baf
 aiobafi6==0.9.0
@@ -550,7 +553,7 @@ beautifulsoup4==4.12.3
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.39.0
+bellows==0.39.1
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected[china]==0.15.3
@@ -706,7 +709,7 @@ debugpy==1.8.1
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==7.3.0
+deebot-client==8.0.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -964,7 +967,7 @@ glances-api==0.8.0
 goalzero==0.2.2
 
 # homeassistant.components.goodwe
-goodwe==0.3.5
+goodwe==0.3.6
 
 # homeassistant.components.google_mail
 # homeassistant.components.google_tasks
@@ -1090,7 +1093,7 @@ hole==0.8.0
 holidays==0.50
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240610.0
+home-assistant-frontend==20240610.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.6.5
@@ -2242,7 +2245,7 @@ python-etherscan-api==0.0.3
 python-family-hub-local==0.0.2
 
 # homeassistant.components.fully_kiosk
-python-fullykiosk==0.0.12
+python-fullykiosk==0.0.13
 
 # homeassistant.components.sms
 # python-gammu==3.2.4
@@ -2785,7 +2788,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==1.0.0
+uiprotect==1.12.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2987,7 +2990,7 @@ zigpy-zigate==0.12.0
 zigpy-znp==0.12.1
 
 # homeassistant.components.zha
-zigpy==0.64.0
+zigpy==0.64.1
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4
