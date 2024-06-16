@@ -170,6 +170,15 @@ def _fail_legacy_config(discovery: bool) -> Callable[[ConfigType], ConfigType]:
             )
 
         if discovery:
+            _LOGGER.warning(
+                "The `schema` option is deprecated for MQTT %s, but "
+                "it was used in a discovery payload. Please contact the maintainer "
+                "of the integration or service that supplies the config, and suggest "
+                "to remove the option. Got %s at discovery topic %s",
+                vacuum.DOMAIN,
+                config,
+                getattr(config, "discovery_data")["discovery_topic"],
+            )
             return config
 
         translation_key = "deprecation_mqtt_schema_vacuum_yaml"

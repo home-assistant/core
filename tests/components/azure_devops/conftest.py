@@ -33,7 +33,7 @@ async def mock_devops_client() -> AsyncGenerator[MagicMock]:
         devops_client.get_project.return_value = DEVOPS_PROJECT
         devops_client.get_builds.return_value = [DEVOPS_BUILD]
         devops_client.get_build.return_value = DEVOPS_BUILD
-        devops_client.get_work_items_ids_all.return_value = None
+        devops_client.get_work_item_ids.return_value = None
         devops_client.get_work_items.return_value = None
 
         yield devops_client
