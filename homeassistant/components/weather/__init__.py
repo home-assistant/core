@@ -122,8 +122,6 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 ROUNDING_PRECISION = 2
 
-LEGACY_SERVICE_GET_FORECAST: Final = "get_forecast"
-"""Deprecated: please use SERVICE_GET_FORECASTS."""
 SERVICE_GET_FORECASTS: Final = "get_forecasts"
 
 _ObservationUpdateCoordinatorT = TypeVar(
