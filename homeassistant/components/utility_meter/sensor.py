@@ -131,8 +131,6 @@ async def async_setup_entry(
 
     device_info = await dr.async_device_info_to_link(hass, entity_id=source_entity_id)
 
-    _LOGGER.warning("TESTE %s", device_info)
-
     cron_pattern = None
     delta_values = config_entry.options[CONF_METER_DELTA_VALUES]
     meter_offset = timedelta(days=config_entry.options[CONF_METER_OFFSET])
