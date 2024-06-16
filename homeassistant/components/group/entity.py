@@ -264,7 +264,9 @@ class Group(Entity):
 
     def update_tracked_entity_ids(self, entity_ids: Collection[str] | None) -> None:
         """Update the member entity IDs."""
-        self.async_update_tracked_entity_ids(entity_ids), self.hass.loop
+        self.hass.loop.call_soon_threadsafe(
+            self.async_update_tracked_entity_ids, entity_ids
+        )
 
     @callback
     def async_update_tracked_entity_ids(
