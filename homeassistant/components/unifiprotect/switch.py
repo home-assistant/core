@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from functools import partial
 import logging
 from typing import Any
 
@@ -466,7 +467,7 @@ _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.VIEWPORT: VIEWER_SWITCHES,
 }
 
-_PRIVACY_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
+_PRIVACY_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.CAMERA: [PRIVACY_MODE_SWITCH]
 }
 
@@ -476,15 +477,6 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
 
     entity_description: ProtectSwitchEntityDescription
     _state_attrs = ("_attr_available", "_attr_is_on")
-
-    def __init__(
-        self,
-        data: ProtectData,
-        device: ProtectAdoptableDeviceModel,
-        description: ProtectSwitchEntityDescription,
-    ) -> None:
-        """Initialize an UniFi Protect Switch."""
-        super().__init__(data, device, description)
 
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
@@ -586,12 +578,6 @@ class ProtectPrivacyModeSwitch(RestoreEntity, ProtectSwitch):
         self._update_previous_attr()
 
 
-MODEL_DESCRIPTIONS_WITH_CLASS = (
-    (_MODEL_DESCRIPTIONS, ProtectSwitch),
-    (_PRIVACY_MODEL_DESCRIPTIONS, ProtectPrivacyModeSwitch),
-)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
@@ -602,20 +588,17 @@ async def async_setup_entry(
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+        _make_entities = partial(async_all_device_entities, data, ufp_device=device)
         entities: list[BaseProtectEntity] = []
-        for model_descriptions, klass in MODEL_DESCRIPTIONS_WITH_CLASS:
-            entities += async_all_device_entities(
-                data, klass, model_descriptions=model_descriptions, ufp_device=device
-            )
+        entities += _make_entities(ProtectSwitch, _MODEL_DESCRIPTIONS)
+        entities += _make_entities(ProtectPrivacyModeSwitch, _PRIVACY_DESCRIPTIONS)
         async_add_entities(entities)
 
+    _make_entities = partial(async_all_device_entities, data)
     data.async_subscribe_adopt(_add_new_device)
     entities: list[BaseProtectEntity] = []
-    for model_descriptions, klass in MODEL_DESCRIPTIONS_WITH_CLASS:
-        entities += async_all_device_entities(
-            data, klass, model_descriptions=model_descriptions
-        )
-
+    entities += _make_entities(ProtectSwitch, _MODEL_DESCRIPTIONS)
+    entities += _make_entities(ProtectPrivacyModeSwitch, _PRIVACY_DESCRIPTIONS)
     bootstrap = data.api.bootstrap
     nvr = bootstrap.nvr
     if nvr.can_write(bootstrap.auth_user) and nvr.is_insights_enabled is not None:
