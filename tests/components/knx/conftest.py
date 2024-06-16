@@ -83,7 +83,7 @@ class KNXTestKit:
             self.xknx.rate_limit = 0
             # set XknxConnectionState.CONNECTED to avoid `unavailable` entities at startup
             # and start StateUpdater. This would be awaited on normal startup too.
-            await self.xknx.connection_manager.connection_state_changed(
+            self.xknx.connection_manager.connection_state_changed(
                 state=XknxConnectionState.CONNECTED,
                 connection_type=XknxConnectionType.TUNNEL_TCP,
             )
@@ -93,6 +93,7 @@ class KNXTestKit:
             mock = Mock()
             mock.start = AsyncMock(side_effect=patch_xknx_start)
             mock.stop = AsyncMock()
+            mock.gateway_info = AsyncMock()
             return mock
 
         def fish_xknx(*args, **kwargs):

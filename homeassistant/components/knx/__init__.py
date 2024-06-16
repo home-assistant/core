@@ -439,11 +439,11 @@ class KNXModule:
             threaded=True,
         )
 
-    async def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
+    def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
         """Call invoked after a KNX connection state change was received."""
         self.connected = state == XknxConnectionState.CONNECTED
-        if tasks := [device.after_update() for device in self.xknx.devices]:
-            await asyncio.gather(*tasks)
+        for device in self.xknx.devices:
+            device.after_update()
 
     def telegram_received_cb(self, telegram: Telegram) -> None:
         """Call invoked after a KNX telegram was received."""
