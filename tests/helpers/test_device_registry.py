@@ -1641,10 +1641,16 @@ async def test_cleanup_device_registry(
     assert device_registry.async_get_device(identifiers={("something", "d4")}) is None
 
 
+@pytest.mark.parametrize(
+    ("test_entity_id", "test_device_id"),
+    [(True, False), (False, True), (True, True), (False, False)],
+)
 async def test_remove_stale_device_links_helpers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    test_entity_id: bool,
+    test_device_id: bool,
 ) -> None:
     """Test cleanup works."""
     config_entry = MockConfigEntry(domain="hue")
@@ -1689,15 +1695,18 @@ async def test_remove_stale_device_links_helpers(
 
     # Manual cleanup should unlink stales devices from the config entry
     await dr.async_remove_stale_device_links_helpers(
-        hass, config_entry.entry_id, source_entity.entity_id
+        hass,
+        entry_id=config_entry.entry_id,
+        source_entity_id=source_entity.entity_id if test_entity_id else None,
+        device_id=current_device.id if test_device_id else None,
     )
 
     devices_config_entry = device_registry.devices.get_devices_for_config_entry_id(
         config_entry.entry_id
     )
 
-    # After cleaning, only one device linked to the configuration entry is expected
-    assert len(devices_config_entry) == 1
+    # After cleanup, only one device is expected to be linked to the configuration entry if at least source_entity_id or device_id was given, else zero
+    assert len(devices_config_entry) == (1 if (test_entity_id or test_device_id) else 0)
 
 
 async def test_cleanup_device_registry_removes_expired_orphaned_devices(
