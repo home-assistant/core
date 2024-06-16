@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 from .coordinator import MadVRCoordinator
+from .utils import cancel_tasks
 
 # For your initial PR, limit it to 1 platform.
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.REMOTE, Platform.SENSOR]
@@ -53,6 +54,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: MadVRConfigEntry) -> boo
 async def async_unload_entry(hass: HomeAssistant, entry: MadVRConfigEntry) -> bool:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    coordinator: MadVRCoordinator = hass.data[DOMAIN][entry.entry_id]
+    # cancel all tasks
+    await cancel_tasks(coordinator.my_api)
+
     hass.data[DOMAIN].pop(entry.entry_id)
     return True
 

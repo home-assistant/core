@@ -13,6 +13,7 @@ from homeassistant.core import callback
 
 from .const import DOMAIN
 from .coordinator import MadVRCoordinator
+from .utils import cancel_tasks
 from .wakeonlan import send_magic_packet
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,9 +70,8 @@ class MadVRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # try to connect
             await asyncio.wait_for(madvr_client.open_connection(), timeout=10)
 
-            # don't need these running
-            madvr_client.heartbeat_task.cancel()
-            madvr_client.ping_task.cancel()
+            # don't need tasks running
+            await cancel_tasks(madvr_client)
 
             # send a test heartbeat
             await madvr_client.send_heartbeat(once=True)
