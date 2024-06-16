@@ -706,8 +706,8 @@ def _async_nvr_entities(
     return entities
 
 
-class ProtectDeviceSensor(ProtectDeviceEntity, SensorEntity):
-    """A Ubiquiti UniFi Protect Sensor."""
+class BaseProtectSensor(BaseProtectEntity, SensorEntity):
+    """A UniFi Protect Sensor Entity."""
 
     entity_description: ProtectSensorEntityDescription
     _state_attrs = ("_attr_available", "_attr_native_value")
@@ -717,15 +717,12 @@ class ProtectDeviceSensor(ProtectDeviceEntity, SensorEntity):
         self._attr_native_value = self.entity_description.get_ufp_value(self.device)
 
 
-class ProtectNVRSensor(ProtectNVREntity, SensorEntity):
+class ProtectDeviceSensor(BaseProtectSensor, ProtectDeviceEntity):
     """A Ubiquiti UniFi Protect Sensor."""
 
-    entity_description: ProtectSensorEntityDescription
-    _state_attrs = ("_attr_available", "_attr_native_value")
 
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        super()._async_update_device_from_protect(device)
-        self._attr_native_value = self.entity_description.get_ufp_value(self.device)
+class ProtectNVRSensor(BaseProtectSensor, ProtectNVREntity):
+    """A Ubiquiti UniFi Protect Sensor."""
 
 
 class ProtectEventSensor(EventEntityMixin, SensorEntity):
