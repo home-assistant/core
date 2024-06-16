@@ -194,7 +194,7 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
             self._attr_name = camera_name
         else:
             self._attr_unique_id = f"{device.mac}_{channel.id}_insecure"
-            self._attr_name = f"{camera_name} (Insecure)"
+            self._attr_name = f"{camera_name} (insecure)"
         # only the default (first) channel is enabled by default
         self._attr_entity_registry_enabled_default = is_default and secure
 
