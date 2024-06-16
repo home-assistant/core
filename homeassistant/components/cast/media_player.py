@@ -41,7 +41,6 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CAST_APP_ID_HOMEASSISTANT_LOVELACE,
     CONF_UUID,
@@ -56,6 +55,7 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url, is_hass_
 import homeassistant.util.dt as dt_util
 from homeassistant.util.logging import async_create_catching_coro
 
+from . import CastConfigEntry
 from .const import (
     ADDED_CAST_DEVICES_KEY,
     CAST_MULTIZONE_MANAGER_KEY,
@@ -138,17 +138,15 @@ def _async_create_cast_device(hass: HomeAssistant, info: ChromecastInfo):
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant, entry: CastConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Cast from a config entry."""
     hass.data.setdefault(ADDED_CAST_DEVICES_KEY, set())
 
     # Import CEC IGNORE attributes
-    pychromecast.IGNORE_CEC += config_entry.data.get(CONF_IGNORE_CEC) or []
+    pychromecast.IGNORE_CEC += entry.data.get(CONF_IGNORE_CEC) or []
 
-    wanted_uuids = config_entry.data.get(CONF_UUID) or None
+    wanted_uuids = entry.data.get(CONF_UUID) or None
 
     @callback
     def async_cast_discovered(discover: ChromecastInfo) -> None:
@@ -165,7 +163,7 @@ async def async_setup_entry(
 
     async_dispatcher_connect(hass, SIGNAL_CAST_DISCOVERED, async_cast_discovered)
     ChromeCastZeroconf.set_zeroconf(await zeroconf.async_get_instance(hass))
-    hass.async_add_executor_job(setup_internal_discovery, hass, config_entry)
+    hass.async_add_executor_job(setup_internal_discovery, hass, entry)
 
 
 class CastDevice:

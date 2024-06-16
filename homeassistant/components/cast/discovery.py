@@ -5,11 +5,11 @@ import threading
 
 import pychromecast
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import dispatcher_send
 
+from . import CastConfigEntry
 from .const import (
     CAST_BROWSER_KEY,
     CONF_KNOWN_HOSTS,
@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def discover_chromecast(
-    hass: HomeAssistant, cast_info: pychromecast.models.CastInfo
+    hass: HomeAssistant, cast_info: pychromecast.models.CastInfo, entry: CastConfigEntry
 ) -> None:
     """Discover a Chromecast."""
 
@@ -35,7 +35,7 @@ def discover_chromecast(
         _LOGGER.error("Discovered chromecast without uuid %s", info)
         return
 
-    info = info.fill_out_missing_chromecast_info(hass)
+    info = info.fill_out_missing_chromecast_info(hass, entry)
     _LOGGER.debug("Discovered new or updated chromecast %s", info)
 
     dispatcher_send(hass, SIGNAL_CAST_DISCOVERED, info)
@@ -48,7 +48,7 @@ def _remove_chromecast(hass: HomeAssistant, info: ChromecastInfo) -> None:
     dispatcher_send(hass, SIGNAL_CAST_REMOVED, info)
 
 
-def setup_internal_discovery(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+def setup_internal_discovery(hass: HomeAssistant, entry: CastConfigEntry) -> None:
     """Set up the pychromecast internal discovery."""
     if INTERNAL_DISCOVERY_RUNNING_KEY not in hass.data:
         hass.data[INTERNAL_DISCOVERY_RUNNING_KEY] = threading.Lock()
@@ -62,11 +62,11 @@ def setup_internal_discovery(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
         def add_cast(self, uuid, _):
             """Handle zeroconf discovery of a new chromecast."""
-            discover_chromecast(hass, browser.devices[uuid])
+            discover_chromecast(hass, browser.devices[uuid], entry)
 
         def update_cast(self, uuid, _):
             """Handle zeroconf discovery of an updated chromecast."""
-            discover_chromecast(hass, browser.devices[uuid])
+            discover_chromecast(hass, browser.devices[uuid], entry)
 
         def remove_cast(self, uuid, service, cast_info):
             """Handle zeroconf discovery of a removed chromecast."""
@@ -81,7 +81,7 @@ def setup_internal_discovery(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     browser = pychromecast.discovery.CastBrowser(
         CastListener(),
         ChromeCastZeroconf.get_zeroconf(),
-        config_entry.data.get(CONF_KNOWN_HOSTS),
+        entry.data.get(CONF_KNOWN_HOSTS),
     )
     hass.data[CAST_BROWSER_KEY] = browser
     browser.start_discovery()
@@ -94,10 +94,10 @@ def setup_internal_discovery(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_discovery)
 
-    config_entry.add_update_listener(config_entry_updated)
+    entry.add_update_listener(config_entry_updated)
 
 
-async def config_entry_updated(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def config_entry_updated(hass: HomeAssistant, entry: CastConfigEntry) -> None:
     """Handle config entry being updated."""
     browser = hass.data[CAST_BROWSER_KEY]
-    browser.host_browser.update_hosts(config_entry.data.get(CONF_KNOWN_HOSTS))
+    browser.host_browser.update_hosts(entry.data.get(CONF_KNOWN_HOSTS))

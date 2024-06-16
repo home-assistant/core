@@ -2,16 +2,22 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
-from homeassistant import auth, config_entries, core
+from homeassistant import auth, core
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, dispatcher, instance_id
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.service import async_register_admin_service
 
 from .const import DOMAIN, SIGNAL_HASS_CAST_SHOW_VIEW, HomeAssistantControllerData
+
+if TYPE_CHECKING:
+    from . import CastConfigEntry
 
 SERVICE_SHOW_VIEW = "show_lovelace_view"
 ATTR_VIEW_PATH = "view_path"
@@ -23,9 +29,7 @@ NO_URL_AVAILABLE_ERROR = (
 )
 
 
-async def async_setup_ha_cast(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
-):
+async def async_setup_ha_cast(hass: HomeAssistant, entry: CastConfigEntry):
     """Set up Home Assistant Cast."""
     user_id: str | None = entry.data.get("user_id")
     user: auth.models.User | None = None
@@ -89,9 +93,7 @@ async def async_setup_ha_cast(
     )
 
 
-async def async_remove_user(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
-):
+async def async_remove_user(hass: HomeAssistant, entry: CastConfigEntry):
     """Remove Home Assistant Cast user."""
     user_id: str | None = entry.data.get("user_id")
 
