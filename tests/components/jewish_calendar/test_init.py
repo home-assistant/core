@@ -1,5 +1,7 @@
 """Tests for the Jewish Calendar component's init."""
 
+import logging
+
 from hdate import Location
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSORS
@@ -17,6 +19,8 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 from homeassistant.setup import async_setup_component
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def test_import_unique_id_migration(hass: HomeAssistant) -> None:
     """Test unique_id migration."""
@@ -27,8 +31,8 @@ async def test_import_unique_id_migration(hass: HomeAssistant) -> None:
             CONF_LANGUAGE: DEFAULT_LANGUAGE,
             CONF_CANDLE_LIGHT_MINUTES: 20,
             CONF_HAVDALAH_OFFSET_MINUTES: 50,
-            CONF_LATITUDE: 31.76,
-            CONF_LONGITUDE: 35.235,
+            CONF_LATITUDE: hass.config.latitude,
+            CONF_LONGITUDE: hass.config.longitude,
         }
     }
 
@@ -38,8 +42,12 @@ async def test_import_unique_id_migration(hass: HomeAssistant) -> None:
         latitude=yaml_conf[DOMAIN][CONF_LATITUDE],
         longitude=yaml_conf[DOMAIN][CONF_LONGITUDE],
         timezone=hass.config.time_zone,
-        altitude=hass.config.elevation,
         diaspora=DEFAULT_DIASPORA,
+    )
+    _LOGGER.info(
+        "Location elevation: %d HASS elevation: %d",
+        location.altitude,
+        hass.config.elevation,
     )
     old_prefix = get_unique_prefix(location, DEFAULT_LANGUAGE, 20, 50)
     sample_entity = ent_reg.async_get_or_create(
