@@ -1090,6 +1090,46 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
 
 @callback
+async def async_device_info_to_link(
+    hass: HomeAssistant,
+    device_id: str | None = None,
+    entity_id: str | None = None,
+) -> DeviceInfo | None:
+    """DeviceInfo with the information to link a device in a config entry in the Link category.
+
+    It can directly receive a device ID or an entity ID to be extracted from the device.
+    """
+
+    def device_id_to_entity_id(entity_id: str) -> str | None:
+        """Resolve the device id to the entity id."""
+        # pylint: disable-next=import-outside-toplevel
+        from . import entity_registry
+
+        ent_reg = entity_registry.async_get(hass)
+        if ((entity := ent_reg.async_get(entity_id)) is not None) and (
+            entity.device_id is not None
+        ):
+            return entity.device_id
+        return None
+
+    dev_reg = async_get(hass)
+
+    if device_id is None and entity_id is not None:
+        device_id = device_id_to_entity_id(entity_id)
+
+    if (
+        device_id is not None
+        and (device := dev_reg.async_get(device_id=device_id)) is not None
+    ):
+        return DeviceInfo(
+            identifiers=device.identifiers,
+            connections=device.connections,
+        )
+
+    return None
+
+
+@callback
 @singleton(DATA_REGISTRY)
 def async_get(hass: HomeAssistant) -> DeviceRegistry:
     """Get device registry."""

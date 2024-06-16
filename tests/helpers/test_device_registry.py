@@ -2262,6 +2262,60 @@ async def test_device_info_configuration_url_validation(
         )
 
 
+async def test_device_info_to_link(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test for returning device info with device link information."""
+    config_entry = MockConfigEntry(domain="my")
+    config_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        identifiers={("test", "my_device")},
+        connections={("mac", "30:31:32:33:34:00")},
+        config_entry_id=config_entry.entry_id,
+    )
+    assert device is not None
+
+    # Source entity registry
+    source_entity = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "source",
+        config_entry=config_entry,
+        device_id=device.id,
+    )
+    await hass.async_block_till_done()
+    assert entity_registry.async_get("sensor.test_source") is not None
+
+    # Only with the entity id
+    result = await dr.async_device_info_to_link(hass, entity_id=source_entity.entity_id)
+    assert result == {
+        "identifiers": {("test", "my_device")},
+        "connections": {("mac", "30:31:32:33:34:00")},
+    }
+
+    # Only with the device id
+    result = await dr.async_device_info_to_link(hass, device_id=device.id)
+    assert result == {
+        "identifiers": {("test", "my_device")},
+        "connections": {("mac", "30:31:32:33:34:00")},
+    }
+
+    # With a non-existent entity id
+    result = await dr.async_device_info_to_link(hass, entity_id="sensor.invalid")
+    assert result is None
+
+    # With a non-existent device id
+    result = await dr.async_device_info_to_link(hass, device_id="abcdefghi")
+    assert result is None
+
+    # Without informing one of the entity_id or device_id parameters
+    result = await dr.async_device_info_to_link(hass)
+    assert result is None
+
+
 @pytest.mark.parametrize("load_registries", [False])
 async def test_loading_invalid_configuration_url_from_storage(
     hass: HomeAssistant,
