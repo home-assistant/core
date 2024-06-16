@@ -996,7 +996,6 @@ class MockConfigEntry(config_entries.ConfigEntry):
         title="Mock Title",
         unique_id=None,
         version=1,
-        runtime_data=None,
     ) -> None:
         """Initialize a mock config entry."""
         kwargs = {
@@ -1008,7 +1007,6 @@ class MockConfigEntry(config_entries.ConfigEntry):
             "options": options or {},
             "pref_disable_new_entities": pref_disable_new_entities,
             "pref_disable_polling": pref_disable_polling,
-            "runtime_data": runtime_data,
             "title": title,
             "unique_id": unique_id,
             "version": version,
