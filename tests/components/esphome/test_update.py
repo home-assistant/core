@@ -83,7 +83,7 @@ async def test_update_entity(
 
     with patch(
         "homeassistant.components.esphome.update.DomainData.get_entry_data",
-        return_value=Mock(available=True, device_info=mock_device_info),
+        return_value=Mock(available=True, device_info=mock_device_info, info={}),
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -266,7 +266,7 @@ async def test_update_entity_dashboard_not_available_startup(
     with (
         patch(
             "homeassistant.components.esphome.update.DomainData.get_entry_data",
-            return_value=Mock(available=True, device_info=mock_device_info),
+            return_value=Mock(available=True, device_info=mock_device_info, info={}),
         ),
         patch(
             "esphome_dashboard_api.ESPHomeDashboardAPI.get_devices",
@@ -358,7 +358,7 @@ async def test_update_entity_not_present_without_dashboard(
     """Test ESPHome update entity does not get created if there is no dashboard."""
     with patch(
         "homeassistant.components.esphome.update.DomainData.get_entry_data",
-        return_value=Mock(available=True, device_info=mock_device_info),
+        return_value=Mock(available=True, device_info=mock_device_info, info={}),
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
