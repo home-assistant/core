@@ -181,6 +181,7 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.storage.used",
+        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
     ),
     ProtectSensorEntityDescription(
         key="write_rate",
@@ -191,6 +192,7 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.storage.rate_per_second",
         precision=2,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
     ),
     ProtectSensorEntityDescription(
         key="voltage",
@@ -280,6 +282,7 @@ CAMERA_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         ufp_value="stats.rx_bytes",
+        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
     ),
     ProtectSensorEntityDescription(
         key="stats_tx",
@@ -290,6 +293,7 @@ CAMERA_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         ufp_value="stats.tx_bytes",
+        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
     ),
 )
 
