@@ -31,7 +31,6 @@ from .const import (
     DEFAULT_HOSTNAME,
     DEFAULT_NAME,
     DEFAULT_PORT,
-    DEFAULT_PORT_IPV6,
     DEFAULT_RESOLVER,
     DEFAULT_RESOLVER_IPV6,
     DOMAIN,
@@ -48,7 +47,7 @@ DATA_SCHEMA_ADV = vol.Schema(
         vol.Optional(CONF_RESOLVER, default=DEFAULT_RESOLVER): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_RESOLVER_IPV6, default=DEFAULT_RESOLVER_IPV6): cv.string,
-        vol.Optional(CONF_PORT_IPV6, default=DEFAULT_PORT_IPV6): cv.port,
+        vol.Optional(CONF_PORT_IPV6, default=DEFAULT_PORT): cv.port,
     }
 )
 
@@ -117,7 +116,7 @@ class DnsIPConfigFlow(ConfigFlow, domain=DOMAIN):
             resolver = user_input.get(CONF_RESOLVER, DEFAULT_RESOLVER)
             resolver_ipv6 = user_input.get(CONF_RESOLVER_IPV6, DEFAULT_RESOLVER_IPV6)
             port = user_input.get(CONF_PORT, DEFAULT_PORT)
-            port_ipv6 = user_input.get(CONF_PORT_IPV6, DEFAULT_PORT_IPV6)
+            port_ipv6 = user_input.get(CONF_PORT_IPV6, DEFAULT_PORT)
 
             validate = await async_validate_hostname(
                 hostname, resolver, resolver_ipv6, port, port_ipv6
@@ -178,7 +177,7 @@ class DnsIPOptionsFlowHandler(OptionsFlowWithConfigEntry):
             resolver = user_input.get(CONF_RESOLVER, DEFAULT_RESOLVER)
             port = user_input.get(CONF_PORT, DEFAULT_PORT)
             resolver_ipv6 = user_input.get(CONF_RESOLVER_IPV6, DEFAULT_RESOLVER_IPV6)
-            port_ipv6 = user_input.get(CONF_PORT_IPV6, DEFAULT_PORT_IPV6)
+            port_ipv6 = user_input.get(CONF_PORT_IPV6, DEFAULT_PORT)
             validate = await async_validate_hostname(
                 self.config_entry.data[CONF_HOSTNAME],
                 resolver,

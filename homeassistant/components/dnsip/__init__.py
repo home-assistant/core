@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT
 from homeassistant.core import _LOGGER, HomeAssistant
 
-from .const import CONF_PORT_IPV6, DEFAULT_PORT, DEFAULT_PORT_IPV6, PLATFORMS
+from .const import CONF_PORT_IPV6, DEFAULT_PORT, PLATFORMS
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -33,7 +33,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
     if config_entry.version > 1:
         # This means the user has downgraded from a future version
-        return False  # pragma: no cover
+        return False
 
     if config_entry.version == 1 and config_entry.minor_version == 1:
         version = config_entry.version
@@ -46,7 +46,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
         new_options = {**config_entry.options}
         new_options[CONF_PORT] = DEFAULT_PORT
-        new_options[CONF_PORT_IPV6] = DEFAULT_PORT_IPV6
+        new_options[CONF_PORT_IPV6] = DEFAULT_PORT
 
         hass.config_entries.async_update_entry(
             config_entry, options=new_options, minor_version=2

@@ -12,7 +12,6 @@ from homeassistant.components.dnsip.const import (
     CONF_RESOLVER,
     CONF_RESOLVER_IPV6,
     DEFAULT_PORT,
-    DEFAULT_PORT_IPV6,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
@@ -94,5 +93,5 @@ async def test_port_migration(
     assert entry.version == 1
     assert entry.minor_version == 2
     assert entry.options[CONF_PORT] == DEFAULT_PORT
-    assert entry.options[CONF_PORT_IPV6] == DEFAULT_PORT_IPV6
+    assert entry.options[CONF_PORT_IPV6] == DEFAULT_PORT
     assert entry.state is ConfigEntryState.LOADED
