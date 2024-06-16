@@ -21,7 +21,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DEVICES_THAT_ADOPT, DISPATCH_ADD, DOMAIN
-from .data import ProtectData, UFPConfigEntry
+from .data import UFPConfigEntry
 from .entity import ProtectDeviceEntity, async_all_device_entities
 from .models import PermRequired, ProtectEntityDescription, ProtectSetableKeysMixin, T
 from .utils import async_dispatch_id as _ufpd
@@ -172,16 +172,6 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
     """A Ubiquiti UniFi Protect Reboot button."""
 
     entity_description: ProtectButtonEntityDescription
-
-    def __init__(
-        self,
-        data: ProtectData,
-        device: ProtectAdoptableDeviceModel,
-        description: ProtectButtonEntityDescription,
-    ) -> None:
-        """Initialize an UniFi camera."""
-        super().__init__(data, device, description)
-        self._attr_name = f"{self.device.display_name} {self.entity_description.name}"
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:

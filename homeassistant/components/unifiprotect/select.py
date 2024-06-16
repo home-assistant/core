@@ -369,7 +369,6 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         """Initialize the unifi protect select entity."""
         self._async_set_options(data, description)
         super().__init__(data, device, description)
-        self._attr_name = f"{self.device.display_name} {self.entity_description.name}"
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
