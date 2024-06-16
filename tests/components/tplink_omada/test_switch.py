@@ -34,6 +34,7 @@ async def test_poe_switches(
     mock_omada_site_client: MagicMock,
     init_integration: MockConfigEntry,
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test PoE switch."""
     poe_switch_mac = "54-AF-97-00-00-01"
@@ -44,6 +45,7 @@ async def test_poe_switches(
         poe_switch_mac,
         1,
         snapshot,
+        entity_registry,
     )
 
     await _test_poe_switch(
@@ -53,6 +55,7 @@ async def test_poe_switches(
         poe_switch_mac,
         2,
         snapshot,
+        entity_registry,
     )
 
 
@@ -240,9 +243,8 @@ async def _test_poe_switch(
     network_switch_mac: str,
     port_num: int,
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    entity_registry = er.async_get(hass)
-
     def assert_update_switch_port(
         device: OmadaSwitch,
         switch_port_details: OmadaSwitchPortDetails,

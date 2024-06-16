@@ -52,12 +52,12 @@ async def test_device_scanner_created(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test gateway connected switches."""
 
     entity_id = "device_tracker.banana"
 
-    entity_registry = er.async_get(hass)
     updated_entity = entity_registry.async_update_entity(entity_id, disabled_by=None)
     assert not updated_entity.disabled
     async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
@@ -73,12 +73,12 @@ async def test_device_scanner_update_to_away_nulls_properties(
     mock_omada_clients_only_site_client: MagicMock,
     init_integration: MockConfigEntry,
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test gateway connected switches."""
 
     entity_id = "device_tracker.banana"
 
-    entity_registry = er.async_get(hass)
     updated_entity = entity_registry.async_update_entity(entity_id, disabled_by=None)
     assert not updated_entity.disabled
     async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
