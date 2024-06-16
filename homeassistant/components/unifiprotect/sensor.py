@@ -47,7 +47,7 @@ from .entity import (
     ProtectNVREntity,
     async_all_device_entities,
 )
-from .models import PermRequired, ProtectEventMixin, ProtectRequiredKeysMixin, T
+from .models import PermRequired, ProtectEntityDescription, ProtectEventMixin, T
 from .utils import async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,7 +56,7 @@ OBJECT_TYPE_NONE = "none"
 
 @dataclass(frozen=True, kw_only=True)
 class ProtectSensorEntityDescription(
-    ProtectRequiredKeysMixin[T], SensorEntityDescription
+    ProtectEntityDescription[T], SensorEntityDescription
 ):
     """Describes UniFi Protect Sensor entity."""
 
@@ -608,7 +608,7 @@ VIEWER_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ),
 )
 
-_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] = {
+_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.CAMERA: CAMERA_SENSORS + CAMERA_DISABLED_SENSORS,
     ModelType.SENSOR: SENSE_SENSORS,
     ModelType.LIGHT: LIGHT_SENSORS,
