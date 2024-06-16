@@ -60,7 +60,7 @@ async def async_setup_entry(
     entities = []
     if entry.data[CONF_IPV4]:
         entities.append(
-            WanIpSensor(name, hostname, resolver_ipv4, False, port=port_ipv4)
+            WanIpSensor(name, hostname, resolver_ipv4, False, port_ipv4)
         )
     if entry.data[CONF_IPV6]:
         entities.append(
@@ -82,7 +82,7 @@ class WanIpSensor(SensorEntity):
         hostname: str,
         resolver: str,
         ipv6: bool,
-        port: int = 53,
+        port: int,
     ) -> None:
         """Initialize the DNS IP sensor."""
         self._attr_name = "IPv6" if ipv6 else None
