@@ -30,7 +30,7 @@ from .entity import (
     ProtectNVREntity,
     async_all_device_entities,
 )
-from .models import PermRequired, ProtectRequiredKeysMixin, ProtectSetableKeysMixin, T
+from .models import PermRequired, ProtectEntityDescription, ProtectSetableKeysMixin, T
 
 _LOGGER = logging.getLogger(__name__)
 ATTR_PREV_MIC = "prev_mic_level"
@@ -459,7 +459,7 @@ NVR_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
     ),
 )
 
-_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] = {
+_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.CAMERA: CAMERA_SWITCHES,
     ModelType.LIGHT: LIGHT_SWITCHES,
     ModelType.SENSOR: SENSE_SWITCHES,
@@ -467,7 +467,7 @@ _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] = {
     ModelType.VIEWPORT: VIEWER_SWITCHES,
 }
 
-_PRIVACY_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] = {
+_PRIVACY_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.CAMERA: [PRIVACY_MODE_SWITCH]
 }
 
@@ -487,7 +487,6 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
         """Initialize an UniFi Protect Switch."""
         super().__init__(data, device, description)
         self._attr_name = f"{self.device.display_name} {self.entity_description.name}"
-        self._switch_type = self.entity_description.key
 
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
@@ -539,21 +538,20 @@ class ProtectPrivacyModeSwitch(RestoreEntity, ProtectSwitch):
     def __init__(
         self,
         data: ProtectData,
-        device: ProtectAdoptableDeviceModel,
+        device: Camera,
         description: ProtectSwitchEntityDescription,
     ) -> None:
         """Initialize an UniFi Protect Switch."""
         super().__init__(data, device, description)
-
-        if self.device.is_privacy_on:
+        if device.is_privacy_on:
             extra_state = self.extra_state_attributes or {}
             self._previous_mic_level = extra_state.get(ATTR_PREV_MIC, 100)
             self._previous_record_mode = extra_state.get(
                 ATTR_PREV_RECORD, RecordingMode.ALWAYS
             )
         else:
-            self._previous_mic_level = self.device.mic_volume
-            self._previous_record_mode = self.device.recording_settings.mode
+            self._previous_mic_level = device.mic_volume
+            self._previous_record_mode = device.recording_settings.mode
 
     @callback
     def _update_previous_attr(self) -> None:
