@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-import asyncio
 from collections.abc import Callable, Collection, Mapping
 import logging
 from typing import Any
@@ -265,11 +264,10 @@ class Group(Entity):
 
     def update_tracked_entity_ids(self, entity_ids: Collection[str] | None) -> None:
         """Update the member entity IDs."""
-        asyncio.run_coroutine_threadsafe(
-            self.async_update_tracked_entity_ids(entity_ids), self.hass.loop
-        ).result()
+        self.async_update_tracked_entity_ids(entity_ids), self.hass.loop
 
-    async def async_update_tracked_entity_ids(
+    @callback
+    def async_update_tracked_entity_ids(
         self, entity_ids: Collection[str] | None
     ) -> None:
         """Update the member entity IDs.
@@ -369,14 +367,15 @@ class Group(Entity):
         self._state = None
         self._async_update_group_state()
 
-    async def async_domain_registered(self, domain: str) -> None:
+    @callback
+    def async_domain_registered(self, domain: str) -> None:
         """Refresh after a new entity platform has been registered."""
         _LOGGER.debug(
             "Domain %s was registered, refreshing state %s",
             domain,
             self.entity_id,
         )
-        await self.async_update_tracked_entity_ids(set(self.tracking))
+        self.async_update_tracked_entity_ids(set(self.tracking))
 
     async def async_added_to_hass(self) -> None:
         """Handle addition to Home Assistant."""
