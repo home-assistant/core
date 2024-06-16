@@ -34,6 +34,7 @@ class MatterEntityDescription(EntityDescription):
 
     # convert the value from the primary attribute to the value used by HA
     measurement_to_ha: Callable[[Any], Any] | None = None
+    ha_to_native_measurement: Callable[[Any], Any] | None = None
 
 
 class MatterEntity(Entity):
