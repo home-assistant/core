@@ -1,5 +1,6 @@
 """Support for Bryant Evolution HVAC systems."""
 
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -12,7 +13,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -22,6 +23,7 @@ from .const import CONF_SYSTEM_ID, CONF_ZONE_ID
 _LOGGER = logging.getLogger(__name__)
 
 type BryantEvolutionConfigEntry = ConfigEntry[BryantEvolutionClient]  # noqa: F821
+SCAN_INTERVAL = timedelta(seconds=60)
 
 
 async def async_setup_entry(
@@ -61,7 +63,7 @@ class BryantEvolutionClimate(ClimateEntity):
         self._attr_hvac_mode = None
         self._attr_fan_mode = None
         self._attr_hvac_action = None
-        self._attr_temperature_unit = "°F"
+        self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
         self._attr_hvac_action = None
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE
@@ -112,6 +114,7 @@ class BryantEvolutionClimate(ClimateEntity):
         # Note: depends on current temperature and target temperature low read
         # above.
         self._attr_hvac_action = await self._read_hvac_action()
+        _LOGGER.error("XXX async update done")
 
     @property
     def unique_id(self) -> str:
@@ -127,7 +130,7 @@ class BryantEvolutionClimate(ClimateEntity):
         # Response format is MODE and (optionally) a number indicating which
         # system is currently calling for the MODE (e.g., HEAT 1 if system 1
         # is calling for heat; HEAT if no call is being made).
-        match mode:
+        match mode.upper():
             case "HEAT":
                 return HVACMode.HEAT
             case "COOL":
@@ -137,7 +140,7 @@ class BryantEvolutionClimate(ClimateEntity):
             case "OFF":
                 return HVACMode.OFF
 
-        raise HomeAssistantError("Cannot parse response to HVACMode: {mode}")
+        raise HomeAssistantError(f"Cannot parse response to HVACMode: {mode}")
 
     async def _read_hvac_action(self) -> HVACAction:
         """Return the current running hvac operation."""
@@ -147,7 +150,7 @@ class BryantEvolutionClimate(ClimateEntity):
         mode, is_active = mode_and_active
         if not is_active:
             return HVACAction.OFF
-        match mode:
+        match mode.upper():
             case "HEAT":
                 return HVACAction.HEATING
             case "COOL":
@@ -178,6 +181,7 @@ class BryantEvolutionClimate(ClimateEntity):
         if not await self._client.set_hvac_mode(hvac_mode):
             raise HomeAssistantError("Failed to set HVAC mode")
         self._attr_hvac_mode = hvac_mode
+        self._async_write_ha_state()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -186,12 +190,14 @@ class BryantEvolutionClimate(ClimateEntity):
             if not await self._client.set_cooling_setpoint(temp):
                 raise HomeAssistantError("Failed to set cooling setpoint")
             self._attr_target_temperature_high = temp
+            self._async_write_ha_state()
 
         if kwargs.get("target_temp_low"):
             temp = int(kwargs["target_temp_low"])
             if not await self._client.set_heating_setpoint(temp):
                 raise HomeAssistantError("Failed to set heating setpoint")
             self._attr_target_temperature_low = temp
+            self._async_write_ha_state()
 
         if kwargs.get("temperature"):
             temp = int(kwargs["temperature"])
@@ -200,15 +206,17 @@ class BryantEvolutionClimate(ClimateEntity):
                 if self.hvac_mode == HVACMode.HEAT
                 else self._client.set_cooling_setpoint
             )
-            if not fn(temp):
+            if not await fn(temp):
                 raise HomeAssistantError("Failed to set temperature")
             self._attr_target_temperature = temp
+            self._async_write_ha_state()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         if not await self._client.set_fan_mode(fan_mode):
             raise HomeAssistantError("Failed to set fan mode")
         self._attr_fan_mode = fan_mode
+        self.async_write_ha_state()
 
     @property
     def hvac_modes(self) -> list[HVACMode]:
