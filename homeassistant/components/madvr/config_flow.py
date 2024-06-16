@@ -65,10 +65,10 @@ class MadVRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             # turn on the device
             send_magic_packet(mac)
-            # wait for it to be available
-            await asyncio.sleep(10)
+            # wait for it to be available (envy takes about 15s to boot)
+            await asyncio.sleep(15)
             # try to connect
-            await asyncio.wait_for(madvr_client.open_connection(), timeout=10)
+            await asyncio.wait_for(madvr_client.open_connection(), timeout=15)
 
             # don't need tasks running
             await asyncio.sleep(2)  # let them run once
