@@ -50,19 +50,11 @@ async def async_device_info_to_link(
 async def async_remove_stale_device_links_helpers(
     hass: HomeAssistant,
     entry_id: str,
-    source_entity_id: str | None = None,
-    device_id: str | None = None,
+    source_entity_id: str,
 ) -> None:
-    """Remove obsolete devices from helper config entries that inherit from source entity.
+    """Remove obsolete devices from helper config entries that inherit from source entity."""
 
-    This can receive an entity ID from which the correct device ID will be extracted or it
-    can directly receive a device ID to be kept in the config entry.
-    Without both entity ID and device ID arguments removes all device bindings from the config
-    entry.
-    """
-
-    if device_id is None and source_entity_id is not None:
-        device_id = async_entity_id_to_device_id(hass, entity_id=source_entity_id)
+    device_id = async_entity_id_to_device_id(hass, entity_id=source_entity_id)
 
     dev_reg = dr.async_get(hass)
     # Removes all devices from the config entry that are not the same as the current device
