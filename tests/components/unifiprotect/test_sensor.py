@@ -327,8 +327,8 @@ async def test_sensor_setup_camera(
 
     expected_values = (
         fixed_now.replace(microsecond=0).isoformat(),
-        "0.000100",
-        "0.0001000",
+        "0.0001",
+        "0.0001",
         "20.0",
     )
     for index, description in enumerate(CAMERA_SENSORS_WRITE):
@@ -348,7 +348,7 @@ async def test_sensor_setup_camera(
         assert state.state == expected_values[index]
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
-    expected_values = ("0.000100", "0.000100")
+    expected_values = ("0.0001", "0.0001")
     for index, description in enumerate(CAMERA_DISABLED_SENSORS):
         unique_id, entity_id = ids_from_device_description(
             Platform.SENSOR, doorbell, description
