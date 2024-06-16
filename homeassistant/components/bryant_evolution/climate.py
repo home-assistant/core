@@ -41,7 +41,13 @@ async def async_setup_entry(
 
 
 class BryantEvolutionClimate(ClimateEntity):
-    """ClimateEntity for Bryant Evolution HVAC systems."""
+    """ClimateEntity for Bryant Evolution HVAC systems.
+
+    Design note: this class updates using polling. However, polling
+    is very slow (~1500 ms / parameter). To improve the user
+    experience on updates, we also locally update this instance and
+    call async_write_ha_state as well.
+    """
 
     def __init__(
         self: ClimateEntity,
@@ -125,10 +131,6 @@ class BryantEvolutionClimate(ClimateEntity):
         if not mode_and_active:
             raise HomeAssistantError("Failed to read current HVAC mode")
         mode = mode_and_active[0]
-
-        # Response format is MODE and (optionally) a number indicating which
-        # system is currently calling for the MODE (e.g., HEAT 1 if system 1
-        # is calling for heat; HEAT if no call is being made).
         match mode.upper():
             case "HEAT":
                 return HVACMode.HEAT

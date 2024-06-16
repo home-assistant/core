@@ -15,9 +15,11 @@ from homeassistant.components.bryant_evolution.const import (
 )
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
+    ATTR_HVAC_ACTION,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, Platform
@@ -40,8 +42,8 @@ async def _wait_for_cond(predicate: Callable[[], bool]) -> None:
 class _FakeEvolutionClient(BryantEvolutionClient):
     """Fake version of `BryantEvolutionClient.
 
-    Important design point: this type provides a `set_reads_allowed` method.
-    When False, all read_ calls will hang. This allows testing that service
+    Important design point: this type provides a `set_allow_reads` method.
+    When False, all read_* calls will hang. This allows testing that service
     call handlers on the BryantEvolutionClient type properly call
     async_write_ha_state (since async_update cannot complete when reads are
     paused).
@@ -56,6 +58,7 @@ class _FakeEvolutionClient(BryantEvolutionClient):
         self._fan = "AUTO"
         self._allow_reads = True
         self._allow_reads_cond = asyncio.Condition()
+        self._is_active = False
 
     async def read_current_temperature(self) -> int | None:
         async with self._allow_reads_cond:
@@ -93,7 +96,7 @@ class _FakeEvolutionClient(BryantEvolutionClient):
     async def read_hvac_mode(self) -> tuple[str, bool] | None:
         async with self._allow_reads_cond:
             await self._allow_reads_cond.wait_for(self._are_reads_allowed)
-            return (self._mode, False)
+            return (self._mode, self._is_active)
 
     async def set_fan_mode(self, fan_mode: str) -> bool:
         async with self._allow_reads_cond:
@@ -109,6 +112,10 @@ class _FakeEvolutionClient(BryantEvolutionClient):
         async with self._allow_reads_cond:
             self._mode = hvac_mode
             return True
+
+    async def set_is_active(self, is_active: bool) -> None:
+        async with self._allow_reads_cond:
+            self._is_active = is_active
 
 
 @pytest.fixture
@@ -267,3 +274,33 @@ async def test_set_fan_mode(
         await mock_evolution_entry.runtime_data.set_allow_reads(True)
         await hass.async_block_till_done()
         assert await client.read_fan_mode() == mode
+
+
+async def test_hvac_action(
+    hass: HomeAssistant, mock_evolution_entry: MockConfigEntry[BryantEvolutionClient]
+) -> None:
+    """Test that we can read the current HVAC action."""
+    client = mock_evolution_entry.runtime_data
+
+    # Initial state should be no action.
+    assert (
+        hass.states.get("climate.bryant_evolution_system_1_zone_1").attributes[
+            ATTR_HVAC_ACTION
+        ]
+        == HVACAction.OFF
+    )
+
+    # Turn on the system and verify we see an action; we change the fan
+    # mode to trigger the integration to re-read the device.
+    await client.set_is_active(True)
+    assert await client.read_hvac_mode() == ("COOL", True)
+    data = {ATTR_FAN_MODE: "AUTO"}
+    data[ATTR_ENTITY_ID] = "climate.bryant_evolution_system_1_zone_1"
+    await hass.services.async_call(
+        "climate", SERVICE_SET_FAN_MODE, data, blocking=False
+    )
+    await _wait_for_cond(
+        lambda s=hass.states.get(
+            "climate.bryant_evolution_system_1_zone_1"
+        ): s.attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING
+    )
