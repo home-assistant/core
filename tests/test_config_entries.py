@@ -5606,9 +5606,10 @@ async def test_config_entry_unloaded_during_platform_setups(
     del task
 
     assert (
-        "OperationNotAllowed: The config entry Mock Title (test) with "
-        "entry_id test2 cannot forward setup for ['light'] because it is "
-        "not loaded in the ConfigEntryState.NOT_LOADED state"
+        "OperationNotAllowed: The config entry 'Mock Title' (test) with "
+        "entry_id 'test2' cannot forward setup for ['light'] because it is "
+        "in state ConfigEntryState.NOT_LOADED, but needs to be in the "
+        "ConfigEntryState.LOADED state"
     ) in caplog.text
 
 
@@ -5824,9 +5825,10 @@ async def test_config_entry_unloaded_during_platform_setup(
     del task
 
     assert (
-        "OperationNotAllowed: The config entry Mock Title (test) with "
-        "entry_id test2 cannot forward setup for light because it is "
-        "not loaded in the ConfigEntryState.NOT_LOADED state"
+        "OperationNotAllowed: The config entry 'Mock Title' (test) with "
+        "entry_id 'test2' cannot forward setup for light because it is "
+        "in state ConfigEntryState.NOT_LOADED, but needs to be in the "
+        "ConfigEntryState.LOADED state"
     ) in caplog.text
 
 

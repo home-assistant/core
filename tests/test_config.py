@@ -522,6 +522,7 @@ def test_core_config_schema() -> None:
         {"customize": {"entity_id": []}},
         {"country": "xx"},
         {"language": "xx"},
+        {"radius": -10},
     ):
         with pytest.raises(MultipleInvalid):
             config_util.CORE_CONFIG_SCHEMA(value)
@@ -538,6 +539,7 @@ def test_core_config_schema() -> None:
             "customize": {"sensor.temperature": {"hidden": True}},
             "country": "SE",
             "language": "sv",
+            "radius": "10",
         }
     )
 
@@ -709,10 +711,11 @@ async def test_loading_configuration_from_storage(
             "currency": "EUR",
             "country": "SE",
             "language": "sv",
+            "radius": 150,
         },
         "key": "core.config",
         "version": 1,
-        "minor_version": 3,
+        "minor_version": 4,
     }
     await config_util.async_process_ha_core_config(
         hass, {"allowlist_external_dirs": "/etc"}
@@ -729,6 +732,7 @@ async def test_loading_configuration_from_storage(
     assert hass.config.currency == "EUR"
     assert hass.config.country == "SE"
     assert hass.config.language == "sv"
+    assert hass.config.radius == 150
     assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
     assert hass.config.config_source is ConfigSource.STORAGE
@@ -798,15 +802,19 @@ async def test_migration_and_updating_configuration(
     expected_new_core_data["data"]["currency"] = "USD"
     # 1.1 -> 1.2 store migration with migrated unit system
     expected_new_core_data["data"]["unit_system_v2"] = "us_customary"
-    expected_new_core_data["minor_version"] = 3
-    # defaults for country and language
+    # 1.1 -> 1.3 defaults for country and language
     expected_new_core_data["data"]["country"] = None
     expected_new_core_data["data"]["language"] = "en"
+    # 1.1 -> 1.4 defaults for zone radius
+    expected_new_core_data["data"]["radius"] = 100
+    # Bumped minor version
+    expected_new_core_data["minor_version"] = 4
     assert hass_storage["core.config"] == expected_new_core_data
     assert hass.config.latitude == 50
     assert hass.config.currency == "USD"
     assert hass.config.country is None
     assert hass.config.language == "en"
+    assert hass.config.radius == 100
 
 
 async def test_override_stored_configuration(
@@ -860,6 +868,7 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
             "currency": "EUR",
             "country": "SE",
             "language": "sv",
+            "radius": 150,
         },
     )
 
@@ -881,6 +890,7 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
     assert hass.config.currency == "EUR"
     assert hass.config.country == "SE"
     assert hass.config.language == "sv"
+    assert hass.config.radius == 150
 
 
 @pytest.mark.parametrize(
@@ -1071,9 +1081,8 @@ async def test_check_ha_config_file_wrong(mock_check, hass: HomeAssistant) -> No
         }
     ],
 )
-async def test_async_hass_config_yaml_merge(
-    merge_log_err, hass: HomeAssistant, mock_hass_config: None
-) -> None:
+@pytest.mark.usefixtures("mock_hass_config")
+async def test_async_hass_config_yaml_merge(merge_log_err, hass: HomeAssistant) -> None:
     """Test merge during async config reload."""
     conf = await config_util.async_hass_config_yaml(hass)
 

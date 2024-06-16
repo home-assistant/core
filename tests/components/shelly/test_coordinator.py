@@ -352,7 +352,7 @@ async def test_block_button_click_event(
 
     # Make device online
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
 
