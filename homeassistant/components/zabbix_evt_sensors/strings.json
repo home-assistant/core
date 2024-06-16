@@ -1,0 +1,41 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "path": "Path (can be empty)",
+          "port": "[%key:common::config_flow::data::port%]",
+          "api_token": "[%key:common::config_flow::data::api_token%]",
+          "scan_interval": "Update Interval"
+        },
+        "description": "Connection parameters for Zabbix host"
+      },
+      "sensors": {
+        "data": {
+          "prefix": "Base device name and sensor prefix (default: Zabbix)",
+          "svcs": "Setup sensors based on Zabbix services",
+          "prbs": "Setup sensors based on Zabbix problem tags"
+        },
+        "description": "Setup Zabbix services as Home Assistant sensors. Sensor names will be prefixed with value specified below."
+      },
+      "sensors_tagged_problems": {
+        "data": {
+          "tag": "Zabbix problem tag name",
+          "value": "Zabbix problem tag value",
+          "stop": "Finished adding sensors"
+        },
+        "description": "Setup sensor that reflects zabbix tagged problems (Check 'Finished' when done)"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "domain": "zabbix_evt_sensors",
+  "name": "Zabbix Event Sensors",
+  "codeowners": ["@rexdek"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/rexdek/zabbix_evt_sensors",
+  "homekit": {},
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/rexdek/zabbix_evt_sensors/issues",
+  "requirements": ["pyzabbix==1.3.1"],
+  "ssdp": [],
+  "zeroconf": []
+}

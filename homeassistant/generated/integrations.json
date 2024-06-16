@@ -7062,6 +7062,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "zabbix_evt_sensors": {
+      "name": "Zabbix Event Sensors",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "zamg": {
       "name": "GeoSphere Austria",
       "integration_type": "hub",
