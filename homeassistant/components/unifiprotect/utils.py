@@ -157,6 +157,6 @@ def get_camera_base_name(channel: CameraChannel) -> str:
 
     camera_name = channel.name
     if channel.name != "Package Camera":
-        camera_name = f"{channel.name} Resolution Channel"
+        camera_name = f"{channel.name} resolution channel"
 
     return camera_name
