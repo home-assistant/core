@@ -1105,6 +1105,33 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
 
 @callback
+async def async_remove_stale_device_links_helpers(
+    hass: HomeAssistant, entry_id: str, source_entity_id: str
+) -> None:
+    """Remove obsolete devices from helper config entries that inherit from source entity."""
+
+    def device_id_to_entity_id(source_entity_id: str) -> str | None:
+        """Resolve the device id to the entity id."""
+        # pylint: disable-next=import-outside-toplevel
+        from . import entity_registry
+
+        ent_reg = entity_registry.async_get(hass)
+        if ((source_entity := ent_reg.async_get(source_entity_id)) is not None) and (
+            source_entity.device_id is not None
+        ):
+            return source_entity.device_id
+        return None
+
+    dev_reg = async_get(hass)
+
+    # Removes all devices from the config entry that are not the same as the current device
+    for device in dev_reg.devices.get_devices_for_config_entry_id(entry_id):
+        if device.id == device_id_to_entity_id(source_entity_id):
+            continue
+        dev_reg.async_update_device(device.id, remove_config_entry_id=entry_id)
+
+
+@callback
 @singleton(DATA_REGISTRY)
 def async_get(hass: HomeAssistant) -> DeviceRegistry:
     """Get device registry."""

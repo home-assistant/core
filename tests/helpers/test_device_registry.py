@@ -1641,6 +1641,65 @@ async def test_cleanup_device_registry(
     assert device_registry.async_get_device(identifiers={("something", "d4")}) is None
 
 
+async def test_remove_stale_device_links_helpers(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test cleanup works."""
+    config_entry = MockConfigEntry(domain="hue")
+    config_entry.add_to_hass(hass)
+
+    current_device = device_registry.async_get_or_create(
+        identifiers={("test", "current_device")},
+        connections={("mac", "30:31:32:33:34:00")},
+        config_entry_id=config_entry.entry_id,
+    )
+    assert current_device is not None
+
+    device_registry.async_get_or_create(
+        identifiers={("test", "stale_device_1")},
+        connections={("mac", "30:31:32:33:34:01")},
+        config_entry_id=config_entry.entry_id,
+    )
+
+    device_registry.async_get_or_create(
+        identifiers={("test", "stale_device_2")},
+        connections={("mac", "30:31:32:33:34:02")},
+        config_entry_id=config_entry.entry_id,
+    )
+
+    # Source entity registry
+    source_entity = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "source",
+        config_entry=config_entry,
+        device_id=current_device.id,
+    )
+    await hass.async_block_till_done()
+    assert entity_registry.async_get("sensor.test_source") is not None
+
+    devices_config_entry = device_registry.devices.get_devices_for_config_entry_id(
+        config_entry.entry_id
+    )
+
+    # 3 devices linked to the config entry are expected (1 current device + 2 stales)
+    assert len(devices_config_entry) == 3
+
+    # Manual cleanup should unlink stales devices from the config entry
+    dr.async_remove_stale_device_links_helpers(
+        hass, config_entry.entry_id, source_entity.entity_id
+    )
+
+    devices_config_entry = device_registry.devices.get_devices_for_config_entry_id(
+        config_entry.entry_id
+    )
+
+    # After cleaning, only one device linked to the configuration entry is expected
+    assert len(devices_config_entry) == 1
+
+
 async def test_cleanup_device_registry_removes_expired_orphaned_devices(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
