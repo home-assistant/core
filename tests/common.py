@@ -991,12 +991,12 @@ class MockConfigEntry(config_entries.ConfigEntry):
         pref_disable_new_entities=None,
         pref_disable_polling=None,
         reason=None,
-        runtime_data=None,
         source=config_entries.SOURCE_USER,
         state=None,
         title="Mock Title",
         unique_id=None,
         version=1,
+        runtime_data=None,
     ) -> None:
         """Initialize a mock config entry."""
         kwargs = {
