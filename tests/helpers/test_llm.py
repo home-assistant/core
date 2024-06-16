@@ -147,8 +147,13 @@ async def test_assist_api(
 
     assert test_context.json_fragment  # To reproduce an error case in tracing
     intent_response = intent.IntentResponse("*")
-    intent_response.matched_states = [State("light.matched", "on")]
-    intent_response.unmatched_states = [State("light.unmatched", "on")]
+    intent_response.async_set_states(
+        [State("light.matched", "on")], [State("light.unmatched", "on")]
+    )
+    intent_response.async_set_speech("Some speech")
+    intent_response.async_set_card("Card title", "card content")
+    intent_response.async_set_speech_slots({"hello": 1})
+    intent_response.async_set_reprompt("Do it again")
     tool_input = llm.ToolInput(
         tool_name="test_intent",
         tool_args={"area": "kitchen", "floor": "ground_floor"},
@@ -179,8 +184,22 @@ async def test_assist_api(
             "success": [],
             "targets": [],
         },
+        "reprompt": {
+            "plain": {
+                "extra_data": None,
+                "reprompt": "Do it again",
+            },
+        },
         "response_type": "action_done",
-        "speech": {},
+        "speech": {
+            "plain": {
+                "extra_data": None,
+                "speech": "Some speech",
+            },
+        },
+        "speech_slots": {
+            "hello": 1,
+        },
     }
 
     # Call with a device/area/floor
@@ -225,7 +244,21 @@ async def test_assist_api(
             "targets": [],
         },
         "response_type": "action_done",
-        "speech": {},
+        "reprompt": {
+            "plain": {
+                "extra_data": None,
+                "reprompt": "Do it again",
+            },
+        },
+        "speech": {
+            "plain": {
+                "extra_data": None,
+                "speech": "Some speech",
+            },
+        },
+        "speech_slots": {
+            "hello": 1,
+        },
     }
 
 

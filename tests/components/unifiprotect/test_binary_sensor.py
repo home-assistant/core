@@ -13,6 +13,7 @@ from homeassistant.components.unifiprotect.binary_sensor import (
     CAMERA_SENSORS,
     EVENT_SENSORS,
     LIGHT_SENSORS,
+    MOUNTABLE_SENSE_SENSORS,
     SENSE_SENSORS,
 )
 from homeassistant.components.unifiprotect.const import (
@@ -40,7 +41,7 @@ from .utils import (
 )
 
 LIGHT_SENSOR_WRITE = LIGHT_SENSORS[:2]
-SENSE_SENSORS_WRITE = SENSE_SENSORS[:4]
+SENSE_SENSORS_WRITE = SENSE_SENSORS[:3]
 
 
 async def test_binary_sensor_camera_remove(
@@ -209,7 +210,6 @@ async def test_binary_sensor_setup_sensor(
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 11, 11)
 
     expected = [
-        STATE_OFF,
         STATE_UNAVAILABLE,
         STATE_OFF,
         STATE_OFF,
@@ -243,7 +243,6 @@ async def test_binary_sensor_setup_sensor_leak(
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 11, 11)
 
     expected = [
-        STATE_UNAVAILABLE,
         STATE_OFF,
         STATE_OFF,
         STATE_UNAVAILABLE,
@@ -367,7 +366,7 @@ async def test_binary_sensor_update_mount_type_window(
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 11, 11)
 
     _, entity_id = ids_from_device_description(
-        Platform.BINARY_SENSOR, sensor_all, SENSE_SENSORS_WRITE[0]
+        Platform.BINARY_SENSOR, sensor_all, MOUNTABLE_SENSE_SENSORS[0]
     )
 
     state = hass.states.get(entity_id)
@@ -399,7 +398,7 @@ async def test_binary_sensor_update_mount_type_garage(
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 11, 11)
 
     _, entity_id = ids_from_device_description(
-        Platform.BINARY_SENSOR, sensor_all, SENSE_SENSORS_WRITE[0]
+        Platform.BINARY_SENSOR, sensor_all, MOUNTABLE_SENSE_SENSORS[0]
     )
 
     state = hass.states.get(entity_id)

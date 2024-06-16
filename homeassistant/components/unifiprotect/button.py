@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DEVICES_THAT_ADOPT, DISPATCH_ADD, DOMAIN
 from .data import ProtectData, UFPConfigEntry
 from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import PermRequired, ProtectRequiredKeysMixin, ProtectSetableKeysMixin, T
+from .models import PermRequired, ProtectEntityDescription, ProtectSetableKeysMixin, T
 from .utils import async_dispatch_id as _ufpd
 
 _LOGGER = logging.getLogger(__name__)
@@ -95,7 +95,7 @@ CHIME_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
 )
 
 
-_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] = {
+_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.CHIME: CHIME_BUTTONS,
     ModelType.SENSOR: SENSOR_BUTTONS,
 }
@@ -186,7 +186,6 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
-
         if self.entity_description.key == KEY_ADOPT:
             device = self.device
             self._attr_available = device.can_adopt and device.can_create(
@@ -195,6 +194,5 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-
         if self.entity_description.ufp_press is not None:
             await getattr(self.device, self.entity_description.ufp_press)()

@@ -5,8 +5,6 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import timedelta
-import logging
-from typing import Any
 
 from uiprotect.data import (
     Camera,
@@ -24,9 +22,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .data import ProtectData, UFPConfigEntry
 from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import PermRequired, ProtectRequiredKeysMixin, ProtectSetableKeysMixin, T
-
-_LOGGER = logging.getLogger(__name__)
+from .models import PermRequired, ProtectEntityDescription, ProtectSetableKeysMixin, T
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -214,7 +210,7 @@ CHIME_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_perm=PermRequired.WRITE,
     ),
 )
-_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] = {
+_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.CAMERA: CAMERA_NUMBERS,
     ModelType.LIGHT: LIGHT_NUMBERS,
     ModelType.SENSOR: SENSE_NUMBERS,
@@ -257,6 +253,7 @@ class ProtectNumbers(ProtectDeviceEntity, NumberEntity):
 
     device: Camera | Light
     entity_description: ProtectNumberEntityDescription
+    _state_attrs = ("_attr_available", "_attr_native_value")
 
     def __init__(
         self,
@@ -278,13 +275,3 @@ class ProtectNumbers(ProtectDeviceEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self.entity_description.ufp_set(self.device, value)
-
-    @callback
-    def _async_get_state_attrs(self) -> tuple[Any, ...]:
-        """Retrieve data that goes into the current state of the entity.
-
-        Called before and after updating entity and state is only written if there
-        is a change.
-        """
-
-        return (self._attr_available, self._attr_native_value)

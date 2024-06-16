@@ -69,6 +69,7 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
+    _state_attrs = ("_attr_available", "_attr_state", "_attr_volume_level")
 
     def __init__(
         self,
@@ -106,16 +107,6 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             or (not updated_device.is_adopted_by_us and updated_device.can_adopt)
         )
         self._attr_available = is_connected and updated_device.feature_flags.has_speaker
-
-    @callback
-    def _async_get_state_attrs(self) -> tuple[Any, ...]:
-        """Retrieve data that goes into the current state of the entity.
-
-        Called before and after updating entity and state is only written if there
-        is a change.
-        """
-
-        return (self._attr_available, self._attr_state, self._attr_volume_level)
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""

@@ -207,7 +207,7 @@ aioasuswrt==1.4.0
 aioautomower==2024.6.0
 
 # homeassistant.components.azure_devops
-aioazuredevops==2.0.0
+aioazuredevops==2.1.1
 
 # homeassistant.components.baf
 aiobafi6==0.9.0
@@ -553,7 +553,7 @@ beautifulsoup4==4.12.3
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.39.0
+bellows==0.39.1
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected[china]==0.15.3
@@ -2788,7 +2788,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==1.6.0
+uiprotect==1.7.2
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2990,7 +2990,7 @@ zigpy-zigate==0.12.0
 zigpy-znp==0.12.1
 
 # homeassistant.components.zha
-zigpy==0.64.0
+zigpy==0.64.1
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4
