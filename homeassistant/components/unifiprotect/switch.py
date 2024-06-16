@@ -8,7 +8,6 @@ import logging
 from typing import Any
 
 from uiprotect.data import (
-    NVR,
     Camera,
     ModelType,
     ProtectAdoptableDeviceModel,
@@ -505,15 +504,6 @@ class ProtectNVRSwitch(ProtectNVREntity, SwitchEntity):
 
     entity_description: ProtectSwitchEntityDescription
     _state_attrs = ("_attr_available", "_attr_is_on")
-
-    def __init__(
-        self,
-        data: ProtectData,
-        device: NVR,
-        description: ProtectSwitchEntityDescription,
-    ) -> None:
-        """Initialize an UniFi Protect Switch."""
-        super().__init__(data, device, description)
 
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
