@@ -152,7 +152,9 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "mqtt_mock_entry": "MqttMockHAClientGenerator",
     "recorder_db_url": "str",
     "recorder_mock": "Recorder",
+    "request": "pytest.FixtureRequest",
     "requests_mock": "Mocker",
+    "service_calls": "list[ServiceCall]",
     "snapshot": "SnapshotAssertion",
     "socket_enabled": "None",
     "stub_blueprint_populate": "None",
@@ -3116,7 +3118,7 @@ class HassTypeHintChecker(BaseChecker):
             "Used when method return type is incorrect",
         ),
         "W7433": (
-            "Argument %s is of type %s and could be move to "
+            "Argument %s is of type %s and could be moved to "
             "`@pytest.mark.usefixtures` decorator in %s",
             "hass-consider-usefixtures-decorator",
             "Used when an argument type is None and could be a fixture",
@@ -3137,15 +3139,15 @@ class HassTypeHintChecker(BaseChecker):
 
     _class_matchers: list[ClassTypeHintMatch]
     _function_matchers: list[TypeHintMatch]
-    _module_name: str
+    _module_node: nodes.Module
     _in_test_module: bool
 
     def visit_module(self, node: nodes.Module) -> None:
         """Populate matchers for a Module node."""
         self._class_matchers = []
         self._function_matchers = []
-        self._module_name = node.name
-        self._in_test_module = self._module_name.startswith("tests.")
+        self._module_node = node
+        self._in_test_module = node.name.startswith("tests.")
 
         if (
             self._in_test_module
@@ -3229,7 +3231,7 @@ class HassTypeHintChecker(BaseChecker):
         if node.is_method():
             matchers = _METHOD_MATCH
         else:
-            if self._in_test_module:
+            if self._in_test_module and node.parent is self._module_node:
                 if node.name.startswith("test_"):
                     self._check_test_function(node, False)
                     return

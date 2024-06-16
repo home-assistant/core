@@ -20,8 +20,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'AC current limit',
     'platform': 'bmw_connected_drive',
@@ -36,6 +39,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
+      'device_class': 'current',
       'friendly_name': 'i3 (+ REX) AC current limit',
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
@@ -148,7 +152,22 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'default',
+        'charging',
+        'error',
+        'complete',
+        'fully_charged',
+        'finished_fully_charged',
+        'finished_not_full',
+        'invalid',
+        'not_charging',
+        'plugged_in',
+        'waiting_for_charging',
+        'target_reached',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -165,7 +184,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging status',
     'platform': 'bmw_connected_drive',
@@ -180,14 +199,29 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
+      'device_class': 'enum',
       'friendly_name': 'i3 (+ REX) Charging status',
+      'options': list([
+        'default',
+        'charging',
+        'error',
+        'complete',
+        'fully_charged',
+        'finished_fully_charged',
+        'finished_not_full',
+        'invalid',
+        'not_charging',
+        'plugged_in',
+        'waiting_for_charging',
+        'target_reached',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.i3_rex_charging_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'WAITING_FOR_CHARGING',
+    'state': 'waiting_for_charging',
   })
 # ---
 # name: test_entity_state_attrs[sensor.i3_rex_charging_target-entry]
@@ -211,8 +245,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Charging target',
     'platform': 'bmw_connected_drive',
@@ -227,6 +264,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
+      'device_class': 'battery',
       'friendly_name': 'i3 (+ REX) Charging target',
       'unit_of_measurement': '%',
     }),
@@ -261,8 +299,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Mileage',
     'platform': 'bmw_connected_drive',
@@ -277,6 +318,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
+      'device_class': 'distance',
       'friendly_name': 'i3 (+ REX) Mileage',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
@@ -312,6 +354,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
@@ -364,8 +409,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.VOLUME: 'volume'>,
     'original_icon': None,
     'original_name': 'Remaining fuel',
     'platform': 'bmw_connected_drive',
@@ -380,6 +428,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
+      'device_class': 'volume',
       'friendly_name': 'i3 (+ REX) Remaining fuel',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
@@ -415,6 +464,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
@@ -466,8 +518,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Remaining range electric',
     'platform': 'bmw_connected_drive',
@@ -482,6 +537,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
+      'device_class': 'distance',
       'friendly_name': 'i3 (+ REX) Remaining range electric',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
@@ -517,8 +573,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Remaining range fuel',
     'platform': 'bmw_connected_drive',
@@ -533,6 +592,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
+      'device_class': 'distance',
       'friendly_name': 'i3 (+ REX) Remaining range fuel',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
@@ -568,8 +628,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Remaining range total',
     'platform': 'bmw_connected_drive',
@@ -584,6 +647,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
+      'device_class': 'distance',
       'friendly_name': 'i3 (+ REX) Remaining range total',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
@@ -617,8 +681,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'AC current limit',
     'platform': 'bmw_connected_drive',
@@ -633,6 +700,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
+      'device_class': 'current',
       'friendly_name': 'i4 eDrive40 AC current limit',
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
@@ -745,7 +813,22 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'default',
+        'charging',
+        'error',
+        'complete',
+        'fully_charged',
+        'finished_fully_charged',
+        'finished_not_full',
+        'invalid',
+        'not_charging',
+        'plugged_in',
+        'waiting_for_charging',
+        'target_reached',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -762,7 +845,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging status',
     'platform': 'bmw_connected_drive',
@@ -777,14 +860,29 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
+      'device_class': 'enum',
       'friendly_name': 'i4 eDrive40 Charging status',
+      'options': list([
+        'default',
+        'charging',
+        'error',
+        'complete',
+        'fully_charged',
+        'finished_fully_charged',
+        'finished_not_full',
+        'invalid',
+        'not_charging',
+        'plugged_in',
+        'waiting_for_charging',
+        'target_reached',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.i4_edrive40_charging_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'NOT_CHARGING',
+    'state': 'not_charging',
   })
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_charging_target-entry]
@@ -808,8 +906,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Charging target',
     'platform': 'bmw_connected_drive',
@@ -824,6 +925,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
+      'device_class': 'battery',
       'friendly_name': 'i4 eDrive40 Charging target',
       'unit_of_measurement': '%',
     }),
@@ -919,8 +1021,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Mileage',
     'platform': 'bmw_connected_drive',
@@ -935,6 +1040,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
+      'device_class': 'distance',
       'friendly_name': 'i4 eDrive40 Mileage',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
@@ -970,6 +1076,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
@@ -1022,8 +1131,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Remaining range electric',
     'platform': 'bmw_connected_drive',
@@ -1038,6 +1150,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
+      'device_class': 'distance',
       'friendly_name': 'i4 eDrive40 Remaining range electric',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
@@ -1073,8 +1186,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Remaining range total',
     'platform': 'bmw_connected_drive',
@@ -1089,6 +1205,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
+      'device_class': 'distance',
       'friendly_name': 'i4 eDrive40 Remaining range total',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
@@ -1122,8 +1239,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'AC current limit',
     'platform': 'bmw_connected_drive',
@@ -1138,6 +1258,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
+      'device_class': 'current',
       'friendly_name': 'iX xDrive50 AC current limit',
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
@@ -1250,7 +1371,22 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'default',
+        'charging',
+        'error',
+        'complete',
+        'fully_charged',
+        'finished_fully_charged',
+        'finished_not_full',
+        'invalid',
+        'not_charging',
+        'plugged_in',
+        'waiting_for_charging',
+        'target_reached',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -1267,7 +1403,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging status',
     'platform': 'bmw_connected_drive',
@@ -1282,14 +1418,29 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
+      'device_class': 'enum',
       'friendly_name': 'iX xDrive50 Charging status',
+      'options': list([
+        'default',
+        'charging',
+        'error',
+        'complete',
+        'fully_charged',
+        'finished_fully_charged',
+        'finished_not_full',
+        'invalid',
+        'not_charging',
+        'plugged_in',
+        'waiting_for_charging',
+        'target_reached',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ix_xdrive50_charging_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'CHARGING',
+    'state': 'charging',
   })
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_charging_target-entry]
@@ -1313,8 +1464,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Charging target',
     'platform': 'bmw_connected_drive',
@@ -1329,6 +1483,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
+      'device_class': 'battery',
       'friendly_name': 'iX xDrive50 Charging target',
       'unit_of_measurement': '%',
     }),
@@ -1424,8 +1579,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Mileage',
     'platform': 'bmw_connected_drive',
@@ -1440,6 +1598,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
+      'device_class': 'distance',
       'friendly_name': 'iX xDrive50 Mileage',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
@@ -1475,6 +1634,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
@@ -1527,8 +1689,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Remaining range electric',
     'platform': 'bmw_connected_drive',
@@ -1543,6 +1708,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
+      'device_class': 'distance',
       'friendly_name': 'iX xDrive50 Remaining range electric',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
@@ -1578,8 +1744,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Remaining range total',
     'platform': 'bmw_connected_drive',
@@ -1594,6 +1763,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
+      'device_class': 'distance',
       'friendly_name': 'iX xDrive50 Remaining range total',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
@@ -1690,8 +1860,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Mileage',
     'platform': 'bmw_connected_drive',
@@ -1706,6 +1879,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
+      'device_class': 'distance',
       'friendly_name': 'M340i xDrive Mileage',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
@@ -1741,8 +1915,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.VOLUME: 'volume'>,
     'original_icon': None,
     'original_name': 'Remaining fuel',
     'platform': 'bmw_connected_drive',
@@ -1757,6 +1934,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
+      'device_class': 'volume',
       'friendly_name': 'M340i xDrive Remaining fuel',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
@@ -1792,6 +1970,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
@@ -1843,8 +2024,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Remaining range fuel',
     'platform': 'bmw_connected_drive',
@@ -1859,6 +2043,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
+      'device_class': 'distance',
       'friendly_name': 'M340i xDrive Remaining range fuel',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
@@ -1894,8 +2079,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Remaining range total',
     'platform': 'bmw_connected_drive',
@@ -1910,6 +2098,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
+      'device_class': 'distance',
       'friendly_name': 'M340i xDrive Remaining range total',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,

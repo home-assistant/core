@@ -519,6 +519,8 @@ async def test_shabbat_times_sensor(
             data={
                 CONF_LANGUAGE: language,
                 CONF_DIASPORA: diaspora,
+            },
+            options={
                 CONF_CANDLE_LIGHT_MINUTES: candle_lighting,
                 CONF_HAVDALAH_OFFSET_MINUTES: havdalah,
             },

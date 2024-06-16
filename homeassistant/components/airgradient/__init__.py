@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from airgradient import AirGradientClient
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,6 +16,17 @@ from .const import DOMAIN
 from .coordinator import AirGradientConfigCoordinator, AirGradientMeasurementCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SELECT, Platform.SENSOR]
+
+
+@dataclass
+class AirGradientData:
+    """AirGradient data class."""
+
+    measurement: AirGradientMeasurementCoordinator
+    config: AirGradientConfigCoordinator
+
+
+type AirGradientConfigEntry = ConfigEntry[AirGradientData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -39,10 +52,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sw_version=measurement_coordinator.data.firmware_version,
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        "measurement": measurement_coordinator,
-        "config": config_coordinator,
-    }
+    entry.runtime_data = AirGradientData(
+        measurement=measurement_coordinator,
+        config=config_coordinator,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -51,7 +64,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

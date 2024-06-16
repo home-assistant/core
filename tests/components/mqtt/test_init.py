@@ -1,7 +1,6 @@
 """The tests for the MQTT component."""
 
 import asyncio
-from collections.abc import Generator
 from copy import deepcopy
 from datetime import datetime, timedelta
 from functools import partial
@@ -13,9 +12,11 @@ import time
 from typing import Any, TypedDict
 from unittest.mock import ANY, MagicMock, Mock, call, mock_open, patch
 
+import certifi
 from freezegun.api import FrozenDateTimeFactory
 import paho.mqtt.client as paho_mqtt
 import pytest
+from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant.components import mqtt
@@ -118,7 +119,7 @@ def record_calls(recorded_calls: list[ReceiveMessage]) -> MessageCallbackType:
 
 
 @pytest.fixture
-def client_debug_log() -> Generator[None, None]:
+def client_debug_log() -> Generator[None]:
     """Set the mqtt client log level to DEBUG."""
     logger = logging.getLogger("mqtt_client_tests_debug")
     logger.setLevel(logging.DEBUG)
@@ -180,7 +181,9 @@ async def test_mqtt_await_ack_at_disconnect(
         mid = 100
         rc = 0
 
-    with patch("paho.mqtt.client.Client") as mock_client:
+    with patch(
+        "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
+    ) as mock_client:
         mqtt_client = mock_client.return_value
         mqtt_client.connect = MagicMock(
             return_value=0,
@@ -191,10 +194,15 @@ async def test_mqtt_await_ack_at_disconnect(
         mqtt_client.publish = MagicMock(return_value=FakeInfo())
         entry = MockConfigEntry(
             domain=mqtt.DOMAIN,
-            data={"certificate": "auto", mqtt.CONF_BROKER: "test-broker"},
+            data={
+                "certificate": "auto",
+                mqtt.CONF_BROKER: "test-broker",
+                mqtt.CONF_DISCOVERY: False,
+            },
         )
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
+
         mqtt_client = mock_client.return_value
 
         # publish from MQTT client without awaiting
@@ -928,9 +936,9 @@ def test_entity_device_info_schema() -> None:
         }
     ],
 )
+@pytest.mark.usefixtures("mock_hass_config")
 async def test_handle_logging_on_writing_the_entity_state(
     hass: HomeAssistant,
-    mock_hass_config: None,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -2219,7 +2227,9 @@ async def test_publish_error(
     entry.add_to_hass(hass)
 
     # simulate an Out of memory error
-    with patch("paho.mqtt.client.Client") as mock_client:
+    with patch(
+        "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
+    ) as mock_client:
         mock_client().connect = lambda *args: 1
         mock_client().publish().rc = 1
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -2354,7 +2364,9 @@ async def test_setup_mqtt_client_protocol(
     protocol: int,
 ) -> None:
     """Test MQTT client protocol setup."""
-    with patch("paho.mqtt.client.Client") as mock_client:
+    with patch(
+        "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
+    ) as mock_client:
         await mqtt_mock_entry()
 
     # check if protocol setup was correctly
@@ -2374,7 +2386,9 @@ async def test_handle_mqtt_timeout_on_callback(
         mid = 100
         rc = 0
 
-    with patch("paho.mqtt.client.Client") as mock_client:
+    with patch(
+        "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
+    ) as mock_client:
 
         def _mock_ack(topic: str, qos: int = 0) -> tuple[int, int]:
             # Handle ACK for subscribe normally
@@ -2419,7 +2433,9 @@ async def test_setup_raises_config_entry_not_ready_if_no_connect_broker(
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
     entry.add_to_hass(hass)
 
-    with patch("paho.mqtt.client.Client") as mock_client:
+    with patch(
+        "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
+    ) as mock_client:
         mock_client().connect = MagicMock(side_effect=OSError("Connection error"))
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -2454,15 +2470,15 @@ async def test_setup_uses_certificate_on_certificate_set_to_auto_and_insecure(
     def mock_tls_insecure_set(insecure_param) -> None:
         insecure_check["insecure"] = insecure_param
 
-    with patch("paho.mqtt.client.Client") as mock_client:
+    with patch(
+        "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
+    ) as mock_client:
         mock_client().tls_set = mock_tls_set
         mock_client().tls_insecure_set = mock_tls_insecure_set
         await mqtt_mock_entry()
         await hass.async_block_till_done()
 
     assert calls
-
-    import certifi
 
     expected_certificate = certifi.where()
     assert calls[0][0] == expected_certificate
@@ -4023,7 +4039,7 @@ async def test_link_config_entry(
     assert _check_entities() == 2
 
     # reload entry and assert again
-    with patch("paho.mqtt.client.Client"):
+    with patch("homeassistant.components.mqtt.async_client.AsyncMQTTClient"):
         await hass.config_entries.async_reload(mqtt_config_entry.entry_id)
         await hass.async_block_till_done()
 

@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "Account is already configured"
+    },
     "error": {
       "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
       "subscription_required": "Subscription required, please visit {short_url}",
@@ -117,6 +120,9 @@
       }
     },
     "climate": {
+      "climate_state_cabin_overheat_protection": {
+        "name": "Cabin overheat protection"
+      },
       "driver_temp": {
         "name": "[%key:component::climate::title%]",
         "state_attributes": {
@@ -464,6 +470,9 @@
   "exceptions": {
     "no_cable": {
       "message": "Charge cable will lock automatically when connected"
+    },
+    "invalid_cop_temp": {
+      "message": "Cabin overheat protection does not support that temperature"
     }
   }
 }

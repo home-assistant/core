@@ -16,7 +16,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import DOMAIN
-from .models import async_connect_gateway
+from .coordinator import async_connect_gateway
 
 TITLE = "Intergas InComfort/Intouch Lan2RF gateway"
 

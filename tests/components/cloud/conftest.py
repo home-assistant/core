@@ -1,6 +1,6 @@
 """Fixtures for cloud tests."""
 
-from collections.abc import AsyncGenerator, Callable, Coroutine
+from collections.abc import Callable, Coroutine
 from pathlib import Path
 from typing import Any
 from unittest.mock import DEFAULT, MagicMock, PropertyMock, patch
@@ -15,6 +15,7 @@ from hass_nabucasa.remote import RemoteUI
 from hass_nabucasa.voice import Voice
 import jwt
 import pytest
+from typing_extensions import AsyncGenerator
 
 from homeassistant.components.cloud import CloudClient, const, prefs
 from homeassistant.core import HomeAssistant
@@ -34,7 +35,7 @@ async def load_homeassistant(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture(name="cloud")
-async def cloud_fixture() -> AsyncGenerator[MagicMock, None]:
+async def cloud_fixture() -> AsyncGenerator[MagicMock]:
     """Mock the cloud object.
 
     See the real hass_nabucasa.Cloud class for how to configure the mock.
@@ -202,7 +203,7 @@ def mock_user_data():
 def mock_cloud_fixture(hass):
     """Fixture for cloud component."""
     hass.loop.run_until_complete(mock_cloud(hass))
-    return mock_cloud_prefs(hass)
+    return mock_cloud_prefs(hass, {})
 
 
 @pytest.fixture

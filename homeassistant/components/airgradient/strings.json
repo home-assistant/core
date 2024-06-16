@@ -48,7 +48,7 @@
         "name": "Nitrogen index"
       },
       "pm003_count": {
-        "name": "PM0.3 count"
+        "name": "PM0.3"
       },
       "raw_total_volatile_organic_component": {
         "name": "Raw total VOC"

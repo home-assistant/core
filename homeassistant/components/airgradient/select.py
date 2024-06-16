@@ -7,14 +7,14 @@ from airgradient import AirGradientClient, Config
 from airgradient.models import ConfigurationControl, TemperatureUnit
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import AirGradientConfigEntry
 from .const import DOMAIN
-from .coordinator import AirGradientConfigCoordinator, AirGradientMeasurementCoordinator
+from .coordinator import AirGradientConfigCoordinator
 from .entity import AirGradientEntity
 
 
@@ -33,7 +33,7 @@ CONFIG_CONTROL_ENTITY = AirGradientSelectEntityDescription(
     options=[ConfigurationControl.CLOUD.value, ConfigurationControl.LOCAL.value],
     entity_category=EntityCategory.CONFIG,
     value_fn=lambda config: config.configuration_control
-    if config.configuration_control is not ConfigurationControl.BOTH
+    if config.configuration_control is not ConfigurationControl.NOT_INITIALIZED
     else None,
     set_value_fn=lambda client, value: client.set_configuration_control(
         ConfigurationControl(value)
@@ -56,16 +56,14 @@ PROTECTED_SELECT_TYPES: tuple[AirGradientSelectEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AirGradientConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AirGradient select entities based on a config entry."""
 
-    config_coordinator: AirGradientConfigCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ]["config"]
-    measurement_coordinator: AirGradientMeasurementCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ]["measurement"]
+    config_coordinator = entry.runtime_data.config
+    measurement_coordinator = entry.runtime_data.measurement
 
     entities = [AirGradientSelect(config_coordinator, CONFIG_CONTROL_ENTITY)]
 

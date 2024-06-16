@@ -18,10 +18,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    current_request_with_host: None,
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -88,11 +87,11 @@ async def test_full_flow(
         ),
     ],
 )
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     config_entry: MockConfigEntry,
     fixture: str,
     abort_reason: str,
@@ -173,10 +172,10 @@ async def test_reauth(
     assert config_entry.data["token"].get("refresh_token") == "mock-refresh-token"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_already_configured(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    current_request_with_host: None,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test case where config flow discovers unique id was already configured."""

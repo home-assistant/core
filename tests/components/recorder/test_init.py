@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Generator
 from datetime import datetime, timedelta
 from pathlib import Path
 import sqlite3
@@ -15,6 +14,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 from sqlalchemy.pool import QueuePool
+from typing_extensions import Generator
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import (
@@ -115,7 +115,7 @@ def setup_recorder(recorder_mock: Recorder) -> None:
 
 
 @pytest.fixture
-def small_cache_size() -> Generator[None, None, None]:
+def small_cache_size() -> Generator[None]:
     """Patch the default cache size to 8."""
     with (
         patch.object(state_attributes_table_manager, "CACHE_SIZE", 8),
@@ -694,7 +694,7 @@ async def test_saving_event_exclude_event_type(
 
     await async_wait_recording_done(hass)
 
-    def _get_events(hass: HomeAssistant, event_types: list[str]) -> list[Event]:
+    def _get_events(hass: HomeAssistant, event_type_list: list[str]) -> list[Event]:
         with session_scope(hass=hass, read_only=True) as session:
             events = []
             for event, event_data, event_types in (
@@ -703,7 +703,7 @@ async def test_saving_event_exclude_event_type(
                     EventTypes, (Events.event_type_id == EventTypes.event_type_id)
                 )
                 .outerjoin(EventData, Events.data_id == EventData.data_id)
-                .where(EventTypes.event_type.in_(event_types))
+                .where(EventTypes.event_type.in_(event_type_list))
             ):
                 event = cast(Events, event)
                 event_data = cast(EventData, event_data)
@@ -1853,8 +1853,8 @@ async def test_database_lock_and_unlock(
     # Recording can't be finished while lock is held
     with pytest.raises(TimeoutError):
         await asyncio.wait_for(asyncio.shield(task), timeout=0.25)
-        db_events = await hass.async_add_executor_job(_get_db_events)
-        assert len(db_events) == 0
+    db_events = await hass.async_add_executor_job(_get_db_events)
+    assert len(db_events) == 0
 
     assert instance.unlock_database()
 

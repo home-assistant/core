@@ -269,7 +269,7 @@ class IsWorkdaySensor(BinarySensorEntity):
 
     def _update_state_and_setup_listener(self) -> None:
         """Update state and setup listener for next interval."""
-        now = dt_util.utcnow()
+        now = dt_util.now()
         self.update_data(now)
         self.unsub = async_track_point_in_utc_time(
             self.hass, self.point_in_time_listener, self.get_next_interval(now)

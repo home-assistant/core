@@ -1,5 +1,7 @@
 """The tests for Nest device triggers."""
 
+from typing import Any
+
 from google_nest_sdm.event import EventMessage
 import pytest
 from pytest_unordered import unordered
@@ -30,7 +32,9 @@ def platforms() -> list[str]:
     return ["camera"]
 
 
-def make_camera(device_id, name=DEVICE_NAME, traits={}):
+def make_camera(
+    device_id, name: str = DEVICE_NAME, *, traits: dict[str, Any]
+) -> dict[str, Any]:
     """Create a nest camera."""
     traits = traits.copy()
     traits.update(
