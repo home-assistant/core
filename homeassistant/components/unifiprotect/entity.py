@@ -21,7 +21,6 @@ from homeassistant.core import callback
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
-from homeassistant.helpers.typing import UNDEFINED
 
 from .const import (
     ATTR_EVENT_ID,
@@ -165,6 +164,8 @@ class BaseProtectEntity(Entity):
     _attr_should_poll = False
     _attr_attribution = DEFAULT_ATTRIBUTION
     _state_attrs: tuple[str, ...] = ("_attr_available",)
+    _attr_has_entity_name = True
+    _async_get_ufp_enabled: Callable[[ProtectAdoptableDeviceModel], bool] | None = None
 
     def __init__(
         self,
@@ -174,24 +175,15 @@ class BaseProtectEntity(Entity):
     ) -> None:
         """Initialize the entity."""
         super().__init__()
-        self.data: ProtectData = data
+        self.data = data
         self.device = device
-        self._async_get_ufp_enabled: (
-            Callable[[ProtectAdoptableDeviceModel], bool] | None
-        ) = None
 
         if description is None:
-            self._attr_unique_id = f"{self.device.mac}"
-            self._attr_name = f"{self.device.display_name}"
+            self._attr_unique_id = self.device.mac
+            self._attr_name = None
         else:
             self.entity_description = description
             self._attr_unique_id = f"{self.device.mac}_{description.key}"
-            name = (
-                description.name
-                if description.name and description.name is not UNDEFINED
-                else ""
-            )
-            self._attr_name = f"{self.device.display_name} {name.title()}"
             if isinstance(description, ProtectEntityDescription):
                 self._async_get_ufp_enabled = description.get_ufp_enabled
 
