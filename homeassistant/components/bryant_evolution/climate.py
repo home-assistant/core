@@ -114,7 +114,6 @@ class BryantEvolutionClimate(ClimateEntity):
         # Note: depends on current temperature and target temperature low read
         # above.
         self._attr_hvac_action = await self._read_hvac_action()
-        _LOGGER.error("XXX async update done")
 
     @property
     def unique_id(self) -> str:
