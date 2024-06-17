@@ -77,12 +77,12 @@ class TPLinkSwitch(CoordinatedTPLinkEntity, SwitchEntity):
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self._feature.set_value(True)  # type: ignore[no-untyped-call]
+        await self._feature.set_value(True)
 
     @async_refresh_after
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self._feature.set_value(False)  # type: ignore[no-untyped-call]
+        await self._feature.set_value(False)
 
     @callback
     def _async_update_attrs(self) -> None:
