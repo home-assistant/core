@@ -76,7 +76,6 @@ class AzureDataExplorerClient:
         logger = logging.getLogger("azure.kusto")
         logger.setLevel(logging.WARNING)
 
-
     def test_connection(self) -> None:
         """Test connection, will throw Exception if it cannot connect."""
 
