@@ -48,7 +48,7 @@ class BryantEvolutionClimate(ClimateEntity):
     experience on updates, we also locally update this instance and
     call async_write_ha_state as well.
     """
-
+    _attr_has_entity_name= True
     def __init__(
         self: ClimateEntity,
         host: str,
