@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from functools import partial
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
@@ -23,7 +23,6 @@ from homeassistant.components.weather import (
     Forecast,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -38,7 +37,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 from homeassistant.util.unit_conversion import SpeedConverter, TemperatureConverter
 
-from . import NWSData, base_unique_id, device_info
+from . import NWSConfigEntry, NWSData, base_unique_id, device_info
 from .const import (
     ATTR_FORECAST_DETAILED_DESCRIPTION,
     ATTRIBUTION,
@@ -79,11 +78,11 @@ def convert_condition(time: str, weather: tuple[tuple[str, int | None], ...]) ->
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: NWSConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the NWS weather platform."""
     entity_registry = er.async_get(hass)
-    nws_data: NWSData = hass.data[DOMAIN][entry.entry_id]
+    nws_data = entry.runtime_data
 
     # Remove hourly entity from legacy config entries
     if entity_id := entity_registry.async_get_entity_id(
@@ -157,6 +156,8 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
         for forecast_type in ("twice_daily", "hourly"):
             if (coordinator := self.forecast_coordinators[forecast_type]) is None:
                 continue
+            if TYPE_CHECKING:
+                forecast_type = cast(Literal["twice_daily", "hourly"], forecast_type)
             self.unsub_forecast[forecast_type] = coordinator.async_add_listener(
                 partial(self._handle_forecast_update, forecast_type)
             )

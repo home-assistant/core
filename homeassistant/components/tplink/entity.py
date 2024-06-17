@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from kasa import (
     AuthenticationException,
@@ -20,11 +20,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
 
-_T = TypeVar("_T", bound="CoordinatedTPLinkEntity")
-_P = ParamSpec("_P")
 
-
-def async_refresh_after(
+def async_refresh_after[_T: CoordinatedTPLinkEntity, **_P](
     func: Callable[Concatenate[_T, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
     """Define a wrapper to raise HA errors and refresh after."""

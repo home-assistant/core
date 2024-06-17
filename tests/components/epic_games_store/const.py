@@ -23,3 +23,7 @@ DATA_FREE_GAMES_ONE = load_json_object_fixture("free_games_one.json", DOMAIN)
 DATA_FREE_GAMES_CHRISTMAS_SPECIAL = load_json_object_fixture(
     "free_games_christmas_special.json", DOMAIN
 )
+
+DATA_FREE_GAMES_MYSTERY_SPECIAL = load_json_object_fixture(
+    "free_games_mystery_special.json", DOMAIN
+)

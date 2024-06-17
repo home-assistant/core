@@ -388,12 +388,12 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
 
     async def async_turn_off(self) -> None:
         """Turn off the zone."""
-        await self.async_set_hvac_mode(OPERATION_MODE_OFF)
+        await self.async_set_hvac_mode(HVACMode.OFF)
         self._signal_zone_update()
 
     async def async_turn_on(self) -> None:
         """Turn on the zone."""
-        await self.async_set_hvac_mode(OPERATION_MODE_AUTO)
+        await self.async_set_hvac_mode(HVACMode.AUTO)
         self._signal_zone_update()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:

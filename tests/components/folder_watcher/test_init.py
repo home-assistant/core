@@ -44,7 +44,7 @@ def test_event() -> None:
         MockPatternMatchingEventHandler,
     ):
         hass = Mock()
-        handler = folder_watcher.create_event_handler(["*"], hass)
+        handler = folder_watcher.create_event_handler(["*"], hass, "1")
         handler.on_created(
             SimpleNamespace(
                 is_directory=False, src_path="/hello/world.txt", event_type="created"
@@ -74,7 +74,7 @@ def test_move_event() -> None:
         MockPatternMatchingEventHandler,
     ):
         hass = Mock()
-        handler = folder_watcher.create_event_handler(["*"], hass)
+        handler = folder_watcher.create_event_handler(["*"], hass, "1")
         handler.on_moved(
             SimpleNamespace(
                 is_directory=False,

@@ -4,7 +4,7 @@
   "after_dependencies": ["panel_custom"],
   "codeowners": ["@Julius2342", "@farmio", "@marvin-w"],
   "config_flow": true,
-  "dependencies": ["file_upload", "repairs", "websocket_api"],
+  "dependencies": ["file_upload", "websocket_api"],
   "documentation": "https://www.home-assistant.io/integrations/knx",
   "integration_type": "hub",
   "iot_class": "local_push",

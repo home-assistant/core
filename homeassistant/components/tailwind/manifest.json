@@ -12,7 +12,7 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "platinum",
-  "requirements": ["gotailwind==0.2.2"],
+  "requirements": ["gotailwind==0.2.3"],
   "zeroconf": [
     {
       "type": "_http._tcp.local.",

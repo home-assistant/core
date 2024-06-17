@@ -104,6 +104,11 @@ class SynoApi:
         except BaseException as err:
             if not self._login_future.done():
                 self._login_future.set_exception(err)
+            with suppress(BaseException):
+                # Clear the flag as its normal that nothing
+                # will wait for this future to be resolved
+                # if there are no concurrent login attempts
+                await self._login_future
             raise
         finally:
             self._login_future = None

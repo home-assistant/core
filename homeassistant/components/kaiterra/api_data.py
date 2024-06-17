@@ -87,10 +87,11 @@ class KaiterraApiData:
                         main_pollutant = POLLUTANTS.get(sensor_name)
 
                 level = None
-                for j in range(1, len(self._scale)):
-                    if aqi <= self._scale[j]:
-                        level = self._level[j - 1]
-                        break
+                if aqi is not None:
+                    for j in range(1, len(self._scale)):
+                        if aqi <= self._scale[j]:
+                            level = self._level[j - 1]
+                            break
 
                 device["aqi"] = {"value": aqi}
                 device["aqi_level"] = {"value": level}

@@ -1,0 +1,66 @@
+{
+  "config": {
+    "flow_title": "{model}",
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Airgradient device."
+        }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to setup {model}?"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_version": "This firmware version is unsupported. Please upgrade the firmware of the device to at least version 3.1.1."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "select": {
+      "configuration_control": {
+        "name": "Configuration source",
+        "state": {
+          "cloud": "Cloud",
+          "local": "Local"
+        }
+      },
+      "display_temperature_unit": {
+        "name": "Display temperature unit",
+        "state": {
+          "c": "Celsius",
+          "f": "Fahrenheit"
+        }
+      }
+    },
+    "sensor": {
+      "total_volatile_organic_component_index": {
+        "name": "Total VOC index"
+      },
+      "nitrogen_index": {
+        "name": "Nitrogen index"
+      },
+      "pm003_count": {
+        "name": "PM0.3"
+      },
+      "raw_total_volatile_organic_component": {
+        "name": "Raw total VOC"
+      },
+      "raw_nitrogen": {
+        "name": "Raw nitrogen"
+      }
+    }
+  },
+  "exceptions": {
+    "no_local_configuration": {
+      "message": "Device should be configured with local configuration to be able to change settings."
+    }
+  }
+}

@@ -52,6 +52,7 @@ from .const import (
     CONF_NAME,
     CONF_PACKAGES,
     CONF_PLATFORM,
+    CONF_RADIUS,
     CONF_TEMPERATURE_UNIT,
     CONF_TIME_ZONE,
     CONF_TYPE,
@@ -342,6 +343,7 @@ CORE_CONFIG_SCHEMA = vol.All(
             CONF_LATITUDE: cv.latitude,
             CONF_LONGITUDE: cv.longitude,
             CONF_ELEVATION: vol.Coerce(int),
+            CONF_RADIUS: cv.positive_int,
             vol.Remove(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
             CONF_UNIT_SYSTEM: validate_unit_system,
             CONF_TIME_ZONE: cv.time_zone,
@@ -882,6 +884,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             CONF_CURRENCY,
             CONF_COUNTRY,
             CONF_LANGUAGE,
+            CONF_RADIUS,
         )
     ):
         hac.config_source = ConfigSource.YAML
@@ -898,6 +901,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
         (CONF_CURRENCY, "currency"),
         (CONF_COUNTRY, "country"),
         (CONF_LANGUAGE, "language"),
+        (CONF_RADIUS, "radius"),
     ):
         if key in config:
             setattr(hac, attr, config[key])
@@ -910,7 +914,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
     _raise_issue_if_no_country(hass, hass.config.country)
 
     if CONF_TIME_ZONE in config:
-        hac.set_time_zone(config[CONF_TIME_ZONE])
+        await hac.async_set_time_zone(config[CONF_TIME_ZONE])
 
     if CONF_MEDIA_DIRS not in config:
         if is_docker_env():
@@ -1079,7 +1083,7 @@ async def merge_packages_config(
                 pack_name,
                 None,
                 config,
-                f"Invalid package definition '{pack_name}': {str(exc)}. Package "
+                f"Invalid package definition '{pack_name}': {exc!s}. Package "
                 f"will not be initialized",
             )
             invalid_packages.append(pack_name)
@@ -1107,7 +1111,7 @@ async def merge_packages_config(
                     pack_name,
                     comp_name,
                     config,
-                    f"Integration {comp_name} caused error: {str(exc)}",
+                    f"Integration {comp_name} caused error: {exc!s}",
                 )
                 continue
             except INTEGRATION_LOAD_EXCEPTIONS as exc:
@@ -1673,7 +1677,9 @@ async def async_process_component_config(
             validated_config
             for validated_config in await asyncio.gather(
                 *(
-                    create_eager_task(async_load_and_validate(p_integration))
+                    create_eager_task(
+                        async_load_and_validate(p_integration), loop=hass.loop
+                    )
                     for p_integration in platform_integrations_to_load
                 )
             )

@@ -11,12 +11,11 @@ from tests.common import MockConfigEntry
 
 async def test_tailscale_sensors(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the Tailscale sensors."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
     state = hass.states.get("sensor.router_expires")
     entry = entity_registry.async_get("sensor.router_expires")
     assert entry

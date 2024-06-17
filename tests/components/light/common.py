@@ -101,7 +101,7 @@ async def async_turn_on(
     """Turn all or specified light on."""
     data = {
         key: value
-        for key, value in [
+        for key, value in (
             (ATTR_ENTITY_ID, entity_id),
             (ATTR_PROFILE, profile),
             (ATTR_TRANSITION, transition),
@@ -118,7 +118,7 @@ async def async_turn_on(
             (ATTR_EFFECT, effect),
             (ATTR_COLOR_NAME, color_name),
             (ATTR_WHITE, white),
-        ]
+        )
         if value is not None
     }
 
@@ -135,11 +135,11 @@ async def async_turn_off(hass, entity_id=ENTITY_MATCH_ALL, transition=None, flas
     """Turn all or specified light off."""
     data = {
         key: value
-        for key, value in [
+        for key, value in (
             (ATTR_ENTITY_ID, entity_id),
             (ATTR_TRANSITION, transition),
             (ATTR_FLASH, flash),
-        ]
+        )
         if value is not None
     }
 
@@ -202,7 +202,7 @@ async def async_toggle(
     """Turn all or specified light on."""
     data = {
         key: value
-        for key, value in [
+        for key, value in (
             (ATTR_ENTITY_ID, entity_id),
             (ATTR_PROFILE, profile),
             (ATTR_TRANSITION, transition),
@@ -216,7 +216,7 @@ async def async_toggle(
             (ATTR_FLASH, flash),
             (ATTR_EFFECT, effect),
             (ATTR_COLOR_NAME, color_name),
-        ]
+        )
         if value is not None
     }
 
@@ -254,7 +254,7 @@ class MockLight(MockToggleEntity, LightEntity):
         state,
         unique_id=None,
         supported_color_modes: set[ColorMode] | None = None,
-    ):
+    ) -> None:
         """Initialize the mock light."""
         super().__init__(name, state, unique_id)
         if supported_color_modes is None:

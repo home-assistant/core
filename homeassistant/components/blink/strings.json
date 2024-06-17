@@ -65,6 +65,10 @@
         }
       }
     },
+    "record": {
+      "name": "Record",
+      "description": "Requests camera to record a clip."
+    },
     "trigger_camera": {
       "name": "Trigger camera",
       "description": "Requests camera to take new image."
@@ -81,7 +85,7 @@
     },
     "save_recent_clips": {
       "name": "Save recent clips",
-      "description": "Saves all recent video clips to local directory with file pattern \"%Y%m%d_%H%M%S_{name}.mp4\".",
+      "description": "Saves all recent video clips to local directory with file pattern \"%Y%m%d_%H%M%S_[camera name].mp4\".",
       "fields": {
         "file_path": {
           "name": "Output directory",
@@ -122,6 +126,9 @@
     },
     "failed_disarm": {
       "message": "Blink failed to disarm camera."
+    },
+    "failed_clip": {
+      "message": "Blink failed to record a clip."
     },
     "failed_snap": {
       "message": "Blink failed to snap a picture."

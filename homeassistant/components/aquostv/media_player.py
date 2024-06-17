@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 import sharp_aquos_rc
 import voluptuous as vol
@@ -27,9 +27,6 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
-_SharpAquosTVDeviceT = TypeVar("_SharpAquosTVDeviceT", bound="SharpAquosTVDevice")
-_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,7 +82,7 @@ def setup_platform(
     add_entities([SharpAquosTVDevice(name, remote, power_on_enabled)])
 
 
-def _retry(
+def _retry[_SharpAquosTVDeviceT: SharpAquosTVDevice, **_P](
     func: Callable[Concatenate[_SharpAquosTVDeviceT, _P], Any],
 ) -> Callable[Concatenate[_SharpAquosTVDeviceT, _P], None]:
     """Handle query retries."""

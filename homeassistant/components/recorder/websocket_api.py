@@ -160,14 +160,13 @@ def _ws_get_statistics_during_period(
         units,
         types,
     )
-    for statistic_id in result:
-        for item in result[statistic_id]:
-            if (start := item.get("start")) is not None:
-                item["start"] = int(start * 1000)
-            if (end := item.get("end")) is not None:
-                item["end"] = int(end * 1000)
-            if (last_reset := item.get("last_reset")) is not None:
-                item["last_reset"] = int(last_reset * 1000)
+    include_last_reset = "last_reset" in types
+    for statistic_rows in result.values():
+        for row in statistic_rows:
+            row["start"] = int(row["start"] * 1000)
+            row["end"] = int(row["end"] * 1000)
+            if include_last_reset and (last_reset := row["last_reset"]) is not None:
+                row["last_reset"] = int(last_reset * 1000)
     return json_bytes(messages.result_message(msg_id, result))
 
 
