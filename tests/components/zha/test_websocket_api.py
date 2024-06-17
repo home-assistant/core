@@ -10,18 +10,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 from freezegun import freeze_time
 import pytest
 import voluptuous as vol
-import zigpy.backups
-import zigpy.profiles.zha
-import zigpy.types
-from zigpy.types.named import EUI64
-import zigpy.util
-from zigpy.zcl.clusters import general, security
-from zigpy.zcl.clusters.general import Groups
-import zigpy.zdo.types as zdo_types
-
-from homeassistant.components.websocket_api import const
-from homeassistant.components.zha import DOMAIN
-from homeassistant.components.zha.const import (
+from zha.application.const import (
     ATTR_CLUSTER_ID,
     ATTR_CLUSTER_TYPE,
     ATTR_ENDPOINT_ID,
@@ -32,19 +21,29 @@ from homeassistant.components.zha.const import (
     ATTR_NEIGHBORS,
     ATTR_QUIRK_APPLIED,
     ATTR_TYPE,
-    BINDINGS,
     CLUSTER_TYPE_IN,
-    EZSP_OVERWRITE_EUI64,
-    GROUP_ID,
-    GROUP_IDS,
-    GROUP_NAME,
 )
+import zigpy.backups
+import zigpy.profiles.zha
+import zigpy.types
+from zigpy.types.named import EUI64
+import zigpy.util
+from zigpy.zcl.clusters.general import Groups
+import zigpy.zdo.types as zdo_types
+
+from homeassistant.components.websocket_api import const
+from homeassistant.components.zha import DOMAIN
+from homeassistant.components.zha.const import EZSP_OVERWRITE_EUI64
 from homeassistant.components.zha.websocket_api import (
     ATTR_DURATION,
     ATTR_INSTALL_CODE,
     ATTR_QR_CODE,
     ATTR_SOURCE_IEEE,
     ATTR_TARGET_IEEE,
+    BINDINGS,
+    GROUP_ID,
+    GROUP_IDS,
+    GROUP_NAME,
     ID,
     SERVICE_PERMIT,
     TYPE,
@@ -53,14 +52,7 @@ from homeassistant.components.zha.websocket_api import (
 from homeassistant.const import ATTR_NAME, Platform
 from homeassistant.core import Context, HomeAssistant
 
-from .conftest import (
-    FIXTURE_GRP_ID,
-    FIXTURE_GRP_NAME,
-    SIG_EP_INPUT,
-    SIG_EP_OUTPUT,
-    SIG_EP_PROFILE,
-    SIG_EP_TYPE,
-)
+from .conftest import FIXTURE_GRP_ID, FIXTURE_GRP_NAME
 from .data import BASE_CUSTOM_CONFIGURATION, CONFIG_WITH_ALARM_OPTIONS
 
 from tests.common import MockConfigEntry, MockUser
@@ -89,74 +81,9 @@ def required_platform_only():
 
 
 @pytest.fixture
-async def device_switch(hass, zigpy_device_mock, zha_device_joined):
-    """Test ZHA switch platform."""
-
-    zigpy_device = zigpy_device_mock(
-        {
-            1: {
-                SIG_EP_INPUT: [general.OnOff.cluster_id, general.Basic.cluster_id],
-                SIG_EP_OUTPUT: [],
-                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
-                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
-            }
-        },
-        ieee=IEEE_SWITCH_DEVICE,
-    )
-    zha_device = await zha_device_joined(zigpy_device)
-    zha_device.available = True
-    return zha_device
-
-
-@pytest.fixture
-async def device_ias_ace(hass, zigpy_device_mock, zha_device_joined):
-    """Test alarm control panel device."""
-
-    zigpy_device = zigpy_device_mock(
-        {
-            1: {
-                SIG_EP_INPUT: [security.IasAce.cluster_id],
-                SIG_EP_OUTPUT: [],
-                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.IAS_ANCILLARY_CONTROL,
-                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
-            }
-        },
-    )
-    zha_device = await zha_device_joined(zigpy_device)
-    zha_device.available = True
-    return zha_device
-
-
-@pytest.fixture
-async def device_groupable(hass, zigpy_device_mock, zha_device_joined):
-    """Test ZHA light platform."""
-
-    zigpy_device = zigpy_device_mock(
-        {
-            1: {
-                SIG_EP_INPUT: [
-                    general.OnOff.cluster_id,
-                    general.Basic.cluster_id,
-                    general.Groups.cluster_id,
-                ],
-                SIG_EP_OUTPUT: [],
-                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
-                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
-            }
-        },
-        ieee=IEEE_GROUPABLE_DEVICE,
-    )
-    zha_device = await zha_device_joined(zigpy_device)
-    zha_device.available = True
-    return zha_device
-
-
-@pytest.fixture
 async def zha_client(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    device_switch,
-    device_groupable,
 ) -> MockHAClientWebSocket:
     """Get ZHA WebSocket client."""
 
