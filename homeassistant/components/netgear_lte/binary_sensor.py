@@ -7,11 +7,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import NetgearLTEConfigEntry
 from .entity import LTEEntity
 
 BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
@@ -37,7 +37,9 @@ BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: NetgearLTEConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Netgear LTE binary sensor."""
     async_add_entities(

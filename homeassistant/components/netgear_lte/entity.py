@@ -1,11 +1,11 @@
 """Entity representing a Netgear LTE entity."""
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import NetgearLTEConfigEntry
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import NetgearLTEDataUpdateCoordinator
 
@@ -17,7 +17,7 @@ class LTEEntity(CoordinatorEntity[NetgearLTEDataUpdateCoordinator]):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: NetgearLTEConfigEntry,
         description: EntityDescription,
     ) -> None:
         """Initialize a Netgear LTE entity."""

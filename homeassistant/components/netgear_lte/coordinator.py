@@ -3,20 +3,23 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from eternalegypt.eternalegypt import Error, Information, Modem
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
 
+if TYPE_CHECKING:
+    from . import NetgearLTEConfigEntry
+
 
 class NetgearLTEDataUpdateCoordinator(DataUpdateCoordinator[Information]):
     """Data update coordinator for the Netgear LTE integration."""
 
-    config_entry: ConfigEntry
+    config_entry: NetgearLTEConfigEntry
 
     def __init__(
         self,

@@ -55,6 +55,7 @@ PLATFORMS = [
     Platform.NOTIFY,
     Platform.SENSOR,
 ]
+type NetgearLTEConfigEntry = ConfigEntry[eternalegypt.Modem]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -66,7 +67,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NetgearLTEConfigEntry) -> bool:
     """Set up Netgear LTE from a config entry."""
     host = entry.data[CONF_HOST]
     password = entry.data[CONF_PASSWORD]
@@ -114,7 +115,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NetgearLTEConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     loaded_entries = [

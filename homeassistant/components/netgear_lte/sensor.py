@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -23,6 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from . import NetgearLTEConfigEntry
 from .entity import LTEEntity
 
 
@@ -125,7 +125,9 @@ SENSORS: tuple[NetgearLTESensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: NetgearLTEConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Netgear LTE sensor."""
     async_add_entities(NetgearLTESensor(entry, description) for description in SENSORS)
