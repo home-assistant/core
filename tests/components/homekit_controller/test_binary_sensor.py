@@ -1,5 +1,7 @@
 """Basic checks for HomeKit motion sensors and contact sensors."""
 
+from collections.abc import Callable
+
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
@@ -7,7 +9,7 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import get_next_aid, setup_test_component
+from .common import setup_test_component
 
 
 def create_motion_sensor_service(accessory):
@@ -175,7 +177,9 @@ async def test_leak_sensor_read_state(hass: HomeAssistant) -> None:
 
 
 async def test_migrate_unique_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    get_next_aid: Callable[[], int],
 ) -> None:
     """Test a we can migrate a binary_sensor unique id."""
     aid = get_next_aid()

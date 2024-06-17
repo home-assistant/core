@@ -1,5 +1,6 @@
 """Tests for homekit_controller init."""
 
+from collections.abc import Callable
 from datetime import timedelta
 import pathlib
 from unittest.mock import patch
@@ -110,10 +111,13 @@ async def test_device_remove_devices(
     assert response["success"]
 
 
-async def test_offline_device_raises(hass: HomeAssistant, controller) -> None:
+async def test_offline_device_raises(
+    hass: HomeAssistant, get_next_aid: Callable[[], int], controller
+) -> None:
     """Test an offline device raises ConfigEntryNotReady."""
 
     is_connected = False
+    aid = get_next_aid()
 
     class OfflineFakePairing(FakePairing):
         """Fake pairing that can flip is_connected."""
@@ -140,7 +144,7 @@ async def test_offline_device_raises(hass: HomeAssistant, controller) -> None:
             return {}
 
     accessory = Accessory.create_with_info(
-        "TestDevice", "example.com", "Test", "0001", "0.1"
+        aid, "TestDevice", "example.com", "Test", "0001", "0.1"
     )
     create_alive_service(accessory)
 
@@ -162,11 +166,12 @@ async def test_offline_device_raises(hass: HomeAssistant, controller) -> None:
 
 
 async def test_ble_device_only_checks_is_available(
-    hass: HomeAssistant, controller
+    hass: HomeAssistant, get_next_aid: Callable[[], int], controller
 ) -> None:
     """Test a BLE device only checks is_available."""
 
     is_available = False
+    aid = get_next_aid()
 
     class FakeBLEPairing(FakePairing):
         """Fake BLE pairing that can flip is_available."""
@@ -197,7 +202,7 @@ async def test_ble_device_only_checks_is_available(
             return {}
 
     accessory = Accessory.create_with_info(
-        "TestDevice", "example.com", "Test", "0001", "0.1"
+        aid, "TestDevice", "example.com", "Test", "0001", "0.1"
     )
     create_alive_service(accessory)
 
