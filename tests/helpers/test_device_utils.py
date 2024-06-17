@@ -40,7 +40,7 @@ async def test_entity_id_to_device_id(
     # Manual cleanup should unlink stales devices from the config entry
     device_id = du.async_entity_id_to_device_id(
         hass,
-        entity_id=entity.entity_id,
+        entity_id_or_uuid=entity.entity_id,
     )
 
     assert device_id == device.id
@@ -73,8 +73,8 @@ async def test_device_info_to_link(
     await hass.async_block_till_done()
     assert entity_registry.async_get("sensor.test_source") is not None
 
-    result = du.async_device_info_to_link_entity_id(
-        hass, entity_id=source_entity.entity_id
+    result = du.async_device_info_to_link_entity(
+        hass, entity_id_or_uuid=source_entity.entity_id
     )
     assert result == {
         "identifiers": {("test", "my_device")},
@@ -88,10 +88,9 @@ async def test_device_info_to_link(
     }
 
     # With a non-existent entity id
-    result = du.async_device_info_to_link_entity_id(hass, entity_id="sensor.invalid")
-    assert result is None
-
-    result = du.async_device_info_to_link_entity_id(hass, entity_id=None)
+    result = du.async_device_info_to_link_entity(
+        hass, entity_id_or_uuid="sensor.invalid"
+    )
     assert result is None
 
     # With a non-existent device id
@@ -152,14 +151,14 @@ async def test_remove_stale_device_links_keep_entity_device(
     du.async_remove_stale_devices_links_keep_entity_device(
         hass,
         entry_id=config_entry.entry_id,
-        source_entity_id=source_entity.entity_id,
+        source_entity_id_or_uuid=source_entity.entity_id,
     )
 
     devices_config_entry = device_registry.devices.get_devices_for_config_entry_id(
         config_entry.entry_id
     )
 
-    # After cleanup, only one device is expected to be linked to the configuration entry if at least source_entity_id or device_id was given, else zero
+    # After cleanup, only one device is expected to be linked to the configuration entry if at least source_entity_id_or_uuid or device_id was given, else zero
     assert len(devices_config_entry) == 1
 
     assert current_device in devices_config_entry
@@ -210,7 +209,7 @@ async def test_remove_stale_devices_links_keep_current_device(
         config_entry.entry_id
     )
 
-    # After cleanup, only one device is expected to be linked to the configuration entry if at least source_entity_id or device_id was given, else zero
+    # After cleanup, only one device is expected to be linked to the configuration entry
     assert len(devices_config_entry) == 1
 
     assert current_device in devices_config_entry

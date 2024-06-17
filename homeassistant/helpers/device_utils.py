@@ -8,28 +8,32 @@ from . import device_registry as dr, entity_registry as er
 @callback
 def async_entity_id_to_device_id(
     hass: HomeAssistant,
-    entity_id: str,
+    entity_id_or_uuid: str,
 ) -> str | None:
-    """Resolve the device id to the entity id."""
+    """Resolve the device id to the entity id or entity uuid."""
 
     ent_reg = er.async_get(hass)
-    if (entity := ent_reg.async_get(entity_id)) is None:
+
+    if (
+        entity_id := er.async_validate_entity_id(ent_reg, entity_id_or_uuid)
+    ) is None or (entity := ent_reg.async_get(entity_id)) is None:
         return None
+
     return entity.device_id
 
 
 @callback
-def async_device_info_to_link_entity_id(
+def async_device_info_to_link_entity(
     hass: HomeAssistant,
-    entity_id: str | None,
+    entity_id_or_uuid: str,
 ) -> dr.DeviceInfo | None:
-    """DeviceInfo with information to link a device to a configuration entry in the Link category from a entity ID."""
+    """DeviceInfo with information to link a device to a configuration entry in the Link category from a entity id or entity uuid."""
+
+    ent_reg = er.async_get(hass)
 
     if (
-        entity_id is None
-        or (device_id := async_entity_id_to_device_id(hass, entity_id=entity_id))
-        is None
-    ):
+        entity_id := er.async_validate_entity_id(ent_reg, entity_id_or_uuid)
+    ) is None or (device_id := async_entity_id_to_device_id(hass, entity_id)) is None:
         return None
 
     return async_device_info_to_link_device_id(
@@ -43,7 +47,7 @@ def async_device_info_to_link_device_id(
     hass: HomeAssistant,
     device_id: str | None,
 ) -> dr.DeviceInfo | None:
-    """DeviceInfo with information to link a device to a configuration entry in the Link category from a device ID."""
+    """DeviceInfo with information to link a device to a configuration entry in the Link category from a device id."""
 
     dev_reg = dr.async_get(hass)
 
@@ -60,16 +64,14 @@ def async_device_info_to_link_device_id(
 def async_remove_stale_devices_links_keep_entity_device(
     hass: HomeAssistant,
     entry_id: str,
-    source_entity_id: str,
+    source_entity_id_or_uuid: str,
 ) -> None:
     """Remove the link between stales devices and a configuration entry, keeping only the device that the informed entity is linked to."""
 
     async_remove_stale_devices_links_keep_current_device(
         hass=hass,
         entry_id=entry_id,
-        current_device_id=async_entity_id_to_device_id(
-            hass, entity_id=source_entity_id
-        ),
+        current_device_id=async_entity_id_to_device_id(hass, source_entity_id_or_uuid),
     )
 
 
