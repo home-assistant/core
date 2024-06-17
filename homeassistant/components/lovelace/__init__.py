@@ -115,6 +115,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             reload_resources_service_handler,
             schema=RESOURCE_RELOAD_SERVICE_SCHEMA,
         )
+        # Register lovelace/resources for backwards compatibility, remove in
+        # Home Assistant Core 2025.1
+        for command in ("lovelace/resources", "lovelace/resources/list"):
+            websocket_api.async_register_command(
+                hass,
+                command,
+                websocket.websocket_lovelace_resources,
+                websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+                    {"type": command},
+                ),
+            )
 
     else:
         default_config = dashboard.LovelaceStorage(hass, None)
@@ -127,22 +138,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         resource_collection = resources.ResourceStorageCollection(hass, default_config)
 
-        collection.DictStorageCollectionWebsocket(
+        resources.ResourceStorageCollectionWebsocket(
             resource_collection,
             "lovelace/resources",
             "resource",
             RESOURCE_CREATE_FIELDS,
             RESOURCE_UPDATE_FIELDS,
-        ).async_setup(hass, create_list=False)
+        ).async_setup(hass)
 
     websocket_api.async_register_command(hass, websocket.websocket_lovelace_config)
     websocket_api.async_register_command(hass, websocket.websocket_lovelace_save_config)
     websocket_api.async_register_command(
         hass, websocket.websocket_lovelace_delete_config
     )
-    websocket_api.async_register_command(hass, websocket.websocket_lovelace_resources)
-
-    websocket_api.async_register_command(hass, websocket.websocket_lovelace_dashboards)
 
     hass.data[DOMAIN] = {
         # We store a dictionary mapping url_path: config. None is the default.
@@ -209,13 +217,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     dashboards_collection.async_add_listener(storage_dashboard_changed)
     await dashboards_collection.async_load()
 
-    collection.DictStorageCollectionWebsocket(
+    dashboard.DashboardsCollectionWebSocket(
         dashboards_collection,
         "lovelace/dashboards",
         "dashboard",
         STORAGE_DASHBOARD_CREATE_FIELDS,
         STORAGE_DASHBOARD_UPDATE_FIELDS,
-    ).async_setup(hass, create_list=False)
+    ).async_setup(hass)
 
     def create_map_dashboard():
         hass.async_create_task(_create_map_dashboard(hass))
