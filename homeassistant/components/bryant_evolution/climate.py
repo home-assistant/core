@@ -60,15 +60,7 @@ class BryantEvolutionClimate(ClimateEntity):
         self._zone_id = zone_id
         self._client = client
         self._name = f"Bryant Evolution (System {system_id}, Zone {zone_id})"
-        self._attr_current_temperature = None
-        self._attr_target_temperature = None
-        self._attr_target_temperature_low = None
-        self._attr_target_temperature_high = None
-        self._attr_hvac_mode = None
-        self._attr_fan_mode = None
-        self._attr_hvac_action = None
         self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
-        self._attr_hvac_action = None
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
