@@ -8,6 +8,7 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
 from tests.common import async_fire_time_changed
+from tests.components.radarr import setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -18,6 +19,7 @@ async def test_calendar(
 ) -> None:
     """Test for successfully setting up the Radarr platform."""
     freezer.move_to("2021-12-02 00:00:00-08:00")
+    await setup_integration(hass, aioclient_mock)
 
     state = hass.states.get("calendar.mock_title")
     assert state.state == STATE_ON
