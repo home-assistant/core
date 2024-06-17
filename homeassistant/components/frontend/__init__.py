@@ -322,7 +322,10 @@ def async_remove_panel(hass: HomeAssistant, frontend_url_path: str) -> None:
 
 
 def add_extra_js_url(hass: HomeAssistant, url: str, es5: bool = False) -> None:
-    """Register extra js or module url to load."""
+    """Register extra js or module url to load.
+
+    This function allows custom integrations to register extra js or module.
+    """
     key = DATA_EXTRA_JS_URL_ES5 if es5 else DATA_EXTRA_MODULE_URL
     hass.data[key].add(url)
 
