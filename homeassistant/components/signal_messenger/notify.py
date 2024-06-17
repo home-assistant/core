@@ -29,6 +29,8 @@ ATTR_URLS = "urls"
 ATTR_VERIFY_SSL = "verify_ssl"
 ATTR_TEXTMODE = "text_mode"
 
+TEXTMODE_OPTIONS = ["normal", "styled"]
+
 DATA_FILENAMES_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_FILENAMES): [cv.string],
@@ -112,13 +114,14 @@ class SignalNotificationService(BaseNotificationService):
         attachments_as_bytes = self.get_attachments_as_bytes(
             data, CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES, self._hass
         )
+        text_mode = self.get_text_mode(data)
         try:
             self._signal_cli_rest_api.send_message(
                 message,
                 self._recp_nrs,
                 filenames,
                 attachments_as_bytes,
-                text_mode=self.get_text_mode(data),
+                text_mode=text_mode,
             )
         except SignalCliRestApiError as ex:
             _LOGGER.error("%s", ex)
@@ -198,8 +201,12 @@ class SignalNotificationService(BaseNotificationService):
     def get_text_mode(data) -> str:
         """Extract text mode parameter from data."""
         try:
-            return vol.In(["normal", "styled"])(data.get(ATTR_TEXTMODE))
+            return vol.In(TEXTMODE_OPTIONS)(data.get(ATTR_TEXTMODE))
         except AttributeError:
             return "normal"
         except vol.Invalid:
+            _LOGGER.warning(
+                "'text_mode' is invalid: found '%s', defaulting to normal",
+                data.get(ATTR_TEXTMODE),
+            )
             return "normal"
