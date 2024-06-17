@@ -5,25 +5,19 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from ical.calendar_stream import IcsCalendarStream
-from ical.exceptions import CalendarParseError
-
-from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.util import slugify
 
-from .const import CONF_CALENDAR_NAME, CONF_ICS_FILE, CONF_STORAGE_KEY, DOMAIN
+from .const import CONF_CALENDAR_NAME, CONF_STORAGE_KEY, DOMAIN, STORAGE_PATH
 from .store import LocalCalendarStore
 
 _LOGGER = logging.getLogger(__name__)
 
 
 PLATFORMS: list[Platform] = [Platform.CALENDAR]
-
-STORAGE_PATH = ".storage/local_calendar.{key}.ics"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -45,17 +39,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await store.async_load()
     except OSError as err:
         raise ConfigEntryNotReady("Failed to load file {path}: {err}") from err
-
-    if entry.data.get(CONF_ICS_FILE):
-        with process_uploaded_file(hass, entry.data[CONF_ICS_FILE]) as ics_file:
-            ics = ics_file.read_text(encoding="utf8")
-            try:
-                IcsCalendarStream.calendar_from_ics(ics)
-            except CalendarParseError as err:
-                raise ConfigEntryNotReady(
-                    "Failed to import events: Invalid ICS file"
-                ) from err
-            await store.async_store(ics)
 
     hass.data[DOMAIN][entry.entry_id] = store
 

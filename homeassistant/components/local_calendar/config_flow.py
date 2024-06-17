@@ -17,6 +17,7 @@ from .const import (
     CONF_STORAGE_KEY,
     DOMAIN,
 )
+from .helpers.ics import save_uploaded_ics_file
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -72,7 +73,9 @@ class LocalCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="import", data_schema=STEP_IMPORT_DATA_SCHEMA
             )
 
-        self.data[CONF_ICS_FILE] = user_input[CONF_ICS_FILE]
+        await save_uploaded_ics_file(
+            self.hass, user_input[CONF_ICS_FILE], self.data[CONF_STORAGE_KEY]
+        )
         return self.async_create_entry(
             title=self.data[CONF_CALENDAR_NAME], data=self.data
         )

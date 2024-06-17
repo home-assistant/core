@@ -3,14 +3,12 @@
 from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from random import getrandbits
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import local_calendar
 from homeassistant.components.local_calendar.const import (
     CONF_CALENDAR_NAME,
     CONF_ICS_FILE,
@@ -25,27 +23,33 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_process_uploaded_file() -> Generator[MagicMock, None, None]:
+def mock_process_uploaded_file(tmp_path: Path) -> Generator[MagicMock, None, None]:
     """Mock upload ics file."""
     file_id_ics = str(uuid4())
-    tmp_path = f"home-assistant-local_calendar-test-{getrandbits(10):03x}"
 
     @contextmanager
-    def _mock_process_uploaded_file(hass: HomeAssistant) -> Iterator[Path | None]:
-        with open(tmp_path / "test.ics", "wb") as icsfile:
+    def _mock_process_uploaded_file(
+        hass: HomeAssistant, uploaded_file_id: str
+    ) -> Iterator[Path | None]:
+        with open(tmp_path / uploaded_file_id, "wb") as icsfile:
             icsfile.write(b"""BEGIN:VCALENDAR
                                 VERSION:2.0
                                 PRODID:-//hacksw/handcal//NONSGML v1.0//EN
                                 END:VCALENDAR
                               """)
-        yield tmp_path / "test.ics"
+        yield tmp_path / uploaded_file_id
 
-    with patch(
-        "homeassistant.components.local_calendar.process_uploaded_file",
-        side_effect=_mock_process_uploaded_file,
-    ) as mock_upload:
+    with (
+        patch(
+            "homeassistant.components.local_calendar.helpers.ics.process_uploaded_file",
+            side_effect=_mock_process_uploaded_file,
+        ) as mock_upload,
+        patch(
+            "shutil.move",
+        ),
+    ):
         mock_upload.file_id = {
-            local_calendar.CONF_ICS_FILE: file_id_ics,
+            CONF_ICS_FILE: file_id_ics,
         }
         yield mock_upload
 
