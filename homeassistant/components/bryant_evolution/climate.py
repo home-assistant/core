@@ -22,7 +22,7 @@ from .const import CONF_SYSTEM_ID, CONF_ZONE_ID
 
 _LOGGER = logging.getLogger(__name__)
 
-type BryantEvolutionConfigEntry = ConfigEntry[BryantEvolutionClient]  # noqa: F821
+from . import BryantEvolutionConfigEntry
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
