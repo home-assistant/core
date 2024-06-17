@@ -1826,6 +1826,9 @@ pyefergy==22.5.0
 # homeassistant.components.energenie_power_sockets
 pyegps==0.2.5
 
+# homeassistant.components.emoncms
+pyemoncms==0.0.6
+
 # homeassistant.components.enphase_envoy
 pyenphase==1.20.3
 
@@ -2460,7 +2463,7 @@ renault-api==0.2.3
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.9.2
+reolink-aio==0.9.3
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2788,7 +2791,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==1.17.0
+uiprotect==1.18.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
