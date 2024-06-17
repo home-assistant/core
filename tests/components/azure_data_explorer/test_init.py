@@ -1,7 +1,9 @@
 """Test the init functions for Azure Data Explorer."""
 
 from datetime import datetime, timedelta
+import json
 import logging
+from unittest import mock
 from unittest.mock import MagicMock, Mock, patch
 
 from azure.kusto.data.exceptions import KustoAuthenticationError, KustoServiceError
@@ -263,6 +265,23 @@ async def test_event(
 
     await hass.async_block_till_done()
     mock_managed_streaming.add.assert_not_called()
+
+
+async def test_json_dumps_raises_TypeError(
+    hass: HomeAssistant, entry_managed: MockConfigEntry, mock_managed_streaming: Mock
+) -> None:
+    """Test listening to events from Hass. and getting an event with a newline in the state."""
+
+    with mock.patch.object(json, "dumps", side_effect=TypeError):
+        hass.states.async_set("sensor.test_sensor", "non_serializable_event")
+
+        async_fire_time_changed(
+            hass,
+            utcnow() + timedelta(seconds=entry_managed.options[CONF_SEND_INTERVAL]),
+        )
+
+        await hass.async_block_till_done()
+        mock_managed_streaming.add.assert_not_called()
 
 
 @pytest.mark.parametrize(

@@ -162,6 +162,8 @@ class AzureDataExplorer:
     async def async_send(self, _) -> None:
         """Write preprocessed events to Azure Data Explorer."""
 
+        self._schedule_next_send()
+
         adx_events = []
         dropped = 0
         while not self._queue.empty():
@@ -189,8 +191,6 @@ class AzureDataExplorer:
             except KustoAuthenticationError as err:
                 _LOGGER.error("Could not authenticate to Azure Data Explorer: %s", err)
 
-        self._schedule_next_send()
-
     def _parse_event(
         self,
         time_fired: datetime,
@@ -204,8 +204,13 @@ class AzureDataExplorer:
         if (utcnow() - time_fired).seconds > DEFAULT_MAX_DELAY + self._send_interval:
             return None, dropped + 1
         if "\n" in state.state:
+            _LOGGER.debug("Could not serialize event with newlinw char %s", state.state)
             return None, dropped + 1
 
-        json_event = json.dumps(obj=state, cls=JSONEncoder)
+        try:
+            json_event = json.dumps(obj=state, cls=JSONEncoder)
+        except TypeError as err:
+            _LOGGER.debug("Could not serialize event: %s with error %s", state, err)
+            return None, dropped + 1
 
         return (json_event, dropped)
