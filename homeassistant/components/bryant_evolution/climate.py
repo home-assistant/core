@@ -32,9 +32,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
-    host = config_entry.data[CONF_HOST]
-    system_id = config_entry.data[CONF_SYSTEM_ID]
-    zone_id = config_entry.data[CONF_ZONE_ID]
+    self._attr_unique_id = f"bryant_evolution_{host}_{system_id}_{zone_id}"
     client = config_entry.runtime_data
     climate = BryantEvolutionClimate(host, system_id, zone_id, client)
     async_add_entities([climate], update_before_add=True)
