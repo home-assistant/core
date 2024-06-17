@@ -55,11 +55,13 @@ BINARY_SENSORS: tuple[JewishCalendarBinarySensorEntityDescription, ...] = (
         key="erev_shabbat_hag",
         name="Erev Shabbat/Hag",
         is_on=lambda state: bool(state.erev_shabbat_chag),
+        entity_registry_enabled_default=False,
     ),
     JewishCalendarBinarySensorEntityDescription(
         key="motzei_shabbat_hag",
         name="Motzei Shabbat/Hag",
         is_on=lambda state: bool(state.motzei_shabbat_chag),
+        entity_registry_enabled_default=False,
     ),
 )
 
