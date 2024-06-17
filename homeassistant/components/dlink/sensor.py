@@ -16,7 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UndefinedType
 
-from .const import DOMAIN
 from .entity import DLinkEntity
 
 _LOGGER = logging.getLogger(__name__)
