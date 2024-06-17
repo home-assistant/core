@@ -43,8 +43,6 @@ SUPPORTED_FEATURES = (
 MIN_TEMPERATURE = 8
 MAX_TEMPERATURE = 28
 
-PRESET_MANUAL = "manual"
-
 # special temperatures for on/off in Fritz!Box API (modified by pyfritzhome)
 ON_API_TEMPERATURE = 127.0
 OFF_API_TEMPERATURE = 126.5
