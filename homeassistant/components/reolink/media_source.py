@@ -210,9 +210,6 @@ class ReolinkVODMediaSource(MediaSource):
                 "playback only possible using sub stream",
                 host.api.camera_name(channel),
             )
-            return await self._async_generate_camera_days(
-                config_entry_id, channel, "sub"
-            )
 
         children = [
             BrowseMediaSource(
@@ -224,16 +221,49 @@ class ReolinkVODMediaSource(MediaSource):
                 can_play=False,
                 can_expand=True,
             ),
-            BrowseMediaSource(
-                domain=DOMAIN,
-                identifier=f"RES|{config_entry_id}|{channel}|main",
-                media_class=MediaClass.CHANNEL,
-                media_content_type=MediaType.PLAYLIST,
-                title="High resolution",
-                can_play=False,
-                can_expand=True,
-            ),
         ]
+        if main_enc != "h265":
+            children.append(
+                BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier=f"RES|{config_entry_id}|{channel}|main",
+                    media_class=MediaClass.CHANNEL,
+                    media_content_type=MediaType.PLAYLIST,
+                    title="High resolution",
+                    can_play=False,
+                    can_expand=True,
+                ),
+            )
+
+        if host.api.supported(channel, "autotrack_stream"):
+            children.append(
+                BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier=f"RES|{config_entry_id}|{channel}|autotrack_sub",
+                    media_class=MediaClass.CHANNEL,
+                    media_content_type=MediaType.PLAYLIST,
+                    title="Low resolution autotrack lens",
+                    can_play=False,
+                    can_expand=True,
+                ),
+            )
+            if main_enc != "h265":
+                children.append(
+                    BrowseMediaSource(
+                        domain=DOMAIN,
+                        identifier=f"RES|{config_entry_id}|{channel}|autotrack_main",
+                        media_class=MediaClass.CHANNEL,
+                        media_content_type=MediaType.PLAYLIST,
+                        title="High resolution autotrack lens",
+                        can_play=False,
+                        can_expand=True,
+                    ),
+                )
+
+        if len(children) == 1:
+            return await self._async_generate_camera_days(
+                config_entry_id, channel, "sub"
+            )
 
         return BrowseMediaSource(
             domain=DOMAIN,
