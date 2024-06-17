@@ -7,8 +7,9 @@ from freezegun.api import FrozenDateTimeFactory
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
+from . import setup_integration
+
 from tests.common import async_fire_time_changed
-from tests.components.radarr import setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
