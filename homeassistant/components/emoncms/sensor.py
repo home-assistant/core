@@ -29,7 +29,6 @@ from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -210,7 +209,6 @@ class EmonCmsSensor(SensorEntity):
         elif elem["value"] is not None:
             self._attr_native_value = round(float(elem["value"]), DECIMALS)
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Get the latest data and updates the state."""
         elem = await self._emoncms_client.async_get_feed_fields(self._feed_id)
