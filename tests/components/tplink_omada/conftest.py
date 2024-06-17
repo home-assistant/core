@@ -77,7 +77,7 @@ def mock_omada_site_client() -> Generator[AsyncMock]:
     site_client.get_switch_ports = AsyncMock(return_value=switch1_ports)
 
     async def async_empty() -> AsyncIterable:
-        for c in []:
+        for c in ():
             yield c
 
     site_client.get_known_clients.return_value = async_empty()
