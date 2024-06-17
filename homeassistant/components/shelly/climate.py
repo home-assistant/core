@@ -470,8 +470,8 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
             self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
         self._humidity_key: str | None = None
         # Check if there is a corresponding humidity key for the thermostat ID
-        if f"humidity:{id_}" in self.coordinator.device.status:
-            self._humidity_key = f"humidity:{id_}"
+        if (humidity_key := f"humidity:{id_}") in self.coordinator.device.status:
+            self._humidity_key = humidity_key
 
     @property
     def target_temperature(self) -> float | None:
