@@ -472,42 +472,31 @@ _PRIVACY_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
 }
 
 
-class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
+class ProtectBaseSwitch(BaseProtectEntity, SwitchEntity):
+    """Base class for UniFi Protect Switch."""
+
+    entity_description: ProtectSwitchEntityDescription
+    _state_attrs = ("_attr_available", "_attr_is_on")
+
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
+        self._attr_is_on = self.entity_description.get_ufp_value(self.device) is True
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the device on."""
+        await self.entity_description.ufp_set(self.device, True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the device off."""
+        await self.entity_description.ufp_set(self.device, False)
+
+
+class ProtectSwitch(ProtectBaseSwitch, ProtectDeviceEntity):
     """A UniFi Protect Switch."""
 
-    entity_description: ProtectSwitchEntityDescription
-    _state_attrs = ("_attr_available", "_attr_is_on")
 
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        super()._async_update_device_from_protect(device)
-        self._attr_is_on = self.entity_description.get_ufp_value(self.device) is True
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the device on."""
-        await self.entity_description.ufp_set(self.device, True)
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the device off."""
-        await self.entity_description.ufp_set(self.device, False)
-
-
-class ProtectNVRSwitch(ProtectNVREntity, SwitchEntity):
+class ProtectNVRSwitch(ProtectBaseSwitch, ProtectNVREntity):
     """A UniFi Protect NVR Switch."""
-
-    entity_description: ProtectSwitchEntityDescription
-    _state_attrs = ("_attr_available", "_attr_is_on")
-
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        super()._async_update_device_from_protect(device)
-        self._attr_is_on = self.entity_description.get_ufp_value(self.device) is True
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the device on."""
-        await self.entity_description.ufp_set(self.device, True)
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the device off."""
-        await self.entity_description.ufp_set(self.device, False)
 
 
 class ProtectPrivacyModeSwitch(RestoreEntity, ProtectSwitch):

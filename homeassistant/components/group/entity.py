@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-import asyncio
 from collections.abc import Callable, Collection, Mapping
 import logging
 from typing import Any
@@ -261,12 +260,6 @@ class Group(Entity):
     def assumed_state(self) -> bool:
         """Test if any member has an assumed state."""
         return self._assumed_state
-
-    def update_tracked_entity_ids(self, entity_ids: Collection[str] | None) -> None:
-        """Update the member entity IDs."""
-        asyncio.run_coroutine_threadsafe(
-            self.async_update_tracked_entity_ids(entity_ids), self.hass.loop
-        ).result()
 
     async def async_update_tracked_entity_ids(
         self, entity_ids: Collection[str] | None

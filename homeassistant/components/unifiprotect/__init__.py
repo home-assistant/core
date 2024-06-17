@@ -39,7 +39,7 @@ from .const import (
 from .data import ProtectData, UFPConfigEntry
 from .discovery import async_start_discovery
 from .migrate import async_migrate_data
-from .services import async_cleanup_services, async_setup_services
+from .services import async_setup_services
 from .utils import (
     _async_unifi_mac_from_hass,
     async_create_api_client,
@@ -61,6 +61,7 @@ EARLY_ACCESS_URL = (
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the UniFi Protect."""
     # Only start discovery once regardless of how many entries they have
+    async_setup_services(hass)
     async_start_discovery(hass)
     return True
 
@@ -174,7 +175,6 @@ async def _async_setup_entry(
         raise ConfigEntryNotReady
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    async_setup_services(hass)
     hass.http.register_view(ThumbnailProxyView(hass))
     hass.http.register_view(VideoProxyView(hass))
 
@@ -186,13 +186,9 @@ async def _async_options_updated(hass: HomeAssistant, entry: UFPConfigEntry) -> 
 
 async def async_unload_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     """Unload UniFi Protect config entry."""
-
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        data = entry.runtime_data
-        await data.async_stop()
-        async_cleanup_services(hass)
-
-    return bool(unload_ok)
+        await entry.runtime_data.async_stop()
+    return unload_ok
 
 
 async def async_remove_config_entry_device(
