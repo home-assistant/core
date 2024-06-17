@@ -7,6 +7,7 @@ from unittest.mock import patch
 import urllib
 import urllib.error
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.feedreader.const import DOMAIN
@@ -274,7 +275,9 @@ async def test_feed_parsing_failed(
     assert not events
 
 
-async def test_feed_errors(hass: HomeAssistant, feed_one_event) -> None:
+async def test_feed_errors(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, feed_one_event
+) -> None:
     """Test feed errors."""
     entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG_DEFAULT)
     entry.add_to_hass(hass)
@@ -290,8 +293,8 @@ async def test_feed_errors(hass: HomeAssistant, feed_one_event) -> None:
 
         # raise URL error
         feedreader.side_effect = urllib.error.URLError("Test")
-        future = dt_util.utcnow() + timedelta(hours=1, seconds=1)
-        async_fire_time_changed(hass, future)
+        freezer.tick(timedelta(hours=1, seconds=1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
         assert not coordinator.last_update_success
         assert isinstance(coordinator.last_exception, UpdateFailed)
@@ -301,8 +304,8 @@ async def test_feed_errors(hass: HomeAssistant, feed_one_event) -> None:
             "homeassistant.components.feedreader.coordinator.feedparser.parse",
             return_value=None,
         ):
-            future = dt_util.utcnow() + timedelta(hours=2, seconds=2)
-            async_fire_time_changed(hass, future)
+            freezer.tick(timedelta(hours=1, seconds=1))
+            async_fire_time_changed(hass)
             await hass.async_block_till_done(wait_background_tasks=True)
             assert not coordinator.last_update_success
             assert isinstance(coordinator.last_exception, UpdateFailed)
@@ -310,7 +313,7 @@ async def test_feed_errors(hass: HomeAssistant, feed_one_event) -> None:
         # success
         feedreader.side_effect = None
         feedreader.return_value = feed_one_event
-        future = dt_util.utcnow() + timedelta(hours=3, seconds=3)
-        async_fire_time_changed(hass, future)
+        freezer.tick(timedelta(hours=1, seconds=1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
         assert coordinator.last_update_success
