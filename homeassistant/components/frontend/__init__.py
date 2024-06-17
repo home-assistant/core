@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from functools import lru_cache
 import logging
 import os
@@ -33,6 +33,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration, bind_hass
+from homeassistant.util.hass_dict import HassKey
 
 from .storage import async_setup_frontend_storage
 
@@ -55,6 +56,10 @@ DATA_PANELS = "frontend_panels"
 DATA_JS_VERSION = "frontend_js_version"
 DATA_EXTRA_MODULE_URL = "frontend_extra_module_url"
 DATA_EXTRA_JS_URL_ES5 = "frontend_extra_js_url_es5"
+
+DATA_WS_SUBSCRIBERS: HassKey[set[tuple[websocket_api.ActiveConnection, int]]] = HassKey(
+    "frontend_ws_subscribers"
+)
 
 THEMES_STORAGE_KEY = f"{DOMAIN}_theme"
 THEMES_STORAGE_VERSION = 1
@@ -204,17 +209,26 @@ class UrlManager:
     on hass.data
     """
 
-    def __init__(self, urls: list[str]) -> None:
+    def __init__(
+        self,
+        on_change: Callable[[str, str, str], None],
+        resource_type: str,
+        urls: list[str],
+    ) -> None:
         """Init the url manager."""
+        self._on_change = on_change
+        self._resource_type = resource_type
         self.urls = frozenset(urls)
 
     def add(self, url: str) -> None:
         """Add a url to the set."""
         self.urls = frozenset([*self.urls, url])
+        self._on_change("added", self._resource_type, url)
 
     def remove(self, url: str) -> None:
         """Remove a url from the set."""
         self.urls = self.urls - {url}
+        self._on_change("removed", self._resource_type, url)
 
 
 class Panel:
@@ -363,6 +377,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_get_themes)
     websocket_api.async_register_command(hass, websocket_get_translations)
     websocket_api.async_register_command(hass, websocket_get_version)
+    websocket_api.async_register_command(hass, websocket_subscribe_extra_js)
     hass.http.register_view(ManifestJSONView())
 
     conf = config.get(DOMAIN, {})
@@ -415,8 +430,27 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         sidebar_icon="hass:hammer",
     )
 
-    hass.data[DATA_EXTRA_MODULE_URL] = UrlManager(conf.get(CONF_EXTRA_MODULE_URL, []))
-    hass.data[DATA_EXTRA_JS_URL_ES5] = UrlManager(conf.get(CONF_EXTRA_JS_URL_ES5, []))
+    @callback
+    def async_change_listener(
+        change_type: str,
+        resource_type: str,
+        url: str,
+    ) -> None:
+        subscribers = hass.data[DATA_WS_SUBSCRIBERS]
+        json_msg = {
+            "change_type": change_type,
+            "item": {"type": resource_type, "url": url},
+        }
+        for connection, msg_id in subscribers:
+            connection.send_message(websocket_api.event_message(msg_id, json_msg))
+
+    hass.data[DATA_EXTRA_MODULE_URL] = UrlManager(
+        async_change_listener, "module", conf.get(CONF_EXTRA_MODULE_URL, [])
+    )
+    hass.data[DATA_EXTRA_JS_URL_ES5] = UrlManager(
+        async_change_listener, "es5", conf.get(CONF_EXTRA_JS_URL_ES5, [])
+    )
+    hass.data[DATA_WS_SUBSCRIBERS] = set()
 
     await _async_setup_themes(hass, conf.get(CONF_THEMES))
 
@@ -776,6 +810,26 @@ async def websocket_get_version(
         connection.send_error(msg["id"], "unknown_version", "Version not found")
     else:
         connection.send_result(msg["id"], {"version": frontend})
+
+
+@callback
+@websocket_api.websocket_command({"type": "frontend/subscribe_extra_js"})
+def websocket_subscribe_extra_js(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Subscribe to URL manager updates."""
+
+    subscribers: set[tuple[websocket_api.ActiveConnection, int]] = hass.data[
+        DATA_WS_SUBSCRIBERS
+    ]
+    subscribers.add((connection, msg["id"]))
+
+    @callback
+    def cancel_subscription() -> None:
+        subscribers.remove((connection, msg["id"]))
+
+    connection.subscriptions[msg["id"]] = cancel_subscription
+    connection.send_message(websocket_api.result_message(msg["id"]))
 
 
 class PanelRespons(TypedDict):
