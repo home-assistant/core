@@ -48,3 +48,14 @@ class AutomowerControlEntity(AutomowerBaseEntity):
     def available(self) -> bool:
         """Return True if the device is available."""
         return super().available and self.mower_attributes.metadata.connected
+
+
+class AutomowerErrorConfirmEntity(AutomowerControlEntity):
+    """AutomowerErrorConfirmEntity, only available when error is confirmable."""
+
+    @property
+    def available(self) -> bool:
+        """Return True if the device and entity is available."""
+        if self.mower_attributes.mower.is_error_confirmable is None:
+            return False
+        return super().available and self.mower_attributes.mower.is_error_confirmable
