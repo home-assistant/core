@@ -47,9 +47,11 @@ def create_motion_sensor_service(accessory):
     cur_state.value = 0
 
 
-async def test_unload_on_stop(hass: HomeAssistant) -> None:
+async def test_unload_on_stop(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test async_unload is called on stop."""
-    await setup_test_component(hass, create_motion_sensor_service)
+    await setup_test_component(hass, get_next_aid(), create_motion_sensor_service)
     with patch(
         "homeassistant.components.homekit_controller.HKDevice.async_unload"
     ) as async_unlock_mock:
@@ -59,9 +61,13 @@ async def test_unload_on_stop(hass: HomeAssistant) -> None:
     assert async_unlock_mock.called
 
 
-async def test_async_remove_entry(hass: HomeAssistant) -> None:
+async def test_async_remove_entry(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test unpairing a component."""
-    helper = await setup_test_component(hass, create_motion_sensor_service)
+    helper = await setup_test_component(
+        hass, get_next_aid(), create_motion_sensor_service
+    )
     controller = helper.pairing.controller
 
     hkid = "00:00:00:00:00:00"
@@ -89,10 +95,13 @@ async def test_device_remove_devices(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     hass_ws_client: WebSocketGenerator,
+    get_next_aid: Callable[[], int],
 ) -> None:
     """Test we can only remove a device that no longer exists."""
     assert await async_setup_component(hass, "config", {})
-    helper: Helper = await setup_test_component(hass, create_alive_service)
+    helper: Helper = await setup_test_component(
+        hass, get_next_aid(), create_alive_service
+    )
     config_entry = helper.config_entry
     entry_id = config_entry.entry_id
 

@@ -1,12 +1,14 @@
 """Basic checks for HomeKit button."""
 
+from collections.abc import Callable
+
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import Helper, get_next_aid, setup_test_component
+from .common import Helper, setup_test_component
 
 
 def create_switch_with_setup_button(accessory):
@@ -39,9 +41,13 @@ def create_switch_with_ecobee_clear_hold_button(accessory):
     return service
 
 
-async def test_press_button(hass: HomeAssistant) -> None:
+async def test_press_button(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test a switch service that has a button characteristic is correctly handled."""
-    helper = await setup_test_component(hass, create_switch_with_setup_button)
+    helper = await setup_test_component(
+        hass, get_next_aid(), create_switch_with_setup_button
+    )
 
     # Helper will be for the primary entity, which is the outlet. Make a helper for the button.
     button = Helper(
@@ -66,10 +72,12 @@ async def test_press_button(hass: HomeAssistant) -> None:
     )
 
 
-async def test_ecobee_clear_hold_press_button(hass: HomeAssistant) -> None:
+async def test_ecobee_clear_hold_press_button(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test ecobee clear hold button characteristic is correctly handled."""
     helper = await setup_test_component(
-        hass, create_switch_with_ecobee_clear_hold_button
+        hass, get_next_aid(), create_switch_with_ecobee_clear_hold_button
     )
 
     # Helper will be for the primary entity, which is the outlet. Make a helper for the button.
@@ -96,7 +104,9 @@ async def test_ecobee_clear_hold_press_button(hass: HomeAssistant) -> None:
 
 
 async def test_migrate_unique_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    get_next_aid: Callable[[], int],
 ) -> None:
     """Test a we can migrate a button unique id."""
     aid = get_next_aid()
@@ -105,7 +115,7 @@ async def test_migrate_unique_id(
         "homekit_controller",
         f"homekit-0001-aid:{aid}-sid:1-cid:2",
     )
-    await setup_test_component(hass, create_switch_with_ecobee_clear_hold_button)
+    await setup_test_component(hass, aid, create_switch_with_ecobee_clear_hold_button)
     assert (
         entity_registry.async_get(button_entry.entity_id).unique_id
         == f"00:00:00:00:00:00_{aid}_1_2"

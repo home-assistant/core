@@ -1,5 +1,7 @@
 """Test homekit_controller stateless triggers."""
 
+from collections.abc import Callable
+
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 import pytest
@@ -88,9 +90,10 @@ async def test_enumerate_remote(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    get_next_aid: Callable[[], int],
 ) -> None:
     """Test that remote is correctly enumerated."""
-    await setup_test_component(hass, create_remote)
+    await setup_test_component(hass, get_next_aid(), create_remote)
 
     bat_sensor = entity_registry.async_get("sensor.testdevice_battery")
     identify_button = entity_registry.async_get("button.testdevice_identify")
@@ -139,9 +142,10 @@ async def test_enumerate_button(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    get_next_aid: Callable[[], int],
 ) -> None:
     """Test that a button is correctly enumerated."""
-    await setup_test_component(hass, create_button)
+    await setup_test_component(hass, get_next_aid(), create_button)
 
     bat_sensor = entity_registry.async_get("sensor.testdevice_battery")
     identify_button = entity_registry.async_get("button.testdevice_identify")
@@ -189,9 +193,10 @@ async def test_enumerate_doorbell(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    get_next_aid: Callable[[], int],
 ) -> None:
     """Test that a button is correctly enumerated."""
-    await setup_test_component(hass, create_doorbell)
+    await setup_test_component(hass, get_next_aid(), create_doorbell)
 
     bat_sensor = entity_registry.async_get("sensor.testdevice_battery")
     identify_button = entity_registry.async_get("button.testdevice_identify")
@@ -239,10 +244,11 @@ async def test_handle_events(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    get_next_aid: Callable[[], int],
     calls: list[ServiceCall],
 ) -> None:
     """Test that events are handled."""
-    helper = await setup_test_component(hass, create_remote)
+    helper = await setup_test_component(hass, get_next_aid(), create_remote)
 
     entry = entity_registry.async_get("sensor.testdevice_battery")
 
@@ -360,9 +366,10 @@ async def test_handle_events_late_setup(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls: list[ServiceCall],
+    get_next_aid: Callable[[], int],
 ) -> None:
     """Test that events are handled when setup happens after startup."""
-    helper = await setup_test_component(hass, create_remote)
+    helper = await setup_test_component(hass, get_next_aid(), create_remote)
 
     entry = entity_registry.async_get("sensor.testdevice_battery")
 
