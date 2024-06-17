@@ -51,6 +51,14 @@ async def test_button_states_and_commands(
     values = mower_list_to_dictionary_dataclass(
         load_json_value_fixture("mower.json", DOMAIN)
     )
+    values[TEST_MOWER_ID].mower.is_error_confirmable = None
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
+
     values[TEST_MOWER_ID].mower.is_error_confirmable = True
     mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
@@ -58,6 +66,7 @@ async def test_button_states_and_commands(
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_UNKNOWN
+
     await hass.services.async_call(
         domain="button",
         service=SERVICE_PRESS,
@@ -68,7 +77,7 @@ async def test_button_states_and_commands(
     mocked_method.assert_called_once_with(TEST_MOWER_ID)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.state == "2024-02-29T11:08:00+00:00"
+    assert state.state == "2024-02-29T11:16:00+00:00"
     getattr(mock_automower_client.commands, "error_confirm").side_effect = ApiException(
         "Test error"
     )
