@@ -10,6 +10,7 @@ from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -46,13 +47,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "status": StatusDataUpdateCoordinator(hass, host_configuration, lidarr),
         "wanted": WantedDataUpdateCoordinator(hass, host_configuration, lidarr),
     }
-    # Temporary, until we add diagnostic entities
-    _version = None
     for coordinator in coordinators.values():
         await coordinator.async_config_entry_first_refresh()
-        if isinstance(coordinator, StatusDataUpdateCoordinator):
-            _version = coordinator.data
-        coordinator.system_version = _version
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        configuration_url=entry.data[CONF_URL],
+        entry_type=DeviceEntryType.SERVICE,
+        identifiers={(DOMAIN, entry.entry_id)},
+        manufacturer=DEFAULT_NAME,
+        sw_version=coordinators["status"].data,
+    )
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -82,10 +87,5 @@ class LidarrEntity(CoordinatorEntity[LidarrDataUpdateCoordinator[T]]):
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            configuration_url=coordinator.host_configuration.base_url,
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            manufacturer=DEFAULT_NAME,
-            name=coordinator.config_entry.title,
-            sw_version=coordinator.system_version,
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)}
         )
