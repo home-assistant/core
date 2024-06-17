@@ -537,19 +537,17 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
         self,
         hass: HomeAssistant,
         *,
-        create_list: bool = True,
         create_create: bool = True,
     ) -> None:
         """Set up the websocket commands."""
-        if create_list:
-            websocket_api.async_register_command(
-                hass,
-                f"{self.api_prefix}/list",
-                self.ws_list_item,
-                websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-                    {vol.Required("type"): f"{self.api_prefix}/list"}
-                ),
-            )
+        websocket_api.async_register_command(
+            hass,
+            f"{self.api_prefix}/list",
+            self.ws_list_item,
+            websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+                {vol.Required("type"): f"{self.api_prefix}/list"}
+            ),
+        )
 
         if create_create:
             websocket_api.async_register_command(
