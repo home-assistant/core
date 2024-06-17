@@ -9,7 +9,7 @@ from datetime import timedelta
 from functools import wraps
 from http import HTTPStatus
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar, cast
+from typing import Any, Concatenate, cast
 
 from aiowebostv import WebOsClient, WebOsTvPairError
 
@@ -79,11 +79,7 @@ async def async_setup_entry(
     async_add_entities([LgWebOSMediaPlayerEntity(entry, client)])
 
 
-_T = TypeVar("_T", bound="LgWebOSMediaPlayerEntity")
-_P = ParamSpec("_P")
-
-
-def cmd(
+def cmd[_T: LgWebOSMediaPlayerEntity, **_P](
     func: Callable[Concatenate[_T, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
     """Catch command exceptions."""
@@ -240,6 +236,20 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             manufacturer="LG",
             name=self._device_name,
         )
+
+        self._attr_assumed_state = True
+        if (
+            self._client.media_state is not None
+            and self._client.media_state.get("foregroundAppInfo") is not None
+        ):
+            self._attr_assumed_state = False
+            for entry in self._client.media_state.get("foregroundAppInfo"):
+                if entry.get("playState") == "playing":
+                    self._attr_state = MediaPlayerState.PLAYING
+                elif entry.get("playState") == "paused":
+                    self._attr_state = MediaPlayerState.PAUSED
+                elif entry.get("playState") == "unloaded":
+                    self._attr_state = MediaPlayerState.IDLE
 
         if self._client.system_info is not None or self.state != MediaPlayerState.OFF:
             maj_v = self._client.software_info.get("major_ver")

@@ -11,16 +11,14 @@ from yalexs.activity import SOURCE_PUBNUB, ActivityType, ActivityTypes
 from yalexs.lock import Lock, LockStatus
 from yalexs.util import get_latest_activity, update_lock_detail_from_activity
 
-from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntity, LockEntityFeature
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.dt as dt_util
 
-from . import AugustData
-from .const import DOMAIN
+from . import AugustConfigEntry, AugustData
 from .entity import AugustEntityMixin
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,11 +28,11 @@ LOCK_JAMMED_ERR = 531
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AugustConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up August locks."""
-    data: AugustData = hass.data[DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     async_add_entities(AugustLock(data, lock) for lock in data.locks)
 
 
@@ -48,6 +46,8 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
         super().__init__(data, device)
         self._lock_status = None
         self._attr_unique_id = f"{self._device_id:s}_lock"
+        if self._detail.unlatch_supported:
+            self._attr_supported_features = LockEntityFeature.OPEN
         self._update_from_data()
 
     async def async_lock(self, **kwargs: Any) -> None:
@@ -57,6 +57,14 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
             await self._data.async_lock_async(self._device_id, self._hyper_bridge)
             return
         await self._call_lock_operation(self._data.async_lock)
+
+    async def async_open(self, **kwargs: Any) -> None:
+        """Open/unlatch the device."""
+        assert self._data.activity_stream is not None
+        if self._data.activity_stream.pubnub.connected:
+            await self._data.async_unlatch_async(self._device_id, self._hyper_bridge)
+            return
+        await self._call_lock_operation(self._data.async_unlatch)
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""

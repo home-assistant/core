@@ -27,18 +27,21 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
+from .mock_data import PROP
+
 from tests.common import MockConfigEntry
-from tests.components.roborock.mock_data import PROP
 
 ENTITY_ID = "vacuum.roborock_s7_maxv"
 DEVICE_ID = "abc123"
 
 
 async def test_registry_entries(
-    hass: HomeAssistant, bypass_api_fixture, setup_entry: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    bypass_api_fixture,
+    setup_entry: MockConfigEntry,
 ) -> None:
     """Tests devices are registered in the entity registry."""
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get(ENTITY_ID)
     assert entry.unique_id == DEVICE_ID
 
@@ -82,7 +85,7 @@ async def test_commands(
 
     data = {ATTR_ENTITY_ID: ENTITY_ID, **(service_params or {})}
     with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_command"
+        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_command"
     ) as mock_send_command:
         await hass.services.async_call(
             Platform.VACUUM,
@@ -115,7 +118,7 @@ async def test_resume_cleaning(
     prop = copy.deepcopy(PROP)
     prop.status.in_cleaning = in_cleaning_int
     with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
+        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
         return_value=prop,
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -124,7 +127,7 @@ async def test_resume_cleaning(
 
     data = {ATTR_ENTITY_ID: ENTITY_ID}
     with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_command"
+        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_command"
     ) as mock_send_command:
         await hass.services.async_call(
             Platform.VACUUM,
@@ -145,7 +148,7 @@ async def test_failed_user_command(
     data = {ATTR_ENTITY_ID: ENTITY_ID, "command": "fake_command"}
     with (
         patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_command",
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_command",
             side_effect=RoborockException(),
         ),
         pytest.raises(HomeAssistantError, match="Error while calling fake_command"),

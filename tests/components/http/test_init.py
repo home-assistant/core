@@ -1,6 +1,7 @@
 """The tests for the Home Assistant HTTP component."""
 
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
 from http import HTTPStatus
 from ipaddress import ip_network
@@ -85,7 +86,9 @@ class TestView(http.HomeAssistantView):
 
 
 async def test_registering_view_while_running(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, unused_tcp_port_factory
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    unused_tcp_port_factory: Callable[[], int],
 ) -> None:
     """Test that we can register a view while the server is running."""
     await async_setup_component(
@@ -465,7 +468,9 @@ async def test_cors_defaults(hass: HomeAssistant) -> None:
 
 
 async def test_storing_config(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, unused_tcp_port_factory
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    unused_tcp_port_factory: Callable[[], int],
 ) -> None:
     """Test that we store last working config."""
     config = {

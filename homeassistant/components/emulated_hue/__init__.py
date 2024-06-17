@@ -136,8 +136,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
 
     # We misunderstood the startup signal. You're not allowed to change
     # anything during startup. Temp workaround.
-    # pylint: disable-next=protected-access
-    app._on_startup.freeze()
+    app._on_startup.freeze()  # noqa: SLF001
     await app.startup()
 
     DescriptionXmlView(config).register(hass, app, app.router)

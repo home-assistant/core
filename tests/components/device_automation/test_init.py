@@ -13,10 +13,10 @@ from homeassistant.components.device_automation import (
     InvalidDeviceAutomationConfig,
     toggle_entity,
 )
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound
@@ -328,23 +328,23 @@ async def test_websocket_get_action_capabilities(
     assert msg["success"]
     actions = msg["result"]
 
-    id = 2
+    msg_id = 2
     assert len(actions) == 3
     for action in actions:
         await client.send_json(
             {
-                "id": id,
+                "id": msg_id,
                 "type": "device_automation/action/capabilities",
                 "action": action,
             }
         )
         msg = await client.receive_json()
-        assert msg["id"] == id
+        assert msg["id"] == msg_id
         assert msg["type"] == TYPE_RESULT
         assert msg["success"]
         capabilities = msg["result"]
         assert capabilities == expected_capabilities[action["type"]]
-        id = id + 1
+        msg_id = msg_id + 1
 
 
 async def test_websocket_get_action_capabilities_unknown_domain(
@@ -487,23 +487,23 @@ async def test_websocket_get_condition_capabilities(
     assert msg["success"]
     conditions = msg["result"]
 
-    id = 2
+    msg_id = 2
     assert len(conditions) == 2
     for condition in conditions:
         await client.send_json(
             {
-                "id": id,
+                "id": msg_id,
                 "type": "device_automation/condition/capabilities",
                 "condition": condition,
             }
         )
         msg = await client.receive_json()
-        assert msg["id"] == id
+        assert msg["id"] == msg_id
         assert msg["type"] == TYPE_RESULT
         assert msg["success"]
         capabilities = msg["result"]
         assert capabilities == expected_capabilities
-        id = id + 1
+        msg_id = msg_id + 1
 
 
 async def test_websocket_get_condition_capabilities_unknown_domain(
@@ -775,23 +775,23 @@ async def test_websocket_get_trigger_capabilities(
     assert msg["success"]
     triggers = msg["result"]
 
-    id = 2
+    msg_id = 2
     assert len(triggers) == 3  # toggled, turned_on, turned_off
     for trigger in triggers:
         await client.send_json(
             {
-                "id": id,
+                "id": msg_id,
                 "type": "device_automation/trigger/capabilities",
                 "trigger": trigger,
             }
         )
         msg = await client.receive_json()
-        assert msg["id"] == id
+        assert msg["id"] == msg_id
         assert msg["type"] == TYPE_RESULT
         assert msg["success"]
         capabilities = msg["result"]
         assert capabilities == expected_capabilities
-        id = id + 1
+        msg_id = msg_id + 1
 
 
 async def test_websocket_get_trigger_capabilities_unknown_domain(
@@ -1385,14 +1385,14 @@ async def test_automation_with_bad_condition(
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
 async def test_automation_with_sub_condition(
     hass: HomeAssistant,
-    calls,
+    calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -1446,8 +1446,10 @@ async def test_automation_with_sub_condition(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "and {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(("platform", "event.event_type"))
+                            "some": (
+                                "and {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -1477,8 +1479,10 @@ async def test_automation_with_sub_condition(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "or {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(("platform", "event.event_type"))
+                            "some": (
+                                "or {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },

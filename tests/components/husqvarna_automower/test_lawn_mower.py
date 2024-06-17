@@ -38,11 +38,11 @@ async def test_lawn_mower_states(
     assert state is not None
     assert state.state == LawnMowerActivity.DOCKED
 
-    for activity, state, expected_state in [
+    for activity, state, expected_state in (
         ("UNKNOWN", "PAUSED", LawnMowerActivity.PAUSED),
         ("MOWING", "NOT_APPLICABLE", LawnMowerActivity.MOWING),
         ("NOT_APPLICABLE", "ERROR", LawnMowerActivity.ERROR),
-    ]:
+    ):
         values[TEST_MOWER_ID].mower.activity = activity
         values[TEST_MOWER_ID].mower.state = state
         mock_automower_client.get_status.return_value = values
@@ -70,19 +70,16 @@ async def test_lawn_mower_commands(
 ) -> None:
     """Test lawn_mower commands."""
     await setup_integration(hass, mock_config_entry)
-
-    getattr(mock_automower_client, aioautomower_command).side_effect = ApiException(
-        "Test error"
-    )
-
-    with pytest.raises(HomeAssistantError) as exc_info:
+    getattr(
+        mock_automower_client.commands, aioautomower_command
+    ).side_effect = ApiException("Test error")
+    with pytest.raises(
+        HomeAssistantError,
+        match="Command couldn't be sent to the command queue: Test error",
+    ):
         await hass.services.async_call(
             domain="lawn_mower",
             service=service,
             service_data={"entity_id": "lawn_mower.test_mower_1"},
             blocking=True,
         )
-    assert (
-        str(exc_info.value)
-        == "Command couldn't be sent to the command queue: Test error"
-    )

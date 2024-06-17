@@ -17,7 +17,6 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     CodeFormat,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -33,12 +32,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import ElkAttachedEntity, ElkEntity, create_elk_entities
+from . import ElkAttachedEntity, ElkEntity, ElkM1ConfigEntry, create_elk_entities
 from .const import (
     ATTR_CHANGED_BY_ID,
     ATTR_CHANGED_BY_KEYPAD,
     ATTR_CHANGED_BY_TIME,
-    DOMAIN,
     ELK_USER_CODE_SERVICE_SCHEMA,
 )
 from .models import ELKM1Data
@@ -63,12 +61,11 @@ SERVICE_ALARM_CLEAR_BYPASS = "alarm_clear_bypass"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ElkM1ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the ElkM1 alarm platform."""
-
-    elk_data: ELKM1Data = hass.data[DOMAIN][config_entry.entry_id]
+    elk_data = config_entry.runtime_data
     elk = elk_data.elk
     entities: list[ElkEntity] = []
     create_elk_entities(elk_data, elk.areas, "area", ElkArea, entities)

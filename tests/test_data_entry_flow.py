@@ -47,7 +47,9 @@ def manager():
             return result
 
     mgr = FlowManager(None)
+    # pylint: disable-next=attribute-defined-outside-init
     mgr.mock_created_entries = entries
+    # pylint: disable-next=attribute-defined-outside-init
     mgr.mock_reg_handler = handlers.register
     return mgr
 
@@ -258,7 +260,7 @@ async def test_finish_callback_change_result_type(hass: HomeAssistant) -> None:
             )
 
     class FlowManager(data_entry_flow.FlowManager):
-        async def async_create_flow(self, handler_name, *, context, data):
+        async def async_create_flow(self, handler_key, *, context, data):
             """Create a test flow."""
             return TestFlow()
 
@@ -460,6 +462,7 @@ async def test_show_progress_error(hass: HomeAssistant, manager) -> None:
 
         async def async_step_init(self, user_input=None):
             async def long_running_task() -> None:
+                await asyncio.sleep(0)
                 raise TypeError
 
             if not self.progress_task:
@@ -518,7 +521,7 @@ async def test_show_progress_hidden_from_frontend(hass: HomeAssistant, manager) 
             nonlocal progress_task
 
             async def long_running_job() -> None:
-                return
+                await asyncio.sleep(0)
 
             if not progress_task:
                 progress_task = hass.async_create_task(long_running_job())
@@ -553,7 +556,9 @@ async def test_show_progress_hidden_from_frontend(hass: HomeAssistant, manager) 
     assert async_show_progress_done_called
 
 
-async def test_show_progress_legacy(hass: HomeAssistant, manager, caplog) -> None:
+async def test_show_progress_legacy(
+    hass: HomeAssistant, manager, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test show progress logic.
 
     This tests the deprecated version where the config flow is responsible for

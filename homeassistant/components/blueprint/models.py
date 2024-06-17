@@ -78,7 +78,7 @@ class Blueprint:
 
         self.domain = data_domain
 
-        missing = yaml.extract_inputs(data) - set(data[CONF_BLUEPRINT][CONF_INPUT])
+        missing = yaml.extract_inputs(data) - set(self.inputs)
 
         if missing:
             raise InvalidBlueprint(
@@ -95,8 +95,15 @@ class Blueprint:
 
     @property
     def inputs(self) -> dict[str, Any]:
-        """Return blueprint inputs."""
-        return self.data[CONF_BLUEPRINT][CONF_INPUT]  # type: ignore[no-any-return]
+        """Return flattened blueprint inputs."""
+        inputs = {}
+        for key, value in self.data[CONF_BLUEPRINT][CONF_INPUT].items():
+            if value and CONF_INPUT in value:
+                for key, value in value[CONF_INPUT].items():
+                    inputs[key] = value
+            else:
+                inputs[key] = value
+        return inputs
 
     @property
     def metadata(self) -> dict[str, Any]:

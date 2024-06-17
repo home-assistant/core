@@ -18,7 +18,6 @@ from homeassistant.components.weather import (
     SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -28,32 +27,24 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    ATTRIBUTION,
-    CONDITIONS_MAP,
-    DOMAIN,
-    ENTRY_NAME,
-    ENTRY_WEATHER_COORDINATOR,
-)
+from . import AemetConfigEntry
+from .const import ATTRIBUTION, CONDITIONS_MAP
 from .coordinator import WeatherUpdateCoordinator
 from .entity import AemetEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AemetConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AEMET OpenData weather entity based on a config entry."""
-    domain_data = hass.data[DOMAIN][config_entry.entry_id]
-    weather_coordinator = domain_data[ENTRY_WEATHER_COORDINATOR]
+    domain_data = config_entry.runtime_data
+    name = domain_data.name
+    weather_coordinator = domain_data.coordinator
 
     async_add_entities(
-        [
-            AemetWeather(
-                domain_data[ENTRY_NAME], config_entry.unique_id, weather_coordinator
-            )
-        ],
+        [AemetWeather(name, config_entry.unique_id, weather_coordinator)],
         False,
     )
 

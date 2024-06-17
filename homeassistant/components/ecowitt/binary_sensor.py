@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -22,7 +23,9 @@ ECOWITT_BINARYSENSORS_MAPPING: Final = {
         key="LEAK", device_class=BinarySensorDeviceClass.MOISTURE
     ),
     EcoWittSensorTypes.BATTERY_BINARY: BinarySensorEntityDescription(
-        key="BATTERY", device_class=BinarySensorDeviceClass.BATTERY
+        key="BATTERY",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
 

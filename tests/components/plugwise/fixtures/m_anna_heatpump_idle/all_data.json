@@ -25,7 +25,7 @@
         "dhw_state": false,
         "flame_state": false,
         "heating_state": false,
-        "slave_boiler_state": false
+        "secondary_boiler_state": false
       },
       "dev_class": "heater_central",
       "location": "a57efe5f145f498c9be62a9b63626fbf",

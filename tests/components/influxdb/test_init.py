@@ -3,9 +3,11 @@
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus
+import logging
 from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components import influxdb
 from homeassistant.components.influxdb.const import DEFAULT_BUCKET
@@ -50,7 +52,9 @@ def mock_batch_timeout(hass, monkeypatch):
 
 
 @pytest.fixture(name="mock_client")
-def mock_client_fixture(request):
+def mock_client_fixture(
+    request: pytest.FixtureRequest,
+) -> Generator[MagicMock]:
     """Patch the InfluxDBClient object with mock for version under test."""
     if request.param == influxdb.API_VERSION_2:
         client_target = f"{INFLUX_CLIENT_PATH}V2"
@@ -62,7 +66,7 @@ def mock_client_fixture(request):
 
 
 @pytest.fixture(name="get_mock_call")
-def get_mock_call_fixture(request):
+def get_mock_call_fixture(request: pytest.FixtureRequest):
     """Get version specific lambda to make write API call mock."""
 
     def v2_call(body, precision):
@@ -1574,10 +1578,23 @@ async def test_invalid_inputs_error(
     write_api = get_write_api(mock_client)
     write_api.side_effect = test_exception
 
-    with patch(f"{INFLUX_PATH}.time.sleep") as sleep:
+    log_emit_done = hass.loop.create_future()
+
+    original_emit = caplog.handler.emit
+
+    def wait_for_emit(record: logging.LogRecord) -> None:
+        original_emit(record)
+        if record.levelname == "ERROR":
+            hass.loop.call_soon_threadsafe(log_emit_done.set_result, None)
+
+    with (
+        patch(f"{INFLUX_PATH}.time.sleep") as sleep,
+        patch.object(caplog.handler, "emit", wait_for_emit),
+    ):
         hass.states.async_set("fake.something", 1)
         await hass.async_block_till_done()
         await async_wait_for_queue_to_process(hass)
+        await log_emit_done
         await hass.async_block_till_done()
 
         write_api.assert_called_once()

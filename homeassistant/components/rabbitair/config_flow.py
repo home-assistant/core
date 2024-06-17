@@ -73,7 +73,7 @@ class RabbitAirConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_host"
             except TimeoutConnect:
                 errors["base"] = "timeout_connect"
-            except Exception as err:  # pylint: disable=broad-except
+            except Exception as err:  # noqa: BLE001
                 _LOGGER.debug("Unexpected exception: %s", err)
                 errors["base"] = "unknown"
             else:

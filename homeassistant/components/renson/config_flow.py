@@ -55,7 +55,7 @@ class RensonConfigFlow(ConfigFlow, domain=DOMAIN):
             info = await self.validate_input(self.hass, user_input)
         except CannotConnect:
             errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:

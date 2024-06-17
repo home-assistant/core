@@ -89,7 +89,7 @@ async def get_integration_info(
             data = await registration.info_callback(hass)
     except TimeoutError:
         data = {"error": {"type": "failed", "error": "timeout"}}
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Error fetching info")
         data = {"error": {"type": "failed", "error": "unknown"}}
 
@@ -127,6 +127,7 @@ async def handle_info(
                 for registration in registrations.values()
             )
         ),
+        strict=False,
     ):
         for key, value in domain_data["info"].items():
             if asyncio.iscoroutine(value):
