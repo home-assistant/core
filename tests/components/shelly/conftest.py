@@ -254,6 +254,7 @@ MOCK_STATUS_RPC = {
         "current_C": 12.3,
         "output": True,
     },
+    "humidity:0": {"rh": 44.4},
     "sys": {
         "available_updates": {
             "beta": {"version": "some_beta_version"},
