@@ -110,7 +110,7 @@ async def test_options(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None
 
     # check that it is setup
     await hass.async_block_till_done()
-    assert hass.states.get("humidifier.my_thermostat") == snapshot(name="with_away")
+    assert hass.states.get("climate.my_thermostat") == snapshot(name="with_away")
 
     # remove away preset
     result = await hass.config_entries.options.async_init(config_entry.entry_id)

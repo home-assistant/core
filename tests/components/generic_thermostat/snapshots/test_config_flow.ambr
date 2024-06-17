@@ -86,7 +86,33 @@
   })
 # ---
 # name: test_options[with_away]
-  None
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 15.0,
+      'friendly_name': 'My thermostat',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'none',
+        'away',
+      ]),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'target_temp_step': 0.1,
+      'temperature': 15.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.my_thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
 # ---
 # name: test_options[without_away]
   StateSnapshot({
