@@ -40,21 +40,24 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         _LOGGER.debug("Count of BLE scanners in HA bt: %i", count_scanners)
 
         if count_scanners < 1:
-            raise ScannerNotAvaliable
+            raise ScannerNotAvailable
         raise NotFound
 
-    light = HueBleLight(ble_device)
+    try:
+        light = HueBleLight(ble_device)
 
-    await light.connect()
-    if not light.authenticated:
-        raise InvalidAuth
+        await light.connect()
+        if not light.authenticated:
+            raise InvalidAuth
 
-    if not light.connected:
-        raise CannotConnect
+        if not light.connected:
+            raise CannotConnect
 
-    state_changed, errors = await light.poll_state()
-    if not len(errors) == 0:
-        raise CannotConnect
+        state_changed, errors = await light.poll_state()
+        if not len(errors) == 0:
+            raise CannotConnect
+    finally:
+        await light.disconnect()
 
 
 class HueBleConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -89,7 +92,7 @@ class HueBleConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except ScannerNotAvaliable:
+        except ScannerNotAvailable:
             errors["base"] = "no_scanners"
         except NotFound:
             errors["base"] = "not_found"
@@ -130,20 +133,39 @@ class HueBleConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm a single device."""
 
         assert self._discovery_info is not None
+        errors: dict[str, str] = {}
         if user_input is not None:
             user_input = {
                 CONF_NAME: self._discovery_info.name,
                 CONF_MAC: self._discovery_info.address,
             }
-            unique_id = dr.format_mac(user_input[CONF_MAC])
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
-            await validate_input(self.hass, user_input)
-            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+
+            try:
+                unique_id = dr.format_mac(user_input[CONF_MAC])
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
+                await validate_input(self.hass, user_input)
+
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except ScannerNotAvailable:
+                errors["base"] = "no_scanners"
+            except NotFound:
+                errors["base"] = "not_found"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME], data=user_input
+                )
 
         return self.async_show_form(
             step_id="confirm",
             data_schema=vol.Schema({}),
+            errors=errors,
             description_placeholders={"name": self._discovery_info.name},
         )
 
@@ -156,7 +178,7 @@ class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
 
 
-class ScannerNotAvaliable(HomeAssistantError):
+class ScannerNotAvailable(HomeAssistantError):
     """Error to indicate no bluetooth scanners are available."""
 
 
