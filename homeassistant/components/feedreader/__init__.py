@@ -44,10 +44,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Feedreader component."""
-    storage = StoredData(hass)
-    await storage.async_setup()
-    hass.data[MY_KEY] = storage
-
     if DOMAIN in config:
         for url in config[DOMAIN][CONF_URLS]:
             hass.async_create_task(
@@ -82,7 +78,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) -> bool:
     """Set up Feedreader from a config entry."""
-    storage = hass.data[MY_KEY]
+    storage = hass.data.setdefault(MY_KEY, StoredData(hass))
+    if not storage.is_initialized:
+        await storage.async_setup()
 
     coordinator = FeedReaderCoordinator(
         hass,
@@ -106,6 +104,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) -
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    entries = hass.config_entries.async_entries(
+        DOMAIN, include_disabled=False, include_ignore=False
+    )
+    # if this is the last entry, remove the storage
+    if len(entries) == 1:
+        hass.data.pop(MY_KEY)
     return True
 
 

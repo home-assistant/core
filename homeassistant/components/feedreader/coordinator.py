@@ -175,16 +175,17 @@ class StoredData:
         self._data: dict[str, struct_time] = {}
         self.hass = hass
         self._store: Store[dict[str, str]] = Store(hass, STORAGE_VERSION, DOMAIN)
+        self.is_initialized = False
 
     async def async_setup(self) -> None:
         """Set up storage."""
-        if (store_data := await self._store.async_load()) is None:
-            return
-        # Make sure that dst is set to 0, by using gmtime() on the timestamp.
-        self._data = {
-            feed_id: gmtime(datetime.fromisoformat(timestamp_string).timestamp())
-            for feed_id, timestamp_string in store_data.items()
-        }
+        if (store_data := await self._store.async_load()) is not None:
+            # Make sure that dst is set to 0, by using gmtime() on the timestamp.
+            self._data = {
+                feed_id: gmtime(datetime.fromisoformat(timestamp_string).timestamp())
+                for feed_id, timestamp_string in store_data.items()
+            }
+        self.is_initialized = True
 
     def get_timestamp(self, feed_id: str) -> struct_time | None:
         """Return stored timestamp for given feed id."""
