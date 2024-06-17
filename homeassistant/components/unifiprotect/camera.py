@@ -26,12 +26,11 @@ from .const import (
     ATTR_FPS,
     ATTR_HEIGHT,
     ATTR_WIDTH,
-    DISPATCH_CHANNELS,
     DOMAIN,
 )
 from .data import ProtectData, UFPConfigEntry
 from .entity import ProtectDeviceEntity
-from .utils import async_dispatch_id as _ufpd, get_camera_base_name
+from .utils import get_camera_base_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -153,7 +152,7 @@ async def async_setup_entry(
 
     data.async_subscribe_adopt(_add_new_device)
     entry.async_on_unload(
-        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_CHANNELS), _add_new_device)
+        async_dispatcher_connect(hass, data.channels_signal, _add_new_device)
     )
     async_add_entities(_async_camera_entities(hass, entry, data))
 
