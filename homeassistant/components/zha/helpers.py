@@ -41,6 +41,7 @@ from zha.application.const import (
     RadioType,
 )
 from zha.application.gateway import (
+    ConnectionLostEvent,
     DeviceFullInitEvent,
     DeviceJoinedEvent,
     DeviceLeftEvent,
@@ -418,6 +419,7 @@ class ZHAGatewayProxy(EventBase):
         self._log_relay_handler: LogRelayHandler = LogRelayHandler(hass, self)
         self._unsubs: list[Callable[[], None]] = []
         self._unsubs.append(self.gateway.on_all_events(self._handle_event_protocol))
+        self._reload_task: asyncio.Task | None = None
 
     @property
     def ha_entity_refs(self) -> collections.defaultdict[EUI64, list[EntityReference]]:
@@ -451,6 +453,21 @@ class ZHAGatewayProxy(EventBase):
             self._create_entity_metadata(group_proxy)
 
         await self.gateway.async_initialize_devices_and_entities()
+
+    @callback
+    def handle_connection_lost(self, event: ConnectionLostEvent) -> None:
+        """Handle a connection lost event."""
+
+        _LOGGER.debug("Connection to the radio was lost: %r", event)
+
+        # Ensure we do not queue up multiple resets
+        if self._reload_task is not None:
+            _LOGGER.debug("Ignoring reset, one is already running")
+            return
+
+        self._reload_task = self.hass.async_create_task(
+            self.hass.config_entries.async_reload(self.config_entry.entry_id),
+        )
 
     @callback
     def handle_device_joined(self, event: DeviceJoinedEvent) -> None:
