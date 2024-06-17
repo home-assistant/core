@@ -7,6 +7,7 @@
           "max_entries": "Maximum feed entries"
         },
         "data_description": {
+          "url": "[%key:common::config_flow::data::url%]",
           "max_entries": "The maximum number of entries to extract from each feed."
         }
       },
@@ -17,6 +18,7 @@
           "max_entries": "[%key:component::feedreader::config::step::user::data::max_entries%]"
         },
         "data_description": {
+          "url": "[%key:common::config_flow::data::url%]",
           "max_entries": "[%key:component::feedreader::config::step::user::data_description::max_entries%]"
         }
       }
