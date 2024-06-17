@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any
 
 from chip.clusters import Objects as clusters
-from matter_server.client.models import device_types
 
 from homeassistant.components.select import (
     SelectEntity,
@@ -47,7 +46,8 @@ class MatterModeSelect(MatterEntity, SelectEntity):
             clusters.ModeSelect.Attributes.SupportedModes
         )
         for mode in supportedmodes:
-            if option == mode.label:  newselectmode = mode.mode
+            if option == mode.label:  
+                newselectmode = mode.mode
             
         await self.matter_client.send_device_command(
             node_id=self._endpoint.node.node_id,
@@ -58,7 +58,7 @@ class MatterModeSelect(MatterEntity, SelectEntity):
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
-        currentmode = self.get_matter_attribute_value(
+        self.get_matter_attribute_value(
             clusters.ModeSelect.Attributes.CurrentMode
         )
         
@@ -81,7 +81,8 @@ class MatterModeSelect(MatterEntity, SelectEntity):
             clusters.ModeSelect.Attributes.SupportedModes
         )
         for mode in supportedmodes:
-            if currentmode == mode.mode:  return(mode.label)
+            if currentmode == mode.mode:  
+                return(mode.label)
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
