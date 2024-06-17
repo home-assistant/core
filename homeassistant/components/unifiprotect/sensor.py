@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
+from functools import partial
 import logging
 from typing import Any
 
@@ -62,12 +63,19 @@ class ProtectSensorEntityDescription(
 
     precision: int | None = None
 
-    def get_ufp_value(self, obj: T) -> Any:
-        """Return value from UniFi Protect device."""
-        value = super().get_ufp_value(obj)
-        if self.precision and value is not None:
-            return round(value, self.precision)
-        return value
+    def __post_init__(self) -> None:
+        """Ensure values are rounded if precision is set."""
+        super().__post_init__()
+        if precision := self.precision:
+            object.__setattr__(
+                self,
+                "get_ufp_value",
+                partial(self._rounded_value, precision, self.get_ufp_value),
+            )
+
+    def _rounded_value(self, precision: int, getter: Callable[[T], Any], obj: T) -> Any:
+        """Round value to precision if set."""
+        return None if (v := getter(obj)) is None else round(v, precision)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -173,6 +181,8 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.storage.used",
+        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        suggested_display_precision=2,
     ),
     ProtectSensorEntityDescription(
         key="write_rate",
@@ -183,6 +193,8 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.storage.rate_per_second",
         precision=2,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        suggested_display_precision=2,
     ),
     ProtectSensorEntityDescription(
         key="voltage",
@@ -272,6 +284,8 @@ CAMERA_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         ufp_value="stats.rx_bytes",
+        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        suggested_display_precision=2,
     ),
     ProtectSensorEntityDescription(
         key="stats_tx",
@@ -282,6 +296,8 @@ CAMERA_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         ufp_value="stats.tx_bytes",
+        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        suggested_display_precision=2,
     ),
 )
 
@@ -698,8 +714,8 @@ def _async_nvr_entities(
     return entities
 
 
-class ProtectDeviceSensor(ProtectDeviceEntity, SensorEntity):
-    """A Ubiquiti UniFi Protect Sensor."""
+class BaseProtectSensor(BaseProtectEntity, SensorEntity):
+    """A UniFi Protect Sensor Entity."""
 
     entity_description: ProtectSensorEntityDescription
     _state_attrs = ("_attr_available", "_attr_native_value")
@@ -709,15 +725,12 @@ class ProtectDeviceSensor(ProtectDeviceEntity, SensorEntity):
         self._attr_native_value = self.entity_description.get_ufp_value(self.device)
 
 
-class ProtectNVRSensor(ProtectNVREntity, SensorEntity):
+class ProtectDeviceSensor(BaseProtectSensor, ProtectDeviceEntity):
     """A Ubiquiti UniFi Protect Sensor."""
 
-    entity_description: ProtectSensorEntityDescription
-    _state_attrs = ("_attr_available", "_attr_native_value")
 
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        super()._async_update_device_from_protect(device)
-        self._attr_native_value = self.entity_description.get_ufp_value(self.device)
+class ProtectNVRSensor(BaseProtectSensor, ProtectNVREntity):
+    """A Ubiquiti UniFi Protect Sensor."""
 
 
 class ProtectEventSensor(EventEntityMixin, SensorEntity):

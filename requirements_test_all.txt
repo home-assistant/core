@@ -1293,7 +1293,7 @@ pvo==2.1.1
 py-aosmith==1.0.8
 
 # homeassistant.components.canary
-py-canary==0.5.3
+py-canary==0.5.4
 
 # homeassistant.components.ccm15
 py-ccm15==0.0.9
@@ -2168,7 +2168,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==1.7.2
+uiprotect==1.17.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
