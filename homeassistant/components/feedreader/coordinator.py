@@ -80,7 +80,7 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
         if self._feed.bozo != 0:
             if isinstance(self._feed.bozo_exception, URLError):
                 raise UpdateFailed(
-                    f"Error fetching feed data from {self._url} : {self._feed.bozo_exception}"
+                    f"Error fetching feed data from {self._url}: {self._feed.bozo_exception}"
                 )
 
             # no connection issue, but parsing issue
