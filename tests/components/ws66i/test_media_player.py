@@ -138,7 +138,7 @@ async def test_setup_success(hass: HomeAssistant) -> None:
     assert hass.states.get(ZONE_1_ID) is not None
 
 
-async def _setup_ws66i(hass, ws66i) -> MockConfigEntry:
+async def _setup_ws66i(hass: HomeAssistant, ws66i) -> MockConfigEntry:
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_CONFIG, options=MOCK_DEFAULT_OPTIONS
     )
@@ -154,7 +154,7 @@ async def _setup_ws66i(hass, ws66i) -> MockConfigEntry:
     return config_entry
 
 
-async def _setup_ws66i_with_options(hass, ws66i) -> MockConfigEntry:
+async def _setup_ws66i_with_options(hass: HomeAssistant, ws66i) -> MockConfigEntry:
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_CONFIG, options=MOCK_OPTIONS
     )

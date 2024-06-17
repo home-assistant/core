@@ -5,6 +5,8 @@ from typing import Any
 from unittest.mock import patch
 import uuid
 
+import pytest
+
 from homeassistant.components.lovelace import dashboard, resources
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -17,8 +19,9 @@ RESOURCE_EXAMPLES = [
 ]
 
 
+@pytest.mark.parametrize("list_cmd", ["lovelace/resources", "lovelace/resources/list"])
 async def test_yaml_resources(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, list_cmd: str
 ) -> None:
     """Test defining resources in configuration.yaml."""
     assert await async_setup_component(
@@ -28,14 +31,15 @@ async def test_yaml_resources(
     client = await hass_ws_client(hass)
 
     # Fetch data
-    await client.send_json({"id": 5, "type": "lovelace/resources"})
+    await client.send_json({"id": 5, "type": list_cmd})
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == RESOURCE_EXAMPLES
 
 
+@pytest.mark.parametrize("list_cmd", ["lovelace/resources", "lovelace/resources/list"])
 async def test_yaml_resources_backwards(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, list_cmd: str
 ) -> None:
     """Test defining resources in YAML ll config (legacy)."""
     with patch(
@@ -49,16 +53,18 @@ async def test_yaml_resources_backwards(
     client = await hass_ws_client(hass)
 
     # Fetch data
-    await client.send_json({"id": 5, "type": "lovelace/resources"})
+    await client.send_json({"id": 5, "type": list_cmd})
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == RESOURCE_EXAMPLES
 
 
+@pytest.mark.parametrize("list_cmd", ["lovelace/resources", "lovelace/resources/list"])
 async def test_storage_resources(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_storage: dict[str, Any],
+    list_cmd: str,
 ) -> None:
     """Test defining resources in storage config."""
     resource_config = [{**item, "id": uuid.uuid4().hex} for item in RESOURCE_EXAMPLES]
@@ -72,16 +78,18 @@ async def test_storage_resources(
     client = await hass_ws_client(hass)
 
     # Fetch data
-    await client.send_json({"id": 5, "type": "lovelace/resources"})
+    await client.send_json({"id": 5, "type": list_cmd})
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == resource_config
 
 
+@pytest.mark.parametrize("list_cmd", ["lovelace/resources", "lovelace/resources/list"])
 async def test_storage_resources_import(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_storage: dict[str, Any],
+    list_cmd: str,
 ) -> None:
     """Test importing resources from storage config."""
     assert await async_setup_component(hass, "lovelace", {})
@@ -94,7 +102,7 @@ async def test_storage_resources_import(
     client = await hass_ws_client(hass)
 
     # Fetch data
-    await client.send_json({"id": 5, "type": "lovelace/resources"})
+    await client.send_json({"id": 5, "type": list_cmd})
     response = await client.receive_json()
     assert response["success"]
     assert (
@@ -118,7 +126,7 @@ async def test_storage_resources_import(
     response = await client.receive_json()
     assert response["success"]
 
-    await client.send_json({"id": 7, "type": "lovelace/resources"})
+    await client.send_json({"id": 7, "type": list_cmd})
     response = await client.receive_json()
     assert response["success"]
 
@@ -141,7 +149,7 @@ async def test_storage_resources_import(
     response = await client.receive_json()
     assert response["success"]
 
-    await client.send_json({"id": 9, "type": "lovelace/resources"})
+    await client.send_json({"id": 9, "type": list_cmd})
     response = await client.receive_json()
     assert response["success"]
 
@@ -160,7 +168,7 @@ async def test_storage_resources_import(
     response = await client.receive_json()
     assert response["success"]
 
-    await client.send_json({"id": 11, "type": "lovelace/resources"})
+    await client.send_json({"id": 11, "type": list_cmd})
     response = await client.receive_json()
     assert response["success"]
 
@@ -168,10 +176,12 @@ async def test_storage_resources_import(
     assert first_item["id"] not in (item["id"] for item in response["result"])
 
 
+@pytest.mark.parametrize("list_cmd", ["lovelace/resources", "lovelace/resources/list"])
 async def test_storage_resources_import_invalid(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_storage: dict[str, Any],
+    list_cmd: str,
 ) -> None:
     """Test importing resources from storage config."""
     assert await async_setup_component(hass, "lovelace", {})
@@ -184,7 +194,7 @@ async def test_storage_resources_import_invalid(
     client = await hass_ws_client(hass)
 
     # Fetch data
-    await client.send_json({"id": 5, "type": "lovelace/resources"})
+    await client.send_json({"id": 5, "type": list_cmd})
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == []
@@ -194,10 +204,12 @@ async def test_storage_resources_import_invalid(
     )
 
 
+@pytest.mark.parametrize("list_cmd", ["lovelace/resources", "lovelace/resources/list"])
 async def test_storage_resources_safe_mode(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_storage: dict[str, Any],
+    list_cmd: str,
 ) -> None:
     """Test defining resources in storage config."""
 
@@ -213,7 +225,7 @@ async def test_storage_resources_safe_mode(
     hass.config.safe_mode = True
 
     # Fetch data
-    await client.send_json({"id": 5, "type": "lovelace/resources"})
+    await client.send_json({"id": 5, "type": list_cmd})
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == []
