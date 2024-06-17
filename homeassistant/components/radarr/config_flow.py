@@ -24,10 +24,7 @@ class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Radarr."""
 
     VERSION = 1
-
-    def __init__(self) -> None:
-        """Initialize the flow."""
-        self.entry: RadarrConfigEntry | None = None
+    entry: RadarrConfigEntry | None = None
 
     async def async_step_reauth(self, _: Mapping[str, Any]) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
