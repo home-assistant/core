@@ -684,6 +684,19 @@ class PrometheusMetrics:
 
         self._handle_attributes(state)
 
+    def _handle_fan(self, state: State) -> None:
+        metric = self._metric(
+            "fan_state", prometheus_client.Gauge, "State of the fan (0/1)"
+        )
+
+        try:
+            value = self.state_as_number(state)
+            metric.labels(**self._labels(state)).set(value)
+        except ValueError:
+            pass
+
+        self._handle_attributes(state)
+
     def _handle_zwave(self, state: State) -> None:
         self._battery(state)
 
