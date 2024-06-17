@@ -1243,6 +1243,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/sensorpush/ @bdraco
 /tests/components/sensorpush/ @bdraco
 /homeassistant/components/sensoterra/ @markruys
+/tests/components/sensoterra/ @markruys
 /homeassistant/components/sentry/ @dcramer @frenck
 /tests/components/sentry/ @dcramer @frenck
 /homeassistant/components/senz/ @milanmeu

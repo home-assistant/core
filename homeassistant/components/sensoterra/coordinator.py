@@ -9,66 +9,19 @@ from sensoterra.customerapi import (
     InvalidAuth as ApiAuthError,
     Timeout as ApiTimeout,
 )
-from sensoterra.probe import Probe, Sensor
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import SCAN_INTERVAL
+from .models import ProbeSensorType, SensoterraSensor
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
-class SensoterraSensor:
-    """Model Sensoterra probe data produced by the API."""
-
-    depth: int | None = None
-    soil: str | None = None
-    timestamp: datetime | None = None
-    value: float | None = None
-
-    BATTERY_LEVELS: dict[str, int] = {"NORMAL": 100, "FAIR": 50, "POOR": 10}
-
-    def __init__(
-        self,
-        probe: Probe,
-        sensor: Sensor | str,
-    ) -> None:
-        """Initialise Sensoterra sensor."""
-        self.name = probe.name
-        self.sku = probe.sku
-        self.serial = probe.serial
-        self.location = probe.location
-        if isinstance(sensor, Sensor):
-            self.id = sensor.id
-            self.type = sensor.type
-            self.depth = sensor.depth
-            self.soil = sensor.soil
-            self.value = sensor.value
-            self.timestamp = sensor.timestamp
-        else:
-            self.id = f"{probe.serial}-{sensor}"
-            self.type = sensor
-            if self.type == "RSSI":
-                if probe.rssi is not None:
-                    self.value = probe.rssi
-                    self.timestamp = probe.timestamp
-            elif self.type == "BATTERY":
-                if probe.battery in self.BATTERY_LEVELS:
-                    self.value = self.BATTERY_LEVELS[probe.battery]
-                    self.timestamp = probe.timestamp
-            elif self.type == "LASTSEEN":
-                self.value = probe.timestamp
-                self.timestamp = datetime.now(UTC)
-            else:
-                raise UpdateFailed(f"Unknown sensor {sensor}")
-
-
-class SensoterraCoordinator(DataUpdateCoordinator):
+class SensoterraCoordinator(DataUpdateCoordinator[dict[str, SensoterraSensor]]):
     """Sensoterra coordinator."""
-
-    add_devices_callback: Callable[[dict[str, SensoterraSensor]], None] | None
 
     def __init__(self, hass: HomeAssistant, api: CustomerApi) -> None:
         """Initialize Sensoterra coordinator."""
@@ -81,29 +34,37 @@ class SensoterraCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
         self.api = api
-        self.add_devices_callback = None
+        self.add_devices_callback: (
+            Callable[[dict[str, SensoterraSensor]], None] | None
+        ) = None
 
     async def _async_update_data(self) -> dict[str, SensoterraSensor]:
         """Fetch data from Sensoterra Customer API endpoint."""
+        current_sensors = set(self.async_contexts())
         try:
-            current_sensors = set(self.async_contexts())
             probes = await self.api.poll()
         except ApiAuthError as err:
-            raise ConfigEntryAuthFailed(err) from err
+            raise ConfigEntryError(err) from err
         except ApiTimeout as err:
             raise UpdateFailed("Timeout communicating with Sensotera API") from err
         else:
-            # Flatten API return probe/sensor data structure.
+            # API returns a probe/sensor data structure which needs to be flattened.
             sensors: list[SensoterraSensor] = []
             for probe in probes:
-                sensors.extend(
-                    SensoterraSensor(probe, sensor) for sensor in probe.sensors()
-                )
                 if probe.battery is not None:
-                    sensors.append(SensoterraSensor(probe, "BATTERY"))
+                    sensors.append(SensoterraSensor(probe, ProbeSensorType.BATTERY))
                 if probe.rssi is not None:
-                    sensors.append(SensoterraSensor(probe, "RSSI"))
-                sensors.append(SensoterraSensor(probe, "LASTSEEN"))
+                    sensors.append(SensoterraSensor(probe, ProbeSensorType.RSSI))
+                # Add soil moistere and temperature sensors at various depths.
+                sensors.extend(
+                    [
+                        SensoterraSensor(probe, sensor)
+                        for sensor in probe.sensors()
+                        if sensor.depth is not None
+                        and sensor.type.lower() in iter(ProbeSensorType)
+                    ]
+                )
+                sensors.append(SensoterraSensor(probe, ProbeSensorType.LASTSEEN))
 
             # Only consider readings updated after the last poll
             expiration = datetime.now(UTC) - timedelta(seconds=SCAN_INTERVAL)
