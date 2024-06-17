@@ -29,10 +29,16 @@ from .const import (
     ATTR_STATE_WINDOW_OPEN,
     LOGGER,
 )
-from .coordinator import FritzboxConfigEntry
+from .coordinator import FritzboxConfigEntry, FritzboxDataUpdateCoordinator
 from .model import ClimateExtraAttributes
 
-OPERATION_LIST = [HVACMode.HEAT, HVACMode.OFF]
+HVAC_MODES = [HVACMode.HEAT, HVACMode.OFF]
+SUPPORTED_FEATURES = (
+    ClimateEntityFeature.TARGET_TEMPERATURE
+    | ClimateEntityFeature.PRESET_MODE
+    | ClimateEntityFeature.TURN_OFF
+    | ClimateEntityFeature.TURN_ON
+)
 
 MIN_TEMPERATURE = 8
 MAX_TEMPERATURE = 28
@@ -76,14 +82,32 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
     """The thermostat class for FRITZ!SmartHome thermostats."""
 
     _attr_precision = PRECISION_HALVES
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.PRESET_MODE
-        | ClimateEntityFeature.TURN_OFF
-        | ClimateEntityFeature.TURN_ON
-    )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _enable_turn_on_off_backwards_compatibility = False
+
+    def __init__(
+        self,
+        coordinator: FritzboxDataUpdateCoordinator,
+        ain: str,
+    ) -> None:
+        """Initialize the thermostat."""
+        self._attr_supported_features = SUPPORTED_FEATURES
+        self._attr_hvac_modes = HVAC_MODES
+        super().__init__(coordinator, ain)
+
+    @callback
+    def async_write_ha_state(self) -> None:
+        """Write the state to the HASS state machine."""
+        if self.data.holiday_active:
+            self._attr_supported_features = ClimateEntityFeature(0)
+            self._attr_hvac_modes = [HVACMode.HEAT]
+        elif self.data.summer_active:
+            self._attr_supported_features = ClimateEntityFeature(0)
+            self._attr_hvac_modes = [HVACMode.OFF]
+        else:
+            self._attr_supported_features = SUPPORTED_FEATURES
+            self._attr_hvac_modes = HVAC_MODES
+        return super().async_write_ha_state()
 
     @property
     def current_temperature(self) -> float:
@@ -123,11 +147,6 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             return HVACMode.OFF
 
         return HVACMode.HEAT
-
-    @property
-    def hvac_modes(self) -> list[HVACMode]:
-        """Return the list of available operation modes."""
-        return OPERATION_LIST
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""

@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import Mock, call
 
+from freezegun.api import FrozenDateTimeFactory
 from requests.exceptions import HTTPError
 
 from homeassistant.components.climate import (
@@ -68,8 +69,8 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     assert state.attributes[ATTR_PRESET_MODE] is None
     assert state.attributes[ATTR_PRESET_MODES] == [PRESET_ECO, PRESET_COMFORT]
     assert state.attributes[ATTR_STATE_BATTERY_LOW] is True
-    assert state.attributes[ATTR_STATE_HOLIDAY_MODE] == "fake_holiday"
-    assert state.attributes[ATTR_STATE_SUMMER_MODE] == "fake_summer"
+    assert not state.attributes[ATTR_STATE_HOLIDAY_MODE]
+    assert not state.attributes[ATTR_STATE_SUMMER_MODE]
     assert state.attributes[ATTR_STATE_WINDOW_OPEN] == "fake_window"
     assert state.attributes[ATTR_TEMPERATURE] == 19.5
     assert ATTR_STATE_CLASS not in state.attributes
@@ -444,3 +445,59 @@ async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
 
     state = hass.states.get(f"{DOMAIN}.new_climate")
     assert state
+
+
+async def test_holidy_summer_mode(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, fritz: Mock
+) -> None:
+    """Test holiday and summer mode."""
+    device = FritzDeviceClimateMock()
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+
+    # initial state
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert not state.attributes[ATTR_STATE_HOLIDAY_MODE]
+    assert not state.attributes[ATTR_STATE_SUMMER_MODE]
+    assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.HEAT, HVACMode.OFF]
+
+    # test holiday mode
+    device.holiday_active = True
+    device.summer_active = False
+    freezer.tick(timedelta(seconds=200))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes[ATTR_STATE_HOLIDAY_MODE]
+    assert not state.attributes[ATTR_STATE_SUMMER_MODE]
+    assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.HEAT]
+
+    # test summer mode
+    device.holiday_active = False
+    device.summer_active = True
+    freezer.tick(timedelta(seconds=200))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert not state.attributes[ATTR_STATE_HOLIDAY_MODE]
+    assert state.attributes[ATTR_STATE_SUMMER_MODE]
+    assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.OFF]
+
+    # back to normal state
+    device.holiday_active = False
+    device.summer_active = False
+    freezer.tick(timedelta(seconds=200))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert not state.attributes[ATTR_STATE_HOLIDAY_MODE]
+    assert not state.attributes[ATTR_STATE_SUMMER_MODE]
+    assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.HEAT, HVACMode.OFF]
