@@ -30,7 +30,7 @@ async def async_setup_entry(
 
     unique_id = config_entry.entry_id
 
-    device_info = du.async_device_info_to_link(
+    device_info = du.async_device_info_to_link_entity_id(
         hass, entity_id=config_entry.options[CONF_SOURCE_SENSOR]
     )
 

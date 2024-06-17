@@ -129,7 +129,9 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_SOURCE_SENSOR]
     )
 
-    device_info = du.async_device_info_to_link(hass, entity_id=source_entity_id)
+    device_info = du.async_device_info_to_link_entity_id(
+        hass, entity_id=source_entity_id
+    )
 
     cron_pattern = None
     delta_values = config_entry.options[CONF_METER_DELTA_VALUES]
