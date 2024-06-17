@@ -17,10 +17,10 @@ def manage_water_heater_fallback_issue(
     integration_overlay_fallback: str | None,
 ) -> None:
     """Notify users about water heater respecting fallback setting."""
-    if integration_overlay_fallback in [
+    if integration_overlay_fallback in (
         CONST_OVERLAY_TADO_DEFAULT,
         CONST_OVERLAY_MANUAL,
-    ]:
+    ):
         for water_heater_entity in water_heater_entities:
             ir.async_create_issue(
                 hass=hass,
