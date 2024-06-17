@@ -6,14 +6,13 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.radarr.const import DOMAIN
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.util.dt as dt_util
 
 from . import setup_integration
 
+from tests.common import async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -43,13 +42,13 @@ async def test_calendar(
     tz = await dt_util.async_get_time_zone(zone)
     dt_util.set_default_time_zone(tz)
     freezer.move_to(tested_time)
-    entry = await setup_integration(hass, aioclient_mock)
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]["calendar"]
+    await setup_integration(hass, aioclient_mock)
 
     assert hass.states.get("calendar.mock_title") == snapshot
 
     freezer.tick(timedelta(days=1))
-    await coordinator.async_refresh()
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     state = hass.states.get("calendar.mock_title")
     assert state.state == STATE_OFF

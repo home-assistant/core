@@ -1,4 +1,184 @@
 # Describes the format for available light services
+.brightness_support: &brightness_support
+  attribute:
+    supported_color_modes:
+      - light.ColorMode.BRIGHTNESS
+      - light.ColorMode.COLOR_TEMP
+      - light.ColorMode.HS
+      - light.ColorMode.XY
+      - light.ColorMode.RGB
+      - light.ColorMode.RGBW
+      - light.ColorMode.RGBWW
+
+.color_support: &color_support
+  attribute:
+    supported_color_modes:
+      - light.ColorMode.HS
+      - light.ColorMode.XY
+      - light.ColorMode.RGB
+      - light.ColorMode.RGBW
+      - light.ColorMode.RGBWW
+
+.color_temp_support: &color_temp_support
+  attribute:
+    supported_color_modes:
+      - light.ColorMode.COLOR_TEMP
+      - light.ColorMode.HS
+      - light.ColorMode.XY
+      - light.ColorMode.RGB
+      - light.ColorMode.RGBW
+      - light.ColorMode.RGBWW
+
+.named_colors: &named_colors
+  - "homeassistant"
+  - "aliceblue"
+  - "antiquewhite"
+  - "aqua"
+  - "aquamarine"
+  - "azure"
+  - "beige"
+  - "bisque"
+  # Black is omitted from this list as nonsensical for lights
+  - "blanchedalmond"
+  - "blue"
+  - "blueviolet"
+  - "brown"
+  - "burlywood"
+  - "cadetblue"
+  - "chartreuse"
+  - "chocolate"
+  - "coral"
+  - "cornflowerblue"
+  - "cornsilk"
+  - "crimson"
+  - "cyan"
+  - "darkblue"
+  - "darkcyan"
+  - "darkgoldenrod"
+  - "darkgray"
+  - "darkgreen"
+  - "darkgrey"
+  - "darkkhaki"
+  - "darkmagenta"
+  - "darkolivegreen"
+  - "darkorange"
+  - "darkorchid"
+  - "darkred"
+  - "darksalmon"
+  - "darkseagreen"
+  - "darkslateblue"
+  - "darkslategray"
+  - "darkslategrey"
+  - "darkturquoise"
+  - "darkviolet"
+  - "deeppink"
+  - "deepskyblue"
+  - "dimgray"
+  - "dimgrey"
+  - "dodgerblue"
+  - "firebrick"
+  - "floralwhite"
+  - "forestgreen"
+  - "fuchsia"
+  - "gainsboro"
+  - "ghostwhite"
+  - "gold"
+  - "goldenrod"
+  - "gray"
+  - "green"
+  - "greenyellow"
+  - "grey"
+  - "honeydew"
+  - "hotpink"
+  - "indianred"
+  - "indigo"
+  - "ivory"
+  - "khaki"
+  - "lavender"
+  - "lavenderblush"
+  - "lawngreen"
+  - "lemonchiffon"
+  - "lightblue"
+  - "lightcoral"
+  - "lightcyan"
+  - "lightgoldenrodyellow"
+  - "lightgray"
+  - "lightgreen"
+  - "lightgrey"
+  - "lightpink"
+  - "lightsalmon"
+  - "lightseagreen"
+  - "lightskyblue"
+  - "lightslategray"
+  - "lightslategrey"
+  - "lightsteelblue"
+  - "lightyellow"
+  - "lime"
+  - "limegreen"
+  - "linen"
+  - "magenta"
+  - "maroon"
+  - "mediumaquamarine"
+  - "mediumblue"
+  - "mediumorchid"
+  - "mediumpurple"
+  - "mediumseagreen"
+  - "mediumslateblue"
+  - "mediumspringgreen"
+  - "mediumturquoise"
+  - "mediumvioletred"
+  - "midnightblue"
+  - "mintcream"
+  - "mistyrose"
+  - "moccasin"
+  - "navajowhite"
+  - "navy"
+  - "navyblue"
+  - "oldlace"
+  - "olive"
+  - "olivedrab"
+  - "orange"
+  - "orangered"
+  - "orchid"
+  - "palegoldenrod"
+  - "palegreen"
+  - "paleturquoise"
+  - "palevioletred"
+  - "papayawhip"
+  - "peachpuff"
+  - "peru"
+  - "pink"
+  - "plum"
+  - "powderblue"
+  - "purple"
+  - "red"
+  - "rosybrown"
+  - "royalblue"
+  - "saddlebrown"
+  - "salmon"
+  - "sandybrown"
+  - "seagreen"
+  - "seashell"
+  - "sienna"
+  - "silver"
+  - "skyblue"
+  - "slateblue"
+  - "slategray"
+  - "slategrey"
+  - "snow"
+  - "springgreen"
+  - "steelblue"
+  - "tan"
+  - "teal"
+  - "thistle"
+  - "tomato"
+  - "turquoise"
+  - "violet"
+  - "wheat"
+  - "white"
+  - "whitesmoke"
+  - "yellow"
+  - "yellowgreen"
 
 turn_on:
   target:
@@ -15,14 +195,7 @@ turn_on:
           max: 300
           unit_of_measurement: seconds
     rgb_color: &rgb_color
-      filter: &color_support
-        attribute:
-          supported_color_modes:
-            - light.ColorMode.HS
-            - light.ColorMode.XY
-            - light.ColorMode.RGB
-            - light.ColorMode.RGBW
-            - light.ColorMode.RGBWW
+      filter: *color_support
       example: "[255, 100, 100]"
       selector:
         color_rgb:
@@ -44,156 +217,7 @@ turn_on:
       selector:
         select:
           translation_key: color_name
-          options: &named_colors
-            - "homeassistant"
-            - "aliceblue"
-            - "antiquewhite"
-            - "aqua"
-            - "aquamarine"
-            - "azure"
-            - "beige"
-            - "bisque"
-            # Black is omitted from this list as nonsensical for lights
-            - "blanchedalmond"
-            - "blue"
-            - "blueviolet"
-            - "brown"
-            - "burlywood"
-            - "cadetblue"
-            - "chartreuse"
-            - "chocolate"
-            - "coral"
-            - "cornflowerblue"
-            - "cornsilk"
-            - "crimson"
-            - "cyan"
-            - "darkblue"
-            - "darkcyan"
-            - "darkgoldenrod"
-            - "darkgray"
-            - "darkgreen"
-            - "darkgrey"
-            - "darkkhaki"
-            - "darkmagenta"
-            - "darkolivegreen"
-            - "darkorange"
-            - "darkorchid"
-            - "darkred"
-            - "darksalmon"
-            - "darkseagreen"
-            - "darkslateblue"
-            - "darkslategray"
-            - "darkslategrey"
-            - "darkturquoise"
-            - "darkviolet"
-            - "deeppink"
-            - "deepskyblue"
-            - "dimgray"
-            - "dimgrey"
-            - "dodgerblue"
-            - "firebrick"
-            - "floralwhite"
-            - "forestgreen"
-            - "fuchsia"
-            - "gainsboro"
-            - "ghostwhite"
-            - "gold"
-            - "goldenrod"
-            - "gray"
-            - "green"
-            - "greenyellow"
-            - "grey"
-            - "honeydew"
-            - "hotpink"
-            - "indianred"
-            - "indigo"
-            - "ivory"
-            - "khaki"
-            - "lavender"
-            - "lavenderblush"
-            - "lawngreen"
-            - "lemonchiffon"
-            - "lightblue"
-            - "lightcoral"
-            - "lightcyan"
-            - "lightgoldenrodyellow"
-            - "lightgray"
-            - "lightgreen"
-            - "lightgrey"
-            - "lightpink"
-            - "lightsalmon"
-            - "lightseagreen"
-            - "lightskyblue"
-            - "lightslategray"
-            - "lightslategrey"
-            - "lightsteelblue"
-            - "lightyellow"
-            - "lime"
-            - "limegreen"
-            - "linen"
-            - "magenta"
-            - "maroon"
-            - "mediumaquamarine"
-            - "mediumblue"
-            - "mediumorchid"
-            - "mediumpurple"
-            - "mediumseagreen"
-            - "mediumslateblue"
-            - "mediumspringgreen"
-            - "mediumturquoise"
-            - "mediumvioletred"
-            - "midnightblue"
-            - "mintcream"
-            - "mistyrose"
-            - "moccasin"
-            - "navajowhite"
-            - "navy"
-            - "navyblue"
-            - "oldlace"
-            - "olive"
-            - "olivedrab"
-            - "orange"
-            - "orangered"
-            - "orchid"
-            - "palegoldenrod"
-            - "palegreen"
-            - "paleturquoise"
-            - "palevioletred"
-            - "papayawhip"
-            - "peachpuff"
-            - "peru"
-            - "pink"
-            - "plum"
-            - "powderblue"
-            - "purple"
-            - "red"
-            - "rosybrown"
-            - "royalblue"
-            - "saddlebrown"
-            - "salmon"
-            - "sandybrown"
-            - "seagreen"
-            - "seashell"
-            - "sienna"
-            - "silver"
-            - "skyblue"
-            - "slateblue"
-            - "slategray"
-            - "slategrey"
-            - "snow"
-            - "springgreen"
-            - "steelblue"
-            - "tan"
-            - "teal"
-            - "thistle"
-            - "tomato"
-            - "turquoise"
-            - "violet"
-            - "wheat"
-            - "white"
-            - "whitesmoke"
-            - "yellow"
-            - "yellowgreen"
+          options: *named_colors
     hs_color: &hs_color
       filter: *color_support
       advanced: true
@@ -207,15 +231,7 @@ turn_on:
       selector:
         object:
     color_temp: &color_temp
-      filter: &color_temp_support
-        attribute:
-          supported_color_modes:
-            - light.ColorMode.COLOR_TEMP
-            - light.ColorMode.HS
-            - light.ColorMode.XY
-            - light.ColorMode.RGB
-            - light.ColorMode.RGBW
-            - light.ColorMode.RGBWW
+      filter: *color_temp_support
       advanced: true
       selector:
         color_temp:
@@ -230,16 +246,7 @@ turn_on:
           min: 2000
           max: 6500
     brightness: &brightness
-      filter: &brightness_support
-        attribute:
-          supported_color_modes:
-            - light.ColorMode.BRIGHTNESS
-            - light.ColorMode.COLOR_TEMP
-            - light.ColorMode.HS
-            - light.ColorMode.XY
-            - light.ColorMode.RGB
-            - light.ColorMode.RGBW
-            - light.ColorMode.RGBWW
+      filter: *brightness_support
       advanced: true
       selector:
         number:

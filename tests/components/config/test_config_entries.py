@@ -705,7 +705,7 @@ async def test_get_progress_index(
     class TestFlow(core_ce.ConfigFlow):
         VERSION = 5
 
-        async def async_step_hassio(self, info):
+        async def async_step_hassio(self, discovery_info):
             return await self.async_step_account()
 
         async def async_step_account(self, user_input=None):

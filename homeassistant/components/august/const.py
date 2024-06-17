@@ -1,7 +1,5 @@
 """Constants for August devices."""
 
-from datetime import timedelta
-
 from homeassistant.const import Platform
 
 DEFAULT_TIMEOUT = 25
@@ -36,15 +34,6 @@ ATTR_OPERATION_REMOTE = "remote"
 ATTR_OPERATION_KEYPAD = "keypad"
 ATTR_OPERATION_MANUAL = "manual"
 ATTR_OPERATION_TAG = "tag"
-
-# Limit battery, online, and hardware updates to hourly
-# in order to reduce the number of api requests and
-# avoid hitting rate limits
-MIN_TIME_BETWEEN_DETAIL_UPDATES = timedelta(hours=24)
-
-# Activity needs to be checked more frequently as the
-# doorbell motion and rings are included here
-ACTIVITY_UPDATE_INTERVAL = timedelta(seconds=10)
 
 LOGIN_METHODS = ["phone", "email"]
 DEFAULT_LOGIN_METHOD = "email"

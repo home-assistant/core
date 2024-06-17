@@ -12,7 +12,7 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.components.ipma import MockLocation
+from . import MockLocation
 
 
 @pytest.fixture(name="ipma_setup", autouse=True)

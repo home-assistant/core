@@ -3118,7 +3118,7 @@ class HassTypeHintChecker(BaseChecker):
             "Used when method return type is incorrect",
         ),
         "W7433": (
-            "Argument %s is of type %s and could be move to "
+            "Argument %s is of type %s and could be moved to "
             "`@pytest.mark.usefixtures` decorator in %s",
             "hass-consider-usefixtures-decorator",
             "Used when an argument type is None and could be a fixture",

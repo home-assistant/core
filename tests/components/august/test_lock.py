@@ -6,9 +6,9 @@ from unittest.mock import Mock
 from aiohttp import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from yalexs.manager.activity import INITIAL_LOCK_RESYNC_TIME
 from yalexs.pubnub_async import AugustPubNub
 
-from homeassistant.components.august.activity import INITIAL_LOCK_RESYNC_TIME
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     STATE_JAMMED,

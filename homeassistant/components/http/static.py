@@ -80,4 +80,4 @@ class CachingStaticResource(StaticResource):
                 },
             )
 
-        return await super()._handle(request)
+        raise HTTPForbidden if filepath is None else HTTPNotFound
