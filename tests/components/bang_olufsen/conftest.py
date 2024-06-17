@@ -31,7 +31,7 @@ def mock_config_entry():
 
 
 @pytest.fixture
-def mock_mozart_client() -> Generator[AsyncMock, None, None]:
+def mock_mozart_client() -> Generator[AsyncMock]:
     """Mock MozartClient."""
 
     with (
@@ -56,6 +56,7 @@ def mock_mozart_client() -> Generator[AsyncMock, None, None]:
         client.close_api_client = AsyncMock()
         client.connect_notifications = AsyncMock()
         client.disconnect_notifications = Mock()
+
         yield client
 
 
