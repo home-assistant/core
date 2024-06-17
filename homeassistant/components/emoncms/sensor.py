@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 from typing import Any
 
@@ -46,7 +45,6 @@ CONF_SENSOR_NAMES = "sensor_names"
 
 DECIMALS = 2
 DEFAULT_UNIT = UnitOfPower.WATT
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 ONLY_INCL_EXCL_NONE = "only_include_exclude_or_none"
 
