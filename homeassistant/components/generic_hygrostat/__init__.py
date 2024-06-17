@@ -6,12 +6,7 @@ from homeassistant.components.humidifier import HumidifierDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    discovery,
-    entity_registry as er,
-)
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "generic_hygrostat"
@@ -83,9 +78,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
-    await async_remove_stale_device_links(
-        hass, entry.entry_id, entry.options[CONF_HUMIDIFIER]
-    )
     await hass.config_entries.async_forward_entry_setups(entry, (Platform.HUMIDIFIER,))
     entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
     return True
@@ -101,24 +93,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(
         entry, (Platform.HUMIDIFIER,)
     )
-
-
-async def async_remove_stale_device_links(
-    hass: HomeAssistant, entry_id: str, entity_id: str
-) -> None:
-    """Remove device link for entry, the source device may have changed."""
-
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
-    # Resolve source entity device
-    device_id = None
-    if entity := entity_registry.async_get(entity_id):
-        device_id = entity.device_id
-
-    # Removes all devices from the config entry that are not the same as the current device
-    devices = device_registry.devices.get_devices_for_config_entry_id(entry_id)
-    for device in devices:
-        if device.id == device_id:
-            continue
-        device_registry.async_update_device(device.id, remove_config_entry_id=entry_id)
