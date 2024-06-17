@@ -1198,6 +1198,7 @@ omit =
     homeassistant/components/sense/sensor.py
     homeassistant/components/sensoterra/__init__.py
     homeassistant/components/sensoterra/coordinator.py
+    homeassistant/components/sensoterra/models.py
     homeassistant/components/sensoterra/sensor.py
     homeassistant/components/senz/__init__.py
     homeassistant/components/senz/api.py
