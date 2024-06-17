@@ -52,6 +52,7 @@ from .const import (
     CONF_NAME,
     CONF_PACKAGES,
     CONF_PLATFORM,
+    CONF_RADIUS,
     CONF_TEMPERATURE_UNIT,
     CONF_TIME_ZONE,
     CONF_TYPE,
@@ -342,6 +343,7 @@ CORE_CONFIG_SCHEMA = vol.All(
             CONF_LATITUDE: cv.latitude,
             CONF_LONGITUDE: cv.longitude,
             CONF_ELEVATION: vol.Coerce(int),
+            CONF_RADIUS: cv.positive_int,
             vol.Remove(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
             CONF_UNIT_SYSTEM: validate_unit_system,
             CONF_TIME_ZONE: cv.time_zone,
@@ -882,6 +884,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             CONF_CURRENCY,
             CONF_COUNTRY,
             CONF_LANGUAGE,
+            CONF_RADIUS,
         )
     ):
         hac.config_source = ConfigSource.YAML
@@ -898,6 +901,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
         (CONF_CURRENCY, "currency"),
         (CONF_COUNTRY, "country"),
         (CONF_LANGUAGE, "language"),
+        (CONF_RADIUS, "radius"),
     ):
         if key in config:
             setattr(hac, attr, config[key])

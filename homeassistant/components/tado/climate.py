@@ -37,7 +37,6 @@ from .const import (
     CONST_MODE_SMART_SCHEDULE,
     CONST_OVERLAY_MANUAL,
     CONST_OVERLAY_TADO_OPTIONS,
-    CONST_OVERLAY_TIMER,
     DATA,
     DOMAIN,
     HA_TERMINATION_DURATION,
@@ -65,7 +64,7 @@ from .const import (
     TYPE_HEATING,
 )
 from .entity import TadoZoneEntity
-from .helper import decide_overlay_mode
+from .helper import decide_duration, decide_overlay_mode
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -603,14 +602,12 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             overlay_mode=overlay_mode,
             zone_id=self.zone_id,
         )
-        # If we ended up with a timer but no duration, set a default duration
-        if overlay_mode == CONST_OVERLAY_TIMER and duration is None:
-            duration = (
-                int(self._tado_zone_data.default_overlay_termination_duration)
-                if self._tado_zone_data.default_overlay_termination_duration is not None
-                else 3600
-            )
-
+        duration = decide_duration(
+            tado=self._tado,
+            duration=duration,
+            zone_id=self.zone_id,
+            overlay_mode=overlay_mode,
+        )
         _LOGGER.debug(
             (
                 "Switching to %s for zone %s (%d) with temperature %s °C and duration"

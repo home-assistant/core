@@ -3,6 +3,7 @@
 from datetime import timedelta
 import time
 
+# pylint: disable-next=no-name-in-module
 from habluetooth.advertisement_tracker import ADVERTISING_TIMES_NEEDED
 import pytest
 

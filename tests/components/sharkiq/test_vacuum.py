@@ -248,8 +248,9 @@ async def test_clean_room_error(
     hass: HomeAssistant, room_list: list, exception: Exception
 ) -> None:
     """Test clean_room errors."""
+    data = {ATTR_ENTITY_ID: VAC_ENTITY_ID, ATTR_ROOMS: room_list}
+
     with pytest.raises(exception):
-        data = {ATTR_ENTITY_ID: VAC_ENTITY_ID, ATTR_ROOMS: room_list}
         await hass.services.async_call(DOMAIN, SERVICE_CLEAN_ROOM, data, blocking=True)
 
 

@@ -191,6 +191,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Utility Meter from a config entry."""
+
+    await async_remove_stale_device_links(
+        hass, entry.entry_id, entry.options[CONF_SOURCE_SENSOR]
+    )
+
     entity_registry = er.async_get(hass)
     hass.data[DATA_UTILITY][entry.entry_id] = {
         "source": entry.options[CONF_SOURCE_SENSOR],
@@ -230,22 +235,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update listener, called when the config entry options are changed."""
-    old_source = hass.data[DATA_UTILITY][entry.entry_id]["source"]
+
     await hass.config_entries.async_reload(entry.entry_id)
-
-    if old_source == entry.options[CONF_SOURCE_SENSOR]:
-        return
-
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
-    old_source_entity = entity_registry.async_get(old_source)
-    if not old_source_entity or not old_source_entity.device_id:
-        return
-
-    device_registry.async_update_device(
-        old_source_entity.device_id, remove_config_entry_id=entry.entry_id
-    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -275,3 +266,27 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     _LOGGER.info("Migration to version %s successful", config_entry.version)
 
     return True
+
+
+async def async_remove_stale_device_links(
+    hass: HomeAssistant, entry_id: str, entity_id: str
+) -> None:
+    """Remove device link for entry, the source device may have changed."""
+
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+
+    # Resolve source entity device
+    current_device_id = None
+    if ((source_entity := entity_registry.async_get(entity_id)) is not None) and (
+        source_entity.device_id is not None
+    ):
+        current_device_id = source_entity.device_id
+
+    devices_in_entry = device_registry.devices.get_devices_for_config_entry_id(entry_id)
+
+    # Removes all devices from the config entry that are not the same as the current device
+    for device in devices_in_entry:
+        if device.id == current_device_id:
+            continue
+        device_registry.async_update_device(device.id, remove_config_entry_id=entry_id)
