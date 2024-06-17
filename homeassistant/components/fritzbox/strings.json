@@ -56,6 +56,21 @@
       "device_lock": { "name": "Button lock via UI" },
       "lock": { "name": "Button lock on device" }
     },
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "name": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::name%]",
+            "state": {
+              "eco": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]",
+              "comfort": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]",
+              "holiday": "Holiday",
+              "summer": "Summer"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "comfort_temperature": { "name": "Comfort temperature" },
       "eco_temperature": { "name": "Eco temperature" },

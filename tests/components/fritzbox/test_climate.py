@@ -22,6 +22,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
+from homeassistant.components.fritzbox.climate import PRESET_HOLIDAY, PRESET_SUMMER
 from homeassistant.components.fritzbox.const import (
     ATTR_STATE_BATTERY_LOW,
     ATTR_STATE_HOLIDAY_MODE,
@@ -462,6 +463,8 @@ async def test_holidy_summer_mode(
     assert not state.attributes[ATTR_STATE_HOLIDAY_MODE]
     assert not state.attributes[ATTR_STATE_SUMMER_MODE]
     assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.HEAT, HVACMode.OFF]
+    assert state.attributes[ATTR_PRESET_MODE] is None
+    assert state.attributes[ATTR_PRESET_MODES] == [PRESET_ECO, PRESET_COMFORT]
 
     # test holiday mode
     device.holiday_active = True
@@ -475,6 +478,8 @@ async def test_holidy_summer_mode(
     assert state.attributes[ATTR_STATE_HOLIDAY_MODE]
     assert not state.attributes[ATTR_STATE_SUMMER_MODE]
     assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.HEAT]
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_HOLIDAY
+    assert state.attributes[ATTR_PRESET_MODES] == [PRESET_HOLIDAY]
 
     # test summer mode
     device.holiday_active = False
@@ -488,6 +493,8 @@ async def test_holidy_summer_mode(
     assert not state.attributes[ATTR_STATE_HOLIDAY_MODE]
     assert state.attributes[ATTR_STATE_SUMMER_MODE]
     assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.OFF]
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_SUMMER
+    assert state.attributes[ATTR_PRESET_MODES] == [PRESET_SUMMER]
 
     # back to normal state
     device.holiday_active = False
@@ -501,3 +508,5 @@ async def test_holidy_summer_mode(
     assert not state.attributes[ATTR_STATE_HOLIDAY_MODE]
     assert not state.attributes[ATTR_STATE_SUMMER_MODE]
     assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.HEAT, HVACMode.OFF]
+    assert state.attributes[ATTR_PRESET_MODE] is None
+    assert state.attributes[ATTR_PRESET_MODES] == [PRESET_ECO, PRESET_COMFORT]
