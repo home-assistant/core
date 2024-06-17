@@ -25,7 +25,7 @@ ATTR_PENDING_CHARGES = "pending_charges"
 
 ATTR_REGION = "region"
 ATTR_VCPUS = "vcpu_count"
-CONF_INSTANCE_ID = "instance_id"
+CONF_INSTANCE_ID = "instance"
 DOMAIN = "vultr"
 
 NOTIFICATION_ID = "vultr_notification"
