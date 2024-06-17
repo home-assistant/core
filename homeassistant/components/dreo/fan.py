@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import logging
 import math
+from functools import cached_property
 from typing import Any
-
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -12,13 +12,12 @@ from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage, int_states_in_range
 )
-from hscloud.const import FAN_DEVICE
+from hscloud.const import DEVICE_TYPE, FAN_DEVICE
 
 from . import MyConfigEntry
 from .entity import DreoEntity
 
 _LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
         hass: HomeAssistant,
@@ -27,17 +26,24 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Fan from a config entry."""
 
-    async_add_entities([DreoFanHA(device, config_entry) for device in config_entry.runtime_data.fans])
+    fans = [
+        device
+        for device in config_entry.runtime_data.devices
+        if DEVICE_TYPE.get(device.get("model")) == FAN_DEVICE.get("type")
+    ]
+
+    async_add_entities([DreoFanHA(device, config_entry) for device in fans])
 
 
 class DreoFanHA(DreoEntity, FanEntity):
     """Dreo fan."""
-    _state = False
-    _mode = None
-    _speed = 0
-    _direction = None
-    _oscillate = False
-    _available = True
+    _attr_state: bool | None = None
+    _attr_preset_modes: list[str] | None
+    _attr_preset_mode: str | None
+    _attr_speed_count: int
+    _attr_percentage: int | None
+    _attr_oscillating: bool | None = None
+    _attr_available: bool | None = None
 
     _attr_supported_features = (FanEntityFeature.PRESET_MODE
                                 | FanEntityFeature.SET_SPEED
@@ -50,42 +56,56 @@ class DreoFanHA(DreoEntity, FanEntity):
     @property
     def is_on(self) -> bool | None:
         """Return True if device is on."""
-        return self._state
+        return self._attr_state
 
-    @property
+    @cached_property
     def preset_modes(self) -> list[str]:
-        """Get the list of available preset modes."""
+        """Return a list of available preset modes.
+
+        Requires FanEntityFeature.SET_SPEED.
+        """
+        if hasattr(self, "_attr_preset_modes"):
+            return self._attr_preset_modes
         return FAN_DEVICE.get("config").get(self._model).get("preset_modes")
 
-    @property
+    @cached_property
     def preset_mode(self) -> str | None:
-        """Get the current preset mode."""
-        return self._mode
+        """Return the current preset mode, e.g., auto, smart, interval, favorite.
 
-    @property
+        Requires FanEntityFeature.SET_SPEED.
+        """
+        if hasattr(self, "_attr_preset_mode"):
+            return self._attr_preset_mode
+        return None
+
+    @cached_property
     def speed_count(self) -> int:
-        """Get the number of speeds the fan supports."""
+        """Return the number of speeds the fan supports."""
+        if hasattr(self, "_attr_speed_count"):
+            return self._attr_speed_count
         return int_states_in_range(
             FAN_DEVICE.get("config").get(self._model).get("speed_range")
         )
 
-    @property
+    @cached_property
     def percentage(self) -> int | None:
-        """Get the current speed."""
-        return ranged_value_to_percentage(
-            FAN_DEVICE.get("config").get(self._model).get("speed_range"),
-            self._speed
-        )
+        """Return the current speed as a percentage."""
+        if hasattr(self, "_attr_percentage"):
+            return ranged_value_to_percentage(
+                FAN_DEVICE.get("config").get(self._model).get("speed_range"),
+                self._attr_percentage
+            )
+        return 0
 
-    @property
+    @cached_property
     def oscillating(self) -> bool | None:
-        """Get the current Oscillate."""
-        return self._oscillate
+        """Return whether the fan is currently oscillating."""
+        return self._attr_oscillating
 
     @property
     def available(self) -> bool:
         """Return True if device is available."""
-        return self._available
+        return self._attr_available
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -134,19 +154,20 @@ class DreoFanHA(DreoEntity, FanEntity):
 
     def oscillate(self, oscillating: bool) -> None:
         """Set the Oscillate of fan."""
-        result = self._try_command(
+        self._try_command(
             "Set the Oscillate failed.", oscillate=oscillating
         )
-
-        if result:
-            self._oscillate = oscillating
+        self._attr_oscillating = oscillating
 
     def update(self) -> None:
         """Update Dreo fan."""
         status = self._config_entry.runtime_data.client.get_status(self._device_id)
         if status is not None:
-            self._state = status.get('power_switch')
-            self._mode = status.get('mode')
-            self._speed = status.get('speed')
-            self._oscillate = status.get('oscillate')
-            self._available = status.get('connected')
+            self._attr_state = status.get('power_switch')
+            self._attr_preset_mode = status.get('mode')
+            self._attr_percentage = status.get('speed')
+            self._attr_oscillating = status.get('oscillate')
+            self._attr_available = status.get('connected')
+
+        else:
+            self._attr_available = False

@@ -8,7 +8,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN, PLATFORMS
-from hscloud.const import DEVICE_TYPE, FAN_DEVICE
 from hscloud.hscloud import HsCloud
 from hscloud.hscloudexception import HsCloudException, HsCloudBusinessException
 
@@ -20,7 +19,7 @@ type MyConfigEntry = ConfigEntry[MyData]
 @dataclass
 class MyData:
     client: HsCloud
-    fans: []
+    devices: []
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry):
@@ -44,15 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry):
         _LOGGER.exception("Unexpected exception")
         raise ConfigEntryNotReady(f"Unexpected exception") from ex
 
-    devices = await hass.async_add_executor_job(manager.get_devices)
-
-    fans = [
-        device
-        for device in devices
-        if DEVICE_TYPE.get(device.get("model")) == FAN_DEVICE.get("type")
-    ]
-
-    config_entry.runtime_data = MyData(manager, fans)
+    config_entry.runtime_data = MyData(manager, await hass.async_add_executor_job(manager.get_devices))
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
