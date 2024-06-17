@@ -246,6 +246,7 @@ class KNXTestKit:
             GroupValueResponse(payload_value),
             source=source,
         )
+        await asyncio.sleep(0)  # advance loop to allow StateUpdater to process
 
     async def receive_write(
         self,
