@@ -1,15 +1,13 @@
 """Matter Number Inputs."""
 
 from __future__ import annotations
-
+from typing import Any
 from dataclasses import dataclass
-
 from chip.clusters import Objects as clusters
-from chip.clusters.Types import Nullable, NullValue
+from chip.clusters.Types import NullValue
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
 from homeassistant.components.number import (
-    NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
