@@ -12,11 +12,12 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import TeslemetryConfigEntry
 from .entity import TeslemetryVehicleEntity
+from .helpers import handle_vehicle_command
 from .models import TeslemetryVehicleData
 
 OPEN = 1
@@ -24,7 +25,9 @@ CLOSED = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Teslemetry cover platform from a config entry."""
 
@@ -86,7 +89,9 @@ class TeslemetryWindowEntity(TeslemetryVehicleEntity, CoverEntity):
         """Vent windows."""
         self.raise_for_scope()
         await self.wake_up_if_asleep()
-        await self.handle_command(self.api.window_control(command=WindowCommand.VENT))
+        await handle_vehicle_command(
+            self.api.window_control(command=WindowCommand.VENT)
+        )
         self._attr_is_closed = False
         self.async_write_ha_state()
 
@@ -94,7 +99,9 @@ class TeslemetryWindowEntity(TeslemetryVehicleEntity, CoverEntity):
         """Close windows."""
         self.raise_for_scope()
         await self.wake_up_if_asleep()
-        await self.handle_command(self.api.window_control(command=WindowCommand.CLOSE))
+        await handle_vehicle_command(
+            self.api.window_control(command=WindowCommand.CLOSE)
+        )
         self._attr_is_closed = True
         self.async_write_ha_state()
 
@@ -125,7 +132,7 @@ class TeslemetryChargePortEntity(TeslemetryVehicleEntity, CoverEntity):
         """Open charge port."""
         self.raise_for_scope()
         await self.wake_up_if_asleep()
-        await self.handle_command(self.api.charge_port_door_open())
+        await handle_vehicle_command(self.api.charge_port_door_open())
         self._attr_is_closed = False
         self.async_write_ha_state()
 
@@ -133,7 +140,7 @@ class TeslemetryChargePortEntity(TeslemetryVehicleEntity, CoverEntity):
         """Close charge port."""
         self.raise_for_scope()
         await self.wake_up_if_asleep()
-        await self.handle_command(self.api.charge_port_door_close())
+        await handle_vehicle_command(self.api.charge_port_door_close())
         self._attr_is_closed = True
         self.async_write_ha_state()
 
@@ -160,7 +167,7 @@ class TeslemetryFrontTrunkEntity(TeslemetryVehicleEntity, CoverEntity):
         """Open front trunk."""
         self.raise_for_scope()
         await self.wake_up_if_asleep()
-        await self.handle_command(self.api.actuate_trunk(Trunk.FRONT))
+        await handle_vehicle_command(self.api.actuate_trunk(Trunk.FRONT))
         self._attr_is_closed = False
         self.async_write_ha_state()
 
@@ -196,7 +203,7 @@ class TeslemetryRearTrunkEntity(TeslemetryVehicleEntity, CoverEntity):
         if self.is_closed is not False:
             self.raise_for_scope()
             await self.wake_up_if_asleep()
-            await self.handle_command(self.api.actuate_trunk(Trunk.REAR))
+            await handle_vehicle_command(self.api.actuate_trunk(Trunk.REAR))
             self._attr_is_closed = False
             self.async_write_ha_state()
 
@@ -205,6 +212,6 @@ class TeslemetryRearTrunkEntity(TeslemetryVehicleEntity, CoverEntity):
         if self.is_closed is not True:
             self.raise_for_scope()
             await self.wake_up_if_asleep()
-            await self.handle_command(self.api.actuate_trunk(Trunk.REAR))
+            await handle_vehicle_command(self.api.actuate_trunk(Trunk.REAR))
             self._attr_is_closed = True
             self.async_write_ha_state()

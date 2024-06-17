@@ -3,11 +3,13 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import locative
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
+from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.components.locative import DOMAIN, TRACKER_UPDATE
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
@@ -15,14 +17,18 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
 
+from tests.typing import ClientSessionGenerator
+
 
 @pytest.fixture(autouse=True)
-def mock_dev_track(mock_device_tracker_conf):
+def mock_dev_track(mock_device_tracker_conf: list[Device]) -> None:
     """Mock device tracker config loading."""
 
 
 @pytest.fixture
-async def locative_client(hass, hass_client):
+async def locative_client(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> TestClient:
     """Locative mock client."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()

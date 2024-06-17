@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
 )
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -87,6 +88,9 @@ def adb_decorator[_ADBDeviceT: AndroidTVEntity, **_P, _R](
                 await self.aftv.adb_close()
                 self._attr_available = False
                 return None
+            except ServiceValidationError:
+                # Service validation error is thrown because raised by remote services
+                raise
             except Exception as err:  # noqa: BLE001
                 # An unforeseen exception occurred. Close the ADB connection so that
                 # it doesn't happen over and over again.

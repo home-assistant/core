@@ -544,6 +544,7 @@ async def test_cloud_disconnect_retry(
         ),  # Success, we ignore the user_id
     ],
 )
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_webhook_post(
     hass: HomeAssistant,
     withings: AsyncMock,
@@ -551,7 +552,6 @@ async def test_webhook_post(
     hass_client_no_auth: ClientSessionGenerator,
     body: dict[str, Any],
     expected_code: int,
-    current_request_with_host: None,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test webhook callback."""

@@ -1,10 +1,12 @@
 """The tests for Home Assistant frontend."""
 
+from asyncio import AbstractEventLoop
 from http import HTTPStatus
 import re
 from typing import Any
 from unittest.mock import patch
 
+from aiohttp.test_utils import TestClient
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -16,16 +18,22 @@ from homeassistant.components.frontend import (
     DOMAIN,
     EVENT_PANELS_UPDATED,
     THEMES_STORAGE_KEY,
+    add_extra_js_url,
     async_register_built_in_panel,
     async_remove_panel,
+    remove_extra_js_url,
 )
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockUser, async_capture_events, async_fire_time_changed
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
+from tests.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 
 MOCK_THEMES = {
     "happy": {"primary-color": "red", "app-header-background-color": "blue"},
@@ -84,31 +92,43 @@ async def frontend_themes(hass):
 
 
 @pytest.fixture
-def aiohttp_client(event_loop, aiohttp_client, socket_enabled):
+def aiohttp_client(
+    event_loop: AbstractEventLoop,
+    aiohttp_client: ClientSessionGenerator,
+    socket_enabled: None,
+) -> ClientSessionGenerator:
     """Return aiohttp_client and allow opening sockets."""
     return aiohttp_client
 
 
 @pytest.fixture
-async def mock_http_client(hass, aiohttp_client, frontend):
+async def mock_http_client(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, frontend
+) -> TestClient:
     """Start the Home Assistant HTTP component."""
     return await aiohttp_client(hass.http.app)
 
 
 @pytest.fixture
-async def themes_ws_client(hass, hass_ws_client, frontend_themes):
+async def themes_ws_client(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, frontend_themes
+) -> MockHAClientWebSocket:
     """Start the Home Assistant HTTP component."""
     return await hass_ws_client(hass)
 
 
 @pytest.fixture
-async def ws_client(hass, hass_ws_client, frontend):
+async def ws_client(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, frontend
+) -> MockHAClientWebSocket:
     """Start the Home Assistant HTTP component."""
     return await hass_ws_client(hass)
 
 
 @pytest.fixture
-async def mock_http_client_with_extra_js(hass, aiohttp_client, ignore_frontend_deps):
+async def mock_http_client_with_extra_js(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, ignore_frontend_deps
+) -> TestClient:
     """Start the Home Assistant HTTP component."""
     assert await async_setup_component(
         hass,
@@ -387,27 +407,53 @@ async def test_missing_themes(hass: HomeAssistant, ws_client) -> None:
     assert msg["result"]["themes"] == {}
 
 
-async def test_extra_js(
-    hass: HomeAssistant, mock_http_client_with_extra_js, mock_onboarded
-):
+@pytest.mark.usefixtures("mock_onboarded")
+async def test_extra_js(hass: HomeAssistant, mock_http_client_with_extra_js) -> None:
     """Test that extra javascript is loaded."""
-    resp = await mock_http_client_with_extra_js.get("")
-    assert resp.status == 200
-    assert "cache-control" not in resp.headers
 
-    text = await resp.text()
+    async def get_response():
+        resp = await mock_http_client_with_extra_js.get("")
+        assert resp.status == 200
+        assert "cache-control" not in resp.headers
+
+        return await resp.text()
+
+    text = await get_response()
     assert '"/local/my_module.js"' in text
     assert '"/local/my_es5.js"' in text
 
+    # Test dynamically adding and removing extra javascript
+    add_extra_js_url(hass, "/local/my_module_2.js", False)
+    add_extra_js_url(hass, "/local/my_es5_2.js", True)
+    text = await get_response()
+    assert '"/local/my_module_2.js"' in text
+    assert '"/local/my_es5_2.js"' in text
+
+    remove_extra_js_url(hass, "/local/my_module_2.js", False)
+    remove_extra_js_url(hass, "/local/my_es5_2.js", True)
+    text = await get_response()
+    assert '"/local/my_module_2.js"' not in text
+    assert '"/local/my_es5_2.js"' not in text
+
+    # Remove again should not raise
+    remove_extra_js_url(hass, "/local/my_module_2.js", False)
+    remove_extra_js_url(hass, "/local/my_es5_2.js", True)
+    text = await get_response()
+    assert '"/local/my_module_2.js"' not in text
+    assert '"/local/my_es5_2.js"' not in text
+
     # safe mode
     hass.config.safe_mode = True
-    resp = await mock_http_client_with_extra_js.get("")
-    assert resp.status == 200
-    assert "cache-control" not in resp.headers
-
-    text = await resp.text()
+    text = await get_response()
     assert '"/local/my_module.js"' not in text
     assert '"/local/my_es5.js"' not in text
+
+    # Test dynamically adding extra javascript
+    add_extra_js_url(hass, "/local/my_module_2.js", False)
+    add_extra_js_url(hass, "/local/my_es5_2.js", True)
+    text = await get_response()
+    assert '"/local/my_module_2.js"' not in text
+    assert '"/local/my_es5_2.js"' not in text
 
 
 async def test_get_panels(

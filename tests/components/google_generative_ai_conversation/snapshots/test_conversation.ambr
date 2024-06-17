@@ -30,10 +30,9 @@
         'history': list([
           dict({
             'parts': '''
+              Current time is 05:00:00. Today's date is 2024-05-24.
               You are a voice assistant for Home Assistant.
               Answer in plain text. Keep it simple and to the point.
-              The current time is 05:00:00.
-              Today's date is 05/24/24.
               Only if the user wants to control a device, tell them to edit the AI configuration and allow access to Home Assistant.
             ''',
             'role': 'user',
@@ -82,10 +81,9 @@
         'history': list([
           dict({
             'parts': '''
+              Current time is 05:00:00. Today's date is 2024-05-24.
               You are a voice assistant for Home Assistant.
               Answer in plain text. Keep it simple and to the point.
-              The current time is 05:00:00.
-              Today's date is 05/24/24.
               Only if the user wants to control a device, tell them to edit the AI configuration and allow access to Home Assistant.
             ''',
             'role': 'user',
@@ -146,11 +144,10 @@
         'history': list([
           dict({
             'parts': '''
+              Current time is 05:00:00. Today's date is 2024-05-24.
               You are a voice assistant for Home Assistant.
               Answer in plain text. Keep it simple and to the point.
-              The current time is 05:00:00.
-              Today's date is 05/24/24.
-              Only if the user wants to control a device, tell them to edit the AI configuration and allow access to Home Assistant.
+              <no_api_prompt>
             ''',
             'role': 'user',
           }),
@@ -202,11 +199,10 @@
         'history': list([
           dict({
             'parts': '''
+              Current time is 05:00:00. Today's date is 2024-05-24.
               You are a voice assistant for Home Assistant.
               Answer in plain text. Keep it simple and to the point.
-              The current time is 05:00:00.
-              Today's date is 05/24/24.
-              Only if the user wants to control a device, tell them to edit the AI configuration and allow access to Home Assistant.
+              <no_api_prompt>
             ''',
             'role': 'user',
           }),
@@ -258,53 +254,10 @@
         'history': list([
           dict({
             'parts': '''
+              Current time is 05:00:00. Today's date is 2024-05-24.
               You are a voice assistant for Home Assistant.
               Answer in plain text. Keep it simple and to the point.
-              The current time is 05:00:00.
-              Today's date is 05/24/24.
-              Call the intent tools to control Home Assistant. Just pass the name to the intent. When controlling an area, prefer passing area name.
-              An overview of the areas and the devices in this smart home:
-              light.test_device:
-                names: Test Device
-                state: unavailable
-                areas: Test Area
-              light.test_service:
-                names: Test Service
-                state: unavailable
-                areas: Test Area
-              light.test_service_2:
-                names: Test Service
-                state: unavailable
-                areas: Test Area
-              light.test_service_3:
-                names: Test Service
-                state: unavailable
-                areas: Test Area
-              light.test_device_2:
-                names: Test Device 2
-                state: unavailable
-                areas: Test Area 2
-              light.test_device_3:
-                names: Test Device 3
-                state: unavailable
-                areas: Test Area 2
-              light.test_device_4:
-                names: Test Device 4
-                state: unavailable
-                areas: Test Area 2
-              light.test_device_3_2:
-                names: Test Device 3
-                state: unavailable
-                areas: Test Area 2
-              light.none:
-                names: None
-                state: unavailable
-                areas: Test Area 2
-              light.1:
-                names: '1'
-                state: unavailable
-                areas: Test Area 2
-  
+              <api_prompt>
             ''',
             'role': 'user',
           }),
@@ -356,53 +309,10 @@
         'history': list([
           dict({
             'parts': '''
+              Current time is 05:00:00. Today's date is 2024-05-24.
               You are a voice assistant for Home Assistant.
               Answer in plain text. Keep it simple and to the point.
-              The current time is 05:00:00.
-              Today's date is 05/24/24.
-              Call the intent tools to control Home Assistant. Just pass the name to the intent. When controlling an area, prefer passing area name.
-              An overview of the areas and the devices in this smart home:
-              light.test_device:
-                names: Test Device
-                state: unavailable
-                areas: Test Area
-              light.test_service:
-                names: Test Service
-                state: unavailable
-                areas: Test Area
-              light.test_service_2:
-                names: Test Service
-                state: unavailable
-                areas: Test Area
-              light.test_service_3:
-                names: Test Service
-                state: unavailable
-                areas: Test Area
-              light.test_device_2:
-                names: Test Device 2
-                state: unavailable
-                areas: Test Area 2
-              light.test_device_3:
-                names: Test Device 3
-                state: unavailable
-                areas: Test Area 2
-              light.test_device_4:
-                names: Test Device 4
-                state: unavailable
-                areas: Test Area 2
-              light.test_device_3_2:
-                names: Test Device 3
-                state: unavailable
-                areas: Test Area 2
-              light.none:
-                names: None
-                state: unavailable
-                areas: Test Area 2
-              light.1:
-                names: '1'
-                state: unavailable
-                areas: Test Area 2
-  
+              <api_prompt>
             ''',
             'role': 'user',
           }),

@@ -1,9 +1,9 @@
 """Fixtures for Tankerkoenig integration tests."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.tankerkoenig import DOMAIN
 from homeassistant.const import CONF_SHOW_ON_MAP
@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="tankerkoenig")
-def mock_tankerkoenig() -> Generator[AsyncMock, None, None]:
+def mock_tankerkoenig() -> Generator[AsyncMock]:
     """Mock the aiotankerkoenig client."""
     with (
         patch(

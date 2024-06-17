@@ -8,6 +8,8 @@ import logging
 from types import MappingProxyType
 from typing import Any
 
+from google.ai import generativelanguage_v1beta
+from google.api_core.client_options import ClientOptions
 from google.api_core.exceptions import ClientError, GoogleAPICallError
 import google.generativeai as genai
 import voluptuous as vol
@@ -72,12 +74,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    genai.configure(api_key=data[CONF_API_KEY])
-
-    def get_first_model():
-        return next(genai.list_models(request_options={"timeout": 5.0}), None)
-
-    await hass.async_add_executor_job(partial(get_first_model))
+    client = generativelanguage_v1beta.ModelServiceAsyncClient(
+        client_options=ClientOptions(api_key=data[CONF_API_KEY])
+    )
+    await client.list_models(timeout=5.0)
 
 
 class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):

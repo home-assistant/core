@@ -18,16 +18,10 @@ from homeassistant.util import dt as dt_util
 from .const import CONF_PROVINCE, DOMAIN
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the Holiday Calendar config entry."""
-    country: str = config_entry.data[CONF_COUNTRY]
-    province: str | None = config_entry.data.get(CONF_PROVINCE)
-    language = hass.config.language
-
+def _get_obj_holidays_and_language(
+    country: str, province: str | None, language: str
+) -> tuple[HolidayBase, str]:
+    """Get the object for the requested country and year."""
     obj_holidays = country_holidays(
         country,
         subdiv=province,
@@ -57,6 +51,23 @@ async def async_setup_entry(
             language=default_language,
         )
         language = default_language
+
+    return (obj_holidays, language)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Holiday Calendar config entry."""
+    country: str = config_entry.data[CONF_COUNTRY]
+    province: str | None = config_entry.data.get(CONF_PROVINCE)
+    language = hass.config.language
+
+    obj_holidays, language = await hass.async_add_executor_job(
+        _get_obj_holidays_and_language, country, province, language
+    )
 
     async_add_entities(
         [

@@ -80,14 +80,15 @@ build.json @home-assistant/supervisor
 /tests/components/airzone/ @Noltari
 /homeassistant/components/airzone_cloud/ @Noltari
 /tests/components/airzone_cloud/ @Noltari
-/homeassistant/components/aladdin_connect/ @mkmer
-/tests/components/aladdin_connect/ @mkmer
+/homeassistant/components/aladdin_connect/ @swcloudgenie
+/tests/components/aladdin_connect/ @swcloudgenie
 /homeassistant/components/alarm_control_panel/ @home-assistant/core
 /tests/components/alarm_control_panel/ @home-assistant/core
 /homeassistant/components/alert/ @home-assistant/core @frenck
 /tests/components/alert/ @home-assistant/core @frenck
 /homeassistant/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
 /tests/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
+/homeassistant/components/amazon_polly/ @jschlyter
 /homeassistant/components/amberelectric/ @madpilot
 /tests/components/amberelectric/ @madpilot
 /homeassistant/components/ambient_network/ @thomaskistler
@@ -129,6 +130,8 @@ build.json @home-assistant/supervisor
 /tests/components/aprs/ @PhilRW
 /homeassistant/components/apsystems/ @mawoka-myblock @SonnenladenGmbH
 /tests/components/apsystems/ @mawoka-myblock @SonnenladenGmbH
+/homeassistant/components/aquacell/ @Jordi1990
+/tests/components/aquacell/ @Jordi1990
 /homeassistant/components/aranet/ @aschmitz @thecode @anrijs
 /tests/components/aranet/ @aschmitz @thecode @anrijs
 /homeassistant/components/arcam_fmj/ @elupus
@@ -184,8 +187,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/binary_sensor/ @home-assistant/core
 /tests/components/binary_sensor/ @home-assistant/core
 /homeassistant/components/bizkaibus/ @UgaitzEtxebarria
-/homeassistant/components/blebox/ @bbx-a @riokuu @swistakm
-/tests/components/blebox/ @bbx-a @riokuu @swistakm
+/homeassistant/components/blebox/ @bbx-a @swistakm
+/tests/components/blebox/ @bbx-a @swistakm
 /homeassistant/components/blink/ @fronzbot @mkmer
 /tests/components/blink/ @fronzbot @mkmer
 /homeassistant/components/blue_current/ @Floris272 @gleeuwen
@@ -342,8 +345,8 @@ build.json @home-assistant/supervisor
 /tests/components/drop_connect/ @ChandlerSystems @pfrazer
 /homeassistant/components/dsmr/ @Robbie1221 @frenck
 /tests/components/dsmr/ @Robbie1221 @frenck
-/homeassistant/components/dsmr_reader/ @sorted-bits @glodenox
-/tests/components/dsmr_reader/ @sorted-bits @glodenox
+/homeassistant/components/dsmr_reader/ @sorted-bits @glodenox @erwindouna
+/tests/components/dsmr_reader/ @sorted-bits @glodenox @erwindouna
 /homeassistant/components/duotecno/ @cereal2nd
 /tests/components/duotecno/ @cereal2nd
 /homeassistant/components/dwd_weather_warnings/ @runningman84 @stephan192 @andarotajo
@@ -379,7 +382,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/elvia/ @ludeeus
 /tests/components/elvia/ @ludeeus
 /homeassistant/components/emby/ @mezz64
-/homeassistant/components/emoncms/ @borpin
+/homeassistant/components/emoncms/ @borpin @alexandrecuer
 /homeassistant/components/emonitor/ @bdraco
 /tests/components/emonitor/ @bdraco
 /homeassistant/components/emulated_hue/ @bdraco @Tho85
@@ -658,7 +661,8 @@ build.json @home-assistant/supervisor
 /tests/components/imgw_pib/ @bieniu
 /homeassistant/components/improv_ble/ @emontnemery
 /tests/components/improv_ble/ @emontnemery
-/homeassistant/components/incomfort/ @zxdavb
+/homeassistant/components/incomfort/ @jbouwh
+/tests/components/incomfort/ @jbouwh
 /homeassistant/components/influxdb/ @mdegat01
 /tests/components/influxdb/ @mdegat01
 /homeassistant/components/inkbird/ @bdraco
@@ -702,6 +706,8 @@ build.json @home-assistant/supervisor
 /tests/components/islamic_prayer_times/ @engrbm87 @cpfair
 /homeassistant/components/iss/ @DurgNomis-drol
 /tests/components/iss/ @DurgNomis-drol
+/homeassistant/components/ista_ecotrend/ @tr4nt0r
+/tests/components/ista_ecotrend/ @tr4nt0r
 /homeassistant/components/isy994/ @bdraco @shbatm
 /tests/components/isy994/ @bdraco @shbatm
 /homeassistant/components/izone/ @Swamp-Ig
@@ -1094,6 +1100,8 @@ build.json @home-assistant/supervisor
 /tests/components/pvoutput/ @frenck
 /homeassistant/components/pvpc_hourly_pricing/ @azogue
 /tests/components/pvpc_hourly_pricing/ @azogue
+/homeassistant/components/pyload/ @tr4nt0r
+/tests/components/pyload/ @tr4nt0r
 /homeassistant/components/qbittorrent/ @geoffreylagaisse @finder39
 /tests/components/qbittorrent/ @geoffreylagaisse @finder39
 /homeassistant/components/qingping/ @bdraco
@@ -1486,8 +1494,6 @@ build.json @home-assistant/supervisor
 /tests/components/unifi/ @Kane610
 /homeassistant/components/unifi_direct/ @tofuSCHNITZEL
 /homeassistant/components/unifiled/ @florisvdk
-/homeassistant/components/unifiprotect/ @bdraco
-/tests/components/unifiprotect/ @bdraco
 /homeassistant/components/upb/ @gwww
 /tests/components/upb/ @gwww
 /homeassistant/components/upc_connect/ @pvizeli @fabaff

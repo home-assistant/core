@@ -354,9 +354,8 @@ async def test_esphome_device_with_current_bluetooth(
     )
 
 
-async def test_unique_id_updated_to_mac(
-    hass: HomeAssistant, mock_client, mock_zeroconf: None
-) -> None:
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_unique_id_updated_to_mac(hass: HomeAssistant, mock_client) -> None:
     """Test we update config entry unique ID to MAC address."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -384,8 +383,9 @@ async def test_unique_id_updated_to_mac(
     assert entry.unique_id == "11:22:33:44:55:aa"
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_unique_id_not_updated_if_name_same_and_already_mac(
-    hass: HomeAssistant, mock_client: APIClient, mock_zeroconf: None
+    hass: HomeAssistant, mock_client: APIClient
 ) -> None:
     """Test we never update the entry unique ID event if the name is the same."""
     entry = MockConfigEntry(
@@ -418,8 +418,9 @@ async def test_unique_id_not_updated_if_name_same_and_already_mac(
     assert entry.unique_id == "11:22:33:44:55:aa"
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_unique_id_updated_if_name_unset_and_already_mac(
-    hass: HomeAssistant, mock_client: APIClient, mock_zeroconf: None
+    hass: HomeAssistant, mock_client: APIClient
 ) -> None:
     """Test we never update config entry unique ID even if the name is unset."""
     entry = MockConfigEntry(
@@ -447,8 +448,9 @@ async def test_unique_id_updated_if_name_unset_and_already_mac(
     assert entry.unique_id == "11:22:33:44:55:aa"
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_unique_id_not_updated_if_name_different_and_already_mac(
-    hass: HomeAssistant, mock_client: APIClient, mock_zeroconf: None
+    hass: HomeAssistant, mock_client: APIClient
 ) -> None:
     """Test we do not update config entry unique ID if the name is different."""
     entry = MockConfigEntry(
@@ -483,8 +485,9 @@ async def test_unique_id_not_updated_if_name_different_and_already_mac(
     assert entry.data[CONF_DEVICE_NAME] == "test"
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_name_updated_only_if_mac_matches(
-    hass: HomeAssistant, mock_client: APIClient, mock_zeroconf: None
+    hass: HomeAssistant, mock_client: APIClient
 ) -> None:
     """Test we update config entry name only if the mac matches."""
     entry = MockConfigEntry(
@@ -517,8 +520,9 @@ async def test_name_updated_only_if_mac_matches(
     assert entry.data[CONF_DEVICE_NAME] == "new"
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_name_updated_only_if_mac_was_unset(
-    hass: HomeAssistant, mock_client: APIClient, mock_zeroconf: None
+    hass: HomeAssistant, mock_client: APIClient
 ) -> None:
     """Test we update config entry name if the old unique id was not a mac."""
     entry = MockConfigEntry(
@@ -551,10 +555,10 @@ async def test_name_updated_only_if_mac_was_unset(
     assert entry.data[CONF_DEVICE_NAME] == "new"
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_connection_aborted_wrong_device(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_zeroconf: None,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test we abort the connection if the unique id is a mac and neither name or mac match."""
@@ -615,10 +619,10 @@ async def test_connection_aborted_wrong_device(
     assert "Unexpected device found at" not in caplog.text
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_failure_during_connect(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_zeroconf: None,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test we disconnect when there is a failure during connection setup."""
@@ -968,6 +972,7 @@ async def test_esphome_user_services_changes(
 
 async def test_esphome_device_with_suggested_area(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: Callable[
         [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
@@ -983,9 +988,8 @@ async def test_esphome_device_with_suggested_area(
         states=[],
     )
     await hass.async_block_till_done()
-    dev_reg = dr.async_get(hass)
     entry = device.entry
-    dev = dev_reg.async_get_device(
+    dev = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
     )
     assert dev.suggested_area == "kitchen"
@@ -993,6 +997,7 @@ async def test_esphome_device_with_suggested_area(
 
 async def test_esphome_device_with_project(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: Callable[
         [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
@@ -1008,9 +1013,8 @@ async def test_esphome_device_with_project(
         states=[],
     )
     await hass.async_block_till_done()
-    dev_reg = dr.async_get(hass)
     entry = device.entry
-    dev = dev_reg.async_get_device(
+    dev = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
     )
     assert dev.manufacturer == "mfr"
@@ -1020,6 +1024,7 @@ async def test_esphome_device_with_project(
 
 async def test_esphome_device_with_manufacturer(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: Callable[
         [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
@@ -1035,9 +1040,8 @@ async def test_esphome_device_with_manufacturer(
         states=[],
     )
     await hass.async_block_till_done()
-    dev_reg = dr.async_get(hass)
     entry = device.entry
-    dev = dev_reg.async_get_device(
+    dev = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
     )
     assert dev.manufacturer == "acme"
@@ -1045,6 +1049,7 @@ async def test_esphome_device_with_manufacturer(
 
 async def test_esphome_device_with_web_server(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: Callable[
         [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
@@ -1060,9 +1065,8 @@ async def test_esphome_device_with_web_server(
         states=[],
     )
     await hass.async_block_till_done()
-    dev_reg = dr.async_get(hass)
     entry = device.entry
-    dev = dev_reg.async_get_device(
+    dev = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
     )
     assert dev.configuration_url == "http://test.local:80"
@@ -1070,6 +1074,7 @@ async def test_esphome_device_with_web_server(
 
 async def test_esphome_device_with_compilation_time(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: Callable[
         [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
@@ -1085,9 +1090,8 @@ async def test_esphome_device_with_compilation_time(
         states=[],
     )
     await hass.async_block_till_done()
-    dev_reg = dr.async_get(hass)
     entry = device.entry
-    dev = dev_reg.async_get_device(
+    dev = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
     )
     assert "comp_time" in dev.sw_version

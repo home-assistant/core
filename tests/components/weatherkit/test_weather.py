@@ -18,8 +18,8 @@ from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
     LEGACY_SERVICE_GET_FORECAST,
     SERVICE_GET_FORECASTS,
+    WeatherEntityFeature,
 )
-from homeassistant.components.weather.const import WeatherEntityFeature
 from homeassistant.components.weatherkit.const import ATTRIBUTION
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant

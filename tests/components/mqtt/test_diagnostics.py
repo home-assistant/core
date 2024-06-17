@@ -152,6 +152,7 @@ async def test_entry_diagnostics(
 async def test_redact_diagnostics(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hass_client: ClientSessionGenerator,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
@@ -266,9 +267,10 @@ async def test_redact_diagnostics(
     }
 
     # Disable the entity and remove the state
-    ent_registry = er.async_get(hass)
-    device_tracker_entry = er.async_entries_for_device(ent_registry, device_entry.id)[0]
-    ent_registry.async_update_entity(
+    device_tracker_entry = er.async_entries_for_device(
+        entity_registry, device_entry.id
+    )[0]
+    entity_registry.async_update_entity(
         device_tracker_entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
     )
     hass.states.async_remove(device_tracker_entry.entity_id)

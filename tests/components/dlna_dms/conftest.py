@@ -38,7 +38,7 @@ NEW_DEVICE_LOCATION: Final = "http://192.88.99.7" + "/dmr_description.xml"
 
 
 @pytest.fixture
-async def setup_media_source(hass) -> None:
+async def setup_media_source(hass: HomeAssistant) -> None:
     """Set up media source."""
     assert await async_setup_component(hass, "media_source", {})
 

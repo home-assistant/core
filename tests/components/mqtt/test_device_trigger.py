@@ -1358,7 +1358,7 @@ async def test_cleanup_trigger(
 
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_called_once_with(
-        "homeassistant/device_automation/bla/config", "", 0, True
+        "homeassistant/device_automation/bla/config", None, 0, True
     )
 
 

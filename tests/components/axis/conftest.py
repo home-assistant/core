@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable
 from copy import deepcopy
 from types import MappingProxyType
 from typing import Any
@@ -11,6 +11,7 @@ from unittest.mock import AsyncMock, patch
 from axis.rtsp import Signal, State
 import pytest
 import respx
+from typing_extensions import Generator
 
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -49,7 +50,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.axis.async_setup_entry", return_value=True
@@ -110,10 +111,10 @@ def config_entry_options_fixture() -> MappingProxyType[str, Any]:
 
 @pytest.fixture(name="mock_vapix_requests")
 def default_request_fixture(
-    respx_mock: respx,
+    respx_mock: respx.MockRouter,
     port_management_payload: dict[str, Any],
-    param_properties_payload: dict[str, Any],
-    param_ports_payload: dict[str, Any],
+    param_properties_payload: str,
+    param_ports_payload: str,
     mqtt_status_code: int,
 ) -> Callable[[str], None]:
     """Mock default Vapix requests responses."""
@@ -229,19 +230,19 @@ def io_port_management_data_fixture() -> dict[str, Any]:
 
 
 @pytest.fixture(name="param_properties_payload")
-def param_properties_data_fixture() -> dict[str, Any]:
+def param_properties_data_fixture() -> str:
     """Property parameter data."""
     return PROPERTIES_RESPONSE
 
 
 @pytest.fixture(name="param_ports_payload")
-def param_ports_data_fixture() -> dict[str, Any]:
+def param_ports_data_fixture() -> str:
     """Property parameter data."""
     return PORTS_RESPONSE
 
 
 @pytest.fixture(name="mqtt_status_code")
-def mqtt_status_code_fixture():
+def mqtt_status_code_fixture() -> int:
     """Property parameter data."""
     return 200
 
@@ -280,7 +281,7 @@ async def setup_config_entry_fixture(
 
 
 @pytest.fixture(autouse=True)
-def mock_axis_rtspclient() -> Generator[Callable[[dict | None, str], None], None, None]:
+def mock_axis_rtspclient() -> Generator[Callable[[dict | None, str], None]]:
     """No real RTSP communication allowed."""
     with patch("axis.stream_manager.RTSPClient") as rtsp_client_mock:
         rtsp_client_mock.return_value.session.state = State.STOPPED

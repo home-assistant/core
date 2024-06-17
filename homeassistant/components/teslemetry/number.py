@@ -16,13 +16,14 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, PRECISION_WHOLE, UnitOfElectricCurrent
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 
+from . import TeslemetryConfigEntry
 from .entity import TeslemetryEnergyInfoEntity, TeslemetryVehicleEntity
+from .helpers import handle_command, handle_vehicle_command
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 
@@ -82,7 +83,7 @@ ENERGY_INFO_DESCRIPTIONS: tuple[TeslemetryNumberBatteryEntityDescription, ...] =
         requires="components_battery",
     ),
     TeslemetryNumberBatteryEntityDescription(
-        key="off_grid_vehicle_charging_reserve",
+        key="off_grid_vehicle_charging_reserve_percent",
         func=lambda api, value: api.off_grid_vehicle_charging_reserve(int(value)),
         requires="components_off_grid_vehicle_charging_reserve_supported",
     ),
@@ -90,7 +91,9 @@ ENERGY_INFO_DESCRIPTIONS: tuple[TeslemetryNumberBatteryEntityDescription, ...] =
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Teslemetry number platform from a config entry."""
 
@@ -161,7 +164,7 @@ class TeslemetryVehicleNumberEntity(TeslemetryVehicleEntity, NumberEntity):
         value = int(value)
         self.raise_for_scope()
         await self.wake_up_if_asleep()
-        await self.handle_command(self.entity_description.func(self.api, value))
+        await handle_vehicle_command(self.entity_description.func(self.api, value))
         self._attr_native_value = value
         self.async_write_ha_state()
 
@@ -196,6 +199,6 @@ class TeslemetryEnergyInfoNumberSensorEntity(TeslemetryEnergyInfoEntity, NumberE
         """Set new value."""
         value = int(value)
         self.raise_for_scope()
-        await self.handle_command(self.entity_description.func(self.api, value))
+        await handle_command(self.entity_description.func(self.api, value))
         self._attr_native_value = value
         self.async_write_ha_state()

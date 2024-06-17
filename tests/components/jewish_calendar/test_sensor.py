@@ -5,7 +5,13 @@ from datetime import datetime as dt, timedelta
 import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.jewish_calendar.const import DOMAIN
+from homeassistant.components.jewish_calendar.const import (
+    CONF_CANDLE_LIGHT_MINUTES,
+    CONF_DIASPORA,
+    CONF_HAVDALAH_OFFSET_MINUTES,
+    DOMAIN,
+)
+from homeassistant.const import CONF_LANGUAGE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -169,8 +175,8 @@ async def test_jewish_calendar_sensor(
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={
-                "language": language,
-                "diaspora": diaspora,
+                CONF_LANGUAGE: language,
+                CONF_DIASPORA: diaspora,
             },
         )
         entry.add_to_hass(hass)
@@ -511,10 +517,12 @@ async def test_shabbat_times_sensor(
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={
-                "language": language,
-                "diaspora": diaspora,
-                "candle_lighting_minutes_before_sunset": candle_lighting,
-                "havdalah_minutes_after_sunset": havdalah,
+                CONF_LANGUAGE: language,
+                CONF_DIASPORA: diaspora,
+            },
+            options={
+                CONF_CANDLE_LIGHT_MINUTES: candle_lighting,
+                CONF_HAVDALAH_OFFSET_MINUTES: havdalah,
             },
         )
         entry.add_to_hass(hass)
@@ -620,7 +628,7 @@ async def test_no_discovery_info(
     assert await async_setup_component(
         hass,
         SENSOR_DOMAIN,
-        {SENSOR_DOMAIN: {"platform": DOMAIN}},
+        {SENSOR_DOMAIN: {CONF_PLATFORM: DOMAIN}},
     )
     await hass.async_block_till_done()
     assert SENSOR_DOMAIN in hass.config.components

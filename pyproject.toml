@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2024.6.0.dev0"
+version     = "2024.7.0.dev0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -28,7 +28,7 @@ dependencies    = [
     "aiohttp_cors==0.7.0",
     "aiohttp-fast-url-dispatcher==0.3.0",
     "aiohttp-fast-zlib==0.1.0",
-    "aiozoneinfo==0.1.0",
+    "aiozoneinfo==0.2.0",
     "astral==2.2",
     "async-interrupt==1.1.1",
     "attrs==23.2.0",
@@ -40,28 +40,28 @@ dependencies    = [
     "fnv-hash-fast==0.5.0",
     # hass-nabucasa is imported by helpers which don't depend on the cloud
     # integration
-    "hass-nabucasa==0.81.0",
+    "hass-nabucasa==0.81.1",
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
     "httpx==0.27.0",
-    "home-assistant-bluetooth==1.12.0",
+    "home-assistant-bluetooth==1.12.1",
     "ifaddr==0.2.0",
     "Jinja2==3.1.4",
     "lru-dict==1.3.0",
     "PyJWT==2.8.0",
     # PyJWT has loose dependency. We want the latest one.
-    "cryptography==42.0.5",
+    "cryptography==42.0.8",
     "Pillow==10.3.0",
     "pyOpenSSL==24.1.0",
-    "orjson==3.10.3",
+    "orjson==3.9.15",
     "packaging>=23.1",
     "pip>=21.3.1",
     "psutil-home-assistant==0.0.1",
     "python-slugify==8.0.4",
     "PyYAML==6.0.1",
-    "requests==2.31.0",
+    "requests==2.32.3",
     "SQLAlchemy==2.0.30",
-    "typing-extensions>=4.12.0,<5.0",
+    "typing-extensions>=4.12.2,<5.0",
     "ulid-transform==0.9.0",
     # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
     # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
@@ -526,6 +526,8 @@ filterwarnings = [
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:ttls",
     # https://github.com/mvantellingen/python-zeep/pull/1364 - >4.2.1
     "ignore:'cgi' is deprecated and slated for removal in Python 3.13:DeprecationWarning:zeep.utils",
+    # https://github.com/vacanza/python-holidays/discussions/1800
+    "ignore::DeprecationWarning:holidays",
 
     # -- fixed for Python 3.13
     # https://github.com/rhasspy/wyoming/commit/e34af30d455b6f2bb9e5cfb25fad8d276914bc54 - >=1.4.2
@@ -669,7 +671,7 @@ filterwarnings = [
 ]
 
 [tool.ruff]
-required-version = ">=0.4.4"
+required-version = ">=0.4.8"
 
 [tool.ruff.lint]
 select = [
@@ -765,7 +767,6 @@ ignore = [
     "PLW2901", # Outer {outer_kind} variable {name} overwritten by inner {inner_kind} target
     "PT004", # Fixture {fixture} does not return anything, add leading underscore
     "PT011", # pytest.raises({exception}) is too broad, set the `match` parameter or use a more specific exception
-    "PT012", # `pytest.raises()` block should contain a single simple statement
     "PT018", # Assertion should be broken down into multiple parts
     "RUF001", # String contains ambiguous unicode character.
     "RUF002", # Docstring contains ambiguous unicode character.

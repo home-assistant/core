@@ -181,4 +181,4 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdateMixin):
             self.hass, self._sub_state
         )
         if self.device_id:
-            self.hass.data[DATA_MQTT].tags[self.device_id].pop(discovery_id)
+            del self.hass.data[DATA_MQTT].tags[self.device_id][discovery_id]

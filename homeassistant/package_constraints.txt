@@ -7,7 +7,7 @@ aiohttp-fast-url-dispatcher==0.3.0
 aiohttp-fast-zlib==0.1.0
 aiohttp==3.9.5
 aiohttp_cors==0.7.0
-aiozoneinfo==0.1.0
+aiozoneinfo==0.2.0
 astral==2.2
 async-interrupt==1.1.1
 async-upnp-client==0.38.3
@@ -23,23 +23,23 @@ bluetooth-data-tools==1.19.0
 cached_ipaddress==0.3.0
 certifi>=2021.5.30
 ciso8601==2.3.1
-cryptography==42.0.5
+cryptography==42.0.8
 dbus-fast==2.21.3
 fnv-hash-fast==0.5.0
 ha-av==10.1.1
 ha-ffmpeg==3.2.0
 habluetooth==3.1.1
-hass-nabucasa==0.81.0
+hass-nabucasa==0.81.1
 hassil==1.7.1
-home-assistant-bluetooth==1.12.0
-home-assistant-frontend==20240501.1
-home-assistant-intents==2024.4.24
+home-assistant-bluetooth==1.12.1
+home-assistant-frontend==20240610.1
+home-assistant-intents==2024.6.5
 httpx==0.27.0
 ifaddr==0.2.0
 Jinja2==3.1.4
 lru-dict==1.3.0
 mutagen==1.47.0
-orjson==3.10.3
+orjson==3.9.15
 packaging>=23.1
 paho-mqtt==1.6.1
 Pillow==10.3.0
@@ -53,9 +53,9 @@ python-slugify==8.0.4
 PyTurboJPEG==1.7.1
 pyudev==0.24.1
 PyYAML==6.0.1
-requests==2.31.0
+requests==2.32.3
 SQLAlchemy==2.0.30
-typing-extensions>=4.12.0,<5.0
+typing-extensions>=4.12.2,<5.0
 ulid-transform==0.9.0
 urllib3>=1.26.5,<2
 voluptuous-serialize==2.6.0
@@ -197,3 +197,6 @@ scapy>=2.5.0
 # Only tuf>=4 includes a constraint to <1.0.
 # https://github.com/theupdateframework/python-tuf/releases/tag/v4.0.0
 tuf>=4.0.0
+
+# https://github.com/jd/tenacity/issues/471
+tenacity<8.4.0

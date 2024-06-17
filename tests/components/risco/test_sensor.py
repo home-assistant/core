@@ -123,15 +123,17 @@ def _no_zones_and_partitions():
 
 @pytest.mark.parametrize("exception", [CannotConnectError, UnauthorizedError])
 async def test_error_on_login(
-    hass: HomeAssistant, login_with_error, cloud_config_entry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    login_with_error,
+    cloud_config_entry,
 ) -> None:
     """Test error on login."""
     await hass.config_entries.async_setup(cloud_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    registry = er.async_get(hass)
     for entity_id in ENTITY_IDS.values():
-        assert not registry.async_is_registered(entity_id)
+        assert not entity_registry.async_is_registered(entity_id)
 
 
 def _check_state(hass, category, entity_id):
@@ -174,15 +176,15 @@ def save_mock():
 @pytest.mark.parametrize("events", [TEST_EVENTS])
 async def test_cloud_setup(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     two_zone_cloud,
     _set_utc_time_zone,
     save_mock,
     setup_risco_cloud,
 ) -> None:
     """Test entity setup."""
-    registry = er.async_get(hass)
     for entity_id in ENTITY_IDS.values():
-        assert registry.async_is_registered(entity_id)
+        assert entity_registry.async_is_registered(entity_id)
 
     save_mock.assert_awaited_once_with({LAST_EVENT_TIMESTAMP_KEY: TEST_EVENTS[0].time})
     for category, entity_id in ENTITY_IDS.items():
@@ -206,9 +208,11 @@ async def test_cloud_setup(
 
 
 async def test_local_setup(
-    hass: HomeAssistant, setup_risco_local, _no_zones_and_partitions
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_risco_local,
+    _no_zones_and_partitions,
 ) -> None:
     """Test entity setup."""
-    registry = er.async_get(hass)
     for entity_id in ENTITY_IDS.values():
-        assert not registry.async_is_registered(entity_id)
+        assert not entity_registry.async_is_registered(entity_id)

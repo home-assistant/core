@@ -1,6 +1,7 @@
 """Test websocket API."""
 
 from pathlib import Path
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -15,19 +16,23 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
-def automation_config():
+def automation_config() -> dict[str, Any]:
     """Automation config."""
     return {}
 
 
 @pytest.fixture
-def script_config():
+def script_config() -> dict[str, Any]:
     """Script config."""
     return {}
 
 
 @pytest.fixture(autouse=True)
-async def setup_bp(hass, automation_config, script_config):
+async def setup_bp(
+    hass: HomeAssistant,
+    automation_config: dict[str, Any],
+    script_config: dict[str, Any],
+) -> None:
     """Fixture to set up the blueprint component."""
     assert await async_setup_component(hass, "blueprint", {})
 
@@ -95,7 +100,7 @@ async def test_import_blueprint(
     """Test importing blueprints."""
     raw_data = Path(
         hass.config.path("blueprints/automation/test_event_service.yaml")
-    ).read_text()
+    ).read_text(encoding="utf8")
 
     aioclient_mock.get(
         "https://raw.githubusercontent.com/balloob/home-assistant-config/main/blueprints/automation/motion_light.yaml",
@@ -135,16 +140,16 @@ async def test_import_blueprint(
     }
 
 
+@pytest.mark.usefixtures("setup_bp")
 async def test_import_blueprint_update(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
-    setup_bp,
 ) -> None:
     """Test importing blueprints."""
     raw_data = Path(
         hass.config.path("blueprints/automation/in_folder/in_folder_blueprint.yaml")
-    ).read_text()
+    ).read_text(encoding="utf8")
 
     aioclient_mock.get(
         "https://raw.githubusercontent.com/in_folder/home-assistant-config/main/blueprints/automation/in_folder_blueprint.yaml",
@@ -182,13 +187,12 @@ async def test_import_blueprint_update(
 
 async def test_save_blueprint(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test saving blueprints."""
     raw_data = Path(
         hass.config.path("blueprints/automation/test_event_service.yaml")
-    ).read_text()
+    ).read_text(encoding="utf8")
 
     with patch("pathlib.Path.write_text") as write_mock:
         client = await hass_ws_client(hass)
@@ -236,7 +240,6 @@ async def test_save_blueprint(
 
 async def test_save_existing_file(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test saving blueprints."""
@@ -262,7 +265,6 @@ async def test_save_existing_file(
 
 async def test_save_existing_file_override(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test saving blueprints."""
@@ -298,7 +300,6 @@ async def test_save_existing_file_override(
 
 async def test_save_file_error(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test saving blueprints with OS error."""
@@ -323,7 +324,6 @@ async def test_save_file_error(
 
 async def test_save_invalid_blueprint(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test saving invalid blueprints."""
@@ -352,7 +352,6 @@ async def test_save_invalid_blueprint(
 
 async def test_delete_blueprint(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test deleting blueprints."""
@@ -377,7 +376,6 @@ async def test_delete_blueprint(
 
 async def test_delete_non_exist_file_blueprint(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test deleting non existing blueprints."""
@@ -417,7 +415,6 @@ async def test_delete_non_exist_file_blueprint(
 )
 async def test_delete_blueprint_in_use_by_automation(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test deleting a blueprint which is in use."""
@@ -463,7 +460,6 @@ async def test_delete_blueprint_in_use_by_automation(
 )
 async def test_delete_blueprint_in_use_by_script(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test deleting a blueprint which is in use."""

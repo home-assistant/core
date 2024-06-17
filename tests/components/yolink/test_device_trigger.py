@@ -7,7 +7,7 @@ from yolink.const import ATTR_DEVICE_DIMMER, ATTR_DEVICE_SMART_REMOTER
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.yolink import DOMAIN, YOLINK_EVENT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
@@ -19,7 +19,7 @@ from tests.common import (
 
 
 @pytest.fixture
-def calls(hass: HomeAssistant):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "yolink", "automation")
 
@@ -120,7 +120,7 @@ async def test_get_triggers_exception(
 
 
 async def test_if_fires_on_event(
-    hass: HomeAssistant, calls, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant, calls: list[ServiceCall], device_registry: dr.DeviceRegistry
 ) -> None:
     """Test for event triggers firing."""
     mac_address = "12:34:56:AB:CD:EF"

@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
-MINOR_VERSION: Final = 6
+MINOR_VERSION: Final = 7
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -1637,6 +1637,12 @@ KEY_DATA_LOGGING: HassKey[str] = HassKey("logging")
 FORMAT_DATE: Final = "%Y-%m-%d"
 FORMAT_TIME: Final = "%H:%M:%S"
 FORMAT_DATETIME: Final = f"{FORMAT_DATE} {FORMAT_TIME}"
+
+
+# Maximum entities expected in the state machine
+# This is not a hard limit, but caches and other
+# data structures will be pre-allocated to this size
+MAX_EXPECTED_ENTITY_IDS: Final = 16384
 
 # These can be removed if no deprecated constant are in this module anymore
 __getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
