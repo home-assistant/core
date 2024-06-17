@@ -47,16 +47,13 @@ def async_device_info_to_link_device_id(
 
     dev_reg = dr.async_get(hass)
 
-    if device_id is None:
+    if device_id is None or (device := dev_reg.async_get(device_id=device_id)) is None:
         return None
 
-    if (device := dev_reg.async_get(device_id=device_id)) is not None:
-        return dr.DeviceInfo(
-            identifiers=device.identifiers,
-            connections=device.connections,
-        )
-
-    return None
+    return dr.DeviceInfo(
+        identifiers=device.identifiers,
+        connections=device.connections,
+    )
 
 
 @callback
