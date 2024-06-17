@@ -1,4 +1,4 @@
-"""Provides useful helpers for dealing with devices."""
+"""Provides useful helpers for handling devices."""
 
 from homeassistant.core import HomeAssistant, callback
 
@@ -14,9 +14,8 @@ def async_entity_id_to_device_id(
 
     ent_reg = er.async_get(hass)
 
-    if (
-        entity_id := er.async_validate_entity_id(ent_reg, entity_id_or_uuid)
-    ) is None or (entity := ent_reg.async_get(entity_id)) is None:
+    entity_id = er.async_validate_entity_id(ent_reg, entity_id_or_uuid)
+    if (entity := ent_reg.async_get(entity_id)) is None:
         return None
 
     return entity.device_id
@@ -27,7 +26,7 @@ def async_device_info_to_link_entity(
     hass: HomeAssistant,
     entity_id_or_uuid: str,
 ) -> dr.DeviceInfo | None:
-    """DeviceInfo with information to link a device to a configuration entry in the Link category from a entity id or entity uuid."""
+    """DeviceInfo with information to link a device to a configuration entry in the link category from a entity id or entity uuid."""
 
     return async_device_info_to_link_device_id(
         hass,
@@ -40,7 +39,7 @@ def async_device_info_to_link_device_id(
     hass: HomeAssistant,
     device_id: str | None,
 ) -> dr.DeviceInfo | None:
-    """DeviceInfo with information to link a device to a configuration entry in the Link category from a device id."""
+    """DeviceInfo with information to link a device to a configuration entry in the link category from a device id."""
 
     dev_reg = dr.async_get(hass)
 
@@ -74,7 +73,7 @@ def async_remove_stale_devices_links_keep_current_device(
     entry_id: str,
     current_device_id: str | None,
 ) -> None:
-    """Remove the link between stales devices and a configuration entry, keeping only those informed.
+    """Remove the link between stales devices and a configuration entry, keeping only the device informed.
 
     Device passed in the current_device_id parameter will be kept linked to the configuration entry.
     """

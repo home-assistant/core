@@ -1,5 +1,8 @@
 """Tests for the Device Utils."""
 
+import pytest
+import voluptuous as vol
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
@@ -15,8 +18,8 @@ async def test_entity_id_to_device_id(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test cleanup works."""
-    config_entry = MockConfigEntry(domain="hue")
+    """Test returning an entity's device ID."""
+    config_entry = MockConfigEntry(domain="my")
     config_entry.add_to_hass(hass)
 
     device = device_registry.async_get_or_create(
@@ -26,7 +29,7 @@ async def test_entity_id_to_device_id(
     )
     assert device is not None
 
-    # Source entity registry
+    # Entity registry
     entity = entity_registry.async_get_or_create(
         "sensor",
         "test",
@@ -37,13 +40,17 @@ async def test_entity_id_to_device_id(
     await hass.async_block_till_done()
     assert entity_registry.async_get("sensor.test_source") is not None
 
-    # Manual cleanup should unlink stales devices from the config entry
     device_id = du.async_entity_id_to_device_id(
         hass,
         entity_id_or_uuid=entity.entity_id,
     )
-
     assert device_id == device.id
+
+    with pytest.raises(vol.Invalid):
+        device_id = du.async_entity_id_to_device_id(
+            hass,
+            entity_id_or_uuid="unknown_uuid",
+        )
 
 
 async def test_device_info_to_link(
@@ -97,6 +104,7 @@ async def test_device_info_to_link(
     result = du.async_device_info_to_link_device_id(hass, device_id="abcdefghi")
     assert result is None
 
+    # With a None device id
     result = du.async_device_info_to_link_device_id(hass, device_id=None)
     assert result is None
 
@@ -106,7 +114,7 @@ async def test_remove_stale_device_links_keep_entity_device(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test cleanup works."""
+    """Test cleaning works for entity."""
     config_entry = MockConfigEntry(domain="hue")
     config_entry.add_to_hass(hass)
 
@@ -168,7 +176,7 @@ async def test_remove_stale_devices_links_keep_current_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test cleanup works."""
+    """Test cleanup works for device id."""
     config_entry = MockConfigEntry(domain="hue")
     config_entry.add_to_hass(hass)
 
