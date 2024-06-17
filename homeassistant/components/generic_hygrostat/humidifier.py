@@ -40,12 +40,7 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.helpers import (
-    condition,
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_state_change_event,
@@ -80,28 +75,6 @@ ATTR_SAVED_HUMIDITY = "saved_humidity"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(HYGROSTAT_SCHEMA.schema)
 
 
-def _async_get_device_info_from_entity_id(
-    hass: HomeAssistant, entity_id_or_uuid: str
-) -> dr.DeviceInfo | None:
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
-    entity_id = er.async_validate_entity_id(entity_registry, entity_id_or_uuid)
-
-    entity = entity_registry.async_get(entity_id)
-    if not entity or not entity.device_id:
-        return None
-
-    device = device_registry.async_get(entity.device_id)
-    if not device:
-        return None
-
-    return dr.DeviceInfo(
-        identifiers=device.identifiers,
-        connections=device.connections,
-    )
-
-
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -123,16 +96,11 @@ async def async_setup_entry(
 ) -> None:
     """Initialize config entry."""
 
-    device_info = _async_get_device_info_from_entity_id(
-        hass, config_entry.options[CONF_HUMIDIFIER]
-    )
-
     await _async_setup_config(
         hass,
         config_entry.options,
         config_entry.entry_id,
         async_add_entities,
-        device_info,
     )
 
 
@@ -147,7 +115,6 @@ async def _async_setup_config(
     config: Mapping[str, Any],
     unique_id: str | None,
     async_add_entities: AddEntitiesCallback,
-    device_info: dr.DeviceInfo | None = None,
 ) -> None:
     name: str = config[CONF_NAME]
     switch_entity_id: str = config[CONF_HUMIDIFIER]
@@ -188,7 +155,6 @@ async def _async_setup_config(
                 away_fixed,
                 sensor_stale_duration,
                 unique_id,
-                device_info,
             )
         ]
     )
@@ -217,7 +183,6 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         away_fixed: bool | None,
         sensor_stale_duration: timedelta | None,
         unique_id: str | None,
-        device_info: dr.DeviceInfo | None,
     ) -> None:
         """Initialize the hygrostat."""
         self._name = name
@@ -245,7 +210,6 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self._is_away = False
         self._attr_action = HumidifierAction.IDLE
         self._attr_unique_id = unique_id
-        self._attr_device_info = device_info
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
