@@ -1,1 +1,1 @@
-"""Test the One-Time Password (OTP) config flow."""
+"""Test the One-Time Password (OTP)."""

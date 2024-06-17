@@ -987,7 +987,6 @@ omit =
     homeassistant/components/osoenergy/sensor.py
     homeassistant/components/osoenergy/water_heater.py
     homeassistant/components/osramlightify/light.py
-    homeassistant/components/otp/__init__.py
     homeassistant/components/otp/sensor.py
     homeassistant/components/overkiz/__init__.py
     homeassistant/components/overkiz/alarm_control_panel.py

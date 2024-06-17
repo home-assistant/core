@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.otp.const import DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_NAME, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -17,17 +17,14 @@ TEST_DATA = {
 }
 
 
-async def test_form(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_pyotp: MagicMock,
-) -> None:
+@pytest.mark.usefixtures("mock_pyotp")
+async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
@@ -36,7 +33,7 @@ async def test_form(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "OTP Sensor"
     assert result["data"] == TEST_DATA
     assert len(mock_setup_entry.mock_calls) == 1
@@ -58,10 +55,10 @@ async def test_errors_and_recover(
 ) -> None:
     """Test errors and recover."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     mock_pyotp.TOTP().now.side_effect = exception
@@ -71,7 +68,7 @@ async def test_errors_and_recover(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
     mock_pyotp.TOTP().now.side_effect = None
@@ -81,20 +78,19 @@ async def test_errors_and_recover(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "OTP Sensor"
     assert result["data"] == TEST_DATA
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_flow_import(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_pyotp: MagicMock
-) -> None:
+@pytest.mark.usefixtures("mock_pyotp", "mock_setup_entry")
+async def test_flow_import(hass: HomeAssistant) -> None:
     """Test that we can import a YAML config."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
+        context={"source": SOURCE_IMPORT},
         data=TEST_DATA,
     )
     await hass.async_block_till_done()

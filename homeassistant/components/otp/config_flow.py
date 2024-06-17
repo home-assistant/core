@@ -10,7 +10,7 @@ import pyotp
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_CODE, CONF_NAME, CONF_TOKEN
+from homeassistant.const import CONF_NAME, CONF_TOKEN
 
 from .const import DEFAULT_NAME, DOMAIN
 
@@ -22,8 +22,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
     }
 )
-
-STEP_CONFIRM_DATA_SCHEMA = vol.Schema({vol.Required(CONF_CODE): str})
 
 
 class TOTPConfigFlow(ConfigFlow, domain=DOMAIN):

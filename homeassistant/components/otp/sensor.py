@@ -41,7 +41,7 @@ async def async_setup_platform(
         HOMEASSISTANT_DOMAIN,
         f"deprecated_yaml_{DOMAIN}",
         is_fixable=False,
-        breaks_in_ha_version="2025.01.0",
+        breaks_in_ha_version="2025.1.0",
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
         translation_placeholders={
