@@ -116,6 +116,7 @@ async def test_light_turn_on_off(
         ("extended-color-light", "light.mock_extended_color_light"),
         ("color-temperature-light", "light.mock_color_temperature_light"),
         ("dimmable-light", "light.mock_dimmable_light"),
+        ("dimmable-plugin-unit", "light.dimmable_plugin_unit"),
     ],
 )
 async def test_dimmable_light(

@@ -1,10 +1,9 @@
 """The tests for the androidtv platform."""
 
-from collections.abc import Generator
 from datetime import timedelta
 import logging
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from adb_shell.exceptions import TcpTimeoutException as AdbShellTimeoutException
 from androidtv.constants import APPS as ANDROIDTV_APPS, KEYS
@@ -12,9 +11,6 @@ from androidtv.exceptions import LockNotAcquiredException
 import pytest
 
 from homeassistant.components.androidtv.const import (
-    CONF_ADB_SERVER_IP,
-    CONF_ADB_SERVER_PORT,
-    CONF_ADBKEY,
     CONF_APPS,
     CONF_EXCLUDE_UNNAMED_APPS,
     CONF_SCREENCAP,
@@ -23,11 +19,8 @@ from homeassistant.components.androidtv.const import (
     CONF_TURN_ON_COMMAND,
     DEFAULT_ADB_SERVER_PORT,
     DEFAULT_PORT,
-    DEVICE_ANDROIDTV,
-    DEVICE_FIRETV,
     DOMAIN,
 )
-from homeassistant.components.androidtv.entity import PREFIX_ANDROIDTV, PREFIX_FIRETV
 from homeassistant.components.androidtv.media_player import (
     ATTR_DEVICE_PATH,
     ATTR_LOCAL_PATH,
@@ -58,9 +51,6 @@ from homeassistant.const import (
     ATTR_COMMAND,
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -75,142 +65,40 @@ from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
 from . import patchers
+from .common import (
+    CONFIG_ANDROID_ADB_SERVER,
+    CONFIG_ANDROID_DEFAULT,
+    CONFIG_ANDROID_PYTHON_ADB,
+    CONFIG_ANDROID_PYTHON_ADB_KEY,
+    CONFIG_ANDROID_PYTHON_ADB_YAML,
+    CONFIG_FIRETV_ADB_SERVER,
+    CONFIG_FIRETV_DEFAULT,
+    CONFIG_FIRETV_PYTHON_ADB,
+    SHELL_RESPONSE_OFF,
+    SHELL_RESPONSE_STANDBY,
+    TEST_ENTITY_NAME,
+    TEST_HOST_NAME,
+    setup_mock_entry,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
 
-HOST = "127.0.0.1"
-
-ADB_PATCH_KEY = "patch_key"
-TEST_ENTITY_NAME = "entity_name"
-
 MSG_RECONNECT = {
     patchers.KEY_PYTHON: (
-        f"ADB connection to {HOST}:{DEFAULT_PORT} successfully established"
+        f"ADB connection to {TEST_HOST_NAME}:{DEFAULT_PORT} successfully established"
     ),
     patchers.KEY_SERVER: (
-        f"ADB connection to {HOST}:{DEFAULT_PORT} via ADB server"
+        f"ADB connection to {TEST_HOST_NAME}:{DEFAULT_PORT} via ADB server"
         f" {patchers.ADB_SERVER_HOST}:{DEFAULT_ADB_SERVER_PORT} successfully"
         " established"
     ),
 }
 
-SHELL_RESPONSE_OFF = ""
-SHELL_RESPONSE_STANDBY = "1"
 
-# Android device with Python ADB implementation
-CONFIG_ANDROID_PYTHON_ADB = {
-    ADB_PATCH_KEY: patchers.KEY_PYTHON,
-    TEST_ENTITY_NAME: f"{PREFIX_ANDROIDTV} {HOST}",
-    DOMAIN: {
-        CONF_HOST: HOST,
-        CONF_PORT: DEFAULT_PORT,
-        CONF_DEVICE_CLASS: DEVICE_ANDROIDTV,
-    },
-}
-
-# Android device with Python ADB implementation imported from YAML
-CONFIG_ANDROID_PYTHON_ADB_YAML = {
-    ADB_PATCH_KEY: patchers.KEY_PYTHON,
-    TEST_ENTITY_NAME: "ADB yaml import",
-    DOMAIN: {
-        CONF_NAME: "ADB yaml import",
-        **CONFIG_ANDROID_PYTHON_ADB[DOMAIN],
-    },
-}
-
-# Android device with Python ADB implementation with custom adbkey
-CONFIG_ANDROID_PYTHON_ADB_KEY = {
-    ADB_PATCH_KEY: patchers.KEY_PYTHON,
-    TEST_ENTITY_NAME: CONFIG_ANDROID_PYTHON_ADB[TEST_ENTITY_NAME],
-    DOMAIN: {
-        **CONFIG_ANDROID_PYTHON_ADB[DOMAIN],
-        CONF_ADBKEY: "user_provided_adbkey",
-    },
-}
-
-# Android device with ADB server
-CONFIG_ANDROID_ADB_SERVER = {
-    ADB_PATCH_KEY: patchers.KEY_SERVER,
-    TEST_ENTITY_NAME: f"{PREFIX_ANDROIDTV} {HOST}",
-    DOMAIN: {
-        CONF_HOST: HOST,
-        CONF_PORT: DEFAULT_PORT,
-        CONF_DEVICE_CLASS: DEVICE_ANDROIDTV,
-        CONF_ADB_SERVER_IP: patchers.ADB_SERVER_HOST,
-        CONF_ADB_SERVER_PORT: DEFAULT_ADB_SERVER_PORT,
-    },
-}
-
-# Fire TV device with Python ADB implementation
-CONFIG_FIRETV_PYTHON_ADB = {
-    ADB_PATCH_KEY: patchers.KEY_PYTHON,
-    TEST_ENTITY_NAME: f"{PREFIX_FIRETV} {HOST}",
-    DOMAIN: {
-        CONF_HOST: HOST,
-        CONF_PORT: DEFAULT_PORT,
-        CONF_DEVICE_CLASS: DEVICE_FIRETV,
-    },
-}
-
-# Fire TV device with ADB server
-CONFIG_FIRETV_ADB_SERVER = {
-    ADB_PATCH_KEY: patchers.KEY_SERVER,
-    TEST_ENTITY_NAME: f"{PREFIX_FIRETV} {HOST}",
-    DOMAIN: {
-        CONF_HOST: HOST,
-        CONF_PORT: DEFAULT_PORT,
-        CONF_DEVICE_CLASS: DEVICE_FIRETV,
-        CONF_ADB_SERVER_IP: patchers.ADB_SERVER_HOST,
-        CONF_ADB_SERVER_PORT: DEFAULT_ADB_SERVER_PORT,
-    },
-}
-
-CONFIG_ANDROID_DEFAULT = CONFIG_ANDROID_PYTHON_ADB
-CONFIG_FIRETV_DEFAULT = CONFIG_FIRETV_PYTHON_ADB
-
-
-@pytest.fixture(autouse=True)
-def adb_device_tcp_fixture() -> Generator[None, patchers.AdbDeviceTcpAsyncFake, None]:
-    """Patch ADB Device TCP."""
-    with patch(
-        "androidtv.adb_manager.adb_manager_async.AdbDeviceTcpAsync",
-        patchers.AdbDeviceTcpAsyncFake,
-    ):
-        yield
-
-
-@pytest.fixture(autouse=True)
-def load_adbkey_fixture() -> Generator[None, str, None]:
-    """Patch load_adbkey."""
-    with patch(
-        "homeassistant.components.androidtv.ADBPythonSync.load_adbkey",
-        return_value="signer for testing",
-    ):
-        yield
-
-
-@pytest.fixture(autouse=True)
-def keygen_fixture() -> Generator[None, Mock, None]:
-    """Patch keygen."""
-    with patch(
-        "homeassistant.components.androidtv.keygen",
-        return_value=Mock(),
-    ):
-        yield
-
-
-def _setup(config) -> tuple[str, str, MockConfigEntry]:
-    """Perform common setup tasks for the tests."""
-    patch_key = config[ADB_PATCH_KEY]
-    entity_id = f"{MP_DOMAIN}.{slugify(config[TEST_ENTITY_NAME])}"
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=config[DOMAIN],
-        unique_id="a1:b1:c1:d1:e1:f1",
-    )
-
-    return patch_key, entity_id, config_entry
+def _setup(config: dict[str, Any]) -> tuple[str, str, MockConfigEntry]:
+    """Prepare mock entry for the media player tests."""
+    return setup_mock_entry(config, MP_DOMAIN)
 
 
 @pytest.mark.parametrize(

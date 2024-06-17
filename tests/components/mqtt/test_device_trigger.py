@@ -529,16 +529,16 @@ async def test_non_unique_triggers(
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[0].data["some"] == "press1"
-    assert calls[1].data["some"] == "press2"
+    all_calls = {calls[0].data["some"], calls[1].data["some"]}
+    assert all_calls == {"press1", "press2"}
 
     # Trigger second config references to same trigger
     # and triggers both attached instances.
     async_fire_mqtt_message(hass, "foobar/triggers/button2", "long_press")
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[0].data["some"] == "press1"
-    assert calls[1].data["some"] == "press2"
+    all_calls = {calls[0].data["some"], calls[1].data["some"]}
+    assert all_calls == {"press1", "press2"}
 
     # Removing the first trigger will clean up
     calls.clear()
@@ -1358,7 +1358,7 @@ async def test_cleanup_trigger(
 
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_called_once_with(
-        "homeassistant/device_automation/bla/config", "", 0, True
+        "homeassistant/device_automation/bla/config", None, 0, True
     )
 
 

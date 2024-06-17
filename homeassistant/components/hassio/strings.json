@@ -17,6 +17,23 @@
     }
   },
   "issues": {
+    "issue_addon_detached_addon_missing": {
+      "title": "Missing repository for an installed add-on",
+      "description": "Repository for add-on {addon} is missing. This means it will not get updates, and backups may not be restored correctly as the supervisor may not be able to build/download the resources required.\n\nPlease check the [add-on's documentation]({addon_url}) for installation instructions and add the repository to the store."
+    },
+    "issue_addon_detached_addon_removed": {
+      "title": "Installed add-on has been removed from repository",
+      "fix_flow": {
+        "step": {
+          "addon_execute_remove": {
+            "description": "Add-on {addon} has been removed from the repository it was installed from. This means it will not get updates, and backups may not be restored correctly as the supervisor may not be able to build/download the resources required.\n\nClicking submit will uninstall this deprecated add-on. Alternatively, you can check [Home Assistant help]({help_url}) and the [community forum]({community_url}) for alternatives to migrate to."
+          }
+        },
+        "abort": {
+          "apply_suggestion_fail": "Could not uninstall the add-on. Check the Supervisor logs for more details."
+        }
+      }
+    },
     "issue_mount_mount_failed": {
       "title": "Network storage device failed",
       "fix_flow": {

@@ -77,7 +77,7 @@ class MockFFmpegDev(ffmpeg.FFmpegBase):
         self.called_entities = entity_ids
 
 
-def test_setup_component():
+def test_setup_component() -> None:
     """Set up ffmpeg component."""
     with get_test_home_assistant() as hass:
         with assert_setup_component(1):
@@ -87,7 +87,7 @@ def test_setup_component():
         hass.stop()
 
 
-def test_setup_component_test_service():
+def test_setup_component_test_service() -> None:
     """Set up ffmpeg component test services."""
     with get_test_home_assistant() as hass:
         with assert_setup_component(1):

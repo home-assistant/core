@@ -10,6 +10,7 @@ from homeassistant.components.tasmota.const import (
     DEFAULT_PREFIX,
     DOMAIN,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.common import (
     MockConfigEntry,
@@ -33,7 +34,7 @@ def entity_reg(hass):
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 

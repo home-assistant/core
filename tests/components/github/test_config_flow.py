@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiogithubapi import GitHubException
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import config_entries
@@ -26,6 +27,7 @@ async def test_full_user_flow_implementation(
     hass: HomeAssistant,
     mock_setup_entry: None,
     aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the full manual user flow from start to finish."""
     aioclient_mock.post(
@@ -39,18 +41,10 @@ async def test_full_user_flow_implementation(
         },
         headers={"Content-Type": "application/json"},
     )
+    # User has not yet entered the code
     aioclient_mock.post(
         "https://github.com/login/oauth/access_token",
-        json={
-            CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN,
-            "token_type": "bearer",
-            "scope": "",
-        },
-        headers={"Content-Type": "application/json"},
-    )
-    aioclient_mock.get(
-        "https://api.github.com/user/starred",
-        json=[{"full_name": "home-assistant/core"}, {"full_name": "esphome/esphome"}],
+        json={"error": "authorization_pending"},
         headers={"Content-Type": "application/json"},
     )
 
@@ -62,8 +56,20 @@ async def test_full_user_flow_implementation(
     assert result["step_id"] == "device"
     assert result["type"] is FlowResultType.SHOW_PROGRESS
 
-    # Wait for the task to start before configuring
+    # User enters the code
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        "https://github.com/login/oauth/access_token",
+        json={
+            CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN,
+            "token_type": "bearer",
+            "scope": "",
+        },
+        headers={"Content-Type": "application/json"},
+    )
+    freezer.tick(10)
     await hass.async_block_till_done()
+
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     result = await hass.config_entries.flow.async_configure(
@@ -101,6 +107,7 @@ async def test_flow_with_registration_failure(
 async def test_flow_with_activation_failure(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test flow with activation failure of the device."""
     aioclient_mock.post(
@@ -114,9 +121,11 @@ async def test_flow_with_activation_failure(
         },
         headers={"Content-Type": "application/json"},
     )
+    # User has not yet entered the code
     aioclient_mock.post(
         "https://github.com/login/oauth/access_token",
-        exc=GitHubException("Activation failed"),
+        json={"error": "authorization_pending"},
+        headers={"Content-Type": "application/json"},
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -124,6 +133,14 @@ async def test_flow_with_activation_failure(
     )
     assert result["step_id"] == "device"
     assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+    # Activation fails
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        "https://github.com/login/oauth/access_token",
+        exc=GitHubException("Activation failed"),
+    )
+    freezer.tick(10)
     await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])

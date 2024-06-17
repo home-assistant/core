@@ -50,7 +50,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '93',
+    'state': '96.5',
   })
 # ---
 # name: test_sensors[GS01234_current_steam_temperature-entry]
@@ -104,7 +104,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '113',
+    'state': '123.800003051758',
   })
 # ---
 # name: test_sensors[GS01234_shot_timer-entry]
@@ -205,7 +205,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '13',
+    'state': '1047',
   })
 # ---
 # name: test_sensors[GS01234_total_flushes_made-entry]
@@ -255,6 +255,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '69',
+    'state': '1740',
   })
 # ---

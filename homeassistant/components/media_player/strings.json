@@ -17,6 +17,9 @@
       "paused": "{entity_name} is paused",
       "playing": "{entity_name} starts playing",
       "changed_states": "[%key:common::device_automation::trigger_type::changed_states%]"
+    },
+    "extra_fields": {
+      "for": "[%key:common::device_automation::extra_fields::for%]"
     }
   },
   "entity_component": {

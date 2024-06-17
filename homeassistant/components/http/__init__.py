@@ -10,8 +10,7 @@ import os
 import socket
 import ssl
 from tempfile import NamedTemporaryFile
-from typing import Any, Final, Required, TypedDict, cast
-from urllib.parse import quote_plus, urljoin
+from typing import Any, Final, TypedDict, cast
 
 from aiohttp import web
 from aiohttp.abc import AbstractStreamWriter
@@ -30,20 +29,8 @@ from yarl import URL
 
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, SERVER_PORT
-from homeassistant.core import (
-    Event,
-    HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
-from homeassistant.exceptions import (
-    HomeAssistantError,
-    ServiceValidationError,
-    Unauthorized,
-    UnknownUser,
-)
+from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import storage
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.http import (
@@ -66,14 +53,9 @@ from homeassistant.util import dt as dt_util, ssl as ssl_util
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.json import json_loads
 
-from .auth import async_setup_auth, async_sign_path
+from .auth import async_setup_auth
 from .ban import setup_bans
-from .const import (  # noqa: F401
-    DOMAIN,
-    KEY_HASS_REFRESH_TOKEN_ID,
-    KEY_HASS_USER,
-    StrictConnectionMode,
-)
+from .const import DOMAIN, KEY_HASS_REFRESH_TOKEN_ID, KEY_HASS_USER  # noqa: F401
 from .cors import setup_cors
 from .decorators import require_admin  # noqa: F401
 from .forwarded import async_setup_forwarded
@@ -96,7 +78,6 @@ CONF_TRUSTED_PROXIES: Final = "trusted_proxies"
 CONF_LOGIN_ATTEMPTS_THRESHOLD: Final = "login_attempts_threshold"
 CONF_IP_BAN_ENABLED: Final = "ip_ban_enabled"
 CONF_SSL_PROFILE: Final = "ssl_profile"
-CONF_STRICT_CONNECTION: Final = "strict_connection"
 
 SSL_MODERN: Final = "modern"
 SSL_INTERMEDIATE: Final = "intermediate"
@@ -146,9 +127,6 @@ HTTP_SCHEMA: Final = vol.All(
                 [SSL_INTERMEDIATE, SSL_MODERN]
             ),
             vol.Optional(CONF_USE_X_FRAME_OPTIONS, default=True): cv.boolean,
-            vol.Optional(
-                CONF_STRICT_CONNECTION, default=StrictConnectionMode.DISABLED
-            ): vol.Coerce(StrictConnectionMode),
         }
     ),
 )
@@ -172,7 +150,6 @@ class ConfData(TypedDict, total=False):
     login_attempts_threshold: int
     ip_ban_enabled: bool
     ssl_profile: str
-    strict_connection: Required[StrictConnectionMode]
 
 
 @bind_hass
@@ -241,7 +218,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         login_threshold=login_threshold,
         is_ban_enabled=is_ban_enabled,
         use_x_frame_options=use_x_frame_options,
-        strict_connection_non_cloud=conf[CONF_STRICT_CONNECTION],
     )
 
     async def stop_server(event: Event) -> None:
@@ -271,7 +247,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         local_ip, host, server_port, ssl_certificate is not None
     )
 
-    _setup_services(hass, conf)
     return True
 
 
@@ -356,7 +331,6 @@ class HomeAssistantHTTP:
         login_threshold: int,
         is_ban_enabled: bool,
         use_x_frame_options: bool,
-        strict_connection_non_cloud: StrictConnectionMode,
     ) -> None:
         """Initialize the server."""
         self.app[KEY_HASS] = self.hass
@@ -373,7 +347,7 @@ class HomeAssistantHTTP:
         if is_ban_enabled:
             setup_bans(self.hass, self.app, login_threshold)
 
-        await async_setup_auth(self.hass, self.app, strict_connection_non_cloud)
+        await async_setup_auth(self.hass, self.app)
 
         setup_headers(self.app, use_x_frame_options)
         setup_cors(self.app, cors_origins)
@@ -602,61 +576,3 @@ async def start_http_server_and_save_config(
         ]
 
     store.async_delay_save(lambda: conf, SAVE_DELAY)
-
-
-@callback
-def _setup_services(hass: HomeAssistant, conf: ConfData) -> None:
-    """Set up services for HTTP component."""
-
-    async def create_temporary_strict_connection_url(
-        call: ServiceCall,
-    ) -> ServiceResponse:
-        """Create a strict connection url and return it."""
-        # Copied form homeassistant/helpers/service.py#_async_admin_handler
-        # as the helper supports no responses yet
-        if call.context.user_id:
-            user = await hass.auth.async_get_user(call.context.user_id)
-            if user is None:
-                raise UnknownUser(context=call.context)
-            if not user.is_admin:
-                raise Unauthorized(context=call.context)
-
-        if conf[CONF_STRICT_CONNECTION] is StrictConnectionMode.DISABLED:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="strict_connection_not_enabled_non_cloud",
-            )
-
-        try:
-            url = get_url(
-                hass, prefer_external=True, allow_internal=False, allow_cloud=False
-            )
-        except NoURLAvailableError as ex:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="no_external_url_available",
-            ) from ex
-
-        # to avoid circular import
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.auth import STRICT_CONNECTION_URL
-
-        path = async_sign_path(
-            hass,
-            STRICT_CONNECTION_URL,
-            datetime.timedelta(hours=1),
-            use_content_user=True,
-        )
-        url = urljoin(url, path)
-
-        return {
-            "url": f"https://login.home-assistant.io?u={quote_plus(url)}",
-            "direct_url": url,
-        }
-
-    hass.services.async_register(
-        DOMAIN,
-        "create_temporary_strict_connection_url",
-        create_temporary_strict_connection_url,
-        supports_response=SupportsResponse.ONLY,
-    )

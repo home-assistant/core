@@ -78,7 +78,10 @@ CUSTOM_INTEGRATION_SERVICE_SCHEMA = vol.Any(
 )
 
 CORE_INTEGRATION_SERVICES_SCHEMA = vol.Schema(
-    {cv.slug: CORE_INTEGRATION_SERVICE_SCHEMA}
+    {
+        vol.Remove(vol.All(str, service.starts_with_dot)): object,
+        cv.slug: CORE_INTEGRATION_SERVICE_SCHEMA,
+    }
 )
 CUSTOM_INTEGRATION_SERVICES_SCHEMA = vol.Schema(
     {cv.slug: CUSTOM_INTEGRATION_SERVICE_SCHEMA}

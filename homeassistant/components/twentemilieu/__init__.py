@@ -23,8 +23,10 @@ SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_ID): cv.string})
 
 PLATFORMS = [Platform.CALENDAR, Platform.SENSOR]
 
-TwenteMilieuDataUpdateCoordinator = DataUpdateCoordinator[dict[WasteType, list[date]]]
-TwenteMilieuConfigEntry = ConfigEntry[TwenteMilieuDataUpdateCoordinator]
+type TwenteMilieuDataUpdateCoordinator = DataUpdateCoordinator[
+    dict[WasteType, list[date]]
+]
+type TwenteMilieuConfigEntry = ConfigEntry[TwenteMilieuDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

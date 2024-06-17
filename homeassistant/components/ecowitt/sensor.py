@@ -125,6 +125,7 @@ ECOWITT_SENSORS_MAPPING: Final = {
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     EcoWittSensorTypes.LIGHTNING_COUNT: SensorEntityDescription(
         key="LIGHTNING_COUNT",
@@ -241,7 +242,12 @@ async def async_setup_entry(
         )
 
         # Hourly rain doesn't reset to fixed hours, it must be measurement state classes
-        if sensor.key in ("hrain_piezomm", "hrain_piezo"):
+        if sensor.key in (
+            "hrain_piezomm",
+            "hrain_piezo",
+            "hourlyrainmm",
+            "hourlyrainin",
+        ):
             description = dataclasses.replace(
                 description,
                 state_class=SensorStateClass.MEASUREMENT,

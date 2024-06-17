@@ -35,11 +35,10 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
         super().__init__(mm, config_entry)
         self._attr_unique_id = f"{self._base_unique_id}-preset"
 
-    def _update_options(self, presets: dict[int, str]) -> None:
+    def _update_options(self, presets: list[motionmount.Preset]) -> None:
         """Convert presets to select options."""
-        options = [WALL_PRESET_NAME]
-        for index, name in presets.items():
-            options.append(f"{index}: {name}")
+        options = [f"{preset.index}: {preset.name}" for preset in presets]
+        options.insert(0, WALL_PRESET_NAME)
 
         self._attr_options = options
 
