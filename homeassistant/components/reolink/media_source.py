@@ -34,7 +34,13 @@ async def async_get_media_source(hass: HomeAssistant) -> ReolinkVODMediaSource:
 
 def res_name(stream: str) -> str:
     """Return the user friendly name for a stream."""
-    return "High res." if stream == "main" else "Low res."
+    if stream == "main":
+        return "High res."
+    if stream == "autotrack_sub":
+        return "Autotrack low res."
+    if stream == "autotrack_main":
+        return "Autotrack high res."
+    return "Low res."
 
 
 class ReolinkVODMediaSource(MediaSource):
@@ -242,7 +248,7 @@ class ReolinkVODMediaSource(MediaSource):
                     identifier=f"RES|{config_entry_id}|{channel}|autotrack_sub",
                     media_class=MediaClass.CHANNEL,
                     media_content_type=MediaType.PLAYLIST,
-                    title="Low resolution autotrack lens",
+                    title="Autotrack low resolution",
                     can_play=False,
                     can_expand=True,
                 ),
@@ -254,7 +260,7 @@ class ReolinkVODMediaSource(MediaSource):
                         identifier=f"RES|{config_entry_id}|{channel}|autotrack_main",
                         media_class=MediaClass.CHANNEL,
                         media_content_type=MediaType.PLAYLIST,
-                        title="High resolution autotrack lens",
+                        title="Autotrack high resolution",
                         can_play=False,
                         can_expand=True,
                     ),
