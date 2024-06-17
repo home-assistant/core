@@ -51,7 +51,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the D-Link Power Plug sensors."""
     entities = [
-        SmartPlugSensor(entry, hass.data[DOMAIN][entry.entry_id], sensor)
+        SmartPlugSensor(entry, sensor)
         for sensor in SENSOR_TYPES
     ]
     async_add_entities(entities, True)
