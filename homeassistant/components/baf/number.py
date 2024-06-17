@@ -8,7 +8,6 @@ from typing import cast
 
 from aiobafi6 import Device
 
-from homeassistant import config_entries
 from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
@@ -18,9 +17,9 @@ from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, HALF_DAY_SECS, ONE_DAY_SECS, ONE_MIN_SECS, SPEED_RANGE
+from . import BAFConfigEntry
+from .const import HALF_DAY_SECS, ONE_DAY_SECS, ONE_MIN_SECS, SPEED_RANGE
 from .entity import BAFEntity
-from .models import BAFData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -116,12 +115,11 @@ LIGHT_NUMBER_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: BAFConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up BAF numbers."""
-    data: BAFData = hass.data[DOMAIN][entry.entry_id]
-    device = data.device
+    device = entry.runtime_data
     descriptions: list[BAFNumberDescription] = []
     if device.has_fan:
         descriptions.extend(FAN_NUMBER_DESCRIPTIONS)

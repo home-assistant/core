@@ -335,6 +335,9 @@ async def test_default_entity_and_device_name(
 
     # Assert that no issues ware registered
     assert len(events) == 0
+    await hass.async_block_till_done()
+    # Assert that no issues ware registered
+    assert len(events) == 0
 
 
 async def test_name_attribute_is_set_or_not(

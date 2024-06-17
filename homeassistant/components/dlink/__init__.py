@@ -9,13 +9,16 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platfor
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_USE_LEGACY_PROTOCOL, DOMAIN
+from .const import CONF_USE_LEGACY_PROTOCOL
 from .coordinator import DlinkCoordinator
+from .const import CONF_USE_LEGACY_PROTOCOL
+
+type DLinkConfigEntry = ConfigEntry[DlinkCoordinator]
 
 PLATFORMS = [Platform.SWITCH]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DLinkConfigEntry) -> bool:
     """Set up D-Link Power Plug from a config entry."""
     smartplug = await hass.async_add_executor_job(
         SmartPlug,
@@ -27,18 +30,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not smartplug.authenticated and smartplug.use_legacy_protocol:
         raise ConfigEntryNotReady("Cannot connect/authenticate")
 
-    coordinator = DlinkCoordinator(hass, smartplug)
 
-    await coordinator.async_config_entry_first_refresh()
-
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = DlinkCoordinator(smartplug)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DLinkConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

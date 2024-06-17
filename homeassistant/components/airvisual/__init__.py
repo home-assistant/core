@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 from datetime import timedelta
 from math import ceil
@@ -307,15 +306,19 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # domain:
             new_entry_data = {**entry.data}
             new_entry_data.pop(CONF_INTEGRATION_TYPE)
-            tasks = [
+
+            # Schedule the removal in a task to avoid a deadlock
+            # since we cannot remove a config entry that is in
+            # the process of being setup.
+            hass.async_create_background_task(
                 hass.config_entries.async_remove(entry.entry_id),
-                hass.config_entries.flow.async_init(
-                    DOMAIN_AIRVISUAL_PRO,
-                    context={"source": SOURCE_IMPORT},
-                    data=new_entry_data,
-                ),
-            ]
-            await asyncio.gather(*tasks)
+                name="remove config legacy airvisual entry {entry.title}",
+            )
+            await hass.config_entries.flow.async_init(
+                DOMAIN_AIRVISUAL_PRO,
+                context={"source": SOURCE_IMPORT},
+                data=new_entry_data,
+            )
 
             # After the migration has occurred, grab the new config and device entries
             # (now under the `airvisual_pro` domain):

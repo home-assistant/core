@@ -5,11 +5,12 @@ from __future__ import annotations
 import bisect
 from contextlib import suppress
 import datetime as dt
-from functools import partial
+from functools import lru_cache, partial
 import re
 from typing import Any, Literal, overload
 import zoneinfo
 
+from aiozoneinfo import async_get_time_zone as _async_get_time_zone
 import ciso8601
 
 DATE_STR_FORMAT = "%Y-%m-%d"
@@ -74,6 +75,12 @@ POSTGRES_INTERVAL_RE = re.compile(
 )
 
 
+@lru_cache(maxsize=1)
+def get_default_time_zone() -> dt.tzinfo:
+    """Get the default time zone."""
+    return DEFAULT_TIME_ZONE
+
+
 def set_default_time_zone(time_zone: dt.tzinfo) -> None:
     """Set a default time zone to be used when none is specified.
 
@@ -85,15 +92,28 @@ def set_default_time_zone(time_zone: dt.tzinfo) -> None:
     assert isinstance(time_zone, dt.tzinfo)
 
     DEFAULT_TIME_ZONE = time_zone
+    get_default_time_zone.cache_clear()
 
 
 def get_time_zone(time_zone_str: str) -> dt.tzinfo | None:
     """Get time zone from string. Return None if unable to determine.
 
-    Async friendly.
+    Must be run in the executor if the ZoneInfo is not already
+    in the cache. If you are not sure, use async_get_time_zone.
     """
     try:
         return zoneinfo.ZoneInfo(time_zone_str)
+    except zoneinfo.ZoneInfoNotFoundError:
+        return None
+
+
+async def async_get_time_zone(time_zone_str: str) -> dt.tzinfo | None:
+    """Get time zone from string. Return None if unable to determine.
+
+    Async friendly.
+    """
+    try:
+        return await _async_get_time_zone(time_zone_str)
     except zoneinfo.ZoneInfoNotFoundError:
         return None
 

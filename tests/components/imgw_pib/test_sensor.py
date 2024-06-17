@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from imgw_pib import ApiError
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.imgw_pib.const import UPDATE_INTERVAL
@@ -18,6 +19,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 ENTITY_ID = "sensor.river_name_station_name_water_level"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

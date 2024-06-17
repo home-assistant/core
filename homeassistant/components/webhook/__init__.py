@@ -87,10 +87,24 @@ def async_generate_id() -> str:
 
 @callback
 @bind_hass
-def async_generate_url(hass: HomeAssistant, webhook_id: str) -> str:
+def async_generate_url(
+    hass: HomeAssistant,
+    webhook_id: str,
+    allow_internal: bool = True,
+    allow_external: bool = True,
+    allow_ip: bool | None = None,
+    prefer_external: bool | None = True,
+) -> str:
     """Generate the full URL for a webhook_id."""
     return (
-        f"{get_url(hass, prefer_external=True, allow_cloud=False)}"
+        f"{get_url(
+            hass,
+            allow_internal=allow_internal,
+            allow_external=allow_external,
+            allow_cloud=False,
+            allow_ip=allow_ip,
+            prefer_external=prefer_external,
+        )}"
         f"{async_generate_path(webhook_id)}"
     )
 
@@ -178,7 +192,7 @@ async def async_handle_webhook(
         response: Response | None = await webhook["handler"](hass, webhook_id, request)
         if response is None:
             response = Response(status=HTTPStatus.OK)
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Error processing webhook %s", webhook_id)
         return Response(status=HTTPStatus.OK)
     return response

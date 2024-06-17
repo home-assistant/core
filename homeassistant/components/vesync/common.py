@@ -67,7 +67,7 @@ class VeSyncBaseEntity(Entity):
         # sensors. Maintaining base_unique_id allows us to group related
         # entities under a single device.
         if isinstance(self.device.sub_device_no, int):
-            return f"{self.device.cid}{str(self.device.sub_device_no)}"
+            return f"{self.device.cid}{self.device.sub_device_no!s}"
         return self.device.cid
 
     @property

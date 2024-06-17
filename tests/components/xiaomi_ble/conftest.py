@@ -3,6 +3,7 @@
 from unittest import mock
 
 import pytest
+from typing_extensions import Generator
 
 
 class MockServices:
@@ -44,7 +45,7 @@ class MockBleakClientBattery5(MockBleakClient):
 
 
 @pytest.fixture(autouse=True)
-def mock_bluetooth(enable_bluetooth):
+def mock_bluetooth(enable_bluetooth: None) -> Generator[None]:
     """Auto mock bluetooth."""
 
     with mock.patch("xiaomi_ble.parser.BleakClient", MockBleakClientBattery5):

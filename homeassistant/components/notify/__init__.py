@@ -41,6 +41,7 @@ from .legacy import (  # noqa: F401
     async_setup_legacy,
     check_templates_warn,
 )
+from .repairs import migrate_notify_issue  # noqa: F401
 
 # mypy: disallow-any-generics
 

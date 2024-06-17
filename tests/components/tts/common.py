@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from http import HTTPStatus
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant.components import media_source
@@ -41,7 +42,7 @@ SUPPORT_LANGUAGES = ["de_CH", "de_DE", "en_GB", "en_US"]
 TEST_DOMAIN = "test"
 
 
-def mock_tts_get_cache_files_fixture_helper():
+def mock_tts_get_cache_files_fixture_helper() -> Generator[MagicMock]:
     """Mock the list TTS cache function."""
     with patch(
         "homeassistant.components.tts._get_cache_files", return_value={}
@@ -51,7 +52,7 @@ def mock_tts_get_cache_files_fixture_helper():
 
 def mock_tts_init_cache_dir_fixture_helper(
     init_tts_cache_dir_side_effect: Any,
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Mock the TTS cache dir in memory."""
     with patch(
         "homeassistant.components.tts._init_tts_cache_dir",
@@ -66,8 +67,11 @@ def init_tts_cache_dir_side_effect_fixture_helper() -> Any:
 
 
 def mock_tts_cache_dir_fixture_helper(
-    tmp_path, mock_tts_init_cache_dir, mock_tts_get_cache_files, request
-):
+    tmp_path: Path,
+    mock_tts_init_cache_dir: MagicMock,
+    mock_tts_get_cache_files: MagicMock,
+    request: pytest.FixtureRequest,
+) -> Generator[Path]:
     """Mock the TTS cache dir with empty dir."""
     mock_tts_init_cache_dir.return_value = str(tmp_path)
 
@@ -88,7 +92,7 @@ def mock_tts_cache_dir_fixture_helper(
     pytest.fail("Test failed, see log for details")
 
 
-def tts_mutagen_mock_fixture_helper():
+def tts_mutagen_mock_fixture_helper() -> Generator[MagicMock]:
     """Mock writing tags."""
     with patch(
         "homeassistant.components.tts.SpeechManager.write_tags",
@@ -222,7 +226,7 @@ async def mock_config_entry_setup(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, TTS_DOMAIN)
+        await hass.config_entries.async_forward_entry_setups(config_entry, [TTS_DOMAIN])
         return True
 
     async def async_unload_entry_init(

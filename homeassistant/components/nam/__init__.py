@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from aiohttp.client_exceptions import ClientConnectorError, ClientError
 from nettigo_air_monitor import (
@@ -27,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BUTTON, Platform.SENSOR]
 
-NAMConfigEntry = ConfigEntry[NAMDataUpdateCoordinator]
+type NAMConfigEntry = ConfigEntry[NAMDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NAMConfigEntry) -> bool:
@@ -50,6 +51,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: NAMConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
     except AuthFailedError as err:
         raise ConfigEntryAuthFailed from err
+
+    if TYPE_CHECKING:
+        assert entry.unique_id
 
     coordinator = NAMDataUpdateCoordinator(hass, nam, entry.unique_id)
     await coordinator.async_config_entry_first_refresh()

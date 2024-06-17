@@ -9,6 +9,7 @@ import pytest
 from homeassistant.components.lock import (
     STATE_LOCKED,
     STATE_LOCKING,
+    STATE_OPEN,
     STATE_UNLOCKED,
     STATE_UNLOCKING,
     LockEntityFeature,
@@ -115,9 +116,9 @@ async def test_lock_requires_pin(
     # set door state to unlocked
     set_node_attribute(door_lock, 1, 257, 0, 2)
 
+    await trigger_subscription_callback(hass, matter_client)
     with pytest.raises(ServiceValidationError):
         # Lock door using invalid code format
-        await trigger_subscription_callback(hass, matter_client)
         await hass.services.async_call(
             "lock",
             "lock",
@@ -208,3 +209,10 @@ async def test_lock_with_unbolt(
         command=clusters.DoorLock.Commands.UnlockDoor(),
         timed_request_timeout_ms=1000,
     )
+
+    set_node_attribute(door_lock_with_unbolt, 1, 257, 3, 0)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("lock.mock_door_lock")
+    assert state
+    assert state.state == STATE_OPEN

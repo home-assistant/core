@@ -268,7 +268,7 @@ WALLETS = {
     "XTZ": "XTZ",
     "YER": "YER",
     "YFI": "YFI",
-    "ZAR": "ZAR",
+    "ZAR": "ZAR",  # codespell:ignore zar
     "ZEC": "ZEC",
     "ZMW": "ZMW",
     "ZRX": "ZRX",
@@ -550,7 +550,7 @@ RATES = {
     "TRAC": "TRAC",
     "TRB": "TRB",
     "TRIBE": "TRIBE",
-    "TRU": "TRU",
+    "TRU": "TRU",  # codespell:ignore tru
     "TRY": "TRY",
     "TTD": "TTD",
     "TWD": "TWD",
@@ -590,7 +590,7 @@ RATES = {
     "YER": "YER",
     "YFI": "YFI",
     "YFII": "YFII",
-    "ZAR": "ZAR",
+    "ZAR": "ZAR",  # codespell:ignore zar
     "ZEC": "ZEC",
     "ZEN": "ZEN",
     "ZMW": "ZMW",

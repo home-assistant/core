@@ -101,6 +101,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Samsung TV config flow."""
 
     VERSION = 2
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize flow."""

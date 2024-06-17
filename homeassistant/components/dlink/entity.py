@@ -8,8 +8,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import DLinkConfigEntry
 from .const import ATTRIBUTION, DOMAIN, MANUFACTURER
-from .coordinator import DlinkCoordinator
 
 
 class DLinkEntity(CoordinatorEntity[DlinkCoordinator]):
@@ -20,17 +20,18 @@ class DLinkEntity(CoordinatorEntity[DlinkCoordinator]):
 
     def __init__(
         self,
-        coordinator: DlinkCoordinator,
+        config_entry: DLinkConfigEntry,
         description: EntityDescription,
     ) -> None:
-        """Initialize the entity."""
-        super().__init__(coordinator)
+        """Initialize a D-Link Power Plug entity."""
+        self.data = config_entry.runtime_data
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer=MANUFACTURER,
-            model=coordinator.smartplug.model_name,
+            model=self.data.smartplug.model_name,
+            name=config_entry.title,
         )
         if coordinator.config_entry.unique_id:
             self._attr_device_info[ATTR_CONNECTIONS] = {
