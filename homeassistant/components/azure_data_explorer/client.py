@@ -72,6 +72,10 @@ class AzureDataExplorerClient:
 
         self.query_client = KustoClient(kcsb_query)
 
+        # Suppress very verbose logging from client
+        logger = logging.getLogger("azure")
+        logger.setLevel(logging.WARNING)
+
     def test_connection(self) -> None:
         """Test connection, will throw Exception if it cannot connect."""
 
