@@ -11,9 +11,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.feedreader.const import DOMAIN
-from homeassistant.components.feedreader.coordinator import FeedReaderCoordinator
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed
 import homeassistant.util.dt as dt_util
 
 from . import async_setup_config_entry
@@ -276,7 +274,10 @@ async def test_feed_parsing_failed(
 
 
 async def test_feed_errors(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, feed_one_event
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    feed_one_event,
 ) -> None:
     """Test feed errors."""
     entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG_DEFAULT)
@@ -289,26 +290,15 @@ async def test_feed_errors(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        coordinator: FeedReaderCoordinator = entry.runtime_data
-
         # raise URL error
         feedreader.side_effect = urllib.error.URLError("Test")
         freezer.tick(timedelta(hours=1, seconds=1))
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
-        assert not coordinator.last_update_success
-        assert isinstance(coordinator.last_exception, UpdateFailed)
-
-        # not feed returned
-        with patch(
-            "homeassistant.components.feedreader.coordinator.feedparser.parse",
-            return_value=None,
-        ):
-            freezer.tick(timedelta(hours=1, seconds=1))
-            async_fire_time_changed(hass)
-            await hass.async_block_till_done(wait_background_tasks=True)
-            assert not coordinator.last_update_success
-            assert isinstance(coordinator.last_exception, UpdateFailed)
+        assert (
+            "Error fetching feed data from http://some.rss.local/rss_feed.xml: <urlopen error Test>"
+            in caplog.text
+        )
 
         # success
         feedreader.side_effect = None
@@ -316,4 +306,25 @@ async def test_feed_errors(
         freezer.tick(timedelta(hours=1, seconds=1))
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
-        assert coordinator.last_update_success
+        caplog.clear()
+
+        # no feed returned
+        freezer.tick(timedelta(hours=1, seconds=1))
+        with patch(
+            "homeassistant.components.feedreader.coordinator.feedparser.parse",
+            return_value=None,
+        ):
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done(wait_background_tasks=True)
+            assert (
+                "Error fetching feed data from http://some.rss.local/rss_feed.xml"
+                in caplog.text
+            )
+            caplog.clear()
+
+        # success
+        feedreader.side_effect = None
+        feedreader.return_value = feed_one_event
+        freezer.tick(timedelta(hours=1, seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
