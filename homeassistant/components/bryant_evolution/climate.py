@@ -70,10 +70,6 @@ class BryantEvolutionClimate(ClimateEntity):
         )
         self._enable_turn_on_off_backwards_compatibility = False
 
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
 
     async def async_update(self) -> None:
         """Update the entity state."""
