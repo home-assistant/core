@@ -12,7 +12,7 @@ import zigpy.types
 
 from homeassistant.components.usb import UsbServiceInfo
 from homeassistant.components.zha import radio_manager
-from homeassistant.components.zha.core.const import DOMAIN, RadioType
+from homeassistant.components.zha.const import DOMAIN, RadioType
 from homeassistant.components.zha.radio_manager import ProbeResult, ZhaRadioManager
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant

@@ -6,7 +6,7 @@ import pytest
 import zigpy.profiles.zha
 from zigpy.zcl.clusters import general
 
-from homeassistant.components.zha.core.const import ZHA_EVENT
+from homeassistant.components.zha.const import ZHA_EVENT
 from homeassistant.const import CONF_DEVICE_ID, CONF_UNIQUE_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr

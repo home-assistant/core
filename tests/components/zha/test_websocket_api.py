@@ -21,7 +21,7 @@ import zigpy.zdo.types as zdo_types
 
 from homeassistant.components.websocket_api import const
 from homeassistant.components.zha import DOMAIN
-from homeassistant.components.zha.core.const import (
+from homeassistant.components.zha.const import (
     ATTR_CLUSTER_ID,
     ATTR_CLUSTER_TYPE,
     ATTR_ENDPOINT_ID,

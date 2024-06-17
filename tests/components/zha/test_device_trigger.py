@@ -14,7 +14,7 @@ from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.components.zha.core.const import ATTR_ENDPOINT_ID
+from homeassistant.components.zha.const import ATTR_ENDPOINT_ID
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr

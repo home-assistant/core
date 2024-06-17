@@ -16,7 +16,7 @@ from homeassistant.components.homeassistant_sky_connect.const import (
     DOMAIN as SKYCONNECT_DOMAIN,
 )
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
-from homeassistant.components.zha.core.const import DOMAIN
+from homeassistant.components.zha.const import DOMAIN
 from homeassistant.components.zha.repairs.network_settings_inconsistent import (
     ISSUE_INCONSISTENT_NETWORK_SETTINGS,
 )
