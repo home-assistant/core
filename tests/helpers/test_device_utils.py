@@ -47,7 +47,7 @@ async def test_entity_id_to_device_id(
     assert device_id == device.id
 
     with pytest.raises(vol.Invalid):
-        device_id = du.async_entity_id_to_device_id(
+        du.async_entity_id_to_device_id(
             hass,
             entity_id_or_uuid="unknown_uuid",
         )
