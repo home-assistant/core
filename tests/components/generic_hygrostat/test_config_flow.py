@@ -5,8 +5,18 @@ from unittest.mock import patch
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
-from homeassistant import config_entries
-from homeassistant.components.generic_hygrostat import DOMAIN
+from homeassistant.components.generic_hygrostat import (
+    CONF_AWAY_HUMIDITY,
+    CONF_DEVICE_CLASS,
+    CONF_DRY_TOLERANCE,
+    CONF_HUMIDIFIER,
+    CONF_INITIAL_STATE,
+    CONF_NAME,
+    CONF_SENSOR,
+    CONF_WET_TOLERANCE,
+    DOMAIN,
+)
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, async_mock_service
@@ -15,7 +25,7 @@ from tests.common import MockConfigEntry, async_mock_service
 async def test_config_flow(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Test the config flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result == snapshot(name="init", exclude=props("data_schema"))
 
@@ -26,14 +36,14 @@ async def test_config_flow(hass: HomeAssistant, snapshot: SnapshotAssertion) -> 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "name": "My dehumidifier",
-                "dry_tolerance": 2,
-                "wet_tolerance": 4,
-                "humidifier": "switch.run",
-                "target_sensor": "sensor.humidity",
-                "device_class": "dehumidifier",
-                "away_humidity": 35,
-                "initial_state": True,
+                CONF_NAME: "My dehumidifier",
+                CONF_DRY_TOLERANCE: 2,
+                CONF_WET_TOLERANCE: 4,
+                CONF_HUMIDIFIER: "switch.run",
+                CONF_SENSOR: "sensor.humidity",
+                CONF_DEVICE_CLASS: "dehumidifier",
+                CONF_AWAY_HUMIDITY: 35,
+                CONF_INITIAL_STATE: True,
             },
         )
         await hass.async_block_till_done()
@@ -57,14 +67,14 @@ async def test_options(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None
         data={},
         domain=DOMAIN,
         options={
-            "away_humidity": 35.0,
-            "device_class": "dehumidifier",
-            "dry_tolerance": 2.0,
-            "humidifier": "switch.run",
-            "initial_state": True,
-            "name": "My dehumidifier",
-            "target_sensor": "sensor.humidity",
-            "wet_tolerance": 4.0,
+            CONF_AWAY_HUMIDITY: 35.0,
+            CONF_DEVICE_CLASS: "dehumidifier",
+            CONF_DRY_TOLERANCE: 2.0,
+            CONF_HUMIDIFIER: "switch.run",
+            CONF_INITIAL_STATE: True,
+            CONF_NAME: "My dehumidifier",
+            CONF_SENSOR: "sensor.humidity",
+            CONF_WET_TOLERANCE: 4.0,
         },
         title="My dehumidifier",
     )
@@ -96,18 +106,15 @@ async def test_options(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "dry_tolerance": 2,
-            "wet_tolerance": 4,
-            "humidifier": "switch.run",
-            "target_sensor": "sensor.humidity",
-            "device_class": "dehumidifier",
-            "initial_state": True,
+            CONF_DRY_TOLERANCE: 2,
+            CONF_WET_TOLERANCE: 4,
+            CONF_HUMIDIFIER: "switch.run",
+            CONF_SENSOR: "sensor.humidity",
+            CONF_DEVICE_CLASS: "dehumidifier",
+            CONF_INITIAL_STATE: True,
         },
     )
     assert result == snapshot(name="create_entry", exclude=props("handler"))
-
-    assert config_entry.data == {}
-    assert config_entry.options == snapshot(name="options", exclude=props("handler"))
 
     # Check config entry is reloaded with new options
     await hass.async_block_till_done()

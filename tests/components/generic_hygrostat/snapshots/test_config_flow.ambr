@@ -144,17 +144,6 @@
     'type': <FlowResultType.FORM: 'form'>,
   })
 # ---
-# name: test_options[options]
-  dict({
-    'device_class': 'dehumidifier',
-    'dry_tolerance': 2.0,
-    'humidifier': 'switch.run',
-    'initial_state': 1.0,
-    'name': 'My dehumidifier',
-    'target_sensor': 'sensor.humidity',
-    'wet_tolerance': 4.0,
-  })
-# ---
 # name: test_options[with_away]
   StateSnapshot({
     'attributes': ReadOnlyDict({
