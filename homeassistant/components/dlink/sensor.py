@@ -50,10 +50,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the D-Link Power Plug sensors."""
-    entities = [
-        SmartPlugSensor(entry, sensor)
-        for sensor in SENSOR_TYPES
-    ]
+    entities = [SmartPlugSensor(entry, sensor) for sensor in SENSOR_TYPES]
     async_add_entities(entities, True)
 
 
