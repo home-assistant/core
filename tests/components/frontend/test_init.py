@@ -18,6 +18,7 @@ from homeassistant.components.frontend import (
     DOMAIN,
     EVENT_PANELS_UPDATED,
     THEMES_STORAGE_KEY,
+    add_extra_js_url,
     async_register_built_in_panel,
     async_remove_panel,
 )
@@ -416,6 +417,17 @@ async def test_extra_js(hass: HomeAssistant, mock_http_client_with_extra_js) -> 
     assert '"/local/my_module.js"' in text
     assert '"/local/my_es5.js"' in text
 
+    # Test dynamically adding extra javascript
+    add_extra_js_url(hass, "/local/my_module_2.js", False)
+    add_extra_js_url(hass, "/local/my_es5_2.js", True)
+    resp = await mock_http_client_with_extra_js.get("")
+    assert resp.status == 200
+    assert "cache-control" not in resp.headers
+
+    text = await resp.text()
+    assert '"/local/my_module_2.js"' in text
+    assert '"/local/my_es5_2.js"' in text
+
     # safe mode
     hass.config.safe_mode = True
     resp = await mock_http_client_with_extra_js.get("")
@@ -425,6 +437,17 @@ async def test_extra_js(hass: HomeAssistant, mock_http_client_with_extra_js) -> 
     text = await resp.text()
     assert '"/local/my_module.js"' not in text
     assert '"/local/my_es5.js"' not in text
+
+    # Test dynamically adding extra javascript
+    add_extra_js_url(hass, "/local/my_module_2.js", False)
+    add_extra_js_url(hass, "/local/my_es5_2.js", True)
+    resp = await mock_http_client_with_extra_js.get("")
+    assert resp.status == 200
+    assert "cache-control" not in resp.headers
+
+    text = await resp.text()
+    assert '"/local/my_module_2.js"' not in text
+    assert '"/local/my_es5_2.js"' not in text
 
 
 async def test_get_panels(
