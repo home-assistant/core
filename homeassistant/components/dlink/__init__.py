@@ -14,7 +14,7 @@ from .data import SmartPlugData
 
 type DLinkConfigEntry = ConfigEntry[SmartPlugData]
 
-PLATFORMS = [Platform.SWITCH]
+PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: DLinkConfigEntry) -> bool:
