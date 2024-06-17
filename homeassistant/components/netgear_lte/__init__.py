@@ -55,7 +55,7 @@ PLATFORMS = [
     Platform.NOTIFY,
     Platform.SENSOR,
 ]
-type NetgearLTEConfigEntry = ConfigEntry[eternalegypt.Modem]
+type NetgearLTEConfigEntry = ConfigEntry[NetgearLTEDataUpdateCoordinator]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 

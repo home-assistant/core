@@ -21,10 +21,9 @@ class LTEEntity(CoordinatorEntity[NetgearLTEDataUpdateCoordinator]):
         description: EntityDescription,
     ) -> None:
         """Initialize a Netgear LTE entity."""
-        coordinator: NetgearLTEDataUpdateCoordinator = entry.runtime_data
-        super().__init__(coordinator)
+        super().__init__(entry.runtime_data)
         self.entity_description = description
-        data = coordinator.data
+        data = entry.runtime_data.data
         self._attr_unique_id = f"{description.key}_{data.serial_number}"
         self._attr_device_info = DeviceInfo(
             configuration_url=f"http://{entry.data[CONF_HOST]}",
