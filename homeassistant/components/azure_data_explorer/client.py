@@ -73,7 +73,7 @@ class AzureDataExplorerClient:
         self.query_client = KustoClient(kcsb_query)
 
         # Suppress very verbose logging from client
-        logger = logging.getLogger("azure")
+        logger = logging.getLogger("azure.kusto")
         logger.setLevel(logging.WARNING)
 
 
