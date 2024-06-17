@@ -29,16 +29,9 @@ def async_device_info_to_link_entity(
 ) -> dr.DeviceInfo | None:
     """DeviceInfo with information to link a device to a configuration entry in the Link category from a entity id or entity uuid."""
 
-    ent_reg = er.async_get(hass)
-
-    if (
-        entity_id := er.async_validate_entity_id(ent_reg, entity_id_or_uuid)
-    ) is None or (device_id := async_entity_id_to_device_id(hass, entity_id)) is None:
-        return None
-
     return async_device_info_to_link_device_id(
         hass,
-        device_id,
+        async_entity_id_to_device_id(hass, entity_id_or_uuid),
     )
 
 
