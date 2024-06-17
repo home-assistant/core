@@ -48,15 +48,15 @@ OPTIONS_SCHEMA = vol.Schema(
                 mode=selector.NumberSelectorMode.BOX, step="any"
             ),
         ),
+        vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
+            selector.EntitySelectorConfig(domain=SENSOR_DOMAIN)
+        ),
     }
 )
 
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): selector.TextSelector(),
-        vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain=SENSOR_DOMAIN)
-        ),
     }
 ).extend(OPTIONS_SCHEMA.schema)
 

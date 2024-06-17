@@ -24,7 +24,6 @@ from homeassistant.const import (
     ATTR_NAME,
     CONF_ID,
     CONF_NAME,
-    CONF_TYPE,
     EVENT_HOMEASSISTANT_START,
     SERVICE_RELOAD,
     STATE_HOME,
@@ -307,6 +306,23 @@ class PersonStorageCollection(collection.DictStorageCollection):
                 raise ValueError("User already taken")
 
 
+class PersonStorageCollectionWebsocket(collection.DictStorageCollectionWebsocket):
+    """Class to expose storage collection management over websocket."""
+
+    def ws_list_item(
+        self,
+        hass: HomeAssistant,
+        connection: websocket_api.ActiveConnection,
+        msg: dict[str, Any],
+    ) -> None:
+        """List persons."""
+        yaml, storage, _ = hass.data[DOMAIN]
+        connection.send_result(
+            msg[ATTR_ID],
+            {"storage": storage.async_items(), "config": yaml.async_items()},
+        )
+
+
 async def filter_yaml_data(hass: HomeAssistant, persons: list[dict]) -> list[dict]:
     """Validate YAML data that we can't validate via schema."""
     filtered = []
@@ -370,11 +386,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DOMAIN] = (yaml_collection, storage_collection, entity_component)
 
-    collection.DictStorageCollectionWebsocket(
+    PersonStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
-    ).async_setup(hass, create_list=False)
-
-    websocket_api.async_register_command(hass, ws_list_person)
+    ).async_setup(hass)
 
     async def _handle_user_removed(event: Event) -> None:
         """Handle a user being removed."""
@@ -568,19 +582,6 @@ class Person(
             data[ATTR_USER_ID] = user_id
 
         self._attr_extra_state_attributes = data
-
-
-@websocket_api.websocket_command({vol.Required(CONF_TYPE): "person/list"})
-def ws_list_person(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """List persons."""
-    yaml, storage, _ = hass.data[DOMAIN]
-    connection.send_result(
-        msg[ATTR_ID], {"storage": storage.async_items(), "config": yaml.async_items()}
-    )
 
 
 def _get_latest(prev: State | None, curr: State) -> State:

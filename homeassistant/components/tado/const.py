@@ -212,3 +212,5 @@ SERVICE_ADD_METER_READING = "add_meter_reading"
 CONF_CONFIG_ENTRY = "config_entry"
 CONF_READING = "reading"
 ATTR_MESSAGE = "message"
+
+WATER_HEATER_FALLBACK_REPAIR = "water_heater_fallback"

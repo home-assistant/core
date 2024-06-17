@@ -1,7 +1,5 @@
 """Test Zamg component init."""
 
-from unittest.mock import MagicMock
-
 import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -62,10 +60,10 @@ from tests.common import MockConfigEntry
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_zamg_coordinator")
 async def test_migrate_unique_ids(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_zamg_coordinator: MagicMock,
     entitydata: dict,
     old_unique_id: str,
     new_unique_id: str,
@@ -108,10 +106,10 @@ async def test_migrate_unique_ids(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_zamg_coordinator")
 async def test_dont_migrate_unique_ids(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_zamg_coordinator: MagicMock,
     entitydata: dict,
     old_unique_id: str,
     new_unique_id: str,
@@ -167,10 +165,10 @@ async def test_dont_migrate_unique_ids(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_zamg_coordinator")
 async def test_unload_entry(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_zamg_coordinator: MagicMock,
     entitydata: dict,
     unique_id: str,
 ) -> None:

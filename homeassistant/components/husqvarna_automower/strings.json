@@ -243,6 +243,12 @@
           "home": "Home",
           "demo": "Demo"
         }
+      },
+      "work_area": {
+        "name": "Work area",
+        "state": {
+          "my_lawn": "My lawn"
+        }
       }
     },
     "switch": {

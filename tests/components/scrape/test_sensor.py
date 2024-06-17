@@ -8,8 +8,6 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.rest.const import DEFAULT_METHOD
-from homeassistant.components.rest.data import DEFAULT_TIMEOUT
 from homeassistant.components.scrape.const import (
     CONF_ENCODING,
     CONF_INDEX,
@@ -584,9 +582,9 @@ async def test_templates_with_yaml(hass: HomeAssistant) -> None:
     [
         {
             CONF_RESOURCE: "https://www.home-assistant.io",
-            CONF_METHOD: DEFAULT_METHOD,
+            CONF_METHOD: "GET",
             CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
-            CONF_TIMEOUT: DEFAULT_TIMEOUT,
+            CONF_TIMEOUT: 10,
             CONF_ENCODING: DEFAULT_ENCODING,
             SENSOR_DOMAIN: [
                 {

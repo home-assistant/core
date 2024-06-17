@@ -34,13 +34,13 @@ async def test_get_triggers_module_device(
             CONF_DEVICE_ID: device.id,
             "metadata": {},
         }
-        for trigger in [
+        for trigger in (
             "transmitter",
             "transponder",
             "fingerprint",
             "codelock",
             "send_keys",
-        ]
+        )
     ]
 
     triggers = await async_get_device_automations(

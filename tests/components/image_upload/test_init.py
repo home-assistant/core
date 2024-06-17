@@ -7,7 +7,7 @@ from unittest.mock import patch
 from aiohttp import ClientSession, ClientWebSocketResponse
 from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant.components.websocket_api import const as ws_const
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -77,7 +77,7 @@ async def test_upload_image(
         msg = await ws_client.receive_json()
 
         assert msg["id"] == 6
-        assert msg["type"] == ws_const.TYPE_RESULT
+        assert msg["type"] == TYPE_RESULT
         assert msg["success"]
         assert msg["result"] == [item]
 
@@ -88,7 +88,7 @@ async def test_upload_image(
         msg = await ws_client.receive_json()
 
         assert msg["id"] == 7
-        assert msg["type"] == ws_const.TYPE_RESULT
+        assert msg["type"] == TYPE_RESULT
         assert msg["success"]
 
         # Ensure removed from disk

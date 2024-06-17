@@ -55,6 +55,7 @@ class BangOlufsenMediaType(StrEnum):
     DEEZER = "deezer"
     RADIO = "radio"
     TTS = "provider"
+    OVERLAY_TTS = "overlay_tts"
 
 
 class BangOlufsenModel(StrEnum):
@@ -119,6 +120,7 @@ VALID_MEDIA_TYPES: Final[tuple] = (
     BangOlufsenMediaType.DEEZER,
     BangOlufsenMediaType.RADIO,
     BangOlufsenMediaType.TTS,
+    BangOlufsenMediaType.OVERLAY_TTS,
     MediaType.MUSIC,
     MediaType.URL,
     MediaType.CHANNEL,

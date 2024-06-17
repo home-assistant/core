@@ -180,8 +180,8 @@ class TelldusLiveClient:
         )
         async with self._hass.data[DATA_CONFIG_ENTRY_LOCK]:
             if component not in self._hass.data[CONFIG_ENTRY_IS_SETUP]:
-                await self._hass.config_entries.async_forward_entry_setup(
-                    self._config_entry, component
+                await self._hass.config_entries.async_forward_entry_setups(
+                    self._config_entry, [component]
                 )
                 self._hass.data[CONFIG_ENTRY_IS_SETUP].add(component)
         device_ids = []

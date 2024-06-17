@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
-from http import HTTPStatus
 import logging
 from typing import Any
 
-import requests
+from pyemoncms import EmoncmsClient
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -30,7 +28,6 @@ from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +45,6 @@ CONF_SENSOR_NAMES = "sensor_names"
 
 DECIMALS = 2
 DEFAULT_UNIT = UnitOfPower.WATT
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 ONLY_INCL_EXCL_NONE = "only_include_exclude_or_none"
 
@@ -72,17 +68,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_id(
-    sensorid: str, feedtag: str, feedname: str, feedid: str, feeduserid: str
-) -> str:
-    """Return unique identifier for feed / sensor."""
-    return f"emoncms{sensorid}_{feedtag}_{feedname}_{feedid}_{feeduserid}"
-
-
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Emoncms sensor."""
@@ -98,16 +87,15 @@ def setup_platform(
     if value_template is not None:
         value_template.hass = hass
 
-    data = EmonCmsData(hass, url, apikey)
+    emoncms_client = EmoncmsClient(url, apikey)
+    elems = await emoncms_client.async_list_feeds()
 
-    data.update()
-
-    if data.data is None:
+    if elems is None:
         return
 
     sensors = []
 
-    for elem in data.data:
+    for elem in elems:
         if exclude_feeds is not None and int(elem["id"]) in exclude_feeds:
             continue
 
@@ -126,7 +114,7 @@ def setup_platform(
         sensors.append(
             EmonCmsSensor(
                 hass,
-                data,
+                emoncms_client,
                 name,
                 value_template,
                 unit_of_measurement,
@@ -134,7 +122,7 @@ def setup_platform(
                 elem,
             )
         )
-    add_entities(sensors)
+    async_add_entities(sensors)
 
 
 class EmonCmsSensor(SensorEntity):
@@ -143,7 +131,7 @@ class EmonCmsSensor(SensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        data: EmonCmsData,
+        emoncms_client: EmoncmsClient,
         name: str | None,
         value_template: template.Template | None,
         unit_of_measurement: str | None,
@@ -161,15 +149,12 @@ class EmonCmsSensor(SensorEntity):
             self._attr_name = f"EmonCMS{id_for_name} {feed_name}"
         else:
             self._attr_name = name
-        self._identifier = get_id(
-            sensorid, elem["tag"], elem["name"], elem["id"], elem["userid"]
-        )
         self._hass = hass
-        self._data = data
+        self._emoncms_client = emoncms_client
         self._value_template = value_template
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._sensorid = sensorid
-        self._elem = elem
+        self._feed_id = elem["id"]
 
         if unit_of_measurement in ("kWh", "Wh"):
             self._attr_device_class = SensorDeviceClass.ENERGY
@@ -195,7 +180,24 @@ class EmonCmsSensor(SensorEntity):
         elif unit_of_measurement == "hPa":
             self._attr_device_class = SensorDeviceClass.PRESSURE
             self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._update_attributes(elem)
 
+    def _update_attributes(self, elem: dict[str, Any]) -> None:
+        """Update entity attributes."""
+        self._attr_extra_state_attributes = {
+            ATTR_FEEDID: elem["id"],
+            ATTR_TAG: elem["tag"],
+            ATTR_FEEDNAME: elem["name"],
+        }
+        if elem["value"] is not None:
+            self._attr_extra_state_attributes[ATTR_SIZE] = elem["size"]
+            self._attr_extra_state_attributes[ATTR_USERID] = elem["userid"]
+            self._attr_extra_state_attributes[ATTR_LASTUPDATETIME] = elem["time"]
+            self._attr_extra_state_attributes[ATTR_LASTUPDATETIMESTR] = (
+                template.timestamp_local(float(elem["time"]))
+            )
+
+        self._attr_native_value = None
         if self._value_template is not None:
             self._attr_native_value = (
                 self._value_template.render_with_possible_json_value(
@@ -204,92 +206,10 @@ class EmonCmsSensor(SensorEntity):
             )
         elif elem["value"] is not None:
             self._attr_native_value = round(float(elem["value"]), DECIMALS)
-        else:
-            self._attr_native_value = None
 
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the sensor extra attributes."""
-        return {
-            ATTR_FEEDID: self._elem["id"],
-            ATTR_TAG: self._elem["tag"],
-            ATTR_FEEDNAME: self._elem["name"],
-            ATTR_SIZE: self._elem["size"],
-            ATTR_USERID: self._elem["userid"],
-            ATTR_LASTUPDATETIME: self._elem["time"],
-            ATTR_LASTUPDATETIMESTR: template.timestamp_local(float(self._elem["time"])),
-        }
-
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Get the latest data and updates the state."""
-        self._data.update()
-
-        if self._data.data is None:
-            return
-
-        elem = next(
-            (
-                elem
-                for elem in self._data.data
-                if get_id(
-                    self._sensorid,
-                    elem["tag"],
-                    elem["name"],
-                    elem["id"],
-                    elem["userid"],
-                )
-                == self._identifier
-            ),
-            None,
-        )
-
+        elem = await self._emoncms_client.async_get_feed_fields(self._feed_id)
         if elem is None:
             return
-
-        self._elem = elem
-
-        if self._value_template is not None:
-            self._attr_native_value = (
-                self._value_template.render_with_possible_json_value(
-                    elem["value"], STATE_UNKNOWN
-                )
-            )
-        elif elem["value"] is not None:
-            self._attr_native_value = round(float(elem["value"]), DECIMALS)
-        else:
-            self._attr_native_value = None
-
-
-class EmonCmsData:
-    """The class for handling the data retrieval."""
-
-    def __init__(self, hass: HomeAssistant, url: str, apikey: str) -> None:
-        """Initialize the data object."""
-        self._apikey = apikey
-        self._url = f"{url}/feed/list.json"
-        self._hass = hass
-        self.data: list[dict[str, Any]] | None = None
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self) -> None:
-        """Get the latest data from Emoncms."""
-        try:
-            parameters = {"apikey": self._apikey}
-            req = requests.get(
-                self._url, params=parameters, allow_redirects=True, timeout=5
-            )
-        except requests.exceptions.RequestException as exception:
-            _LOGGER.error(exception)
-            return
-
-        if req.status_code == HTTPStatus.OK:
-            self.data = req.json()
-        else:
-            _LOGGER.error(
-                (
-                    "Please verify if the specified configuration value "
-                    "'%s' is correct! (HTTP Status_code = %d)"
-                ),
-                CONF_URL,
-                req.status_code,
-            )
+        self._update_attributes(elem)
