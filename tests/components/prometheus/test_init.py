@@ -16,6 +16,7 @@ from homeassistant.components import (
     counter,
     cover,
     device_tracker,
+    fan,
     humidifier,
     input_boolean,
     input_number,
@@ -559,6 +560,20 @@ async def test_lock(
         'lock_state{domain="lock",'
         'entity="lock.kitchen_door",'
         'friendly_name="Kitchen Door"} 0.0' in body
+    )
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_fan(
+    client: ClientSessionGenerator, fan_entities: dict[str, er.RegistryEntry]
+) -> None:
+    """Test prometheus metrics for fan."""
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'fan_state{domain="fan",'
+        'entity="fan.fan_1",'
+        'friendly_name="Fan 1"} 1.0' in body
     )
 
 
@@ -1783,6 +1798,26 @@ async def switch_fixture(
     set_state_with_entry(hass, switch_2, STATE_OFF, switch_2_attributes)
     data["switch_2"] = switch_2
     data["switch_2_attributes"] = switch_2_attributes
+
+    await hass.async_block_till_done()
+    return data
+
+
+@pytest.fixture(name="fan_entities")
+async def fan_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry]:
+    """Simulate fan entities."""
+    data = {}
+    fan_1 = entity_registry.async_get_or_create(
+        domain=fan.DOMAIN,
+        platform="test",
+        unique_id="fan_1",
+        suggested_object_id="fan_1",
+        original_name="Fan 1",
+    )
+    set_state_with_entry(hass, fan_1, STATE_LOCKED)
+    data["fan_1"] = fan_1
 
     await hass.async_block_till_done()
     return data
