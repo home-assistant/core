@@ -228,7 +228,7 @@ async def test_ble_device_only_checks_is_available(
     assert hass.states.get("light.testdevice").state == STATE_OFF
 
 
-@pytest.mark.parametrize("example", FIXTURES, ids=lambda val: str(val.stem))
+@pytest.mark.parametrize("example", list(FIXTURES), ids=lambda val: str(val.stem))
 async def test_snapshots(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
