@@ -645,7 +645,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         default_name: str | None | UndefinedType = UNDEFINED,
         # To disable a device if it gets created
         disabled_by: DeviceEntryDisabler | None | UndefinedType = UNDEFINED,
-        domain: str | UndefinedType = UNDEFINED,
         entry_type: DeviceEntryType | None | UndefinedType = UNDEFINED,
         hw_version: str | None | UndefinedType = UNDEFINED,
         identifiers: set[tuple[str, str]] | None | UndefinedType = UNDEFINED,
