@@ -1,0 +1,114 @@
+# serializer version: 1
+# name: test_config_flow[create_entry]
+  FlowResultSnapshot({
+    'result': ConfigEntrySnapshot({
+      'title': 'My thermostat',
+    }),
+    'title': 'My thermostat',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+  })
+# ---
+# name: test_config_flow[init]
+  FlowResultSnapshot({
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_config_flow[options]
+  FlowResultSnapshot({
+    'context': dict({
+      'source': 'user',
+    }),
+    'data': dict({
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'generic_thermostat',
+    'minor_version': 1,
+    'options': dict({
+      'ac_mode': False,
+      'away_temp': 20.0,
+      'cold_tolerance': 0.3,
+      'heater': 'switch.run',
+      'hot_tolerance': 0.3,
+      'initial_hvac_mode': <HVACMode.HEAT: 'heat'>,
+      'name': 'My thermostat',
+      'target_sensor': 'sensor.temperature',
+    }),
+    'result': ConfigEntrySnapshot({
+      'data': dict({
+      }),
+      'disabled_by': None,
+      'domain': 'generic_thermostat',
+      'entry_id': <ANY>,
+      'minor_version': 1,
+      'options': dict({
+        'ac_mode': False,
+        'away_temp': 20.0,
+        'cold_tolerance': 0.3,
+        'heater': 'switch.run',
+        'hot_tolerance': 0.3,
+        'initial_hvac_mode': <HVACMode.HEAT: 'heat'>,
+        'name': 'My thermostat',
+        'target_sensor': 'sensor.temperature',
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'My thermostat',
+      'unique_id': None,
+      'version': 1,
+    }),
+    'title': 'My thermostat',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+    'version': 1,
+  })
+# ---
+# name: test_config_flow[presets]
+  FlowResultSnapshot({
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_options[create_entry]
+  FlowResultSnapshot({
+    'result': True,
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+  })
+# ---
+# name: test_options[init]
+  FlowResultSnapshot({
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_options[presets]
+  FlowResultSnapshot({
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_options[with_away]
+  None
+# ---
+# name: test_options[without_away]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 15.0,
+      'friendly_name': 'My thermostat',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'supported_features': <ClimateEntityFeature: 385>,
+      'target_temp_step': 0.1,
+      'temperature': 15.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.my_thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
