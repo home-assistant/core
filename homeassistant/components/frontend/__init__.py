@@ -330,6 +330,15 @@ def add_extra_js_url(hass: HomeAssistant, url: str, es5: bool = False) -> None:
     hass.data[key].add(url)
 
 
+def remove_extra_js_url(hass: HomeAssistant, url: str, es5: bool = False) -> None:
+    """Remove extra js or module url to load.
+
+    This function allows custom integrations to remove extra js or module.
+    """
+    key = DATA_EXTRA_JS_URL_ES5 if es5 else DATA_EXTRA_MODULE_URL
+    hass.data[key].remove(url)
+
+
 def add_manifest_json_key(key: str, val: Any) -> None:
     """Add a keyval to the manifest.json."""
     MANIFEST_JSON.update_key(key, val)
