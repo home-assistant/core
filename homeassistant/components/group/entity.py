@@ -133,6 +133,7 @@ class Group(Entity):
     tracking: tuple[str, ...]
     trackable: tuple[str, ...]
     single_state_type_key: SingleStateType | None
+    _registry: GroupIntegrationRegistry
 
     def __init__(
         self,
@@ -286,7 +287,7 @@ class Group(Entity):
             self.single_state_type_key = None
             return
 
-        registry: GroupIntegrationRegistry = self.hass.data[REG_KEY]
+        registry = self._registry
         excluded_domains = registry.exclude_domains
 
         tracking: list[str] = []
@@ -326,7 +327,7 @@ class Group(Entity):
     def _async_deregister(self) -> None:
         """Deregister group entity from the registry."""
         self._async_deregister_hook_set = False
-        registry: GroupIntegrationRegistry = self.hass.data[REG_KEY]
+        registry = self._registry
         if self.entity_id in registry.state_group_mapping:
             registry.state_group_mapping.pop(self.entity_id)
 
@@ -368,6 +369,7 @@ class Group(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Handle addition to Home Assistant."""
+        self._registry = self.hass.data[REG_KEY]
         self._set_tracked(self._entity_ids)
         self.async_on_remove(start.async_at_start(self.hass, self._async_start))
 
@@ -410,7 +412,7 @@ class Group(Entity):
         entity_id = new_state.entity_id
         domain = new_state.domain
         state = new_state.state
-        registry: GroupIntegrationRegistry = self.hass.data[REG_KEY]
+        registry = self._registry
         self._assumed[entity_id] = bool(new_state.attributes.get(ATTR_ASSUMED_STATE))
 
         if domain not in registry.on_states_by_domain:
