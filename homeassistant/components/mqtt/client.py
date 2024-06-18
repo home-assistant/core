@@ -803,8 +803,12 @@ class MQTT:
 
             await asyncio.sleep(RECONNECT_INTERVAL_SECONDS)
 
-    async def async_disconnect(self) -> None:
-        """Stop the MQTT client."""
+    async def async_disconnect(self, disconnect_paho_client: bool = False) -> None:
+        """Stop the MQTT client.
+
+        We only disconnect grafully if disconnect_paho_client is set, but not
+        when Home Assistant is shut down.
+        """
 
         # stop waiting for any pending subscriptions
         await self._subscribe_debouncer.async_cleanup()
@@ -824,7 +828,9 @@ class MQTT:
             self._should_reconnect = False
             self._async_cancel_reconnect()
             # We do not gracefully disconnect to ensure
-            # the broker publishes the will message
+            # the broker publishes the will message unless the entry is reloaded
+            if disconnect_paho_client:
+                self._mqttc.disconnect()
 
     @callback
     def async_restore_tracked_subscriptions(
@@ -1274,7 +1280,8 @@ class MQTT:
         self._async_connection_result(False)
         self.connected = False
         async_dispatcher_send(self.hass, MQTT_CONNECTION_STATE, False)
-        _LOGGER.warning(
+        _LOGGER.log(
+            logging.INFO if result_code == 0 else logging.DEBUG,
             "Disconnected from MQTT server %s:%s (%s)",
             self.conf[CONF_BROKER],
             self.conf.get(CONF_PORT, DEFAULT_PORT),

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from dataclasses import dataclass, fields
 
 from aiopyarr.lidarr_client import LidarrClient
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
@@ -26,10 +26,22 @@ from .coordinator import (
     WantedDataUpdateCoordinator,
 )
 
+type LidarrConfigEntry = ConfigEntry[LidarrData]
+
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+@dataclass(kw_only=True, slots=True)
+class LidarrData:
+    """Lidarr data type."""
+
+    disk_space: DiskSpaceDataUpdateCoordinator
+    queue: QueueDataUpdateCoordinator
+    status: StatusDataUpdateCoordinator
+    wanted: WantedDataUpdateCoordinator
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: LidarrConfigEntry) -> bool:
     """Set up Lidarr from a config entry."""
     host_configuration = PyArrHostConfiguration(
         api_token=entry.data[CONF_API_KEY],
@@ -41,13 +53,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session=async_get_clientsession(hass, host_configuration.verify_ssl),
         request_timeout=60,
     )
-    coordinators: dict[str, LidarrDataUpdateCoordinator[Any]] = {
-        "disk_space": DiskSpaceDataUpdateCoordinator(hass, host_configuration, lidarr),
-        "queue": QueueDataUpdateCoordinator(hass, host_configuration, lidarr),
-        "status": StatusDataUpdateCoordinator(hass, host_configuration, lidarr),
-        "wanted": WantedDataUpdateCoordinator(hass, host_configuration, lidarr),
-    }
-    for coordinator in coordinators.values():
+    data = LidarrData(
+        disk_space=DiskSpaceDataUpdateCoordinator(hass, host_configuration, lidarr),
+        queue=QueueDataUpdateCoordinator(hass, host_configuration, lidarr),
+        status=StatusDataUpdateCoordinator(hass, host_configuration, lidarr),
+        wanted=WantedDataUpdateCoordinator(hass, host_configuration, lidarr),
+    )
+    for field in fields(data):
+        coordinator = getattr(data, field.name)
         await coordinator.async_config_entry_first_refresh()
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -56,20 +69,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry_type=DeviceEntryType.SERVICE,
         identifiers={(DOMAIN, entry.entry_id)},
         manufacturer=DEFAULT_NAME,
-        sw_version=coordinators["status"].data,
+        sw_version=data.status.data,
     )
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinators
+    entry.runtime_data = data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LidarrConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class LidarrEntity(CoordinatorEntity[LidarrDataUpdateCoordinator[T]]):
