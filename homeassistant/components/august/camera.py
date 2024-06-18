@@ -43,6 +43,11 @@ class AugustCamera(AugustEntityMixin, Camera):
     """An implementation of an August security camera."""
 
     _attr_translation_key = "camera"
+    _attr_motion_detection_enabled = True
+    _attr_brand = DEFAULT_NAME
+    _image_url: str | None = None
+    _content_token: str | None = None
+    _image_content: bytes | None = None
 
     def __init__(
         self, data: AugustData, device: Doorbell, session: ClientSession, timeout: int
@@ -51,12 +56,7 @@ class AugustCamera(AugustEntityMixin, Camera):
         super().__init__(data, device)
         self._timeout = timeout
         self._session = session
-        self._image_url = None
-        self._content_token = None
-        self._image_content = None
         self._attr_unique_id = f"{self._device_id:s}_camera"
-        self._attr_motion_detection_enabled = True
-        self._attr_brand = DEFAULT_NAME
 
     @property
     def is_recording(self) -> bool:

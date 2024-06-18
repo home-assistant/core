@@ -40,11 +40,11 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
     """Representation of an August lock."""
 
     _attr_name = None
+    _lock_status: LockStatus | None = None
 
     def __init__(self, data: AugustData, device: Lock) -> None:
         """Initialize the lock."""
         super().__init__(data, device)
-        self._lock_status = None
         self._attr_unique_id = f"{self._device_id:s}_lock"
         if self._detail.unlatch_supported:
             self._attr_supported_features = LockEntityFeature.OPEN
@@ -53,7 +53,7 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         assert self._data.activity_stream is not None
-        if self._data.activity_stream.pubnub.connected:
+        if self._data.push_updates_connected:
             await self._data.async_lock_async(self._device_id, self._hyper_bridge)
             return
         await self._call_lock_operation(self._data.async_lock)
@@ -61,7 +61,7 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
     async def async_open(self, **kwargs: Any) -> None:
         """Open/unlatch the device."""
         assert self._data.activity_stream is not None
-        if self._data.activity_stream.pubnub.connected:
+        if self._data.push_updates_connected:
             await self._data.async_unlatch_async(self._device_id, self._hyper_bridge)
             return
         await self._call_lock_operation(self._data.async_unlatch)
@@ -69,7 +69,7 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         assert self._data.activity_stream is not None
-        if self._data.activity_stream.pubnub.connected:
+        if self._data.push_updates_connected:
             await self._data.async_unlock_async(self._device_id, self._hyper_bridge)
             return
         await self._call_lock_operation(self._data.async_unlock)
@@ -136,14 +136,15 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
             update_lock_detail_from_activity(self._detail, bridge_activity)
 
         self._update_lock_status_from_detail()
-        if self._lock_status is None or self._lock_status is LockStatus.UNKNOWN:
+        lock_status = self._lock_status
+        if lock_status is None or lock_status is LockStatus.UNKNOWN:
             self._attr_is_locked = None
         else:
-            self._attr_is_locked = self._lock_status is LockStatus.LOCKED
+            self._attr_is_locked = lock_status is LockStatus.LOCKED
 
-        self._attr_is_jammed = self._lock_status is LockStatus.JAMMED
-        self._attr_is_locking = self._lock_status is LockStatus.LOCKING
-        self._attr_is_unlocking = self._lock_status in (
+        self._attr_is_jammed = lock_status is LockStatus.JAMMED
+        self._attr_is_locking = lock_status is LockStatus.LOCKING
+        self._attr_is_unlocking = lock_status in (
             LockStatus.UNLOCKING,
             LockStatus.UNLATCHING,
         )

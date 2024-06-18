@@ -8,7 +8,6 @@ import pytest
 
 from homeassistant.components.blink.const import (
     DOMAIN,
-    SERVICE_REFRESH,
     SERVICE_SAVE_VIDEO,
     SERVICE_SEND_PIN,
 )
@@ -82,7 +81,6 @@ async def test_unload_entry_multiple(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-    assert hass.services.has_service(DOMAIN, SERVICE_REFRESH)
     assert hass.services.has_service(DOMAIN, SERVICE_SAVE_VIDEO)
     assert hass.services.has_service(DOMAIN, SERVICE_SEND_PIN)
 
