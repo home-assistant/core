@@ -590,6 +590,10 @@ async def test_storage_collection_websocket_subscribe(
     assert len(changes) == 0
     event_id = response["id"]
 
+    response = await client.receive_json()
+    assert response["id"] == event_id
+    assert response["event"] == []
+
     # Create invalid
     await client.send_json_auto_id(
         {
@@ -633,6 +637,33 @@ async def test_storage_collection_websocket_subscribe(
     }
     assert len(changes) == 1
     assert changes[0] == (collection.CHANGE_ADDED, "initial_name", response["result"])
+
+    # Subscribe again
+    await client.send_json_auto_id({"type": "test_item/collection/subscribe"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] is None
+    event_id_2 = response["id"]
+
+    response = await client.receive_json()
+    assert response["id"] == event_id_2
+    assert response["event"] == [
+        {
+            "change_type": "added",
+            "item": {
+                "id": "initial_name",
+                "immutable_string": "no-changes",
+                "name": "Initial Name",
+            },
+            "test_item_id": "initial_name",
+        },
+    ]
+
+    await client.send_json_auto_id(
+        {"type": "unsubscribe_events", "subscription": event_id_2}
+    )
+    response = await client.receive_json()
+    assert response["success"]
 
     # List
     await client.send_json_auto_id({"type": "test_item/collection/list"})

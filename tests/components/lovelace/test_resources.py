@@ -108,6 +108,10 @@ async def test_storage_resources_import(
     assert response["result"] is None
     event_id = response["id"]
 
+    response = await client.receive_json()
+    assert response["id"] == event_id
+    assert response["event"] == []
+
     # Fetch data - this also loads the resources
     await client.send_json_auto_id({"type": list_cmd})
 

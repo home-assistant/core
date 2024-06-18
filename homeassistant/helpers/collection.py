@@ -671,6 +671,16 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
 
         connection.send_message(websocket_api.result_message(msg["id"]))
 
+        json_msg = [
+            {
+                "change_type": CHANGE_ADDED,
+                self.item_id_key: item_id,
+                "item": item,
+            }
+            for item_id, item in self.storage_collection.data.items()
+        ]
+        connection.send_message(websocket_api.event_message(msg["id"], json_msg))
+
     async def ws_update_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
