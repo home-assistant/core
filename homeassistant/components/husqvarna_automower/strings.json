@@ -43,8 +43,8 @@
       }
     },
     "button": {
-      "error_confirm": {
-        "name": "Error confirm"
+      "confirm_error": {
+        "name": "Confirm error"
       }
     },
     "number": {

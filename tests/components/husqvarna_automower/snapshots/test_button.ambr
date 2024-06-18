@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_button_snapshot[button.test_mower_1_error_confirm-entry]
+# name: test_button_snapshot[button.test_mower_1_confirm_error-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11,7 +11,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.test_mower_1_error_confirm',
+    'entity_id': 'button.test_mower_1_confirm_error',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -23,22 +23,22 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Error confirm',
+    'original_name': 'Confirm error',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'error_confirm',
-    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_error_confirm',
+    'translation_key': 'confirm_error',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_confirm_error',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_snapshot[button.test_mower_1_error_confirm-state]
+# name: test_button_snapshot[button.test_mower_1_confirm_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 1 Error confirm',
+      'friendly_name': 'Test Mower 1 Confirm error',
     }),
     'context': <ANY>,
-    'entity_id': 'button.test_mower_1_error_confirm',
+    'entity_id': 'button.test_mower_1_confirm_error',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

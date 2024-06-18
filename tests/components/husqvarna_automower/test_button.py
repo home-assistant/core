@@ -42,10 +42,10 @@ async def test_button_states_and_commands(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test button commands."""
-    entity_id = "button.test_mower_1_error_confirm"
+    entity_id = "button.test_mower_1_confirm_error"
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get(entity_id)
-    assert state.name == "Test Mower 1 Error confirm"
+    assert state.name == "Test Mower 1 Confirm error"
     assert state.state == STATE_UNAVAILABLE
 
     values = mower_list_to_dictionary_dataclass(

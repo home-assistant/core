@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import AutomowerConfigEntry
 from .const import DOMAIN
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import AutomowerErrorConfirmEntity
+from .entity import AutomowerControlEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,10 +29,10 @@ async def async_setup_entry(
     )
 
 
-class AutomowerButtonEntity(AutomowerErrorConfirmEntity, ButtonEntity):
+class AutomowerButtonEntity(AutomowerControlEntity, ButtonEntity):
     """Defining the AutomowerButtonEntity."""
 
-    _attr_translation_key = "error_confirm"
+    _attr_translation_key = "confirm_error"
     _attr_entity_registry_enabled_default = False
 
     def __init__(
@@ -42,7 +42,12 @@ class AutomowerButtonEntity(AutomowerErrorConfirmEntity, ButtonEntity):
     ) -> None:
         """Set up button platform."""
         super().__init__(mower_id, coordinator)
-        self._attr_unique_id = f"{mower_id}_error_confirm"
+        self._attr_unique_id = f"{mower_id}_confirm_error"
+
+    @property
+    def available(self) -> bool:
+        """Return True if the device and entity is available."""
+        return super().available and self.mower_attributes.mower.is_error_confirmable
 
     async def async_press(self) -> None:
         """Handle the button press."""
