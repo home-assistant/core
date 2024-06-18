@@ -85,7 +85,7 @@ HOSE_TIMER_BINARY_SENSOR_TYPES: tuple[RachioHoseTimerBinarySensorDescription, ..
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="flow",
-        value_fn=lambda device: device.flow_detected,
+        value_fn=lambda device: device.no_flow_detected,
         exists_fn=lambda valve: valve[KEY_DETECT_FLOW],
     ),
 )

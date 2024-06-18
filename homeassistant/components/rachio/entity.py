@@ -97,7 +97,7 @@ class RachioHoseTimerEntity(CoordinatorEntity[RachioUpdateCoordinator]):
         ]
 
     @property
-    def flow_detected(self) -> bool:
+    def no_flow_detected(self) -> bool:
         """Return true if valve is on and flow is not detected."""
         status = self.coordinator.data[self.id][KEY_STATE][KEY_REPORTED_STATE].get(
             KEY_CURRENT_STATUS
