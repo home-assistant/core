@@ -9,7 +9,7 @@ from typing import Any, Generic, TypeVar, cast
 from yalexs.activity import ActivityType, LockOperationActivity
 from yalexs.doorbell import Doorbell
 from yalexs.keypad import KeypadDetail
-from yalexs.lock import Lock, LockDetail
+from yalexs.lock import LockDetail
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -42,7 +42,7 @@ from .const import (
     OPERATION_METHOD_REMOTE,
     OPERATION_METHOD_TAG,
 )
-from .entity import AugustEntityMixin
+from .entity import AugustDescriptionEntity, AugustEntityMixin
 
 
 def _retrieve_device_battery_state(detail: LockDetail) -> int:
@@ -215,24 +215,12 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreSensor):
             self._operated_autorelock = last_state.attributes[ATTR_OPERATION_AUTORELOCK]
 
 
-class AugustBatterySensor(AugustEntityMixin, SensorEntity, Generic[_T]):
+class AugustBatterySensor(AugustDescriptionEntity, SensorEntity, Generic[_T]):
     """Representation of an August sensor."""
 
     entity_description: AugustSensorEntityDescription[_T]
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
-
-    def __init__(
-        self,
-        data: AugustData,
-        device: Doorbell | Lock | KeypadDetail,
-        description: AugustSensorEntityDescription[_T],
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(data, device)
-        self.entity_description = description
-        self._attr_unique_id = f"{self._device_id}_{description.key}"
-        self._update_from_data()
 
     @callback
     def _update_from_data(self) -> None:
