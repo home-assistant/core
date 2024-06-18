@@ -148,6 +148,13 @@ def async_setup_rpc_entry(
         unique_id = f"{coordinator.mac}-switch:{id_}"
         async_remove_shelly_entity(hass, "light", unique_id)
 
+    virtual_switches = (
+        component["key"].split(":")[-1]
+        for component in coordinator.device.dynamic_components
+        if "boolean" in component["key"]
+    )
+    async_add_entities(RpcVirtualSwitch(coordinator, id_) for id_ in virtual_switches)
+
     if not switch_ids:
         return
 
@@ -255,3 +262,25 @@ class RpcRelaySwitch(ShellyRpcEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off relay."""
         await self.call_rpc("Switch.Set", {"id": self._id, "on": False})
+
+
+class RpcVirtualSwitch(ShellyRpcEntity, SwitchEntity):
+    """Entity that controls a virtual boolean component on RPC based Shelly devices."""
+
+    def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
+        """Initialize relay switch."""
+        super().__init__(coordinator, f"boolean:{id_}")
+        self._id = id_
+
+    @property
+    def is_on(self) -> bool:
+        """If switch is on."""
+        return bool(self.status["value"])
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on relay."""
+        await self.call_rpc("Boolean.Set", {"id": self._id, "value": True})
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off relay."""
+        await self.call_rpc("Boolean.Set", {"id": self._id, "value": False})
