@@ -210,8 +210,6 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
         """Initialize the sensor."""
         super().__init__(data, device)
         self.entity_description = description
-        self._data = data
-        self._device = device
         self._attr_unique_id = f"{self._device_id}_{description.key}"
 
     @callback
@@ -273,22 +271,21 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
         else:
             self._attr_available = True
 
+    @callback
+    def _async_scheduled_update(self, now: datetime) -> None:
+        """Timer callback for sensor update."""
+        self._check_for_off_update_listener = None
+        self._update_from_data()
+        if not self.is_on:
+            self.async_write_ha_state()
+
     def _schedule_update_to_recheck_turn_off_sensor(self) -> None:
         """Schedule an update to recheck the sensor to see if it is ready to turn off."""
         # If the sensor is already off there is nothing to do
         if not self.is_on:
             return
-
-        @callback
-        def _scheduled_update(now: datetime) -> None:
-            """Timer callback for sensor update."""
-            self._check_for_off_update_listener = None
-            self._update_from_data()
-            if not self.is_on:
-                self.async_write_ha_state()
-
         self._check_for_off_update_listener = async_call_later(
-            self.hass, TIME_TO_RECHECK_DETECTION.total_seconds(), _scheduled_update
+            self.hass, TIME_TO_RECHECK_DETECTION, self._async_scheduled_update
         )
 
     def _cancel_any_pending_updates(self) -> None:
