@@ -402,9 +402,10 @@ enable = [
     "use-symbolic-message-instead",
 ]
 per-file-ignores = [
-    # hass-component-root-import: Tests test non-public APIs
     # redefined-outer-name: Tests reference fixtures in the test function
-    "/tests/:hass-component-root-import,redefined-outer-name",
+    # use-implicit-booleaness-not-comparison: Tests need to validate that a list
+    # or a dict is returned
+    "/tests/:redefined-outer-name,use-implicit-booleaness-not-comparison",
 ]
 
 [tool.pylint.REPORTS]
