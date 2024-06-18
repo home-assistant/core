@@ -21,10 +21,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SensoterraConfigEntry) -
     api = CustomerApi()
     api.set_language(hass.config.language)
     api.set_token(entry.data[CONF_TOKEN])
-    coordinator = SensoterraCoordinator(hass, api)
-    entry.runtime_data = coordinator
 
+    coordinator = SensoterraCoordinator(hass, api)
     await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
