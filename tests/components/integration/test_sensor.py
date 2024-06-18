@@ -144,7 +144,7 @@ async def test_state(hass: HomeAssistant, method) -> None:
     )
 
 
-async def test_restore_unavailable_state(hass: HomeAssistant) -> None:
+async def test_restore_state(hass: HomeAssistant) -> None:
     """Test integration sensor state is restored correctly."""
     mock_restore_cache_with_extra_data(
         hass,
@@ -200,9 +200,7 @@ async def test_restore_unavailable_state(hass: HomeAssistant) -> None:
         },
     ],
 )
-async def test_restore_unavailable_state_failed(
-    hass: HomeAssistant, extra_attributes
-) -> None:
+async def test_restore_state_failed(hass: HomeAssistant, extra_attributes) -> None:
     """Test integration sensor state is restored correctly."""
     mock_restore_cache_with_extra_data(
         hass,
