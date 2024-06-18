@@ -17,6 +17,8 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_TRIGGERED,
     STATE_CLOSED,
+    STATE_HOME,
+    STATE_NOT_HOME,
     STATE_OFF,
     STATE_ON,
     STATE_OPEN,
@@ -57,6 +59,7 @@ ON_OFF_STATES = {
         STATE_OFF,
     ),
     "cover": ({STATE_OPEN}, STATE_OPEN, STATE_CLOSED),
+    "device_tracker": ({STATE_HOME}, STATE_HOME, STATE_NOT_HOME),
 }
 
 
