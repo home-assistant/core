@@ -191,7 +191,9 @@ async def test_abort_if_already_setup(hass: HomeAssistant, test_connect) -> None
     assert result["data"][CONF_HOST] == "http://2.2.2.2"
 
 
-async def test_options_flow(hass: HomeAssistant, test_connect) -> None:
+async def test_reconfigure_flow(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test config flow options."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -203,14 +205,21 @@ async def test_options_flow(hass: HomeAssistant, test_connect) -> None:
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": entry.entry_id,
+        },
+    )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
+    assert result["step_id"] == "reconfigure"
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"extended_data": True}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"extended_data": True}
     )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.data["extended_data"] is True
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert len(mock_setup_entry.mock_calls) == 1

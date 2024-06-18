@@ -1,19 +1,14 @@
 """Config flow for solarlog integration."""
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import ParseResult, urlparse
 
 from solarlog_cli.solarlog_connector import SolarLogConnector
 from solarlog_cli.solarlog_exceptions import SolarLogConnectionError, SolarLogError
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
@@ -37,17 +32,10 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> OptionsFlow:
-        """Define the config flow to handle options."""
-        return SolarLogOptionsFlowHandler(config_entry)
-
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._errors: dict = {}
+        self._entry: ConfigEntry | None = None
 
     def _host_in_configuration_exists(self, host) -> bool:
         """Return True if host exists in configuration."""
@@ -131,31 +119,29 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user(user_input)
 
-
-class SolarLogOptionsFlowHandler(OptionsFlow):
-    """Handle a SolarLog options flow."""
-
-    def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize."""
-        self._entry = entry
-
-    async def async_step_init(
+    async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manage the options."""
+        """Handle a reconfiguration flow initialized by the user."""
+
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+
+        if TYPE_CHECKING:
+            assert entry is not None
+
         if user_input is not None:
-            self.hass.config_entries.async_update_entry(
-                self._entry,
-                data={**self._entry.data, **user_input},
+            return self.async_update_reload_and_abort(
+                entry,
+                reason="reconfigure_successful",
+                data={**entry.data, **user_input},
             )
-            return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
-            step_id="init",
+            step_id="reconfigure",
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        "extended_data", default=self._entry.data["extended_data"]
+                        "extended_data", default=entry.data["extended_data"]
                     ): bool,
                 }
             ),
