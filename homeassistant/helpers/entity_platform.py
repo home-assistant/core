@@ -771,7 +771,6 @@ class EntityPlatform:
                 try:
                     device = dev_reg.async_get(self.hass).async_get_or_create(
                         config_entry_id=self.config_entry.entry_id,
-                        domain=self.platform_name,
                         **device_info,
                     )
                 except dev_reg.DeviceInfoError as exc:
