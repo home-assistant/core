@@ -18,8 +18,7 @@
       "backflush_enabled": {
         "default": "mdi:water-off",
         "state": {
-          "on": "mdi:water",
-          "off": "mdi:water-off"
+          "on": "mdi:water"
         }
       }
     },
