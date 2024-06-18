@@ -1800,7 +1800,7 @@ pydiscovergy==3.0.1
 pydoods==1.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2024.6.3
+pydrawise==2024.6.4
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
