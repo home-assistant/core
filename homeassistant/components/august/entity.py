@@ -26,7 +26,7 @@ class AugustEntityMixin(Entity):
     _attr_has_entity_name = True
 
     def __init__(
-        self, data: AugustData, device: Doorbell | Lock | LockDetail, unique_id: str
+        self, data: AugustData, device: Doorbell | Lock | KeypadDetail, unique_id: str
     ) -> None:
         """Initialize an August device."""
         super().__init__()
