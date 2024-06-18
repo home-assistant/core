@@ -2,6 +2,17 @@
 
 from ipaddress import IPv4Address, IPv6Address
 
+from mozart_api.models import (
+    PlaybackContentMetadata,
+    PlaybackError,
+    PlaybackProgress,
+    RenderingState,
+    Source,
+    SourceTypeEnum,
+    VolumeLevel,
+    VolumeState,
+)
+
 from homeassistant.components.bang_olufsen.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ITEM_NUMBER,
@@ -24,7 +35,7 @@ TEST_FRIENDLY_NAME = "Living room Balance"
 TEST_TYPE_NUMBER = "1111"
 TEST_ITEM_NUMBER = "1111111"
 TEST_JID_1 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.{TEST_SERIAL_NUMBER}@products.bang-olufsen.com"
-
+TEST_MEDIA_PLAYER_ENTITY_ID = "media_player.beosound_balance_11111111"
 
 TEST_HOSTNAME_ZEROCONF = TEST_NAME.replace(" ", "-") + ".local."
 TEST_TYPE_ZEROCONF = "_bangolufsen._tcp.local."
@@ -80,3 +91,35 @@ TEST_DATA_ZEROCONF_IPV6 = ZeroconfServiceInfo(
         ATTR_ITEM_NUMBER: TEST_ITEM_NUMBER,
     },
 )
+
+TEST_AUDIO_SOURCES = ["Tidal Connect"]
+TEST_VIDEO_SOURCES = ["HDMI A"]
+TEST_SOURCES = TEST_AUDIO_SOURCES + TEST_VIDEO_SOURCES
+TEST_FALLBACK_SOURCES = [
+    "Audio Streamer",
+    "Spotify Connect",
+    "Line-In",
+    "Optical",
+    "B&O Radio",
+    "Deezer",
+    "Tidal Connect",
+]
+TEST_PLAYBACK_METADATA = PlaybackContentMetadata(
+    album_name="Test album",
+    artist_name="Test artist",
+    organization="Test organization",
+    title="Test title",
+    total_duration_seconds=123,
+    track=1,
+)
+TEST_PLAYBACK_ERROR = PlaybackError(error="Test error")
+TEST_PLAYBACK_PROGRESS = PlaybackProgress(progress=123)
+TEST_PLAYBACK_STATE = RenderingState(value="paused")
+TEST_SOURCE_CHANGE = Source(
+    id="tidalConnect",
+    is_enabled=True,
+    is_playable=True,
+    name="Tidal Connect",
+    type=SourceTypeEnum(value="tidalConnect"),
+)
+TEST_VOLUME = VolumeState(level=VolumeLevel(level=40))
