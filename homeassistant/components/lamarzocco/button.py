@@ -24,17 +24,11 @@ class LaMarzoccoButtonEntityDescription(
     press_fn: Callable[[LaMarzoccoMachine], Coroutine[Any, Any, None]]
 
 
-async def async_start_backflush(machine: LaMarzoccoMachine) -> None:
-    """Press the start backflush button."""
-    await machine.start_backflush()
-    machine.config.backflush_enabled = True
-
-
 ENTITIES: tuple[LaMarzoccoButtonEntityDescription, ...] = (
     LaMarzoccoButtonEntityDescription(
         key="start_backflush",
         translation_key="start_backflush",
-        press_fn=async_start_backflush,
+        press_fn=lambda machine: machine.start_backflush(),
     ),
 )
 
