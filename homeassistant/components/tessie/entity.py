@@ -55,7 +55,7 @@ class TessieBaseEntity(
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_attrs()
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
     @abstractmethod
     def _async_update_attrs(self) -> None:
