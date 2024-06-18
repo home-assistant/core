@@ -18,10 +18,15 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
     STATE_CLOSED,
     STATE_HOME,
+    STATE_LOCKED,
+    STATE_LOCKING,
     STATE_NOT_HOME,
     STATE_OFF,
     STATE_ON,
     STATE_OPEN,
+    STATE_OPENING,
+    STATE_UNLOCKED,
+    STATE_UNLOCKING,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.integration_platform import (
@@ -60,6 +65,17 @@ ON_OFF_STATES = {
     ),
     "cover": ({STATE_OPEN}, STATE_OPEN, STATE_CLOSED),
     "device_tracker": ({STATE_HOME}, STATE_HOME, STATE_NOT_HOME),
+    "lock": (
+        {
+            STATE_LOCKING,
+            STATE_OPEN,
+            STATE_OPENING,
+            STATE_UNLOCKED,
+            STATE_UNLOCKING,
+        },
+        STATE_UNLOCKED,
+        STATE_LOCKED,
+    ),
 }
 
 
