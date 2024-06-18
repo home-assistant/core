@@ -277,8 +277,8 @@ class AugustBatterySensor(AugustEntityMixin, SensorEntity, Generic[_T]):
     def __init__(
         self,
         data: AugustData,
-        device,
-        old_device,
+        device: Doorbell | Lock,
+        old_device: Doorbell | Lock,
         description: AugustSensorEntityDescription[_T],
     ) -> None:
         """Initialize the sensor."""
