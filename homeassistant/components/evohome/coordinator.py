@@ -5,10 +5,10 @@ from __future__ import annotations
 from collections.abc import Awaitable
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import evohomeasync as ev1
-from evohomeasync.schema import SZ_ID, SZ_SESSION_ID, SZ_TEMP
+from evohomeasync.schema import SZ_ID, SZ_TEMP
 import evohomeasync2 as evo
 from evohomeasync2.schema.const import (
     SZ_GATEWAY_ID,
@@ -18,46 +18,30 @@ from evohomeasync2.schema.const import (
     SZ_TIME_ZONE,
 )
 
-from homeassistant.const import CONF_USERNAME
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.storage import Store
-import homeassistant.util.dt as dt_util
 
-from .const import (
-    ACCESS_TOKEN,
-    ACCESS_TOKEN_EXPIRES,
-    CONF_LOCATION_IDX,
-    DOMAIN,
-    GWS,
-    REFRESH_TOKEN,
-    STORAGE_KEY,
-    STORAGE_VER,
-    TCS,
-    USER_DATA,
-    UTC_OFFSET,
-)
-from .helpers import dt_aware_to_naive, dt_local_to_aware, handle_evo_exception
+from .const import CONF_LOCATION_IDX, DOMAIN, GWS, TCS, UTC_OFFSET
+from .helpers import handle_evo_exception
+
+if TYPE_CHECKING:
+    from . import EvoClient
 
 _LOGGER = logging.getLogger(__name__.rpartition(".")[0])
 
 
 class EvoBroker:
-    """Broker for evohome client and data."""
+    """Broker for evohome client broker."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, client: EvoClient) -> None:
         """Initialize the evohome broker and its data structure."""
 
-        self.hass = hass
+        self._client = client
 
-        self._session = async_get_clientsession(hass)
-        self._store = Store[dict[str, Any]](hass, STORAGE_VER, STORAGE_KEY)
+        assert isinstance(client.client_v2, evo.EvohomeClient)  # mypy
 
-        # the main client, which uses the newer API
-        self.client: evo.EvohomeClient = None  # type: ignore[assignment]
-        self._tokens: dict[str, Any] = {}
+        self.client = client.client_v2
+        self.client_v1 = client.client_v1
 
         self.loc_idx: int = None  # type: ignore[assignment]
         self.loc: evo.Location = None  # type: ignore[assignment]
@@ -65,101 +49,7 @@ class EvoBroker:
         self.loc_utc_offset: timedelta = None  # type: ignore[assignment]
         self.tcs: evo.ControlSystem = None  # type: ignore[assignment]
 
-        # the older client can be used to obtain high-precision temps (only)
-        self.client_v1: ev1.EvohomeClient | None = None
-        self._session_id: str | None = None
-
         self.temps: dict[str, float | None] = {}
-
-    async def authenticate(self, username: str, password: str) -> bool:
-        """Check the user credentials against the web API."""
-
-        if (
-            self.client is None
-            or username != self.client.username
-            or password != self.client.password
-        ):
-            await self._load_auth_tokens(username)  # for self._tokens
-
-            self.client = evo.EvohomeClient(
-                username,
-                password,
-                **self._tokens,
-                session=self._session,
-            )
-
-        else:  # force a re-authentication
-            self.client._user_account = {}  # noqa: SLF001
-
-        try:
-            await self.client.login()
-        except evo.AuthenticationFailed as err:
-            handle_evo_exception(err)
-            return False
-
-        self.client_v1 = ev1.EvohomeClient(
-            self.client.username,
-            self.client.password,
-            session_id=self._session_id,
-            session=self._session,
-        )
-
-        await self._save_auth_tokens()
-        return True
-
-    async def _load_auth_tokens(self, username: str) -> None:
-        """Load access tokens and session_id from the store and validate them.
-
-        Sets self._tokens and self._session_id to the latest values.
-        """
-
-        app_storage: dict[str, Any] = dict(await self._store.async_load() or {})
-
-        if app_storage.pop(CONF_USERNAME, None) != username:
-            # any tokens won't be valid, and store might be corrupt
-            await self._store.async_save({})
-
-            self._session_id = None
-            self._tokens = {}
-
-            return
-
-        # evohomeasync2 requires naive/local datetimes as strings
-        if app_storage.get(ACCESS_TOKEN_EXPIRES) is not None and (
-            expires := dt_util.parse_datetime(app_storage[ACCESS_TOKEN_EXPIRES])
-        ):
-            app_storage[ACCESS_TOKEN_EXPIRES] = dt_aware_to_naive(expires)
-
-        user_data: dict[str, str] = app_storage.pop(USER_DATA, {})
-
-        self._session_id = user_data.get(SZ_SESSION_ID)
-        self._tokens = app_storage
-
-    async def _save_auth_tokens(self) -> None:
-        """Save access tokens and session_id to the store.
-
-        Sets self._tokens and self._session_id to the latest values.
-        """
-
-        # evohomeasync2 uses naive/local datetimes
-        access_token_expires = dt_local_to_aware(
-            self.client.access_token_expires  # type: ignore[arg-type]
-        )
-
-        self._tokens = {
-            CONF_USERNAME: self.client.username,
-            REFRESH_TOKEN: self.client.refresh_token,
-            ACCESS_TOKEN: self.client.access_token,
-            ACCESS_TOKEN_EXPIRES: access_token_expires.isoformat(),
-        }
-
-        self._session_id = self.client_v1.broker.session_id if self.client_v1 else None
-
-        app_storage = self._tokens
-        if self.client_v1:
-            app_storage[USER_DATA] = {SZ_SESSION_ID: self._session_id}
-
-        await self._store.async_save(app_storage)
 
     def validate_location(self, loc_idx: int) -> bool:
         """Get the default TCS of the specified location."""
@@ -217,7 +107,7 @@ class EvoBroker:
             return None
 
         if update_state:  # wait a moment for system to quiesce before updating state
-            async_call_later(self.hass, 1, self._update_v2_api_state)
+            async_call_later(self._client.hass, 1, self._update_v2_api_state)
 
         return result
 
@@ -226,7 +116,7 @@ class EvoBroker:
 
         assert self.client_v1 is not None  # mypy check
 
-        old_session_id = self._session_id
+        old_session_id = self._client.session_id
 
         try:
             temps = await self.client_v1.get_temperatures()
@@ -272,7 +162,7 @@ class EvoBroker:
 
         finally:
             if self.client_v1 and self.client_v1.broker.session_id != old_session_id:
-                await self._save_auth_tokens()
+                await self._client.save_auth_tokens()
 
         _LOGGER.debug("Temperatures = %s", self.temps)
 
@@ -286,11 +176,11 @@ class EvoBroker:
         except evo.RequestFailed as err:
             handle_evo_exception(err)
         else:
-            async_dispatcher_send(self.hass, DOMAIN)
+            async_dispatcher_send(self._client.hass, DOMAIN)
             _LOGGER.debug("Status = %s", status)
         finally:
             if access_token != self.client.access_token:
-                await self._save_auth_tokens()
+                await self._client.save_auth_tokens()
 
     async def async_update(self, *args: Any) -> None:
         """Get the latest state data of an entire Honeywell TCC Location.

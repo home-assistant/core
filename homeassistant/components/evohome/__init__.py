@@ -10,6 +10,8 @@ from datetime import datetime, timedelta, timezone
 import logging
 from typing import Any, Final
 
+import evohomeasync as ev1
+from evohomeasync.schema import SZ_SESSION_ID
 import evohomeasync2 as evo
 from evohomeasync2.schema.const import (
     SZ_AUTO_WITH_RESET,
@@ -34,6 +36,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
@@ -42,11 +45,14 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service import verify_domain_control
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.util.dt as dt_util
 
 from .const import (
+    ACCESS_TOKEN,
+    ACCESS_TOKEN_EXPIRES,
     ATTR_DURATION_DAYS,
     ATTR_DURATION_HOURS,
     ATTR_DURATION_UNTIL,
@@ -54,12 +60,22 @@ from .const import (
     ATTR_ZONE_TEMP,
     CONF_LOCATION_IDX,
     DOMAIN,
+    REFRESH_TOKEN,
     SCAN_INTERVAL_DEFAULT,
     SCAN_INTERVAL_MINIMUM,
+    STORAGE_KEY,
+    STORAGE_VER,
+    USER_DATA,
     EvoService,
 )
 from .coordinator import EvoBroker
-from .helpers import convert_dict, convert_until
+from .helpers import (
+    convert_dict,
+    convert_until,
+    dt_aware_to_naive,
+    dt_local_to_aware,
+    handle_evo_exception,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,18 +113,134 @@ SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
 )
 
 
+class EvoClient:
+    """Class for evohome client instantiation & authentication."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the evohome broker and its data structure."""
+
+        self.hass = hass
+
+        self._session = async_get_clientsession(hass)
+        self._store = Store[dict[str, Any]](hass, STORAGE_VER, STORAGE_KEY)
+
+        # the main client, which uses the newer API
+        self.client_v2: evo.EvohomeClient | None = None
+        self._tokens: dict[str, Any] = {}
+
+        # the older client can be used to obtain high-precision temps (only)
+        self.client_v1: ev1.EvohomeClient | None = None
+        self.session_id: str | None = None
+
+    async def authenticate(self, username: str, password: str) -> bool:
+        """Check the user credentials against the web API."""
+
+        if self.client_v2 is None:
+            await self._load_auth_tokens(username)
+
+            client_v2 = evo.EvohomeClient(
+                username,
+                password,
+                **self._tokens,
+                session=self._session,
+            )
+
+        else:  # force a re-authentication
+            client_v2 = self.client_v2
+            client_v2._user_account = {}  # noqa: SLF001
+
+        try:
+            await client_v2.login()
+        except evo.AuthenticationFailed as err:
+            handle_evo_exception(err)
+            return False
+
+        await self.save_auth_tokens()
+
+        self.client_v2 = client_v2
+
+        self.client_v1 = ev1.EvohomeClient(
+            self.client_v2.username,
+            self.client_v2.password,
+            session_id=self.session_id,
+            session=self._session,
+        )
+
+        return True
+
+    async def _load_auth_tokens(self, username: str) -> None:
+        """Load access tokens and session_id from the store and validate them.
+
+        Sets self._tokens and self._session_id to the latest values.
+        """
+
+        app_storage: dict[str, Any] = dict(await self._store.async_load() or {})
+
+        if app_storage.pop(CONF_USERNAME, None) != username:
+            # any tokens won't be valid, and store might be corrupt
+            await self._store.async_save({})
+
+            self.session_id = None
+            self._tokens = {}
+
+            return
+
+        # evohomeasync2 requires naive/local datetimes as strings
+        if app_storage.get(ACCESS_TOKEN_EXPIRES) is not None and (
+            expires := dt_util.parse_datetime(app_storage[ACCESS_TOKEN_EXPIRES])
+        ):
+            app_storage[ACCESS_TOKEN_EXPIRES] = dt_aware_to_naive(expires)
+
+        user_data: dict[str, str] = app_storage.pop(USER_DATA, {})
+
+        self.session_id = user_data.get(SZ_SESSION_ID)
+        self._tokens = app_storage
+
+    async def save_auth_tokens(self) -> None:
+        """Save access tokens and session_id to the store.
+
+        Sets self._tokens and self._session_id to the latest values.
+        """
+
+        if self.client_v2 is None:
+            await self._store.async_save({})
+            return
+
+        # evohomeasync2 uses naive/local datetimes
+        access_token_expires = dt_local_to_aware(
+            self.client_v2.access_token_expires  # type: ignore[arg-type]
+        )
+
+        self._tokens = {
+            CONF_USERNAME: self.client_v2.username,
+            REFRESH_TOKEN: self.client_v2.refresh_token,
+            ACCESS_TOKEN: self.client_v2.access_token,
+            ACCESS_TOKEN_EXPIRES: access_token_expires.isoformat(),
+        }
+
+        self.session_id = self.client_v1.broker.session_id if self.client_v1 else None
+
+        app_storage = self._tokens
+        if self.client_v1:
+            app_storage[USER_DATA] = {SZ_SESSION_ID: self.session_id}
+
+        await self._store.async_save(app_storage)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Evohome integration."""
 
-    broker = EvoBroker(hass)
+    client = EvoClient(hass)
 
-    if not await broker.authenticate(
+    if not await client.authenticate(
         config[DOMAIN][CONF_USERNAME],
         config[DOMAIN][CONF_PASSWORD],
     ):
         return False
 
     config[DOMAIN][CONF_PASSWORD] = "REDACTED"
+
+    broker = EvoBroker(client)
 
     if not broker.validate_location(
         config[DOMAIN][CONF_LOCATION_IDX],
