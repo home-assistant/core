@@ -4007,7 +4007,7 @@ async def test_config_entry_attr(hass: HomeAssistant) -> None:
 
     for key, value in info.items():
         tpl = template.Template(
-            "{{ config_entry_attr('" f"{config_entry.entry_id}" "', '" f"{key}" "') }}",
+            "{{ config_entry_attr('" + config_entry.entry_id + "', '" + key + "') }}",
             hass,
         )
         assert tpl.async_render(parse_result=False) == str(value)
