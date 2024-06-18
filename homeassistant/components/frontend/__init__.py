@@ -819,9 +819,7 @@ def websocket_subscribe_extra_js(
 ) -> None:
     """Subscribe to URL manager updates."""
 
-    subscribers: set[tuple[websocket_api.ActiveConnection, int]] = hass.data[
-        DATA_WS_SUBSCRIBERS
-    ]
+    subscribers = hass.data[DATA_WS_SUBSCRIBERS]
     subscribers.add((connection, msg["id"]))
 
     @callback
