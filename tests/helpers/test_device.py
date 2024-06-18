@@ -5,8 +5,8 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
+    device as d,
     device_registry as dr,
-    device_utils as du,
     entity_registry as er,
 )
 
@@ -40,14 +40,14 @@ async def test_entity_id_to_device_id(
     await hass.async_block_till_done()
     assert entity_registry.async_get("sensor.test_source") is not None
 
-    device_id = du.async_entity_id_to_device_id(
+    device_id = d.async_entity_id_to_device_id(
         hass,
         entity_id_or_uuid=entity.entity_id,
     )
     assert device_id == device.id
 
     with pytest.raises(vol.Invalid):
-        du.async_entity_id_to_device_id(
+        d.async_entity_id_to_device_id(
             hass,
             entity_id_or_uuid="unknown_uuid",
         )
@@ -80,7 +80,7 @@ async def test_device_info_to_link(
     await hass.async_block_till_done()
     assert entity_registry.async_get("sensor.test_source") is not None
 
-    result = du.async_device_info_to_link_entity(
+    result = d.async_device_info_to_link_entity(
         hass, entity_id_or_uuid=source_entity.entity_id
     )
     assert result == {
@@ -88,24 +88,24 @@ async def test_device_info_to_link(
         "connections": {("mac", "30:31:32:33:34:00")},
     }
 
-    result = du.async_device_info_to_link_device_id(hass, device_id=device.id)
+    result = d.async_device_info_to_link_device_id(hass, device_id=device.id)
     assert result == {
         "identifiers": {("test", "my_device")},
         "connections": {("mac", "30:31:32:33:34:00")},
     }
 
     # With a non-existent entity id
-    result = du.async_device_info_to_link_entity(
+    result = d.async_device_info_to_link_entity(
         hass, entity_id_or_uuid="sensor.invalid"
     )
     assert result is None
 
     # With a non-existent device id
-    result = du.async_device_info_to_link_device_id(hass, device_id="abcdefghi")
+    result = d.async_device_info_to_link_device_id(hass, device_id="abcdefghi")
     assert result is None
 
     # With a None device id
-    result = du.async_device_info_to_link_device_id(hass, device_id=None)
+    result = d.async_device_info_to_link_device_id(hass, device_id=None)
     assert result is None
 
 
@@ -156,7 +156,7 @@ async def test_remove_stale_device_links_keep_entity_device(
     assert len(devices_config_entry) == 3
 
     # Manual cleanup should unlink stales devices from the config entry
-    du.async_remove_stale_devices_links_keep_entity_device(
+    d.async_remove_stale_devices_links_keep_entity_device(
         hass,
         entry_id=config_entry.entry_id,
         source_entity_id_or_uuid=source_entity.entity_id,
@@ -207,7 +207,7 @@ async def test_remove_stale_devices_links_keep_current_device(
     assert len(devices_config_entry) == 3
 
     # Manual cleanup should unlink stales devices from the config entry
-    du.async_remove_stale_devices_links_keep_current_device(
+    d.async_remove_stale_devices_links_keep_current_device(
         hass,
         entry_id=config_entry.entry_id,
         current_device_id=current_device.id,
