@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
-from pyopenweathermap import OWMClient
+from pyopenweathermap import OWMClientFactory
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -52,7 +52,7 @@ async def async_setup_entry(
     else:
         async_delete_issue(hass, entry.entry_id)
 
-    owm_client = OWMClient(api_key, mode, lang=language)
+    owm_client = OWMClientFactory.get_client(api_key, mode, lang=language)
     weather_coordinator = WeatherUpdateCoordinator(
         owm_client, latitude, longitude, hass
     )
