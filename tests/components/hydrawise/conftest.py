@@ -1,6 +1,6 @@
 """Common fixtures for the Hydrawise tests."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Generator
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
@@ -15,11 +15,11 @@ from pydrawise.schema import (
     Sensor,
     SensorModel,
     SensorStatus,
+    UnitsSummary,
     User,
     Zone,
 )
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.hydrawise.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
@@ -85,7 +85,11 @@ def mock_auth() -> Generator[AsyncMock]:
 @pytest.fixture
 def user() -> User:
     """Hydrawise User fixture."""
-    return User(customer_id=12345, email="asdf@asdf.com")
+    return User(
+        customer_id=12345,
+        email="asdf@asdf.com",
+        units=UnitsSummary(units_name="imperial"),
+    )
 
 
 @pytest.fixture
