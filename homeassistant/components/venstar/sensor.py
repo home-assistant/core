@@ -36,8 +36,8 @@ RUNTIME_AUX2 = "aux2"
 RUNTIME_FC = "fc"
 RUNTIME_OV = "ov"
 
-CONSUMABLE_FILTER_HOURS = "filterHours"
-CONSUMABLE_FILTER_DAYS = "filterDays"
+CONSUMABLE_FILTER_USAGE = "filterHours"
+CONSUMABLE_FILTER_INSTALLATION = "filterDays"
 
 RUNTIME_DEVICES = [
     RUNTIME_HEAT1,
@@ -50,7 +50,7 @@ RUNTIME_DEVICES = [
     RUNTIME_OV,
 ]
 
-CONSUMABLE_DEVICES = [CONSUMABLE_FILTER_HOURS, CONSUMABLE_FILTER_DAYS]
+CONSUMABLE_DEVICES = [CONSUMABLE_FILTER_USAGE, CONSUMABLE_FILTER_INSTALLATION]
 
 RUNTIME_ATTRIBUTES = {
     RUNTIME_HEAT1: "Heating Stage 1",
@@ -64,8 +64,11 @@ RUNTIME_ATTRIBUTES = {
 }
 
 CONSUMABLE_ATTRIBUTES = {
-    CONSUMABLE_FILTER_HOURS: {"name": "Filter Used Hours", "uom": UnitOfTime.HOURS},
-    CONSUMABLE_FILTER_DAYS: {"name": "Filter Used Days", "uom": UnitOfTime.DAYS},
+    CONSUMABLE_FILTER_USAGE: {"name": "Filter Usage", "uom": UnitOfTime.HOURS},
+    CONSUMABLE_FILTER_INSTALLATION: {
+        "name": "Filter Installation Time",
+        "uom": UnitOfTime.DAYS,
+    },
 }
 
 SCHEDULE_PARTS: dict[int, str] = {
