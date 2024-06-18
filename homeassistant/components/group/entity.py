@@ -165,6 +165,7 @@ class Group(Entity):
         self._order = order
         self._assumed_state = False
         self._async_unsub_state_changed: CALLBACK_TYPE | None = None
+        self._async_deregister_hook_set = False
 
     @staticmethod
     @callback
@@ -315,7 +316,9 @@ class Group(Entity):
             registry.state_group_mapping[self.entity_id] = self.single_state_type_key
         else:
             self.single_state_type_key = None
-        self.async_on_remove(self._async_deregister)
+        if not self._async_deregister_hook_set:
+            self.async_on_remove(self._async_deregister)
+            self._async_deregister_hook_set = True
 
         self.trackable = tuple(trackable)
         self.tracking = tuple(tracking)
@@ -323,6 +326,7 @@ class Group(Entity):
     @callback
     def _async_deregister(self) -> None:
         """Deregister group entity from the registry."""
+        self._async_deregister_hook_set = False
         registry: GroupIntegrationRegistry = self.hass.data[REG_KEY]
         if self.entity_id in registry.state_group_mapping:
             registry.state_group_mapping.pop(self.entity_id)
