@@ -25,7 +25,7 @@ from .const import CONF_LOCATION_IDX, DOMAIN, GWS, TCS, UTC_OFFSET
 from .helpers import handle_evo_exception
 
 if TYPE_CHECKING:
-    from . import EvoClient
+    from . import EvoAuthenticator
 
 _LOGGER = logging.getLogger(__name__.rpartition(".")[0])
 
@@ -33,15 +33,15 @@ _LOGGER = logging.getLogger(__name__.rpartition(".")[0])
 class EvoBroker:
     """Broker for evohome client broker."""
 
-    def __init__(self, client: EvoClient) -> None:
+    def __init__(self, auth: EvoAuthenticator) -> None:
         """Initialize the evohome broker and its data structure."""
 
-        self._client = client
+        self._auth = auth
 
-        assert isinstance(client.client_v2, evo.EvohomeClient)  # mypy
+        assert isinstance(auth.client_v2, evo.EvohomeClient)  # mypy
 
-        self.client = client.client_v2
-        self.client_v1 = client.client_v1
+        self.client = auth.client_v2
+        self.client_v1 = auth.client_v1
 
         self.loc_idx: int = None  # type: ignore[assignment]
         self.loc: evo.Location = None  # type: ignore[assignment]
@@ -107,7 +107,7 @@ class EvoBroker:
             return None
 
         if update_state:  # wait a moment for system to quiesce before updating state
-            async_call_later(self._client.hass, 1, self._update_v2_api_state)
+            async_call_later(self._auth.hass, 1, self._update_v2_api_state)
 
         return result
 
@@ -116,7 +116,7 @@ class EvoBroker:
 
         assert self.client_v1 is not None  # mypy check
 
-        old_session_id = self._client.session_id
+        old_session_id = self._auth.session_id
 
         try:
             temps = await self.client_v1.get_temperatures()
@@ -162,7 +162,7 @@ class EvoBroker:
 
         finally:
             if self.client_v1 and self.client_v1.broker.session_id != old_session_id:
-                await self._client.save_auth_tokens()
+                await self._auth.save_auth_tokens()
 
         _LOGGER.debug("Temperatures = %s", self.temps)
 
@@ -176,11 +176,11 @@ class EvoBroker:
         except evo.RequestFailed as err:
             handle_evo_exception(err)
         else:
-            async_dispatcher_send(self._client.hass, DOMAIN)
+            async_dispatcher_send(self._auth.hass, DOMAIN)
             _LOGGER.debug("Status = %s", status)
         finally:
             if access_token != self.client.access_token:
-                await self._client.save_auth_tokens()
+                await self._auth.save_auth_tokens()
 
     async def async_update(self, *args: Any) -> None:
         """Get the latest state data of an entire Honeywell TCC Location.
