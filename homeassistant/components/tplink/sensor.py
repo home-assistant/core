@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_VOLTAGE,
     UnitOfElectricCurrent,
@@ -30,7 +29,6 @@ from .const import (
     ATTR_CURRENT_POWER_W,
     ATTR_TODAY_ENERGY_KWH,
     ATTR_TOTAL_ENERGY_KWH,
-    DOMAIN,
 )
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import (
@@ -38,7 +36,6 @@ from .entity import (
     _description_for_feature,
     _entities_for_device,
 )
-from .models import TPLinkData
 
 
 @dataclass(frozen=True)
@@ -146,7 +143,8 @@ async def async_setup_entry(
     device = parent_coordinator.device
 
     for idx, child in enumerate(device.children):
-        # TODO: nicer way for multi-coordinator updates.
+        # HS300 does not like too many concurrent requests and its emeter data requires
+        # a request for each socket, so we create separate coordinators.
         if isinstance(device, SmartStrip):
             entities.extend(
                 _async_sensors_for_device(
@@ -193,9 +191,6 @@ class Sensor(CoordinatedTPLinkEntity, SensorEntity):
             SensorEntityDescription, feature, native_unit_of_measurement=feature.unit
         )
 
-        # TODO: define `options` if type==Choice
-        #  Requires the enum device class to be set. Cannot be combined with state_class or native_unit_of_measurement.
-
     @callback
     def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
@@ -208,7 +203,6 @@ class Sensor(CoordinatedTPLinkEntity, SensorEntity):
 class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
     """Representation of a TPLink sensor."""
 
-    # TODO: get rid of the old sensor impl.
     entity_description: TPLinkSensorEntityDescription
 
     def __init__(
