@@ -26,24 +26,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Fan from a config entry."""
 
-    fans = [
-        device
+    async_add_entities([
+        DreoFanHA(device, config_entry)
         for device in config_entry.runtime_data.devices
         if DEVICE_TYPE.get(device.get("model")) == FAN_DEVICE.get("type")
-    ]
-
-    async_add_entities([DreoFanHA(device, config_entry) for device in fans])
+    ])
 
 
 class DreoFanHA(DreoEntity, FanEntity):
     """Dreo fan."""
-    _attr_state: bool | None = None
-    _attr_preset_modes: list[str] | None
-    _attr_preset_mode: str | None
-    _attr_speed_count: int
-    _attr_percentage: int | None
-    _attr_oscillating: bool | None = None
-    _attr_available: bool | None = None
 
     _attr_supported_features = (FanEntityFeature.PRESET_MODE
                                 | FanEntityFeature.SET_SPEED
@@ -53,7 +44,8 @@ class DreoFanHA(DreoEntity, FanEntity):
         """Initialize the Dreo fan."""
         super().__init__(device, config_entry)
         self._attr_preset_modes = FAN_DEVICE.get("config").get(self._model).get("preset_modes")
-        self._attr_speed_count = int_states_in_range(FAN_DEVICE.get("config").get(self._model).get("speed_range"))
+        self._attr_low_high_range = FAN_DEVICE.get("config").get(self._model).get("speed_range")
+        self._attr_speed_count = int_states_in_range(self._attr_low_high_range)
 
     @property
     def is_on(self) -> bool | None:
@@ -117,7 +109,7 @@ class DreoFanHA(DreoEntity, FanEntity):
         """Set the speed of fan."""
         speed = math.ceil(
             percentage_to_ranged_value(
-                FAN_DEVICE.get("config").get(self._model).get("speed_range"), percentage
+                self._attr_low_high_range, percentage
             )
         )
 

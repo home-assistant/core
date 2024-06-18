@@ -29,7 +29,7 @@ class DreoEntity(Entity):
             hw_version=device.get("mcuFirmwareVersion")
         )
 
-    def _try_command(self, mask_error, **kwargs):
+    def _try_command(self, mask_error, **kwargs) -> bool:
         """Call a hscluod device command handling error messages."""
         _LOGGER.info("command: {}".format(kwargs))
         try:
