@@ -159,23 +159,23 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreSensor):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
         attributes: dict[str, Any] = {}
-        method = OPERATION_METHOD_MOBILE_DEVICE
-
-        if self._operated_remote is not None:
+        if self._operated_remote:
             attributes[ATTR_OPERATION_REMOTE] = self._operated_remote
             method = OPERATION_METHOD_REMOTE
-        if self._operated_keypad is not None:
+        elif self._operated_keypad:
             attributes[ATTR_OPERATION_KEYPAD] = self._operated_keypad
             method = OPERATION_METHOD_KEYPAD
-        if self._operated_manual is not None:
+        elif self._operated_manual:
             attributes[ATTR_OPERATION_MANUAL] = self._operated_manual
             method = OPERATION_METHOD_MANUAL
-        if self._operated_tag is not None:
+        elif self._operated_tag:
             attributes[ATTR_OPERATION_TAG] = self._operated_tag
             method = OPERATION_METHOD_TAG
-        if self._operated_autorelock is not None:
+        elif self._operated_autorelock:
             attributes[ATTR_OPERATION_AUTORELOCK] = self._operated_autorelock
             method = OPERATION_METHOD_AUTORELOCK
+        else:
+            method = OPERATION_METHOD_MOBILE_DEVICE
 
         attributes[ATTR_OPERATION_METHOD] = method
         return attributes
