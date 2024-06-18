@@ -93,6 +93,11 @@ class AugustDescriptionEntity(AugustEntityMixin):
         self.entity_description = description
         self._attr_unique_id = f"{self._device_id}_{description.key}"
 
+    async def async_added_to_hass(self) -> None:
+        """Update data before adding to hass."""
+        self._update_from_data()
+        await super().async_added_to_hass()
+
 
 def _remove_device_types(name: str, device_types: list[str]) -> str:
     """Strip device types from a string.

@@ -209,11 +209,6 @@ class AugustDoorBinarySensor(AugustDescriptionEntity, BinarySensorEntity):
         self._attr_available = self._detail.bridge_is_online
         self._attr_is_on = self._detail.door_state == LockDoorStatus.OPEN
 
-    async def async_added_to_hass(self) -> None:
-        """Set the initial state when adding to hass."""
-        self._update_from_data()
-        await super().async_added_to_hass()
-
 
 class AugustDoorbellBinarySensor(AugustDescriptionEntity, BinarySensorEntity):
     """Representation of an August binary sensor."""
@@ -257,11 +252,6 @@ class AugustDoorbellBinarySensor(AugustDescriptionEntity, BinarySensorEntity):
         _LOGGER.debug("%s: canceled pending update", self.entity_id)
         self._check_for_off_update_listener()
         self._check_for_off_update_listener = None
-
-    async def async_added_to_hass(self) -> None:
-        """Call the mixin to subscribe and setup an async_track_point_in_utc_time to turn off the sensor if needed."""
-        self._update_from_data()
-        await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self) -> None:
         """When removing cancel any scheduled updates."""

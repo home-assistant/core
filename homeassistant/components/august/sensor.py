@@ -227,3 +227,8 @@ class AugustBatterySensor(AugustDescriptionEntity, SensorEntity, Generic[_T]):
         """Get the latest state of the sensor."""
         self._attr_native_value = self.entity_description.value_fn(self._detail)
         self._attr_available = self._attr_native_value is not None
+
+    async def async_added_to_hass(self) -> None:
+        """Call the mixin to subscribe and setup an async_track_point_in_utc_time to turn off the sensor if needed."""
+        self._update_from_data()
+        await super().async_added_to_hass()
