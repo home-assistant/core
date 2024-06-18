@@ -1628,7 +1628,7 @@ pvo==2.1.1
 py-aosmith==1.0.8
 
 # homeassistant.components.canary
-py-canary==0.5.3
+py-canary==0.5.4
 
 # homeassistant.components.ccm15
 py-ccm15==0.0.9
@@ -1828,6 +1828,9 @@ pyefergy==22.5.0
 
 # homeassistant.components.energenie_power_sockets
 pyegps==0.2.5
+
+# homeassistant.components.emoncms
+pyemoncms==0.0.6
 
 # homeassistant.components.enphase_envoy
 pyenphase==1.20.3
@@ -2463,7 +2466,7 @@ renault-api==0.2.3
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.9.2
+reolink-aio==0.9.3
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2791,7 +2794,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==1.12.0
+uiprotect==1.19.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2912,7 +2915,7 @@ wyoming==1.5.4
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.29.0
+xiaomi-ble==0.30.0
 
 # homeassistant.components.knx
 xknx==2.12.2
