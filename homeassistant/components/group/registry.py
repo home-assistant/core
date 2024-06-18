@@ -23,11 +23,13 @@ from homeassistant.const import (
     STATE_LOCKING,
     STATE_NOT_HOME,
     STATE_OFF,
+    STATE_OK,
     STATE_ON,
     STATE_OPEN,
     STATE_OPENING,
     STATE_PAUSED,
     STATE_PLAYING,
+    STATE_PROBLEM,
     STATE_UNLOCKED,
     STATE_UNLOCKING,
 )
@@ -90,6 +92,7 @@ ON_OFF_STATES = {
         STATE_OFF,
     ),
     "person": ({STATE_HOME}, STATE_HOME, STATE_NOT_HOME),
+    "plant": ({STATE_PROBLEM}, STATE_PROBLEM, STATE_OK),
 }
 
 
