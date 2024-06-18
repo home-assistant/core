@@ -2,6 +2,7 @@
 
 from asyncio import AbstractEventLoop
 from http import HTTPStatus
+from pathlib import Path
 import re
 from typing import Any
 from unittest.mock import patch
@@ -18,8 +19,10 @@ from homeassistant.components.frontend import (
     DOMAIN,
     EVENT_PANELS_UPDATED,
     THEMES_STORAGE_KEY,
+    add_extra_js_url,
     async_register_built_in_panel,
     async_remove_panel,
+    remove_extra_js_url,
 )
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
@@ -408,23 +411,50 @@ async def test_missing_themes(hass: HomeAssistant, ws_client) -> None:
 @pytest.mark.usefixtures("mock_onboarded")
 async def test_extra_js(hass: HomeAssistant, mock_http_client_with_extra_js) -> None:
     """Test that extra javascript is loaded."""
-    resp = await mock_http_client_with_extra_js.get("")
-    assert resp.status == 200
-    assert "cache-control" not in resp.headers
 
-    text = await resp.text()
+    async def get_response():
+        resp = await mock_http_client_with_extra_js.get("")
+        assert resp.status == 200
+        assert "cache-control" not in resp.headers
+
+        return await resp.text()
+
+    text = await get_response()
     assert '"/local/my_module.js"' in text
     assert '"/local/my_es5.js"' in text
 
+    # Test dynamically adding and removing extra javascript
+    add_extra_js_url(hass, "/local/my_module_2.js", False)
+    add_extra_js_url(hass, "/local/my_es5_2.js", True)
+    text = await get_response()
+    assert '"/local/my_module_2.js"' in text
+    assert '"/local/my_es5_2.js"' in text
+
+    remove_extra_js_url(hass, "/local/my_module_2.js", False)
+    remove_extra_js_url(hass, "/local/my_es5_2.js", True)
+    text = await get_response()
+    assert '"/local/my_module_2.js"' not in text
+    assert '"/local/my_es5_2.js"' not in text
+
+    # Remove again should not raise
+    remove_extra_js_url(hass, "/local/my_module_2.js", False)
+    remove_extra_js_url(hass, "/local/my_es5_2.js", True)
+    text = await get_response()
+    assert '"/local/my_module_2.js"' not in text
+    assert '"/local/my_es5_2.js"' not in text
+
     # safe mode
     hass.config.safe_mode = True
-    resp = await mock_http_client_with_extra_js.get("")
-    assert resp.status == 200
-    assert "cache-control" not in resp.headers
-
-    text = await resp.text()
+    text = await get_response()
     assert '"/local/my_module.js"' not in text
     assert '"/local/my_es5.js"' not in text
+
+    # Test dynamically adding extra javascript
+    add_extra_js_url(hass, "/local/my_module_2.js", False)
+    add_extra_js_url(hass, "/local/my_es5_2.js", True)
+    text = await get_response()
+    assert '"/local/my_module_2.js"' not in text
+    assert '"/local/my_es5_2.js"' not in text
 
 
 async def test_get_panels(
@@ -758,3 +788,23 @@ async def test_get_icons_for_single_integration(
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {"resources": {"http": {}}}
+
+
+async def test_www_local_dir(
+    hass: HomeAssistant, tmp_path: Path, hass_client: ClientSessionGenerator
+) -> None:
+    """Test local www folder."""
+    hass.config.config_dir = str(tmp_path)
+    tmp_path_www = tmp_path / "www"
+    x_txt_file = tmp_path_www / "x.txt"
+
+    def _create_www_and_x_txt():
+        tmp_path_www.mkdir()
+        x_txt_file.write_text("any")
+
+    await hass.async_add_executor_job(_create_www_and_x_txt)
+
+    assert await async_setup_component(hass, "frontend", {})
+    client = await hass_client()
+    resp = await client.get("/local/x.txt")
+    assert resp.status == HTTPStatus.OK

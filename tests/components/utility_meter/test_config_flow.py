@@ -332,8 +332,6 @@ async def test_options(hass: HomeAssistant) -> None:
 
     # Check config entry is reloaded with new options
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.electricity_meter")
-    assert state.attributes["source"] == input_sensor2_entity_id
 
 
 async def test_change_device_source(

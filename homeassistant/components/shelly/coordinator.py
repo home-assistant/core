@@ -72,6 +72,7 @@ from .utils import (
 class ShellyEntryData:
     """Class for sharing data within a given config entry."""
 
+    platforms: list[Platform]
     block: ShellyBlockCoordinator | None = None
     rest: ShellyRestCoordinator | None = None
     rpc: ShellyRpcCoordinator | None = None

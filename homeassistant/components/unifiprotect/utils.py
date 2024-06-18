@@ -36,7 +36,6 @@ from .const import (
     CONF_ALL_UPDATES,
     CONF_OVERRIDE_CHOST,
     DEVICES_FOR_SUBSCRIBE,
-    DOMAIN,
     ModelType,
 )
 
@@ -122,13 +121,6 @@ def async_get_light_motion_current(obj: Light) -> str:
 
 
 @callback
-def async_dispatch_id(entry: UFPConfigEntry, dispatch: str) -> str:
-    """Generate entry specific dispatch ID."""
-
-    return f"{DOMAIN}.{entry.entry_id}.{dispatch}"
-
-
-@callback
 def async_create_api_client(
     hass: HomeAssistant, entry: UFPConfigEntry
 ) -> ProtectApiClient:
@@ -157,6 +149,6 @@ def get_camera_base_name(channel: CameraChannel) -> str:
 
     camera_name = channel.name
     if channel.name != "Package Camera":
-        camera_name = f"{channel.name} Resolution Channel"
+        camera_name = f"{channel.name} resolution channel"
 
     return camera_name
