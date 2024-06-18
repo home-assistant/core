@@ -39,43 +39,33 @@ class ProtectEntityDescription(EntityDescription, Generic[T]):
     ufp_enabled: str | None = None
     ufp_perm: PermRequired | None = None
 
-    def get_ufp_value(self, obj: T) -> Any:
-        """Return value from UniFi Protect device.
+    # The below are set in __post_init__
+    has_required: Callable[[T], bool] = bool
+    get_ufp_enabled: Callable[[T], bool] = bool
 
-        May be overridden by ufp_value or ufp_value_fn.
-        """
-        # ufp_value or ufp_value_fn is required, the
+    def get_ufp_value(self, obj: T) -> Any:
+        """Return value from UniFi Protect device; overridden in __post_init__."""
+        # ufp_value or ufp_value_fn are required, the
         # RuntimeError is to catch any issues in the code
         # with new descriptions.
         raise RuntimeError(  # pragma: no cover
-            "`ufp_value` or `ufp_value_fn` is required"
+            f"`ufp_value` or `ufp_value_fn` is required for {self}"
         )
-
-    def has_required(self, obj: T) -> bool:
-        """Return if required field is set.
-
-        May be overridden by ufp_required_field.
-        """
-        return True
-
-    def get_ufp_enabled(self, obj: T) -> bool:
-        """Return if entity is enabled.
-
-        May be overridden by ufp_enabled.
-        """
-        return True
 
     def __post_init__(self) -> None:
         """Override get_ufp_value, has_required, and get_ufp_enabled if required."""
         _setter = partial(object.__setattr__, self)
+
         if (_ufp_value := self.ufp_value) is not None:
             ufp_value = tuple(_ufp_value.split("."))
             _setter("get_ufp_value", partial(get_nested_attr, attrs=ufp_value))
         elif (ufp_value_fn := self.ufp_value_fn) is not None:
             _setter("get_ufp_value", ufp_value_fn)
+
         if (_ufp_enabled := self.ufp_enabled) is not None:
             ufp_enabled = tuple(_ufp_enabled.split("."))
             _setter("get_ufp_enabled", partial(get_nested_attr, attrs=ufp_enabled))
+
         if (_ufp_required_field := self.ufp_required_field) is not None:
             ufp_required_field = tuple(_ufp_required_field.split("."))
             _setter(
