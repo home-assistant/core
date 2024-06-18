@@ -51,7 +51,7 @@ class MockFlowManager(data_entry_flow.FlowManager):
 @pytest.fixture
 def manager() -> MockFlowManager:
     """Return a flow manager."""
-    return MockFlowManager(None)
+    return MockFlowManager()
 
 
 async def test_configure_reuses_handler_instance(manager: MockFlowManager) -> None:
