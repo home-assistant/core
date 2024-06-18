@@ -8,7 +8,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import (
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
+    STATE_ALARM_TRIGGERED,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
@@ -17,6 +26,22 @@ from homeassistant.helpers.integration_platform import (
 from .const import DOMAIN, REG_KEY
 
 EXCLUDED_DOMAINS = {"air_quality", "sensor", "weather"}
+
+ON_OFF_STATES = {
+    "alarm_control_panel": (
+        {
+            STATE_ON,
+            STATE_ALARM_ARMED_AWAY,
+            STATE_ALARM_ARMED_CUSTOM_BYPASS,
+            STATE_ALARM_ARMED_HOME,
+            STATE_ALARM_ARMED_NIGHT,
+            STATE_ALARM_ARMED_VACATION,
+            STATE_ALARM_TRIGGERED,
+        },
+        STATE_ON,
+        STATE_OFF,
+    )
+}
 
 
 async def async_setup(hass: HomeAssistant) -> None:
@@ -65,6 +90,8 @@ class GroupIntegrationRegistry:
         self.on_states_by_domain: dict[str, set[str]] = {}
         self.exclude_domains: set[str] = EXCLUDED_DOMAINS
         self.state_group_mapping: dict[str, SingleStateType] = {}
+        for domain, on_off_states in ON_OFF_STATES.items():
+            self.on_off_states(domain, *on_off_states)
 
     @callback
     def exclude_domain(self, domain: str) -> None:
