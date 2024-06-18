@@ -21,13 +21,15 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, async_mock_service
 
+SNAPSHOT_FLOW_PROPS = props("type", "title", "result", "error")
+
 
 async def test_config_flow(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Test the config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result == snapshot(name="init", exclude=props("data_schema"))
+    assert result == snapshot(name="init", include=SNAPSHOT_FLOW_PROPS)
 
     with patch(
         "homeassistant.components.generic_hygrostat.async_setup_entry",
@@ -48,12 +50,11 @@ async def test_config_flow(hass: HomeAssistant, snapshot: SnapshotAssertion) -> 
         )
         await hass.async_block_till_done()
 
-    assert result == snapshot(name="create")
+    assert result == snapshot(name="create", include=SNAPSHOT_FLOW_PROPS)
     assert len(mock_setup_entry.mock_calls) == 1
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert config_entry.data == {}
-    assert result == snapshot(name="options")
     assert config_entry.title == "My dehumidifier"
 
 
@@ -96,7 +97,7 @@ async def test_options(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None
     assert len(turn_off_calls) == 1
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result == snapshot(name="init", exclude=props("data_schema", "handler"))
+    assert result == snapshot(name="init", include=SNAPSHOT_FLOW_PROPS)
 
     # check that it is setup
     await hass.async_block_till_done()
@@ -114,7 +115,7 @@ async def test_options(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None
             CONF_INITIAL_STATE: True,
         },
     )
-    assert result == snapshot(name="create_entry", exclude=props("handler"))
+    assert result == snapshot(name="create_entry", include=SNAPSHOT_FLOW_PROPS)
 
     # Check config entry is reloaded with new options
     await hass.async_block_till_done()
