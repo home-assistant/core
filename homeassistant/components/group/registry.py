@@ -41,6 +41,7 @@ from homeassistant.const import (
     STATE_PROBLEM,
     STATE_UNLOCKED,
     STATE_UNLOCKING,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.integration_platform import (
@@ -52,7 +53,7 @@ from .const import DOMAIN, REG_KEY
 EXCLUDED_DOMAINS = {"air_quality", "sensor", "weather"}
 
 ON_OFF_STATES = {
-    "alarm_control_panel": (
+    Platform.ALARM_CONTROL_PANEL: (
         {
             STATE_ON,
             STATE_ALARM_ARMED_AWAY,
@@ -65,7 +66,7 @@ ON_OFF_STATES = {
         STATE_ON,
         STATE_OFF,
     ),
-    "climate": (
+    Platform.CLIMATE: (
         {
             STATE_ON,
             HVACMode.HEAT,
@@ -77,9 +78,9 @@ ON_OFF_STATES = {
         STATE_ON,
         STATE_OFF,
     ),
-    "cover": ({STATE_OPEN}, STATE_OPEN, STATE_CLOSED),
-    "device_tracker": ({STATE_HOME}, STATE_HOME, STATE_NOT_HOME),
-    "lock": (
+    Platform.COVER: ({STATE_OPEN}, STATE_OPEN, STATE_CLOSED),
+    Platform.DEVICE_TRACKER: ({STATE_HOME}, STATE_HOME, STATE_NOT_HOME),
+    Platform.LOCK: (
         {
             STATE_LOCKING,
             STATE_OPEN,
@@ -90,7 +91,7 @@ ON_OFF_STATES = {
         STATE_UNLOCKED,
         STATE_LOCKED,
     ),
-    "media_player": (
+    Platform.MEDIA_PLAYER: (
         {
             STATE_ON,
             STATE_PAUSED,
@@ -102,7 +103,7 @@ ON_OFF_STATES = {
     ),
     "person": ({STATE_HOME}, STATE_HOME, STATE_NOT_HOME),
     "plant": ({STATE_PROBLEM}, STATE_PROBLEM, STATE_OK),
-    "vacuum": (
+    Platform.VACUUM: (
         {
             STATE_ON,
             STATE_CLEANING,
@@ -112,7 +113,7 @@ ON_OFF_STATES = {
         STATE_ON,
         STATE_OFF,
     ),
-    "water_heater": (
+    Platform.WATER_HEATER: (
         {
             STATE_ON,
             STATE_ECO,
