@@ -1271,7 +1271,10 @@ async def test_master_state_with_template(hass: HomeAssistant) -> None:
     events = []
 
     async_track_state_change_event(
-        hass, "media_player.tv", callback(lambda event: events.append(event))
+        hass,
+        "media_player.tv",
+        # pylint: disable-next=unnecessary-lambda
+        callback(lambda event: events.append(event)),
     )
 
     context = Context()

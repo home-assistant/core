@@ -693,9 +693,9 @@ def mock_device_registry(
 class MockGroup(auth_models.Group):
     """Mock a group in Home Assistant."""
 
-    def __init__(self, id=None, name="Mock Group", policy=system_policies.ADMIN_POLICY):
+    def __init__(self, id=None, name="Mock Group"):
         """Mock a group."""
-        kwargs = {"name": name, "policy": policy}
+        kwargs = {"name": name, "policy": system_policies.ADMIN_POLICY}
         if id is not None:
             kwargs["id"] = id
 
@@ -818,6 +818,7 @@ class MockModule:
 
         if setup:
             # We run this in executor, wrap it in function
+            # pylint: disable-next=unnecessary-lambda
             self.setup = lambda *args: setup(*args)
 
         if async_setup is not None:
@@ -875,6 +876,7 @@ class MockPlatform:
 
         if setup_platform is not None:
             # We run this in executor, wrap it in function
+            # pylint: disable-next=unnecessary-lambda
             self.setup_platform = lambda *args: setup_platform(*args)
 
         if async_setup_platform is not None:
@@ -899,7 +901,7 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
         platform=None,
         scan_interval=timedelta(seconds=15),
         entity_namespace=None,
-    ):
+    ) -> None:
         """Initialize a mock entity platform."""
         if logger is None:
             logger = logging.getLogger("homeassistant.helpers.entity_platform")

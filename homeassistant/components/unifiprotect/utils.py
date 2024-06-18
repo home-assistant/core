@@ -36,7 +36,6 @@ from .const import (
     CONF_ALL_UPDATES,
     CONF_OVERRIDE_CHOST,
     DEVICES_FOR_SUBSCRIBE,
-    DOMAIN,
     ModelType,
 )
 
@@ -92,10 +91,8 @@ def async_get_devices_by_type(
     bootstrap: Bootstrap, device_type: ModelType
 ) -> dict[str, ProtectAdoptableDeviceModel]:
     """Get devices by type."""
-
-    devices: dict[str, ProtectAdoptableDeviceModel] = getattr(
-        bootstrap, f"{device_type.value}s"
-    )
+    devices: dict[str, ProtectAdoptableDeviceModel]
+    devices = getattr(bootstrap, device_type.devices_key)
     return devices
 
 
@@ -121,13 +118,6 @@ def async_get_light_motion_current(obj: Light) -> str:
     ):
         return f"{LightModeType.MOTION.value}Dark"
     return obj.light_mode_settings.mode.value
-
-
-@callback
-def async_dispatch_id(entry: UFPConfigEntry, dispatch: str) -> str:
-    """Generate entry specific dispatch ID."""
-
-    return f"{DOMAIN}.{entry.entry_id}.{dispatch}"
 
 
 @callback
@@ -159,6 +149,6 @@ def get_camera_base_name(channel: CameraChannel) -> str:
 
     camera_name = channel.name
     if channel.name != "Package Camera":
-        camera_name = f"{channel.name} Resolution Channel"
+        camera_name = f"{channel.name} resolution channel"
 
     return camera_name

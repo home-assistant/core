@@ -8,7 +8,7 @@ from datetime import datetime
 import logging
 from typing import Any
 
-from aioazuredevops.builds import DevOpsBuild
+from aioazuredevops.models.builds import Build
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -32,8 +32,8 @@ _LOGGER = logging.getLogger(__name__)
 class AzureDevOpsBuildSensorEntityDescription(SensorEntityDescription):
     """Class describing Azure DevOps base build sensor entities."""
 
-    attr_fn: Callable[[DevOpsBuild], dict[str, Any] | None] = lambda _: None
-    value_fn: Callable[[DevOpsBuild], datetime | StateType]
+    attr_fn: Callable[[Build], dict[str, Any] | None] = lambda _: None
+    value_fn: Callable[[Build], datetime | StateType]
 
 
 BASE_BUILD_SENSOR_DESCRIPTIONS: tuple[AzureDevOpsBuildSensorEntityDescription, ...] = (
@@ -133,7 +133,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Azure DevOps sensor based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    initial_builds: list[DevOpsBuild] = coordinator.data.builds
+    initial_builds: list[Build] = coordinator.data.builds
 
     async_add_entities(
         AzureDevOpsBuildSensor(
@@ -162,13 +162,13 @@ class AzureDevOpsBuildSensor(AzureDevOpsEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self.item_key = item_key
-        self._attr_unique_id = f"{self.coordinator.data.organization}_{self.build.project.project_id}_{self.build.definition.build_id}_{description.key}"
+        self._attr_unique_id = f"{self.coordinator.data.organization}_{self.build.project.id}_{self.build.definition.build_id}_{description.key}"
         self._attr_translation_placeholders = {
             "definition_name": self.build.definition.name
         }
 
     @property
-    def build(self) -> DevOpsBuild:
+    def build(self) -> Build:
         """Return the build."""
         return self.coordinator.data.builds[self.item_key]
 

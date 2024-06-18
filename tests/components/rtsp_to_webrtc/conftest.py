@@ -39,7 +39,7 @@ async def webrtc_server() -> None:
 
 
 @pytest.fixture
-async def mock_camera(hass) -> AsyncGenerator[None]:
+async def mock_camera(hass: HomeAssistant) -> AsyncGenerator[None]:
     """Initialize a demo camera platform."""
     assert await async_setup_component(
         hass, "camera", {camera.DOMAIN: {"platform": "demo"}}
