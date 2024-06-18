@@ -92,7 +92,6 @@ class AugustDescriptionEntity(AugustEntityMixin):
         super().__init__(data, device)
         self.entity_description = description
         self._attr_unique_id = f"{self._device_id}_{description.key}"
-        self._update_from_data()
 
 
 def _remove_device_types(name: str, device_types: list[str]) -> str:
