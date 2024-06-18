@@ -56,4 +56,4 @@ class LaMarzoccoButtonEntity(LaMarzoccoEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Press button."""
         await self.entity_description.press_fn(self.coordinator.device)
-        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
