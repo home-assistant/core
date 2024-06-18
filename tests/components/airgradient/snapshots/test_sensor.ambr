@@ -150,6 +150,55 @@
     'state': '1',
   })
 # ---
+# name: test_all_entities[sensor.airgradient_nox_index-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.airgradient_nox_index',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'NOx index',
+    'platform': 'airgradient',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nitrogen_index',
+    'unique_id': '84fce612f5b8-nitrogen_index',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.airgradient_nox_index-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Airgradient NOx index',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.airgradient_nox_index',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
 # name: test_all_entities[sensor.airgradient_pm0_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -403,6 +452,56 @@
     'state': '16931',
   })
 # ---
+# name: test_all_entities[sensor.airgradient_raw_nox-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.airgradient_raw_nox',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Raw NOx',
+    'platform': 'airgradient',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'raw_nitrogen',
+    'unique_id': '84fce612f5b8-nox_raw',
+    'unit_of_measurement': 'ticks',
+  })
+# ---
+# name: test_all_entities[sensor.airgradient_raw_nox-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Airgradient Raw NOx',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'ticks',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.airgradient_raw_nox',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '16931',
+  })
+# ---
 # name: test_all_entities[sensor.airgradient_raw_total_voc-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -447,6 +546,56 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airgradient_raw_total_voc',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '31792',
+  })
+# ---
+# name: test_all_entities[sensor.airgradient_raw_voc-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.airgradient_raw_voc',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Raw VOC',
+    'platform': 'airgradient',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'raw_total_volatile_organic_component',
+    'unique_id': '84fce612f5b8-tvoc_raw',
+    'unit_of_measurement': 'ticks',
+  })
+# ---
+# name: test_all_entities[sensor.airgradient_raw_voc-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Airgradient Raw VOC',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'ticks',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.airgradient_raw_voc',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -598,6 +747,55 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airgradient_total_voc_index',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '99',
+  })
+# ---
+# name: test_all_entities[sensor.airgradient_voc_index-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.airgradient_voc_index',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'VOC index',
+    'platform': 'airgradient',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_volatile_organic_component_index',
+    'unique_id': '84fce612f5b8-tvoc',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.airgradient_voc_index-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Airgradient VOC index',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.airgradient_voc_index',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
