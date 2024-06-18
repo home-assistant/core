@@ -525,8 +525,8 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
         self.create_schema = create_schema
         self.update_schema = update_schema
 
-        self.remove_subscription: CALLBACK_TYPE | None = None
-        self.subscribers: set[tuple[websocket_api.ActiveConnection, int]] = set()
+        self._remove_subscription: CALLBACK_TYPE | None = None
+        self._subscribers: set[tuple[websocket_api.ActiveConnection, int]] = set()
 
         assert self.api_prefix[-1] != "/", "API prefix should not end in /"
 
@@ -570,7 +570,7 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
         websocket_api.async_register_command(
             hass,
             f"{self.api_prefix}/subscribe",
-            self.ws_subscribe,
+            self._ws_subscribe,
             websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
                 {vol.Required("type"): f"{self.api_prefix}/subscribe"}
             ),
@@ -632,7 +632,7 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
             connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
 
     @callback
-    def ws_subscribe(
+    def _ws_subscribe(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
         """Subscribe to collection updates."""
@@ -648,24 +648,24 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
                 }
                 for change in change_set
             ]
-            for connection, msg_id in self.subscribers:
+            for connection, msg_id in self._subscribers:
                 connection.send_message(websocket_api.event_message(msg_id, json_msg))
 
-        if not self.subscribers:
-            self.remove_subscription = (
+        if not self._subscribers:
+            self._remove_subscription = (
                 self.storage_collection.async_add_change_set_listener(
                     async_change_listener
                 )
             )
 
-        self.subscribers.add((connection, msg["id"]))
+        self._subscribers.add((connection, msg["id"]))
 
         @callback
         def cancel_subscription() -> None:
-            self.subscribers.remove((connection, msg["id"]))
-            if not self.subscribers and self.remove_subscription:
-                self.remove_subscription()
-                self.remove_subscription = None
+            self._subscribers.remove((connection, msg["id"]))
+            if not self._subscribers and self._remove_subscription:
+                self._remove_subscription()
+                self._remove_subscription = None
 
         connection.subscriptions[msg["id"]] = cancel_subscription
 
