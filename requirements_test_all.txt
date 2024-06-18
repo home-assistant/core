@@ -2020,6 +2020,9 @@ snapcast==2.3.6
 # homeassistant.components.sonos
 soco==0.30.4
 
+# homeassistant.components.solarlog
+solarlog_cli==0.1.5
+
 # homeassistant.components.solax
 solax==3.1.1
 
@@ -2076,9 +2079,6 @@ stringcase==1.2.0
 
 # homeassistant.components.subaru
 subarulink==0.7.11
-
-# homeassistant.components.solarlog
-sunwatcher==0.2.1
 
 # homeassistant.components.sunweg
 sunweg==3.0.1
