@@ -76,10 +76,13 @@ async def help_test_mixed_entity_platforms_on_off_state_test(
             """Describe group on off states."""
             registry.on_off_states("test2", *on_off_states2)
 
-    # Set up first integration before `group` initializes
     mock_integration(hass, MockModule(domain="test1"))
     mock_platform(hass, "test1.group", MockGroupPlatform1())
     assert await async_setup_component(hass, "test1", {"test1": {}})
+
+    mock_integration(hass, MockModule(domain="test2"))
+    mock_platform(hass, "test2.group", MockGroupPlatform2())
+    assert await async_setup_component(hass, "test2", {"test2": {}})
 
     if grouped_groups:
         assert await async_setup_component(
@@ -118,11 +121,6 @@ async def help_test_mixed_entity_platforms_on_off_state_test(
             },
         )
     await hass.async_block_till_done()
-
-    # Set up the second integration after `group` initializes
-    mock_integration(hass, MockModule(domain="test2"))
-    mock_platform(hass, "test2.group", MockGroupPlatform2())
-    assert await async_setup_component(hass, "test2", {"test2": {}})
     await hass.async_block_till_done()
 
     state = hass.states.get("group.test")
