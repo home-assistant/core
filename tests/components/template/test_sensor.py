@@ -1828,9 +1828,9 @@ async def test_trigger_entity_restore_state(
 
     state = hass.states.get("sensor.test")
     assert state.state == initial_state
-    for attr in restored_attributes:
+    for attr, value in restored_attributes.items():
         if attr in initial_attributes:
-            assert state.attributes[attr] == restored_attributes[attr]
+            assert state.attributes[attr] == value
         else:
             assert attr not in state.attributes
     assert "another" not in state.attributes

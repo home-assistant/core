@@ -6,22 +6,23 @@ from datetime import datetime, timedelta
 from unittest.mock import Mock
 
 import pytest
-from pyunifiprotect.data import (
+from uiprotect.data import (
     NVR,
     Camera,
     Event,
     EventType,
+    ModelType,
     Sensor,
     SmartDetectObjectType,
 )
-from pyunifiprotect.data.nvr import EventMetadata, LicensePlateMetadata
+from uiprotect.data.nvr import EventMetadata, LicensePlateMetadata
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.components.unifiprotect.sensor import (
     ALL_DEVICES_SENSORS,
     CAMERA_DISABLED_SENSORS,
     CAMERA_SENSORS,
-    EVENT_SENSORS,
+    LICENSE_PLATE_EVENT_SENSORS,
     MOTION_TRIP_SENSORS,
     NVR_DISABLED_SENSORS,
     NVR_SENSORS,
@@ -326,8 +327,8 @@ async def test_sensor_setup_camera(
 
     expected_values = (
         fixed_now.replace(microsecond=0).isoformat(),
-        "100",
-        "100.0",
+        "0.0001",
+        "0.0001",
         "20.0",
     )
     for index, description in enumerate(CAMERA_SENSORS_WRITE):
@@ -347,7 +348,7 @@ async def test_sensor_setup_camera(
         assert state.state == expected_values[index]
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
-    expected_values = ("100", "100")
+    expected_values = ("0.0001", "0.0001")
     for index, description in enumerate(CAMERA_DISABLED_SENSORS):
         unique_id, entity_id = ids_from_device_description(
             Platform.SENSOR, doorbell, description
@@ -445,6 +446,7 @@ async def test_sensor_update_alarm(
 
     event_metadata = EventMetadata(sensor_id=sensor_all.id, alarm_type="smoke")
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.SENSOR_ALARM,
         start=fixed_now - timedelta(seconds=1),
@@ -506,10 +508,10 @@ async def test_sensor_update_alarm_with_last_trip_time(
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
-async def test_camera_update_licenseplate(
+async def test_camera_update_license_plate(
     hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera, fixed_now: datetime
 ) -> None:
-    """Test sensor motion entity."""
+    """Test license plate sensor."""
 
     camera.feature_flags.smart_detect_types.append(SmartDetectObjectType.LICENSE_PLATE)
     camera.feature_flags.has_smart_detect = True
@@ -521,13 +523,14 @@ async def test_camera_update_licenseplate(
     assert_entity_counts(hass, Platform.SENSOR, 23, 13)
 
     _, entity_id = ids_from_device_description(
-        Platform.SENSOR, camera, EVENT_SENSORS[0]
+        Platform.SENSOR, camera, LICENSE_PLATE_EVENT_SENSORS[0]
     )
 
     event_metadata = EventMetadata(
         license_plate=LicensePlateMetadata(name="ABCD1234", confidence_level=95)
     )
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.SMART_DETECT,
         start=fixed_now - timedelta(seconds=1),
@@ -557,3 +560,17 @@ async def test_camera_update_licenseplate(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "ABCD1234"
+
+
+async def test_sensor_precision(
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor, fixed_now: datetime
+) -> None:
+    """Test sensor precision value is respected."""
+
+    await init_entry(hass, ufp, [sensor_all])
+    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
+    nvr: NVR = ufp.api.bootstrap.nvr
+
+    _, entity_id = ids_from_device_description(Platform.SENSOR, nvr, NVR_SENSORS[6])
+
+    assert hass.states.get(entity_id).state == "17.49"

@@ -142,10 +142,10 @@ class Enigma2Device(MediaPlayerEntity):
         self._device: OpenWebIfDevice = device
         self._entry = entry
 
-        self._attr_unique_id = device.mac_address
+        self._attr_unique_id = device.mac_address or entry.entry_id
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.mac_address)},
+            identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer=about["info"]["brand"],
             model=about["info"]["model"],
             configuration_url=device.base,

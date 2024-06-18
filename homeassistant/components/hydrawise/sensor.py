@@ -48,7 +48,7 @@ def _get_zone_daily_active_water_use(sensor: HydrawiseSensor) -> float:
     return float(daily_water_summary.active_use_by_zone_id.get(sensor.zone.id, 0.0))
 
 
-def _get_controller_daily_active_water_use(sensor: HydrawiseSensor) -> float:
+def _get_controller_daily_active_water_use(sensor: HydrawiseSensor) -> float | None:
     """Get active water use for the controller."""
     daily_water_summary = sensor.coordinator.data.daily_water_use[sensor.controller.id]
     return daily_water_summary.total_active_use

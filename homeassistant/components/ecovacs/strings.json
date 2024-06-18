@@ -228,7 +228,7 @@
       "message": "Params are required for the command: {command}"
     },
     "vacuum_raw_get_positions_not_supported": {
-      "message": "Getting the positions of the charges and the device itself is not supported"
+      "message": "Getting the positions of the chargers and the device itself is not supported"
     }
   },
   "issues": {

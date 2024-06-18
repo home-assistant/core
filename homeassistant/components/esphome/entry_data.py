@@ -38,6 +38,7 @@ from aioesphomeapi import (
     TextInfo,
     TextSensorInfo,
     TimeInfo,
+    UpdateInfo,
     UserService,
     ValveInfo,
     build_unique_id,
@@ -82,6 +83,7 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     TextInfo: Platform.TEXT,
     TextSensorInfo: Platform.SENSOR,
     TimeInfo: Platform.TIME,
+    UpdateInfo: Platform.UPDATE,
     ValveInfo: Platform.VALVE,
 }
 
@@ -248,16 +250,10 @@ class RuntimeEntryData:
         hass: HomeAssistant,
         entry: ConfigEntry,
         platforms: set[Platform],
-        late: bool,
     ) -> None:
         async with self.platform_load_lock:
             if needed := platforms - self.loaded_platforms:
-                if late:
-                    await hass.config_entries.async_late_forward_entry_setups(
-                        entry, needed
-                    )
-                else:
-                    await hass.config_entries.async_forward_entry_setups(entry, needed)
+                await hass.config_entries.async_forward_entry_setups(entry, needed)
             self.loaded_platforms |= needed
 
     async def async_update_static_infos(
@@ -266,7 +262,6 @@ class RuntimeEntryData:
         entry: ConfigEntry,
         infos: list[EntityInfo],
         mac: str,
-        late: bool = False,
     ) -> None:
         """Distribute an update of static infos to all platforms."""
         # First, load all platforms
@@ -296,7 +291,7 @@ class RuntimeEntryData:
             ):
                 ent_reg.async_update_entity(old_entry, new_unique_id=new_unique_id)
 
-        await self._ensure_platforms_loaded(hass, entry, needed_platforms, late)
+        await self._ensure_platforms_loaded(hass, entry, needed_platforms)
 
         # Make a dict of the EntityInfo by type and send
         # them to the listeners for each specific EntityInfo type

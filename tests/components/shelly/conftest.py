@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 
 from . import MOCK_MAC
 
-from tests.common import async_capture_events, async_mock_service, mock_device_registry
+from tests.common import async_capture_events, async_mock_service
 
 MOCK_SETTINGS = {
     "name": "Test name",
@@ -254,6 +254,7 @@ MOCK_STATUS_RPC = {
         "current_C": 12.3,
         "output": True,
     },
+    "humidity:0": {"rh": 44.4},
     "sys": {
         "available_updates": {
             "beta": {"version": "some_beta_version"},
@@ -284,12 +285,6 @@ def mock_ws_server():
     """Mock out ws_server."""
     with patch("homeassistant.components.shelly.utils.get_ws_context"):
         yield
-
-
-@pytest.fixture
-def device_reg(hass: HomeAssistant):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
 
 
 @pytest.fixture

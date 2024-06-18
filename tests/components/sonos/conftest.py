@@ -323,7 +323,7 @@ class MockMusicServiceItem:
         parent_id: str,
         item_class: str,
         album_art_uri: None | str = None,
-    ):
+    ) -> None:
         """Initialize the mock item."""
         self.title = title
         self.item_id = item_id
@@ -467,6 +467,7 @@ def music_library_fixture(
 def alarm_clock_fixture():
     """Create alarmClock fixture."""
     alarm_clock = SonosMockService("AlarmClock")
+    # pylint: disable-next=attribute-defined-outside-init
     alarm_clock.ListAlarms = Mock()
     alarm_clock.ListAlarms.return_value = {
         "CurrentAlarmListVersion": "RINCON_test:14",
@@ -484,6 +485,7 @@ def alarm_clock_fixture():
 def alarm_clock_fixture_extended():
     """Create alarmClock fixture."""
     alarm_clock = SonosMockService("AlarmClock")
+    # pylint: disable-next=attribute-defined-outside-init
     alarm_clock.ListAlarms = Mock()
     alarm_clock.ListAlarms.return_value = {
         "CurrentAlarmListVersion": "RINCON_test:15",

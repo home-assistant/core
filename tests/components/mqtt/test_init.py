@@ -12,6 +12,7 @@ import time
 from typing import Any, TypedDict
 from unittest.mock import ANY, MagicMock, Mock, call, mock_open, patch
 
+import certifi
 from freezegun.api import FrozenDateTimeFactory
 import paho.mqtt.client as paho_mqtt
 import pytest
@@ -2479,8 +2480,6 @@ async def test_setup_uses_certificate_on_certificate_set_to_auto_and_insecure(
 
     assert calls
 
-    import certifi
-
     expected_certificate = certifi.where()
     assert calls[0][0] == expected_certificate
 
@@ -4088,6 +4087,7 @@ async def test_link_config_entry(
 async def test_reload_config_entry(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test manual entities reloaded and set up correctly."""
     await mqtt_mock_entry()
@@ -4154,6 +4154,9 @@ async def test_reload_config_entry(
         assert await hass.config_entries.async_reload(entry.entry_id)
         assert entry.state is ConfigEntryState.LOADED
         await hass.async_block_till_done()
+    # Assert the MQTT client was connected gracefully
+    with caplog.at_level(logging.INFO):
+        assert "Disconnected from MQTT server mock-broker:1883" in caplog.text
 
     assert (state := hass.states.get("sensor.test_manual1")) is not None
     assert state.attributes["friendly_name"] == "test_manual1_updated"

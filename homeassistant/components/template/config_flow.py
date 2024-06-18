@@ -344,7 +344,7 @@ def ws_start_preview(
         connection.send_message(
             {
                 "id": msg["id"],
-                "type": websocket_api.const.TYPE_RESULT,
+                "type": websocket_api.TYPE_RESULT,
                 "success": False,
                 "error": {"code": "invalid_user_input", "message": errors},
             }

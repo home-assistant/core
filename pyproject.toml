@@ -28,7 +28,7 @@ dependencies    = [
     "aiohttp_cors==0.7.0",
     "aiohttp-fast-url-dispatcher==0.3.0",
     "aiohttp-fast-zlib==0.1.0",
-    "aiozoneinfo==0.1.0",
+    "aiozoneinfo==0.2.0",
     "astral==2.2",
     "async-interrupt==1.1.1",
     "attrs==23.2.0",
@@ -402,9 +402,10 @@ enable = [
     "use-symbolic-message-instead",
 ]
 per-file-ignores = [
-    # hass-component-root-import: Tests test non-public APIs
     # redefined-outer-name: Tests reference fixtures in the test function
-    "/tests/:hass-component-root-import,redefined-outer-name",
+    # use-implicit-booleaness-not-comparison: Tests need to validate that a list
+    # or a dict is returned
+    "/tests/:redefined-outer-name,use-implicit-booleaness-not-comparison",
 ]
 
 [tool.pylint.REPORTS]
