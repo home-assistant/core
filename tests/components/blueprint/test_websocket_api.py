@@ -516,3 +516,56 @@ async def test_substituting_blueprint_inputs(
             "platform": "event",
         },
     }
+
+
+async def test_substituting_blueprint_inputs_unknown_domain(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test substituting blueprint inputs."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "blueprint/substitute",
+            "domain": "donald_duck",
+            "path": "test_event_service.yaml",
+            "input": {
+                "trigger_event": "test_event",
+                "service_to_call": "test.automation",
+                "a_number": 5,
+            },
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "invalid_format",
+        "message": "Unsupported domain",
+    }
+
+
+async def test_substituting_blueprint_inputs_incomplete_input(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test substituting blueprint inputs."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "blueprint/substitute",
+            "domain": "automation",
+            "path": "test_event_service.yaml",
+            "input": {
+                "service_to_call": "test.automation",
+                "a_number": 5,
+            },
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "unknown_error",
+        "message": "Missing input trigger_event",
+    }
