@@ -181,7 +181,7 @@ class GroupIntegrationRegistry:
         self.on_off_mapping: dict[str, str] = {STATE_ON: STATE_OFF}
         self.off_on_mapping: dict[str, str] = {STATE_OFF: STATE_ON}
         self.on_states_by_domain: dict[str, set[str]] = {}
-        self.exclude_domains: set[Platform | str] = EXCLUDED_DOMAINS.copy()
+        self.exclude_domains = EXCLUDED_DOMAINS.copy()
         self.state_group_mapping: dict[str, SingleStateType] = {}
         for domain, on_off_states in ON_OFF_STATES.items():
             self.on_off_states(domain, *on_off_states)
