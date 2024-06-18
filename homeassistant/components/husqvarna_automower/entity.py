@@ -56,6 +56,4 @@ class AutomowerErrorConfirmEntity(AutomowerControlEntity):
     @property
     def available(self) -> bool:
         """Return True if the device and entity is available."""
-        if self.mower_attributes.mower.is_error_confirmable is None:
-            return False
         return super().available and self.mower_attributes.mower.is_error_confirmable
