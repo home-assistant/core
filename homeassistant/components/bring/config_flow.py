@@ -9,7 +9,7 @@ from bring_api.bring import Bring
 from bring_api.exceptions import BringAuthException, BringRequestException
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -38,14 +38,14 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class BringConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bring!."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -53,20 +53,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             bring = Bring(session, user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
 
             try:
-                await bring.login()
+                info = await bring.login()
                 await bring.load_lists()
             except BringRequestException:
                 errors["base"] = "cannot_connect"
             except BringAuthException:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(bring.uuid)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=user_input[CONF_EMAIL], data=user_input
+                    title=info["name"] or user_input[CONF_EMAIL], data=user_input
                 )
 
         return self.async_show_form(

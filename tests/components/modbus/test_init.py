@@ -25,6 +25,7 @@ import voluptuous as vol
 
 from homeassistant import config as hass_config
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.modbus import async_reset_platform
 from homeassistant.components.modbus.const import (
     ATTR_ADDRESS,
     ATTR_HUB,
@@ -66,6 +67,11 @@ from homeassistant.components.modbus.const import (
     CONF_SWAP_BYTE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
+    CONF_SWING_MODE_REGISTER,
+    CONF_SWING_MODE_SWING_BOTH,
+    CONF_SWING_MODE_SWING_OFF,
+    CONF_SWING_MODE_SWING_ON,
+    CONF_SWING_MODE_VALUES,
     CONF_TARGET_TEMP,
     CONF_VIRTUAL_COUNT,
     DEFAULT_SCAN_INTERVAL,
@@ -84,6 +90,7 @@ from homeassistant.components.modbus.validators import (
     check_config,
     check_hvac_target_temp_registers,
     duplicate_fan_mode_validator,
+    duplicate_swing_mode_validator,
     hvac_fixedsize_reglist_validator,
     nan_validator,
     register_int_list_validator,
@@ -129,7 +136,9 @@ from tests.common import async_fire_time_changed, get_fixture_path
 
 
 @pytest.fixture(name="mock_modbus_with_pymodbus")
-async def mock_modbus_with_pymodbus_fixture(hass, caplog, do_config, mock_pymodbus):
+async def mock_modbus_with_pymodbus_fixture(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, do_config, mock_pymodbus
+):
     """Load integration modbus using mocked pymodbus."""
     caplog.clear()
     caplog.set_level(logging.ERROR)
@@ -629,6 +638,42 @@ async def test_check_config_sensor(hass: HomeAssistant, do_config) -> None:
                 ],
             }
         ],
+        [  # Testing Swing modes
+            {
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_TIMEOUT: 3,
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 0,
+                        CONF_SWING_MODE_REGISTER: {
+                            CONF_ADDRESS: 120,
+                            CONF_SWING_MODE_VALUES: {
+                                CONF_SWING_MODE_SWING_ON: 0,
+                                CONF_SWING_MODE_SWING_BOTH: 1,
+                            },
+                        },
+                    },
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME + " 2",
+                        CONF_ADDRESS: 119,
+                        CONF_SLAVE: 0,
+                        CONF_TARGET_TEMP: 118,
+                        CONF_SWING_MODE_REGISTER: {
+                            CONF_ADDRESS: [120],
+                            CONF_SWING_MODE_VALUES: {
+                                CONF_SWING_MODE_SWING_ON: 0,
+                                CONF_SWING_MODE_SWING_BOTH: 1,
+                            },
+                        },
+                    },
+                ],
+            }
+        ],
         [
             {
                 CONF_NAME: TEST_MODBUS_NAME,
@@ -733,6 +778,29 @@ async def test_check_config_climate(hass: HomeAssistant, do_config) -> None:
                 CONF_FAN_MODE_REGISTER: {
                     CONF_ADDRESS: 117,
                 },
+                CONF_SWING_MODE_REGISTER: {
+                    CONF_ADDRESS: 117,
+                },
+            },
+        ],
+        [
+            {
+                CONF_NAME: TEST_ENTITY_NAME,
+                CONF_ADDRESS: 1,
+                CONF_TARGET_TEMP: [117],
+                CONF_HVAC_MODE_REGISTER: {
+                    CONF_ADDRESS: 117,
+                    CONF_HVAC_MODE_VALUES: {
+                        CONF_HVAC_MODE_COOL: 0,
+                        CONF_HVAC_MODE_HEAT: 1,
+                        CONF_HVAC_MODE_HEAT_COOL: 2,
+                        CONF_HVAC_MODE_DRY: 3,
+                    },
+                },
+                CONF_HVAC_ONOFF_REGISTER: 117,
+                CONF_SWING_MODE_REGISTER: {
+                    CONF_ADDRESS: [117],
+                },
             },
         ],
     ],
@@ -743,6 +811,7 @@ async def test_climate_conflict_addresses(do_config) -> None:
     assert CONF_HVAC_MODE_REGISTER not in do_config[0]
     assert CONF_HVAC_ONOFF_REGISTER not in do_config[0]
     assert CONF_FAN_MODE_REGISTER not in do_config[0]
+    assert CONF_SWING_MODE_REGISTER not in do_config[0]
 
 
 @pytest.mark.parametrize(
@@ -762,6 +831,25 @@ async def test_duplicate_fan_mode_validator(do_config) -> None:
     """Test duplicate modbus validator."""
     duplicate_fan_mode_validator(do_config)
     assert len(do_config[CONF_FAN_MODE_VALUES]) == 2
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_ADDRESS: 11,
+            CONF_SWING_MODE_VALUES: {
+                CONF_SWING_MODE_SWING_ON: 7,
+                CONF_SWING_MODE_SWING_OFF: 9,
+                CONF_SWING_MODE_SWING_BOTH: 9,
+            },
+        }
+    ],
+)
+async def test_duplicate_swing_mode_validator(do_config) -> None:
+    """Test duplicate modbus validator."""
+    duplicate_swing_mode_validator(do_config)
+    assert len(do_config[CONF_SWING_MODE_VALUES]) == 2
 
 
 @pytest.mark.parametrize(
@@ -1275,23 +1363,18 @@ async def test_pb_service_write(
 
 @pytest.fixture(name="mock_modbus_read_pymodbus")
 async def mock_modbus_read_pymodbus_fixture(
-    hass,
+    hass: HomeAssistant,
     do_group,
     do_type,
     do_scan_interval,
     do_return,
-    do_exception,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     mock_pymodbus,
     freezer: FrozenDateTimeFactory,
 ):
     """Load integration modbus using mocked pymodbus."""
     caplog.clear()
     caplog.set_level(logging.ERROR)
-    mock_pymodbus.read_coils.side_effect = do_exception
-    mock_pymodbus.read_discrete_inputs.side_effect = do_exception
-    mock_pymodbus.read_input_registers.side_effect = do_exception
-    mock_pymodbus.read_holding_registers.side_effect = do_exception
     mock_pymodbus.read_coils.return_value = do_return
     mock_pymodbus.read_discrete_inputs.return_value = do_return
     mock_pymodbus.read_input_registers.return_value = do_return
@@ -1694,3 +1777,9 @@ async def test_no_entities(hass: HomeAssistant) -> None:
         ]
     }
     assert await async_setup_component(hass, DOMAIN, config) is False
+
+
+async def test_reset_platform(hass: HomeAssistant) -> None:
+    """Run test for async_reset_platform."""
+    await async_reset_platform(hass, "modbus")
+    assert DOMAIN not in hass.data

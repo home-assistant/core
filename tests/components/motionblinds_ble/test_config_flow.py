@@ -1,8 +1,9 @@
 """Test the Motionblinds Bluetooth config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from motionblindsble.const import MotionBlindType
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
@@ -39,12 +40,12 @@ BLIND_SERVICE_INFO = BluetoothServiceInfoBleak(
     ),
     connectable=True,
     time=0,
+    tx_power=-127,
 )
 
 
-async def test_config_flow_manual_success(
-    hass: HomeAssistant, motionblinds_ble_connect
-) -> None:
+@pytest.mark.usefixtures("motionblinds_ble_connect")
+async def test_config_flow_manual_success(hass: HomeAssistant) -> None:
     """Successful flow manually initialized by the user."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -75,9 +76,8 @@ async def test_config_flow_manual_success(
     assert result["options"] == {}
 
 
-async def test_config_flow_manual_error_invalid_mac(
-    hass: HomeAssistant, motionblinds_ble_connect
-) -> None:
+@pytest.mark.usefixtures("motionblinds_ble_connect")
+async def test_config_flow_manual_error_invalid_mac(hass: HomeAssistant) -> None:
     """Invalid MAC code error flow manually initialized by the user."""
 
     # Initialize
@@ -121,8 +121,9 @@ async def test_config_flow_manual_error_invalid_mac(
     assert result["options"] == {}
 
 
+@pytest.mark.usefixtures("motionblinds_ble_connect")
 async def test_config_flow_manual_error_no_bluetooth_adapter(
-    hass: HomeAssistant, motionblinds_ble_connect
+    hass: HomeAssistant,
 ) -> None:
     """No Bluetooth adapter error flow manually initialized by the user."""
 
@@ -158,7 +159,7 @@ async def test_config_flow_manual_error_no_bluetooth_adapter(
 
 
 async def test_config_flow_manual_error_could_not_find_motor(
-    hass: HomeAssistant, motionblinds_ble_connect
+    hass: HomeAssistant, motionblinds_ble_connect: tuple[AsyncMock, Mock]
 ) -> None:
     """Could not find motor error flow manually initialized by the user."""
 
@@ -206,7 +207,7 @@ async def test_config_flow_manual_error_could_not_find_motor(
 
 
 async def test_config_flow_manual_error_no_devices_found(
-    hass: HomeAssistant, motionblinds_ble_connect
+    hass: HomeAssistant, motionblinds_ble_connect: tuple[AsyncMock, Mock]
 ) -> None:
     """No devices found error flow manually initialized by the user."""
 
@@ -228,9 +229,8 @@ async def test_config_flow_manual_error_no_devices_found(
     assert result["reason"] == const.ERROR_NO_DEVICES_FOUND
 
 
-async def test_config_flow_bluetooth_success(
-    hass: HomeAssistant, motionblinds_ble_connect
-) -> None:
+@pytest.mark.usefixtures("motionblinds_ble_connect")
+async def test_config_flow_bluetooth_success(hass: HomeAssistant) -> None:
     """Successful bluetooth discovery flow."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,

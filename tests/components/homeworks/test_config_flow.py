@@ -9,7 +9,6 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.homeworks.const import (
     CONF_ADDR,
-    CONF_BUTTONS,
     CONF_DIMMERS,
     CONF_INDEX,
     CONF_KEYPADS,
@@ -161,26 +160,6 @@ async def test_import_flow(
                 {
                     CONF_ADDR: "[02:08:02:01]",
                     CONF_NAME: "Foyer Keypad",
-                    CONF_BUTTONS: [
-                        {
-                            CONF_NAME: "Morning",
-                            CONF_NUMBER: 1,
-                            CONF_LED: True,
-                            CONF_RELEASE_DELAY: None,
-                        },
-                        {
-                            CONF_NAME: "Relax",
-                            CONF_NUMBER: 2,
-                            CONF_LED: True,
-                            CONF_RELEASE_DELAY: None,
-                        },
-                        {
-                            CONF_NAME: "Dim up",
-                            CONF_NUMBER: 3,
-                            CONF_LED: False,
-                            CONF_RELEASE_DELAY: 0.2,
-                        },
-                    ],
                 }
             ],
         },
@@ -207,16 +186,7 @@ async def test_import_flow(
         "keypads": [
             {
                 "addr": "[02:08:02:01]",
-                "buttons": [
-                    {
-                        "led": True,
-                        "name": "Morning",
-                        "number": 1,
-                        "release_delay": None,
-                    },
-                    {"led": True, "name": "Relax", "number": 2, "release_delay": None},
-                    {"led": False, "name": "Dim up", "number": 3, "release_delay": 0.2},
-                ],
+                "buttons": [],
                 "name": "Foyer Keypad",
             }
         ],
@@ -574,8 +544,12 @@ async def test_options_add_remove_light_flow(
     )
 
 
+@pytest.mark.parametrize("keypad_address", ["[02:08:03:01]", "[02:08:03]"])
 async def test_options_add_remove_keypad_flow(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_homeworks: MagicMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homeworks: MagicMock,
+    keypad_address: str,
 ) -> None:
     """Test options flow to add and remove a keypad."""
     mock_config_entry.add_to_hass(hass)
@@ -596,7 +570,7 @@ async def test_options_add_remove_keypad_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_ADDR: "[02:08:03:01]",
+            CONF_ADDR: keypad_address,
             CONF_NAME: "Hall Keypad",
         },
     )
@@ -622,7 +596,7 @@ async def test_options_add_remove_keypad_flow(
                 ],
                 "name": "Foyer Keypad",
             },
-            {"addr": "[02:08:03:01]", "buttons": [], "name": "Hall Keypad"},
+            {"addr": keypad_address, "buttons": [], "name": "Hall Keypad"},
         ],
         "port": 1234,
     }
@@ -642,7 +616,7 @@ async def test_options_add_remove_keypad_flow(
     assert result["step_id"] == "remove_keypad"
     assert result["data_schema"].schema["index"].options == {
         "0": "Foyer Keypad ([02:08:02:01])",
-        "1": "Hall Keypad ([02:08:03:01])",
+        "1": f"Hall Keypad ({keypad_address})",
     }
 
     result = await hass.config_entries.options.async_configure(
@@ -655,7 +629,7 @@ async def test_options_add_remove_keypad_flow(
             {"addr": "[02:08:01:01]", "name": "Foyer Sconces", "rate": 1.0},
         ],
         "host": "192.168.0.1",
-        "keypads": [{"addr": "[02:08:03:01]", "buttons": [], "name": "Hall Keypad"}],
+        "keypads": [{"addr": keypad_address, "buttons": [], "name": "Hall Keypad"}],
         "port": 1234,
     }
     await hass.async_block_till_done()

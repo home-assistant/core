@@ -8,7 +8,7 @@ from requests.exceptions import RequestException
 from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.nuki.const import DOMAIN
-from homeassistant.const import CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -37,19 +37,19 @@ async def test_form(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "port": 8080,
-                "token": "test-token",
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 8080,
+                CONF_TOKEN: "test-token",
             },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "75BCD15"
+    assert result2["title"] == "BC614E"
     assert result2["data"] == {
-        "host": "1.1.1.1",
-        "port": 8080,
-        "token": "test-token",
+        CONF_HOST: "1.1.1.1",
+        CONF_PORT: 8080,
+        CONF_TOKEN: "test-token",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -67,9 +67,9 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "port": 8080,
-                "token": "test-token",
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 8080,
+                CONF_TOKEN: "test-token",
             },
         )
 
@@ -90,9 +90,9 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "port": 8080,
-                "token": "test-token",
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 8080,
+                CONF_TOKEN: "test-token",
             },
         )
 
@@ -113,9 +113,9 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "port": 8080,
-                "token": "test-token",
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 8080,
+                CONF_TOKEN: "test-token",
             },
         )
 
@@ -137,9 +137,9 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "port": 8080,
-                "token": "test-token",
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 8080,
+                CONF_TOKEN: "test-token",
             },
         )
 
@@ -173,18 +173,18 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "port": 8080,
-                "token": "test-token",
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 8080,
+                CONF_TOKEN: "test-token",
             },
         )
 
         assert result2["type"] is FlowResultType.CREATE_ENTRY
-        assert result2["title"] == "75BCD15"
+        assert result2["title"] == "BC614E"
         assert result2["data"] == {
-            "host": "1.1.1.1",
-            "port": 8080,
-            "token": "test-token",
+            CONF_HOST: "1.1.1.1",
+            CONF_PORT: 8080,
+            CONF_TOKEN: "test-token",
         }
 
         await hass.async_block_till_done()

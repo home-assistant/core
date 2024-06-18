@@ -97,9 +97,7 @@ async def discover(hass):
     """Connect and authenticate home assistant."""
 
     hub = RoonHub(hass)
-    servers = await hub.discover()
-
-    return servers
+    return await hub.discover()
 
 
 async def authenticate(hass: HomeAssistant, host, port, servers):
@@ -168,7 +166,7 @@ class RoonConfigFlow(ConfigFlow, domain=DOMAIN):
 
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

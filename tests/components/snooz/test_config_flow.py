@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from asyncio import Event
+from asyncio import Event, sleep
 from unittest.mock import patch
 
 from homeassistant import config_entries
@@ -298,9 +298,16 @@ async def _test_pairs(
 async def _test_pairs_timeout(
     hass: HomeAssistant, flow_id: str, user_input: dict | None = None
 ) -> str:
+    async def _async_process_advertisements(
+        _hass, _callback, _matcher, _mode, _timeout
+    ):
+        """Simulate a timeout waiting for pairing mode."""
+        await sleep(0)
+        raise TimeoutError
+
     with patch(
         "homeassistant.components.snooz.config_flow.async_process_advertisements",
-        side_effect=TimeoutError(),
+        _async_process_advertisements,
     ):
         result = await hass.config_entries.flow.async_configure(
             flow_id, user_input=user_input or {}

@@ -69,6 +69,7 @@ async def async_setup_entry(
     data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
     api = data.api
     coordinator = data.coordinator_central
+    assert api.storage is not None
 
     entities: list[SynoDSMSecurityBinarySensor | SynoDSMStorageBinarySensor] = [
         SynoDSMSecurityBinarySensor(api, coordinator, description)
@@ -116,12 +117,13 @@ class SynoDSMSecurityBinarySensor(SynoDSMBinarySensor):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return bool(self._api.security)
+        return bool(self._api.security) and super().available
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return security checks details."""
-        return self._api.security.status_by_check  # type: ignore[no-any-return]
+        assert self._api.security is not None
+        return self._api.security.status_by_check
 
 
 class SynoDSMStorageBinarySensor(SynologyDSMDeviceEntity, SynoDSMBinarySensor):

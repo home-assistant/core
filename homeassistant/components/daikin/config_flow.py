@@ -109,7 +109,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 data_schema=self.schema,
                 errors={"base": "unknown"},
             )
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected error creating device")
             return self.async_show_form(
                 step_id="user",

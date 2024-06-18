@@ -385,7 +385,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                 else:
                     children.append(item)
 
-        overview = BrowseMedia(
+        return BrowseMedia(
             title=media_content_provider.title,
             media_class=MEDIA_CLASS_MAPPING.get(media_content_provider.content_type),
             media_content_id=media_content_provider.content_id,
@@ -394,8 +394,6 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             can_expand=media_content_provider.can_browse,
             children=children,
         )
-
-        return overview
 
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""

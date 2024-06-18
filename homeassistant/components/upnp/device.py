@@ -74,9 +74,7 @@ async def async_create_device(hass: HomeAssistant, location: str) -> Device:
 
     # Create profile wrapper.
     igd_device = IgdDevice(upnp_device, None)
-    device = Device(hass, igd_device)
-
-    return device
+    return Device(hass, igd_device)
 
 
 class Device:

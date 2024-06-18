@@ -28,6 +28,8 @@ from homeassistant.components.media_player import (
     ATTR_SOUND_MODE,
     DOMAIN as MP_DOMAIN,
     SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
@@ -443,6 +445,8 @@ async def test_services(
         "eq",
         "Music",
     )
+    await _test_service(hass, MP_DOMAIN, "play", SERVICE_MEDIA_PLAY, None)
+    await _test_service(hass, MP_DOMAIN, "pause", SERVICE_MEDIA_PAUSE, None)
 
 
 async def test_options_update(
@@ -741,7 +745,7 @@ async def test_apps_update(
 ) -> None:
     """Test device setup with apps where no app is running."""
     with patch(
-        "homeassistant.components.vizio.gen_apps_list_from_url",
+        "homeassistant.components.vizio.coordinator.gen_apps_list_from_url",
         return_value=None,
     ):
         async with _cm_for_test_setup_tv_with_apps(
@@ -754,7 +758,7 @@ async def test_apps_update(
             assert len(apps) == len(APPS)
 
             with patch(
-                "homeassistant.components.vizio.gen_apps_list_from_url",
+                "homeassistant.components.vizio.coordinator.gen_apps_list_from_url",
                 return_value=APP_LIST,
             ):
                 async_fire_time_changed(hass, dt_util.now() + timedelta(days=2))

@@ -9,7 +9,7 @@ forward exercising the triggers.
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Callable, Generator
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 import datetime
 import logging
@@ -19,6 +19,7 @@ import zoneinfo
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components import automation, calendar
 from homeassistant.components.calendar.trigger import EVENT_END, EVENT_START
@@ -86,7 +87,7 @@ class FakeSchedule:
 @pytest.fixture
 def fake_schedule(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> Generator[FakeSchedule, None, None]:
+) -> Generator[FakeSchedule]:
     """Fixture that tests can use to make fake events."""
 
     # Setup start time for all tests
@@ -150,7 +151,7 @@ async def create_automation(
 
 
 @pytest.fixture
-def calls(hass: HomeAssistant) -> Callable[[], list[dict[str, Any]]]:
+def calls_data(hass: HomeAssistant) -> Callable[[], list[dict[str, Any]]]:
     """Fixture to return payload data for automation calls."""
     service_calls = async_mock_service(hass, "test", "automation")
 
@@ -161,7 +162,7 @@ def calls(hass: HomeAssistant) -> Callable[[], list[dict[str, Any]]]:
 
 
 @pytest.fixture(autouse=True)
-def mock_update_interval() -> Generator[None, None, None]:
+def mock_update_interval() -> Generator[None]:
     """Fixture to override the update interval for refreshing events."""
     with patch(
         "homeassistant.components.calendar.trigger.UPDATE_INTERVAL",
@@ -172,7 +173,7 @@ def mock_update_interval() -> Generator[None, None, None]:
 
 async def test_event_start_trigger(
     hass: HomeAssistant,
-    calls: Callable[[], list[dict[str, Any]]],
+    calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
 ) -> None:
@@ -182,13 +183,13 @@ async def test_event_start_trigger(
         end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
     )
     async with create_automation(hass, EVENT_START):
-        assert len(calls()) == 0
+        assert len(calls_data()) == 0
 
         await fake_schedule.fire_until(
             datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
         )
 
-    assert calls() == [
+    assert calls_data() == [
         {
             "platform": "calendar",
             "event": EVENT_START,
@@ -206,7 +207,7 @@ async def test_event_start_trigger(
 )
 async def test_event_start_trigger_with_offset(
     hass: HomeAssistant,
-    calls: Callable[[], list[dict[str, Any]]],
+    calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
     offset_str,
@@ -222,13 +223,13 @@ async def test_event_start_trigger_with_offset(
         await fake_schedule.fire_until(
             datetime.datetime.fromisoformat("2022-04-19 11:55:00+00:00") + offset_delta,
         )
-        assert len(calls()) == 0
+        assert len(calls_data()) == 0
 
         # Event has started w/ offset
         await fake_schedule.fire_until(
             datetime.datetime.fromisoformat("2022-04-19 12:05:00+00:00") + offset_delta,
         )
-        assert calls() == [
+        assert calls_data() == [
             {
                 "platform": "calendar",
                 "event": EVENT_START,
@@ -239,7 +240,7 @@ async def test_event_start_trigger_with_offset(
 
 async def test_event_end_trigger(
     hass: HomeAssistant,
-    calls: Callable[[], list[dict[str, Any]]],
+    calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
 ) -> None:
@@ -253,13 +254,13 @@ async def test_event_end_trigger(
         await fake_schedule.fire_until(
             datetime.datetime.fromisoformat("2022-04-19 11:10:00+00:00")
         )
-        assert len(calls()) == 0
+        assert len(calls_data()) == 0
 
         # Event ends
         await fake_schedule.fire_until(
             datetime.datetime.fromisoformat("2022-04-19 12:10:00+00:00")
         )
-        assert calls() == [
+        assert calls_data() == [
             {
                 "platform": "calendar",
                 "event": EVENT_END,
@@ -277,7 +278,7 @@ async def test_event_end_trigger(
 )
 async def test_event_end_trigger_with_offset(
     hass: HomeAssistant,
-    calls: Callable[[], list[dict[str, Any]]],
+    calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
     offset_str,
@@ -293,13 +294,13 @@ async def test_event_end_trigger_with_offset(
         await fake_schedule.fire_until(
             datetime.datetime.fromisoformat("2022-04-19 12:05:00+00:00") + offset_delta,
         )
-        assert len(calls()) == 0
+        assert len(calls_data()) == 0
 
         # Event has started w/ offset
         await fake_schedule.fire_until(
             datetime.datetime.fromisoformat("2022-04-19 12:35:00+00:00") + offset_delta,
         )
-        assert calls() == [
+        assert calls_data() == [
             {
                 "platform": "calendar",
                 "event": EVENT_END,
@@ -310,7 +311,7 @@ async def test_event_end_trigger_with_offset(
 
 async def test_calendar_trigger_with_no_events(
     hass: HomeAssistant,
-    calls: Callable[[], list[dict[str, Any]]],
+    calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
 ) -> None:
     """Test a calendar trigger setup  with no events."""
@@ -320,12 +321,12 @@ async def test_calendar_trigger_with_no_events(
         await fake_schedule.fire_until(
             datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00")
         )
-    assert len(calls()) == 0
+    assert len(calls_data()) == 0
 
 
 async def test_multiple_start_events(
     hass: HomeAssistant,
-    calls: Callable[[], list[dict[str, Any]]],
+    calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
 ) -> None:
@@ -343,7 +344,7 @@ async def test_multiple_start_events(
         await fake_schedule.fire_until(
             datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00")
         )
-    assert calls() == [
+    assert calls_data() == [
         {
             "platform": "calendar",
             "event": EVENT_START,
@@ -359,7 +360,7 @@ async def test_multiple_start_events(
 
 async def test_multiple_end_events(
     hass: HomeAssistant,
-    calls: Callable[[], list[dict[str, Any]]],
+    calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
 ) -> None:
@@ -378,7 +379,7 @@ async def test_multiple_end_events(
             datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00")
         )
 
-    assert calls() == [
+    assert calls_data() == [
         {
             "platform": "calendar",
             "event": EVENT_END,
@@ -394,7 +395,7 @@ async def test_multiple_end_events(
 
 async def test_multiple_events_sharing_start_time(
     hass: HomeAssistant,
-    calls: Callable[[], list[dict[str, Any]]],
+    calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
 ) -> None:
@@ -413,7 +414,7 @@ async def test_multiple_events_sharing_start_time(
             datetime.datetime.fromisoformat("2022-04-19 11:35:00+00:00")
         )
 
-    assert calls() == [
+    assert calls_data() == [
         {
             "platform": "calendar",
             "event": EVENT_START,
@@ -429,7 +430,7 @@ async def test_multiple_events_sharing_start_time(
 
 async def test_overlap_events(
     hass: HomeAssistant,
-    calls: Callable[[], list[dict[str, Any]]],
+    calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
 ) -> None:
@@ -448,7 +449,7 @@ async def test_overlap_events(
             datetime.datetime.fromisoformat("2022-04-19 11:20:00+00:00")
         )
 
-    assert calls() == [
+    assert calls_data() == [
         {
             "platform": "calendar",
             "event": EVENT_START,
@@ -506,7 +507,7 @@ async def test_legacy_entity_type(
 
 async def test_update_next_event(
     hass: HomeAssistant,
-    calls: Callable[[], list[dict[str, Any]]],
+    calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
 ) -> None:
@@ -521,7 +522,7 @@ async def test_update_next_event(
         await fake_schedule.fire_until(
             datetime.datetime.fromisoformat("2022-04-19 10:45:00+00:00")
         )
-        assert len(calls()) == 0
+        assert len(calls_data()) == 0
 
         # Create a new event between now and when the event fires
         event_data2 = test_entity.create_event(
@@ -533,7 +534,7 @@ async def test_update_next_event(
         await fake_schedule.fire_until(
             datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00")
         )
-    assert calls() == [
+    assert calls_data() == [
         {
             "platform": "calendar",
             "event": EVENT_START,
@@ -549,7 +550,7 @@ async def test_update_next_event(
 
 async def test_update_missed(
     hass: HomeAssistant,
-    calls: Callable[[], list[dict[str, Any]]],
+    calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
 ) -> None:
@@ -565,7 +566,7 @@ async def test_update_missed(
         await fake_schedule.fire_until(
             datetime.datetime.fromisoformat("2022-04-19 10:38:00+00:00")
         )
-        assert len(calls()) == 0
+        assert len(calls_data()) == 0
 
         test_entity.create_event(
             start=datetime.datetime.fromisoformat("2022-04-19 10:40:00+00:00"),
@@ -576,7 +577,7 @@ async def test_update_missed(
         await fake_schedule.fire_until(
             datetime.datetime.fromisoformat("2022-04-19 11:05:00+00:00")
         )
-        assert calls() == [
+        assert calls_data() == [
             {
                 "platform": "calendar",
                 "event": EVENT_START,
@@ -639,7 +640,7 @@ async def test_update_missed(
 )
 async def test_event_payload(
     hass: HomeAssistant,
-    calls: Callable[[], list[dict[str, Any]]],
+    calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
     set_time_zone: None,
@@ -650,10 +651,10 @@ async def test_event_payload(
     """Test the fields in the calendar event payload are set."""
     test_entity.create_event(**create_data)
     async with create_automation(hass, EVENT_START):
-        assert len(calls()) == 0
+        assert len(calls_data()) == 0
 
         await fake_schedule.fire_until(fire_time)
-        assert calls() == [
+        assert calls_data() == [
             {
                 "platform": "calendar",
                 "event": EVENT_START,
@@ -664,7 +665,7 @@ async def test_event_payload(
 
 async def test_trigger_timestamp_window_edge(
     hass: HomeAssistant,
-    calls: Callable[[], list[dict[str, Any]]],
+    calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
     freezer: FrozenDateTimeFactory,
@@ -678,12 +679,12 @@ async def test_trigger_timestamp_window_edge(
         end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
     )
     async with create_automation(hass, EVENT_START):
-        assert len(calls()) == 0
+        assert len(calls_data()) == 0
 
         await fake_schedule.fire_until(
             datetime.datetime.fromisoformat("2022-04-19 11:20:00+00:00")
         )
-        assert calls() == [
+        assert calls_data() == [
             {
                 "platform": "calendar",
                 "event": EVENT_START,
@@ -694,14 +695,14 @@ async def test_trigger_timestamp_window_edge(
 
 async def test_event_start_trigger_dst(
     hass: HomeAssistant,
-    calls: Callable[[], list[dict[str, Any]]],
+    calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a calendar event trigger happening at the start of daylight savings time."""
+    await hass.config.async_set_time_zone("America/Los_Angeles")
     tzinfo = zoneinfo.ZoneInfo("America/Los_Angeles")
-    hass.config.set_time_zone("America/Los_Angeles")
     freezer.move_to("2023-03-12 01:00:00-08:00")
 
     # Before DST transition starts
@@ -723,13 +724,13 @@ async def test_event_start_trigger_dst(
         end=datetime.datetime(2023, 3, 12, 3, 45, tzinfo=tzinfo),
     )
     async with create_automation(hass, EVENT_START):
-        assert len(calls()) == 0
+        assert len(calls_data()) == 0
 
         await fake_schedule.fire_until(
             datetime.datetime.fromisoformat("2023-03-12 05:00:00-08:00"),
         )
 
-        assert calls() == [
+        assert calls_data() == [
             {
                 "platform": "calendar",
                 "event": EVENT_START,
@@ -750,7 +751,7 @@ async def test_event_start_trigger_dst(
 
 async def test_config_entry_reload(
     hass: HomeAssistant,
-    calls: Callable[[], list[dict[str, Any]]],
+    calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entities: list[MockCalendarEntity],
     setup_platform: None,
@@ -764,7 +765,7 @@ async def test_config_entry_reload(
     invalid after a config entry was reloaded.
     """
     async with create_automation(hass, EVENT_START):
-        assert len(calls()) == 0
+        assert len(calls_data()) == 0
 
         assert await hass.config_entries.async_reload(config_entry.entry_id)
 
@@ -779,7 +780,7 @@ async def test_config_entry_reload(
             datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
         )
 
-    assert calls() == [
+    assert calls_data() == [
         {
             "platform": "calendar",
             "event": EVENT_START,
@@ -790,7 +791,7 @@ async def test_config_entry_reload(
 
 async def test_config_entry_unload(
     hass: HomeAssistant,
-    calls: Callable[[], list[dict[str, Any]]],
+    calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entities: list[MockCalendarEntity],
     setup_platform: None,
@@ -799,7 +800,7 @@ async def test_config_entry_unload(
 ) -> None:
     """Test an automation that references a calendar entity that is unloaded."""
     async with create_automation(hass, EVENT_START):
-        assert len(calls()) == 0
+        assert len(calls_data()) == 0
 
         assert await hass.config_entries.async_unload(config_entry.entry_id)
 

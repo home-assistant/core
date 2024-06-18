@@ -11,6 +11,7 @@ from homeassistant.const import ATTR_RESTORED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import json_loads
 
 from . import start
@@ -18,9 +19,10 @@ from .entity import Entity
 from .event import async_track_time_interval
 from .frame import report
 from .json import JSONEncoder
+from .singleton import singleton
 from .storage import Store
 
-DATA_RESTORE_STATE = "restore_state"
+DATA_RESTORE_STATE: HassKey[RestoreStateData] = HassKey("restore_state")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,12 +75,11 @@ class StoredState:
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the stored state to be JSON serialized."""
-        result = {
+        return {
             "state": self.state.json_fragment,
             "extra_data": self.extra_data.as_dict() if self.extra_data else None,
             "last_seen": self.last_seen,
         }
-        return result
 
     @classmethod
     def from_dict(cls, json_dict: dict) -> Self:
@@ -97,15 +98,14 @@ class StoredState:
 
 async def async_load(hass: HomeAssistant) -> None:
     """Load the restore state task."""
-    restore_state = RestoreStateData(hass)
-    await restore_state.async_setup()
-    hass.data[DATA_RESTORE_STATE] = restore_state
+    await async_get(hass).async_setup()
 
 
 @callback
+@singleton(DATA_RESTORE_STATE)
 def async_get(hass: HomeAssistant) -> RestoreStateData:
     """Get the restore state data helper."""
-    return cast(RestoreStateData, hass.data[DATA_RESTORE_STATE])
+    return RestoreStateData(hass)
 
 
 class RestoreStateData:
@@ -237,7 +237,9 @@ class RestoreStateData:
         # Dump the initial states now. This helps minimize the risk of having
         # old states loaded by overwriting the last states once Home Assistant
         # has started and the old states have been read.
-        self.hass.async_create_task(_async_dump_states(), "RestoreStateData dump")
+        self.hass.async_create_task_internal(
+            _async_dump_states(), "RestoreStateData dump"
+        )
 
         # Dump states periodically
         cancel_interval = async_track_time_interval(
@@ -253,7 +255,7 @@ class RestoreStateData:
 
         # Dump states when stopping hass
         self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _async_dump_states_at_stop, run_immediately=True
+            EVENT_HOMEASSISTANT_STOP, _async_dump_states_at_stop
         )
 
     @callback
@@ -279,7 +281,7 @@ class RestoreStateData:
                 state, extra_data, dt_util.utcnow()
             )
 
-        self.entities.pop(entity_id)
+        del self.entities[entity_id]
 
 
 class RestoreEntity(Entity):

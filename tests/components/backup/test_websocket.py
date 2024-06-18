@@ -120,7 +120,6 @@ async def test_backup_end(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
-    request: pytest.FixtureRequest,
     sync_access_token_proxy: str,
     *,
     access_token_fixture_name: str,

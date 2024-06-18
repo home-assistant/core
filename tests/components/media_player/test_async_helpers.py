@@ -111,7 +111,7 @@ class DescrMediaPlayer(SimpleMediaPlayer):
 
 
 @pytest.fixture(params=[ExtendedMediaPlayer, SimpleMediaPlayer])
-def player(hass, request):
+def player(hass: HomeAssistant, request: pytest.FixtureRequest) -> mp.MediaPlayerEntity:
     """Return a media player."""
     return request.param(hass)
 

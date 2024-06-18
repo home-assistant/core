@@ -15,11 +15,10 @@ from tessie_api import (
 )
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import TessieConfigEntry
 from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
@@ -47,14 +46,16 @@ DESCRIPTIONS: tuple[TessieButtonEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TessieConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Tessie Button platform from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     async_add_entities(
-        TessieButtonEntity(vehicle.state_coordinator, description)
-        for vehicle in data
+        TessieButtonEntity(vehicle, description)
+        for vehicle in data.vehicles
         for description in DESCRIPTIONS
     )
 

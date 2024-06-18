@@ -81,7 +81,7 @@ async def async_exec(*args, display=False):
         raise
 
     if not display:
-        # Readin stdout into log
+        # Reading stdout into log
         stdout, _ = await proc.communicate()
     else:
         # read child's stdout/stderr concurrently (capture and display)

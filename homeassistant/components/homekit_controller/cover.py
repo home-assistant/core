@@ -212,13 +212,15 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
         )
 
     @property
-    def current_cover_tilt_position(self) -> int:
+    def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt."""
         tilt_position = self.service.value(CharacteristicsTypes.VERTICAL_TILT_CURRENT)
         if not tilt_position:
             tilt_position = self.service.value(
                 CharacteristicsTypes.HORIZONTAL_TILT_CURRENT
             )
+        if tilt_position is None:
+            return None
         # Recalculate to convert from arcdegree scale to percentage scale.
         if self.is_vertical_tilt:
             scale = 0.9

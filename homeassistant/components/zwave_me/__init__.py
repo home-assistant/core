@@ -63,8 +63,7 @@ class ZWaveMeController:
 
     async def async_establish_connection(self):
         """Get connection status."""
-        is_connected = await self.zwave_api.get_connection()
-        return is_connected
+        return await self.zwave_api.get_connection()
 
     def add_device(self, device: ZWaveMeData) -> None:
         """Send signal to create device."""

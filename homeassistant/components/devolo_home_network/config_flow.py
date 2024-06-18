@@ -63,7 +63,7 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except DeviceNotFound:
             errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -114,10 +114,11 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, data: Mapping[str, Any]) -> ConfigFlowResult:
         """Handle reauthentication."""
-        self.context[CONF_HOST] = data[CONF_IP_ADDRESS]
-        self.context["title_placeholders"][PRODUCT] = self.hass.data[DOMAIN][
-            self.context["entry_id"]
-        ]["device"].product
+        if entry := self.hass.config_entries.async_get_entry(self.context["entry_id"]):
+            self.context[CONF_HOST] = data[CONF_IP_ADDRESS]
+            self.context["title_placeholders"][PRODUCT] = (
+                entry.runtime_data.device.product
+            )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -139,11 +140,4 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_IP_ADDRESS: self.context[CONF_HOST],
             CONF_PASSWORD: user_input[CONF_PASSWORD],
         }
-        self.hass.config_entries.async_update_entry(
-            reauth_entry,
-            data=data,
-        )
-        self.hass.async_create_task(
-            self.hass.config_entries.async_reload(reauth_entry.entry_id)
-        )
-        return self.async_abort(reason="reauth_successful")
+        return self.async_update_reload_and_abort(reauth_entry, data=data)

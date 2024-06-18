@@ -3,7 +3,7 @@
 from contextlib import contextmanager
 from unittest.mock import patch
 
-from aiooncue import OncueDevice, OncueSensor
+from aiooncue import LoginFailedException, OncueDevice, OncueSensor
 
 MOCK_ASYNC_FETCH_ALL = {
     "123456": OncueDevice(
@@ -856,6 +856,24 @@ def _patch_login_and_data_unavailable_device():
             patch(
                 "homeassistant.components.oncue.Oncue.async_fetch_all",
                 return_value=MOCK_ASYNC_FETCH_ALL_UNAVAILABLE_DEVICE,
+            ),
+        ):
+            yield
+
+    return _patcher()
+
+
+def _patch_login_and_data_auth_failure():
+    @contextmanager
+    def _patcher():
+        with (
+            patch(
+                "homeassistant.components.oncue.Oncue.async_login",
+                side_effect=LoginFailedException,
+            ),
+            patch(
+                "homeassistant.components.oncue.Oncue.async_fetch_all",
+                side_effect=LoginFailedException,
             ),
         ):
             yield

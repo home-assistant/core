@@ -262,23 +262,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Shutdown event."""
         await cloud.stop()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _shutdown, run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
     _remote_handle_prefs_updated(cloud)
-
-    async def _service_handler(service: ServiceCall) -> None:
-        """Handle service for cloud."""
-        if service.service == SERVICE_REMOTE_CONNECT:
-            await prefs.async_update(remote_enabled=True)
-        elif service.service == SERVICE_REMOTE_DISCONNECT:
-            await prefs.async_update(remote_enabled=False)
-
-    async_register_admin_service(hass, DOMAIN, SERVICE_REMOTE_CONNECT, _service_handler)
-    async_register_admin_service(
-        hass, DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler
-    )
+    _setup_services(hass, prefs)
 
     async def async_startup_repairs(_: datetime) -> None:
         """Create repair issues after startup."""
@@ -396,6 +383,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    return unload_ok
+
+@callback
+def _setup_services(hass: HomeAssistant, prefs: CloudPreferences) -> None:
+    """Set up services for cloud component."""
+
+    async def _service_handler(service: ServiceCall) -> None:
+        """Handle service for cloud."""
+        if service.service == SERVICE_REMOTE_CONNECT:
+            await prefs.async_update(remote_enabled=True)
+        elif service.service == SERVICE_REMOTE_DISCONNECT:
+            await prefs.async_update(remote_enabled=False)
+
+    async_register_admin_service(hass, DOMAIN, SERVICE_REMOTE_CONNECT, _service_handler)
+    async_register_admin_service(
+        hass, DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler
+    )

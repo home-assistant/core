@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 import logging
 from typing import Any
+
+from typing_extensions import Generator
 
 from homeassistant.components import (
     button,
@@ -260,7 +261,7 @@ class AlexaCapability:
 
         return result
 
-    def serialize_properties(self) -> Generator[dict[str, Any], None, None]:
+    def serialize_properties(self) -> Generator[dict[str, Any]]:
         """Return properties serialized for an API response."""
         for prop in self.properties_supported():
             prop_name = prop["name"]
@@ -268,7 +269,7 @@ class AlexaCapability:
                 prop_value = self.get_property(prop_name)
             except UnsupportedProperty:
                 raise
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception(
                     "Unexpected error getting %s.%s property from %s",
                     self.name(),
@@ -300,6 +301,10 @@ class Alexa(AlexaCapability):
     The API suggests you should explicitly include this interface.
 
     https://developer.amazon.com/docs/device-apis/alexa-interface.html
+
+    To compare current supported locales in Home Assistant
+    with Alexa supported locales, run the following script:
+    python -m script.alexa_locales
     """
 
     supported_locales = {
@@ -1764,10 +1769,7 @@ class AlexaRangeController(AlexaCapability):
             speed_list = self.entity.attributes.get(vacuum.ATTR_FAN_SPEED_LIST)
             speed = self.entity.attributes.get(vacuum.ATTR_FAN_SPEED)
             if speed_list is not None and speed is not None:
-                speed_index = next(
-                    (i for i, v in enumerate(speed_list) if v == speed), None
-                )
-                return speed_index
+                return next((i for i, v in enumerate(speed_list) if v == speed), None)
 
         # Valve Position
         if self.instance == f"{valve.DOMAIN}.{valve.ATTR_POSITION}":

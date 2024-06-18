@@ -2,9 +2,8 @@
 
 from typing import Any
 
-from homeassistant import config_entries
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_MAC
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util import slugify
@@ -13,7 +12,7 @@ from .const import DOMAIN
 from .schemas import SCHEMA_MAC
 
 
-class EQ3ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class EQ3ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for eQ-3 Bluetooth Smart thermostats."""
 
     def __init__(self) -> None:

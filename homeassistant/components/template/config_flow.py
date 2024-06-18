@@ -130,7 +130,7 @@ def _validate_unit(options: dict[str, Any]) -> None:
         and (unit := options.get(CONF_UNIT_OF_MEASUREMENT)) not in units
     ):
         sorted_units = sorted(
-            [f"'{str(unit)}'" if unit else "no unit of measurement" for unit in units],
+            [f"'{unit!s}'" if unit else "no unit of measurement" for unit in units],
             key=str.casefold,
         )
         if len(sorted_units) == 1:
@@ -153,7 +153,7 @@ def _validate_state_class(options: dict[str, Any]) -> None:
         and state_class not in state_classes
     ):
         sorted_state_classes = sorted(
-            [f"'{str(state_class)}'" for state_class in state_classes],
+            [f"'{state_class!s}'" for state_class in state_classes],
             key=str.casefold,
         )
         if len(sorted_state_classes) == 0:
@@ -344,7 +344,7 @@ def ws_start_preview(
         connection.send_message(
             {
                 "id": msg["id"],
-                "type": websocket_api.const.TYPE_RESULT,
+                "type": websocket_api.TYPE_RESULT,
                 "success": False,
                 "error": {"code": "invalid_user_input", "message": errors},
             }

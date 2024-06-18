@@ -158,10 +158,8 @@ class HassIOView(HomeAssistantView):
                 if path == "backups/new/upload":
                     # We need to reuse the full content type that includes the boundary
                     if TYPE_CHECKING:
-                        # pylint: disable-next=protected-access
-                        assert isinstance(request._stored_content_type, str)
-                    # pylint: disable-next=protected-access
-                    headers[CONTENT_TYPE] = request._stored_content_type
+                        assert isinstance(request._stored_content_type, str)  # noqa: SLF001
+                    headers[CONTENT_TYPE] = request._stored_content_type  # noqa: SLF001
 
         try:
             client = await self._websession.request(

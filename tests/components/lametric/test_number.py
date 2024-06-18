@@ -150,7 +150,6 @@ async def test_number_error(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("number.frenck_s_lametric_volume")
     assert state
@@ -180,7 +179,6 @@ async def test_number_connection_error(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("number.frenck_s_lametric_volume")
     assert state

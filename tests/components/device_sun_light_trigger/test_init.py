@@ -22,6 +22,7 @@ from homeassistant.const import (
     STATE_NOT_HOME,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -107,9 +108,8 @@ async def test_lights_on_when_sun_sets(
     )
 
 
-async def test_lights_turn_off_when_everyone_leaves(
-    hass: HomeAssistant, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_lights_turn_off_when_everyone_leaves(hass: HomeAssistant) -> None:
     """Test lights turn off when everyone leaves the house."""
     assert await async_setup_component(
         hass, "light", {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -150,10 +150,22 @@ async def test_lights_turn_on_when_coming_home_after_sun_set(
         hass, device_sun_light_trigger.DOMAIN, {device_sun_light_trigger.DOMAIN: {}}
     )
 
-    hass.states.async_set(f"{DOMAIN}.device_2", STATE_HOME)
-
+    hass.states.async_set(f"{DOMAIN}.device_2", STATE_UNKNOWN)
     await hass.async_block_till_done()
+    assert all(
+        hass.states.get(ent_id).state == STATE_OFF
+        for ent_id in hass.states.async_entity_ids("light")
+    )
 
+    hass.states.async_set(f"{DOMAIN}.device_2", STATE_NOT_HOME)
+    await hass.async_block_till_done()
+    assert all(
+        hass.states.get(ent_id).state == STATE_OFF
+        for ent_id in hass.states.async_entity_ids("light")
+    )
+
+    hass.states.async_set(f"{DOMAIN}.device_2", STATE_HOME)
+    await hass.async_block_till_done()
     assert all(
         hass.states.get(ent_id).state == light.STATE_ON
         for ent_id in hass.states.async_entity_ids("light")

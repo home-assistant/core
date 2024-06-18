@@ -108,12 +108,10 @@ def create_v1_mock_binary_sensor_entity_entry(
         device_id=device_entry_id,
     )
     assert entity_entry.unique_id == entity_unique_id
-    binary_sensor_entity_id_key_mapping = {
+    return {
         "entity_id": entity_entry.entity_id,
         "key": BINARY_SENSOR_KEYS["v2"],
     }
-
-    return binary_sensor_entity_id_key_mapping
 
 
 async def test_setup_and_unload_entry(

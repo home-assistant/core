@@ -1,5 +1,6 @@
 """Test the UPB Control config flow."""
 
+from asyncio import TimeoutError
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from homeassistant import config_entries
@@ -34,11 +35,10 @@ async def valid_tcp_flow(hass, sync_complete=True, config_ok=True):
         flow = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        result = await hass.config_entries.flow.async_configure(
+        return await hass.config_entries.flow.async_configure(
             flow["flow_id"],
             {"protocol": "TCP", "address": "1.2.3.4", "file_path": "upb.upe"},
         )
-    return result
 
 
 async def test_full_upb_flow_with_serial_port(hass: HomeAssistant) -> None:
@@ -85,7 +85,6 @@ async def test_form_user_with_tcp_upb(hass: HomeAssistant) -> None:
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
-    from asyncio import TimeoutError
 
     with patch(
         "homeassistant.components.upb.config_flow.asyncio.timeout",

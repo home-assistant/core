@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable
 import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -12,6 +12,7 @@ from pytradfri.command import Command
 from pytradfri.const import ATTR_FIRMWARE_VERSION, ATTR_GATEWAY_ID
 from pytradfri.device import Device
 from pytradfri.gateway import Gateway
+from typing_extensions import Generator
 
 from homeassistant.components.tradfri.const import DOMAIN
 
@@ -22,7 +23,7 @@ from tests.common import load_fixture
 
 
 @pytest.fixture
-def mock_entry_setup() -> Generator[AsyncMock, None, None]:
+def mock_entry_setup() -> Generator[AsyncMock]:
     """Mock entry setup."""
     with patch(f"{TRADFRI_PATH}.async_setup_entry") as mock_setup:
         mock_setup.return_value = True
@@ -76,7 +77,7 @@ def mock_api_fixture(
 @pytest.fixture(autouse=True)
 def mock_api_factory(
     mock_api: Callable[[Command | list[Command], float | None], Any | None],
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Mock pytradfri api factory."""
     with patch(f"{TRADFRI_PATH}.APIFactory", autospec=True) as factory_class:
         factory = factory_class.return_value
@@ -96,13 +97,13 @@ def device(
     return device
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def air_purifier() -> str:
     """Return an air purifier response."""
     return load_fixture("air_purifier.json", DOMAIN)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def blind() -> str:
     """Return a blind response."""
     return load_fixture("blind.json", DOMAIN)

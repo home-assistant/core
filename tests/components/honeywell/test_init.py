@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, create_autospec, patch
 
+from aiohttp.client_exceptions import ClientConnectionError
 import aiosomecomfort
 import pytest
 
@@ -30,7 +31,7 @@ async def test_setup_entry(hass: HomeAssistant, config_entry: MockConfigEntry) -
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
     assert (
-        hass.states.async_entity_ids_count() == 3
+        hass.states.async_entity_ids_count() == 4
     )  # 1 climate entity; 2 sensor entities
 
 
@@ -63,8 +64,8 @@ async def test_setup_multiple_thermostats(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
     assert (
-        hass.states.async_entity_ids_count() == 6
-    )  # 2 climate entities; 4 sensor entities
+        hass.states.async_entity_ids_count() == 8
+    )  # 2 climate entities; 4 sensor entities; 2 switch entities
 
 
 async def test_setup_multiple_thermostats_with_same_deviceid(
@@ -84,8 +85,8 @@ async def test_setup_multiple_thermostats_with_same_deviceid(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
     assert (
-        hass.states.async_entity_ids_count() == 3
-    )  # 1 climate entity; 2 sensor entities
+        hass.states.async_entity_ids_count() == 4
+    )  # 1 climate entity; 2 sensor entities; 1 switch enitiy
     assert "Platform honeywell does not generate unique IDs" not in caplog.text
 
 
@@ -120,11 +121,23 @@ async def test_login_error(
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
+@pytest.mark.parametrize(
+    "the_error",
+    [
+        aiosomecomfort.ConnectionError,
+        aiosomecomfort.device.ConnectionTimeout,
+        aiosomecomfort.device.SomeComfortError,
+        ClientConnectionError,
+    ],
+)
 async def test_connection_error(
-    hass: HomeAssistant, client: MagicMock, config_entry: MagicMock
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MagicMock,
+    the_error: Exception,
 ) -> None:
     """Test Connection errors from API."""
-    client.login.side_effect = aiosomecomfort.ConnectionError
+    client.login.side_effect = the_error
     await init_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -171,7 +184,7 @@ async def test_remove_stale_device(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
-    assert hass.states.async_entity_ids_count() == 6
+    assert hass.states.async_entity_ids_count() == 8
 
     device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
@@ -209,8 +222,8 @@ async def test_remove_stale_device(
     assert config_entry.state is ConfigEntryState.LOADED
 
     assert (
-        hass.states.async_entity_ids_count() == 3
-    )  # 1 climate entities; 2 sensor entities
+        hass.states.async_entity_ids_count() == 4
+    )  # 1 climate entities; 2 sensor entities; 1 switch entity
 
     device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id

@@ -39,6 +39,7 @@ from .const import (
     CONF_CUSTOMIZE,
     CONF_CUSTOMIZE_DOMAIN,
     CONF_CUSTOMIZE_GLOB,
+    CONF_DEBUG,
     CONF_ELEVATION,
     CONF_EXTERNAL_URL,
     CONF_ID,
@@ -51,6 +52,7 @@ from .const import (
     CONF_NAME,
     CONF_PACKAGES,
     CONF_PLATFORM,
+    CONF_RADIUS,
     CONF_TEMPERATURE_UNIT,
     CONF_TIME_ZONE,
     CONF_TYPE,
@@ -68,6 +70,7 @@ from .helpers.typing import ConfigType
 from .loader import ComponentProtocol, Integration, IntegrationNotFound
 from .requirements import RequirementsNotFound, async_get_integration_with_requirements
 from .util.async_ import create_eager_task
+from .util.hass_dict import HassKey
 from .util.package import is_docker_env
 from .util.unit_system import get_unit_system, validate_unit_system
 from .util.yaml import SECRET_YAML, Secrets, YamlTypeError, load_yaml_dict
@@ -80,7 +83,7 @@ RE_ASCII = re.compile(r"\033\[[^m]*m")
 YAML_CONFIG_FILE = "configuration.yaml"
 VERSION_FILE = ".HA_VERSION"
 CONFIG_DIR_NAME = ".homeassistant"
-DATA_CUSTOMIZE = "hass_customize"
+DATA_CUSTOMIZE: HassKey[EntityValues] = HassKey("hass_customize")
 
 AUTOMATION_CONFIG_PATH = "automations.yaml"
 SCRIPT_CONFIG_PATH = "scripts.yaml"
@@ -329,8 +332,7 @@ def _validate_currency(data: Any) -> Any:
         return cv.currency(data)
     except vol.InInvalid:
         with suppress(vol.InInvalid):
-            currency = cv.historic_currency(data)
-            return currency
+            return cv.historic_currency(data)
         raise
 
 
@@ -341,6 +343,7 @@ CORE_CONFIG_SCHEMA = vol.All(
             CONF_LATITUDE: cv.latitude,
             CONF_LONGITUDE: cv.longitude,
             CONF_ELEVATION: vol.Coerce(int),
+            CONF_RADIUS: cv.positive_int,
             vol.Remove(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
             CONF_UNIT_SYSTEM: validate_unit_system,
             CONF_TIME_ZONE: cv.time_zone,
@@ -392,6 +395,7 @@ CORE_CONFIG_SCHEMA = vol.All(
             vol.Optional(CONF_CURRENCY): _validate_currency,
             vol.Optional(CONF_COUNTRY): cv.country,
             vol.Optional(CONF_LANGUAGE): cv.language,
+            vol.Optional(CONF_DEBUG): cv.boolean,
         }
     ),
     _filter_bad_internal_external_urls,
@@ -880,6 +884,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             CONF_CURRENCY,
             CONF_COUNTRY,
             CONF_LANGUAGE,
+            CONF_RADIUS,
         )
     ):
         hac.config_source = ConfigSource.YAML
@@ -896,16 +901,20 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
         (CONF_CURRENCY, "currency"),
         (CONF_COUNTRY, "country"),
         (CONF_LANGUAGE, "language"),
+        (CONF_RADIUS, "radius"),
     ):
         if key in config:
             setattr(hac, attr, config[key])
+
+    if config.get(CONF_DEBUG):
+        hac.debug = True
 
     _raise_issue_if_legacy_templates(hass, config.get(CONF_LEGACY_TEMPLATES))
     _raise_issue_if_historic_currency(hass, hass.config.currency)
     _raise_issue_if_no_country(hass, hass.config.country)
 
     if CONF_TIME_ZONE in config:
-        hac.set_time_zone(config[CONF_TIME_ZONE])
+        await hac.async_set_time_zone(config[CONF_TIME_ZONE])
 
     if CONF_MEDIA_DIRS not in config:
         if is_docker_env():
@@ -991,7 +1000,7 @@ def _identify_config_schema(module: ComponentProtocol) -> str | None:
         key = next(k for k in schema if k == module.DOMAIN)
     except (TypeError, AttributeError, StopIteration):
         return None
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Unexpected error identifying config schema")
         return None
 
@@ -1074,7 +1083,7 @@ async def merge_packages_config(
                 pack_name,
                 None,
                 config,
-                f"Invalid package definition '{pack_name}': {str(exc)}. Package "
+                f"Invalid package definition '{pack_name}': {exc!s}. Package "
                 f"will not be initialized",
             )
             invalid_packages.append(pack_name)
@@ -1102,7 +1111,7 @@ async def merge_packages_config(
                     pack_name,
                     comp_name,
                     config,
-                    f"Integration {comp_name} caused error: {str(exc)}",
+                    f"Integration {comp_name} caused error: {exc!s}",
                 )
                 continue
             except INTEGRATION_LOAD_EXCEPTIONS as exc:
@@ -1461,7 +1470,7 @@ async def _async_load_and_validate_platform_integration(
             p_integration.integration.documentation,
         )
         config_exceptions.append(exc_info)
-    except Exception as exc:  # pylint: disable=broad-except
+    except Exception as exc:  # noqa: BLE001
         exc_info = ConfigExceptionInfo(
             exc,
             ConfigErrorTranslationKey.PLATFORM_SCHEMA_VALIDATOR_ERR,
@@ -1545,7 +1554,7 @@ async def async_process_component_config(
             )
             config_exceptions.append(exc_info)
             return IntegrationConfigInfo(None, config_exceptions)
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception as exc:  # noqa: BLE001
             exc_info = ConfigExceptionInfo(
                 exc,
                 ConfigErrorTranslationKey.CONFIG_VALIDATOR_UNKNOWN_ERR,
@@ -1570,7 +1579,7 @@ async def async_process_component_config(
             )
             config_exceptions.append(exc_info)
             return IntegrationConfigInfo(None, config_exceptions)
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception as exc:  # noqa: BLE001
             exc_info = ConfigExceptionInfo(
                 exc,
                 ConfigErrorTranslationKey.CONFIG_SCHEMA_UNKNOWN_ERR,
@@ -1605,7 +1614,7 @@ async def async_process_component_config(
             )
             config_exceptions.append(exc_info)
             continue
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception as exc:  # noqa: BLE001
             exc_info = ConfigExceptionInfo(
                 exc,
                 ConfigErrorTranslationKey.PLATFORM_SCHEMA_VALIDATOR_ERR,
@@ -1668,7 +1677,9 @@ async def async_process_component_config(
             validated_config
             for validated_config in await asyncio.gather(
                 *(
-                    create_eager_task(async_load_and_validate(p_integration))
+                    create_eager_task(
+                        async_load_and_validate(p_integration), loop=hass.loop
+                    )
                     for p_integration in platform_integrations_to_load
                 )
             )

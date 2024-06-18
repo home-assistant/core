@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 import copy
 from dataclasses import dataclass
 import logging
@@ -167,8 +167,7 @@ class SensorManager:
                 if adapter.flow_type is None:
                     self._process_sensor_data(
                         adapter,
-                        # Opting out of the type complexity because can't get it to work
-                        energy_source,  # type: ignore[arg-type]
+                        energy_source,
                         to_add,
                         to_remove,
                     )
@@ -177,8 +176,7 @@ class SensorManager:
                 for flow in energy_source[adapter.flow_type]:  # type: ignore[typeddict-item]
                     self._process_sensor_data(
                         adapter,
-                        # Opting out of the type complexity because can't get it to work
-                        flow,  # type: ignore[arg-type]
+                        flow,
                         to_add,
                         to_remove,
                     )
@@ -189,7 +187,7 @@ class SensorManager:
     def _process_sensor_data(
         self,
         adapter: SourceAdapter,
-        config: dict,
+        config: Mapping[str, Any],
         to_add: list[EnergyCostSensor],
         to_remove: dict[tuple[str, str | None, str], EnergyCostSensor],
     ) -> None:
@@ -241,7 +239,7 @@ class EnergyCostSensor(SensorEntity):
     def __init__(
         self,
         adapter: SourceAdapter,
-        config: dict,
+        config: Mapping[str, Any],
     ) -> None:
         """Initialize the sensor."""
         super().__init__()
@@ -456,7 +454,7 @@ class EnergyCostSensor(SensorEntity):
         await super().async_will_remove_from_hass()
 
     @callback
-    def update_config(self, config: dict) -> None:
+    def update_config(self, config: Mapping[str, Any]) -> None:
         """Update the config."""
         self._config = config
 

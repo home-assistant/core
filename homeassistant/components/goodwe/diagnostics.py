@@ -18,7 +18,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     inverter: Inverter = hass.data[DOMAIN][config_entry.entry_id][KEY_INVERTER]
 
-    diagnostics_data = {
+    return {
         "config_entry": config_entry.as_dict(),
         "inverter": {
             "model_name": inverter.model_name,
@@ -32,5 +32,3 @@ async def async_get_config_entry_diagnostics(
             "arm_svn_version": inverter.arm_svn_version,
         },
     }
-
-    return diagnostics_data

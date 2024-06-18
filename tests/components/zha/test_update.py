@@ -229,7 +229,7 @@ def make_packet(zigpy_device, cluster, cmd_name: str, **kwargs):
         kwargs=kwargs,
     )
 
-    ota_packet = t.ZigbeePacket(
+    return t.ZigbeePacket(
         src=t.AddrModeAddress(addr_mode=t.AddrMode.NWK, address=zigpy_device.nwk),
         src_ep=1,
         dst=t.AddrModeAddress(addr_mode=t.AddrMode.NWK, address=0x0000),
@@ -241,8 +241,6 @@ def make_packet(zigpy_device, cluster, cmd_name: str, **kwargs):
         lqi=255,
         rssi=-30,
     )
-
-    return ota_packet
 
 
 @patch("zigpy.device.AFTER_OTA_ATTR_READ_DELAY", 0.01)
