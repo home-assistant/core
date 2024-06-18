@@ -26,8 +26,9 @@ async def async_setup_entry(
     sense_monitor_id = config_entry.runtime_data.data.sense_monitor_id
 
     sense_devices = config_entry.runtime_data.discovered
+    device_data = config_entry.runtime_data.device_data
     devices = [
-        SenseDevice(config_entry.runtime_data.device_data, device, sense_monitor_id)
+        SenseDevice(device_data, device, sense_monitor_id)
         for device in sense_devices
         if device["tags"]["DeviceListAllowed"] == "true"
     ]

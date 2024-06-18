@@ -55,7 +55,7 @@ class SenseDevicesData:
         return self._data_by_device.get(sense_device_id)
 
 
-@dataclass
+@dataclass(kw_only=True, slots=True)
 class SenseData:
     """Sense data type."""
 
