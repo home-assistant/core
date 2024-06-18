@@ -371,8 +371,7 @@ class Group(Entity):
             domain,
             self.entity_id,
         )
-        domains = {split_entity_id(entity_id)[0] for entity_id in self.tracking}
-        if domain == DOMAIN or domain in domains:
+        if self.single_state_type_key in (None, SingleStateType(STATE_ON, STATE_OFF)):
             self.async_update_tracked_entity_ids(set(self.tracking))
 
     async def async_added_to_hass(self) -> None:
