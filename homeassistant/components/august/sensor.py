@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import Any, Generic, TypeVar, cast
 
 from yalexs.activity import ActivityType, LockOperationActivity
@@ -44,8 +43,6 @@ from .const import (
     OPERATION_METHOD_TAG,
 )
 from .entity import AugustEntityMixin
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def _retrieve_device_battery_state(detail: LockDetail) -> int:
@@ -98,53 +95,28 @@ async def async_setup_entry(
     """Set up the August sensors."""
     data = config_entry.runtime_data
     entities: list[SensorEntity] = []
-    operation_sensors = []
-    batteries: dict[str, list[Doorbell | Lock]] = {
-        "device_battery": [],
-        "linked_keypad_battery": [],
-    }
-    for device in data.doorbells:
-        batteries["device_battery"].append(device)
+
     for device in data.locks:
-        batteries["device_battery"].append(device)
-        batteries["linked_keypad_battery"].append(device)
-        operation_sensors.append(device)
-
-    for device in batteries["device_battery"]:
         detail = data.get_device_detail(device.device_id)
-        if detail is None or SENSOR_TYPE_DEVICE_BATTERY.value_fn(detail) is None:
-            _LOGGER.debug(
-                "Not adding battery sensor for %s because it is not present",
-                device.device_name,
+        entities.append(AugustOperatorSensor(data, device))
+        if SENSOR_TYPE_DEVICE_BATTERY.value_fn(detail):
+            entities.append(
+                AugustBatterySensor[LockDetail](
+                    data, device, SENSOR_TYPE_DEVICE_BATTERY
+                )
             )
-            continue
-        _LOGGER.debug(
-            "Adding battery sensor for %s",
-            device.device_name,
-        )
-        entities.append(
-            AugustBatterySensor[LockDetail](data, device, SENSOR_TYPE_DEVICE_BATTERY)
-        )
-
-    for device in batteries["linked_keypad_battery"]:
-        detail = data.get_device_detail(device.device_id)
-
-        if detail.keypad is None:
-            _LOGGER.debug(
-                "Not adding keypad battery sensor for %s because it is not present",
-                device.device_name,
+        if keypad := detail.keypad:
+            entities.append(
+                AugustBatterySensor[KeypadDetail](
+                    data, keypad, SENSOR_TYPE_KEYPAD_BATTERY
+                )
             )
-            continue
-        _LOGGER.debug(
-            "Adding keypad battery sensor for %s",
-            device.device_name,
-        )
-        keypad_battery_sensor = AugustBatterySensor[KeypadDetail](
-            data, detail.keypad, SENSOR_TYPE_KEYPAD_BATTERY
-        )
-        entities.append(keypad_battery_sensor)
 
-    entities.extend(AugustOperatorSensor(data, device) for device in operation_sensors)
+    entities.extend(
+        AugustBatterySensor[Doorbell](data, device, SENSOR_TYPE_DEVICE_BATTERY)
+        for device in data.doorbells
+        if SENSOR_TYPE_DEVICE_BATTERY.value_fn(data.get_device_detail(device.device_id))
+    )
 
     async_add_entities(entities)
 
