@@ -2,6 +2,7 @@
 
 from asyncio import AbstractEventLoop
 from http import HTTPStatus
+from pathlib import Path
 import re
 from typing import Any
 from unittest.mock import patch
@@ -787,3 +788,23 @@ async def test_get_icons_for_single_integration(
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {"resources": {"http": {}}}
+
+
+async def test_www_local_dir(
+    hass: HomeAssistant, tmp_path: Path, hass_client: ClientSessionGenerator
+) -> None:
+    """Test local www folder."""
+    hass.config.config_dir = str(tmp_path)
+    tmp_path_www = tmp_path / "www"
+    x_txt_file = tmp_path_www / "x.txt"
+
+    def _create_www_and_x_txt():
+        tmp_path_www.mkdir()
+        x_txt_file.write_text("any")
+
+    await hass.async_add_executor_job(_create_www_and_x_txt)
+
+    assert await async_setup_component(hass, "frontend", {})
+    client = await hass_client()
+    resp = await client.get("/local/x.txt")
+    assert resp.status == HTTPStatus.OK
