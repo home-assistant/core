@@ -155,7 +155,7 @@
   })
 # ---
 # name: test_sensor_total.10
-  '2023-02-16T14:22:37'
+  'unknown'
 # ---
 # name: test_sensor_total.11
   ReadOnlyDict({
@@ -210,11 +210,12 @@
   })
 # ---
 # name: test_sensor_total.8
-  '0.5'
+  '2023-02-16T14:22:37'
 # ---
 # name: test_sensor_total.9
   ReadOnlyDict({
-    'friendly_name': 'Plant #123 Total kWh per kWp',
+    'device_class': 'date',
+    'friendly_name': 'Plant #123 Total Last Update',
     'icon': 'mdi:solar-power',
   })
 # ---

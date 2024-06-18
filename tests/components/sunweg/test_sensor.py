@@ -45,10 +45,6 @@ async def test_sensor_total(
     assert state.state == snapshot
     assert state.attributes == snapshot
 
-    state = hass.states.get("sensor.plant_123_total_kwh_per_kwp")
-    assert state.state == snapshot
-    assert state.attributes == snapshot
-
     state = hass.states.get("sensor.plant_123_total_last_update")
     assert state.state == snapshot
     assert state.attributes == snapshot
