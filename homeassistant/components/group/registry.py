@@ -16,6 +16,8 @@ from homeassistant.helpers.integration_platform import (
 
 from .const import DOMAIN, REG_KEY
 
+EXCLUDED_DOMAINS = {"air_quality", "sensor", "weather"}
+
 
 async def async_setup(hass: HomeAssistant) -> None:
     """Set up the Group integration registry of integration platforms."""
@@ -61,7 +63,7 @@ class GroupIntegrationRegistry:
         self.on_off_mapping: dict[str, str] = {STATE_ON: STATE_OFF}
         self.off_on_mapping: dict[str, str] = {STATE_OFF: STATE_ON}
         self.on_states_by_domain: dict[str, set[str]] = {}
-        self.exclude_domains: set[str] = set()
+        self.exclude_domains: set[str] = EXCLUDED_DOMAINS
         self.state_group_mapping: dict[str, SingleStateType] = {}
 
     @callback
