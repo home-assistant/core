@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
@@ -35,29 +36,24 @@ class KnockiConfigFlow(ConfigFlow, domain=DOMAIN):
                 token_response = await client.login(
                     user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                 )
+                await self.async_set_unique_id(token_response.user_id)
+                self._abort_if_unique_id_configured()
+                client.token = token_response.token
+                await client.link()
+            except HomeAssistantError:
+                raise
             except KnockiConnectionError:
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
                 LOGGER.exception("Error logging into the Knocki API")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(token_response.user_id)
-                self._abort_if_unique_id_configured()
-                client.token = token_response.token
-                try:
-                    await client.link()
-                except KnockiConnectionError:
-                    errors["base"] = "cannot_connect"
-                except Exception:  # noqa: BLE001
-                    LOGGER.exception("Error logging into the Knocki API")
-                    errors["base"] = "unknown"
-                else:
-                    return self.async_create_entry(
-                        title=user_input[CONF_USERNAME],
-                        data={
-                            CONF_TOKEN: token_response.token,
-                        },
-                    )
+                return self.async_create_entry(
+                    title=user_input[CONF_USERNAME],
+                    data={
+                        CONF_TOKEN: token_response.token,
+                    },
+                )
         return self.async_show_form(
             step_id="user",
             errors=errors,
