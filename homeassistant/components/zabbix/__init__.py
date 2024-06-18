@@ -97,13 +97,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def options_update_listener(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> None:
-    """Handle options update."""
-    # For future options handling with await hass.config_entries.async_reload(config_entry.entry_id)
-
-
 def event_to_metrics(
     event: Event,
     float_keys: set[str],
@@ -113,17 +106,16 @@ def event_to_metrics(
 ) -> list[ItemValue] | None:
     """Add an event to the outgoing Zabbix list."""
     metrics: list[ItemValue] = []
-    entity_id: str
     state = event.data.get("new_state")
     if state is None or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE):
         return None
-    entity_id = state.entity_id
+    entity_id: str = state.entity_id
     if not entities_filter(entity_id):
         return None
-    floats = {}
-    strings = {}
+    floats: dict[str, Any] = {}
+    strings: dict[str, Any] = {}
     try:
-        _state_as_value = float(state.state)
+        _state_as_value: float = float(state.state)
         floats[entity_id] = _state_as_value
     except ValueError:
         try:
@@ -156,24 +148,37 @@ def event_to_metrics(
             json.dumps(floats_discovery),
         )
         metrics.append(metric)
-    for key, value in floats.items():
-        metric = ItemValue(
-            publish_states_host, f"homeassistant.float[{str(key)[:230]}]", value
-        )
-        metrics.append(metric)
+    metrics.extend(
+        ItemValue(publish_states_host, f"homeassistant.float[{str(key)[:230]}]", value)
+        for key, value in floats.items()
+    )
 
     string_keys.update(strings)
 
     return metrics
 
 
+def _zabbix_api_login(
+    url: str, token: str | None, username: str | None, password: str | None
+) -> ZabbixAPI:
+    """Login to ZabbixAPI and check if authentication is ok."""
+    zapi: ZabbixAPI = ZabbixAPI(url=url)
+    if token:
+        zapi.login(
+            token=token,
+        )
+    else:
+        zapi.login(
+            user=username,
+            password=password,
+        )
+    zapi.check_auth()
+    return zapi
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Zabbix component from a ConfigEntry."""
-    zabbix_sender: AsyncSender
-    host: str
     filter_dict: dict[str, list[str]] = {}
-    hass_data: dict
-    instance: ZabbixThread
 
     hass.data.setdefault(DOMAIN, {})
     # Already configured from configuration.yaml. Not allow UI config.
@@ -181,18 +186,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return True
 
     # Continue with the new config format
-    hass_data = dict(entry.data)
-    # Registers update listener to update config entry when options are updated.
-    unsub_options_update_listener = entry.add_update_listener(options_update_listener)
-    # Store a reference to the unsubscribe function to cleanup if an entry is unloaded.
-    hass_data["unsub_options_update_listener"] = unsub_options_update_listener
-
-    hass.data[DOMAIN][entry.entry_id] = hass_data
+    hass.data[DOMAIN][entry.entry_id] = dict(entry.data)
     hass.data[DOMAIN][entry.entry_id][ENTRY_ID] = entry.entry_id
 
-    if hass_data.get(CONF_USE_SENDER, False):
-        host = urlparse(hass_data[CONF_URL]).hostname
-        port = urlparse(hass_data[CONF_URL]).port
+    if entry.data.get(CONF_USE_SENDER, False):
+        host: str = urlparse(entry.data[CONF_URL]).hostname
+        port: int = urlparse(entry.data[CONF_URL]).port
         if not port:
             port = DEFAULT_ZABBIX_SENDER_PORT
 
@@ -204,49 +203,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             CONF_EXCLUDE_ENTITY_GLOBS,
             CONF_EXCLUDE_ENTITIES,
         ):
-            if hass_data[INCLUDE_EXCLUDE_FILTER].get(filter_key) is not None:
-                filter_dict[filter_key] = hass_data[INCLUDE_EXCLUDE_FILTER].get(
+            if entry.data[INCLUDE_EXCLUDE_FILTER].get(filter_key) is not None:
+                filter_dict[filter_key] = entry.data[INCLUDE_EXCLUDE_FILTER].get(
                     filter_key
                 )
             else:
                 filter_dict[filter_key] = []
-        entities_filter = convert_filter(filter_dict)
+        entities_filter: EntityFilter = convert_filter(filter_dict)
 
-        zabbix_sender = await hass.async_add_executor_job(
+        zabbix_sender: AsyncSender = await hass.async_add_executor_job(
             lambda: Sender(server=host, port=port)
         )
 
         hass.data[DOMAIN][entry.entry_id][ZABBIX_SENDER] = zabbix_sender
         hass.data[DOMAIN][entry.entry_id][ENTITIES_FILTER] = entities_filter
-        instance = ZabbixThread(hass, entry.entry_id)
+        instance: ZabbixThread = ZabbixThread(hass, entry.entry_id)
         hass.data[DOMAIN][entry.entry_id][ZABBIX_THREAD_INSTANCE] = instance
         await hass.async_add_executor_job(instance.setup, hass)
-        _LOGGER.info(
+        _LOGGER.debug(
             "Started Zabbix thread for sharing events to zabbix_sender for config entry %s:",
             entry.entry_id,
         )
 
-    if hass_data.get(CONF_USE_API, False) and hass_data.get(CONF_USE_SENSORS, False):
+    if entry.data.get(CONF_USE_API, False) and entry.data.get(CONF_USE_SENSORS, False):
         # define Zabbix API for sensors
         try:
-            zapi = await hass.async_add_executor_job(
-                lambda: ZabbixAPI(url=hass_data[CONF_URL])
+            zapi: ZabbixAPI = await hass.async_add_executor_job(
+                _zabbix_api_login,
+                entry.data.get(CONF_URL, ""),
+                entry.data.get(CONF_TOKEN, None),
+                entry.data.get(CONF_USERNAME, None),
+                entry.data.get(CONF_PASSWORD, None),
             )
-            if hass_data[CONF_USE_TOKEN]:
-                await hass.async_add_executor_job(
-                    lambda: zapi.login(
-                        token=hass_data[CONF_TOKEN],
-                    )
-                )
-            else:
-                await hass.async_add_executor_job(
-                    lambda: zapi.login(
-                        user=hass_data[CONF_USERNAME],
-                        password=hass_data[CONF_PASSWORD],
-                    )
-                )
-            await hass.async_add_executor_job(zapi.check_auth)
-            _LOGGER.info("Connected to Zabbix API Version %s", zapi.api_version())
+            _LOGGER.debug("Connected to Zabbix API Version %s", zapi.api_version())
         except APIRequestError as login_exception:
             _LOGGER.error("Unable to login to the Zabbix API: %s", login_exception)
             hass.data[DOMAIN][entry.entry_id][ZAPI] = None
@@ -265,26 +254,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    instance: ZabbixThread
-    zapi: ZabbixAPI
 
     unload_ok = all(
         await asyncio.gather(
             *[hass.config_entries.async_forward_entry_unload(entry, "sensor")]
         )
     )
-    # Remove options_update_listener.
-    hass.data[DOMAIN][entry.entry_id]["unsub_options_update_listener"]()
 
     # Remove Zabbix thread if was running
     if entry.entry_id in hass.data[DOMAIN]:
-        instance = hass.data[DOMAIN][entry.entry_id][ZABBIX_THREAD_INSTANCE]
+        instance: ZabbixThread = hass.data[DOMAIN][entry.entry_id][
+            ZABBIX_THREAD_INSTANCE
+        ]
     if instance is not None:
         instance.thread_shutdown()
 
     # Logout from Zabbix is API with Username and password is used.
     if entry.entry_id in hass.data[DOMAIN]:
         if hass.data[DOMAIN][entry.entry_id].get(CONF_USE_TOKEN) is False:
+            zapi: ZabbixAPI
             if zapi := hass.data[DOMAIN][entry.entry_id].get(ZAPI, None):
                 await hass.async_add_executor_job(zapi.logout)
 
@@ -309,32 +297,23 @@ async def async_start_retry(msg: str, hass: HomeAssistant, config: ConfigType) -
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Zabbix component from yaml configuration for backward compatibility."""
-    conf: Any | None
-    protocol: str
-    url: str
-    username: str | None
-    password: str | None
-    publish_states_host: str | None
-    entities_filter: EntityFilter
-    zapi: ZabbixAPI
-    zabbix_sender: Sender
-    instance: ZabbixThread
 
     hass.data.setdefault(DOMAIN, {})
 
     # if no zabbix section in configuration.yaml just continue to setup_entry (new configuration via flow)
+    conf: Any | None
     if (conf := config.get(DOMAIN)) is None:
         hass.data[DOMAIN][NEW_CONFIG] = True
         return True
 
     conf = config[DOMAIN]
-    protocol = "https" if conf[CONF_SSL] else "http"
-    url = urljoin(f"{protocol}://{conf[CONF_HOST]}", conf[CONF_PATH])
-    username = cast(str, conf.get(CONF_USERNAME, ""))
-    password = cast(str, conf.get(CONF_PASSWORD, ""))
-    publish_states_host = cast(str, conf.get(CONF_PUBLISH_STATES_HOST, ""))
+    protocol: str = "https" if conf[CONF_SSL] else "http"
+    url: str = urljoin(f"{protocol}://{conf[CONF_HOST]}", conf[CONF_PATH])
+    username: str = cast(str, conf.get(CONF_USERNAME, ""))
+    password: str = cast(str, conf.get(CONF_PASSWORD, ""))
+    publish_states_host: str = cast(str, conf.get(CONF_PUBLISH_STATES_HOST, ""))
 
-    entities_filter = convert_include_exclude_filter(conf)
+    entities_filter: EntityFilter = convert_include_exclude_filter(conf)
 
     # If not zabbix sensors, then skip starting ZabbixAPI
     def zabbix_sensor_exists(platforms: list[dict]) -> bool:
@@ -347,15 +326,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             and hass.data[DOMAIN].get(ZAPI, None) is None
         ):
             try:
-                zapi = await hass.async_add_executor_job(lambda: ZabbixAPI(url=url))
-                await hass.async_add_executor_job(
-                    lambda: zapi.login(
-                        user=username,
-                        password=password,
-                    )
+                zapi: ZabbixAPI = await hass.async_add_executor_job(
+                    _zabbix_api_login, url, None, username, password
                 )
-                await hass.async_add_executor_job(zapi.check_auth)
-                _LOGGER.info("Connected to Zabbix API Version %s", zapi.api_version())
+                _LOGGER.debug("Connected to Zabbix API Version %s", zapi.api_version())
             except APIRequestError as login_exception:
                 _LOGGER.error("Unable to login to the Zabbix API: %s", login_exception)
                 zapi = None
@@ -375,14 +349,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         publish_states_host
         and hass.data[DOMAIN].get(ZABBIX_THREAD_INSTANCE, None) is None
     ):
-        zabbix_sender = await hass.async_add_executor_job(
+        zabbix_sender: Sender = await hass.async_add_executor_job(
             lambda: Sender(server=conf[CONF_HOST], port=DEFAULT_ZABBIX_SENDER_PORT)
         )
         hass.data[DOMAIN][ZABBIX_SENDER] = zabbix_sender
-        instance = ZabbixThread(hass)
+        instance: ZabbixThread = ZabbixThread(hass)
         hass.data[DOMAIN][ZABBIX_THREAD_INSTANCE] = instance
         await hass.async_add_executor_job(instance.setup, hass)
-        _LOGGER.info("Started Zabbix thread for sharing events to zabbix_sender")
+        _LOGGER.debug("Started Zabbix thread for sharing events to zabbix_sender")
 
     return True
 

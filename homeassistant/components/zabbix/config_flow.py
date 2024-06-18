@@ -112,59 +112,57 @@ STEP_PUBLISH_STATES_HOST_NO_API = vol.Schema(
 )
 
 
+def _create_template_job(zabbix_api: ZabbixAPI) -> str:
+    """Gathering several Zabbix API call for one executor job."""
+
+    # Create template as not existing
+    result: Any | None = zabbix_api.template.create(
+        host=DEFAULT_ZABBIX_TEMPLATE_NAME,
+        name=DEFAULT_ZABBIX_TEMPLATE_NAME,
+        groups={"groupid": 1},
+    )
+    assert isinstance(result, dict)
+    templateid: str = result["templateids"][0]
+    result = zabbix_api.discoveryrule.create(
+        name="Floats Discovery",
+        key="homeassistant.floats_discovery",
+        hostid=templateid,
+        type=2,
+        delay=0,
+    )
+    assert isinstance(result, dict)
+    ruleid: str = result["itemids"][0]
+    result = zabbix_api.itemprototype.create(
+        ruleid=ruleid,
+        hostid=templateid,
+        name="{#KEY}",
+        key="homeassistant.float[{#KEY}]",
+        type=2,
+        value_type=0,
+        delay=0,
+        history="1095d",
+        trends=0,
+        preprocessing=[{"type": 20, "params": "14400"}],
+    )
+    return templateid
+
+
 async def create_template(zabbix_api: ZabbixAPI, hass: HomeAssistant) -> str:
     """Try to create in Zabbix a hostname to be used to receive entities data with the linked template."""
 
-    result: Any | None
-    templateid: str
-    ruleid: str
-
     # Check if template already exists
     try:
-        result = await hass.async_add_executor_job(
+        result: Any | None = await hass.async_add_executor_job(
             lambda: zabbix_api.template.get(
                 output=["templateid", "name"],
                 filter={"host": DEFAULT_ZABBIX_TEMPLATE_NAME},
             )
         )
         assert isinstance(result, list)
-        templateid = result[0]["templateid"]
+        templateid: str = result[0]["templateid"]
     except (IndexError, KeyError):
         # Create template as not existing
-        result = await hass.async_add_executor_job(
-            lambda: zabbix_api.template.create(
-                host=DEFAULT_ZABBIX_TEMPLATE_NAME,
-                name=DEFAULT_ZABBIX_TEMPLATE_NAME,
-                groups={"groupid": 1},
-            ),
-        )
-        assert isinstance(result, dict)
-        templateid = result["templateids"][0]
-        result = await hass.async_add_executor_job(
-            lambda: zabbix_api.discoveryrule.create(
-                name="Floats Discovery",
-                key="homeassistant.floats_discovery",
-                hostid=templateid,
-                type=2,
-                delay=0,
-            ),
-        )
-        assert isinstance(result, dict)
-        ruleid = result["itemids"][0]
-        result = await hass.async_add_executor_job(
-            lambda: zabbix_api.itemprototype.create(
-                ruleid=ruleid,
-                hostid=templateid,
-                name="{#KEY}",
-                key="homeassistant.float[{#KEY}]",
-                type=2,
-                value_type=0,
-                delay=0,
-                history="1095d",
-                trends=0,
-                preprocessing=[{"type": 20, "params": "14400"}],
-            ),
-        )
+        templateid = await hass.async_add_executor_job(_create_template_job, zabbix_api)
 
     return templateid
 
@@ -177,19 +175,16 @@ async def create_hostname(
 ) -> str:
     """Try to create in Zabbix a hostname to be used to receive entities data with the linked template."""
 
-    result: Any | None
-    groupid: str
-
     # Check if template already exists
     try:
-        result = await hass.async_add_executor_job(
+        result: Any | None = await hass.async_add_executor_job(
             lambda: zabbix_api.hostgroup.get(
                 output=["groupid", "name"],
                 filter={"name": DEFAULT_ZABBIX_HOSTGROUP_NAME},
             )
         )
         assert isinstance(result, list)
-        groupid = result[0]["groupid"]
+        groupid: str = result[0]["groupid"]
     except (IndexError, KeyError):
         # No such SHost group - create.
         result = await hass.async_add_executor_job(
@@ -213,9 +208,7 @@ async def create_hostname(
 async def zabbix_api_login(hass: HomeAssistant, data: dict[str, Any]) -> ZabbixAPI:
     """Handle login to ZabbixAPI on each Config flow step."""
 
-    zabbix_api: ZabbixAPI
-
-    zabbix_api = await hass.async_add_executor_job(
+    zabbix_api: ZabbixAPI = await hass.async_add_executor_job(
         lambda: ZabbixAPI(url=data.get(CONF_URL))
     )
     if data.get(CONF_USE_TOKEN):
@@ -372,12 +365,9 @@ class ZabbixConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Ask for hostname configured in Zabbix to send Home Assistant entities states."""
         errors: dict[str, str] = {}
-        result: Any | None
-        def_publish_host: str
-        templateid: str
         skip_creation: bool = False
         description_placeholders: dict[str, str] = {"message": ""}
-        def_publish_host = DEFAULT_PUBLISH_STATES_HOST
+        def_publish_host: str = DEFAULT_PUBLISH_STATES_HOST
 
         assert isinstance(self.data, dict)
         if not self.data.get(CONF_USE_SENDER):
@@ -397,7 +387,7 @@ class ZabbixConfigFlow(ConfigFlow, domain=DOMAIN):
                 # Check if provided publish_states_host is already existing in Zabbix
                 if zabbix_api:
                     try:
-                        result = await self.hass.async_add_executor_job(
+                        result: Any | None = await self.hass.async_add_executor_job(
                             lambda: zabbix_api.host.get(
                                 output=["hostid", "host"],
                                 filter={
@@ -415,7 +405,9 @@ class ZabbixConfigFlow(ConfigFlow, domain=DOMAIN):
                         # No hostname exists in Zabbix
                         try:
                             # Create or usr existing one
-                            templateid = await create_template(zabbix_api, self.hass)
+                            templateid: str = await create_template(
+                                zabbix_api, self.hass
+                            )
                         except (
                             APIRequestError,
                             ProcessingError,
@@ -516,7 +508,6 @@ class ZabbixConfigFlow(ConfigFlow, domain=DOMAIN):
         """Ask for any include or exclude filters to be used when sending entities update to Zabbix."""
         errors: dict[str, str] = {}
         domains: list[str] = []
-        state: State
 
         assert isinstance(self.data, dict)
         if user_input is not None:
@@ -528,6 +519,7 @@ class ZabbixConfigFlow(ConfigFlow, domain=DOMAIN):
             # create a config entry
             return self.async_create_entry(title="Zabbix integration", data=self.data)
 
+        state: State
         for state in self.hass.states.async_all():
             if state.domain not in domains:
                 domains.append(state.domain)

@@ -56,16 +56,11 @@ async def async_zabbix_sensors(
 ) -> list[ZabbixTriggerCountSensor] | None:
     """Set up Zabbix sensors."""
     sensors: list[ZabbixTriggerCountSensor] = []
-    zabbix_sensor: SensorEntity
-    zapi: ZabbixAPI
-    name: str
-    individual: bool
-    hostids: list[str]
-    hostid: str
     configuration_url: str | None = None
 
     if entry_id is None:
         # this is from configuration.yaml
+        zapi: ZabbixAPI
         if not (zapi := hass.data[DOMAIN].get(ZAPI)):
             _LOGGER.error("Zabbix integration hasn't been loaded? zapi is None")
             return None
@@ -80,11 +75,13 @@ async def async_zabbix_sensors(
 
     # The following code seems overly complex. Need to think about this...
     if trigger_conf := config.get(CONF_SENSOR_TRIGGERS):
-        hostids = cast(list[str], trigger_conf.get(CONF_SENSOR_TRIGGERS_HOSTIDS, []))
-        individual = cast(
+        hostids: list[str] = cast(
+            list[str], trigger_conf.get(CONF_SENSOR_TRIGGERS_HOSTIDS, [])
+        )
+        individual: bool = cast(
             bool, trigger_conf.get(CONF_SENSOR_TRIGGERS_INDIVIDUAL, False)
         )
-        name = cast(
+        name: str = cast(
             str, trigger_conf.get(CONF_SENSOR_TRIGGERS_NAME, DEFAULT_TRIGGER_NAME)
         )
         if name is None or name == "":
@@ -248,14 +245,14 @@ class ZabbixTriggerCountSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Update the sensor."""
-        triggers: list
+
         _LOGGER.debug("Updating ZabbixTriggerCountSensor: %s", str(self._attr_name))
         try:
             if self.sensor_type in (
                 ZabbixTriggerCountSensorType.SINGLE_HOST_TYPE,
                 ZabbixTriggerCountSensorType.MULTIPLE_HOST_TYPE,
             ):
-                triggers = await self.hass.async_add_executor_job(
+                triggers: list = await self.hass.async_add_executor_job(
                     lambda: self.zapi.trigger.get(
                         hostids=self.hostids,
                         output="extend",
