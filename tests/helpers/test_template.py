@@ -17,6 +17,7 @@ import orjson
 import pytest
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.components import group
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
@@ -3989,6 +3990,33 @@ async def test_device_attr(
     )
     assert_result_info(info, [device_entry.id])
     assert info.rate_limit is None
+
+
+async def test_config_entry_attr(hass: HomeAssistant) -> None:
+    """Test config entry attr."""
+    info = {
+        "domain": "mock_light",
+        "title": "mock title",
+        "source": config_entries.SOURCE_BLUETOOTH,
+        "disabled_by": config_entries.ConfigEntryDisabler.USER,
+    }
+    config_entry = MockConfigEntry(**info)
+    config_entry.add_to_hass(hass)
+
+    info["state"] = config_entries.ConfigEntryState.NOT_LOADED
+
+    for key, value in info.items():
+        tpl = template.Template(
+            "{{ config_entry_attr('" f"{config_entry.entry_id}" "', '" f"{key}" "') }}",
+            hass,
+        )
+        assert tpl.async_render() == str(value)
+
+    with pytest.raises(TemplateError):
+        template.Template(
+            "{{ config_entry_attr('" f"{config_entry.entry_id}" "', 'invalid_key') }}",
+            hass,
+        ).async_render()
 
 
 async def test_issues(hass: HomeAssistant, issue_registry: ir.IssueRegistry) -> None:
