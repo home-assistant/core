@@ -15,22 +15,18 @@ class DreoEntity(Entity):
 
     def __init__(self, device, config_entry):
         """Initialize the coordinated Dreo Device."""
-        self._device = device
         self._config_entry = config_entry
         self._model = device.get("model")
         self._device_id = device.get("deviceSn")
-        self._unique_id = device.get("deviceSn")
-        self._mcuFirmwareVersion = device.get("mcuFirmwareVersion")
-        self._moduleFirmwareVersion = device.get("moduleFirmwareVersion")
-        self._attr_unique_id = self._unique_id
+        self._attr_unique_id = device.get("deviceSn")
         self._attr_name = device.get("deviceName")
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
             manufacturer="Dreo",
             model=self._model,
             name=self._attr_name,
-            sw_version=self._moduleFirmwareVersion,
-            hw_version=self._mcuFirmwareVersion
+            sw_version=device.get("moduleFirmwareVersion"),
+            hw_version=device.get("mcuFirmwareVersion")
         )
 
     def _try_command(self, mask_error, **kwargs):
