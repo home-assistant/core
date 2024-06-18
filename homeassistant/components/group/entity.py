@@ -18,12 +18,11 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.helpers import start
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import ATTR_AUTO, ATTR_ORDER, DOMAIN, GROUP_ORDER, REG_DISPATCHER, REG_KEY
+from .const import ATTR_AUTO, ATTR_ORDER, DOMAIN, GROUP_ORDER, REG_KEY
 from .registry import GroupIntegrationRegistry, SingleStateType
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -263,8 +262,7 @@ class Group(Entity):
         """Test if any member has an assumed state."""
         return self._assumed_state
 
-    @callback
-    def async_update_tracked_entity_ids(
+    async def async_update_tracked_entity_ids(
         self, entity_ids: Collection[str] | None
     ) -> None:
         """Update the member entity IDs.
@@ -367,26 +365,9 @@ class Group(Entity):
         self._state = None
         self._async_update_group_state()
 
-    @callback
-    def async_domain_registered(self, domain: str) -> None:
-        """Refresh after a new entity platform has been registered."""
-        _LOGGER.debug(
-            "Domain %s was registered, refreshing state %s",
-            domain,
-            self.entity_id,
-        )
-        # Update the group state if the current state type key is None or ON/OFF
-        if self.single_state_type_key in {None, SingleStateType(STATE_ON, STATE_OFF)}:
-            self.async_update_tracked_entity_ids(set(self.tracking))
-
     async def async_added_to_hass(self) -> None:
         """Handle addition to Home Assistant."""
         self._set_tracked(self._entity_ids)
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, REG_DISPATCHER, self.async_domain_registered
-            )
-        )
         self.async_on_remove(start.async_at_start(self.hass, self._async_start))
 
     async def async_will_remove_from_hass(self) -> None:
