@@ -53,7 +53,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DelugeConfigEntry) -> bo
     coordinator = DelugeDataUpdateCoordinator(hass, api, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
-    await entry.runtime_data.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
