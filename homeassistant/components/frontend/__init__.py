@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator
-from functools import lru_cache
+from functools import lru_cache, partial
 import logging
 import os
 import pathlib
@@ -211,24 +211,22 @@ class UrlManager:
 
     def __init__(
         self,
-        on_change: Callable[[str, str, str], None],
-        resource_type: str,
+        on_change: Callable[[str, str], None],
         urls: list[str],
     ) -> None:
         """Init the url manager."""
         self._on_change = on_change
-        self._resource_type = resource_type
         self.urls = frozenset(urls)
 
     def add(self, url: str) -> None:
         """Add a url to the set."""
         self.urls = frozenset([*self.urls, url])
-        self._on_change("added", self._resource_type, url)
+        self._on_change("added", url)
 
     def remove(self, url: str) -> None:
         """Remove a url from the set."""
         self.urls = self.urls - {url}
-        self._on_change("removed", self._resource_type, url)
+        self._on_change("removed", url)
 
 
 class Panel:
@@ -432,8 +430,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     @callback
     def async_change_listener(
-        change_type: str,
         resource_type: str,
+        change_type: str,
         url: str,
     ) -> None:
         subscribers = hass.data[DATA_WS_SUBSCRIBERS]
@@ -445,10 +443,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             connection.send_message(websocket_api.event_message(msg_id, json_msg))
 
     hass.data[DATA_EXTRA_MODULE_URL] = UrlManager(
-        async_change_listener, "module", conf.get(CONF_EXTRA_MODULE_URL, [])
+        partial(async_change_listener, "module"), conf.get(CONF_EXTRA_MODULE_URL, [])
     )
     hass.data[DATA_EXTRA_JS_URL_ES5] = UrlManager(
-        async_change_listener, "es5", conf.get(CONF_EXTRA_JS_URL_ES5, [])
+        partial(async_change_listener, "es5"), conf.get(CONF_EXTRA_JS_URL_ES5, [])
     )
     hass.data[DATA_WS_SUBSCRIBERS] = set()
 
