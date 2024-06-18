@@ -31,6 +31,8 @@ async def test_start_backflush(
     assert entry
     assert entry == snapshot
 
+    assert mock_lamarzocco.config.backflush_enabled is False
+
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
@@ -42,3 +44,5 @@ async def test_start_backflush(
 
     assert len(mock_lamarzocco.start_backflush.mock_calls) == 1
     mock_lamarzocco.start_backflush.assert_called_once()
+
+    assert mock_lamarzocco.config.backflush_enabled is True
