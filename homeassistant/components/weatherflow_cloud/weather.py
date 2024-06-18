@@ -19,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_ATTRIBUTION, DOMAIN, MANUFACTURER, STATE_MAP
+from .const import ATTR_ATTRIBUTION, DOMAIN, STATE_MAP
 from .coordinator import WeatherFlowCloudDataUpdateCoordinator
 from .entity import get_station_device_info
 
