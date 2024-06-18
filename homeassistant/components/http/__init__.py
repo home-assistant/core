@@ -37,7 +37,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import storage
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.http import (
-    KEY_ALLOW_CONFIGRED_CORS,
+    KEY_ALLOW_CONFIGURED_CORS,
     KEY_AUTHENTICATED,  # noqa: F401
     KEY_HASS,
     HomeAssistantView,
@@ -427,7 +427,7 @@ class HomeAssistantHTTP:
             # Should be instance of aiohttp.web_exceptions._HTTPMove.
             raise redirect_exc(redirect_to)  # type: ignore[arg-type,misc]
 
-        self.app[KEY_ALLOW_CONFIGRED_CORS](
+        self.app[KEY_ALLOW_CONFIGURED_CORS](
             self.app.router.add_route("GET", url, redirect)
         )
 
@@ -461,7 +461,7 @@ class HomeAssistantHTTP:
     ) -> None:
         """Register a folders or files to serve as a static path."""
         app = self.app
-        allow_cors = app[KEY_ALLOW_CONFIGRED_CORS]
+        allow_cors = app[KEY_ALLOW_CONFIGURED_CORS]
         for config in configs:
             if resource := resources[config.url_path]:
                 app.router.register_resource(resource)
