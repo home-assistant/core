@@ -160,38 +160,22 @@ async def async_setup_entry(
     data = config_entry.runtime_data
     entities: list[BinarySensorEntity] = []
 
-    for door in data.locks:
-        detail = data.get_device_detail(door.device_id)
-        if not detail.doorsense:
-            _LOGGER.debug(
-                (
-                    "Not adding sensor class door for lock %s because it does not have"
-                    " doorsense"
-                ),
-                door.device_name,
-            )
-            continue
-
-        _LOGGER.debug("Adding sensor class door for %s", door.device_name)
-        entities.append(AugustDoorBinarySensor(data, door, SENSOR_TYPE_DOOR))
+    for lock in data.locks:
+        detail = data.get_device_detail(lock.device_id)
+        if detail.doorsense:
+            entities.append(AugustDoorBinarySensor(data, lock, SENSOR_TYPE_DOOR))
 
         if detail.doorbell:
-            for description in SENSOR_TYPES_DOORBELL:
-                _LOGGER.debug(
-                    "Adding doorbell sensor class %s for %s",
-                    description.device_class,
-                    door.device_name,
-                )
-                entities.append(AugustDoorbellBinarySensor(data, door, description))
+            entities.extend(
+                AugustDoorbellBinarySensor(data, lock, description)
+                for description in SENSOR_TYPES_DOORBELL
+            )
 
     for doorbell in data.doorbells:
-        for description in SENSOR_TYPES_DOORBELL + SENSOR_TYPES_VIDEO_DOORBELL:
-            _LOGGER.debug(
-                "Adding doorbell sensor class %s for %s",
-                description.device_class,
-                doorbell.device_name,
-            )
-            entities.append(AugustDoorbellBinarySensor(data, doorbell, description))
+        entities.extend(
+            AugustDoorbellBinarySensor(data, doorbell, description)
+            for description in SENSOR_TYPES_DOORBELL + SENSOR_TYPES_VIDEO_DOORBELL
+        )
 
     async_add_entities(entities)
 
