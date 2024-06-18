@@ -40,11 +40,11 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
     """Representation of an August lock."""
 
     _attr_name = None
+    _lock_status: LockStatus | None = None
 
     def __init__(self, data: AugustData, device: Lock) -> None:
         """Initialize the lock."""
         super().__init__(data, device)
-        self._lock_status: LockStatus | None = None
         self._attr_unique_id = f"{self._device_id:s}_lock"
         if self._detail.unlatch_supported:
             self._attr_supported_features = LockEntityFeature.OPEN
