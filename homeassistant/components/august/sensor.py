@@ -181,8 +181,6 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreSensor):
     def __init__(self, data: AugustData, device) -> None:
         """Initialize the sensor."""
         super().__init__(data, device)
-        self._data = data
-        self._device = device
         self._operated_remote: bool | None = None
         self._operated_keypad: bool | None = None
         self._operated_manual: bool | None = None
