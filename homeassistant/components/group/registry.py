@@ -10,6 +10,14 @@ from typing import Protocol
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.vacuum import STATE_CLEANING, STATE_ERROR, STATE_RETURNING
+from homeassistant.components.water_heater import (
+    STATE_ECO,
+    STATE_ELECTRIC,
+    STATE_GAS,
+    STATE_HEAT_PUMP,
+    STATE_HIGH_DEMAND,
+    STATE_PERFORMANCE,
+)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
@@ -100,6 +108,19 @@ ON_OFF_STATES = {
             STATE_CLEANING,
             STATE_RETURNING,
             STATE_ERROR,
+        },
+        STATE_ON,
+        STATE_OFF,
+    ),
+    "water_heater": (
+        {
+            STATE_ON,
+            STATE_ECO,
+            STATE_ELECTRIC,
+            STATE_PERFORMANCE,
+            STATE_HIGH_DEMAND,
+            STATE_HEAT_PUMP,
+            STATE_GAS,
         },
         STATE_ON,
         STATE_OFF,
