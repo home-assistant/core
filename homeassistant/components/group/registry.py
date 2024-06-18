@@ -8,6 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
+from homeassistant.components.climate import HVACMode
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
@@ -40,7 +41,19 @@ ON_OFF_STATES = {
         },
         STATE_ON,
         STATE_OFF,
-    )
+    ),
+    "climate": (
+        {
+            STATE_ON,
+            HVACMode.HEAT,
+            HVACMode.COOL,
+            HVACMode.HEAT_COOL,
+            HVACMode.AUTO,
+            HVACMode.FAN_ONLY,
+        },
+        STATE_ON,
+        STATE_OFF,
+    ),
 }
 
 
