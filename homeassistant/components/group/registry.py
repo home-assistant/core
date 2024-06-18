@@ -16,8 +16,10 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_TRIGGERED,
+    STATE_CLOSED,
     STATE_OFF,
     STATE_ON,
+    STATE_OPEN,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.integration_platform import (
@@ -54,6 +56,7 @@ ON_OFF_STATES = {
         STATE_ON,
         STATE_OFF,
     ),
+    "cover": ({STATE_OPEN}, STATE_OPEN, STATE_CLOSED),
 }
 
 
