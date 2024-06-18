@@ -375,7 +375,8 @@ class Group(Entity):
             domain,
             self.entity_id,
         )
-        if self.single_state_type_key in (None, SingleStateType(STATE_ON, STATE_OFF)):
+        # Update the group state if the current state type key is None or ON/OFF
+        if self.single_state_type_key in {None, SingleStateType(STATE_ON, STATE_OFF)}:
             self.async_update_tracked_entity_ids(set(self.tracking))
 
     async def async_added_to_hass(self) -> None:
