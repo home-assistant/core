@@ -262,7 +262,8 @@ class Group(Entity):
         """Test if any member has an assumed state."""
         return self._assumed_state
 
-    async def async_update_tracked_entity_ids(
+    @callback
+    def async_update_tracked_entity_ids(
         self, entity_ids: Collection[str] | None
     ) -> None:
         """Update the member entity IDs.
