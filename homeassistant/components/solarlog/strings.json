@@ -22,6 +22,16 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure SolarLog",
+        "data": {
+          "extended_data": "[%key:component::solarlog::config::step::user::data::extended_data%]"
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "last_update": {

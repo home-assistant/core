@@ -8,7 +8,12 @@ from solarlog_cli.solarlog_connector import SolarLogConnector
 from solarlog_cli.solarlog_exceptions import SolarLogConnectionError, SolarLogError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
@@ -31,6 +36,14 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     MINOR_VERSION = 2
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
+        """Define the config flow to handle options."""
+        return SolarLogOptionsFlowHandler(config_entry)
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -117,3 +130,33 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_configured")
 
         return await self.async_step_user(user_input)
+
+
+class SolarLogOptionsFlowHandler(OptionsFlow):
+    """Handle a SolarLog options flow."""
+
+    def __init__(self, entry: ConfigEntry) -> None:
+        """Initialize."""
+        self._entry = entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            self.hass.config_entries.async_update_entry(
+                self._entry,
+                data={**self._entry.data, **user_input},
+            )
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        "extended_data", default=self._entry.data["extended_data"]
+                    ): bool,
+                }
+            ),
+        )

@@ -189,3 +189,28 @@ async def test_abort_if_already_setup(hass: HomeAssistant, test_connect) -> None
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "solarlog_test_1_2_3"
     assert result["data"][CONF_HOST] == "http://2.2.2.2"
+
+
+async def test_options_flow(hass: HomeAssistant, test_connect) -> None:
+    """Test config flow options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="solarlog_test_1_2_3",
+        data={
+            CONF_HOST: HOST,
+            "extended_data": False,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"extended_data": True}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.data["extended_data"] is True
