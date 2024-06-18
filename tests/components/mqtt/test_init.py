@@ -4087,6 +4087,7 @@ async def test_link_config_entry(
 async def test_reload_config_entry(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test manual entities reloaded and set up correctly."""
     await mqtt_mock_entry()
@@ -4153,6 +4154,9 @@ async def test_reload_config_entry(
         assert await hass.config_entries.async_reload(entry.entry_id)
         assert entry.state is ConfigEntryState.LOADED
         await hass.async_block_till_done()
+    # Assert the MQTT client was connected gracefully
+    with caplog.at_level(logging.INFO):
+        assert "Disconnected from MQTT server mock-broker:1883" in caplog.text
 
     assert (state := hass.states.get("sensor.test_manual1")) is not None
     assert state.attributes["friendly_name"] == "test_manual1_updated"
