@@ -119,5 +119,4 @@ class BAFSensor(BAFDescriptionEntity, SensorEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
-        description = self.entity_description
-        self._attr_native_value = description.value_fn(self._device)
+        self._attr_native_value = self.entity_description.value_fn(self._device)
