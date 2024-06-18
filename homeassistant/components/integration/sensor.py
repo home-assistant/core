@@ -13,6 +13,7 @@ from typing import Any, Final, Self
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    DEVICE_CLASS_UNITS,
     PLATFORM_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
@@ -74,6 +75,11 @@ UNIT_TIME = {
     UnitOfTime.MINUTES: 60,
     UnitOfTime.HOURS: 60 * 60,
     UnitOfTime.DAYS: 24 * 60 * 60,
+}
+
+DEVICE_CLASS_MAP = {
+    SensorDeviceClass.POWER: SensorDeviceClass.ENERGY,
+    SensorDeviceClass.VOLUME_FLOW_RATE: SensorDeviceClass.VOLUME,
 }
 
 DEFAULT_ROUND = 3
@@ -382,6 +388,22 @@ class IntegrationSensor(RestoreSensor):
 
         return f"{self._unit_prefix_string}{integral_unit}"
 
+    def _calculate_device_class(
+        self,
+        source_device_class: SensorDeviceClass | None,
+        unit_of_measurement: str | None,
+    ) -> SensorDeviceClass | None:
+        """Deduce device class if possible from source device class and target unit."""
+        if source_device_class is None:
+            return None
+
+        if (device_class := DEVICE_CLASS_MAP.get(source_device_class)) is None:
+            return None
+
+        if unit_of_measurement not in DEVICE_CLASS_UNITS.get(device_class, set()):
+            return None
+        return device_class
+
     def _derive_and_set_attributes_from_state(self, source_state: State) -> None:
         source_unit = source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         if source_unit is not None:
@@ -390,13 +412,13 @@ class IntegrationSensor(RestoreSensor):
             # If the source has no defined unit we cannot derive a unit for the integral
             self._unit_of_measurement = None
 
-        if (
-            self.device_class is None
-            and source_state.attributes.get(ATTR_DEVICE_CLASS)
-            == SensorDeviceClass.POWER
-        ):
-            self._attr_device_class = SensorDeviceClass.ENERGY
-            self._attr_icon = None  # Remove this sensors icon default and allow to fallback to the ENERGY default
+        self._attr_device_class = self._calculate_device_class(
+            source_state.attributes.get(ATTR_DEVICE_CLASS), self.unit_of_measurement
+        )
+        if self._attr_device_class:
+            self._attr_icon = None  # Remove this sensors icon default and allow to fallback to the device class default
+        else:
+            self._attr_icon = "mdi:chart-histogram"
 
     def _update_integral(self, area: Decimal) -> None:
         area_scaled = area / (self._unit_prefix * self._unit_time)
@@ -455,6 +477,11 @@ class IntegrationSensor(RestoreSensor):
         else:
             handle_state_change = self._integrate_on_state_change_callback
 
+        if (
+            state := self.hass.states.get(self._source_entity)
+        ) and state.state != STATE_UNAVAILABLE:
+            self._derive_and_set_attributes_from_state(state)
+
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass,
@@ -496,7 +523,7 @@ class IntegrationSensor(RestoreSensor):
     def _integrate_on_state_change(
         self, old_state: State | None, new_state: State | None
     ) -> None:
-        if old_state is None or new_state is None:
+        if new_state is None:
             return
 
         if new_state.state == STATE_UNAVAILABLE:
@@ -506,6 +533,10 @@ class IntegrationSensor(RestoreSensor):
 
         self._attr_available = True
         self._derive_and_set_attributes_from_state(new_state)
+
+        if old_state is None:
+            self.async_write_ha_state()
+            return
 
         if not (states := self._method.validate_states(old_state, new_state)):
             self.async_write_ha_state()
