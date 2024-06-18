@@ -65,7 +65,7 @@ def fixture_discovery():
 
 
 @pytest.fixture(name="mock_device_registry")
-def fixture_device_registry(hass, device_registry: dr.DeviceRegistry):
+def fixture_device_registry(hass: HomeAssistant, device_registry: dr.DeviceRegistry):
     """Mock device registry."""
     config_entry = MockConfigEntry(domain="something_else")
     config_entry.add_to_hass(hass)
@@ -139,7 +139,9 @@ def fixture_known_wireless_clients() -> list[str]:
 
 
 @pytest.fixture(autouse=True, name="mock_wireless_client_storage")
-def fixture_wireless_client_storage(hass_storage, known_wireless_clients: list[str]):
+def fixture_wireless_client_storage(
+    hass_storage: dict[str, Any], known_wireless_clients: list[str]
+):
     """Mock the known wireless storage."""
     data: dict[str, list[str]] = (
         {"wireless_clients": known_wireless_clients} if known_wireless_clients else {}

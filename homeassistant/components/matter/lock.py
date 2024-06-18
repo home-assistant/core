@@ -168,6 +168,9 @@ class MatterLock(MatterEntity, LockEntity):
             self._attr_is_jammed = (
                 door_state is clusters.DoorLock.Enums.DoorStateEnum.kDoorJammed
             )
+            self._attr_is_open = (
+                door_state is clusters.DoorLock.Enums.DoorStateEnum.kDoorOpen
+            )
 
 
 DISCOVERY_SCHEMAS = [

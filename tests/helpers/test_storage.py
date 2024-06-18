@@ -684,7 +684,7 @@ async def test_loading_corrupt_core_file(
         assert data == {"hello": "world"}
 
         def _corrupt_store():
-            with open(store_file, "w") as f:
+            with open(store_file, "w", encoding="utf8") as f:
                 f.write("corrupt")
 
         await hass.async_add_executor_job(_corrupt_store)
@@ -745,7 +745,7 @@ async def test_loading_corrupt_file_known_domain(
         assert data == {"hello": "world"}
 
         def _corrupt_store():
-            with open(store_file, "w") as f:
+            with open(store_file, "w", encoding="utf8") as f:
                 f.write('{"valid":"json"}..with..corrupt')
 
         await hass.async_add_executor_job(_corrupt_store)

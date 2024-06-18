@@ -25,6 +25,9 @@
       "today_production": { "name": "Production of today" },
       "today_production_p1": { "name": "Production of today from P1" },
       "today_production_p2": { "name": "Production of today from P2" }
+    },
+    "number": {
+      "max_output": { "name": "Max output" }
     }
   }
 }

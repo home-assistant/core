@@ -834,7 +834,9 @@ def try_connection(
     # should be able to optionally rely on MQTT.
     import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
 
-    client = MqttClientSetup(user_input).client
+    mqtt_client_setup = MqttClientSetup(user_input)
+    mqtt_client_setup.setup()
+    client = mqtt_client_setup.client
 
     result: queue.Queue[bool] = queue.Queue(maxsize=1)
 
