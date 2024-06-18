@@ -159,6 +159,7 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreSensor):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
         attributes: dict[str, Any] = {}
+        method: str | None = None
         if self._operated_remote:
             attributes[ATTR_OPERATION_REMOTE] = self._operated_remote
             method = OPERATION_METHOD_REMOTE
@@ -176,8 +177,8 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreSensor):
             method = OPERATION_METHOD_AUTORELOCK
         else:
             method = OPERATION_METHOD_MOBILE_DEVICE
-
-        attributes[ATTR_OPERATION_METHOD] = method
+        if method:
+            attributes[ATTR_OPERATION_METHOD] = method
         return attributes
 
     async def async_added_to_hass(self) -> None:
