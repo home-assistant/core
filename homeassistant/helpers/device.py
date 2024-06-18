@@ -22,20 +22,20 @@ def async_entity_id_to_device_id(
 
 
 @callback
-def async_device_info_to_link_entity(
+def async_device_info_to_link_from_entity(
     hass: HomeAssistant,
     entity_id_or_uuid: str,
 ) -> dr.DeviceInfo | None:
     """DeviceInfo with information to link a device to a configuration entry in the link category from a entity id or entity uuid."""
 
-    return async_device_info_to_link_device_id(
+    return async_device_info_to_link_from_device_id(
         hass,
         async_entity_id_to_device_id(hass, entity_id_or_uuid),
     )
 
 
 @callback
-def async_device_info_to_link_device_id(
+def async_device_info_to_link_from_device_id(
     hass: HomeAssistant,
     device_id: str | None,
 ) -> dr.DeviceInfo | None:

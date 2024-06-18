@@ -8,7 +8,7 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device import async_device_info_to_link_entity
+from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -30,7 +30,7 @@ async def async_setup_entry(
 
     unique_id = config_entry.entry_id
 
-    device_info = async_device_info_to_link_entity(
+    device_info = async_device_info_to_link_from_entity(
         hass,
         config_entry.options[CONF_SOURCE_SENSOR],
     )
