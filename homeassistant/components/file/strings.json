@@ -1,0 +1,53 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Make a choice",
+        "menu_options": {
+          "sensor": "Set up a file based sensor",
+          "notify": "Set up a notification service"
+        }
+      },
+      "sensor": {
+        "title": "File sensor",
+        "description": "Set up a file based sensor",
+        "data": {
+          "file_path": "File path",
+          "value_template": "Value template",
+          "unit_of_measurement": "Unit of measurement"
+        },
+        "data_description": {
+          "file_path": "The local file path to retrieve the sensor value from",
+          "value_template": "A template to render the the sensors value based on the file content",
+          "unit_of_measurement": "Unit of measurement for the sensor"
+        }
+      },
+      "notify": {
+        "title": "Notification to file service",
+        "description": "Set up a service that allows to write notification to a file.",
+        "data": {
+          "file_path": "[%key:component::file::config::step::sensor::data::file_path%]",
+          "timestamp": "Timestamp"
+        },
+        "data_description": {
+          "file_path": "A local file path to write the notification to",
+          "timestamp": "Add a timestamp to the notification"
+        }
+      }
+    },
+    "error": {
+      "not_allowed": "Access to the selected file path is not allowed"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "exceptions": {
+    "dir_not_allowed": {
+      "message": "Access to {filename} is not allowed."
+    },
+    "write_access_failed": {
+      "message": "Write access to {filename} failed: {exc}."
+    }
+  }
+}

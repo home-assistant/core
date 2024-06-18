@@ -101,7 +101,9 @@ async def test_led_switch(hass: HomeAssistant, dev, domain: str) -> None:
     dev.set_led.reset_mock()
 
 
-async def test_plug_unique_id(hass: HomeAssistant) -> None:
+async def test_plug_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test a plug unique id."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
@@ -113,7 +115,6 @@ async def test_plug_unique_id(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     entity_id = "switch.my_plug"
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_get(entity_id).unique_id == "aa:bb:cc:dd:ee:ff"
 
 
@@ -187,7 +188,9 @@ async def test_strip(hass: HomeAssistant) -> None:
     strip.children[1].turn_on.reset_mock()
 
 
-async def test_strip_unique_ids(hass: HomeAssistant) -> None:
+async def test_strip_unique_ids(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test a strip unique id."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
@@ -200,7 +203,6 @@ async def test_strip_unique_ids(hass: HomeAssistant) -> None:
 
     for plug_id in range(2):
         entity_id = f"switch.my_strip_plug{plug_id}"
-        entity_registry = er.async_get(hass)
         assert (
             entity_registry.async_get(entity_id).unique_id == f"PLUG{plug_id}DEVICEID"
         )

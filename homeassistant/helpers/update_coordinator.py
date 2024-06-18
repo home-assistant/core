@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Generator
+from collections.abc import Awaitable, Callable, Coroutine
 from datetime import datetime, timedelta
 import logging
 from random import randint
@@ -14,7 +14,7 @@ import urllib.error
 
 import aiohttp
 import requests
-from typing_extensions import TypeVar
+from typing_extensions import Generator, TypeVar
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -33,9 +33,6 @@ REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
 _DataT = TypeVar("_DataT", default=dict[str, Any])
-_BaseDataUpdateCoordinatorT = TypeVar(
-    "_BaseDataUpdateCoordinatorT", bound="BaseDataUpdateCoordinatorProtocol"
-)
 _DataUpdateCoordinatorT = TypeVar(
     "_DataUpdateCoordinatorT",
     bound="DataUpdateCoordinator[Any]",
@@ -180,7 +177,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._async_unsub_refresh()
         self._debounced_refresh.async_cancel()
 
-    def async_contexts(self) -> Generator[Any, None, None]:
+    def async_contexts(self) -> Generator[Any]:
         """Return all registered contexts."""
         yield from (
             context for _, context in self._listeners.values() if context is not None
@@ -380,7 +377,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             self.last_exception = err
             raise
 
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:
             self.last_exception = err
             self.last_update_success = False
             self.logger.exception("Unexpected error fetching %s data", self.name)
@@ -462,7 +459,9 @@ class TimestampDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
             self.last_update_success_time = utcnow()
 
 
-class BaseCoordinatorEntity(entity.Entity, Generic[_BaseDataUpdateCoordinatorT]):
+class BaseCoordinatorEntity[
+    _BaseDataUpdateCoordinatorT: BaseDataUpdateCoordinatorProtocol
+](entity.Entity):
     """Base class for all Coordinator entities."""
 
     def __init__(

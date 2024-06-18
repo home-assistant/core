@@ -36,14 +36,14 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import (
-    DeviceInfo,
-    async_get as async_get_device_registry,
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_platform,
+    entity_registry as er,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
 from .const import ATTR_CMODE, DOMAIN, SERVICE_SELECT_CMODE
 
@@ -110,13 +110,13 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
             return False
         if uid := await self._projector.get_serial_number():
             self.hass.config_entries.async_update_entry(self._entry, unique_id=uid)
-            ent_reg = async_get_entity_registry(self.hass)
+            ent_reg = er.async_get(self.hass)
             old_entity_id = ent_reg.async_get_entity_id(
                 "media_player", DOMAIN, self._entry.entry_id
             )
             if old_entity_id is not None:
                 ent_reg.async_update_entity(old_entity_id, new_unique_id=uid)
-            dev_reg = async_get_device_registry(self.hass)
+            dev_reg = dr.async_get(self.hass)
             device = dev_reg.async_get_device({(DOMAIN, self._entry.entry_id)})
             if device is not None:
                 dev_reg.async_update_device(device.id, new_identifiers={(DOMAIN, uid)})

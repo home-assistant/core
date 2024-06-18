@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     POWER_VOLT_AMPERE_REACTIVE,
@@ -44,7 +43,7 @@ from .const import (
 )
 
 if TYPE_CHECKING:
-    from . import FroniusSolarNet
+    from . import FroniusConfigEntry
     from .coordinator import (
         FroniusCoordinatorBase,
         FroniusInverterUpdateCoordinator,
@@ -60,11 +59,11 @@ ENERGY_VOLT_AMPERE_REACTIVE_HOUR: Final = "varh"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: FroniusConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Fronius sensor entities based on a config entry."""
-    solar_net: FroniusSolarNet = hass.data[DOMAIN][config_entry.entry_id]
+    solar_net = config_entry.runtime_data
 
     for inverter_coordinator in solar_net.inverter_coordinators:
         inverter_coordinator.add_entities_for_seen_keys(

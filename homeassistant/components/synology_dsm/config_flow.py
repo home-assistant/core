@@ -34,7 +34,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_SSL,
-    CONF_TIMEOUT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
@@ -179,7 +178,9 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
                 port = DEFAULT_PORT
 
         session = async_get_clientsession(self.hass, verify_ssl)
-        api = SynologyDSM(session, host, port, username, password, use_ssl, timeout=30)
+        api = SynologyDSM(
+            session, host, port, username, password, use_ssl, timeout=DEFAULT_TIMEOUT
+        )
 
         errors = {}
         try:
@@ -390,12 +391,6 @@ class SynologyDSMOptionsFlowHandler(OptionsFlow):
                     CONF_SCAN_INTERVAL,
                     default=self.config_entry.options.get(
                         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                    ),
-                ): cv.positive_int,
-                vol.Required(
-                    CONF_TIMEOUT,
-                    default=self.config_entry.options.get(
-                        CONF_TIMEOUT, DEFAULT_TIMEOUT
                     ),
                 ): cv.positive_int,
                 vol.Required(

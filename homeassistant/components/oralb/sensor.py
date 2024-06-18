@@ -128,7 +128,9 @@ async def async_setup_entry(
 
 
 class OralBBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[str | int | None]],
+    PassiveBluetoothProcessorEntity[
+        PassiveBluetoothDataProcessor[str | int | None, SensorUpdate]
+    ],
     SensorEntity,
 ):
     """Representation of a OralB sensor."""

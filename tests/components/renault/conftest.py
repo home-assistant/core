@@ -1,6 +1,5 @@
 """Provide common Renault fixtures."""
 
-from collections.abc import Generator
 import contextlib
 from types import MappingProxyType
 from typing import Any
@@ -9,6 +8,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from renault_api.kamereon import exceptions, schemas
 from renault_api.renault_account import RenaultAccount
+from typing_extensions import Generator
 
 from homeassistant.components.renault.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntry
@@ -21,7 +21,7 @@ from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.renault.async_setup_entry", return_value=True

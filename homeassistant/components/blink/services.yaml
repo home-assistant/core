@@ -8,6 +8,12 @@ blink_update:
         device:
           integration: blink
 
+record:
+  target:
+    entity:
+      integration: blink
+      domain: camera
+
 trigger_camera:
   target:
     entity:

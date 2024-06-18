@@ -8,6 +8,7 @@
     "start_log_object_sources": "mdi:play",
     "stop_log_object_sources": "mdi:stop",
     "lru_stats": "mdi:chart-areaspline",
+    "log_current_tasks": "mdi:format-list-bulleted",
     "log_thread_frames": "mdi:format-list-bulleted",
     "log_event_loop_scheduled": "mdi:calendar-clock",
     "set_asyncio_debug": "mdi:bug-check"

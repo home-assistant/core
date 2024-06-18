@@ -394,6 +394,7 @@ class USBDiscovery:
                 cooldown=REQUEST_SCAN_COOLDOWN,
                 immediate=True,
                 function=self._async_scan,
+                background=True,
             )
         await self._request_debouncer.async_call()
 

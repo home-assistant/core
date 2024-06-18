@@ -75,7 +75,7 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Optional(CONF_FOLDER, default="INBOX"): str,
         vol.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
         # The default for new entries is to not include text and headers
-        vol.Optional(CONF_EVENT_MESSAGE_DATA, default=[]): cv.ensure_list,
+        vol.Optional(CONF_EVENT_MESSAGE_DATA, default=[]): EVENT_MESSAGE_DATA_SELECTOR,
     }
 )
 CONFIG_SCHEMA_ADVANCED = {

@@ -39,7 +39,6 @@ async def test_setup_config_and_unload(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
-    assert not hass.data.get(DOMAIN)
 
 
 async def test_async_setup_entry_not_ready(hass: HomeAssistant) -> None:

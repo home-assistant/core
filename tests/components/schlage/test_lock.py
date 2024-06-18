@@ -14,10 +14,11 @@ from tests.common import async_fire_time_changed
 
 
 async def test_lock_device_registry(
-    hass: HomeAssistant, mock_added_config_entry: ConfigEntry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_added_config_entry: ConfigEntry,
 ) -> None:
     """Test lock is added to device registry."""
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={("schlage", "test")})
     assert device.model == "<model-name>"
     assert device.sw_version == "1.0"

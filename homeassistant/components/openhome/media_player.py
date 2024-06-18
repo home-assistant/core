@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 import aiohttp
 from async_upnp_client.client import UpnpError
@@ -27,10 +27,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_PIN_INDEX, DOMAIN, SERVICE_INVOKE_PIN
-
-_OpenhomeDeviceT = TypeVar("_OpenhomeDeviceT", bound="OpenhomeDevice")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
 
 SUPPORT_OPENHOME = (
     MediaPlayerEntityFeature.SELECT_SOURCE
@@ -65,13 +61,13 @@ async def async_setup_entry(
     )
 
 
-_FuncType = Callable[Concatenate[_OpenhomeDeviceT, _P], Awaitable[_R]]
-_ReturnFuncType = Callable[
-    Concatenate[_OpenhomeDeviceT, _P], Coroutine[Any, Any, _R | None]
+type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], Awaitable[_R]]
+type _ReturnFuncType[_T, **_P, _R] = Callable[
+    Concatenate[_T, _P], Coroutine[Any, Any, _R | None]
 ]
 
 
-def catch_request_errors() -> (
+def catch_request_errors[_OpenhomeDeviceT: OpenhomeDevice, **_P, _R]() -> (
     Callable[
         [_FuncType[_OpenhomeDeviceT, _P, _R]], _ReturnFuncType[_OpenhomeDeviceT, _P, _R]
     ]

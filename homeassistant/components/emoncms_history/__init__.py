@@ -86,8 +86,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 continue
 
         if payload_dict:
-            payload = "{%s}" % ",".join(
-                f"{key}:{val}" for key, val in payload_dict.items()
+            payload = "{{{}}}".format(
+                ",".join(f"{key}:{val}" for key, val in payload_dict.items())
             )
 
             send_data(

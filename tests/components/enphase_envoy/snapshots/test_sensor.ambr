@@ -3767,9 +3767,6 @@
 # name: test_sensor[sensor.envoy_1234_metering_status_net_consumption_ct_l3-state]
   None
 # ---
-# name: test_sensor[sensor.envoy_1234_metering_status_priduction_ct-state]
-  None
-# ---
 # name: test_sensor[sensor.envoy_1234_metering_status_production_ct-state]
   None
 # ---

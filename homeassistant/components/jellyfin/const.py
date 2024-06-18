@@ -14,6 +14,7 @@ COLLECTION_TYPE_MOVIES: Final = "movies"
 COLLECTION_TYPE_MUSIC: Final = "music"
 COLLECTION_TYPE_TVSHOWS: Final = "tvshows"
 
+CONF_AUDIO_CODEC: Final = "audio_codec"
 CONF_CLIENT_DEVICE_ID: Final = "client_device_id"
 
 DEFAULT_NAME: Final = "Jellyfin"
@@ -49,6 +50,8 @@ SUPPORTED_COLLECTION_TYPES: Final = [
     COLLECTION_TYPE_MOVIES,
     COLLECTION_TYPE_TVSHOWS,
 ]
+
+SUPPORTED_AUDIO_CODECS: Final = ["aac", "mp3", "vorbis", "wma"]
 
 PLAYABLE_ITEM_TYPES: Final = [ITEM_TYPE_AUDIO, ITEM_TYPE_EPISODE, ITEM_TYPE_MOVIE]
 

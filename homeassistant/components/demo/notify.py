@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.components.notify import DOMAIN, NotifyEntity
+from homeassistant.components.notify import DOMAIN, NotifyEntity, NotifyEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -33,12 +33,15 @@ class DemoNotifyEntity(NotifyEntity):
     ) -> None:
         """Initialize the Demo button entity."""
         self._attr_unique_id = unique_id
+        self._attr_supported_features = NotifyEntityFeature.TITLE
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             name=device_name,
         )
 
-    async def async_send_message(self, message: str) -> None:
+    async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to a user."""
-        event_notitifcation = {"message": message}
-        self.hass.bus.async_fire(EVENT_NOTIFY, event_notitifcation)
+        event_notification = {"message": message}
+        if title is not None:
+            event_notification["title"] = title
+        self.hass.bus.async_fire(EVENT_NOTIFY, event_notification)

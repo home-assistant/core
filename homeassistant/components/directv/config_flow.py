@@ -55,7 +55,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except DIRECTVError:
             return self._show_setup_form({"base": ERROR_CANNOT_CONNECT})
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason=ERROR_UNKNOWN)
 
@@ -88,7 +88,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, self.discovery_info)
         except DIRECTVError:
             return self.async_abort(reason=ERROR_CANNOT_CONNECT)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason=ERROR_UNKNOWN)
 

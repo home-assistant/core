@@ -233,7 +233,7 @@ async def test_zha_retry_unique_ids(
     config_entry: MockConfigEntry,
     zigpy_device_mock,
     mock_zigpy_connect: ControllerApplication,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that ZHA retrying creates unique entity IDs."""
 
@@ -255,10 +255,11 @@ async def test_zha_retry_unique_ids(
             lambda hass, delay, action: async_call_later(hass, 0, action),
         ):
             await hass.config_entries.async_setup(config_entry.entry_id)
-            await hass.async_block_till_done()
+            await hass.async_block_till_done(wait_background_tasks=True)
 
             # Wait for the config entry setup to retry
             await asyncio.sleep(0.1)
+            await hass.async_block_till_done(wait_background_tasks=True)
 
         assert len(mock_connect.mock_calls) == 2
 

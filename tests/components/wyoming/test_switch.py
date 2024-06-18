@@ -40,3 +40,4 @@ async def test_muted(
     state = hass.states.get(muted_id)
     assert state is not None
     assert state.state == STATE_ON
+    assert satellite_device.is_muted

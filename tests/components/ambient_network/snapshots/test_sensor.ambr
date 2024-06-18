@@ -10,7 +10,7 @@
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
-    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.station_a_absolute_pressure',
@@ -22,6 +22,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
@@ -38,7 +41,21 @@
   })
 # ---
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_absolute_pressure-state]
-  None
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by ambientnetwork.net',
+      'device_class': 'pressure',
+      'friendly_name': 'Station A Absolute pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.station_a_absolute_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '977.616536580043',
+  })
 # ---
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_daily_rain-entry]
   EntityRegistryEntrySnapshot({
@@ -332,7 +349,7 @@
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
-    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.station_a_irradiance',
@@ -344,6 +361,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
     'original_icon': None,
@@ -357,7 +377,21 @@
   })
 # ---
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_irradiance-state]
-  None
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by ambientnetwork.net',
+      'device_class': 'irradiance',
+      'friendly_name': 'Station A Irradiance',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.station_a_irradiance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '37.64',
+  })
 # ---
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_last_rain-entry]
   EntityRegistryEntrySnapshot({
@@ -368,7 +402,7 @@
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
-    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.station_a_last_rain',
@@ -393,7 +427,19 @@
   })
 # ---
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_last_rain-state]
-  None
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by ambientnetwork.net',
+      'device_class': 'timestamp',
+      'friendly_name': 'Station A Last rain',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.station_a_last_rain',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-10-30T09:45:00+00:00',
+  })
 # ---
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_max_daily_gust-entry]
   EntityRegistryEntrySnapshot({
@@ -464,7 +510,7 @@
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
-    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.station_a_monthly_rain',
@@ -476,6 +522,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
       }),
@@ -492,7 +541,21 @@
   })
 # ---
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_monthly_rain-state]
-  None
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by ambientnetwork.net',
+      'device_class': 'precipitation',
+      'friendly_name': 'Station A Monthly rain',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.station_a_monthly_rain',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
 # ---
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_relative_pressure-entry]
   EntityRegistryEntrySnapshot({
@@ -672,7 +735,7 @@
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
-    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.station_a_weekly_rain',
@@ -684,6 +747,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
       }),
@@ -700,7 +766,21 @@
   })
 # ---
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_weekly_rain-state]
-  None
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by ambientnetwork.net',
+      'device_class': 'precipitation',
+      'friendly_name': 'Station A Weekly rain',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.station_a_weekly_rain',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
 # ---
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_wind_direction-entry]
   EntityRegistryEntrySnapshot({
@@ -711,7 +791,7 @@
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
-    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.station_a_wind_direction',
@@ -723,6 +803,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
@@ -736,7 +819,19 @@
   })
 # ---
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_wind_direction-state]
-  None
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by ambientnetwork.net',
+      'friendly_name': 'Station A Wind direction',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.station_a_wind_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '11',
+  })
 # ---
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_wind_gust-entry]
   EntityRegistryEntrySnapshot({

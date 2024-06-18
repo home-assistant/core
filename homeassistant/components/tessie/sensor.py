@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -33,7 +32,8 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.variance import ignore_variance
 
-from .const import DOMAIN, TessieChargeStates
+from . import TessieConfigEntry
+from .const import TessieChargeStates
 from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
@@ -259,14 +259,16 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TessieConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Tessie sensor platform from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     async_add_entities(
-        TessieSensorEntity(vehicle.state_coordinator, description)
-        for vehicle in data
+        TessieSensorEntity(vehicle, description)
+        for vehicle in data.vehicles
         for description in DESCRIPTIONS
     )
 

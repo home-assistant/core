@@ -83,7 +83,7 @@ class KNXWeather(KnxEntity, WeatherEntity):
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of a KNX sensor."""
         super().__init__(_create_weather(xknx, config))
-        self._attr_unique_id = str(self._device._temperature.group_address_state)
+        self._attr_unique_id = str(self._device._temperature.group_address_state)  # noqa: SLF001
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
 
     @property
