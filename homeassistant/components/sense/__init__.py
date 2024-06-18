@@ -21,7 +21,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     ACTIVE_UPDATE_RATE,
@@ -109,6 +109,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except (SenseAuthenticationException, SenseMFARequiredException) as err:
             _LOGGER.warning("Sense authentication expired")
             raise ConfigEntryAuthFailed(err) from err
+        except SENSE_CONNECT_EXCEPTIONS as err:
+            raise UpdateFailed(err) from err
 
     trends_coordinator: DataUpdateCoordinator[None] = DataUpdateCoordinator(
         hass,
