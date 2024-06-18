@@ -341,13 +341,10 @@ async def async_start(  # noqa: C901
 
     discovery_topics = [
         f"{discovery_topic}/{component}/+/config" for component in SUPPORTED_COMPONENTS
+    ] + [
+        f"{discovery_topic}/{component}/+/+/config"
+        for component in SUPPORTED_COMPONENTS
     ]
-    discovery_topics.extend(
-        [
-            f"{discovery_topic}/{component}/+/+/config"
-            for component in SUPPORTED_COMPONENTS
-        ]
-    )
     mqtt_data.discovery_unsubscribe = [
         mqtt.async_subscribe_internal(
             hass,
