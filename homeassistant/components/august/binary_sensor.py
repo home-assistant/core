@@ -97,8 +97,12 @@ def _activity_time_based_state(latest: Activity) -> bool:
     """Get the latest state of the sensor."""
     start = latest.activity_start_time
     end = latest.activity_end_time + TIME_TO_DECLARE_DETECTION
-    # The underlying library uses non timezone aware datetime
-    return start <= datetime.now() <= end
+    return start <= _native_datetime() <= end
+
+
+def _native_datetime() -> datetime:
+    """Return time in the format august uses without timezone."""
+    return datetime.now()
 
 
 @dataclass(frozen=True, kw_only=True)
