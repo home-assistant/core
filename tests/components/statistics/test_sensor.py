@@ -1314,13 +1314,13 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
 
         # With all values in buffer
 
-        for i in range(len(VALUES_NUMERIC)):
+        for i, value in enumerate(VALUES_NUMERIC):
             current_time += timedelta(minutes=1)
             freezer.move_to(current_time)
             async_fire_time_changed(hass, current_time)
             hass.states.async_set(
                 "sensor.test_monitored",
-                str(VALUES_NUMERIC[i]),
+                str(value),
                 {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
             )
             hass.states.async_set(

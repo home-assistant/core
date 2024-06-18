@@ -7,7 +7,7 @@ import contextlib
 from enum import Enum
 from pathlib import Path
 import socket
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import CookieJar
 from typing_extensions import Generator
@@ -21,7 +21,6 @@ from uiprotect.data import (
     ProtectAdoptableDeviceModel,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -40,6 +39,9 @@ from .const import (
     DOMAIN,
     ModelType,
 )
+
+if TYPE_CHECKING:
+    from .data import UFPConfigEntry
 
 _SENTINEL = object()
 
@@ -90,10 +92,8 @@ def async_get_devices_by_type(
     bootstrap: Bootstrap, device_type: ModelType
 ) -> dict[str, ProtectAdoptableDeviceModel]:
     """Get devices by type."""
-
-    devices: dict[str, ProtectAdoptableDeviceModel] = getattr(
-        bootstrap, f"{device_type.value}s"
-    )
+    devices: dict[str, ProtectAdoptableDeviceModel]
+    devices = getattr(bootstrap, device_type.devices_key)
     return devices
 
 
@@ -122,7 +122,7 @@ def async_get_light_motion_current(obj: Light) -> str:
 
 
 @callback
-def async_dispatch_id(entry: ConfigEntry, dispatch: str) -> str:
+def async_dispatch_id(entry: UFPConfigEntry, dispatch: str) -> str:
     """Generate entry specific dispatch ID."""
 
     return f"{DOMAIN}.{entry.entry_id}.{dispatch}"
@@ -130,7 +130,7 @@ def async_dispatch_id(entry: ConfigEntry, dispatch: str) -> str:
 
 @callback
 def async_create_api_client(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: UFPConfigEntry
 ) -> ProtectApiClient:
     """Create ProtectApiClient from config entry."""
 
