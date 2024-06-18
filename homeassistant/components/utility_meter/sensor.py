@@ -37,7 +37,8 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.helpers import device as d, entity_platform, entity_registry as er
+from homeassistant.helpers import entity_platform, entity_registry as er
+from homeassistant.helpers.device import async_device_info_to_link_entity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
@@ -125,7 +126,7 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_SOURCE_SENSOR]
     )
 
-    device_info = d.async_device_info_to_link_entity(
+    device_info = async_device_info_to_link_entity(
         hass,
         source_entity_id,
     )

@@ -11,8 +11,11 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_UNIQUE_ID, Platform
 from homeassistant.core import HomeAssistant, split_entity_id
-from homeassistant.helpers import device as d, discovery, entity_registry as er
+from homeassistant.helpers import discovery, entity_registry as er
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device import (
+    async_remove_stale_devices_links_keep_entity_device,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
@@ -188,7 +191,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Utility Meter from a config entry."""
 
-    d.async_remove_stale_devices_links_keep_entity_device(
+    async_remove_stale_devices_links_keep_entity_device(
         hass, entry.entry_id, entry.options[CONF_SOURCE_SENSOR]
     )
 
