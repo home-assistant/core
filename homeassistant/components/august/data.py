@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from yalexs.const import DEFAULT_BRAND
 from yalexs.lock import LockDetail
-from yalexs.manager.const import CONF_BRAND
 from yalexs.manager.data import YaleXSData
 from yalexs_ble import YaleXSBLEDiscovery
 
@@ -51,13 +49,7 @@ class AugustData(YaleXSData):
     ) -> None:
         """Init August data object."""
         self._hass = hass
-        self._config_entry = config_entry
         super().__init__(august_gateway, HomeAssistantError)
-
-    @property
-    def brand(self) -> str:
-        """Brand of the device."""
-        return self._config_entry.data.get(CONF_BRAND, DEFAULT_BRAND)
 
     @callback
     def async_offline_key_discovered(self, detail: LockDetail) -> None:
