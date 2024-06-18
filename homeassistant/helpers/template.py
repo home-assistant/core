@@ -1393,7 +1393,7 @@ def config_entry_attr(
 
     config_entry = hass.config_entries.async_get_entry(config_entry_id_)
 
-    if config_entry is None or not hasattr(config_entry, attr_name):
+    if config_entry is None:
         return None
 
     return getattr(config_entry, attr_name)

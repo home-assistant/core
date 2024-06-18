@@ -4010,13 +4010,28 @@ async def test_config_entry_attr(hass: HomeAssistant) -> None:
             "{{ config_entry_attr('" f"{config_entry.entry_id}" "', '" f"{key}" "') }}",
             hass,
         )
-        assert tpl.async_render() == str(value)
+        assert tpl.async_render(parse_result=False) == str(value)
 
-    with pytest.raises(TemplateError):
+    for config_entry_id, key in (
+        (config_entry.entry_id, "invalid_key"),
+        (56, "domain"),
+    ):
+        with pytest.raises(TemplateError):
+            template.Template(
+                "{{ config_entry_attr("
+                + json.dumps(config_entry_id)
+                + ", '"
+                + key
+                + "') }}",
+                hass,
+            ).async_render()
+
+    assert (
         template.Template(
-            "{{ config_entry_attr('" f"{config_entry.entry_id}" "', 'invalid_key') }}",
-            hass,
-        ).async_render()
+            "{{ config_entry_attr('invalid_id', 'domain') }}", hass
+        ).async_render(parse_result=False)
+        == "None"
+    )
 
 
 async def test_issues(hass: HomeAssistant, issue_registry: ir.IssueRegistry) -> None:
