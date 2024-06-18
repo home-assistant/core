@@ -15,7 +15,8 @@
         },
         "data_description": {
           "cluster_ingest_uri": "Ingest-URI of the cluster",
-          "use_queued_ingestion": "Must be enabled when using ADX free cluster"
+          "use_queued_ingestion": "Must be enabled when using ADX free cluster",
+          "authority_id": "The Azure tenant ID"
         }
       }
     },
