@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from homeassistant.components.climate import HVACMode
+from homeassistant.components.vacuum import STATE_CLEANING, STATE_ERROR, STATE_RETURNING
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
@@ -93,6 +94,16 @@ ON_OFF_STATES = {
     ),
     "person": ({STATE_HOME}, STATE_HOME, STATE_NOT_HOME),
     "plant": ({STATE_PROBLEM}, STATE_PROBLEM, STATE_OK),
+    "vacuum": (
+        {
+            STATE_ON,
+            STATE_CLEANING,
+            STATE_RETURNING,
+            STATE_ERROR,
+        },
+        STATE_ON,
+        STATE_OFF,
+    ),
 }
 
 
