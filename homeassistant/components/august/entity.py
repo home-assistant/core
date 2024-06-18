@@ -3,6 +3,7 @@
 from abc import abstractmethod
 
 from yalexs.doorbell import Doorbell, DoorbellDetail
+from yalexs.keypad import KeypadDetail
 from yalexs.lock import Lock, LockDetail
 from yalexs.util import get_configuration_url
 
@@ -10,7 +11,7 @@ from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 
 from . import DOMAIN, AugustData
 from .const import MANUFACTURER
@@ -76,6 +77,22 @@ class AugustEntityMixin(Entity):
                 self._device_id, self._update_from_data_and_write_state
             )
         )
+
+
+class AugustDescriptionEntity(AugustEntityMixin):
+    """An August entity with a description."""
+
+    def __init__(
+        self,
+        data: AugustData,
+        device: Doorbell | Lock | KeypadDetail,
+        description: EntityDescription,
+    ) -> None:
+        """Initialize an August entity with a description."""
+        super().__init__(data, device)
+        self.entity_description = description
+        self._attr_unique_id = f"{self._device_id}_{description.key}"
+        self._update_from_data()
 
 
 def _remove_device_types(name: str, device_types: list[str]) -> str:
