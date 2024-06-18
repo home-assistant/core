@@ -79,7 +79,6 @@ UNIT_TIME = {
 
 DEVICE_CLASS_MAP = {
     SensorDeviceClass.POWER: SensorDeviceClass.ENERGY,
-    SensorDeviceClass.VOLUME_FLOW_RATE: SensorDeviceClass.VOLUME,
 }
 
 DEFAULT_ROUND = 3

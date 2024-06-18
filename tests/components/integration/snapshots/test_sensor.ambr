@@ -19,8 +19,8 @@
 # name: test_initial_state[ft\xb3/min-volume_flow_rate-min]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'volume',
       'friendly_name': 'integration',
+      'icon': 'mdi:chart-histogram',
       'source': 'sensor.source',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': 'ft³',
