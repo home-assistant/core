@@ -18,6 +18,7 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
     STATE_CLOSED,
     STATE_HOME,
+    STATE_IDLE,
     STATE_LOCKED,
     STATE_LOCKING,
     STATE_NOT_HOME,
@@ -25,6 +26,8 @@ from homeassistant.const import (
     STATE_ON,
     STATE_OPEN,
     STATE_OPENING,
+    STATE_PAUSED,
+    STATE_PLAYING,
     STATE_UNLOCKED,
     STATE_UNLOCKING,
 )
@@ -75,6 +78,16 @@ ON_OFF_STATES = {
         },
         STATE_UNLOCKED,
         STATE_LOCKED,
+    ),
+    "media_player": (
+        {
+            STATE_ON,
+            STATE_PAUSED,
+            STATE_PLAYING,
+            STATE_IDLE,
+        },
+        STATE_ON,
+        STATE_OFF,
     ),
 }
 
