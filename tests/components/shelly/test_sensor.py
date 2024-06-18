@@ -808,7 +808,6 @@ async def test_rpc_pulse_counter_frequency_sensors(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     entity_registry: EntityRegistry,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC counter sensor."""
     await init_integration(hass, 2)
