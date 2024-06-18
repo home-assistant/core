@@ -3,11 +3,7 @@
   "name": "Bryant Evolution",
   "codeowners": ["@danielsmyers"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/bryant_evolution",
-  "homekit": {},
   "iot_class": "local_polling",
-  "requirements": ["evolutionhttp==0.0.1"],
-  "ssdp": [],
-  "zeroconf": []
+  "requirements": ["evolutionhttp==0.0.1"]
 }

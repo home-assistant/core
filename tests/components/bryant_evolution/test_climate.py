@@ -22,7 +22,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, Platform
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -121,7 +121,7 @@ class _FakeEvolutionClient(BryantEvolutionClient):
 @pytest.fixture
 async def mock_evolution_entry(
     hass: HomeAssistant,
-) -> MockConfigEntry[BryantEvolutionClient]:
+) -> MockConfigEntry:
     """Configure and return a Bryant evolution integration."""
     hass.config.units = US_CUSTOMARY_SYSTEM
     entry = MockConfigEntry(
@@ -130,18 +130,17 @@ async def mock_evolution_entry(
     )
     entry.runtime_data = _FakeEvolutionClient()
     entry.add_to_hass(hass)
-
-    await hass.config_entries.async_forward_entry_setups(entry, [Platform.CLIMATE])
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-
     return entry
 
 
 async def test_setup_integration(
-    hass: HomeAssistant, mock_evolution_entry: MockConfigEntry[BryantEvolutionClient]
+    hass: HomeAssistant, mock_evolution_entry: MockConfigEntry
 ) -> None:
     """Test that an instance can be constructed."""
     state = hass.states.get("climate.bryant_evolution_system_1_zone_1")
+    assert state, hass.states.async_all()
     assert state.state == "cool"
     assert state.attributes["fan_mode"] == "AUTO"
     assert state.attributes["current_temperature"] == 75
@@ -149,7 +148,7 @@ async def test_setup_integration(
 
 
 async def test_set_temperature(
-    hass: HomeAssistant, mock_evolution_entry: MockConfigEntry[BryantEvolutionClient]
+    hass: HomeAssistant, mock_evolution_entry: MockConfigEntry
 ) -> None:
     """Test that setting target temperature HEAT and COOL modes works."""
 
@@ -209,7 +208,7 @@ async def test_set_temperature(
 
 
 async def test_set_temperature_mode_heat_cool(
-    hass: HomeAssistant, mock_evolution_entry: MockConfigEntry[BryantEvolutionClient]
+    hass: HomeAssistant, mock_evolution_entry: MockConfigEntry
 ) -> None:
     """Test that changing the setpoint in HEAT_COOL mode works."""
     client = mock_evolution_entry.runtime_data
@@ -250,7 +249,7 @@ async def test_set_temperature_mode_heat_cool(
 
 
 async def test_set_fan_mode(
-    hass: HomeAssistant, mock_evolution_entry: MockConfigEntry[BryantEvolutionClient]
+    hass: HomeAssistant, mock_evolution_entry: MockConfigEntry
 ) -> None:
     """Test that setting fan mode works."""
     fan_modes = ["AUTO", "LOW", "MED", "HIGH"]
@@ -277,7 +276,7 @@ async def test_set_fan_mode(
 
 
 async def test_hvac_action(
-    hass: HomeAssistant, mock_evolution_entry: MockConfigEntry[BryantEvolutionClient]
+    hass: HomeAssistant, mock_evolution_entry: MockConfigEntry
 ) -> None:
     """Test that we can read the current HVAC action."""
     client = mock_evolution_entry.runtime_data

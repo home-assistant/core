@@ -22,7 +22,10 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: BryantEvolutionConfigEntry
 ) -> bool:
     """Set up Bryant Evolution from a config entry."""
-    entry.runtime_data = BryantEvolutionClient(entry.data[CONF_HOST], entry.data[CONF_SYSTEM_ID], entry.data[CONF_ZONE_ID])
+    if not hasattr(entry, "runtime_data") or entry.runtime_data is None:
+        entry.runtime_data = BryantEvolutionClient(
+            entry.data[CONF_HOST], entry.data[CONF_SYSTEM_ID], entry.data[CONF_ZONE_ID]
+        )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

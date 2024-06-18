@@ -12,17 +12,17 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import BryantEvolutionConfigEntry
 from .const import CONF_SYSTEM_ID, CONF_ZONE_ID
 
 _LOGGER = logging.getLogger(__name__)
 
-from . import BryantEvolutionConfigEntry
+
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
@@ -32,7 +32,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
-    self._attr_unique_id = f"bryant_evolution_{host}_{system_id}_{zone_id}"
+    host = config_entry.data[CONF_HOST]
+    system_id = config_entry.data[CONF_SYSTEM_ID]
+    zone_id = config_entry.data[CONF_ZONE_ID]
     client = config_entry.runtime_data
     climate = BryantEvolutionClimate(host, system_id, zone_id, client)
     async_add_entities([climate], update_before_add=True)
@@ -46,7 +48,9 @@ class BryantEvolutionClimate(ClimateEntity):
     experience on updates, we also locally update this instance and
     call async_write_ha_state as well.
     """
-    _attr_has_entity_name= True
+
+    _attr_has_entity_name = True
+
     def __init__(
         self: ClimateEntity,
         host: str,
@@ -55,11 +59,8 @@ class BryantEvolutionClimate(ClimateEntity):
         client: BryantEvolutionClient,
     ) -> None:
         """Initialize an entity from parts."""
-        self._host = host
-        self._system_id = system_id
-        self._zone_id = zone_id
         self._client = client
-        self._name = f"Bryant Evolution (System {system_id}, Zone {zone_id})"
+        self._attr_name = f"Bryant Evolution (System {system_id}, Zone {zone_id})"
         self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE
@@ -69,7 +70,7 @@ class BryantEvolutionClimate(ClimateEntity):
             | ClimateEntityFeature.TURN_OFF
         )
         self._enable_turn_on_off_backwards_compatibility = False
-
+        self._attr_unique_id = f"bryant_evolution_{host}_{system_id}_{zone_id}"
 
     async def async_update(self) -> None:
         """Update the entity state."""
@@ -106,11 +107,6 @@ class BryantEvolutionClimate(ClimateEntity):
         # Note: depends on current temperature and target temperature low read
         # above.
         self._attr_hvac_action = await self._read_hvac_action()
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID for this entity."""
-        return f"bryant_evolution_{self._host}_{self._system_id}_{self._zone_id}"
 
     async def _read_hvac_mode(self) -> HVACMode:
         mode_and_active = await self._client.read_hvac_mode()
