@@ -383,7 +383,7 @@ aiowithings==3.0.1
 aioymaps==1.2.2
 
 # homeassistant.components.airgradient
-airgradient==0.4.3
+airgradient==0.5.0
 
 # homeassistant.components.airly
 airly==1.1.0
@@ -892,7 +892,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.50
+holidays==0.51
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240610.1
@@ -2241,7 +2241,7 @@ wallbox==0.6.0
 watchdog==2.3.1
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==0.2.20
+weatherflow4py==0.2.21
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
