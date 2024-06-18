@@ -30,6 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry):
     manager = HsCloud(username, password)
     try:
         await hass.async_add_executor_job(manager.login)
+        config_entry.runtime_data = MyData(manager, await hass.async_add_executor_job(manager.get_devices))
 
     except HsCloudException as ex:
         _LOGGER.exception("unable to connect")
@@ -42,8 +43,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry):
     except Exception as ex:  # pylint: disable=broad-except
         _LOGGER.exception("Unexpected exception")
         raise ConfigEntryNotReady(f"Unexpected exception") from ex
-
-    config_entry.runtime_data = MyData(manager, await hass.async_add_executor_job(manager.get_devices))
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True

@@ -7,6 +7,7 @@ from functools import cached_property
 from typing import Any
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
@@ -16,6 +17,7 @@ from hscloud.const import DEVICE_TYPE, FAN_DEVICE
 
 from . import MyConfigEntry
 from .entity import DreoEntity
+from hscloud.hscloudexception import HsCloudException, HsCloudBusinessException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,7 +129,21 @@ class DreoFanHA(DreoEntity, FanEntity):
 
     def update(self) -> None:
         """Update Dreo fan."""
-        status = self._config_entry.runtime_data.client.get_status(self._device_id)
+        try:
+            status = self._config_entry.runtime_data.client.get_status(self._device_id)
+
+        except HsCloudException as ex:
+            _LOGGER.exception("unable to connect")
+            raise ConfigEntryNotReady(f"unable to connect") from ex
+
+        except HsCloudBusinessException as ex:
+            _LOGGER.exception("invalid username or password")
+            raise ConfigEntryNotReady(f"invalid username or password") from ex
+
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            raise ConfigEntryNotReady(f"Unexpected exception") from ex
+
         if status is not None:
             self._attr_state = status.get('power_switch')
             self._attr_preset_mode = status.get('mode')
