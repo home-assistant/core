@@ -53,8 +53,8 @@ def fix_image_url(url: str) -> str:
     """
 
     # Before parsing encode the plus sign; otherwise it'll be interpreted as a space.
-    ori_url: str = urllib.parse.unquote(url).replace("+", "%2B")
-    parsed_url = urllib.parse.urlparse(ori_url)
+    original_uri: str = urllib.parse.unquote(url).replace("+", "%2B")
+    parsed_url = urllib.parse.urlparse(original_uri)
     query_params = urllib.parse.parse_qsl(parsed_url.query)
     new_url = urllib.parse.urlunsplit(
         (
@@ -67,8 +67,8 @@ def fix_image_url(url: str) -> str:
             "",
         )
     )
-    if ori_url != new_url:
-        _LOGGER.debug("fix_sonos_image_url original: %s new: %s", ori_url, new_url)
+    if original_uri != new_url:
+        _LOGGER.debug("fix_sonos_image_url original: %s new: %s", original_uri, new_url)
     return new_url
 
 
