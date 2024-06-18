@@ -115,8 +115,7 @@ async def async_setup_entry(
     entities.extend(
         AugustBatterySensor[Doorbell](data, device, SENSOR_TYPE_DEVICE_BATTERY)
         for device in data.doorbells
-        if (detail := data.get_device_detail(device.device_id))
-        and SENSOR_TYPE_DEVICE_BATTERY.value_fn(detail)
+        if SENSOR_TYPE_DEVICE_BATTERY.value_fn(data.get_device_detail(device.device_id))
     )
 
     async_add_entities(entities)
