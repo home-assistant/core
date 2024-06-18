@@ -84,10 +84,7 @@ def _retrieve_ding_state(data: AugustData, detail: DoorbellDetail | LockDetail) 
     if latest is None:
         return False
 
-    if (
-        data.activity_stream.pubnub.connected
-        and latest.action == ACTION_DOORBELL_CALL_MISSED
-    ):
+    if data.push_updates_connected and latest.action == ACTION_DOORBELL_CALL_MISSED:
         return False
 
     return _activity_time_based_state(latest)

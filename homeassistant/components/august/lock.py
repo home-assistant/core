@@ -53,7 +53,7 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         assert self._data.activity_stream is not None
-        if self._data.activity_stream.pubnub.connected:
+        if self._data.push_updates_connected:
             await self._data.async_lock_async(self._device_id, self._hyper_bridge)
             return
         await self._call_lock_operation(self._data.async_lock)
@@ -61,7 +61,7 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
     async def async_open(self, **kwargs: Any) -> None:
         """Open/unlatch the device."""
         assert self._data.activity_stream is not None
-        if self._data.activity_stream.pubnub.connected:
+        if self._data.push_updates_connected:
             await self._data.async_unlatch_async(self._device_id, self._hyper_bridge)
             return
         await self._call_lock_operation(self._data.async_unlatch)
@@ -69,7 +69,7 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         assert self._data.activity_stream is not None
-        if self._data.activity_stream.pubnub.connected:
+        if self._data.push_updates_connected:
             await self._data.async_unlock_async(self._device_id, self._hyper_bridge)
             return
         await self._call_lock_operation(self._data.async_unlock)
