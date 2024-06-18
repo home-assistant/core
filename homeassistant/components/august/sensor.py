@@ -26,7 +26,6 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AugustConfigEntry, AugustData
@@ -37,7 +36,6 @@ from .const import (
     ATTR_OPERATION_METHOD,
     ATTR_OPERATION_REMOTE,
     ATTR_OPERATION_TAG,
-    DOMAIN,
     OPERATION_METHOD_AUTORELOCK,
     OPERATION_METHOD_KEYPAD,
     OPERATION_METHOD_MANUAL,
@@ -100,7 +98,6 @@ async def async_setup_entry(
     """Set up the August sensors."""
     data = config_entry.runtime_data
     entities: list[SensorEntity] = []
-    migrate_unique_id_devices = []
     operation_sensors = []
     batteries: dict[str, list[Doorbell | Lock]] = {
         "device_battery": [],
@@ -126,9 +123,7 @@ async def async_setup_entry(
             device.device_name,
         )
         entities.append(
-            AugustBatterySensor[LockDetail](
-                data, device, device, SENSOR_TYPE_DEVICE_BATTERY
-            )
+            AugustBatterySensor[LockDetail](data, device, SENSOR_TYPE_DEVICE_BATTERY)
         )
 
     for device in batteries["linked_keypad_battery"]:
@@ -145,32 +140,13 @@ async def async_setup_entry(
             device.device_name,
         )
         keypad_battery_sensor = AugustBatterySensor[KeypadDetail](
-            data, detail.keypad, device, SENSOR_TYPE_KEYPAD_BATTERY
+            data, detail.keypad, SENSOR_TYPE_KEYPAD_BATTERY
         )
         entities.append(keypad_battery_sensor)
-        migrate_unique_id_devices.append(keypad_battery_sensor)
 
     entities.extend(AugustOperatorSensor(data, device) for device in operation_sensors)
 
-    await _async_migrate_old_unique_ids(hass, migrate_unique_id_devices)
-
     async_add_entities(entities)
-
-
-async def _async_migrate_old_unique_ids(hass: HomeAssistant, devices) -> None:
-    """Keypads now have their own serial number."""
-    registry = er.async_get(hass)
-    for device in devices:
-        old_entity_id = registry.async_get_entity_id(
-            "sensor", DOMAIN, device.old_unique_id
-        )
-        if old_entity_id is not None:
-            _LOGGER.debug(
-                "Migrating unique_id from [%s] to [%s]",
-                device.old_unique_id,
-                device.unique_id,
-            )
-            registry.async_update_entity(old_entity_id, new_unique_id=device.unique_id)
 
 
 class AugustOperatorSensor(AugustEntityMixin, RestoreSensor):
@@ -181,8 +157,6 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreSensor):
     def __init__(self, data: AugustData, device) -> None:
         """Initialize the sensor."""
         super().__init__(data, device)
-        self._data = data
-        self._device = device
         self._operated_remote: bool | None = None
         self._operated_keypad: bool | None = None
         self._operated_manual: bool | None = None
@@ -279,15 +253,13 @@ class AugustBatterySensor(AugustEntityMixin, SensorEntity, Generic[_T]):
     def __init__(
         self,
         data: AugustData,
-        device,
-        old_device,
+        device: Doorbell | Lock | KeypadDetail,
         description: AugustSensorEntityDescription[_T],
     ) -> None:
         """Initialize the sensor."""
         super().__init__(data, device)
         self.entity_description = description
         self._attr_unique_id = f"{self._device_id}_{description.key}"
-        self.old_unique_id = f"{old_device.device_id}_{description.key}"
         self._update_from_data()
 
     @callback
