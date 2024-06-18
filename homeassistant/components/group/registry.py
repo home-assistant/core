@@ -50,9 +50,13 @@ from homeassistant.helpers.integration_platform import (
 
 from .const import DOMAIN, REG_KEY
 
-EXCLUDED_DOMAINS = {"air_quality", "sensor", "weather"}
+EXCLUDED_DOMAINS: set[Platform | str] = {
+    Platform.AIR_QUALITY,
+    Platform.SENSOR,
+    Platform.WEATHER,
+}
 
-ON_OFF_STATES = {
+ON_OFF_STATES: dict[Platform | str, tuple[set[str], str, str]] = {
     Platform.ALARM_CONTROL_PANEL: (
         {
             STATE_ON,
@@ -173,7 +177,7 @@ class GroupIntegrationRegistry:
         self.on_off_mapping: dict[str, str] = {STATE_ON: STATE_OFF}
         self.off_on_mapping: dict[str, str] = {STATE_OFF: STATE_ON}
         self.on_states_by_domain: dict[str, set[str]] = {}
-        self.exclude_domains: set[str] = EXCLUDED_DOMAINS
+        self.exclude_domains: set[Platform | str] = EXCLUDED_DOMAINS
         self.state_group_mapping: dict[str, SingleStateType] = {}
         for domain, on_off_states in ON_OFF_STATES.items():
             self.on_off_states(domain, *on_off_states)
@@ -185,7 +189,11 @@ class GroupIntegrationRegistry:
 
     @callback
     def on_off_states(
-        self, domain: str, on_states: set[str], default_on_state: str, off_state: str
+        self,
+        domain: Platform | str,
+        on_states: set[str],
+        default_on_state: str,
+        off_state: str,
     ) -> None:
         """Register on and off states for the current domain.
 
