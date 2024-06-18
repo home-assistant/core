@@ -89,6 +89,7 @@ ON_OFF_STATES = {
         STATE_ON,
         STATE_OFF,
     ),
+    "person": ({STATE_HOME}, STATE_HOME, STATE_NOT_HOME),
 }
 
 
