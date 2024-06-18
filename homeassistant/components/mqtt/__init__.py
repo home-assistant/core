@@ -535,8 +535,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     registry_hooks = mqtt_data.discovery_registry_hooks
     while registry_hooks:
         registry_hooks.popitem()[1]()
-    # Wait for all ACKs and stop the loop
-    await mqtt_client.async_disconnect()
+    # Wait for all ACKs, stop the loop and disconnect the client
+    await mqtt_client.async_disconnect(disconnect_paho_client=True)
 
     # Cleanup MQTT client availability
     hass.data.pop(DATA_MQTT_AVAILABLE, None)
