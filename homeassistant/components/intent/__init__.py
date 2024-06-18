@@ -45,9 +45,12 @@ from .timers import (
     IncreaseTimerIntentHandler,
     PauseTimerIntentHandler,
     StartTimerIntentHandler,
+    TimerEventType,
+    TimerInfo,
     TimerManager,
     TimerStatusIntentHandler,
     UnpauseTimerIntentHandler,
+    async_device_supports_timers,
     async_register_timer_handler,
 )
 
@@ -57,6 +60,9 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 __all__ = [
     "async_register_timer_handler",
+    "async_device_supports_timers",
+    "TimerInfo",
+    "TimerEventType",
     "DOMAIN",
 ]
 
@@ -73,15 +79,30 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     intent.async_register(
         hass,
-        OnOffIntentHandler(intent.INTENT_TURN_ON, HA_DOMAIN, SERVICE_TURN_ON),
+        OnOffIntentHandler(
+            intent.INTENT_TURN_ON,
+            HA_DOMAIN,
+            SERVICE_TURN_ON,
+            description="Turns on/opens a device or entity",
+        ),
     )
     intent.async_register(
         hass,
-        OnOffIntentHandler(intent.INTENT_TURN_OFF, HA_DOMAIN, SERVICE_TURN_OFF),
+        OnOffIntentHandler(
+            intent.INTENT_TURN_OFF,
+            HA_DOMAIN,
+            SERVICE_TURN_OFF,
+            description="Turns off/closes a device or entity",
+        ),
     )
     intent.async_register(
         hass,
-        intent.ServiceIntentHandler(intent.INTENT_TOGGLE, HA_DOMAIN, SERVICE_TOGGLE),
+        intent.ServiceIntentHandler(
+            intent.INTENT_TOGGLE,
+            HA_DOMAIN,
+            SERVICE_TOGGLE,
+            description="Toggles a device or entity",
+        ),
     )
     intent.async_register(
         hass,
@@ -195,6 +216,7 @@ class GetStateIntentHandler(intent.IntentHandler):
     """Answer questions about entity states."""
 
     intent_type = intent.INTENT_GET_STATE
+    description = "Gets or checks the state of a device or entity"
     slot_schema = {
         vol.Any("name", "area", "floor"): cv.string,
         vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
@@ -314,6 +336,7 @@ class NevermindIntentHandler(intent.IntentHandler):
     """Takes no action."""
 
     intent_type = intent.INTENT_NEVERMIND
+    description = "Cancels the current request and does nothing"
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Doe not do anything, and produces an empty response."""
@@ -330,6 +353,8 @@ class SetPositionIntentHandler(intent.DynamicServiceIntentHandler):
             required_slots={
                 ATTR_POSITION: vol.All(vol.Coerce(int), vol.Range(min=0, max=100))
             },
+            description="Sets the position of a device or entity",
+            platforms={COVER_DOMAIN, VALVE_DOMAIN},
         )
 
     def get_domain_and_service(

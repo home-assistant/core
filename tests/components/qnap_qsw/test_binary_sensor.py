@@ -1,5 +1,7 @@
 """The binary sensor tests for the QNAP QSW platform."""
 
+import pytest
+
 from homeassistant.components.qnap_qsw.const import ATTR_MESSAGE
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -8,9 +10,9 @@ from homeassistant.helpers import entity_registry as er
 from .util import async_init_integration
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_qnap_qsw_create_binary_sensors(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test creation of binary sensors."""

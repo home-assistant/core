@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-async def test_basic_setup(hass: HomeAssistant, mock_get_source_ip) -> None:
+async def test_basic_setup(hass: HomeAssistant) -> None:
     """Test component setup creates entry from config."""
     entry = MockConfigEntry(domain=DOMAIN, data={})
     entry.add_to_hass(hass)

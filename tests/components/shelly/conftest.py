@@ -11,11 +11,11 @@ from homeassistant.components.shelly.const import (
     EVENT_SHELLY_CLICK,
     REST_SENSORS_UPDATE_INTERVAL,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 
 from . import MOCK_MAC
 
-from tests.common import async_capture_events, async_mock_service, mock_device_registry
+from tests.common import async_capture_events, async_mock_service
 
 MOCK_SETTINGS = {
     "name": "Test name",
@@ -254,6 +254,7 @@ MOCK_STATUS_RPC = {
         "current_C": 12.3,
         "output": True,
     },
+    "humidity:0": {"rh": 44.4},
     "sys": {
         "available_updates": {
             "beta": {"version": "some_beta_version"},
@@ -287,13 +288,7 @@ def mock_ws_server():
 
 
 @pytest.fixture
-def device_reg(hass: HomeAssistant):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -409,5 +404,5 @@ async def mock_rpc_device():
 
 
 @pytest.fixture(autouse=True)
-def mock_bluetooth(enable_bluetooth):
+def mock_bluetooth(enable_bluetooth: None) -> None:
     """Auto mock bluetooth."""

@@ -2,7 +2,6 @@
 
 import pytest
 
-from homeassistant.components.switcher_kis.const import DATA_DEVICE, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
@@ -32,12 +31,11 @@ DEVICE_SENSORS_TUPLE = (
 @pytest.mark.parametrize("mock_bridge", [DUMMY_SWITCHER_DEVICES], indirect=True)
 async def test_sensor_platform(hass: HomeAssistant, mock_bridge) -> None:
     """Test sensor platform."""
-    await init_integration(hass)
+    entry = await init_integration(hass)
     assert mock_bridge
 
     assert mock_bridge.is_running is True
-    assert len(hass.data[DOMAIN]) == 2
-    assert len(hass.data[DOMAIN][DATA_DEVICE]) == 2
+    assert len(entry.runtime_data) == 2
 
     for device, sensors in DEVICE_SENSORS_TUPLE:
         for sensor, field in sensors:
@@ -46,7 +44,9 @@ async def test_sensor_platform(hass: HomeAssistant, mock_bridge) -> None:
             assert state.state == str(getattr(device, field))
 
 
-async def test_sensor_disabled(hass: HomeAssistant, mock_bridge) -> None:
+async def test_sensor_disabled(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_bridge
+) -> None:
     """Test sensor disabled by default."""
     await init_integration(hass)
     assert mock_bridge
@@ -54,11 +54,10 @@ async def test_sensor_disabled(hass: HomeAssistant, mock_bridge) -> None:
     mock_bridge.mock_callbacks([DUMMY_WATER_HEATER_DEVICE])
     await hass.async_block_till_done()
 
-    registry = er.async_get(hass)
     device = DUMMY_WATER_HEATER_DEVICE
     unique_id = f"{device.device_id}-{device.mac_address}-auto_off_set"
     entity_id = f"sensor.{slugify(device.name)}_auto_shutdown"
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
 
     assert entry
     assert entry.unique_id == unique_id
@@ -66,7 +65,9 @@ async def test_sensor_disabled(hass: HomeAssistant, mock_bridge) -> None:
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # Test enabling entity
-    updated_entry = registry.async_update_entity(entry.entity_id, disabled_by=None)
+    updated_entry = entity_registry.async_update_entity(
+        entry.entity_id, disabled_by=None
+    )
 
     assert updated_entry != entry
     assert updated_entry.disabled is False

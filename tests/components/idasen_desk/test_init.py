@@ -57,7 +57,7 @@ async def test_no_ble_device(hass: HomeAssistant, mock_desk_api: MagicMock) -> N
 async def test_reconnect_on_bluetooth_callback(
     hass: HomeAssistant, mock_desk_api: MagicMock
 ) -> None:
-    """Test that a reconnet is made after the bluetooth callback is triggered."""
+    """Test that a reconnect is made after the bluetooth callback is triggered."""
     with mock.patch(
         "homeassistant.components.idasen_desk.bluetooth.async_register_callback"
     ) as mock_register_callback:

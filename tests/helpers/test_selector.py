@@ -745,6 +745,11 @@ def test_attribute_selector_schema(
             ({"seconds": 10}, {"days": 10}),
             (None, {}),
         ),
+        (
+            {"allow_negative": False},
+            ({"seconds": 10}, {"days": 10}),
+            (None, {}, {"seconds": -1}),
+        ),
     ],
 )
 def test_duration_selector_schema(schema, valid_selections, invalid_selections) -> None:

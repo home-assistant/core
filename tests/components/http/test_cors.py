@@ -1,5 +1,6 @@
 """Test cors for the HTTP component."""
 
+from asyncio import AbstractEventLoop
 from http import HTTPStatus
 from pathlib import Path
 from unittest.mock import patch
@@ -13,6 +14,7 @@ from aiohttp.hdrs import (
     AUTHORIZATION,
     ORIGIN,
 )
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components.http.cors import setup_cors
@@ -54,7 +56,9 @@ async def mock_handler(request):
 
 
 @pytest.fixture
-def client(event_loop, aiohttp_client):
+def client(
+    event_loop: AbstractEventLoop, aiohttp_client: ClientSessionGenerator
+) -> TestClient:
     """Fixture to set up a web.Application."""
     app = web.Application()
     setup_cors(app, [TRUSTED_ORIGIN])

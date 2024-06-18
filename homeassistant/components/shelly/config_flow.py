@@ -122,7 +122,7 @@ async def validate_input(
         options,
     )
     await block_device.initialize()
-    block_device.shutdown()
+    await block_device.shutdown()
     return {
         "title": block_device.name,
         CONF_SLEEP_PERIOD: get_block_device_sleep_period(block_device.settings),
@@ -256,6 +256,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if (
             current_entry := await self.async_set_unique_id(mac)
         ) and current_entry.data.get(CONF_HOST) == host:
+            LOGGER.debug("async_reconnect_soon: host: %s, mac: %s", host, mac)
             await async_reconnect_soon(self.hass, current_entry)
         if host == INTERNAL_WIFI_AP_IP:
             # If the device is broadcasting the internal wifi ap ip

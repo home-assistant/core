@@ -45,17 +45,17 @@ class SwitcherDataUpdateCoordinator(
     @property
     def model(self) -> str:
         """Switcher device model."""
-        return self.data.device_type.value  # type: ignore[no-any-return]
+        return self.data.device_type.value
 
     @property
     def device_id(self) -> str:
         """Switcher device id."""
-        return self.data.device_id  # type: ignore[no-any-return]
+        return self.data.device_id
 
     @property
     def mac_address(self) -> str:
         """Switcher device mac address."""
-        return self.data.mac_address  # type: ignore[no-any-return]
+        return self.data.mac_address
 
     @callback
     def async_setup(self) -> None:

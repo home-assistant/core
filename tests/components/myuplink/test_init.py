@@ -76,25 +76,23 @@ async def test_expired_token_refresh_failure(
 )
 async def test_devices_created_count(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_myuplink_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that one device is created."""
     await setup_integration(hass, mock_config_entry)
 
-    device_registry = dr.async_get(hass)
-
     assert len(device_registry.devices) == 1
 
 
 async def test_devices_multiple_created_count(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_myuplink_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that multiple device are created."""
     await setup_integration(hass, mock_config_entry)
-
-    device_registry = dr.async_get(hass)
 
     assert len(device_registry.devices) == 2

@@ -6,7 +6,7 @@ import dataclasses
 from datetime import timedelta
 from functools import cache
 import logging
-from typing import TYPE_CHECKING, Any, Generic, Self, TypedDict, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Self, TypedDict, cast
 
 from habluetooth import BluetoothScanningMode
 
@@ -42,9 +42,6 @@ STORAGE_KEY = "bluetooth.passive_update_processor"
 STORAGE_VERSION = 1
 STORAGE_SAVE_INTERVAL = timedelta(minutes=15)
 PASSIVE_UPDATE_PROCESSOR = "passive_update_processor"
-
-_T = TypeVar("_T")
-_DataT = TypeVar("_DataT")
 
 
 @dataclasses.dataclass(slots=True, frozen=True)
@@ -125,7 +122,7 @@ def serialize_entity_description(description: EntityDescription) -> dict[str, An
 
 
 @dataclasses.dataclass(slots=True, frozen=False)
-class PassiveBluetoothDataUpdate(Generic[_T]):
+class PassiveBluetoothDataUpdate[_T]:
     """Generic bluetooth data."""
 
     devices: dict[str | None, DeviceInfo] = dataclasses.field(default_factory=dict)
@@ -277,9 +274,7 @@ async def async_setup(hass: HomeAssistant) -> None:
     )
 
 
-class PassiveBluetoothProcessorCoordinator(
-    Generic[_DataT], BasePassiveBluetoothCoordinator
-):
+class PassiveBluetoothProcessorCoordinator[_DataT](BasePassiveBluetoothCoordinator):
     """Passive bluetooth processor coordinator for bluetooth advertisements.
 
     The coordinator is responsible for dispatching the bluetooth data,
@@ -388,13 +383,7 @@ class PassiveBluetoothProcessorCoordinator(
             processor.async_handle_update(update, was_available)
 
 
-_PassiveBluetoothDataProcessorT = TypeVar(
-    "_PassiveBluetoothDataProcessorT",
-    bound="PassiveBluetoothDataProcessor[Any, Any]",
-)
-
-
-class PassiveBluetoothDataProcessor(Generic[_T, _DataT]):
+class PassiveBluetoothDataProcessor[_T, _DataT]:
     """Passive bluetooth data processor for bluetooth advertisements.
 
     The processor is responsible for keeping track of the bluetooth data
@@ -609,7 +598,9 @@ class PassiveBluetoothDataProcessor(Generic[_T, _DataT]):
         self.async_update_listeners(new_data, was_available, changed_entity_keys)
 
 
-class PassiveBluetoothProcessorEntity(Entity, Generic[_PassiveBluetoothDataProcessorT]):
+class PassiveBluetoothProcessorEntity[
+    _PassiveBluetoothDataProcessorT: PassiveBluetoothDataProcessor[Any, Any]
+](Entity):
     """A class for entities using PassiveBluetoothDataProcessor."""
 
     _attr_has_entity_name = True

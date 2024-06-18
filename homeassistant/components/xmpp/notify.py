@@ -147,7 +147,7 @@ async def async_send_message(  # noqa: C901
 
             self.force_starttls = use_tls
             self.use_ipv6 = False
-            self.add_event_handler("failed_auth", self.disconnect_on_login_fail)
+            self.add_event_handler("failed_all_auth", self.disconnect_on_login_fail)
             self.add_event_handler("session_start", self.start)
 
             if room:

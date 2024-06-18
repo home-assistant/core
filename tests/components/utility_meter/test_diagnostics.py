@@ -2,6 +2,7 @@
 
 from aiohttp.test_utils import TestClient
 from freezegun import freeze_time
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.auth.models import Credentials
@@ -50,12 +51,12 @@ def limit_diagnostic_attrs(prop, path) -> bool:
 
 
 @freeze_time("2024-04-06 00:00:00+00:00")
+@pytest.mark.usefixtures("socket_enabled")
 async def test_diagnostics(
     hass: HomeAssistant,
     aiohttp_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
     hass_admin_credential: Credentials,
-    socket_enabled: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test generating diagnostics for a config entry."""

@@ -13,9 +13,9 @@ from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.entity_registry import async_get
 
 from .const import CONF_HTTPS, DEFAULT_PORT, DOMAIN
 
@@ -199,7 +199,7 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("Configuring dhcp player with unique id: %s", self.unique_id)
 
-        registry = async_get(self.hass)
+        registry = er.async_get(self.hass)
 
         if TYPE_CHECKING:
             assert self.unique_id

@@ -53,7 +53,7 @@ class BringConfigFlow(ConfigFlow, domain=DOMAIN):
             bring = Bring(session, user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
 
             try:
-                await bring.login()
+                info = await bring.login()
                 await bring.load_lists()
             except BringRequestException:
                 errors["base"] = "cannot_connect"
@@ -66,7 +66,7 @@ class BringConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(bring.uuid)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=user_input[CONF_EMAIL], data=user_input
+                    title=info["name"] or user_input[CONF_EMAIL], data=user_input
                 )
 
         return self.async_show_form(

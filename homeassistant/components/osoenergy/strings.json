@@ -25,6 +25,17 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "power_save": {
+        "name": "Power save"
+      },
+      "extra_energy": {
+        "name": "Extra energy"
+      },
+      "heating": {
+        "name": "Heating"
+      }
+    },
     "sensor": {
       "tapping_capacity": {
         "name": "Tapping capacity"
@@ -66,6 +77,18 @@
       },
       "profile": {
         "name": "Profile local"
+      },
+      "temperature_top": {
+        "name": "Temperature top"
+      },
+      "temperature_mid": {
+        "name": "Temperature middle"
+      },
+      "temperature_low": {
+        "name": "Temperature bottom"
+      },
+      "temperature_one": {
+        "name": "Temperature one"
       }
     }
   }
