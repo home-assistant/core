@@ -44,10 +44,10 @@ DATA_SCHEMA = vol.Schema(
 DATA_SCHEMA_ADV = vol.Schema(
     {
         vol.Required(CONF_HOSTNAME, default=DEFAULT_HOSTNAME): cv.string,
-        vol.Optional(CONF_RESOLVER, default=DEFAULT_RESOLVER): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_RESOLVER_IPV6, default=DEFAULT_RESOLVER_IPV6): cv.string,
-        vol.Optional(CONF_PORT_IPV6, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_RESOLVER): cv.string,
+        vol.Optional(CONF_PORT): cv.port,
+        vol.Optional(CONF_RESOLVER_IPV6): cv.string,
+        vol.Optional(CONF_PORT_IPV6): cv.port,
     }
 )
 

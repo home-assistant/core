@@ -35,7 +35,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         # This means the user has downgraded from a future version
         return False
 
-    if config_entry.version == 1 and config_entry.minor_version == 1:
+    if config_entry.version < 2 and config_entry.minor_version < 2:
         version = config_entry.version
         minor_version = config_entry.minor_version
         _LOGGER.debug(

@@ -61,9 +61,7 @@ async def async_setup_entry(
     if entry.data[CONF_IPV4]:
         entities.append(WanIpSensor(name, hostname, resolver_ipv4, False, port_ipv4))
     if entry.data[CONF_IPV6]:
-        entities.append(
-            WanIpSensor(name, hostname, resolver_ipv6, True, port=port_ipv6)
-        )
+        entities.append(WanIpSensor(name, hostname, resolver_ipv6, True, port_ipv6))
 
     async_add_entities(entities, update_before_add=True)
 
