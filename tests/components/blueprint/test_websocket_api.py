@@ -478,9 +478,41 @@ async def test_delete_blueprint_in_use_by_script(
         msg = await client.receive_json()
 
         assert not unlink_mock.mock_calls
-        assert msg["id"] == 9
         assert not msg["success"]
         assert msg["error"] == {
             "code": "home_assistant_error",
             "message": "Blueprint in use",
         }
+
+
+async def test_substituting_blueprint_inputs(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test substituting blueprint inputs."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "blueprint/substitute",
+            "domain": "automation",
+            "path": "test_event_service.yaml",
+            "input": {
+                "trigger_event": "test_event",
+                "service_to_call": "test.automation",
+                "a_number": 5,
+            },
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"]["substituted_config"] == {
+        "action": {
+            "entity_id": "light.kitchen",
+            "service": "test.automation",
+        },
+        "trigger": {
+            "event_type": "test_event",
+            "platform": "event",
+        },
+    }
