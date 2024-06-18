@@ -13,7 +13,7 @@ from .const import (
 
 def manage_water_heater_fallback_issue(
     hass: HomeAssistant,
-    water_heater_names: list,
+    water_heater_names: list[str],
     integration_overlay_fallback: str | None,
 ) -> None:
     """Notify users about water heater respecting fallback setting."""
