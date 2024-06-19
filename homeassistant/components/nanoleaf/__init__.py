@@ -82,7 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def _cancel_listener() -> None:
         event_listener.cancel()
-        with suppress(RuntimeError):
+        with suppress(asyncio.CancelledError):
             await event_listener
 
     entry.async_on_unload(_cancel_listener)
