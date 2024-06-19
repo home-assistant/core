@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 from dataclasses import dataclass
 import logging
 
@@ -79,8 +80,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    def _cancel_listener() -> None:
+    async def _cancel_listener() -> None:
         event_listener.cancel()
+        with suppress(RuntimeError):
+            await event_listener
 
     entry.async_on_unload(_cancel_listener)
 
