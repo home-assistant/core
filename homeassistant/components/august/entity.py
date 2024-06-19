@@ -75,14 +75,15 @@ class AugustEntityMixin(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
+        device_id = self._device_id
         self.async_on_remove(
             self._data.async_subscribe_device_id(
-                self._device_id, self._update_from_data_and_write_state
+                device_id, self._update_from_data_and_write_state
             )
         )
         self.async_on_remove(
-            self._data.activity_stream.async_subscribe_device_id(
-                self._device_id, self._update_from_data_and_write_state
+            self._stream.async_subscribe_device_id(
+                device_id, self._update_from_data_and_write_state
             )
         )
         self._update_from_data()
