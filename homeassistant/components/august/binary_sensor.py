@@ -63,30 +63,29 @@ def _retrieve_motion_state(data: AugustData, detail: DoorbellDetail) -> bool:
     return _activity_time_based_state(latest)
 
 
-def _retrieve_image_capture_state(data: AugustData, detail: DoorbellDetail) -> bool:
-    assert data.activity_stream is not None
-    latest = data.activity_stream.get_latest_device_activity(
-        detail.device_id, {ActivityType.DOORBELL_IMAGE_CAPTURE}
-    )
+_IMAGE_ACTIVITIES = {ActivityType.DOORBELL_IMAGE_CAPTURE}
 
+
+def _retrieve_image_capture_state(data: AugustData, detail: DoorbellDetail) -> bool:
+    stream = data.activity_stream
+    assert stream is not None
+    latest = stream.get_latest_device_activity(detail.device_id, _IMAGE_ACTIVITIES)
     if latest is None:
         return False
-
     return _activity_time_based_state(latest)
 
 
+_RING_ACTIVITIES = {ActivityType.DOORBELL_DING}
+
+
 def _retrieve_ding_state(data: AugustData, detail: DoorbellDetail | LockDetail) -> bool:
-    assert data.activity_stream is not None
-    latest = data.activity_stream.get_latest_device_activity(
-        detail.device_id, {ActivityType.DOORBELL_DING}
-    )
-
-    if latest is None:
+    stream = data.activity_stream
+    assert stream is not None
+    latest = stream.get_latest_device_activity(detail.device_id, _RING_ACTIVITIES)
+    if latest is None or (
+        data.push_updates_connected and latest.action == ACTION_DOORBELL_CALL_MISSED
+    ):
         return False
-
-    if data.push_updates_connected and latest.action == ACTION_DOORBELL_CALL_MISSED:
-        return False
-
     return _activity_time_based_state(latest)
 
 
