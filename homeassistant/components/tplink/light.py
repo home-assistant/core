@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from dataclasses import dataclass
 import logging
 from typing import Any, Final
 
@@ -20,7 +19,6 @@ from homeassistant.components.light import (
     EFFECT_OFF,
     ColorMode,
     LightEntity,
-    LightEntityDescription,
     LightEntityFeature,
     filter_supported_color_modes,
 )
@@ -173,11 +171,6 @@ async def async_setup_entry(
                 )
             ]
         )
-
-
-@dataclass(frozen=True)
-class TPLinkLightEntityDescription(LightEntityDescription):
-    """Describes TPLink light entity."""
 
 
 class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
