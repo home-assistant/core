@@ -34,8 +34,7 @@ from .common import (
     async_wait_recording_done,
     old_db_schema,
 )
-
-from tests.components.recorder.db_schema_32 import (
+from .db_schema_32 import (
     EventData,
     Events,
     RecorderRuns,
@@ -44,6 +43,7 @@ from tests.components.recorder.db_schema_32 import (
     StatisticsRuns,
     StatisticsShortTerm,
 )
+
 from tests.typing import RecorderInstanceGenerator
 
 

@@ -49,11 +49,6 @@ class IncomfortWaterHeater(IncomfortBoilerEntity, WaterHeaterEntity):
         self._attr_unique_id = heater.serial_no
 
     @property
-    def icon(self) -> str:
-        """Return the icon of the water_heater device."""
-        return "mdi:thermometer-lines"
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {k: v for k, v in self._heater.status.items() if k in HEATER_ATTRS}
@@ -68,9 +63,6 @@ class IncomfortWaterHeater(IncomfortBoilerEntity, WaterHeaterEntity):
         return max(self._heater.heater_temp, self._heater.tap_temp)
 
     @property
-    def current_operation(self) -> str:
+    def current_operation(self) -> str | None:
         """Return the current operation mode."""
-        if self._heater.is_failed:
-            return f"Fault code: {self._heater.fault_code}"
-
         return self._heater.display_text

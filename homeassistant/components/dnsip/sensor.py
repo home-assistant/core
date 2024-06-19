@@ -11,7 +11,7 @@ from aiodns.error import DNSError
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -20,6 +20,7 @@ from .const import (
     CONF_HOSTNAME,
     CONF_IPV4,
     CONF_IPV6,
+    CONF_PORT_IPV6,
     CONF_RESOLVER,
     CONF_RESOLVER_IPV6,
     DOMAIN,
@@ -53,12 +54,14 @@ async def async_setup_entry(
 
     resolver_ipv4 = entry.options[CONF_RESOLVER]
     resolver_ipv6 = entry.options[CONF_RESOLVER_IPV6]
+    port_ipv4 = entry.options[CONF_PORT]
+    port_ipv6 = entry.options[CONF_PORT_IPV6]
 
     entities = []
     if entry.data[CONF_IPV4]:
-        entities.append(WanIpSensor(name, hostname, resolver_ipv4, False))
+        entities.append(WanIpSensor(name, hostname, resolver_ipv4, False, port_ipv4))
     if entry.data[CONF_IPV6]:
-        entities.append(WanIpSensor(name, hostname, resolver_ipv6, True))
+        entities.append(WanIpSensor(name, hostname, resolver_ipv6, True, port_ipv6))
 
     async_add_entities(entities, update_before_add=True)
 
@@ -75,12 +78,13 @@ class WanIpSensor(SensorEntity):
         hostname: str,
         resolver: str,
         ipv6: bool,
+        port: int,
     ) -> None:
         """Initialize the DNS IP sensor."""
         self._attr_name = "IPv6" if ipv6 else None
         self._attr_unique_id = f"{hostname}_{ipv6}"
         self.hostname = hostname
-        self.resolver = aiodns.DNSResolver()
+        self.resolver = aiodns.DNSResolver(tcp_port=port, udp_port=port)
         self.resolver.nameservers = [resolver]
         self.querytype = "AAAA" if ipv6 else "A"
         self._retries = DEFAULT_RETRIES
