@@ -44,7 +44,7 @@ async def async_setup_entry(
 
 
 class TPLinkSwitch(CoordinatedTPLinkEntity, SwitchEntity):
-    """Representation of a feature-based TPLink sensor."""
+    """Representation of a feature-based TPLink switch."""
 
     def __init__(
         self,
@@ -66,7 +66,6 @@ class TPLinkSwitch(CoordinatedTPLinkEntity, SwitchEntity):
         # Use the device name for the primary switch control
         if feature.category is Feature.Category.Primary and not parent:
             self._attr_name = None
-
         self.entity_description = _description_for_feature(
             SwitchEntityDescription, feature
         )

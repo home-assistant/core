@@ -145,8 +145,8 @@ async def async_setup_entry(
                 TPLinkSmartLightStrip(
                     device,
                     parent_coordinator,
-                    device.modules[Module.Light],
-                    effect_module,
+                    light_module=device.modules[Module.Light],
+                    effect_module=effect_module,
                 )
             ]
         )
@@ -163,7 +163,13 @@ async def async_setup_entry(
         )
     elif Module.Light in device.modules:
         async_add_entities(
-            [TPLinkSmartBulb(device, parent_coordinator, device.modules[Module.Light])]
+            [
+                TPLinkSmartBulb(
+                    device,
+                    parent_coordinator,
+                    light_module=device.modules[Module.Light],
+                )
+            ]
         )
 
 
@@ -178,6 +184,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         self,
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
+        *,
         light_module: Light,
     ) -> None:
         """Initialize the switch."""
@@ -313,12 +320,13 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
         self,
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
+        *,
         light_module: Light,
         effect_module: LightEffect,
     ) -> None:
-        """Initialize the switch."""
+        """Initialize the light strip."""
         self._effect_module = effect_module
-        super().__init__(device, coordinator, light_module)
+        super().__init__(device, coordinator, light_module=light_module)
 
     _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
 
