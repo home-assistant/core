@@ -1326,7 +1326,6 @@ async def test_auth_provider_config(hass: HomeAssistant) -> None:
         "time_zone": "GMT",
         CONF_AUTH_PROVIDERS: [
             {"type": "homeassistant"},
-            {"type": "legacy_api_password", "api_password": "some-pass"},
         ],
         CONF_AUTH_MFA_MODULES: [{"type": "totp"}, {"type": "totp", "id": "second"}],
     }
@@ -1334,9 +1333,8 @@ async def test_auth_provider_config(hass: HomeAssistant) -> None:
         del hass.auth
     await config_util.async_process_ha_core_config(hass, core_config)
 
-    assert len(hass.auth.auth_providers) == 2
+    assert len(hass.auth.auth_providers) == 1
     assert hass.auth.auth_providers[0].type == "homeassistant"
-    assert hass.auth.auth_providers[1].type == "legacy_api_password"
     assert len(hass.auth.auth_mfa_modules) == 2
     assert hass.auth.auth_mfa_modules[0].id == "totp"
     assert hass.auth.auth_mfa_modules[1].id == "second"

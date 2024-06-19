@@ -12,9 +12,7 @@ import voluptuous as vol
 
 from homeassistant import const
 from homeassistant.auth.models import Credentials
-from homeassistant.auth.providers.legacy_api_password import (
-    LegacyApiPasswordAuthProvider,
-)
+from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.bootstrap import DATA_LOGGING
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
@@ -735,7 +733,7 @@ async def test_rendering_template_legacy_user(
     hass: HomeAssistant,
     mock_api_client: TestClient,
     aiohttp_client: ClientSessionGenerator,
-    legacy_auth: LegacyApiPasswordAuthProvider,
+    local_auth: HassAuthProvider,
 ) -> None:
     """Test rendering a template with legacy API password."""
     hass.states.async_set("sensor.temperature", 10)
