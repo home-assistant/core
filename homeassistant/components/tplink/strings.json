@@ -63,10 +63,10 @@
       "current_consumption": {
         "name": "Current consumption"
       },
-      "total_consumption": {
+      "consumption_total": {
         "name": "Total consumption"
       },
-      "today_consumption": {
+      "consumption_today": {
         "name": "Today's consumption"
       }
     },

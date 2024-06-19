@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable, Coroutine
+from datetime import datetime
 import logging
 from typing import Any, Concatenate
 
@@ -18,7 +19,8 @@ from kasa import (
 from kasa.iot import IotDevice
 
 from homeassistant.components.light import LightEntity
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -27,11 +29,17 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import legacy_device_id
-from .const import DOMAIN, PRIMARY_STATE_ID
+from .const import DOMAIN, ENTITY_EXTRAS, PRIMARY_STATE_ID
 from .coordinator import TPLinkDataUpdateCoordinator
-from .descriptions import description_for_feature
 
 _LOGGER = logging.getLogger(__name__)
+
+# Mapping from upstream category to homeassistant category
+FEATURE_CATEGORY_TO_ENTITY_CATEGORY = {
+    Feature.Category.Config: EntityCategory.CONFIG,
+    Feature.Category.Info: EntityCategory.DIAGNOSTIC,
+    Feature.Category.Debug: EntityCategory.DIAGNOSTIC,
+}
 
 # Skips creating entities for primary features supported by a specialized platform.
 # For example, we do not need a separate "state" switch for light bulbs.
@@ -94,13 +102,11 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
         *,
-        description: EntityDescription,
         feature: Feature | None = None,
         parent: Device | None = None,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self.entity_description = description
         self._device: Device = device
         self._feature = feature
 
@@ -168,8 +174,10 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
             return unique_id
 
         # For legacy sensors, we construct our IDs from the entity description
-        if self.entity_description is not None:
+        if isinstance(self, SensorEntity) and self.entity_description is not None:
             return f"{legacy_device_id(device)}_{self.entity_description.key}"
+
+        return legacy_device_id(device)
 
     @abstractmethod
     @callback
@@ -230,16 +238,15 @@ def _entities_for_device[_E: CoordinatedTPLinkEntity](
             device,
             coordinator,
             feature=feat,
-            description=description,
             parent=parent,
         )
         for feat in device.features.values()
         if feat.type == feature_type
+        and (not isinstance(feat.value, datetime) or feat.value.tzinfo)
         and (
             feat.category != Feature.Category.Primary
             or device.device_type not in DEVICETYPES_WITH_SPECIALIZED_PLATFORMS
         )
-        and (description := description_for_feature(feat)) is not None
     )
     return entities
 
@@ -286,3 +293,58 @@ def _entities_for_device_and_its_children[_E: CoordinatedTPLinkEntity](
             )
 
     return entities
+
+
+def _category_for_feature(feature: Feature | None) -> EntityCategory | None:
+    """Return entity category for a feature."""
+    # Main controls have no category
+    if feature is None or feature.category is Feature.Category.Primary:
+        return None
+
+    if (
+        entity_category := FEATURE_CATEGORY_TO_ENTITY_CATEGORY.get(feature.category)
+    ) is None:
+        _LOGGER.error("Unhandled category %s, fallback to DIAGNOSTIC", feature.category)
+        entity_category = EntityCategory.DIAGNOSTIC
+
+    return entity_category
+
+
+def _description_for_feature[_D: EntityDescription](
+    desc_cls: type[_D],
+    feature: Feature,
+) -> _D:
+    """Return description object for the given feature.
+
+    This is responsible for setting the common parameters & deciding based on feature id
+    which additional parameters are passed.
+    """
+
+    kwargs: dict = {}
+    # Key can be overridden for legacy support
+    if (entity_extras := ENTITY_EXTRAS.get(feature.id)) and (
+        key := entity_extras.get("key")
+    ):
+        kwargs["key"] = key
+    else:
+        kwargs["key"] = feature.id
+    # Use translation keys for all features configured in extras
+    if entity_extras:
+        kwargs["translation_key"] = feature.id
+        kwargs["state_class"] = entity_extras.get("state_class")
+        kwargs["device_class"] = entity_extras.get("device_class")
+    else:
+        kwargs["name"] = feature.name
+        kwargs["icon"] = feature.icon
+
+    kwargs["entity_registry_enabled_default"] = (
+        feature.category is not Feature.Category.Debug
+    )
+    kwargs["entity_category"] = _category_for_feature(feature)
+
+    if feature.type == Feature.Type.Sensor:
+        if isinstance(feature.value, datetime):
+            kwargs["device_class"] = SensorDeviceClass.TIMESTAMP
+        kwargs["native_unit_of_measurement"] = feature.unit
+        kwargs["precision"] = feature.precision_hint
+    return desc_cls(**kwargs)

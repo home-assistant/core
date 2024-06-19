@@ -2,18 +2,29 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import cast
 
 from kasa import Device, Feature
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TPLinkConfigEntry
 from .coordinator import TPLinkDataUpdateCoordinator
-from .descriptions import TPLinkSensorEntityDescription
-from .entity import CoordinatedTPLinkEntity, _entities_for_device_and_its_children
+from .entity import (
+    CoordinatedTPLinkEntity,
+    _description_for_feature,
+    _entities_for_device_and_its_children,
+)
+
+
+@dataclass(frozen=True, kw_only=True)
+class TPLinkSensorEntityDescription(SensorEntityDescription):
+    """Describes TPLink sensor entity."""
+
+    precision: int | None = None
 
 
 async def async_setup_entry(
@@ -48,14 +59,14 @@ class TPLinkSensor(CoordinatedTPLinkEntity, SensorEntity):
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
         *,
-        description: TPLinkSensorEntityDescription,
         feature: Feature,
         parent: Device | None = None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(
-            device, coordinator, description=description, feature=feature, parent=parent
+        self.entity_description = _description_for_feature(
+            TPLinkSensorEntityDescription, feature
         )
+        super().__init__(device, coordinator, feature=feature, parent=parent)
         self._feature: Feature
         self._async_call_update_attrs()
 

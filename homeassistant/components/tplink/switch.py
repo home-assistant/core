@@ -7,15 +7,15 @@ from typing import Any
 
 from kasa import Device, Feature
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TPLinkConfigEntry
 from .coordinator import TPLinkDataUpdateCoordinator
-from .descriptions import TPLinkSwitchEntityDescription
 from .entity import (
     CoordinatedTPLinkEntity,
+    _description_for_feature,
     _entities_for_device_and_its_children,
     async_refresh_after,
 )
@@ -51,7 +51,6 @@ class TPLinkSwitch(CoordinatedTPLinkEntity, SwitchEntity):
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
         *,
-        description: TPLinkSwitchEntityDescription,
         feature: Feature,
         parent: Device | None = None,
     ) -> None:
@@ -59,7 +58,6 @@ class TPLinkSwitch(CoordinatedTPLinkEntity, SwitchEntity):
         super().__init__(
             device,
             coordinator,
-            description=description,
             feature=feature,
             parent=parent,
         )
@@ -68,7 +66,9 @@ class TPLinkSwitch(CoordinatedTPLinkEntity, SwitchEntity):
         # Use the device name for the primary switch control
         if feature.category is Feature.Category.Primary and not parent:
             self._attr_name = None
-
+        self.entity_description = _description_for_feature(
+            SwitchEntityDescription, feature
+        )
         self._async_call_update_attrs()
 
     @async_refresh_after
