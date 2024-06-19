@@ -44,6 +44,7 @@ async def async_setup_entry(
             translation_key="request_timeout",
             translation_placeholders={
                 "config_title": entry.title,
+                "error": e,
             },
         ) from e
     except OpendataTransportError as e:
@@ -52,6 +53,7 @@ async def async_setup_entry(
             translation_key="invalid_data",
             translation_placeholders={
                 "config_title": entry.title,
+                "error": e,
             },
         ) from e
 
@@ -114,8 +116,8 @@ async def async_migrate_entry(
             config_entry, unique_id=new_unique_id, minor_version=2
         )
 
-    if config_entry.version < 2 and config_entry.minor_version < 3:
-        # Via stations now available, migrate to version 2.1
+    if config_entry.version < 2:
+        # Via stations now available, which are not backwards compatible if used, changes unique id
         hass.config_entries.async_update_entry(config_entry, version=2, minor_version=1)
 
     _LOGGER.debug(
