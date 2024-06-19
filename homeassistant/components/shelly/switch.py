@@ -152,6 +152,7 @@ def async_setup_rpc_entry(
         component["key"].split(":")[-1]
         for component in coordinator.device.dynamic_components
         if "boolean" in component["key"]
+        and component["config"]["meta"]["ui"]["view"] == "toggle"
     )
     async_add_entities(RpcVirtualSwitch(coordinator, id_) for id_ in virtual_switches)
 
