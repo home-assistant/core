@@ -27,7 +27,10 @@ from zwave_js_server.const.command_class.lock import (
     DOOR_STATUS_PROPERTY,
     LOCKED_PROPERTY,
 )
-from zwave_js_server.const.command_class.meter import VALUE_PROPERTY
+from zwave_js_server.const.command_class.meter import (
+    RESET_PROPERTY as RESET_METER_PROPERTY,
+    VALUE_PROPERTY,
+)
 from zwave_js_server.const.command_class.protection import LOCAL_PROPERTY, RF_PROPERTY
 from zwave_js_server.const.command_class.sound_switch import (
     DEFAULT_TONE_ID_PROPERTY,
@@ -1179,6 +1182,18 @@ DISCOVERY_SCHEMAS = [
         primary_value=ZWaveValueDiscoverySchema(
             stateful=False,
         ),
+    ),
+    # button
+    # Meter CC idle
+    ZWaveDiscoverySchema(
+        platform=Platform.BUTTON,
+        hint="meter reset",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.METER},
+            property={RESET_METER_PROPERTY},
+            type={ValueType.BOOLEAN},
+        ),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 ]
 
