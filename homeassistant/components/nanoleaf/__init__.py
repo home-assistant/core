@@ -4,17 +4,9 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from datetime import timedelta
 import logging
 
-from aionanoleaf import (
-    EffectsEvent,
-    InvalidToken,
-    Nanoleaf,
-    StateEvent,
-    TouchEvent,
-    Unavailable,
-)
+from aionanoleaf import EffectsEvent, Nanoleaf, StateEvent, TouchEvent
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -25,12 +17,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, NANOLEAF_EVENT, TOUCH_GESTURE_TRIGGER_MAP, TOUCH_MODELS
+from .coordinator import NanoleafCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +33,7 @@ class NanoleafEntryData:
     """Class for sharing data within the Nanoleaf integration."""
 
     device: Nanoleaf
-    coordinator: DataUpdateCoordinator[None]
+    coordinator: NanoleafCoordinator
     event_listener: asyncio.Task
 
 
@@ -52,22 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_get_clientsession(hass), entry.data[CONF_HOST], entry.data[CONF_TOKEN]
     )
 
-    async def async_get_state() -> None:
-        """Get the state of the device."""
-        try:
-            await nanoleaf.get_info()
-        except Unavailable as err:
-            raise UpdateFailed from err
-        except InvalidToken as err:
-            raise ConfigEntryAuthFailed from err
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=entry.title,
-        update_interval=timedelta(minutes=1),
-        update_method=async_get_state,
-    )
+    coordinator = NanoleafCoordinator(hass, nanoleaf)
 
     await coordinator.async_config_entry_first_refresh()
 
