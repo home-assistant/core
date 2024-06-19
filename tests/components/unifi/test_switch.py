@@ -1098,7 +1098,6 @@ async def test_outlet_switches(
     mock_websocket_message,
     config_entry_setup: ConfigEntry,
     device_payload: list[dict[str, Any]],
-    mock_websocket_state,
     entity_id: str,
     outlet_index: int,
     expected_switches: int,
@@ -1156,16 +1155,6 @@ async def test_outlet_switches(
     assert aioclient_mock.mock_calls[1][2] == {
         "outlet_overrides": expected_on_overrides
     }
-
-    # Availability signalling
-
-    # Controller disconnects
-    await mock_websocket_state.disconnect()
-    assert hass.states.get(f"switch.{entity_id}").state == STATE_UNAVAILABLE
-
-    # Controller reconnects
-    await mock_websocket_state.reconnect()
-    assert hass.states.get(f"switch.{entity_id}").state == STATE_OFF
 
     # Device gets disabled
     device_1["disabled"] = True
@@ -1567,7 +1556,7 @@ async def test_updating_unique_id(
     assert hass.states.get("switch.switch_port_1_poe")
 
 
-@pytest.mark.parametrize("device_payload", [[DEVICE_1]])
+@pytest.mark.parametrize("device_payload", [[DEVICE_1, OUTLET_UP1]])
 @pytest.mark.parametrize("port_forward_payload", [[PORT_FORWARD_PLEX]])
 @pytest.mark.parametrize("wlan_payload", [[WLAN]])
 @pytest.mark.usefixtures("config_entry_setup")
@@ -1575,19 +1564,20 @@ async def test_updating_unique_id(
 async def test_hub_state_change(hass: HomeAssistant, mock_websocket_state) -> None:
     """Verify entities state reflect on hub connection becoming unavailable."""
     assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_ON
+    assert hass.states.get("switch.plug_outlet_1").state == STATE_ON
     assert hass.states.get("switch.unifi_network_plex").state == STATE_ON
     assert hass.states.get("switch.ssid_1").state == STATE_ON
-
-    # Availability signalling
 
     # Controller disconnects
     await mock_websocket_state.disconnect()
     assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_UNAVAILABLE
+    assert hass.states.get("switch.plug_outlet_1").state == STATE_UNAVAILABLE
     assert hass.states.get("switch.unifi_network_plex").state == STATE_UNAVAILABLE
     assert hass.states.get("switch.ssid_1").state == STATE_UNAVAILABLE
 
     # Controller reconnects
     await mock_websocket_state.reconnect()
     assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_ON
+    assert hass.states.get("switch.plug_outlet_1").state == STATE_ON
     assert hass.states.get("switch.unifi_network_plex").state == STATE_ON
     assert hass.states.get("switch.ssid_1").state == STATE_ON
