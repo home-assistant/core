@@ -55,7 +55,7 @@ async def websocket_create(
 
     try:
         await provider.async_add_auth(msg["username"], msg["password"])
-    except auth_ha.InvalidUsername:
+    except auth_ha.InvalidUser:
         connection.send_error(msg["id"], "username_exists", "Username already exists")
         return
 
@@ -228,6 +228,10 @@ async def websocket_change_username(
 
     try:
         await provider.async_change_username(username, msg["new_username"])
+    except auth_ha.InvalidUsername:
+        # As InvalidUsername is a subclass of InvalidAuth and is translated, we raise
+        # to use the translations
+        raise
     except auth_ha.InvalidUser:
         connection.send_error(
             msg["id"], "credentials_not_found", "Credentials not found"

@@ -510,6 +510,12 @@ async def test_change_username_error_not_normalized(
         hass, hass_ws_client, local_auth, hass_admin_credential, new_username
     )
     assert not result["success"], result
-    assert result["error"]["code"] == "credentials_not_found"
+    assert result["error"] == {
+        "code": "home_assistant_error",
+        "message": "username_not_normalized",
+        "translation_key": "username_not_normalized",
+        "translation_placeholders": {"new_username": new_username},
+        "translation_domain": "auth",
+    }
     _assert_username(local_auth, current_username, should_exist=True)
     _assert_username(local_auth, new_username, should_exist=False)
