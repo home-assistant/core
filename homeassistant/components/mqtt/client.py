@@ -894,29 +894,32 @@ class MQTT:
         if not self._pending_subscriptions:
             return
 
-        subscriptions: dict[str, int] = self._pending_subscriptions
-        wildcard_subscriptions = self._wildcard_subscriptions.copy()
+        pending_subscriptions: dict[str, int] = self._pending_subscriptions
+        pending_wildcard_subscriptions = {
+            subscription.topic: pending_subscriptions.pop(subscription.topic)
+            for subscription in self._wildcard_subscriptions
+            if subscription.topic in pending_subscriptions
+        }
+        simple_subscription_list = list(pending_subscriptions.items())
+
         self._pending_subscriptions = {}
 
         debug_enabled = _LOGGER.isEnabledFor(logging.DEBUG)
 
-        for subscription in wildcard_subscriptions:
-            if (topic := subscription.topic) in subscriptions:
-                qos = subscriptions.pop(topic)
-                result, mid = self._mqttc.subscribe(topic, qos)
+        for topic, qos in pending_wildcard_subscriptions.items():
+            result, mid = self._mqttc.subscribe(topic, qos)
 
-                if debug_enabled:
-                    _LOGGER.debug(
-                        "Subscribing wildcard topic %s with qos %s, mid: %s",
-                        topic,
-                        qos,
-                        mid,
-                    )
+            if debug_enabled:
+                _LOGGER.debug(
+                    "Subscribing wildcard topic %s with qos %s, mid: %s",
+                    topic,
+                    qos,
+                    mid,
+                )
 
-                await self._async_wait_for_mid_or_raise(mid, result)
+            await self._async_wait_for_mid_or_raise(mid, result)
 
-        subscription_list = list(subscriptions.items())
-        for chunk in chunked_or_all(subscription_list, MAX_SUBSCRIBES_PER_CALL):
+        for chunk in chunked_or_all(simple_subscription_list, MAX_SUBSCRIBES_PER_CALL):
             chunk_list = list(chunk)
             if not chunk_list:
                 continue

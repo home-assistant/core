@@ -77,8 +77,11 @@ def help_all_subscribe_calls(mqtt_client_mock: MqttMockPahoClient) -> list[Any]:
     """Test of a call."""
     all_calls = []
     for calls in mqtt_client_mock.subscribe.mock_calls:
-        for call in calls[1]:
-            all_calls.extend(call)
+        if hasattr(calls, "args"):
+            all_calls.append(calls[1])
+        else:
+            for call in calls[1]:
+                all_calls.extend(call)
     return all_calls
 
 
