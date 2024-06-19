@@ -996,9 +996,7 @@ async def test_block_switches(
 @pytest.mark.parametrize("dpi_app_payload", [DPI_APPS])
 @pytest.mark.parametrize("dpi_group_payload", [DPI_GROUPS])
 @pytest.mark.usefixtures("config_entry_setup")
-async def test_dpi_switches(
-    hass: HomeAssistant, mock_websocket_message, mock_websocket_state
-) -> None:
+async def test_dpi_switches(hass: HomeAssistant, mock_websocket_message) -> None:
     """Test the update_items function with some clients."""
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
@@ -1010,16 +1008,6 @@ async def test_dpi_switches(
     mock_websocket_message(data=DPI_APP_DISABLED_EVENT)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.block_media_streaming").state == STATE_OFF
-
-    # Availability signalling
-
-    # Controller disconnects
-    await mock_websocket_state.disconnect()
-    assert hass.states.get("switch.block_media_streaming").state == STATE_UNAVAILABLE
-
-    # Controller reconnects
-    await mock_websocket_state.reconnect()
     assert hass.states.get("switch.block_media_streaming").state == STATE_OFF
 
     # Remove app
@@ -1557,6 +1545,8 @@ async def test_updating_unique_id(
 
 
 @pytest.mark.parametrize("device_payload", [[DEVICE_1, OUTLET_UP1]])
+@pytest.mark.parametrize("dpi_app_payload", [DPI_APPS])
+@pytest.mark.parametrize("dpi_group_payload", [DPI_GROUPS])
 @pytest.mark.parametrize("port_forward_payload", [[PORT_FORWARD_PLEX]])
 @pytest.mark.parametrize("wlan_payload", [[WLAN]])
 @pytest.mark.usefixtures("config_entry_setup")
@@ -1565,6 +1555,7 @@ async def test_hub_state_change(hass: HomeAssistant, mock_websocket_state) -> No
     """Verify entities state reflect on hub connection becoming unavailable."""
     assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_ON
     assert hass.states.get("switch.plug_outlet_1").state == STATE_ON
+    assert hass.states.get("switch.block_media_streaming").state == STATE_ON
     assert hass.states.get("switch.unifi_network_plex").state == STATE_ON
     assert hass.states.get("switch.ssid_1").state == STATE_ON
 
@@ -1572,6 +1563,7 @@ async def test_hub_state_change(hass: HomeAssistant, mock_websocket_state) -> No
     await mock_websocket_state.disconnect()
     assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_UNAVAILABLE
     assert hass.states.get("switch.plug_outlet_1").state == STATE_UNAVAILABLE
+    assert hass.states.get("switch.block_media_streaming").state == STATE_UNAVAILABLE
     assert hass.states.get("switch.unifi_network_plex").state == STATE_UNAVAILABLE
     assert hass.states.get("switch.ssid_1").state == STATE_UNAVAILABLE
 
@@ -1579,5 +1571,6 @@ async def test_hub_state_change(hass: HomeAssistant, mock_websocket_state) -> No
     await mock_websocket_state.reconnect()
     assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_ON
     assert hass.states.get("switch.plug_outlet_1").state == STATE_ON
+    assert hass.states.get("switch.block_media_streaming").state == STATE_ON
     assert hass.states.get("switch.unifi_network_plex").state == STATE_ON
     assert hass.states.get("switch.ssid_1").state == STATE_ON
