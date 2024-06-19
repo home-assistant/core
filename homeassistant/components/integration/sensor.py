@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from decimal import Decimal, DecimalException, InvalidOperation
+from decimal import Decimal, InvalidOperation
 from enum import Enum
 import logging
 from typing import Any, Final, Self
@@ -27,7 +27,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
     UnitOfTime,
 )
 from homeassistant.core import (
@@ -428,24 +427,6 @@ class IntegrationSensor(RestoreSensor):
                 self._state,
                 self._last_valid_state,
             )
-        elif (state := await self.async_get_last_state()) is not None:
-            # legacy to be removed on 2023.10 (we are keeping this to avoid losing data during the transition)
-            if state.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
-                if state.state == STATE_UNAVAILABLE:
-                    self._attr_available = False
-            else:
-                try:
-                    self._state = Decimal(state.state)
-                except (DecimalException, ValueError) as err:
-                    _LOGGER.warning(
-                        "%s could not restore last state %s: %s",
-                        self.entity_id,
-                        state.state,
-                        err,
-                    )
-
-            self._attr_device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-            self._unit_of_measurement = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if self._max_sub_interval is not None:
             source_state = self.hass.states.get(self._sensor_source_id)
