@@ -88,7 +88,7 @@ class Data:
         self._data: dict[str, list[dict[str, str]]] | None = None
         # Legacy mode will allow usernames to start/end with whitespace
         # and will compare usernames case-insensitive.
-        # Deprecated since June 2019 and will be removed in 2026.7
+        # Remove in 2020 or when we launch 1.0.
         self.is_legacy = False
 
     @callback
