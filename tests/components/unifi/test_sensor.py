@@ -1385,6 +1385,7 @@ WIRELESS_CLIENT = {
 )
 @pytest.mark.usefixtures("config_entry_setup")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.freeze_time("2021-01-01 01:01:00")
 async def test_sensor_sources(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
