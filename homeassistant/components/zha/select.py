@@ -73,7 +73,6 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
     _attr_entity_category = EntityCategory.CONFIG
     _attribute_name: str
     _enum: type[Enum]
-    # needs fixing: Change all enums to uncapitalized snake_case
     _translation_keys: dict[str, str]
 
     def __init__(
@@ -88,7 +87,6 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
         self._translation_keys = {
             entry.name.lower(): entry.name for entry in self._enum
         }
-        # needs fixing: Change all enums to uncapitalized snake_case
         self._attr_options = [entry.name.lower() for entry in self._enum]
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
@@ -99,7 +97,6 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
         option = self._cluster_handler.data_cache.get(self._attribute_name)
         if option is None:
             return None
-        # needs fixing: Change all enums to uncapitalized snake_case
         return option.name.lower()
 
     async def async_select_option(self, option: str) -> None:
@@ -114,7 +111,8 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
         """Restore previous state."""
         if last_state.state and last_state.state != STATE_UNKNOWN:
             self._cluster_handler.data_cache[self._attribute_name] = self._enum[
-                self._translation_keys[last_state.state]
+                last_state.state.replace(" ", "_")
+                # after 6months, change to: self._translation_keys[last_state.state]
             ]
 
 
