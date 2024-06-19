@@ -98,7 +98,6 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
             entry.name.lower(): entry.name for entry in self._enum
         }
         self._attr_options = [entry.name.lower() for entry in self._enum]
-        self._cluster_handler: ClusterHandler = cluster_handlers[0]
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
     @property
