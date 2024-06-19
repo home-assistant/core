@@ -138,7 +138,11 @@ class EvoSession:
         Will raise evo.AuthenticationFailed if the credentials are invalid.
         """
 
-        if self.client_v2 is None:
+        if (
+            self.client_v2 is None
+            or username != self.client_v2.username
+            or password != self.client_v2.password
+        ):
             await self._load_auth_tokens(username)
 
             client_v2 = evo.EvohomeClient(
