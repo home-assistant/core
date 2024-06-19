@@ -6,7 +6,7 @@ from yalexs.lock import LockDetail
 from yalexs.manager.data import YaleXSData
 from yalexs_ble import YaleXSBLEDiscovery
 
-from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
+from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery_flow
@@ -41,12 +41,7 @@ def _async_trigger_ble_lock_discovery(
 class AugustData(YaleXSData):
     """August data object."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        august_gateway: AugustGateway,
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, august_gateway: AugustGateway) -> None:
         """Init August data object."""
         self._hass = hass
         super().__init__(august_gateway, HomeAssistantError)

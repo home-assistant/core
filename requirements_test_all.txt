@@ -107,7 +107,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.30
+SQLAlchemy==2.0.31
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -383,7 +383,7 @@ aiowithings==3.0.1
 aioymaps==1.2.2
 
 # homeassistant.components.airgradient
-airgradient==0.5.0
+airgradient==0.6.0
 
 # homeassistant.components.airly
 airly==1.1.0
@@ -876,7 +876,7 @@ hass-nabucasa==0.81.1
 hassil==1.7.1
 
 # homeassistant.components.jewish_calendar
-hdate==0.10.8
+hdate==0.10.9
 
 # homeassistant.components.here_travel_time
 here-routing==0.2.0
@@ -1255,7 +1255,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==0.37.3
+plugwise==0.37.4.1
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
