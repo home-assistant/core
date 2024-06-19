@@ -11,7 +11,7 @@ from yalexs.manager.exceptions import CannotConnect, InvalidAuth, RequireValidat
 from yalexs.manager.gateway import Config as YaleXSConfig
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -49,14 +49,6 @@ async def async_setup_august(
     """Set up the August component."""
     config = cast(YaleXSConfig, entry.data)
     await august_gateway.async_setup(config)
-
-    if CONF_PASSWORD in entry.data:
-        # We no longer need to store passwords since we do not
-        # support YAML anymore
-        config_data = entry.data.copy()
-        del config_data[CONF_PASSWORD]
-        hass.config_entries.async_update_entry(entry, data=config_data)
-
     await august_gateway.async_authenticate()
     await august_gateway.async_refresh_access_token_if_needed()
 

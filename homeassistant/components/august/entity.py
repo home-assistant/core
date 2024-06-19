@@ -33,6 +33,7 @@ class AugustEntityMixin(Entity):
         self._data = data
         self._device = device
         detail = self._detail
+        self._device_id = device.device_id
         self._attr_unique_id = f"{device.device_id}_{unique_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
@@ -45,10 +46,6 @@ class AugustEntityMixin(Entity):
         )
         if isinstance(detail, LockDetail) and (mac := detail.mac_address):
             self._attr_device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_BLUETOOTH, mac)}
-
-    @property
-    def _device_id(self) -> str:
-        return self._device.device_id
 
     @property
     def _detail(self) -> DoorbellDetail | LockDetail:
