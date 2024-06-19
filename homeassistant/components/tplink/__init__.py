@@ -210,11 +210,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
 
 async def async_unload_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bool:
     """Unload a config entry."""
-    hass_data: dict[str, Any] = hass.data[DOMAIN]
     data = entry.runtime_data
     device = data.parent_coordinator.device
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass_data.pop(entry.entry_id)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     await device.protocol.close()
 
     return unload_ok

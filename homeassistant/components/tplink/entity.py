@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable, Coroutine
-from dataclasses import dataclass
-from datetime import datetime
 import logging
 from typing import Any, Concatenate
 
@@ -21,7 +19,6 @@ from kasa.iot import IotDevice
 
 from homeassistant.components.light import LightEntity
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import EntityCategory
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -32,16 +29,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import legacy_device_id
 from .const import DOMAIN, PRIMARY_STATE_ID
 from .coordinator import TPLinkDataUpdateCoordinator
+from .descriptions import description_for_feature
 
 _LOGGER = logging.getLogger(__name__)
-
-
-# Mapping from upstream category to homeassistant category
-FEATURE_CATEGORY_TO_ENTITY_CATEGORY = {
-    Feature.Category.Config: EntityCategory.CONFIG,
-    Feature.Category.Info: EntityCategory.DIAGNOSTIC,
-    Feature.Category.Debug: EntityCategory.DIAGNOSTIC,
-}
 
 # Skips creating entities for primary features supported by a specialized platform.
 # For example, we do not need a separate "state" switch for light bulbs.
@@ -50,13 +40,6 @@ DEVICETYPES_WITH_SPECIALIZED_PLATFORMS = {
     DeviceType.LightStrip,
     DeviceType.Dimmer,
 }
-
-
-@dataclass(frozen=True)
-class TPLinkFeatureEntityDescription(EntityDescription):
-    """Describes TPLink entity."""
-
-    feature_id: str | None = None
 
 
 def async_refresh_after[_T: CoordinatedTPLinkEntity, **_P](
@@ -227,21 +210,6 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         return self.coordinator.last_update_success and self._attr_available
 
 
-def _category_for_feature(feature: Feature | None) -> EntityCategory | None:
-    """Return entity category for a feature."""
-    # Main controls have no category
-    if feature is None or feature.category is Feature.Category.Primary:
-        return None
-
-    if (
-        entity_category := FEATURE_CATEGORY_TO_ENTITY_CATEGORY.get(feature.category)
-    ) is None:
-        _LOGGER.error("Unhandled category %s, fallback to DIAGNOSTIC", feature.category)
-        entity_category = EntityCategory.DIAGNOSTIC
-
-    return entity_category
-
-
 def _entities_for_device[_E: CoordinatedTPLinkEntity](
     device: Device,
     coordinator: TPLinkDataUpdateCoordinator,
@@ -249,49 +217,30 @@ def _entities_for_device[_E: CoordinatedTPLinkEntity](
     feature_type: Feature.Type,
     entity_class: type[_E],
     parent: Device | None = None,
-    descriptions: tuple[TPLinkFeatureEntityDescription, ...] | None = None,
-    new_description_generator: Callable[[Feature], TPLinkFeatureEntityDescription]
-    | None = None,
 ) -> list[_E]:
     """Return a list of entities to add.
 
     This filters out unwanted features to avoid creating unnecessary entities
     for device features that are implemented by specialized platforms like light.
     """
-    described_features: set[str | None] = set()
     entities: list[_E] = []
-    if descriptions:
-        described_features = {description.feature_id for description in descriptions}
-        entities.extend(
-            entity_class(
-                device,
-                coordinator,
-                feature=device.features[description.feature_id],
-                description=description,
-                parent=parent,
-            )
-            for description in descriptions
-            if description.feature_id in device.features
+
+    entities.extend(
+        entity_class(
+            device,
+            coordinator,
+            feature=feat,
+            description=description,
+            parent=parent,
         )
-    if new_description_generator:
-        entities.extend(
-            entity_class(
-                device,
-                coordinator,
-                feature=feat,
-                description=new_description_generator(feat),
-                parent=parent,
-            )
-            for feat in device.features.values()
-            if feat.type == feature_type
-            and feat.id not in described_features
-            # Timezone not currently supported in library
-            and (not isinstance(feat.value, datetime) or feat.value.tzinfo is not None)
-            and (
-                feat.category != Feature.Category.Primary
-                or device.device_type not in DEVICETYPES_WITH_SPECIALIZED_PLATFORMS
-            )
+        for feat in device.features.values()
+        if feat.type == feature_type
+        and (
+            feat.category != Feature.Category.Primary
+            or device.device_type not in DEVICETYPES_WITH_SPECIALIZED_PLATFORMS
         )
+        and (description := description_for_feature(feat)) is not None
+    )
     return entities
 
 
@@ -301,9 +250,6 @@ def _entities_for_device_and_its_children[_E: CoordinatedTPLinkEntity](
     *,
     feature_type: Feature.Type,
     entity_class: type[_E],
-    descriptions: tuple[TPLinkFeatureEntityDescription, ...] | None = None,
-    new_description_generator: Callable[[Feature], TPLinkFeatureEntityDescription]
-    | None = None,
     child_coordinators: list[TPLinkDataUpdateCoordinator] | None = None,
 ) -> list[_E]:
     """Create entities for device and its children.
@@ -318,8 +264,6 @@ def _entities_for_device_and_its_children[_E: CoordinatedTPLinkEntity](
             coordinator=coordinator,
             feature_type=feature_type,
             entity_class=entity_class,
-            descriptions=descriptions,
-            new_description_generator=new_description_generator,
         )
     )
     if device.children:
@@ -338,8 +282,6 @@ def _entities_for_device_and_its_children[_E: CoordinatedTPLinkEntity](
                     feature_type=feature_type,
                     entity_class=entity_class,
                     parent=device,
-                    descriptions=descriptions,
-                    new_description_generator=new_description_generator,
                 )
             )
 
