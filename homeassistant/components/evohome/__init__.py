@@ -132,8 +132,11 @@ class EvoSession:
         self.client_v1: ev1.EvohomeClient | None = None
         self.session_id: str | None = None
 
-    async def authenticate(self, username: str, password: str) -> bool:
-        """Check the user credentials against the web API."""
+    async def authenticate(self, username: str, password: str) -> None:
+        """Check the user credentials against the web API.
+
+        Will raise evo.AuthenticationFailed if the credentials are invalid.
+        """
 
         if self.client_v2 is None:
             await self._load_auth_tokens(username)
@@ -149,12 +152,7 @@ class EvoSession:
             client_v2 = self.client_v2
             client_v2._user_account = {}  # noqa: SLF001
 
-        try:
-            await client_v2.login()
-        except evo.AuthenticationFailed as err:
-            handle_evo_exception(err)
-            return False
-
+        await client_v2.login()
         await self.save_auth_tokens()
 
         self.client_v2 = client_v2
@@ -165,8 +163,6 @@ class EvoSession:
             session_id=self.session_id,
             session=self._session,
         )
-
-        return True
 
     async def _load_auth_tokens(self, username: str) -> None:
         """Load access tokens and session_id from the store and validate them.
@@ -232,13 +228,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     sess = EvoSession(hass)
 
-    if not await sess.authenticate(
-        config[DOMAIN][CONF_USERNAME],
-        config[DOMAIN][CONF_PASSWORD],
-    ):
+    try:
+        await sess.authenticate(
+            config[DOMAIN][CONF_USERNAME],
+            config[DOMAIN][CONF_PASSWORD],
+        )
+
+    except evo.AuthenticationFailed as err:
+        handle_evo_exception(err)
         return False
 
-    config[DOMAIN][CONF_PASSWORD] = "REDACTED"
+    finally:
+        config[DOMAIN][CONF_PASSWORD] = "REDACTED"
 
     broker = EvoBroker(sess)
 
