@@ -51,16 +51,13 @@ async def async_setup_august(
     await august_gateway.async_setup(config)
     await august_gateway.async_authenticate()
     await august_gateway.async_refresh_access_token_if_needed()
-
-    data = entry.runtime_data = AugustData(hass, entry, august_gateway)
+    data = entry.runtime_data = AugustData(hass, august_gateway)
     entry.async_on_unload(
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, data.async_stop)
     )
     entry.async_on_unload(data.async_stop)
     await data.async_setup()
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
     return True
 
 
