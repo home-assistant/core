@@ -32,7 +32,6 @@ class AugustEntityMixin(Entity):
         """Initialize an August device."""
         super().__init__()
         self._data = data
-        assert data.activity_stream is not None
         self._stream = data.activity_stream
         self._device = device
         detail = self._detail
