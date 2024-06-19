@@ -625,16 +625,16 @@ class ZHAGatewayProxy(EventBase):
 
     def get_device_proxy(self, ieee: EUI64) -> ZHADeviceProxy | None:
         """Return ZHADevice for given ieee."""
-        return self._devices.get(ieee)
+        return self.device_proxies.get(ieee)
 
     def get_group_proxy(self, group_id: int | str) -> ZHAGroupProxy | None:
         """Return Group for given group id."""
         if isinstance(group_id, str):
-            for group in self.groups.values():
-                if group.name == group_id:
-                    return group
+            for group_proxy in self.group_proxies.values():
+                if group_proxy.group.name == group_id:
+                    return group_proxy
             return None
-        return self.groups.get(group_id)
+        return self.group_proxies.get(group_id)
 
     def get_entity_reference(self, entity_id: str) -> EntityReference | None:
         """Return entity reference for given entity_id if found."""
