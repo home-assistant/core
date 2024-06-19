@@ -23,7 +23,9 @@ CONF_DATA = {
 }
 
 
-def _create_mocked_device(throw_exception=False, wired_mac=MAC, wireless_mac=None):
+def _create_mocked_device(
+    throw_exception=False, wired_mac=MAC, wireless_mac=None, no_soundfield=False
+):
     mocked_device = MagicMock()
 
     type(mocked_device).get_supported_methods = AsyncMock(
@@ -106,7 +108,9 @@ def _create_mocked_device(throw_exception=False, wired_mac=MAC, wireless_mac=Non
     settings.target = "soundField"
     settings.__iter__.return_value = [soundField]
 
-    type(mocked_device).get_sound_settings = AsyncMock(return_value=[settings])
+    type(mocked_device).get_sound_settings = AsyncMock(
+        return_value=[] if no_soundfield else [settings]
+    )
 
     type(mocked_device).set_power = AsyncMock()
     type(mocked_device).set_sound_settings = AsyncMock()
