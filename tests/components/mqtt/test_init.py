@@ -2743,6 +2743,7 @@ async def test_subscription_done_when_birth_message_is_sent(
     await mqtt.async_subscribe(hass, "topic/test", record_calls)
     await mqtt.async_subscribe(hass, "homeassistant/status", wait_birth)
     await hass.async_block_till_done()
+    mqtt_client_mock.reset_mock()
     mqtt_client_mock.on_connect(None, None, 0, 0)
     # We wait until we receive a birth message
     await asyncio.wait_for(birth.wait(), 1)
