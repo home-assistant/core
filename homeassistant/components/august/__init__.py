@@ -29,13 +29,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     session = async_create_august_clientsession(hass)
     august_gateway = AugustGateway(Path(hass.config.config_dir), session)
     try:
-        return await async_setup_august(hass, entry, august_gateway)
+        await async_setup_august(hass, entry, august_gateway)
     except (RequireValidation, InvalidAuth) as err:
         raise ConfigEntryAuthFailed from err
     except TimeoutError as err:
         raise ConfigEntryNotReady("Timed out connecting to august api") from err
     except (AugustApiAIOHTTPError, ClientResponseError, CannotConnect) as err:
         raise ConfigEntryNotReady from err
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> bool:
@@ -45,7 +47,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> b
 
 async def async_setup_august(
     hass: HomeAssistant, entry: AugustConfigEntry, august_gateway: AugustGateway
-) -> bool:
+) -> None:
     """Set up the August component."""
     config = cast(YaleXSConfig, entry.data)
     await august_gateway.async_setup(config)
@@ -57,8 +59,6 @@ async def async_setup_august(
     )
     entry.async_on_unload(data.async_stop)
     await data.async_setup()
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_remove_config_entry_device(
