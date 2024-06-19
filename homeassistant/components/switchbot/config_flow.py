@@ -240,7 +240,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._discovered_adv.device,
                 user_input[CONF_KEY_ID],
                 user_input[CONF_ENCRYPTION_KEY],
-                model=self._discovered_adv["modelName"],
+                model=self._discovered_adv.data["modelName"],
             ):
                 errors = {
                     "base": "encryption_key_invalid",
