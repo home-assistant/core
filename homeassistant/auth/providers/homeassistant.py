@@ -55,11 +55,25 @@ class InvalidUser(HomeAssistantError):
     """
 
 
-class InvalidUsername(HomeAssistantError):
+class InvalidUsername(InvalidUser):
     """Raised when invalid username is specified.
 
     Will not be raised when validating authentication.
     """
+
+    def __init__(
+        self,
+        *args: object,
+        translation_key: str | None = None,
+        translation_placeholders: dict[str, str] | None = None,
+    ) -> None:
+        """Initialize exception."""
+        super().__init__(
+            *args,
+            translation_domain="auth",
+            translation_key=translation_key,
+            translation_placeholders=translation_placeholders,
+        )
 
 
 class Data:
@@ -74,7 +88,7 @@ class Data:
         self._data: dict[str, list[dict[str, str]]] | None = None
         # Legacy mode will allow usernames to start/end with whitespace
         # and will compare usernames case-insensitive.
-        # Remove in 2020 or when we launch 1.0.
+        # Deprecated since June 2019 and will be removed in 2026.7
         self.is_legacy = False
 
     @callback
@@ -224,9 +238,8 @@ class Data:
         )
         if normalized_username != new_username:
             raise InvalidUsername(
-                f'Username "{new_username}" is not normalized',
-                translation_domain="auth",
                 translation_key="username_not_normalized",
+                translation_placeholders={"new_username": new_username},
             )
 
         if any(
@@ -234,8 +247,6 @@ class Data:
             for user in self.users
         ):
             raise InvalidUsername(
-                "Username already exists",
-                translation_domain="auth",
                 translation_key="username_exists",
             )
 

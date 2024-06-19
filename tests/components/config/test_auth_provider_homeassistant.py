@@ -503,7 +503,7 @@ async def test_change_username_error_not_normalized(
     hass_admin_credential: Credentials,
     new_username: str,
 ) -> None:
-    """Test that change username succeeds."""
+    """Test that change username raises error."""
     current_username = hass_admin_credential.data["username"]
 
     result = await _test_change_username(
@@ -511,5 +511,5 @@ async def test_change_username_error_not_normalized(
     )
     assert not result["success"], result
     assert result["error"]["code"] == "credentials_not_found"
-    _assert_username(local_auth, current_username, expected=True)
-    _assert_username(local_auth, new_username, expected=False)
+    _assert_username(local_auth, current_username, should_exist=True)
+    _assert_username(local_auth, new_username, should_exist=False)
