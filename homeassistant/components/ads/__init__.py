@@ -245,6 +245,11 @@ class AdsHub:
             if connection_state == ConnectionState.Connected:
                 if wait_time != heartbeat_interval:
                     _LOGGER.info("Reconnected")
+                    while deleted_device_notifications:
+                        self.add_device_notification(
+                            *deleted_device_notifications.pop()
+                        )
+
                     self._client.set_timeout(ms=default_timeout_ms)
                     wait_time = heartbeat_interval
 
@@ -255,6 +260,10 @@ class AdsHub:
                     self._client.set_timeout(
                         ms=communication_timeout_while_disconnected_ms
                     )
+                    if not deleted_device_notifications:
+                        deleted_device_notifications = (
+                            self._delete_device_notifications()
+                        )
 
                 wait_time = (
                     wait_time * 2 if wait_time * 2 < max_wait_time else max_wait_time
@@ -262,13 +271,7 @@ class AdsHub:
                 _LOGGER.debug("Waiting %d seconds to check device state", wait_time)
                 await asyncio.sleep(wait_time)
             elif connection_state == ConnectionState.ReadyToReconnect:
-                if not deleted_device_notifications:
-                    deleted_device_notifications = self._delete_device_notifications()
-
                 self._reconnect()
-
-                while deleted_device_notifications:
-                    self.add_device_notification(*deleted_device_notifications.pop())
 
     def _check_connection(self) -> ConnectionState:
         try:
