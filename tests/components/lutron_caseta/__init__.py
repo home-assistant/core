@@ -1,6 +1,5 @@
 """Tests for the Lutron Caseta integration."""
 
-
 from unittest.mock import patch
 
 from homeassistant.components.lutron_caseta import DOMAIN
@@ -10,6 +9,7 @@ from homeassistant.components.lutron_caseta.const import (
     CONF_KEYFILE,
 )
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -84,7 +84,7 @@ _LEAP_DEVICE_TYPES = {
 }
 
 
-async def async_setup_integration(hass, mock_bridge) -> MockConfigEntry:
+async def async_setup_integration(hass: HomeAssistant, mock_bridge) -> MockConfigEntry:
     """Set up a mock bridge."""
     mock_entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_MOCK_DATA)
     mock_entry.add_to_hass(hass)
@@ -284,7 +284,7 @@ class MockBridge:
         :param domain: one of 'light', 'switch', 'cover', 'fan' or 'sensor'
         :returns list of zero or more of the devices
         """
-        types = _LEAP_DEVICE_TYPES.get(domain, None)
+        types = _LEAP_DEVICE_TYPES.get(domain)
 
         # return immediately if not a supported domain
         if types is None:

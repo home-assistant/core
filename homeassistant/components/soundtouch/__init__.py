@@ -1,4 +1,5 @@
 """The soundtouch component."""
+
 import logging
 
 from libsoundtouch import soundtouch_device

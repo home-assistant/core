@@ -1,4 +1,5 @@
 """Support for displaying details about a Gitter.im chat room."""
+
 from __future__ import annotations
 
 import logging

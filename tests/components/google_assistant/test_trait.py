@@ -1,5 +1,7 @@
 """Tests for the Google Assistant traits."""
+
 from datetime import datetime, timedelta
+from typing import Any
 from unittest.mock import ANY, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -1761,7 +1763,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
                     ],
                 },
             ],
-            "ordered": False,
+            "ordered": True,
         }
     }
 
@@ -1780,16 +1782,16 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
 
     # Test with no secure_pin configured
 
+    trt = trait.ArmDisArmTrait(
+        hass,
+        State(
+            "alarm_control_panel.alarm",
+            STATE_ALARM_DISARMED,
+            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+        ),
+        BASIC_CONFIG,
+    )
     with pytest.raises(error.SmartHomeError) as err:
-        trt = trait.ArmDisArmTrait(
-            hass,
-            State(
-                "alarm_control_panel.alarm",
-                STATE_ALARM_DISARMED,
-                {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
-            ),
-            BASIC_CONFIG,
-        )
         await trt.execute(
             trait.COMMAND_ARMDISARM,
             BASIC_DATA,
@@ -1843,16 +1845,16 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
     assert len(calls) == 1
 
     # Test already armed
+    trt = trait.ArmDisArmTrait(
+        hass,
+        State(
+            "alarm_control_panel.alarm",
+            STATE_ALARM_ARMED_AWAY,
+            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+        ),
+        PIN_CONFIG,
+    )
     with pytest.raises(error.SmartHomeError) as err:
-        trt = trait.ArmDisArmTrait(
-            hass,
-            State(
-                "alarm_control_panel.alarm",
-                STATE_ALARM_ARMED_AWAY,
-                {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
-            ),
-            PIN_CONFIG,
-        )
         await trt.execute(
             trait.COMMAND_ARMDISARM,
             PIN_DATA,
@@ -1903,7 +1905,8 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
             {
                 alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True,
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.TRIGGER
-                | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+                | AlarmControlPanelEntityFeature.ARM_HOME
+                | AlarmControlPanelEntityFeature.ARM_AWAY,
             },
         ),
         PIN_CONFIG,
@@ -1912,10 +1915,19 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         "availableArmLevels": {
             "levels": [
                 {
-                    "level_name": "armed_custom_bypass",
+                    "level_name": "armed_home",
                     "level_values": [
                         {
-                            "level_synonym": ["armed custom bypass", "custom"],
+                            "level_synonym": ["armed home", "home"],
+                            "lang": "en",
+                        }
+                    ],
+                },
+                {
+                    "level_name": "armed_away",
+                    "level_values": [
+                        {
+                            "level_synonym": ["armed away", "away"],
                             "lang": "en",
                         }
                     ],
@@ -1925,11 +1937,14 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
                     "level_values": [{"level_synonym": ["triggered"], "lang": "en"}],
                 },
             ],
-            "ordered": False,
+            "ordered": True,
         }
     }
 
-    assert trt.query_attributes() == {"isArmed": False}
+    assert trt.query_attributes() == {
+        "currentArmLevel": "armed_home",
+        "isArmed": False,
+    }
 
     assert trt.can_execute(trait.COMMAND_ARMDISARM, {"arm": False})
 
@@ -1938,16 +1953,16 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
     )
 
     # Test without secure_pin configured
+    trt = trait.ArmDisArmTrait(
+        hass,
+        State(
+            "alarm_control_panel.alarm",
+            STATE_ALARM_ARMED_AWAY,
+            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+        ),
+        BASIC_CONFIG,
+    )
     with pytest.raises(error.SmartHomeError) as err:
-        trt = trait.ArmDisArmTrait(
-            hass,
-            State(
-                "alarm_control_panel.alarm",
-                STATE_ALARM_ARMED_AWAY,
-                {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
-            ),
-            BASIC_CONFIG,
-        )
         await trt.execute(trait.COMMAND_ARMDISARM, BASIC_DATA, {"arm": False}, {})
 
     assert len(calls) == 0
@@ -1987,31 +2002,32 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
     assert len(calls) == 1
 
     # Test already disarmed
+    trt = trait.ArmDisArmTrait(
+        hass,
+        State(
+            "alarm_control_panel.alarm",
+            STATE_ALARM_DISARMED,
+            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+        ),
+        PIN_CONFIG,
+    )
     with pytest.raises(error.SmartHomeError) as err:
-        trt = trait.ArmDisArmTrait(
-            hass,
-            State(
-                "alarm_control_panel.alarm",
-                STATE_ALARM_DISARMED,
-                {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
-            ),
-            PIN_CONFIG,
-        )
         await trt.execute(trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": False}, {})
     assert len(calls) == 1
     assert err.value.code == const.ERR_ALREADY_DISARMED
 
+    trt = trait.ArmDisArmTrait(
+        hass,
+        State(
+            "alarm_control_panel.alarm",
+            STATE_ALARM_ARMED_AWAY,
+            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
+        ),
+        PIN_CONFIG,
+    )
+
     # Cancel arming after already armed will require pin
     with pytest.raises(error.SmartHomeError) as err:
-        trt = trait.ArmDisArmTrait(
-            hass,
-            State(
-                "alarm_control_panel.alarm",
-                STATE_ALARM_ARMED_AWAY,
-                {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
-            ),
-            PIN_CONFIG,
-        )
         await trt.execute(
             trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": True, "cancel": True}, {}
         )
@@ -2158,13 +2174,13 @@ async def test_fan_speed_without_percentage_step(hass: HomeAssistant) -> None:
     ],
 )
 async def test_fan_speed_ordered(
-    hass,
+    hass: HomeAssistant,
     percentage: int,
     percentage_step: float,
     speed: str,
     speeds: list[list[str]],
     percentage_result: int,
-):
+) -> None:
     """Test FanSpeed trait speed control support for fan domain."""
     assert helpers.get_google_type(fan.DOMAIN, None) is not None
     assert trait.FanSpeedTrait.supported(
@@ -3304,11 +3320,11 @@ async def test_openclose_cover_valve_no_position(
 
 @pytest.mark.parametrize(
     "device_class",
-    (
+    [
         cover.CoverDeviceClass.DOOR,
         cover.CoverDeviceClass.GARAGE,
         cover.CoverDeviceClass.GATE,
-    ),
+    ],
 )
 async def test_openclose_cover_secure(hass: HomeAssistant, device_class) -> None:
     """Test OpenClose trait support for cover domain."""
@@ -3370,13 +3386,13 @@ async def test_openclose_cover_secure(hass: HomeAssistant, device_class) -> None
 
 @pytest.mark.parametrize(
     "device_class",
-    (
+    [
         binary_sensor.BinarySensorDeviceClass.DOOR,
         binary_sensor.BinarySensorDeviceClass.GARAGE_DOOR,
         binary_sensor.BinarySensorDeviceClass.LOCK,
         binary_sensor.BinarySensorDeviceClass.OPENING,
         binary_sensor.BinarySensorDeviceClass.WINDOW,
-    ),
+    ],
 )
 async def test_openclose_binary_sensor(hass: HomeAssistant, device_class) -> None:
     """Test OpenClose trait support for binary_sensor domain."""
@@ -3814,7 +3830,7 @@ async def test_transport_control(
 
 @pytest.mark.parametrize(
     "state",
-    (
+    [
         STATE_OFF,
         STATE_IDLE,
         STATE_PLAYING,
@@ -3823,7 +3839,7 @@ async def test_transport_control(
         STATE_STANDBY,
         STATE_UNAVAILABLE,
         STATE_UNKNOWN,
-    ),
+    ],
 )
 async def test_media_state(hass: HomeAssistant, state) -> None:
     """Test the MediaStateTrait."""
@@ -3925,16 +3941,15 @@ async def test_air_quality_description_for_aqi(hass: HomeAssistant) -> None:
         BASIC_CONFIG,
     )
 
-    assert trt._air_quality_description_for_aqi("0") == "healthy"
-    assert trt._air_quality_description_for_aqi("75") == "moderate"
+    assert trt._air_quality_description_for_aqi(0) == "healthy"
+    assert trt._air_quality_description_for_aqi(75) == "moderate"
     assert (
-        trt._air_quality_description_for_aqi("125") == "unhealthy for sensitive groups"
+        trt._air_quality_description_for_aqi(125.0) == "unhealthy for sensitive groups"
     )
-    assert trt._air_quality_description_for_aqi("175") == "unhealthy"
-    assert trt._air_quality_description_for_aqi("250") == "very unhealthy"
-    assert trt._air_quality_description_for_aqi("350") == "hazardous"
-    assert trt._air_quality_description_for_aqi("-1") == "unknown"
-    assert trt._air_quality_description_for_aqi("non-numeric") == "unknown"
+    assert trt._air_quality_description_for_aqi(175) == "unhealthy"
+    assert trt._air_quality_description_for_aqi(250) == "very unhealthy"
+    assert trt._air_quality_description_for_aqi(350) == "hazardous"
+    assert trt._air_quality_description_for_aqi(-1) == "unknown"
 
 
 async def test_null_device_class(hass: HomeAssistant) -> None:
@@ -3955,7 +3970,19 @@ async def test_null_device_class(hass: HomeAssistant) -> None:
     assert trt.query_attributes() == {}
 
 
-async def test_sensorstate(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("value", "published", "aqi"),
+    [
+        (100.0, 100.0, "moderate"),
+        (10.0, 10.0, "healthy"),
+        (0, 0.0, "healthy"),
+        ("", None, "unknown"),
+        ("unknown", None, "unknown"),
+    ],
+)
+async def test_sensorstate(
+    hass: HomeAssistant, value: Any, published: Any, aqi: Any
+) -> None:
     """Test SensorState trait support for sensor domain."""
     sensor_types = {
         sensor.SensorDeviceClass.AQI: ("AirQuality", "AQI"),
@@ -3969,7 +3996,7 @@ async def test_sensorstate(hass: HomeAssistant) -> None:
         ),
     }
 
-    for sensor_type in sensor_types:
+    for sensor_type, item in sensor_types.items():
         assert helpers.get_google_type(sensor.DOMAIN, None) is not None
         assert trait.SensorStateTrait.supported(sensor.DOMAIN, None, sensor_type, None)
 
@@ -3977,7 +4004,7 @@ async def test_sensorstate(hass: HomeAssistant) -> None:
             hass,
             State(
                 "sensor.test",
-                100.0,
+                value,
                 {
                     "device_class": sensor_type,
                 },
@@ -3985,8 +4012,8 @@ async def test_sensorstate(hass: HomeAssistant) -> None:
             BASIC_CONFIG,
         )
 
-        name = sensor_types[sensor_type][0]
-        unit = sensor_types[sensor_type][1]
+        name = item[0]
+        unit = item[1]
 
         if sensor_type == sensor.SensorDeviceClass.AQI:
             assert trt.sync_attributes() == {
@@ -4023,16 +4050,14 @@ async def test_sensorstate(hass: HomeAssistant) -> None:
                 "currentSensorStateData": [
                     {
                         "name": name,
-                        "currentSensorState": trt._air_quality_description_for_aqi(
-                            trt.state.state
-                        ),
-                        "rawValue": trt.state.state,
+                        "currentSensorState": aqi,
+                        "rawValue": published,
                     },
                 ]
             }
         else:
             assert trt.query_attributes() == {
-                "currentSensorStateData": [{"name": name, "rawValue": trt.state.state}]
+                "currentSensorStateData": [{"name": name, "rawValue": published}]
             }
 
     assert helpers.get_google_type(sensor.DOMAIN, None) is not None

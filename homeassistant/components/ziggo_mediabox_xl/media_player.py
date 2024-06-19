@@ -1,4 +1,5 @@
 """Support for interface with a Ziggo Mediabox XL."""
+
 from __future__ import annotations
 
 import logging

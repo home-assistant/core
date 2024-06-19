@@ -1,4 +1,5 @@
 """Config flow for xbox."""
+
 import logging
 
 from homeassistant.helpers import config_entry_oauth2_flow

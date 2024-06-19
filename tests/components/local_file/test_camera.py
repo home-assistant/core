@@ -1,4 +1,5 @@
 """The tests for local file camera component."""
+
 from http import HTTPStatus
 from unittest import mock
 
@@ -15,11 +16,13 @@ async def test_loading_file(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test that it loads image from disk."""
-    with mock.patch("os.path.isfile", mock.Mock(return_value=True)), mock.patch(
-        "os.access", mock.Mock(return_value=True)
-    ), mock.patch(
-        "homeassistant.components.local_file.camera.mimetypes.guess_type",
-        mock.Mock(return_value=(None, None)),
+    with (
+        mock.patch("os.path.isfile", mock.Mock(return_value=True)),
+        mock.patch("os.access", mock.Mock(return_value=True)),
+        mock.patch(
+            "homeassistant.components.local_file.camera.mimetypes.guess_type",
+            mock.Mock(return_value=(None, None)),
+        ),
     ):
         await async_setup_component(
             hass,
@@ -51,8 +54,9 @@ async def test_file_not_readable(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test a warning is shown setup when file is not readable."""
-    with mock.patch("os.path.isfile", mock.Mock(return_value=True)), mock.patch(
-        "os.access", mock.Mock(return_value=False)
+    with (
+        mock.patch("os.path.isfile", mock.Mock(return_value=True)),
+        mock.patch("os.access", mock.Mock(return_value=False)),
     ):
         await async_setup_component(
             hass,
@@ -141,11 +145,13 @@ async def test_camera_content_type(
 async def test_update_file_path(hass: HomeAssistant) -> None:
     """Test update_file_path service."""
     # Setup platform
-    with mock.patch("os.path.isfile", mock.Mock(return_value=True)), mock.patch(
-        "os.access", mock.Mock(return_value=True)
-    ), mock.patch(
-        "homeassistant.components.local_file.camera.mimetypes.guess_type",
-        mock.Mock(return_value=(None, None)),
+    with (
+        mock.patch("os.path.isfile", mock.Mock(return_value=True)),
+        mock.patch("os.access", mock.Mock(return_value=True)),
+        mock.patch(
+            "homeassistant.components.local_file.camera.mimetypes.guess_type",
+            mock.Mock(return_value=(None, None)),
+        ),
     ):
         camera_1 = {"platform": "local_file", "file_path": "mock/path.jpg"}
         camera_2 = {

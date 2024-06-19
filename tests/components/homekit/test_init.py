@@ -1,5 +1,6 @@
 """Test HomeKit initialization."""
-from unittest.mock import patch
+
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -25,14 +26,15 @@ from tests.common import MockConfigEntry
 from tests.components.logbook.common import MockRow, mock_humanify
 
 
-async def test_humanify_homekit_changed_event(
-    hass: HomeAssistant, hk_driver, mock_get_source_ip
-) -> None:
+async def test_humanify_homekit_changed_event(hass: HomeAssistant, hk_driver) -> None:
     """Test humanifying HomeKit changed event."""
     hass.config.components.add("recorder")
-    with patch("homeassistant.components.homekit.HomeKit"):
+    with patch("homeassistant.components.homekit.HomeKit") as mock_homekit:
+        mock_homekit.return_value = homekit = Mock()
+        type(homekit).async_start = AsyncMock()
         assert await async_setup_component(hass, "homekit", {"homekit": {}})
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     event1, event2 = mock_humanify(
         hass,
@@ -68,10 +70,10 @@ async def test_humanify_homekit_changed_event(
     assert event2["entity_id"] == "cover.window"
 
 
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_bridge_with_triggers(
     hass: HomeAssistant,
     hk_driver,
-    mock_async_zeroconf: None,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -110,15 +112,19 @@ async def test_bridge_with_triggers(
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.network.async_get_source_ip", return_value="1.2.3.4"
-    ), patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True):
+    with (
+        patch(
+            "homeassistant.components.network.async_get_source_ip",
+            return_value="1.2.3.4",
+        ),
+        patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True),
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
-        assert entry.state == ConfigEntryState.LOADED
+        assert entry.state is ConfigEntryState.LOADED
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
 

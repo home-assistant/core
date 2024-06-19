@@ -1,0 +1,8 @@
+{
+  "services": {
+    "add_device": "mdi:cellphone-link",
+    "play_ringtone": "mdi:music",
+    "remove_device": "mdi:cellphone-link",
+    "stop_ringtone": "mdi:music-off"
+  }
+}

@@ -1,4 +1,5 @@
 """Test Ecovacs config flow."""
+
 from collections.abc import Awaitable, Callable
 import ssl
 from typing import Any
@@ -48,7 +49,7 @@ async def _test_user_flow(
         context={"source": SOURCE_USER},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert not result["errors"]
 
@@ -70,7 +71,7 @@ async def _test_user_flow_show_advanced_options(
         context={"source": SOURCE_USER, "show_advanced_options": True},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
 
@@ -79,7 +80,7 @@ async def _test_user_flow_show_advanced_options(
         user_input=user_input_user or {},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert not result["errors"]
 
@@ -130,7 +131,7 @@ async def test_user_flow(
         hass,
         **test_fn_args,
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == entry_data[CONF_USERNAME]
     assert result["data"] == entry_data
     mock_setup_entry.assert_called()
@@ -213,7 +214,7 @@ async def test_user_flow_raise_error(
         hass,
         **test_fn_args,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert result["errors"] == {"base": reason_rest}
     mock_authenticator_authenticate.assert_called()
@@ -228,7 +229,7 @@ async def test_user_flow_raise_error(
         result["flow_id"],
         user_input=user_input_auth,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert result["errors"] == errors_mqtt(user_input_auth)
     mock_authenticator_authenticate.assert_called()
@@ -242,7 +243,7 @@ async def test_user_flow_raise_error(
         result["flow_id"],
         user_input=user_input_auth,
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == entry_data[CONF_USERNAME]
     assert result["data"] == entry_data
     mock_setup_entry.assert_called()
@@ -268,7 +269,7 @@ async def test_user_flow_self_hosted_error(
         user_input_user=_USER_STEP_SELF_HOSTED,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert result["errors"] == {
         CONF_OVERRIDE_REST_URL: "invalid_url_schema_override_rest_url",
@@ -296,7 +297,7 @@ async def test_user_flow_self_hosted_error(
         assert ssl_context.verify_mode == ssl.CERT_NONE
         assert ssl_context.check_hostname is False
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == data[CONF_USERNAME]
     assert result["data"] == data
     mock_setup_entry.assert_called()
@@ -319,7 +320,7 @@ async def test_import_flow(
     )
     mock_authenticator_authenticate.assert_called()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == VALID_ENTRY_DATA_CLOUD[CONF_USERNAME]
     assert result["data"] == VALID_ENTRY_DATA_CLOUD
     assert (HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}") in issue_registry.issues
@@ -339,7 +340,7 @@ async def test_import_flow_already_configured(
         context={"source": SOURCE_IMPORT},
         data=IMPORT_DATA.copy(),
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert (HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}") in issue_registry.issues
 
@@ -373,7 +374,7 @@ async def test_import_flow_error(
         },
         data=IMPORT_DATA.copy(),
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
     assert (
         DOMAIN,
@@ -409,7 +410,7 @@ async def test_import_flow_invalid_data(
         },
         data=user_input,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
     assert (
         DOMAIN,

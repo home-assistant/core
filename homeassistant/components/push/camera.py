@@ -1,4 +1,5 @@
 """Camera platform that receives images through HTTP POST."""
+
 from __future__ import annotations
 
 import asyncio
@@ -75,7 +76,7 @@ async def handle_webhook(hass, webhook_id, request):
     try:
         async with asyncio.timeout(5):
             data = dict(await request.post())
-    except (asyncio.TimeoutError, aiohttp.web.HTTPException) as error:
+    except (TimeoutError, aiohttp.web.HTTPException) as error:
         _LOGGER.error("Could not get information from POST <%s>", error)
         return
 

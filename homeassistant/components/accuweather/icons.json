@@ -1,0 +1,51 @@
+{
+  "entity": {
+    "sensor": {
+      "cloud_ceiling": {
+        "default": "mdi:weather-fog"
+      },
+      "cloud_cover": {
+        "default": "mdi:weather-cloudy"
+      },
+      "cloud_cover_day": {
+        "default": "mdi:weather-cloudy"
+      },
+      "cloud_cover_night": {
+        "default": "mdi:weather-cloudy"
+      },
+      "grass_pollen": {
+        "default": "mdi:grass"
+      },
+      "hours_of_sun": {
+        "default": "mdi:weather-partly-cloudy"
+      },
+      "mold_pollen": {
+        "default": "mdi:blur"
+      },
+      "pressure_tendency": {
+        "default": "mdi:gauge"
+      },
+      "ragweed_pollen": {
+        "default": "mdi:sprout"
+      },
+      "thunderstorm_probability_day": {
+        "default": "mdi:weather-lightning"
+      },
+      "thunderstorm_probability_night": {
+        "default": "mdi:weather-lightning"
+      },
+      "translation_key": {
+        "default": "mdi:air-filter"
+      },
+      "tree_pollen": {
+        "default": "mdi:tree-outline"
+      },
+      "uv_index": {
+        "default": "mdi:weather-sunny"
+      },
+      "uv_index_forecast": {
+        "default": "mdi:weather-sunny"
+      }
+    }
+  }
+}

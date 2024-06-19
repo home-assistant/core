@@ -1,4 +1,5 @@
 """Support for Aqualink temperature sensors."""
+
 from __future__ import annotations
 
 from iaqualink.device import AqualinkBinarySensor
@@ -24,10 +25,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up discovered binary sensors."""
-    devs = []
-    for dev in hass.data[AQUALINK_DOMAIN][DOMAIN]:
-        devs.append(HassAqualinkBinarySensor(dev))
-    async_add_entities(devs, True)
+    async_add_entities(
+        (HassAqualinkBinarySensor(dev) for dev in hass.data[AQUALINK_DOMAIN][DOMAIN]),
+        True,
+    )
 
 
 class HassAqualinkBinarySensor(AqualinkEntity, BinarySensorEntity):

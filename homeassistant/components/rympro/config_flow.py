@@ -1,4 +1,5 @@
 """Config flow for Read Your Meter Pro integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,10 +9,9 @@ from typing import Any
 from pyrympro import CannotConnectError, RymPro, UnauthorizedError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -41,18 +41,18 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     return {CONF_TOKEN: token, CONF_UNIQUE_ID: info["accountNumber"]}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class RymproConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Read Your Meter Pro."""
 
     VERSION = 1
 
     def __init__(self) -> None:
         """Init the config flow."""
-        self._reauth_entry: config_entries.ConfigEntry | None = None
+        self._reauth_entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -67,7 +67,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except UnauthorizedError:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -92,7 +92,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]

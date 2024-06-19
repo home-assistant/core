@@ -1,4 +1,5 @@
 """Sensor that can display the current Home Assistant versions."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -31,6 +32,7 @@ async def async_setup_entry(
             entity_description=SensorEntityDescription(
                 key=str(entry.data[CONF_SOURCE]),
                 name=entity_name,
+                translation_key="version",
             ),
         )
     ]
@@ -40,8 +42,6 @@ async def async_setup_entry(
 
 class VersionSensorEntity(VersionEntity, SensorEntity):
     """Version sensor entity class."""
-
-    _attr_icon = "mdi:package-up"
 
     @property
     def native_value(self) -> StateType:

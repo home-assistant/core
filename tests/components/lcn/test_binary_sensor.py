@@ -1,4 +1,5 @@
 """Test for the LCN binary sensor platform."""
+
 from pypck.inputs import ModStatusBinSensors, ModStatusKeyLocks, ModStatusVar
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import Var, VarValue

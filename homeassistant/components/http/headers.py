@@ -1,4 +1,5 @@
 """Middleware that helps with the control of headers in our responses."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -32,7 +33,7 @@ def setup_headers(app: Application, use_x_frame_options: bool) -> None:
         except HTTPException as err:
             for key, value in added_headers.items():
                 err.headers[key] = value
-            raise err
+            raise
 
         for key, value in added_headers.items():
             response.headers[key] = value

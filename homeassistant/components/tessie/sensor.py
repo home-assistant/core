@@ -1,4 +1,5 @@
 """Sensor platform for Tessie integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -12,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -32,7 +32,8 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.variance import ignore_variance
 
-from .const import DOMAIN
+from . import TessieConfigEntry
+from .const import TessieChargeStates
 from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
@@ -54,6 +55,12 @@ class TessieSensorEntityDescription(SensorEntityDescription):
 
 
 DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
+    TessieSensorEntityDescription(
+        key="charge_state_charging_state",
+        options=list(TessieChargeStates.values()),
+        device_class=SensorDeviceClass.ENUM,
+        value_fn=lambda value: TessieChargeStates[cast(str, value)],
+    ),
     TessieSensorEntityDescription(
         key="charge_state_usable_battery_level",
         state_class=SensorStateClass.MEASUREMENT,
@@ -108,6 +115,22 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         suggested_display_precision=1,
     ),
     TessieSensorEntityDescription(
+        key="charge_state_est_battery_range",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfLength.MILES,
+        device_class=SensorDeviceClass.DISTANCE,
+        suggested_display_precision=1,
+        entity_registry_enabled_default=False,
+    ),
+    TessieSensorEntityDescription(
+        key="charge_state_ideal_battery_range",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfLength.MILES,
+        device_class=SensorDeviceClass.DISTANCE,
+        suggested_display_precision=1,
+        entity_registry_enabled_default=False,
+    ),
+    TessieSensorEntityDescription(
         key="drive_state_speed",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
@@ -122,7 +145,6 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
     ),
     TessieSensorEntityDescription(
         key="drive_state_shift_state",
-        icon="mdi:car-shift-pattern",
         options=["p", "d", "r", "n"],
         device_class=SensorDeviceClass.ENUM,
         value_fn=lambda x: x.lower() if isinstance(x, str) else x,
@@ -231,21 +253,22 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
     ),
     TessieSensorEntityDescription(
         key="drive_state_active_route_destination",
-        icon="mdi:map-marker",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TessieConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Tessie sensor platform from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     async_add_entities(
-        TessieSensorEntity(vehicle.state_coordinator, description)
-        for vehicle in data
+        TessieSensorEntity(vehicle, description)
+        for vehicle in data.vehicles
         for description in DESCRIPTIONS
     )
 

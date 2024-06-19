@@ -1,4 +1,5 @@
 """Counter for the days until an HTTPS (TLS) certificate will expire."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -11,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_START
 from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -21,7 +22,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CertExpiryDataUpdateCoordinator
+from . import CertExpiryConfigEntry, CertExpiryDataUpdateCoordinator
 from .const import DEFAULT_PORT, DOMAIN
 
 SCAN_INTERVAL = timedelta(hours=12)
@@ -61,15 +62,13 @@ async def async_setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: CertExpiryConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add cert-expiry entry."""
-    coordinator: CertExpiryDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
-    sensors = [
-        SSLCertificateTimestamp(coordinator),
-    ]
+    sensors = [SSLCertificateTimestamp(coordinator)]
 
     async_add_entities(sensors, True)
 
@@ -77,7 +76,6 @@ async def async_setup_entry(
 class CertExpiryEntity(CoordinatorEntity[CertExpiryDataUpdateCoordinator]):
     """Defines a base Cert Expiry entity."""
 
-    _attr_icon = "mdi:certificate"
     _attr_has_entity_name = True
 
     @property

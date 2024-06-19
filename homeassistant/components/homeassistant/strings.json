@@ -1,4 +1,10 @@
 {
+  "config": {
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "step": {}
+  },
   "issues": {
     "country_not_configured": {
       "title": "The country has not been configured",
@@ -157,31 +163,46 @@
       "message": "Error importing config platform {domain}: {error}"
     },
     "config_validation_err": {
-      "message": "Invalid config for integration {domain} at {config_file}, line {line}: {error}. Check the logs for more information."
+      "message": "Invalid config for integration {domain} at {config_file}, line {line}: {error}."
     },
     "config_validator_unknown_err": {
-      "message": "Unknown error calling {domain} config validator. Check the logs for more information."
+      "message": "Unknown error calling {domain} config validator - {error}."
     },
     "config_schema_unknown_err": {
-      "message": "Unknown error calling {domain} CONFIG_SCHEMA. Check the logs for more information."
+      "message": "Unknown error calling {domain} CONFIG_SCHEMA - {error}."
     },
-    "integration_config_error": {
+    "multiple_integration_config_errors": {
       "message": "Failed to process config for integration {domain} due to multiple ({errors}) errors. Check the logs for more information."
     },
+    "max_length_exceeded": {
+      "message": "Value {value} for property {property_name} has a maximum length of {max_length} characters."
+    },
     "platform_component_load_err": {
-      "message": "Platform error: {domain} - {error}. Check the logs for more information."
+      "message": "Platform error: {domain} - {error}."
     },
     "platform_component_load_exc": {
-      "message": "Platform error: {domain} - {error}. Check the logs for more information."
+      "message": "[%key:component::homeassistant::exceptions::platform_component_load_err::message%]"
     },
     "platform_config_validation_err": {
       "message": "Invalid config for {domain} from integration {p_name} at file {config_file}, line {line}: {error}. Check the logs for more information."
     },
     "platform_schema_validator_err": {
-      "message": "Unknown error when validating config for {domain} from integration {p_name}"
+      "message": "Unknown error when validating config for {domain} from integration {p_name} - {error}."
     },
     "service_not_found": {
       "message": "Service {domain}.{service} not found."
+    },
+    "service_does_not_support_response": {
+      "message": "A service which does not return responses can't be called with {return_response}."
+    },
+    "service_lacks_response_request": {
+      "message": "The service call requires responses and must be called with {return_response}."
+    },
+    "service_reponse_invalid": {
+      "message": "Failed to process the returned service response data, expected a dictionary, but got {response_data_type}."
+    },
+    "service_should_be_blocking": {
+      "message": "A non blocking service call with argument {non_blocking_argument} can't be used together with argument {return_response}."
     }
   }
 }

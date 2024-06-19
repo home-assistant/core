@@ -1,4 +1,5 @@
 """The test for the Coolmaster climate platform."""
+
 from __future__ import annotations
 
 from pycoolmasternet_async import SWING_MODES

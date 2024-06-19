@@ -50,6 +50,27 @@
           "dialing": "Dialing",
           "talking": "Talking",
           "idle": "[%key:common::state::idle%]"
+        },
+        "state_attributes": {
+          "prefixes": { "name": "Prefixes" },
+          "type": {
+            "name": "Type",
+            "state": {
+              "incoming": "Incoming",
+              "outgoing": "Outgoing"
+            }
+          },
+          "from": { "name": "Caller number" },
+          "to": { "name": "Number called" },
+          "device": { "name": "[%key:common::config_flow::data::device%]" },
+          "initiated": { "name": "Initiated" },
+          "from_name": { "name": "Caller name" },
+          "to_name": { "name": "Called name" },
+          "with": { "name": "With number" },
+          "accepted": { "name": "Accepted" },
+          "with_name": { "name": "With name" },
+          "duration": { "name": "Duration" },
+          "closed": { "name": "Closed" }
         }
       }
     }

@@ -1,4 +1,5 @@
 """Test the Improv via BLE config flow."""
+
 from collections.abc import Callable
 from unittest.mock import patch
 
@@ -43,7 +44,7 @@ async def test_user_step_success(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -61,7 +62,7 @@ async def test_user_step_success_authorize(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -82,7 +83,7 @@ async def test_user_step_no_devices_found(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
 
@@ -95,7 +96,7 @@ async def test_async_step_user_takes_precedence_over_discovery(
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=IMPROV_BLE_DISCOVERY_INFO,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
 
     with patch(
@@ -106,7 +107,7 @@ async def test_async_step_user_takes_precedence_over_discovery(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
     await _test_common_success_wo_identify(
         hass, result, IMPROV_BLE_DISCOVERY_INFO.address
@@ -123,7 +124,7 @@ async def test_bluetooth_step_provisioned_device(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=PROVISIONED_IMPROV_BLE_DISCOVERY_INFO,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_provisioned"
 
 
@@ -137,7 +138,7 @@ async def test_bluetooth_step_provisioned_device_2(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_BLUETOOTH},
             data=IMPROV_BLE_DISCOVERY_INFO,
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
 
     assert len(hass.config_entries.flow.async_progress_by_handler("improv_ble")) == 1
@@ -155,7 +156,7 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=IMPROV_BLE_DISCOVERY_INFO,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     assert result["errors"] is None
 
@@ -171,7 +172,7 @@ async def test_bluetooth_step_success_identify(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=IMPROV_BLE_DISCOVERY_INFO,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     assert result["errors"] is None
 
@@ -191,7 +192,7 @@ async def _test_common_success_with_identify(
             result["flow_id"],
             {CONF_ADDRESS: address},
         )
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["menu_options"] == ["identify", "provision"]
     assert result["step_id"] == "main_menu"
 
@@ -200,12 +201,12 @@ async def _test_common_success_with_identify(
             result["flow_id"],
             {"next_step_id": "identify"},
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "identify"
     assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["menu_options"] == ["identify", "provision"]
     assert result["step_id"] == "main_menu"
 
@@ -213,7 +214,7 @@ async def _test_common_success_with_identify(
         result["flow_id"],
         {"next_step_id": "provision"},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "provision"
     assert result["errors"] is None
 
@@ -236,7 +237,7 @@ async def _test_common_success_wo_identify(
             result["flow_id"],
             {CONF_ADDRESS: address},
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "provision"
     assert result["errors"] is None
 
@@ -252,24 +253,27 @@ async def _test_common_success(
 ) -> None:
     """Test bluetooth and user flow success paths."""
 
-    with patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
-        return_value=False,
-    ), patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.provision",
-        return_value=url,
-    ) as mock_provision:
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
+            return_value=False,
+        ),
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.provision",
+            return_value=url,
+        ) as mock_provision,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"ssid": "MyWIFI", "password": "secret"}
         )
-        assert result["type"] == FlowResultType.SHOW_PROGRESS
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["progress_action"] == "provisioning"
         assert result["step_id"] == "do_provision"
         await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result.get("description_placeholders") == placeholders
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == abort_reason
 
     mock_provision.assert_awaited_once_with("MyWIFI", "secret", None)
@@ -286,7 +290,7 @@ async def _test_common_success_wo_identify_w_authorize(
             result["flow_id"],
             {CONF_ADDRESS: address},
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "provision"
     assert result["errors"] is None
 
@@ -304,38 +308,44 @@ async def _test_common_success_w_authorize(
         state_callback(State.AUTHORIZED)
         return lambda: None
 
-    with patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
-        return_value=True,
-    ), patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.subscribe_state_updates",
-        side_effect=subscribe_state_updates,
-    ) as mock_subscribe_state_updates:
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
+            return_value=True,
+        ),
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.subscribe_state_updates",
+            side_effect=subscribe_state_updates,
+        ) as mock_subscribe_state_updates,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"ssid": "MyWIFI", "password": "secret"}
         )
-        assert result["type"] == FlowResultType.SHOW_PROGRESS
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["progress_action"] == "authorize"
         assert result["step_id"] == "authorize"
         mock_subscribe_state_updates.assert_awaited_once()
         await hass.async_block_till_done()
 
-    with patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
-        return_value=False,
-    ), patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.provision",
-        return_value="http://blabla.local",
-    ) as mock_provision:
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
+            return_value=False,
+        ),
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.provision",
+            return_value="http://blabla.local",
+        ) as mock_provision,
+    ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result["type"] == FlowResultType.SHOW_PROGRESS
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["progress_action"] == "provisioning"
         assert result["step_id"] == "do_provision"
         await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["description_placeholders"] == {"url": "http://blabla.local"}
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "provision_successful_url"
 
     mock_provision.assert_awaited_once_with("MyWIFI", "secret", None)
@@ -348,7 +358,7 @@ async def test_bluetooth_step_already_in_progress(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=IMPROV_BLE_DISCOVERY_INFO,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
 
     result = await hass.config_entries.flow.async_init(
@@ -356,17 +366,17 @@ async def test_bluetooth_step_already_in_progress(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=IMPROV_BLE_DISCOVERY_INFO,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
 
 
 @pytest.mark.parametrize(
     ("exc", "error"),
-    (
+    [
         (BleakError, "cannot_connect"),
         (Exception, "unknown"),
         (improv_ble_errors.CharacteristicMissingError, "characteristic_missing"),
-    ),
+    ],
 )
 async def test_can_identify_fails(hass: HomeAssistant, exc, error) -> None:
     """Test bluetooth flow with error."""
@@ -375,12 +385,12 @@ async def test_can_identify_fails(hass: HomeAssistant, exc, error) -> None:
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=IMPROV_BLE_DISCOVERY_INFO,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     assert result["errors"] is None
 
@@ -391,17 +401,17 @@ async def test_can_identify_fails(hass: HomeAssistant, exc, error) -> None:
             result["flow_id"],
             {CONF_ADDRESS: IMPROV_BLE_DISCOVERY_INFO.address},
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == error
 
 
 @pytest.mark.parametrize(
     ("exc", "error"),
-    (
+    [
         (BleakError, "cannot_connect"),
         (Exception, "unknown"),
         (improv_ble_errors.CharacteristicMissingError, "characteristic_missing"),
-    ),
+    ],
 )
 async def test_identify_fails(hass: HomeAssistant, exc, error) -> None:
     """Test bluetooth flow with error."""
@@ -410,12 +420,12 @@ async def test_identify_fails(hass: HomeAssistant, exc, error) -> None:
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=IMPROV_BLE_DISCOVERY_INFO,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     assert result["errors"] is None
 
@@ -426,7 +436,7 @@ async def test_identify_fails(hass: HomeAssistant, exc, error) -> None:
             result["flow_id"],
             {CONF_ADDRESS: IMPROV_BLE_DISCOVERY_INFO.address},
         )
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "main_menu"
 
     with patch(f"{IMPROV_BLE}.config_flow.ImprovBLEClient.identify", side_effect=exc):
@@ -434,17 +444,17 @@ async def test_identify_fails(hass: HomeAssistant, exc, error) -> None:
             result["flow_id"],
             {"next_step_id": "identify"},
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == error
 
 
 @pytest.mark.parametrize(
     ("exc", "error"),
-    (
+    [
         (BleakError, "cannot_connect"),
         (Exception, "unknown"),
         (improv_ble_errors.CharacteristicMissingError, "characteristic_missing"),
-    ),
+    ],
 )
 async def test_need_authorization_fails(hass: HomeAssistant, exc, error) -> None:
     """Test bluetooth flow with error."""
@@ -453,12 +463,12 @@ async def test_need_authorization_fails(hass: HomeAssistant, exc, error) -> None
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=IMPROV_BLE_DISCOVERY_INFO,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     assert result["errors"] is None
 
@@ -469,7 +479,7 @@ async def test_need_authorization_fails(hass: HomeAssistant, exc, error) -> None
             result["flow_id"],
             {CONF_ADDRESS: IMPROV_BLE_DISCOVERY_INFO.address},
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "provision"
 
     with patch(
@@ -478,17 +488,17 @@ async def test_need_authorization_fails(hass: HomeAssistant, exc, error) -> None
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"ssid": "MyWIFI", "password": "secret"}
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == error
 
 
 @pytest.mark.parametrize(
     ("exc", "error"),
-    (
+    [
         (BleakError, "cannot_connect"),
         (Exception, "unknown"),
         (improv_ble_errors.CharacteristicMissingError, "characteristic_missing"),
-    ),
+    ],
 )
 async def test_authorize_fails(hass: HomeAssistant, exc, error) -> None:
     """Test bluetooth flow with error."""
@@ -497,12 +507,12 @@ async def test_authorize_fails(hass: HomeAssistant, exc, error) -> None:
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=IMPROV_BLE_DISCOVERY_INFO,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     assert result["errors"] is None
 
@@ -513,20 +523,23 @@ async def test_authorize_fails(hass: HomeAssistant, exc, error) -> None:
             result["flow_id"],
             {CONF_ADDRESS: IMPROV_BLE_DISCOVERY_INFO.address},
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "provision"
 
-    with patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
-        return_value=True,
-    ), patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.subscribe_state_updates",
-        side_effect=exc,
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
+            return_value=True,
+        ),
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.subscribe_state_updates",
+            side_effect=exc,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"ssid": "MyWIFI", "password": "secret"}
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == error
 
 
@@ -537,12 +550,12 @@ async def _test_provision_error(hass: HomeAssistant, exc) -> None:
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=IMPROV_BLE_DISCOVERY_INFO,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     assert result["errors"] is None
 
@@ -553,20 +566,23 @@ async def _test_provision_error(hass: HomeAssistant, exc) -> None:
             result["flow_id"],
             {CONF_ADDRESS: IMPROV_BLE_DISCOVERY_INFO.address},
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "provision"
 
-    with patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
-        return_value=False,
-    ), patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.provision",
-        side_effect=exc,
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
+            return_value=False,
+        ),
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.provision",
+            side_effect=exc,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"ssid": "MyWIFI", "password": "secret"}
         )
-        assert result["type"] == FlowResultType.SHOW_PROGRESS
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["progress_action"] == "provisioning"
         assert result["step_id"] == "do_provision"
         await hass.async_block_till_done()
@@ -576,25 +592,25 @@ async def _test_provision_error(hass: HomeAssistant, exc) -> None:
 
 @pytest.mark.parametrize(
     ("exc", "error"),
-    (
+    [
         (BleakError, "cannot_connect"),
         (Exception, "unknown"),
         (improv_ble_errors.CharacteristicMissingError, "characteristic_missing"),
         (improv_ble_errors.ProvisioningFailed(Error.UNKNOWN_ERROR), "unknown"),
-    ),
+    ],
 )
 async def test_provision_fails(hass: HomeAssistant, exc, error) -> None:
     """Test bluetooth flow with error."""
     flow_id = await _test_provision_error(hass, exc)
 
     result = await hass.config_entries.flow.async_configure(flow_id)
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == error
 
 
 @pytest.mark.parametrize(
     ("exc", "error"),
-    ((improv_ble_errors.ProvisioningFailed(Error.NOT_AUTHORIZED), "unknown"),),
+    [(improv_ble_errors.ProvisioningFailed(Error.NOT_AUTHORIZED), "unknown")],
 )
 async def test_provision_not_authorized(hass: HomeAssistant, exc, error) -> None:
     """Test bluetooth flow with error."""
@@ -611,25 +627,25 @@ async def test_provision_not_authorized(hass: HomeAssistant, exc, error) -> None
     ):
         flow_id = await _test_provision_error(hass, exc)
     result = await hass.config_entries.flow.async_configure(flow_id)
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["progress_action"] == "authorize"
     assert result["step_id"] == "authorize"
 
 
 @pytest.mark.parametrize(
     ("exc", "error"),
-    (
+    [
         (
             improv_ble_errors.ProvisioningFailed(Error.UNABLE_TO_CONNECT),
             "unable_to_connect",
         ),
-    ),
+    ],
 )
 async def test_provision_retry(hass: HomeAssistant, exc, error) -> None:
     """Test bluetooth flow with error."""
     flow_id = await _test_provision_error(hass, exc)
 
     result = await hass.config_entries.flow.async_configure(flow_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "provision"
     assert result["errors"] == {"base": error}

@@ -1,0 +1,102 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "lids": {
+        "default": "mdi:car-door-lock"
+      },
+      "windows": {
+        "default": "mdi:car-door"
+      },
+      "door_lock_state": {
+        "default": "mdi:car-key"
+      },
+      "condition_based_services": {
+        "default": "mdi:wrench"
+      },
+      "check_control_messages": {
+        "default": "mdi:car-tire-alert"
+      },
+      "charging_status": {
+        "default": "mdi:ev-station"
+      },
+      "connection_status": {
+        "default": "mdi:car-electric"
+      },
+      "is_pre_entry_climatization_enabled": {
+        "default": "mdi:car-seat-heater"
+      }
+    },
+    "button": {
+      "light_flash": {
+        "default": "mdi:car-light-alert"
+      },
+      "sound_horn": {
+        "default": "mdi:bullhorn"
+      },
+      "activate_air_conditioning": {
+        "default": "mdi:hvac"
+      },
+      "deactivate_air_conditioning": {
+        "default": "mdi:hvac-off"
+      },
+      "find_vehicle": {
+        "default": "mdi:crosshairs-question"
+      }
+    },
+    "device_tracker": {
+      "car": {
+        "default": "mdi:car"
+      }
+    },
+    "number": {
+      "target_soc": {
+        "default": "mdi:battery-charging-medium"
+      }
+    },
+    "select": {
+      "ac_limit": {
+        "default": "mdi:current-ac"
+      },
+      "charging_mode": {
+        "default": "mdi:vector-point-select"
+      }
+    },
+    "sensor": {
+      "charging_status": {
+        "default": "mdi:ev-station"
+      },
+      "charging_target": {
+        "default": "mdi:battery-charging-high"
+      },
+      "mileage": {
+        "default": "mdi:speedometer"
+      },
+      "remaining_range_total": {
+        "default": "mdi:map-marker-distance"
+      },
+      "remaining_range_electric": {
+        "default": "mdi:map-marker-distance"
+      },
+      "remaining_range_fuel": {
+        "default": "mdi:map-marker-distance"
+      },
+      "remaining_fuel": {
+        "default": "mdi:gas-station"
+      },
+      "remaining_fuel_percent": {
+        "default": "mdi:gas-station"
+      },
+      "climate_status": {
+        "default": "mdi:fan"
+      }
+    },
+    "switch": {
+      "climate": {
+        "default": "mdi:fan"
+      },
+      "charging": {
+        "default": "mdi:ev-station"
+      }
+    }
+  }
+}

@@ -1,4 +1,5 @@
 """Basic checks for HomeKitalarm_control_panel."""
+
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
@@ -33,7 +34,7 @@ async def test_switch_change_alarm_state(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         "alarm_control_panel",
         "alarm_arm_home",
-        {"entity_id": "alarm_control_panel.testdevice"},
+        {"entity_id": "alarm_control_panel.testdevice", "code": "1234"},
         blocking=True,
     )
     helper.async_assert_service_values(
@@ -46,7 +47,7 @@ async def test_switch_change_alarm_state(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         "alarm_control_panel",
         "alarm_arm_away",
-        {"entity_id": "alarm_control_panel.testdevice"},
+        {"entity_id": "alarm_control_panel.testdevice", "code": "1234"},
         blocking=True,
     )
     helper.async_assert_service_values(
@@ -59,7 +60,7 @@ async def test_switch_change_alarm_state(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         "alarm_control_panel",
         "alarm_arm_night",
-        {"entity_id": "alarm_control_panel.testdevice"},
+        {"entity_id": "alarm_control_panel.testdevice", "code": "1234"},
         blocking=True,
     )
     helper.async_assert_service_values(
@@ -72,7 +73,7 @@ async def test_switch_change_alarm_state(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         "alarm_control_panel",
         "alarm_disarm",
-        {"entity_id": "alarm_control_panel.testdevice"},
+        {"entity_id": "alarm_control_panel.testdevice", "code": "1234"},
         blocking=True,
     )
     helper.async_assert_service_values(

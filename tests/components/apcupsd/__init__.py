@@ -1,4 +1,5 @@
 """Tests for the APCUPSd component."""
+
 from collections import OrderedDict
 from typing import Final
 from unittest.mock import patch

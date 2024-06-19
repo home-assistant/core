@@ -1,4 +1,5 @@
 """Support for Blink system camera control."""
+
 from __future__ import annotations
 
 import logging

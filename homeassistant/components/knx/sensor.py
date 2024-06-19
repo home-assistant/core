@@ -1,4 +1,5 @@
 """Support for KNX/IP sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -55,7 +56,6 @@ SYSTEM_ENTITY_DESCRIPTIONS = (
     KNXSystemEntityDescription(
         key="individual_address",
         always_available=False,
-        icon="mdi:router-network",
         should_poll=False,
         value_fn=lambda knx: str(knx.xknx.current_address),
     ),
@@ -76,7 +76,6 @@ SYSTEM_ENTITY_DESCRIPTIONS = (
     ),
     KNXSystemEntityDescription(
         key="telegrams_incoming",
-        icon="mdi:upload-network",
         entity_registry_enabled_default=False,
         force_update=True,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -84,13 +83,11 @@ SYSTEM_ENTITY_DESCRIPTIONS = (
     ),
     KNXSystemEntityDescription(
         key="telegrams_incoming_error",
-        icon="mdi:help-network",
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda knx: knx.xknx.connection_manager.cemi_count_incoming_error,
     ),
     KNXSystemEntityDescription(
         key="telegrams_outgoing",
-        icon="mdi:download-network",
         entity_registry_enabled_default=False,
         force_update=True,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -98,13 +95,11 @@ SYSTEM_ENTITY_DESCRIPTIONS = (
     ),
     KNXSystemEntityDescription(
         key="telegrams_outgoing_error",
-        icon="mdi:close-network",
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda knx: knx.xknx.connection_manager.cemi_count_outgoing_error,
     ),
     KNXSystemEntityDescription(
         key="telegram_count",
-        icon="mdi:plus-network",
         force_update=True,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda knx: knx.xknx.connection_manager.cemi_count_outgoing

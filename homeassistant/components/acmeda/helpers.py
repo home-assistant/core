@@ -1,5 +1,8 @@
 """Helper functions for Acmeda Pulse."""
+
 from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from aiopulse import Roller
 
@@ -10,17 +13,20 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, LOGGER
 
+if TYPE_CHECKING:
+    from . import AcmedaConfigEntry
+
 
 @callback
 def async_add_acmeda_entities(
     hass: HomeAssistant,
     entity_class: type,
-    config_entry: ConfigEntry,
+    config_entry: AcmedaConfigEntry,
     current: set[int],
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add any new entities."""
-    hub = hass.data[DOMAIN][config_entry.entry_id]
+    hub = config_entry.runtime_data
     LOGGER.debug("Looking for new %s on: %s", entity_class.__name__, hub.host)
 
     api = hub.api.rollers

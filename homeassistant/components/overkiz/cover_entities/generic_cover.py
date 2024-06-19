@@ -1,4 +1,5 @@
 """Base class for Overkiz covers, shutters, awnings, etc."""
+
 from __future__ import annotations
 
 from typing import Any, cast

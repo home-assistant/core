@@ -1,4 +1,5 @@
 """Test the ibeacon sensors."""
+
 from datetime import timedelta
 import time
 
@@ -39,7 +40,7 @@ from tests.components.bluetooth import (
 
 
 @pytest.fixture(autouse=True)
-def mock_bluetooth(enable_bluetooth):
+def mock_bluetooth(enable_bluetooth: None) -> None:
     """Auto mock bluetooth."""
 
 
@@ -235,9 +236,12 @@ async def test_default_name_allowlisted_restore_late(hass: HomeAssistant) -> Non
     # Fastforward time until the device is no longer advertised
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch_bluetooth_time(
-        monotonic_now,
-    ), patch_all_discovered_devices([]):
+    with (
+        patch_bluetooth_time(
+            monotonic_now,
+        ),
+        patch_all_discovered_devices([]),
+    ):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()

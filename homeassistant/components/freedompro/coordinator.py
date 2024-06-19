@@ -1,4 +1,5 @@
 """Freedompro data update coordinator."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -35,7 +36,7 @@ class FreedomproDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]
             if result["state"]:
                 self._devices = result["devices"]
             else:
-                raise UpdateFailed()
+                raise UpdateFailed
 
         result = await get_states(
             aiohttp_client.async_get_clientsession(self._hass), self._api_key

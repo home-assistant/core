@@ -1,4 +1,5 @@
 """The Rituals Perfume Genie data update coordinator."""
+
 import logging
 
 from pyrituals import Diffuser

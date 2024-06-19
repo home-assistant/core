@@ -1,4 +1,5 @@
 """Support for bthome event entities."""
+
 from __future__ import annotations
 
 from dataclasses import replace

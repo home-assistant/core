@@ -1,0 +1,62 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'coordinators': dict({
+      'data': dict({
+        'addresses': dict({
+          'eth0': "[snicaddr(family=<AddressFamily.AF_INET: 2>, address='192.168.1.1', netmask='255.255.255.0', broadcast='255.255.255.255', ptp=None), snicaddr(family=<AddressFamily.AF_INET6: 10>, address='fe80::baf2:8a90:4f78:b1cb%end0', netmask='ffff:ffff:ffff:ffff::', broadcast=None, ptp=None), snicaddr(family=<AddressFamily.AF_INET6: 10>, address='2a00:1f:2103:3a01:3333:2222:1111:0000', netmask='ffff:ffff:ffff:ffff::', broadcast=None, ptp=None)]",
+          'eth1': "[snicaddr(family=<AddressFamily.AF_INET: 2>, address='192.168.10.1', netmask='255.255.255.0', broadcast='255.255.255.255', ptp=None)]",
+          'vethxyzxyz': "[snicaddr(family=<AddressFamily.AF_INET: 2>, address='172.16.10.1', netmask='255.255.255.0', broadcast='255.255.255.255', ptp=None)]",
+        }),
+        'boot_time': '2024-02-24 15:00:00+00:00',
+        'cpu_percent': '10.0',
+        'disk_usage': dict({
+          '/': 'sdiskusage(total=536870912000, used=322122547200, free=214748364800, percent=60.0)',
+          '/home/notexist/': 'sdiskusage(total=536870912000, used=322122547200, free=214748364800, percent=60.0)',
+          '/media/share': 'sdiskusage(total=536870912000, used=322122547200, free=214748364800, percent=60.0)',
+        }),
+        'io_counters': dict({
+          'eth0': 'snetio(bytes_sent=104857600, bytes_recv=104857600, packets_sent=50, packets_recv=50, errin=0, errout=0, dropin=0, dropout=0)',
+          'eth1': 'snetio(bytes_sent=209715200, bytes_recv=209715200, packets_sent=150, packets_recv=150, errin=0, errout=0, dropin=0, dropout=0)',
+          'vethxyzxyz': 'snetio(bytes_sent=314572800, bytes_recv=314572800, packets_sent=150, packets_recv=150, errin=0, errout=0, dropin=0, dropout=0)',
+        }),
+        'load': '(1, 2, 3)',
+        'memory': 'VirtualMemory(total=104857600, available=41943040, percent=40.0, used=62914560, free=31457280)',
+        'processes': "[tests.components.systemmonitor.conftest.MockProcess(pid=1, name='python3', status='sleeping', started='2024-02-23 15:00:00'), tests.components.systemmonitor.conftest.MockProcess(pid=1, name='pip', status='sleeping', started='2024-02-23 15:00:00')]",
+        'swap': 'sswap(total=104857600, used=62914560, free=41943040, percent=60.0, sin=1, sout=1)',
+        'temperatures': dict({
+          'cpu0-thermal': "[shwtemp(label='cpu0-thermal', current=50.0, high=60.0, critical=70.0)]",
+        }),
+      }),
+      'last_update_success': True,
+    }),
+    'entry': dict({
+      'data': dict({
+      }),
+      'disabled_by': None,
+      'domain': 'systemmonitor',
+      'minor_version': 2,
+      'options': dict({
+        'binary_sensor': dict({
+          'process': list([
+            'python3',
+            'pip',
+          ]),
+        }),
+        'resources': list([
+          'disk_use_percent_/',
+          'disk_use_percent_/home/notexist/',
+          'memory_free_',
+          'network_out_eth0',
+          'process_python3',
+        ]),
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'System Monitor',
+      'unique_id': None,
+      'version': 1,
+    }),
+  })
+# ---

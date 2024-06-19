@@ -1,4 +1,5 @@
 """GoodWe PV inverter selection settings entities."""
+
 import logging
 
 from goodwe import Inverter, InverterError, OperationMode
@@ -31,7 +32,6 @@ _OPTION_TO_MODE: dict[str, OperationMode] = {
 
 OPERATION_MODE = SelectEntityDescription(
     key="operation_mode",
-    icon="mdi:solar-power",
     entity_category=EntityCategory.CONFIG,
     translation_key="operation_mode",
 )

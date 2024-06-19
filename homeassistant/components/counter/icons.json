@@ -1,0 +1,8 @@
+{
+  "services": {
+    "decrement": "mdi:numeric-negative-1",
+    "increment": "mdi:numeric-positive-1",
+    "reset": "mdi:refresh",
+    "set_value": "mdi:counter"
+  }
+}

@@ -1,0 +1,31 @@
+# serializer version: 1
+# name: test_device_info
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'garden',
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'husqvarna_automower',
+        'c7233734-b219-4287-a173-08e3643f89f0',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Husqvarna',
+    'model': '450XH-TEST',
+    'name': 'Test Mower 1',
+    'name_by_user': None,
+    'serial_number': 123,
+    'suggested_area': 'Garden',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---

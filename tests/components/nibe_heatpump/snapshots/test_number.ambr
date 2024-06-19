@@ -11,6 +11,7 @@
     'context': <ANY>,
     'entity_id': 'number.heat_offset_s1_47011',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-10.0',
   })
@@ -27,6 +28,7 @@
     'context': <ANY>,
     'entity_id': 'number.heat_offset_s1_47011',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10.0',
   })
@@ -47,6 +49,7 @@
     'context': <ANY>,
     'entity_id': 'number.hw_charge_offset_47062',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-10.0',
   })
@@ -64,6 +67,7 @@
     'context': <ANY>,
     'entity_id': 'number.hw_charge_offset_47062',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10.0',
   })
@@ -81,6 +85,7 @@
     'context': <ANY>,
     'entity_id': 'number.hw_charge_offset_47062',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -97,6 +102,7 @@
     'context': <ANY>,
     'entity_id': 'number.heating_offset_climate_system_1_40031',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-10.0',
   })
@@ -113,6 +119,7 @@
     'context': <ANY>,
     'entity_id': 'number.heating_offset_climate_system_1_40031',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10.0',
   })
@@ -129,6 +136,7 @@
     'context': <ANY>,
     'entity_id': 'number.heating_offset_climate_system_1_40031',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })

@@ -1,4 +1,5 @@
 """Config Flow for Advantage Air integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,9 +7,8 @@ from typing import Any
 from advantage_air import ApiError, advantage_air
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import ADVANTAGE_AIR_RETRY, DOMAIN
@@ -23,7 +23,7 @@ ADVANTAGE_AIR_SCHEMA = vol.Schema(
 )
 
 
-class AdvantageAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AdvantageAirConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config Advantage Air API connection."""
 
     VERSION = 1
@@ -32,7 +32,7 @@ class AdvantageAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Get configuration from the user."""
         errors = {}
         if user_input:
@@ -45,7 +45,7 @@ class AdvantageAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     port=port,
                     session=async_get_clientsession(self.hass),
                     retry=ADVANTAGE_AIR_RETRY,
-                ).async_get(1)
+                ).async_get()
             except ApiError:
                 errors["base"] = "cannot_connect"
             else:

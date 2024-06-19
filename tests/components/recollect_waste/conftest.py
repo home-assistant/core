@@ -1,4 +1,5 @@
 """Define test fixtures for ReCollect Waste."""
+
 from datetime import date
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -55,12 +56,15 @@ def pickup_events_fixture():
 @pytest.fixture(name="mock_aiorecollect")
 async def mock_aiorecollect_fixture(client):
     """Define a fixture to patch aiorecollect."""
-    with patch(
-        "homeassistant.components.recollect_waste.Client",
-        return_value=client,
-    ), patch(
-        "homeassistant.components.recollect_waste.config_flow.Client",
-        return_value=client,
+    with (
+        patch(
+            "homeassistant.components.recollect_waste.Client",
+            return_value=client,
+        ),
+        patch(
+            "homeassistant.components.recollect_waste.config_flow.Client",
+            return_value=client,
+        ),
     ):
         yield
 

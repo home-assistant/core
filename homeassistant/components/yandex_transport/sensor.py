@@ -1,4 +1,5 @@
 """Service for obtaining information about closer bus from Transport Yandex Service."""
+
 from __future__ import annotations
 
 from datetime import timedelta

@@ -1,8 +1,10 @@
 """Test bluetooth diagnostics."""
+
 from unittest.mock import ANY, MagicMock, patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
+import pytest
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -42,12 +44,11 @@ class FakeHaScanner(FakeScannerMixin, HaScanner):
 
 
 @patch("homeassistant.components.bluetooth.HaScanner", FakeHaScanner)
+@pytest.mark.usefixtures("enable_bluetooth", "two_adapters")
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_bleak_scanner_start: MagicMock,
-    enable_bluetooth: None,
-    two_adapters: None,
 ) -> None:
     """Test we can setup and unsetup bluetooth with multiple adapters."""
     # Normally we do not want to patch our classes, but since bleak will import
@@ -56,27 +57,30 @@ async def test_diagnostics(
     # error if the test is not running on linux since we won't have the correct
     # deps installed when testing on MacOS.
 
-    with patch(
-        "homeassistant.components.bluetooth.diagnostics.platform.system",
-        return_value="Linux",
-    ), patch(
-        "homeassistant.components.bluetooth.diagnostics.get_dbus_managed_objects",
-        return_value={
-            "org.bluez": {
-                "/org/bluez/hci0": {
-                    "org.bluez.Adapter1": {
-                        "Name": "BlueZ 5.63",
-                        "Alias": "BlueZ 5.63",
-                        "Modalias": "usb:v1D6Bp0246d0540",
-                        "Discovering": False,
-                    },
-                    "org.bluez.AdvertisementMonitorManager1": {
-                        "SupportedMonitorTypes": ["or_patterns"],
-                        "SupportedFeatures": [],
-                    },
+    with (
+        patch(
+            "homeassistant.components.bluetooth.diagnostics.platform.system",
+            return_value="Linux",
+        ),
+        patch(
+            "homeassistant.components.bluetooth.diagnostics.get_dbus_managed_objects",
+            return_value={
+                "org.bluez": {
+                    "/org/bluez/hci0": {
+                        "org.bluez.Adapter1": {
+                            "Name": "BlueZ 5.63",
+                            "Alias": "BlueZ 5.63",
+                            "Modalias": "usb:v1D6Bp0246d0540",
+                            "Discovering": False,
+                        },
+                        "org.bluez.AdvertisementMonitorManager1": {
+                            "SupportedMonitorTypes": ["or_patterns"],
+                            "SupportedFeatures": [],
+                        },
+                    }
                 }
-            }
-        },
+            },
+        ),
     ):
         entry2 = MockConfigEntry(
             domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:02"
@@ -172,6 +176,14 @@ async def test_diagnostics(
                         "source": "00:00:00:00:00:01",
                         "start_time": ANY,
                         "type": "HaScanner",
+                        "current_mode": {
+                            "__type": "<enum 'BluetoothScanningMode'>",
+                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                        },
+                        "requested_mode": {
+                            "__type": "<enum 'BluetoothScanningMode'>",
+                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                        },
                     },
                     {
                         "adapter": "hci1",
@@ -199,6 +211,14 @@ async def test_diagnostics(
                         "source": "00:00:00:00:00:02",
                         "start_time": ANY,
                         "type": "FakeHaScanner",
+                        "current_mode": {
+                            "__type": "<enum 'BluetoothScanningMode'>",
+                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                        },
+                        "requested_mode": {
+                            "__type": "<enum 'BluetoothScanningMode'>",
+                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                        },
                     },
                 ],
                 "slot_manager": {
@@ -217,12 +237,11 @@ async def test_diagnostics(
 
 
 @patch("homeassistant.components.bluetooth.HaScanner", FakeHaScanner)
+@pytest.mark.usefixtures(
+    "macos_adapter", "mock_bleak_scanner_start", "mock_bluetooth_adapters"
+)
 async def test_diagnostics_macos(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-    macos_adapter,
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test diagnostics for macos."""
     # Normally we do not want to patch our classes, but since bleak will import
@@ -235,12 +254,15 @@ async def test_diagnostics_macos(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
     )
 
-    with patch(
-        "homeassistant.components.bluetooth.diagnostics.platform.system",
-        return_value="Darwin",
-    ), patch(
-        "homeassistant.components.bluetooth.diagnostics.get_dbus_managed_objects",
-        return_value={},
+    with (
+        patch(
+            "homeassistant.components.bluetooth.diagnostics.platform.system",
+            return_value="Darwin",
+        ),
+        patch(
+            "homeassistant.components.bluetooth.diagnostics.get_dbus_managed_objects",
+            return_value={},
+        ),
     ):
         entry1 = MockConfigEntry(
             domain=bluetooth.DOMAIN,
@@ -312,6 +334,7 @@ async def test_diagnostics_macos(
                         "service_uuids": [],
                         "source": "local",
                         "time": ANY,
+                        "tx_power": -127,
                     }
                 ],
                 "connectable_history": [
@@ -340,6 +363,7 @@ async def test_diagnostics_macos(
                         "service_uuids": [],
                         "source": "local",
                         "time": ANY,
+                        "tx_power": -127,
                     }
                 ],
                 "scanners": [
@@ -369,6 +393,14 @@ async def test_diagnostics_macos(
                         "source": "Core Bluetooth",
                         "start_time": ANY,
                         "type": "FakeHaScanner",
+                        "current_mode": {
+                            "__type": "<enum 'BluetoothScanningMode'>",
+                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                        },
+                        "requested_mode": {
+                            "__type": "<enum 'BluetoothScanningMode'>",
+                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                        },
                     }
                 ],
                 "slot_manager": {
@@ -381,13 +413,14 @@ async def test_diagnostics_macos(
 
 
 @patch("homeassistant.components.bluetooth.HaScanner", FakeHaScanner)
+@pytest.mark.usefixtures(
+    "enable_bluetooth",
+    "one_adapter",
+    "mock_bleak_scanner_start",
+    "mock_bluetooth_adapters",
+)
 async def test_diagnostics_remote_adapter(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-    enable_bluetooth: None,
-    one_adapter: None,
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test diagnostics for remote adapter."""
     manager = _get_manager()
@@ -413,12 +446,15 @@ async def test_diagnostics_remote_adapter(
                 MONOTONIC_TIME(),
             )
 
-    with patch(
-        "homeassistant.components.bluetooth.diagnostics.platform.system",
-        return_value="Linux",
-    ), patch(
-        "homeassistant.components.bluetooth.diagnostics.get_dbus_managed_objects",
-        return_value={},
+    with (
+        patch(
+            "homeassistant.components.bluetooth.diagnostics.platform.system",
+            return_value="Linux",
+        ),
+        patch(
+            "homeassistant.components.bluetooth.diagnostics.get_dbus_managed_objects",
+            return_value={},
+        ),
     ):
         entry1 = hass.config_entries.async_entries(bluetooth.DOMAIN)[0]
         connector = (
@@ -492,6 +528,7 @@ async def test_diagnostics_remote_adapter(
                         "service_uuids": [],
                         "source": "esp32",
                         "time": ANY,
+                        "tx_power": -127,
                     }
                 ],
                 "connectable_history": [
@@ -520,6 +557,7 @@ async def test_diagnostics_remote_adapter(
                         "service_uuids": [],
                         "source": "esp32",
                         "time": ANY,
+                        "tx_power": -127,
                     }
                 ],
                 "scanners": [
@@ -533,6 +571,14 @@ async def test_diagnostics_remote_adapter(
                         "source": "00:00:00:00:00:01",
                         "start_time": ANY,
                         "type": "HaScanner",
+                        "current_mode": {
+                            "__type": "<enum 'BluetoothScanningMode'>",
+                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                        },
+                        "requested_mode": {
+                            "__type": "<enum 'BluetoothScanningMode'>",
+                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                        },
                     },
                     {
                         "connectable": True,

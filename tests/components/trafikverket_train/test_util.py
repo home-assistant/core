@@ -1,4 +1,5 @@
 """The test for the Trafikverket train utils."""
+
 from __future__ import annotations
 
 from datetime import datetime

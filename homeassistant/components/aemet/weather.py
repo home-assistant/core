@@ -14,12 +14,10 @@ from aemet_opendata.const import (
 )
 
 from homeassistant.components.weather import (
-    DOMAIN as WEATHER_DOMAIN,
     Forecast,
     SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -27,55 +25,28 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    ATTRIBUTION,
-    CONDITIONS_MAP,
-    DOMAIN,
-    ENTRY_NAME,
-    ENTRY_WEATHER_COORDINATOR,
-    WEATHER_FORECAST_MODES,
-)
+from . import AemetConfigEntry
+from .const import ATTRIBUTION, CONDITIONS_MAP
 from .coordinator import WeatherUpdateCoordinator
 from .entity import AemetEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AemetConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AEMET OpenData weather entity based on a config entry."""
-    domain_data = hass.data[DOMAIN][config_entry.entry_id]
-    weather_coordinator = domain_data[ENTRY_WEATHER_COORDINATOR]
+    domain_data = config_entry.runtime_data
+    name = domain_data.name
+    weather_coordinator = domain_data.coordinator
 
-    entities = []
-    entity_registry = er.async_get(hass)
-
-    # Add daily + hourly entity for legacy config entries, only add daily for new
-    # config entries. This can be removed in HA Core 2024.3
-    if entity_registry.async_get_entity_id(
-        WEATHER_DOMAIN,
-        DOMAIN,
-        f"{config_entry.unique_id} {WEATHER_FORECAST_MODES[AOD_FORECAST_HOURLY]}",
-    ):
-        for mode, mode_id in WEATHER_FORECAST_MODES.items():
-            name = f"{domain_data[ENTRY_NAME]} {mode_id}"
-            unique_id = f"{config_entry.unique_id} {mode_id}"
-            entities.append(AemetWeather(name, unique_id, weather_coordinator, mode))
-    else:
-        entities.append(
-            AemetWeather(
-                domain_data[ENTRY_NAME],
-                config_entry.unique_id,
-                weather_coordinator,
-                AOD_FORECAST_DAILY,
-            )
-        )
-
-    async_add_entities(entities, False)
+    async_add_entities(
+        [AemetWeather(name, config_entry.unique_id, weather_coordinator)],
+        False,
+    )
 
 
 class AemetWeather(
@@ -98,14 +69,9 @@ class AemetWeather(
         name,
         unique_id,
         coordinator: WeatherUpdateCoordinator,
-        forecast_mode,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._forecast_mode = forecast_mode
-        self._attr_entity_registry_enabled_default = (
-            self._forecast_mode == AOD_FORECAST_DAILY
-        )
         self._attr_name = name
         self._attr_unique_id = unique_id
 
@@ -114,11 +80,6 @@ class AemetWeather(
         """Return the current condition."""
         cond = self.get_aemet_value([AOD_WEATHER, AOD_CONDITION])
         return CONDITIONS_MAP.get(cond)
-
-    @property
-    def forecast(self) -> list[Forecast]:
-        """Return the forecast array."""
-        return self.get_aemet_forecast(self._forecast_mode)
 
     @callback
     def _async_forecast_daily(self) -> list[Forecast]:

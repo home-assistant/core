@@ -1,4 +1,5 @@
 """Support for Tractive switches."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -8,19 +9,15 @@ from typing import Any, Literal, cast
 from aiotractive.exceptions import TractiveError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import Trackables, TractiveClient
+from . import Trackables, TractiveClient, TractiveConfigEntry
 from .const import (
     ATTR_BUZZER,
     ATTR_LED,
     ATTR_LIVE_TRACKING,
-    CLIENT,
-    DOMAIN,
-    TRACKABLES,
     TRACKER_SWITCH_STATUS_UPDATED,
 )
 from .entity import TractiveEntity
@@ -28,39 +25,29 @@ from .entity import TractiveEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class TractiveRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class TractiveSwitchEntityDescription(SwitchEntityDescription):
+    """Class describing Tractive switch entities."""
 
     method: Literal["async_set_buzzer", "async_set_led", "async_set_live_tracking"]
-
-
-@dataclass(frozen=True)
-class TractiveSwitchEntityDescription(
-    SwitchEntityDescription, TractiveRequiredKeysMixin
-):
-    """Class describing Tractive switch entities."""
 
 
 SWITCH_TYPES: tuple[TractiveSwitchEntityDescription, ...] = (
     TractiveSwitchEntityDescription(
         key=ATTR_BUZZER,
         translation_key="tracker_buzzer",
-        icon="mdi:volume-high",
         method="async_set_buzzer",
         entity_category=EntityCategory.CONFIG,
     ),
     TractiveSwitchEntityDescription(
         key=ATTR_LED,
         translation_key="tracker_led",
-        icon="mdi:led-on",
         method="async_set_led",
         entity_category=EntityCategory.CONFIG,
     ),
     TractiveSwitchEntityDescription(
         key=ATTR_LIVE_TRACKING,
         translation_key="live_tracking",
-        icon="mdi:map-marker-path",
         method="async_set_live_tracking",
         entity_category=EntityCategory.CONFIG,
     ),
@@ -68,11 +55,13 @@ SWITCH_TYPES: tuple[TractiveSwitchEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TractiveConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Tractive switches."""
-    client = hass.data[DOMAIN][entry.entry_id][CLIENT]
-    trackables = hass.data[DOMAIN][entry.entry_id][TRACKABLES]
+    client = entry.runtime_data.client
+    trackables = entry.runtime_data.trackables
 
     entities = [
         TractiveSwitch(client, item, description)

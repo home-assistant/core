@@ -1,4 +1,5 @@
 """Constants for the switchbot integration."""
+
 from enum import StrEnum
 
 from switchbot import SwitchbotModel
@@ -26,6 +27,7 @@ class SupportedModels(StrEnum):
     HUMIDIFIER = "humidifier"
     LOCK = "lock"
     BLIND_TILT = "blind_tilt"
+    HUB2 = "hub2"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -38,6 +40,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.HUMIDIFIER: SupportedModels.HUMIDIFIER,
     SwitchbotModel.LOCK: SupportedModels.LOCK,
     SwitchbotModel.BLIND_TILT: SupportedModels.BLIND_TILT,
+    SwitchbotModel.HUB2: SupportedModels.HUB2,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {

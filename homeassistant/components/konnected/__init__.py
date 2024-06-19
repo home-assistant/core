@@ -1,4 +1,5 @@
 """Support for Konnected devices."""
+
 import copy
 import hmac
 from http import HTTPStatus
@@ -11,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -304,7 +305,7 @@ class KonnectedView(HomeAssistantView):
 
     async def update_sensor(self, request: Request, device_id) -> Response:
         """Process a put or post."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         data = hass.data[DOMAIN]
 
         auth = request.headers.get(AUTHORIZATION)
@@ -376,7 +377,7 @@ class KonnectedView(HomeAssistantView):
 
     async def get(self, request: Request, device_id) -> Response:
         """Return the current binary state of a switch."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         data = hass.data[DOMAIN]
 
         if not (device := data[CONF_DEVICES].get(device_id)):
@@ -424,7 +425,8 @@ class KonnectedView(HomeAssistantView):
         # Make sure entity is setup
         if zone_entity_id := zone.get(ATTR_ENTITY_ID):
             resp["state"] = self.binary_value(
-                hass.states.get(zone_entity_id).state, zone[CONF_ACTIVATION]
+                hass.states.get(zone_entity_id).state,  # type: ignore[union-attr]
+                zone[CONF_ACTIVATION],
             )
             return self.json(resp)
 

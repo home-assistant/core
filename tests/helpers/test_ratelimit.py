@@ -1,10 +1,10 @@
 """Tests for ratelimit."""
+
 import asyncio
-from datetime import timedelta
+import time
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import ratelimit
-from homeassistant.util import dt as dt_util
 
 
 async def test_hit(hass: HomeAssistant) -> None:
@@ -18,12 +18,10 @@ async def test_hit(hass: HomeAssistant) -> None:
         refresh_called = True
 
     rate_limiter = ratelimit.KeyedRateLimit(hass)
-    rate_limiter.async_triggered("key1", dt_util.utcnow())
+    rate_limiter.async_triggered("key1", time.time())
 
     assert (
-        rate_limiter.async_schedule_action(
-            "key1", timedelta(seconds=0.001), dt_util.utcnow(), _refresh
-        )
+        rate_limiter.async_schedule_action("key1", 0.001, time.time(), _refresh)
         is not None
     )
 
@@ -35,10 +33,7 @@ async def test_hit(hass: HomeAssistant) -> None:
     assert refresh_called
 
     assert (
-        rate_limiter.async_schedule_action(
-            "key2", timedelta(seconds=0.001), dt_util.utcnow(), _refresh
-        )
-        is None
+        rate_limiter.async_schedule_action("key2", 0.001, time.time(), _refresh) is None
     )
     rate_limiter.async_remove()
 
@@ -55,19 +50,13 @@ async def test_miss(hass: HomeAssistant) -> None:
 
     rate_limiter = ratelimit.KeyedRateLimit(hass)
     assert (
-        rate_limiter.async_schedule_action(
-            "key1", timedelta(seconds=0.1), dt_util.utcnow(), _refresh
-        )
-        is None
+        rate_limiter.async_schedule_action("key1", 0.1, time.time(), _refresh) is None
     )
     assert not refresh_called
     assert not rate_limiter.async_has_timer("key1")
 
     assert (
-        rate_limiter.async_schedule_action(
-            "key1", timedelta(seconds=0.1), dt_util.utcnow(), _refresh
-        )
-        is None
+        rate_limiter.async_schedule_action("key1", 0.1, time.time(), _refresh) is None
     )
     assert not refresh_called
     assert not rate_limiter.async_has_timer("key1")
@@ -85,20 +74,18 @@ async def test_no_limit(hass: HomeAssistant) -> None:
         refresh_called = True
 
     rate_limiter = ratelimit.KeyedRateLimit(hass)
-    rate_limiter.async_triggered("key1", dt_util.utcnow())
+    rate_limiter.async_triggered("key1", time.time())
 
     assert (
-        rate_limiter.async_schedule_action("key1", None, dt_util.utcnow(), _refresh)
-        is None
+        rate_limiter.async_schedule_action("key1", None, time.time(), _refresh) is None
     )
     assert not refresh_called
     assert not rate_limiter.async_has_timer("key1")
 
-    rate_limiter.async_triggered("key1", dt_util.utcnow())
+    rate_limiter.async_triggered("key1", time.time())
 
     assert (
-        rate_limiter.async_schedule_action("key1", None, dt_util.utcnow(), _refresh)
-        is None
+        rate_limiter.async_schedule_action("key1", None, time.time(), _refresh) is None
     )
     assert not refresh_called
     assert not rate_limiter.async_has_timer("key1")

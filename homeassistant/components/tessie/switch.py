@@ -1,4 +1,5 @@
 """Switch platform for Tessie integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -23,11 +24,10 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import TessieConfigEntry
 from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
@@ -45,47 +45,44 @@ DESCRIPTIONS: tuple[TessieSwitchEntityDescription, ...] = (
         key="charge_state_charge_enable_request",
         on_func=lambda: start_charging,
         off_func=lambda: stop_charging,
-        icon="mdi:ev-station",
     ),
     TessieSwitchEntityDescription(
         key="climate_state_defrost_mode",
         on_func=lambda: start_defrost,
         off_func=lambda: stop_defrost,
-        icon="mdi:snowflake",
     ),
     TessieSwitchEntityDescription(
         key="vehicle_state_sentry_mode",
         on_func=lambda: enable_sentry_mode,
         off_func=lambda: disable_sentry_mode,
-        icon="mdi:shield-car",
     ),
     TessieSwitchEntityDescription(
         key="vehicle_state_valet_mode",
         on_func=lambda: enable_valet_mode,
         off_func=lambda: disable_valet_mode,
-        icon="mdi:car-key",
     ),
     TessieSwitchEntityDescription(
         key="climate_state_steering_wheel_heater",
         on_func=lambda: start_steering_wheel_heater,
         off_func=lambda: stop_steering_wheel_heater,
-        icon="mdi:steering",
     ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TessieConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Tessie Switch platform from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     async_add_entities(
         [
-            TessieSwitchEntity(vehicle.state_coordinator, description)
-            for vehicle in data
+            TessieSwitchEntity(vehicle, description)
+            for vehicle in data.vehicles
             for description in DESCRIPTIONS
-            if description.key in vehicle.state_coordinator.data
+            if description.key in vehicle.data
         ]
     )
 

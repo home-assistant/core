@@ -1,4 +1,5 @@
 """A risco entity base class."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -12,8 +13,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import RiscoDataUpdateCoordinator, zone_update_signal
+from . import zone_update_signal
 from .const import DOMAIN
+from .coordinator import RiscoDataUpdateCoordinator
 
 
 def zone_unique_id(risco: RiscoCloud, zone_id: int) -> str:

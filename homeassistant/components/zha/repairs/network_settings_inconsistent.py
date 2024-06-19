@@ -1,4 +1,5 @@
 """ZHA repair for inconsistent network settings."""
+
 from __future__ import annotations
 
 import logging

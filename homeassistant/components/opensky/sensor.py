@@ -1,4 +1,5 @@
 """Sensor for the Open Sky Network."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
@@ -38,7 +39,7 @@ class OpenSkySensor(CoordinatorEntity[OpenSkyDataUpdateCoordinator], SensorEntit
     )
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_icon = "mdi:airplane"
+    _attr_translation_key = "flights"
     _attr_native_unit_of_measurement = "flights"
     _attr_state_class = SensorStateClass.MEASUREMENT
 

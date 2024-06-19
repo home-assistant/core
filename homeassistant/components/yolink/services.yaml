@@ -7,9 +7,7 @@ play_on_speaker_hub:
         device:
           filter:
             - integration: yolink
-              manufacturer: YoLink
               model: SpeakerHub
-
     message:
       required: true
       example: hello, yolink

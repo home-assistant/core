@@ -1,4 +1,5 @@
 """Constants for the Tuya integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -112,6 +113,7 @@ class DPCode(StrEnum):
     BASIC_OSD = "basic_osd"
     BASIC_PRIVATE = "basic_private"
     BASIC_WDR = "basic_wdr"
+    BATTERY = "battery"  # Used by non-standard contact sensor implementations
     BATTERY_PERCENTAGE = "battery_percentage"  # Battery percentage
     BATTERY_STATE = "battery_state"  # Battery state
     BATTERY_VALUE = "battery_value"  # Battery value

@@ -1,4 +1,5 @@
 """Integration for Apple's WeatherKit API."""
+
 from __future__ import annotations
 
 from apple_weatherkit.client import (
@@ -23,7 +24,7 @@ from .const import (
 )
 from .coordinator import WeatherKitDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.WEATHER, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.WEATHER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

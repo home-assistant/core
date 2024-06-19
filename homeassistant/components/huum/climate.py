@@ -1,4 +1,5 @@
 """Support for Huum wifi-enabled sauna."""
+
 from __future__ import annotations
 
 import logging
@@ -41,7 +42,11 @@ class HuumDevice(ClimateEntity):
     """Representation of a heater."""
 
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_max_temp = 110
@@ -51,6 +56,7 @@ class HuumDevice(ClimateEntity):
 
     _target_temperature: int | None = None
     _status: HuumStatusResponse | None = None
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, huum_handler: Huum, unique_id: str) -> None:
         """Initialize the heater."""

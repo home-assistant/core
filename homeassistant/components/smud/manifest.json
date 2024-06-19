@@ -1,0 +1,6 @@
+{
+  "domain": "smud",
+  "name": "Sacramento Municipal Utility District (SMUD)",
+  "integration_type": "virtual",
+  "supported_by": "opower"
+}

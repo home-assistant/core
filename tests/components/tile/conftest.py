@@ -1,4 +1,5 @@
 """Define test fixtures for Tile."""
+
 import json
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -53,9 +54,12 @@ def data_tile_details_fixture():
 @pytest.fixture(name="mock_pytile")
 async def mock_pytile_fixture(api):
     """Define a fixture to patch pytile."""
-    with patch(
-        "homeassistant.components.tile.config_flow.async_login", return_value=api
-    ), patch("homeassistant.components.tile.async_login", return_value=api):
+    with (
+        patch(
+            "homeassistant.components.tile.config_flow.async_login", return_value=api
+        ),
+        patch("homeassistant.components.tile.async_login", return_value=api),
+    ):
         yield
 
 

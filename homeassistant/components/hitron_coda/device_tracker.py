@@ -1,4 +1,5 @@
 """Support for the Hitron CODA-4582U, provided by Rogers."""
+
 from __future__ import annotations
 
 from collections import namedtuple
@@ -94,10 +95,10 @@ class HitronCODADeviceScanner(DeviceScanner):
             return False
         try:
             self._userid = res.cookies["userid"]
-            return True
         except KeyError:
             _LOGGER.error("Failed to log in to router")
             return False
+        return True
 
     def _update_info(self):
         """Get ARP from router."""

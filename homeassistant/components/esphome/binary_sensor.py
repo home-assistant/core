@@ -1,4 +1,5 @@
 """Support for ESPHome binary sensors."""
+
 from __future__ import annotations
 
 from aioesphomeapi import BinarySensorInfo, BinarySensorState, EntityInfo
@@ -32,7 +33,9 @@ async def async_setup_entry(
 
     entry_data = DomainData.get(hass).get_entry_data(entry)
     assert entry_data.device_info is not None
-    if entry_data.device_info.voice_assistant_version:
+    if entry_data.device_info.voice_assistant_feature_flags_compat(
+        entry_data.api_version
+    ):
         async_add_entities([EsphomeAssistInProgressBinarySensor(entry_data)])
 
 

@@ -1,4 +1,5 @@
 """Support for Rheem EcoNet water heaters."""
+
 from __future__ import annotations
 
 from pyeconet.equipment import EquipmentType

@@ -1,4 +1,5 @@
 """Support for the Tank Utility propane monitor."""
+
 from __future__ import annotations
 
 import datetime
@@ -125,7 +126,7 @@ class TankUtilitySensor(SensorEntity):
                 self._token = auth.get_token(self._email, self._password, force=True)
                 data = tank_monitor.get_device_data(self._token, self.device)
             else:
-                raise http_error
+                raise
         data.update(data.pop("device", {}))
         data.update(data.pop("lastReading", {}))
         return data

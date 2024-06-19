@@ -1,10 +1,9 @@
 """Support for Nanoleaf Lights."""
+
 from __future__ import annotations
 
 import math
 from typing import Any
-
-from aionanoleaf import Nanoleaf
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -19,13 +18,12 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
 
-from . import NanoleafEntryData
+from . import NanoleafCoordinator, NanoleafEntryData
 from .const import DOMAIN
 from .entity import NanoleafEntity
 
@@ -38,7 +36,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Nanoleaf light."""
     entry_data: NanoleafEntryData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([NanoleafLight(entry_data.device, entry_data.coordinator)])
+    async_add_entities([NanoleafLight(entry_data.coordinator)])
 
 
 class NanoleafLight(NanoleafEntity, LightEntity):
@@ -47,16 +45,16 @@ class NanoleafLight(NanoleafEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
     _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
     _attr_name = None
-    _attr_icon = "mdi:triangle-outline"
+    _attr_translation_key = "light"
 
-    def __init__(
-        self, nanoleaf: Nanoleaf, coordinator: DataUpdateCoordinator[None]
-    ) -> None:
+    def __init__(self, coordinator: NanoleafCoordinator) -> None:
         """Initialize the Nanoleaf light."""
-        super().__init__(nanoleaf, coordinator)
-        self._attr_unique_id = nanoleaf.serial_no
-        self._attr_min_mireds = math.ceil(1000000 / nanoleaf.color_temperature_max)
-        self._attr_max_mireds = kelvin_to_mired(nanoleaf.color_temperature_min)
+        super().__init__(coordinator)
+        self._attr_unique_id = self._nanoleaf.serial_no
+        self._attr_min_mireds = math.ceil(
+            1000000 / self._nanoleaf.color_temperature_max
+        )
+        self._attr_max_mireds = kelvin_to_mired(self._nanoleaf.color_temperature_min)
 
     @property
     def brightness(self) -> int:

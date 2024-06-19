@@ -1,4 +1,5 @@
 """Support for Dominos Pizza ordering."""
+
 from datetime import timedelta
 import logging
 
@@ -138,10 +139,10 @@ class Dominos:
         """Update the shared closest store (if open)."""
         try:
             self.closest_store = self.address.closest_store()
-            return True
         except StoreException:
             self.closest_store = None
             return False
+        return True
 
     def get_menu(self):
         """Return the products from the closest stores menu."""

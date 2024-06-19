@@ -1,4 +1,5 @@
 """Support for Tuya binary sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -10,15 +11,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HomeAssistantTuyaData
+from . import TuyaConfigEntry
 from .base import TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
+from .const import TUYA_DISCOVERY_NEW, DPCode
 
 
 @dataclass(frozen=True)
@@ -51,7 +51,6 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     "dgnbj": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.GAS_SENSOR_STATE,
-            icon="mdi:gas-cylinder",
             device_class=BinarySensorDeviceClass.GAS,
             on_value="alarm",
         ),
@@ -76,14 +75,12 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         TuyaBinarySensorEntityDescription(
             key=DPCode.CO_STATE,
             translation_key="carbon_monoxide",
-            icon="mdi:molecule-co",
             device_class=BinarySensorDeviceClass.SAFETY,
             on_value="alarm",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.CO2_STATE,
             translation_key="carbon_dioxide",
-            icon="mdi:molecule-co2",
             device_class=BinarySensorDeviceClass.SAFETY,
             on_value="alarm",
         ),
@@ -109,7 +106,6 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.SMOKE_SENSOR_STATE,
-            icon="mdi:smoke-detector",
             device_class=BinarySensorDeviceClass.SMOKE,
             on_value="alarm",
         ),
@@ -146,7 +142,6 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         TuyaBinarySensorEntityDescription(
             key=DPCode.FEED_STATE,
             translation_key="feeding",
-            icon="mdi:information",
             on_value="feeding",
         ),
     ),
@@ -193,6 +188,10 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     "mcs": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.DOORCONTACT_STATE,
+            device_class=BinarySensorDeviceClass.DOOR,
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.SWITCH,  # Used by non-standard contact sensor implementations
             device_class=BinarySensorDeviceClass.DOOR,
         ),
         TAMPER_BINARY_SENSOR,
@@ -329,14 +328,12 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             key=f"{DPCode.SHOCK_STATE}_drop",
             dpcode=DPCode.SHOCK_STATE,
             translation_key="drop",
-            icon="mdi:icon=package-down",
             on_value="drop",
         ),
         TuyaBinarySensorEntityDescription(
             key=f"{DPCode.SHOCK_STATE}_tilt",
             dpcode=DPCode.SHOCK_STATE,
             translation_key="tilt",
-            icon="mdi:spirit-level",
             on_value="tilt",
         ),
     ),
@@ -344,10 +341,10 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: TuyaConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Tuya binary sensor dynamically through Tuya discovery."""
-    hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
+    hass_data = entry.runtime_data
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:

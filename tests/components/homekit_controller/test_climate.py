@@ -1,4 +1,5 @@
 """Basic checks for HomeKitclimate."""
+
 from aiohomekit.model.characteristics import (
     ActivationStateValues,
     CharacteristicsTypes,

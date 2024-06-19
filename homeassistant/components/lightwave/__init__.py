@@ -1,4 +1,5 @@
 """Support for device connected via Lightwave WiFi-link hub."""
+
 import logging
 
 from lightwave.lightwave import LWLink

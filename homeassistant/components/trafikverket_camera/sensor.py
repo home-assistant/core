@@ -1,4 +1,5 @@
 """Sensor platform for Trafikverket Camera integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -10,31 +11,23 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEGREE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
-from .coordinator import CameraData, TVDataUpdateCoordinator
+from . import TVCameraConfigEntry
+from .coordinator import CameraData
 from .entity import TrafikverketCameraNonCameraEntity
 
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
-class DeviceBaseEntityDescriptionMixin:
-    """Mixin for required Trafikverket Camera base description keys."""
+@dataclass(frozen=True, kw_only=True)
+class TVCameraSensorEntityDescription(SensorEntityDescription):
+    """Describes Trafikverket Camera sensor entity."""
 
     value_fn: Callable[[CameraData], StateType | datetime]
-
-
-@dataclass(frozen=True)
-class TVCameraSensorEntityDescription(
-    SensorEntityDescription, DeviceBaseEntityDescriptionMixin
-):
-    """Describes Trafikverket Camera sensor entity."""
 
 
 SENSOR_TYPES: tuple[TVCameraSensorEntityDescription, ...] = (
@@ -42,13 +35,11 @@ SENSOR_TYPES: tuple[TVCameraSensorEntityDescription, ...] = (
         key="direction",
         translation_key="direction",
         native_unit_of_measurement=DEGREE,
-        icon="mdi:sign-direction",
         value_fn=lambda data: data.data.direction,
     ),
     TVCameraSensorEntityDescription(
         key="modified",
         translation_key="modified",
-        icon="mdi:camera-retake-outline",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: data.data.modified,
         entity_registry_enabled_default=False,
@@ -56,28 +47,24 @@ SENSOR_TYPES: tuple[TVCameraSensorEntityDescription, ...] = (
     TVCameraSensorEntityDescription(
         key="photo_time",
         translation_key="photo_time",
-        icon="mdi:camera-timer",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: data.data.phototime,
     ),
     TVCameraSensorEntityDescription(
         key="photo_url",
         translation_key="photo_url",
-        icon="mdi:camera-outline",
         value_fn=lambda data: data.data.photourl,
         entity_registry_enabled_default=False,
     ),
     TVCameraSensorEntityDescription(
         key="status",
         translation_key="status",
-        icon="mdi:camera-outline",
         value_fn=lambda data: data.data.status,
         entity_registry_enabled_default=False,
     ),
     TVCameraSensorEntityDescription(
         key="camera_type",
         translation_key="camera_type",
-        icon="mdi:camera-iris",
         value_fn=lambda data: data.data.camera_type,
         entity_registry_enabled_default=False,
     ),
@@ -85,11 +72,13 @@ SENSOR_TYPES: tuple[TVCameraSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TVCameraConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Trafikverket Camera sensor platform."""
 
-    coordinator: TVDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         TrafikverketCameraSensor(coordinator, entry.entry_id, description)
         for description in SENSOR_TYPES

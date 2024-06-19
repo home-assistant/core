@@ -1,4 +1,5 @@
 """Tests for greeneye_monitor sensors."""
+
 from unittest.mock import AsyncMock
 
 from homeassistant.components.greeneye_monitor.sensor import (
@@ -7,10 +8,7 @@ from homeassistant.components.greeneye_monitor.sensor import (
 )
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import (
-    RegistryEntryDisabler,
-    async_get as get_entity_registry,
-)
+from homeassistant.helpers import entity_registry as er
 
 from .common import (
     MULTI_MONITOR_CONFIG,
@@ -26,7 +24,7 @@ from .conftest import assert_sensor_state
 
 
 async def test_sensor_does_not_exist_before_monitor_connected(
-    hass: HomeAssistant, monitors: AsyncMock
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, monitors: AsyncMock
 ) -> None:
     """Test that a sensor does not exist before its monitor is connected."""
     # The sensor base class handles connecting the monitor, so we test this with a single voltage sensor for ease
@@ -34,7 +32,6 @@ async def test_sensor_does_not_exist_before_monitor_connected(
         hass, SINGLE_MONITOR_CONFIG_VOLTAGE_SENSORS
     )
 
-    entity_registry = get_entity_registry(hass)
     assert entity_registry.async_get("sensor.voltage_1") is None
 
 
@@ -203,8 +200,8 @@ async def test_multi_monitor_sensors(hass: HomeAssistant, monitors: AsyncMock) -
 
 async def disable_entity(hass: HomeAssistant, entity_id: str) -> None:
     """Disable the given entity."""
-    entity_registry = get_entity_registry(hass)
+    entity_registry = er.async_get(hass)
     entity_registry.async_update_entity(
-        entity_id, disabled_by=RegistryEntryDisabler.USER
+        entity_id, disabled_by=er.RegistryEntryDisabler.USER
     )
     await hass.async_block_till_done()

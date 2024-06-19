@@ -1,0 +1,126 @@
+{
+  "release": 11.7,
+  "tappFeature": true,
+  "sceneFeature": true,
+  "zone": [
+    {
+      "endpointId": "2db3dae30b9102de4d078706f94d0708-zona-0",
+      "visibile": true,
+      "indice": 0,
+      "nome": "Feed zone 0",
+      "aperta": false,
+      "esclusa": false
+    },
+    {
+      "endpointId": "2db3dae30b9102de4d078706f94d0708-zona-1",
+      "visibile": true,
+      "indice": 1,
+      "nome": "Feed Zone 1",
+      "aperta": false,
+      "esclusa": false
+    },
+    {
+      "endpointId": "2db3dae30b9102de4d078706f94d0708-zona-2",
+      "visibile": true,
+      "indice": 2,
+      "nome": "Feed Zone 2",
+      "aperta": false,
+      "esclusa": false
+    }
+  ],
+  "uscite": [
+    {
+      "endpointId": "2db3dae30b9102de4d078706f94d0708-uscita-0",
+      "visibile": true,
+      "indice": 0,
+      "nome": "Actuator 0",
+      "aperta": false
+    },
+    {
+      "endpointId": "2db3dae30b9102de4d078706f94d0708-uscita-1",
+      "visibile": true,
+      "indice": 1,
+      "nome": "Actuator 1",
+      "aperta": false
+    },
+    {
+      "endpointId": "2db3dae30b9102de4d078706f94d0708-uscita-2",
+      "visibile": true,
+      "indice": 2,
+      "nome": "Actuator 2",
+      "aperta": true
+    }
+  ],
+  "aree": [
+    {
+      "endpointId": "2db3dae30b9102de4d078706f94d0708-area-0",
+      "visibile": true,
+      "indice": 0,
+      "nome": "AREA 0",
+      "statiDisponibili": [0, 1, 2, 3, 4],
+      "statiSessioneDisponibili": [0, 1, 2, 3],
+      "stato": 0,
+      "statoSessione": 0
+    },
+    {
+      "endpointId": "2db3dae30b9102de4d078706f94d0708-area-1",
+      "visibile": true,
+      "indice": 1,
+      "nome": "AREA 1",
+      "statiDisponibili": [0, 1, 2, 3, 4],
+      "statiSessioneDisponibili": [0, 1, 2, 3],
+      "stato": 0,
+      "statoSessione": 0
+    },
+    {
+      "endpointId": "2db3dae30b9102de4d078706f94d0708-area-2",
+      "visibile": false,
+      "indice": 2,
+      "nome": "AREA 2",
+      "statiDisponibili": [0, 1, 2, 3, 4],
+      "statiSessioneDisponibili": [0, 1, 2, 3],
+      "stato": 0,
+      "statoSessione": 0
+    }
+  ],
+  "tapparelle": [
+    {
+      "endpointId": "2db3dae30b9102de4d078706f94d0708-tapparella-0",
+      "visibile": true,
+      "indice": 0,
+      "stato": "stop",
+      "posizione": 100,
+      "nome": "Cover 0"
+    }
+  ],
+  "gruppi": [
+    {
+      "endpointId": "2db3dae30b9102de4d078706f94d0708-gruppo-0",
+      "visibile": true,
+      "indice": 0,
+      "nome": "Group 0"
+    },
+    {
+      "endpointId": "2db3dae30b9102de4d078706f94d0708-gruppo-1",
+      "visibile": false,
+      "indice": 1,
+      "nome": "Group 1"
+    }
+  ],
+  "scenari": [
+    {
+      "endpointId": "2db3dae30b9102de4d078706f94d0708-scenario-0",
+      "visibile": true,
+      "indice": 0,
+      "nome": "Automation 0"
+    },
+    {
+      "endpointId": "2db3dae30b9102de4d078706f94d0708-scenario-2",
+      "visibile": true,
+      "indice": 2,
+      "nome": "Automation 2"
+    }
+  ],
+  "utente": "this.is@test.com",
+  "centrale": "2db3dae30b9102de4d078706f94d0708"
+}

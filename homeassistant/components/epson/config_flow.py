@@ -1,9 +1,10 @@
 """Config flow for epson integration."""
+
 import logging
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 
 from . import validate_projector
@@ -20,7 +21,7 @@ DATA_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class EpsonConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for epson."""
 
     VERSION = 1

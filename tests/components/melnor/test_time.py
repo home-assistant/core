@@ -1,4 +1,5 @@
 """Test the Melnor time platform."""
+
 from __future__ import annotations
 
 from datetime import time
@@ -23,7 +24,11 @@ async def test_schedule_start_time(hass: HomeAssistant) -> None:
 
     entry = mock_config_entry(hass)
 
-    with patch_async_ble_device_from_address(), patch_melnor_device() as device_patch, patch_async_register_callback():
+    with (
+        patch_async_ble_device_from_address(),
+        patch_melnor_device() as device_patch,
+        patch_async_register_callback(),
+    ):
         device = device_patch.return_value
 
         assert await hass.config_entries.async_setup(entry.entry_id)

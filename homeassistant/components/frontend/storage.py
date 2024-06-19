@@ -1,4 +1,5 @@
 """API for persistent storage for the frontend."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine

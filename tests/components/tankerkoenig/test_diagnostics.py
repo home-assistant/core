@@ -1,4 +1,5 @@
 """Tests for the Tankerkoening integration."""
+
 from __future__ import annotations
 
 import pytest

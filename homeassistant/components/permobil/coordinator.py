@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 class MyPermobilData:
     """MyPermobil data stored in the DataUpdateCoordinator."""
 
-    battery: dict[str, str | float | int | list | dict]
+    battery: dict[str, str | float | int | bool | list | dict]
     daily_usage: dict[str, str | float | int | list | dict]
     records: dict[str, str | float | int | list | dict]
 
@@ -50,8 +50,7 @@ class MyPermobilCoordinator(DataUpdateCoordinator[MyPermobilData]):
 
         except MyPermobilAPIException as err:
             _LOGGER.exception(
-                "Error fetching data from MyPermobil API for account %s %s",
+                "Error fetching data from MyPermobil API for account %s",
                 self.p_api.email,
-                err,
             )
             raise UpdateFailed from err

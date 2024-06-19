@@ -1,10 +1,12 @@
 """Test for the Schedule integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from typing import Any
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.schedule import STORAGE_VERSION, STORAGE_VERSION_MINOR
@@ -117,7 +119,7 @@ async def test_invalid_config(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("schedule", "error"),
-    (
+    [
         (
             [
                 {CONF_FROM: "00:00:00", CONF_TO: "23:59:59"},
@@ -152,7 +154,7 @@ async def test_invalid_config(hass: HomeAssistant) -> None:
             ],
             "Invalid time range, from 06:00:00 is after 05:00:00",
         ),
-    ),
+    ],
 )
 async def test_invalid_schedules(
     hass: HomeAssistant,
@@ -180,7 +182,7 @@ async def test_events_one_day(
     hass: HomeAssistant,
     schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
     caplog: pytest.LogCaptureFixture,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test events only during one day of the week."""
     freezer.move_to("2022-08-30 13:20:00-07:00")
@@ -224,7 +226,7 @@ async def test_adjacent_cross_midnight(
     hass: HomeAssistant,
     schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
     caplog: pytest.LogCaptureFixture,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test adjacent events don't toggle on->off->on."""
     freezer.move_to("2022-08-30 13:20:00-07:00")
@@ -285,7 +287,7 @@ async def test_adjacent_within_day(
     hass: HomeAssistant,
     schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
     caplog: pytest.LogCaptureFixture,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test adjacent events don't toggle on->off->on."""
     freezer.move_to("2022-08-30 13:20:00-07:00")
@@ -348,7 +350,7 @@ async def test_non_adjacent_within_day(
     hass: HomeAssistant,
     schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
     caplog: pytest.LogCaptureFixture,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test adjacent events don't toggle on->off->on."""
     freezer.move_to("2022-08-30 13:20:00-07:00")
@@ -418,17 +420,17 @@ async def test_non_adjacent_within_day(
 
 @pytest.mark.parametrize(
     "schedule",
-    (
+    [
         {CONF_FROM: "00:00:00", CONF_TO: "24:00"},
         {CONF_FROM: "00:00:00", CONF_TO: "24:00:00"},
-    ),
+    ],
 )
 async def test_to_midnight(
     hass: HomeAssistant,
     schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
     caplog: pytest.LogCaptureFixture,
     schedule: list[dict[str, str]],
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test time range allow to 24:00."""
     freezer.move_to("2022-08-30 13:20:00-07:00")
@@ -515,7 +517,7 @@ async def test_load(
 async def test_schedule_updates(
     hass: HomeAssistant,
     schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the schedule updates when time changes."""
     freezer.move_to("2022-08-10 20:10:00-07:00")
@@ -568,16 +570,17 @@ async def test_ws_list(
 async def test_ws_delete(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
     schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
 ) -> None:
     """Test WS delete cleans up entity registry."""
-    ent_reg = er.async_get(hass)
-
     assert await schedule_setup()
 
     state = hass.states.get("schedule.from_storage")
     assert state is not None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "from_storage") is not None
+    assert (
+        entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "from_storage") is not None
+    )
 
     client = await hass_ws_client(hass)
     await client.send_json(
@@ -588,29 +591,28 @@ async def test_ws_delete(
 
     state = hass.states.get("schedule.from_storage")
     assert state is None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "from_storage") is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "from_storage") is None
 
 
 @pytest.mark.freeze_time("2022-08-10 20:10:00-07:00")
 @pytest.mark.parametrize(
     ("to", "next_event", "saved_to"),
-    (
+    [
         ("23:59:59", "2022-08-10T23:59:59-07:00", "23:59:59"),
         ("24:00", "2022-08-11T00:00:00-07:00", "24:00:00"),
         ("24:00:00", "2022-08-11T00:00:00-07:00", "24:00:00"),
-    ),
+    ],
 )
 async def test_update(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
     schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
     to: str,
     next_event: str,
     saved_to: str,
 ) -> None:
     """Test updating the schedule."""
-    ent_reg = er.async_get(hass)
-
     assert await schedule_setup()
 
     state = hass.states.get("schedule.from_storage")
@@ -619,7 +621,9 @@ async def test_update(
     assert state.attributes[ATTR_FRIENDLY_NAME] == "from storage"
     assert state.attributes[ATTR_ICON] == "mdi:party-popper"
     assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-08-12T17:00:00-07:00"
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "from_storage") is not None
+    assert (
+        entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "from_storage") is not None
+    )
 
     client = await hass_ws_client(hass)
 
@@ -664,17 +668,18 @@ async def test_update(
 @pytest.mark.freeze_time("2022-08-11 8:52:00-07:00")
 @pytest.mark.parametrize(
     ("to", "next_event", "saved_to"),
-    (
+    [
         ("14:00:00", "2022-08-15T14:00:00-07:00", "14:00:00"),
         ("24:00", "2022-08-16T00:00:00-07:00", "24:00:00"),
         ("24:00:00", "2022-08-16T00:00:00-07:00", "24:00:00"),
-    ),
+    ],
 )
 async def test_ws_create(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
     schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
-    freezer,
+    freezer: FrozenDateTimeFactory,
     to: str,
     next_event: str,
     saved_to: str,
@@ -682,13 +687,11 @@ async def test_ws_create(
     """Test create WS."""
     freezer.move_to("2022-08-11 8:52:00-07:00")
 
-    ent_reg = er.async_get(hass)
-
     assert await schedule_setup(items=[])
 
     state = hass.states.get("schedule.party_mode")
     assert state is None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "party_mode") is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "party_mode") is None
 
     client = await hass_ws_client(hass)
     await client.send_json(

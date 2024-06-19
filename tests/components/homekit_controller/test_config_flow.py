@@ -1,4 +1,5 @@
 """Tests for homekit_controller config flow."""
+
 import asyncio
 from ipaddress import ip_address
 import unittest.mock
@@ -12,7 +13,7 @@ from aiohomekit.model.services import ServicesTypes
 from bleak.exc import BleakError
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.homekit_controller import config_flow
 from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
@@ -242,7 +243,7 @@ async def test_discovery_works(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
     assert get_flow_context(hass, result) == {
         "source": config_entries.SOURCE_ZEROCONF,
@@ -252,14 +253,14 @@ async def test_discovery_works(
 
     # User initiates pairing - device enters pairing mode and displays code
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
 
     # Pairing doesn't error error and pairing results
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"pairing_code": "111-22-333"}
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Koogeek-LS1-20833F"
     assert result["data"] == {}
 
@@ -275,7 +276,7 @@ async def test_abort_duplicate_flow(hass: HomeAssistant, controller) -> None:
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
 
     result = await hass.config_entries.flow.async_init(
@@ -283,7 +284,7 @@ async def test_abort_duplicate_flow(hass: HomeAssistant, controller) -> None:
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
 
 
@@ -299,7 +300,7 @@ async def test_pair_already_paired_1(hass: HomeAssistant, controller) -> None:
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_paired"
 
 
@@ -316,7 +317,7 @@ async def test_unknown_domain_type(hass: HomeAssistant, controller) -> None:
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "ignored_model"
 
 
@@ -334,7 +335,7 @@ async def test_id_missing(hass: HomeAssistant, controller) -> None:
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_properties"
 
 
@@ -351,7 +352,7 @@ async def test_discovery_ignored_model(hass: HomeAssistant, controller) -> None:
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "ignored_model"
 
 
@@ -379,7 +380,7 @@ async def test_discovery_ignored_hk_bridge(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "ignored_model"
 
 
@@ -407,7 +408,7 @@ async def test_discovery_does_not_ignore_non_homekit(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
 
 
 async def test_discovery_broken_pairing_flag(hass: HomeAssistant, controller) -> None:
@@ -482,7 +483,7 @@ async def test_discovery_invalid_config_entry(hass: HomeAssistant, controller) -
     assert config_entry_count == 0
 
     # And new config flow should continue allowing user to set up a new pairing
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
 
 
 async def test_discovery_ignored_config_entry(hass: HomeAssistant, controller) -> None:
@@ -519,7 +520,7 @@ async def test_discovery_ignored_config_entry(hass: HomeAssistant, controller) -
     assert config_entry_count == 1
 
     # We should abort since there is no accessory id in the data
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -548,7 +549,7 @@ async def test_discovery_already_configured(hass: HomeAssistant, controller) -> 
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["AccessoryIP"] == discovery_info.host
     assert entry.data["AccessoryPort"] == discovery_info.port
@@ -586,7 +587,7 @@ async def test_discovery_already_configured_update_csharp(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     await hass.async_block_till_done()
 
@@ -614,7 +615,7 @@ async def test_pair_abort_errors_on_start(
     test_exc = exception("error")
     with patch.object(device, "async_start_pairing", side_effect=test_exc):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == expected
 
 
@@ -639,7 +640,7 @@ async def test_pair_try_later_errors_on_start(
     with patch.object(device, "async_start_pairing", side_effect=test_exc):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result2["step_id"] == expected
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
 
     # Device is rebooted or placed into pairing mode as they have been instructed
 
@@ -653,7 +654,7 @@ async def test_pair_try_later_errors_on_start(
         result3["flow_id"], user_input={"pairing_code": "111-22-333"}
     )
 
-    assert result4["type"] == "create_entry"
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["title"] == "Koogeek-LS1-20833F"
 
 
@@ -685,7 +686,7 @@ async def test_pair_form_errors_on_start(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={"pairing_code": "111-22-333"}
         )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["pairing_code"] == expected
 
     assert get_flow_context(hass, result) == {
@@ -696,7 +697,7 @@ async def test_pair_form_errors_on_start(
 
     # User gets back the form
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     # User re-tries entering pairing code
@@ -704,7 +705,7 @@ async def test_pair_form_errors_on_start(
         result["flow_id"], user_input={"pairing_code": "111-22-333"}
     )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Koogeek-LS1-20833F"
 
 
@@ -735,7 +736,7 @@ async def test_pair_abort_errors_on_finish(
     with patch.object(device, "async_start_pairing", return_value=finish_pairing):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert get_flow_context(hass, result) == {
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
@@ -746,7 +747,7 @@ async def test_pair_abort_errors_on_finish(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"pairing_code": "111-22-333"}
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == expected
 
 
@@ -777,7 +778,7 @@ async def test_pair_form_errors_on_finish(
     with patch.object(device, "async_start_pairing", return_value=finish_pairing):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert get_flow_context(hass, result) == {
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
@@ -788,7 +789,7 @@ async def test_pair_form_errors_on_finish(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"pairing_code": "111-22-333"}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["pairing_code"] == expected
 
     assert get_flow_context(hass, result) == {
@@ -825,7 +826,7 @@ async def test_pair_unknown_errors(hass: HomeAssistant, controller) -> None:
     with patch.object(device, "async_start_pairing", return_value=finish_pairing):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert get_flow_context(hass, result) == {
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
@@ -836,7 +837,7 @@ async def test_pair_unknown_errors(hass: HomeAssistant, controller) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"pairing_code": "111-22-333"}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["pairing_code"] == "pairing_failed"
     assert (
         result["description_placeholders"]["error"] == "The bluetooth connection failed"
@@ -859,7 +860,7 @@ async def test_user_works(hass: HomeAssistant, controller) -> None:
         "homekit_controller", context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert get_flow_context(hass, result) == {
         "source": config_entries.SOURCE_USER,
@@ -868,7 +869,7 @@ async def test_user_works(hass: HomeAssistant, controller) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"device": "TestDevice"}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
 
     assert get_flow_context(hass, result) == {
@@ -880,7 +881,7 @@ async def test_user_works(hass: HomeAssistant, controller) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"pairing_code": "111-22-333"}
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Koogeek-LS1-20833F"
 
 
@@ -896,7 +897,7 @@ async def test_user_pairing_with_insecure_setup_code(
         "homekit_controller", context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert get_flow_context(hass, result) == {
         "source": config_entries.SOURCE_USER,
@@ -905,7 +906,7 @@ async def test_user_pairing_with_insecure_setup_code(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"device": "TestDevice"}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
 
     assert get_flow_context(hass, result) == {
@@ -917,7 +918,7 @@ async def test_user_pairing_with_insecure_setup_code(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"pairing_code": "123-45-678"}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
     assert result["errors"] == {"pairing_code": "insecure_setup_code"}
 
@@ -925,7 +926,7 @@ async def test_user_pairing_with_insecure_setup_code(
         result["flow_id"],
         user_input={"pairing_code": "123-45-678", "allow_insecure_setup_codes": True},
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Koogeek-LS1-20833F"
 
 
@@ -934,7 +935,7 @@ async def test_user_no_devices(hass: HomeAssistant, controller) -> None:
     result = await hass.config_entries.flow.async_init(
         "homekit_controller", context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices"
 
 
@@ -951,7 +952,7 @@ async def test_user_no_unpaired_devices(hass: HomeAssistant, controller) -> None
         "homekit_controller", context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices"
 
 
@@ -965,7 +966,7 @@ async def test_unignore_works(hass: HomeAssistant, controller) -> None:
         context={"source": config_entries.SOURCE_UNIGNORE},
         data={"unique_id": device.description.id},
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
     assert get_flow_context(hass, result) == {
         "title_placeholders": {"name": "TestDevice", "category": "Other"},
@@ -975,14 +976,14 @@ async def test_unignore_works(hass: HomeAssistant, controller) -> None:
 
     # User initiates pairing by clicking on 'configure' - device enters pairing mode and displays code
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
 
     # Pairing finalized
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"pairing_code": "111-22-333"}
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Koogeek-LS1-20833F"
 
 
@@ -999,7 +1000,7 @@ async def test_unignore_ignores_missing_devices(
         data={"unique_id": "00:00:00:00:00:01"},
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "accessory_not_found_error"
 
 
@@ -1021,7 +1022,7 @@ async def test_discovery_dismiss_existing_flow_on_paired(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
     await hass.async_block_till_done()
     assert (
@@ -1037,7 +1038,7 @@ async def test_discovery_dismiss_existing_flow_on_paired(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_paired"
     await hass.async_block_till_done()
     assert (
@@ -1067,6 +1068,7 @@ async def test_mdns_update_to_paired_during_pairing(
         "source": config_entries.SOURCE_ZEROCONF,
     }
 
+    finish_pairing_started = asyncio.Event()
     mdns_update_to_paired = asyncio.Event()
 
     original_async_start_pairing = device.async_start_pairing
@@ -1075,6 +1077,7 @@ async def test_mdns_update_to_paired_during_pairing(
         finish_pairing = await original_async_start_pairing(*args, **kwargs)
 
         async def _finish_pairing(*args, **kwargs):
+            finish_pairing_started.set()
             # Insert an event wait to make sure
             # we trigger the mdns update in the middle of the pairing
             await mdns_update_to_paired.wait()
@@ -1085,7 +1088,7 @@ async def test_mdns_update_to_paired_during_pairing(
     with patch.object(device, "async_start_pairing", _async_start_pairing):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert get_flow_context(hass, result) == {
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
@@ -1098,6 +1101,8 @@ async def test_mdns_update_to_paired_during_pairing(
             result["flow_id"], user_input={"pairing_code": "111-22-333"}
         )
     )
+    # Ensure the task starts
+    await finish_pairing_started.wait()
     # Make sure when the device is discovered as paired via mdns
     # it does not abort pairing if it happens before pairing is finished
     result2 = await hass.config_entries.flow.async_init(
@@ -1105,11 +1110,11 @@ async def test_mdns_update_to_paired_during_pairing(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info_paired,
     )
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_paired"
     mdns_update_to_paired.set()
     result = await task
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Koogeek-LS1-20833F"
     assert result["data"] == {}
 
@@ -1125,7 +1130,7 @@ async def test_discovery_no_bluetooth_support(hass: HomeAssistant, controller) -
             context={"source": config_entries.SOURCE_BLUETOOTH},
             data=HK_BLUETOOTH_SERVICE_INFO_NOT_DISCOVERED,
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "ignored_model"
 
 
@@ -1140,7 +1145,7 @@ async def test_bluetooth_not_homekit(hass: HomeAssistant, controller) -> None:
             context={"source": config_entries.SOURCE_BLUETOOTH},
             data=NOT_HK_BLUETOOTH_SERVICE_INFO,
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "ignored_model"
 
 
@@ -1157,7 +1162,7 @@ async def test_bluetooth_valid_device_no_discovery(
             context={"source": config_entries.SOURCE_BLUETOOTH},
             data=HK_BLUETOOTH_SERVICE_INFO_NOT_DISCOVERED,
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "accessory_not_found_error"
 
 
@@ -1177,7 +1182,7 @@ async def test_bluetooth_valid_device_discovery_paired(
             data=HK_BLUETOOTH_SERVICE_INFO_DISCOVERED_PAIRED,
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_paired"
 
 
@@ -1198,7 +1203,7 @@ async def test_bluetooth_valid_device_discovery_unpaired(
             data=HK_BLUETOOTH_SERVICE_INFO_DISCOVERED_UNPAIRED,
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
     assert storage.get_map("00:00:00:00:00:00") is None
 
@@ -1209,11 +1214,11 @@ async def test_bluetooth_valid_device_discovery_unpaired(
     }
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"], user_input={"pairing_code": "111-22-333"}
     )
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Koogeek-LS1-20833F"
     assert result3["data"] == {}
 
@@ -1251,7 +1256,7 @@ async def test_discovery_updates_ip_when_config_entry_set_up(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     await hass.async_block_till_done()
 
@@ -1289,7 +1294,7 @@ async def test_discovery_updates_ip_config_entry_not_set_up(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     await hass.async_block_till_done()
 

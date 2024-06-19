@@ -1,4 +1,5 @@
 """Support for fans through the SmartThings cloud API."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -31,11 +32,9 @@ async def async_setup_entry(
     """Add fans for a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     async_add_entities(
-        [
-            SmartThingsFan(device)
-            for device in broker.devices.values()
-            if broker.any_assigned(device.device_id, "fan")
-        ]
+        SmartThingsFan(device)
+        for device in broker.devices.values()
+        if broker.any_assigned(device.device_id, "fan")
     )
 
 
@@ -60,9 +59,9 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
 
     supported = [Capability.switch]
 
-    for capability in optional:
-        if capability in capabilities:
-            supported.append(capability)
+    supported.extend(
+        capability for capability in optional if capability in capabilities
+    )
 
     return supported
 

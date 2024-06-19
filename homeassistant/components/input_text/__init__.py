@@ -1,4 +1,5 @@
 """Support to enter a value into a text box."""
+
 from __future__ import annotations
 
 import logging
@@ -263,7 +264,7 @@ class InputText(collection.CollectionEntity, RestoreEntity):
             return
 
         state = await self.async_get_last_state()
-        value: str | None = state and state.state  # type: ignore[assignment]
+        value = state.state if state else None
 
         # Check against None because value can be 0
         if value is not None and self._minimum <= len(value) <= self._maximum:

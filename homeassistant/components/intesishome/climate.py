@@ -1,4 +1,5 @@
 """Support for IntesisHome and airconwithme Smart AC Controllers."""
+
 from __future__ import annotations
 
 import logging
@@ -146,6 +147,7 @@ class IntesisAC(ClimateEntity):
 
     _attr_should_poll = False
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, ih_device_id, ih_device, controller):
         """Initialize the thermostat."""
@@ -175,10 +177,6 @@ class IntesisAC(ClimateEntity):
         self._power_consumption_heat = None
         self._power_consumption_cool = None
 
-        self._attr_supported_features |= (
-            ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
-        )
-
         # Setpoint support
         if controller.has_setpoint_control(ih_device_id):
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
@@ -207,6 +205,11 @@ class IntesisAC(ClimateEntity):
             mode_list = [MAP_IH_TO_HVAC_MODE[mode] for mode in modes]
             self._attr_hvac_modes.extend(mode_list)
         self._attr_hvac_modes.append(HVACMode.OFF)
+
+        if len(self.hvac_modes) > 1:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+            )
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to event updates."""

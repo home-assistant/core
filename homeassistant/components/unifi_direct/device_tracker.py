@@ -1,4 +1,5 @@
 """Support for Unifi AP direct access."""
+
 from __future__ import annotations
 
 import logging

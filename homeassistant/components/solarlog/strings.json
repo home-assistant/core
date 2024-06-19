@@ -5,7 +5,8 @@
         "title": "Define your Solar-Log connection",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "name": "The prefix to be used for your Solar-Log sensors"
+          "name": "The prefix to be used for your Solar-Log sensors",
+          "extended_data": "Get additional data from Solar-Log. Extended data is only accessible, if no password is set for the Solar-Log. Use at your own risk!"
         },
         "data_description": {
           "host": "The hostname or IP address of your Solar-Log device."
@@ -14,7 +15,8 @@
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"

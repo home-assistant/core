@@ -1,0 +1,32 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "flood_warning": {
+        "default": "mdi:check-circle",
+        "state": {
+          "on": "mdi:home-flood"
+        }
+      },
+      "flood_alarm": {
+        "default": "mdi:check-circle",
+        "state": {
+          "on": "mdi:home-flood"
+        }
+      }
+    },
+    "sensor": {
+      "flood_warning_level": {
+        "default": "mdi:alert-outline"
+      },
+      "flood_alarm_level": {
+        "default": "mdi:alert"
+      },
+      "water_level": {
+        "default": "mdi:waves"
+      },
+      "water_temperature": {
+        "default": "mdi:thermometer-water"
+      }
+    }
+  }
+}

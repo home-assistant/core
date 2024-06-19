@@ -1,4 +1,5 @@
 """Support for esphome texts."""
+
 from __future__ import annotations
 
 from aioesphomeapi import EntityInfo, TextInfo, TextMode as EsphomeTextMode, TextState
@@ -8,7 +9,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .entity import (
+    EsphomeEntity,
+    convert_api_error_ha_error,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 from .enum_mapper import EsphomeEnumMapper
 
 
@@ -58,6 +64,7 @@ class EsphomeText(EsphomeEntity[TextInfo, TextState], TextEntity):
             return None
         return state.state
 
+    @convert_api_error_ha_error
     async def async_set_value(self, value: str) -> None:
         """Update the current value."""
-        await self._client.text_command(self._key, value)
+        self._client.text_command(self._key, value)

@@ -16,11 +16,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
-    'original_icon': 'mdi:radiator',
+    'original_icon': None,
     'original_name': 'Electric heater',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
@@ -35,11 +37,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
       'friendly_name': 'Device Name Electric heater',
-      'icon': 'mdi:radiator',
     }),
     'context': <ANY>,
     'entity_id': 'switch.device_name_electric_heater',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -49,11 +51,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
       'friendly_name': 'Device Name Electric heater',
-      'icon': 'mdi:radiator',
     }),
     'context': <ANY>,
     'entity_id': 'switch.device_name_electric_heater',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })

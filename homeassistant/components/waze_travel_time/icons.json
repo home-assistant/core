@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "waze_travel_time": {
+        "default": "mdi:car"
+      }
+    }
+  },
+  "services": {
+    "get_travel_times": "mdi:timelapse"
+  }
+}

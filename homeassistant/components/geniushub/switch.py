@@ -1,4 +1,5 @@
 """Support for Genius Hub switch/outlet devices."""
+
 from __future__ import annotations
 
 from datetime import timedelta

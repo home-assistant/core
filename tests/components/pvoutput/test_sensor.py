@@ -1,4 +1,5 @@
 """Tests for the sensors provided by the PVOutput integration."""
+
 from homeassistant.components.pvoutput.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -23,11 +24,11 @@ from tests.common import MockConfigEntry
 
 async def test_sensors(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the PVOutput sensors."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     state = hass.states.get("sensor.frenck_s_solar_farm_energy_consumed")
     entry = entity_registry.async_get("sensor.frenck_s_solar_farm_energy_consumed")

@@ -1,4 +1,5 @@
 """Tests for the buienradar component."""
+
 from homeassistant.components.buienradar.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE

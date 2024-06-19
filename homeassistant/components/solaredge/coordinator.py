@@ -1,11 +1,12 @@
 """Provides the data update coordinators for SolarEdge."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from datetime import date, datetime, timedelta
 from typing import Any
 
-from solaredge import Solaredge
+from aiosolaredge import SolarEdge
 from stringcase import snakecase
 
 from homeassistant.core import HomeAssistant, callback
@@ -26,7 +27,7 @@ class SolarEdgeDataService(ABC):
 
     coordinator: DataUpdateCoordinator[None]
 
-    def __init__(self, hass: HomeAssistant, api: Solaredge, site_id: str) -> None:
+    def __init__(self, hass: HomeAssistant, api: SolarEdge, site_id: str) -> None:
         """Initialize the data object."""
         self.api = api
         self.site_id = site_id
@@ -53,12 +54,8 @@ class SolarEdgeDataService(ABC):
         """Update interval."""
 
     @abstractmethod
-    def update(self) -> None:
-        """Update data in executor."""
-
     async def async_update_data(self) -> None:
         """Update data."""
-        await self.hass.async_add_executor_job(self.update)
 
 
 class SolarEdgeOverviewDataService(SolarEdgeDataService):
@@ -69,10 +66,10 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
         """Update interval."""
         return OVERVIEW_UPDATE_DELAY
 
-    def update(self) -> None:
+    async def async_update_data(self) -> None:
         """Update the data from the SolarEdge Monitoring API."""
         try:
-            data = self.api.get_overview(self.site_id)
+            data = await self.api.get_overview(self.site_id)
             overview = data["overview"]
         except KeyError as ex:
             raise UpdateFailed("Missing overview data, skipping update") from ex
@@ -112,11 +109,11 @@ class SolarEdgeDetailsDataService(SolarEdgeDataService):
         """Update interval."""
         return DETAILS_UPDATE_DELAY
 
-    def update(self) -> None:
+    async def async_update_data(self) -> None:
         """Update the data from the SolarEdge Monitoring API."""
 
         try:
-            data = self.api.get_details(self.site_id)
+            data = await self.api.get_details(self.site_id)
             details = data["details"]
         except KeyError as ex:
             raise UpdateFailed("Missing details data, skipping update") from ex
@@ -156,10 +153,10 @@ class SolarEdgeInventoryDataService(SolarEdgeDataService):
         """Update interval."""
         return INVENTORY_UPDATE_DELAY
 
-    def update(self) -> None:
+    async def async_update_data(self) -> None:
         """Update the data from the SolarEdge Monitoring API."""
         try:
-            data = self.api.get_inventory(self.site_id)
+            data = await self.api.get_inventory(self.site_id)
             inventory = data["Inventory"]
         except KeyError as ex:
             raise UpdateFailed("Missing inventory data, skipping update") from ex
@@ -177,7 +174,7 @@ class SolarEdgeInventoryDataService(SolarEdgeDataService):
 class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
     """Get and update the latest power flow data."""
 
-    def __init__(self, hass: HomeAssistant, api: Solaredge, site_id: str) -> None:
+    def __init__(self, hass: HomeAssistant, api: SolarEdge, site_id: str) -> None:
         """Initialize the power flow data service."""
         super().__init__(hass, api, site_id)
 
@@ -188,17 +185,16 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
         """Update interval."""
         return ENERGY_DETAILS_DELAY
 
-    def update(self) -> None:
+    async def async_update_data(self) -> None:
         """Update the data from the SolarEdge Monitoring API."""
         try:
             now = datetime.now()
             today = date.today()
             midnight = datetime.combine(today, datetime.min.time())
-            data = self.api.get_energy_details(
+            data = await self.api.get_energy_details(
                 self.site_id,
                 midnight,
-                now.strftime("%Y-%m-%d %H:%M:%S"),
-                meters=None,
+                now,
                 time_unit="DAY",
             )
             energy_details = data["energyDetails"]
@@ -238,7 +234,7 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
 class SolarEdgePowerFlowDataService(SolarEdgeDataService):
     """Get and update the latest power flow data."""
 
-    def __init__(self, hass: HomeAssistant, api: Solaredge, site_id: str) -> None:
+    def __init__(self, hass: HomeAssistant, api: SolarEdge, site_id: str) -> None:
         """Initialize the power flow data service."""
         super().__init__(hass, api, site_id)
 
@@ -249,10 +245,10 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
         """Update interval."""
         return POWER_FLOW_UPDATE_DELAY
 
-    def update(self) -> None:
+    async def async_update_data(self) -> None:
         """Update the data from the SolarEdge Monitoring API."""
         try:
-            data = self.api.get_current_power_flow(self.site_id)
+            data = await self.api.get_current_power_flow(self.site_id)
             power_flow = data["siteCurrentPowerFlow"]
         except KeyError as ex:
             raise UpdateFailed("Missing power flow data, skipping update") from ex

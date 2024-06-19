@@ -1,4 +1,5 @@
 """The NZBGet integration."""
+
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry

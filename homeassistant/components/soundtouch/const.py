@@ -1,4 +1,5 @@
 """Constants for the Bose SoundTouch component."""
+
 DOMAIN = "soundtouch"
 SERVICE_PLAY_EVERYWHERE = "play_everywhere"
 SERVICE_CREATE_ZONE = "create_zone"

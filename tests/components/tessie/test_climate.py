@@ -1,4 +1,5 @@
 """Test the Tessie climate platform."""
+
 from unittest.mock import patch
 
 import pytest
@@ -51,17 +52,28 @@ async def test_climate(
     assert state.state == HVACMode.HEAT_COOL
 
     # Test setting climate temp
-    with patch(
-        "homeassistant.components.tessie.climate.set_temperature",
-        return_value=TEST_RESPONSE,
-    ) as mock_set:
+    with (
+        patch(
+            "homeassistant.components.tessie.climate.set_temperature",
+            return_value=TEST_RESPONSE,
+        ) as mock_set,
+        patch(
+            "homeassistant.components.tessie.climate.start_climate_preconditioning",
+            return_value=TEST_RESPONSE,
+        ) as mock_set2,
+    ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: 20},
+            {
+                ATTR_ENTITY_ID: [entity_id],
+                ATTR_HVAC_MODE: HVACMode.HEAT_COOL,
+                ATTR_TEMPERATURE: 20,
+            },
             blocking=True,
         )
         mock_set.assert_called_once()
+        mock_set2.assert_called_once()
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_TEMPERATURE] == 20
 
@@ -103,15 +115,18 @@ async def test_errors(hass: HomeAssistant) -> None:
     entity_id = "climate.test_climate"
 
     # Test setting climate on with unknown error
-    with patch(
-        "homeassistant.components.tessie.climate.stop_climate",
-        side_effect=ERROR_UNKNOWN,
-    ) as mock_set, pytest.raises(HomeAssistantError) as error:
+    with (
+        patch(
+            "homeassistant.components.tessie.climate.stop_climate",
+            side_effect=ERROR_UNKNOWN,
+        ) as mock_set,
+        pytest.raises(HomeAssistantError) as error,
+    ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-        mock_set.assert_called_once()
-        assert error.from_exception == ERROR_UNKNOWN
+    mock_set.assert_called_once()
+    assert error.value.__cause__ == ERROR_UNKNOWN

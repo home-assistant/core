@@ -1,4 +1,5 @@
 """Support for currencylayer.com exchange rates service."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -47,12 +48,12 @@ def setup_platform(
     rest = CurrencylayerData(_RESOURCE, parameters)
 
     response = requests.get(_RESOURCE, params=parameters, timeout=10)
-    sensors = []
-    for variable in config[CONF_QUOTE]:
-        sensors.append(CurrencylayerSensor(rest, base, variable))
     if "error" in response.json():
         return
-    add_entities(sensors, True)
+    add_entities(
+        (CurrencylayerSensor(rest, base, variable) for variable in config[CONF_QUOTE]),
+        True,
+    )
 
 
 class CurrencylayerSensor(SensorEntity):

@@ -1,4 +1,5 @@
 """Constants for Nextcloud integration."""
+
 from datetime import timedelta
 
 DOMAIN = "nextcloud"

@@ -1,4 +1,5 @@
 """Tests for the diagnostics data provided by the Overkiz integration."""
+
 from unittest.mock import AsyncMock, patch
 
 from syrupy import SnapshotAssertion

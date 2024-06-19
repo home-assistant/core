@@ -1,11 +1,12 @@
 """Persistently store issues raised by integrations."""
+
 from __future__ import annotations
 
 import dataclasses
 from datetime import datetime
 from enum import StrEnum
 import functools as ft
-from typing import Any, cast
+from typing import Any, Literal, TypedDict, cast
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
@@ -13,15 +14,28 @@ from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
+from homeassistant.util.event_type import EventType
+from homeassistant.util.hass_dict import HassKey
 
+from .registry import BaseRegistry
+from .singleton import singleton
 from .storage import Store
 
-DATA_REGISTRY = "issue_registry"
-EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED = "repairs_issue_registry_updated"
+DATA_REGISTRY: HassKey[IssueRegistry] = HassKey("issue_registry")
+EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED: EventType[EventIssueRegistryUpdatedData] = (
+    EventType("repairs_issue_registry_updated")
+)
 STORAGE_KEY = "repairs.issue_registry"
 STORAGE_VERSION_MAJOR = 1
 STORAGE_VERSION_MINOR = 2
-SAVE_DELAY = 10
+
+
+class EventIssueRegistryUpdatedData(TypedDict):
+    """Event data for when the issue registry is updated."""
+
+    action: Literal["create", "remove", "update"]
+    domain: str
+    issue_id: str
 
 
 class IssueSeverity(StrEnum):
@@ -92,21 +106,19 @@ class IssueRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
         return old_data
 
 
-class IssueRegistry:
+class IssueRegistry(BaseRegistry):
     """Class to hold a registry of issues."""
 
-    def __init__(self, hass: HomeAssistant, *, read_only: bool = False) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the issue registry."""
         self.hass = hass
         self.issues: dict[tuple[str, str], IssueEntry] = {}
-        self._read_only = read_only
         self._store = IssueRegistryStore(
             hass,
             STORAGE_VERSION_MAJOR,
             STORAGE_KEY,
             atomic_writes=True,
             minor_version=STORAGE_VERSION_MINOR,
-            read_only=read_only,
         )
 
     @callback
@@ -131,7 +143,7 @@ class IssueRegistry:
         translation_placeholders: dict[str, str] | None = None,
     ) -> IssueEntry:
         """Get issue. Create if it doesn't exist."""
-
+        self.hass.verify_event_loop_thread("issue_registry.async_get_or_create")
         if (issue := self.async_get_issue(domain, issue_id)) is None:
             issue = IssueEntry(
                 active=True,
@@ -151,9 +163,13 @@ class IssueRegistry:
             )
             self.issues[(domain, issue_id)] = issue
             self.async_schedule_save()
-            self.hass.bus.async_fire(
+            self.hass.bus.async_fire_internal(
                 EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
-                {"action": "create", "domain": domain, "issue_id": issue_id},
+                EventIssueRegistryUpdatedData(
+                    action="create",
+                    domain=domain,
+                    issue_id=issue_id,
+                ),
             )
         else:
             replacement = dataclasses.replace(
@@ -173,9 +189,13 @@ class IssueRegistry:
             if replacement != issue:
                 issue = self.issues[(domain, issue_id)] = replacement
                 self.async_schedule_save()
-                self.hass.bus.async_fire(
+                self.hass.bus.async_fire_internal(
                     EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
-                    {"action": "update", "domain": domain, "issue_id": issue_id},
+                    EventIssueRegistryUpdatedData(
+                        action="update",
+                        domain=domain,
+                        issue_id=issue_id,
+                    ),
                 )
 
         return issue
@@ -183,18 +203,24 @@ class IssueRegistry:
     @callback
     def async_delete(self, domain: str, issue_id: str) -> None:
         """Delete issue."""
+        self.hass.verify_event_loop_thread("issue_registry.async_delete")
         if self.issues.pop((domain, issue_id), None) is None:
             return
 
         self.async_schedule_save()
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
-            {"action": "remove", "domain": domain, "issue_id": issue_id},
+            EventIssueRegistryUpdatedData(
+                action="remove",
+                domain=domain,
+                issue_id=issue_id,
+            ),
         )
 
     @callback
     def async_ignore(self, domain: str, issue_id: str, ignore: bool) -> IssueEntry:
         """Ignore issue."""
+        self.hass.verify_event_loop_thread("issue_registry.async_ignore")
         old = self.issues[(domain, issue_id)]
         dismissed_version = ha_version if ignore else None
         if old.dismissed_version == dismissed_version:
@@ -206,12 +232,24 @@ class IssueRegistry:
         )
 
         self.async_schedule_save()
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
-            {"action": "update", "domain": domain, "issue_id": issue_id},
+            EventIssueRegistryUpdatedData(
+                action="update",
+                domain=domain,
+                issue_id=issue_id,
+            ),
         )
 
         return issue
+
+    @callback
+    def make_read_only(self) -> None:
+        """Make the registry read-only.
+
+        This method is irreversible.
+        """
+        self._store.make_read_only()
 
     async def async_load(self) -> None:
         """Load the issue registry."""
@@ -260,11 +298,6 @@ class IssueRegistry:
         self.issues = issues
 
     @callback
-    def async_schedule_save(self) -> None:
-        """Schedule saving the issue registry."""
-        self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
-
-    @callback
     def _data_to_save(self) -> dict[str, list[dict[str, str | None]]]:
         """Return data of issue registry to store in a file."""
         data = {}
@@ -275,16 +308,18 @@ class IssueRegistry:
 
 
 @callback
+@singleton(DATA_REGISTRY)
 def async_get(hass: HomeAssistant) -> IssueRegistry:
     """Get issue registry."""
-    return cast(IssueRegistry, hass.data[DATA_REGISTRY])
+    return IssueRegistry(hass)
 
 
 async def async_load(hass: HomeAssistant, *, read_only: bool = False) -> None:
     """Load issue registry."""
-    assert DATA_REGISTRY not in hass.data
-    hass.data[DATA_REGISTRY] = IssueRegistry(hass, read_only=read_only)
-    await hass.data[DATA_REGISTRY].async_load()
+    ir = async_get(hass)
+    if read_only:  # only used in for check config script
+        ir.make_read_only()
+    return await ir.async_load()
 
 
 @callback

@@ -1,4 +1,5 @@
 """Constants for the mütesync integration."""
+
 from datetime import timedelta
 from typing import Final
 

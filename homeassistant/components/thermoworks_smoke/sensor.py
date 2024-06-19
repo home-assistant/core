@@ -2,6 +2,7 @@
 
 Requires Smoke Gateway Wifi with an internet connection.
 """
+
 from __future__ import annotations
 
 import logging
@@ -85,22 +86,21 @@ def setup_platform(
 
     try:
         mgr = thermoworks_smoke.initialize_app(email, password, True, excluded)
-
-        # list of sensor devices
-        dev = []
-
-        # get list of registered devices
-        for serial in mgr.serials():
-            for variable in monitored_variables:
-                dev.append(ThermoworksSmokeSensor(variable, serial, mgr))
-
-        add_entities(dev, True)
     except HTTPError as error:
         msg = f"{error.strerror}"
         if "EMAIL_NOT_FOUND" in msg or "INVALID_PASSWORD" in msg:
             _LOGGER.error("Invalid email and password combination")
         else:
             _LOGGER.error(msg)
+    else:
+        add_entities(
+            (
+                ThermoworksSmokeSensor(variable, serial, mgr)
+                for serial in mgr.serials()
+                for variable in monitored_variables
+            ),
+            True,
+        )
 
 
 class ThermoworksSmokeSensor(SensorEntity):
@@ -159,9 +159,9 @@ class ThermoworksSmokeSensor(SensorEntity):
                         if key and key not in EXCLUDE_KEYS:
                             self._attr_extra_state_attributes[key] = val
                 # store actual unit because attributes are not converted
-                self._attr_extra_state_attributes[
-                    "unit_of_min_max"
-                ] = self._attr_native_unit_of_measurement
+                self._attr_extra_state_attributes["unit_of_min_max"] = (
+                    self._attr_native_unit_of_measurement
+                )
 
         except (RequestException, ValueError, KeyError):
             _LOGGER.warning("Could not update status for %s", self.name)

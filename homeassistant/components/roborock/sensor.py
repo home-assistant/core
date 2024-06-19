@@ -1,4 +1,5 @@
 """Support for Roborock sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -36,18 +37,11 @@ from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntity
 
 
-@dataclass(frozen=True)
-class RoborockSensorDescriptionMixin:
-    """A class that describes sensor entities."""
+@dataclass(frozen=True, kw_only=True)
+class RoborockSensorDescription(SensorEntityDescription):
+    """A class that describes Roborock sensors."""
 
     value_fn: Callable[[DeviceProp], StateType | datetime.datetime]
-
-
-@dataclass(frozen=True)
-class RoborockSensorDescription(
-    SensorEntityDescription, RoborockSensorDescriptionMixin
-):
-    """A class that describes Roborock sensors."""
 
     protocol_listener: RoborockDataProtocol | None = None
 
@@ -232,10 +226,8 @@ class RoborockSensorEntity(RoborockCoordinatedEntity, SensorEntity):
         description: RoborockSensorDescription,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(unique_id, coordinator)
         self.entity_description = description
-        if (protocol := self.entity_description.protocol_listener) is not None:
-            self.api.add_listener(protocol, self._update_from_listener, self.api.cache)
+        super().__init__(unique_id, coordinator, description.protocol_listener)
 
     @property
     def native_value(self) -> StateType | datetime.datetime:

@@ -1,4 +1,5 @@
 """Controller module."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -39,9 +40,10 @@ class EcovacsController:
     def __init__(self, hass: HomeAssistant, config: Mapping[str, Any]) -> None:
         """Initialize controller."""
         self._hass = hass
-        self.devices: list[Device] = []
-        self.legacy_devices: list[VacBot] = []
-        self._device_id = get_client_device_id()
+        self._devices: list[Device] = []
+        self._legacy_devices: list[VacBot] = []
+        rest_url = config.get(CONF_OVERRIDE_REST_URL)
+        self._device_id = get_client_device_id(hass, rest_url is not None)
         country = config[CONF_COUNTRY]
         self._continent = get_continent(country)
 
@@ -49,8 +51,8 @@ class EcovacsController:
             create_rest_config(
                 aiohttp_client.async_get_clientsession(self._hass),
                 device_id=self._device_id,
-                country=country,
-                override_rest_url=config.get(CONF_OVERRIDE_REST_URL),
+                alpha_2_country=country,
+                override_rest_url=rest_url,
             ),
             config[CONF_USERNAME],
             md5(config[CONF_PASSWORD]),
@@ -74,14 +76,19 @@ class EcovacsController:
 
     async def initialize(self) -> None:
         """Init controller."""
+        mqtt_config_verfied = False
         try:
             devices = await self._api_client.get_devices()
             credentials = await self._authenticator.authenticate()
             for device_config in devices:
                 if isinstance(device_config, DeviceInfo):
+                    # MQTT device
+                    if not mqtt_config_verfied:
+                        await self._mqtt.verify_config()
+                        mqtt_config_verfied = True
                     device = Device(device_config, self._authenticator)
                     await device.initialize(self._mqtt)
-                    self.devices.append(device)
+                    self._devices.append(device)
                 else:
                     # Legacy device
                     bot = VacBot(
@@ -93,7 +100,7 @@ class EcovacsController:
                         self._continent,
                         monitor=True,
                     )
-                    self.legacy_devices.append(bot)
+                    self._legacy_devices.append(bot)
         except InvalidAuthenticationError as ex:
             raise ConfigEntryError("Invalid credentials") from ex
         except DeebotError as ex:
@@ -103,9 +110,19 @@ class EcovacsController:
 
     async def teardown(self) -> None:
         """Disconnect controller."""
-        for device in self.devices:
+        for device in self._devices:
             await device.teardown()
-        for legacy_device in self.legacy_devices:
+        for legacy_device in self._legacy_devices:
             await self._hass.async_add_executor_job(legacy_device.disconnect)
         await self._mqtt.disconnect()
         await self._authenticator.teardown()
+
+    @property
+    def devices(self) -> list[Device]:
+        """Return devices."""
+        return self._devices
+
+    @property
+    def legacy_devices(self) -> list[VacBot]:
+        """Return legacy devices."""
+        return self._legacy_devices

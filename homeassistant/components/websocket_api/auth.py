@@ -1,4 +1,5 @@
 """Handle the auth of a connection."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -89,10 +90,10 @@ class AuthPhase:
                 refresh_token.user,
                 refresh_token,
             )
-            conn.subscriptions[
-                "auth"
-            ] = self._hass.auth.async_register_revoke_token_callback(
-                refresh_token.id, self._cancel_ws
+            conn.subscriptions["auth"] = (
+                self._hass.auth.async_register_revoke_token_callback(
+                    refresh_token.id, self._cancel_ws
+                )
             )
             await self._send_bytes_text(AUTH_OK_MESSAGE)
             self._logger.debug("Auth OK")

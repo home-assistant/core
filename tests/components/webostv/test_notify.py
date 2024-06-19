@@ -1,4 +1,5 @@
 """The tests for the WebOS TV notify platform."""
+
 from unittest.mock import Mock, call
 
 from aiowebostv import WebOsTvPairError

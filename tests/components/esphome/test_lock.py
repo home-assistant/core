@@ -1,6 +1,5 @@
 """Test ESPHome locks."""
 
-
 from unittest.mock import call
 
 from aioesphomeapi import APIClient, LockCommand, LockEntityState, LockInfo, LockState

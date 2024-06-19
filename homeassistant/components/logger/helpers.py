@@ -1,4 +1,5 @@
 """Helpers for the logger integration."""
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -26,6 +27,16 @@ from .const import (
     STORAGE_LOG_KEY,
     STORAGE_VERSION,
 )
+
+SAVE_DELAY = 15.0
+# At startup, we want to save after a long delay to avoid
+# saving while the system is still starting up. If the system
+# for some reason restarts quickly, it will still be written
+# at the final write event. In most cases we expect startup
+# to happen in less than 180 seconds, but if it takes longer
+# it's likely delayed because of remote I/O and not local
+# I/O so it's fine to save at that point.
+SAVE_DELAY_LONG = 180.0
 
 
 @callback
@@ -147,7 +158,7 @@ class LoggerSettings:
                 for domain, settings in stored_log_config.items()
             }
         }
-        await self._store.async_save(self._async_data_to_save())
+        self.async_save(SAVE_DELAY_LONG)
 
     @callback
     def _async_data_to_save(self) -> dict[str, dict[str, dict[str, str]]]:
@@ -163,9 +174,9 @@ class LoggerSettings:
         }
 
     @callback
-    def async_save(self) -> None:
+    def async_save(self, delay: float = SAVE_DELAY) -> None:
         """Save settings."""
-        self._store.async_delay_save(self._async_data_to_save, 15)
+        self._store.async_delay_save(self._async_data_to_save, delay)
 
     @callback
     def _async_get_logger_logs(self) -> dict[str, int]:

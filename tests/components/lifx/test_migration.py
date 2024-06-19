@@ -1,4 +1,5 @@
 """Tests the lifx migration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -64,7 +65,7 @@ async def test_migration_device_online_end_to_end(
 
         assert migrated_entry is not None
 
-        assert device.config_entries == {migrated_entry.entry_id}
+        assert device.config_entries == [migrated_entry.entry_id]
         assert light_entity_reg.config_entry_id == migrated_entry.entry_id
         assert er.async_entries_for_config_entry(entity_reg, config_entry) == []
 
@@ -129,10 +130,13 @@ async def test_discovery_is_more_frequent_during_migration(
         def cleanup(self):
             """Mock cleanup."""
 
-    with _patch_device(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), patch.object(discovery, "DEFAULT_TIMEOUT", 0), patch(
-        "homeassistant.components.lifx.discovery.LifxDiscovery", MockLifxDiscovery
+    with (
+        _patch_device(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        patch.object(discovery, "DEFAULT_TIMEOUT", 0),
+        patch(
+            "homeassistant.components.lifx.discovery.LifxDiscovery", MockLifxDiscovery
+        ),
     ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -143,15 +147,15 @@ async def test_discovery_is_more_frequent_during_migration(
         assert start_calls == 1
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert start_calls == 3
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert start_calls == 4
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=15))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert start_calls == 5
 
 
@@ -191,7 +195,7 @@ async def test_migration_device_online_end_to_end_after_downgrade(
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
         await hass.async_block_till_done()
 
-        assert device.config_entries == {config_entry.entry_id}
+        assert device.config_entries == [config_entry.entry_id]
         assert light_entity_reg.config_entry_id == config_entry.entry_id
         assert er.async_entries_for_config_entry(entity_reg, config_entry) == []
 
@@ -272,7 +276,7 @@ async def test_migration_device_online_end_to_end_ignores_other_devices(
         assert new_entry is not None
         assert legacy_entry is None
 
-        assert device.config_entries == {legacy_config_entry.entry_id}
+        assert device.config_entries == [legacy_config_entry.entry_id]
         assert light_entity_reg.config_entry_id == legacy_config_entry.entry_id
         assert ignored_entity_reg.config_entry_id == other_domain_config_entry.entry_id
         assert garbage_entity_reg.config_entry_id == legacy_config_entry.entry_id

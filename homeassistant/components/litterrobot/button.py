@@ -1,4 +1,5 @@
 """Support for Litter-Robot button."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -61,14 +62,12 @@ class RobotButtonEntityDescription(ButtonEntityDescription, RequiredKeysMixin[_R
 LITTER_ROBOT_BUTTON = RobotButtonEntityDescription[LitterRobot3](
     key="reset_waste_drawer",
     translation_key="reset_waste_drawer",
-    icon="mdi:delete-variant",
     entity_category=EntityCategory.CONFIG,
     press_fn=lambda robot: robot.reset_waste_drawer(),
 )
 FEEDER_ROBOT_BUTTON = RobotButtonEntityDescription[FeederRobot](
     key="give_snack",
     translation_key="give_snack",
-    icon="mdi:candy-outline",
     press_fn=lambda robot: robot.give_snack(),
 )
 

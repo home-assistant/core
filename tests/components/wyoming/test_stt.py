@@ -1,8 +1,10 @@
 """Test stt."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
 
+from syrupy import SnapshotAssertion
 from wyoming.asr import Transcript
 
 from homeassistant.components import stt
@@ -28,7 +30,7 @@ async def test_support(hass: HomeAssistant, init_wyoming_stt) -> None:
 
 
 async def test_streaming_audio(
-    hass: HomeAssistant, init_wyoming_stt, metadata, snapshot
+    hass: HomeAssistant, init_wyoming_stt, metadata, snapshot: SnapshotAssertion
 ) -> None:
     """Test streaming audio."""
     entity = stt.async_get_speech_to_text_entity(hass, "stt.test_asr")
@@ -81,10 +83,13 @@ async def test_streaming_audio_oserror(
 
     mock_client = MockAsyncTcpClient([Transcript(text="Hello world").event()])
 
-    with patch(
-        "homeassistant.components.wyoming.stt.AsyncTcpClient",
-        mock_client,
-    ), patch.object(mock_client, "read_event", side_effect=OSError("Boom!")):
+    with (
+        patch(
+            "homeassistant.components.wyoming.stt.AsyncTcpClient",
+            mock_client,
+        ),
+        patch.object(mock_client, "read_event", side_effect=OSError("Boom!")),
+    ):
         result = await entity.async_process_audio_stream(metadata, audio_stream())
 
     assert result.result == stt.SpeechResultState.ERROR

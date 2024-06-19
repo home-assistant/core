@@ -2,6 +2,7 @@
 
 This component is part of the device_tracker platform.
 """
+
 from __future__ import annotations
 
 import logging
@@ -47,7 +48,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> FortiOSDeviceScanner
     except ConnectionError as ex:
         _LOGGER.error("ConnectionError to FortiOS API: %s", ex)
         return None
-    except Exception as ex:  # pylint: disable=broad-except
+    except Exception as ex:  # noqa: BLE001
         _LOGGER.error("Failed to login to FortiOS API: %s", ex)
         return None
 

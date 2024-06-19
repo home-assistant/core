@@ -1,4 +1,5 @@
 """Test the owntracks_http platform."""
+
 from unittest.mock import patch
 
 import pytest

@@ -1,4 +1,5 @@
 """Support for LaMetric buttons."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -30,28 +31,24 @@ BUTTONS = [
     LaMetricButtonEntityDescription(
         key="app_next",
         translation_key="app_next",
-        icon="mdi:arrow-right-bold",
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda api: api.app_next(),
     ),
     LaMetricButtonEntityDescription(
         key="app_previous",
         translation_key="app_previous",
-        icon="mdi:arrow-left-bold",
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda api: api.app_previous(),
     ),
     LaMetricButtonEntityDescription(
         key="dismiss_current",
         translation_key="dismiss_current",
-        icon="mdi:bell-cancel",
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda api: api.dismiss_current_notification(),
     ),
     LaMetricButtonEntityDescription(
         key="dismiss_all",
         translation_key="dismiss_all",
-        icon="mdi:bell-cancel",
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda api: api.dismiss_all_notifications(),
     ),

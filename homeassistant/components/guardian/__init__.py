@@ -1,4 +1,5 @@
 """The Elexa Guardian integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -138,16 +139,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         (API_VALVE_STATUS, client.valve.status),
         (API_WIFI_STATUS, client.wifi.status),
     ):
-        coordinator = valve_controller_coordinators[
-            api
-        ] = GuardianDataUpdateCoordinator(
-            hass,
-            entry=entry,
-            client=client,
-            api_name=api,
-            api_coro=api_coro,
-            api_lock=api_lock,
-            valve_controller_uid=entry.data[CONF_UID],
+        coordinator = valve_controller_coordinators[api] = (
+            GuardianDataUpdateCoordinator(
+                hass,
+                entry=entry,
+                client=client,
+                api_name=api,
+                api_coro=api_coro,
+                api_lock=api_lock,
+                valve_controller_uid=entry.data[CONF_UID],
+            )
         )
         init_valve_controller_tasks.append(async_init_coordinator(coordinator))
 

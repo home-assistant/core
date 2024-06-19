@@ -1,4 +1,5 @@
 """Component providing support for Xiaomi Cameras."""
+
 from __future__ import annotations
 
 from ftplib import FTP, error_perm

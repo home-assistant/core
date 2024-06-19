@@ -1,25 +1,25 @@
 """Diagnostics support for Shelly."""
+
 from __future__ import annotations
 
 from typing import Any
 
 from homeassistant.components.bluetooth import async_scanner_by_source
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 
-from .coordinator import get_entry_data
+from .coordinator import ShellyConfigEntry
 
 TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: ShellyConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    shelly_entry_data = get_entry_data(hass)[entry.entry_id]
+    shelly_entry_data = entry.runtime_data
 
     device_settings: str | dict = "not initialized"
     device_status: str | dict = "not initialized"

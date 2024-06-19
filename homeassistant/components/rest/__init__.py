@@ -1,4 +1,5 @@
 """The rest component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -40,9 +41,11 @@ from homeassistant.helpers.reload import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util.async_ import create_eager_task
 
 from .const import (
     CONF_ENCODING,
+    CONF_PAYLOAD_TEMPLATE,
     CONF_SSL_CIPHER_LIST,
     COORDINATOR,
     DEFAULT_SSL_CIPHER_LIST,
@@ -106,8 +109,11 @@ async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> bool
     for rest_idx, conf in enumerate(rest_config):
         scan_interval: timedelta = conf.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         resource_template: template.Template | None = conf.get(CONF_RESOURCE_TEMPLATE)
+        payload_template: template.Template | None = conf.get(CONF_PAYLOAD_TEMPLATE)
         rest = create_rest_data_from_config(hass, conf)
-        coordinator = _rest_coordinator(hass, rest, resource_template, scan_interval)
+        coordinator = _rest_coordinator(
+            hass, rest, resource_template, payload_template, scan_interval
+        )
         refresh_coroutines.append(coordinator.async_refresh())
         hass.data[DOMAIN][REST_DATA].append({REST: rest, COORDINATOR: coordinator})
 
@@ -129,10 +135,10 @@ async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> bool
                 load_coroutines.append(load_coroutine)
 
     if refresh_coroutines:
-        await asyncio.gather(*refresh_coroutines)
+        await asyncio.gather(*(create_eager_task(coro) for coro in refresh_coroutines))
 
     if load_coroutines:
-        await asyncio.gather(*load_coroutines)
+        await asyncio.gather(*(create_eager_task(coro) for coro in load_coroutines))
 
     return True
 
@@ -154,16 +160,20 @@ def _rest_coordinator(
     hass: HomeAssistant,
     rest: RestData,
     resource_template: template.Template | None,
+    payload_template: template.Template | None,
     update_interval: timedelta,
 ) -> DataUpdateCoordinator[None]:
     """Wrap a DataUpdateCoordinator around the rest object."""
-    if resource_template:
+    if resource_template or payload_template:
 
-        async def _async_refresh_with_resource_template() -> None:
-            rest.set_url(resource_template.async_render(parse_result=False))
+        async def _async_refresh_with_templates() -> None:
+            if resource_template:
+                rest.set_url(resource_template.async_render(parse_result=False))
+            if payload_template:
+                rest.set_payload(payload_template.async_render(parse_result=False))
             await rest.async_update()
 
-        update_method = _async_refresh_with_resource_template
+        update_method = _async_refresh_with_templates
     else:
         update_method = rest.async_update
 
@@ -182,6 +192,7 @@ def create_rest_data_from_config(hass: HomeAssistant, config: ConfigType) -> Res
     resource_template: template.Template | None = config.get(CONF_RESOURCE_TEMPLATE)
     method: str = config[CONF_METHOD]
     payload: str | None = config.get(CONF_PAYLOAD)
+    payload_template: template.Template | None = config.get(CONF_PAYLOAD_TEMPLATE)
     verify_ssl: bool = config[CONF_VERIFY_SSL]
     ssl_cipher_list: str = config.get(CONF_SSL_CIPHER_LIST, DEFAULT_SSL_CIPHER_LIST)
     username: str | None = config.get(CONF_USERNAME)
@@ -193,6 +204,10 @@ def create_rest_data_from_config(hass: HomeAssistant, config: ConfigType) -> Res
     if resource_template is not None:
         resource_template.hass = hass
         resource = resource_template.async_render(parse_result=False)
+
+    if payload_template is not None:
+        payload_template.hass = hass
+        payload = payload_template.async_render(parse_result=False)
 
     if not resource:
         raise HomeAssistantError("Resource not set for RestData")

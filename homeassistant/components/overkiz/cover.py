@@ -1,4 +1,5 @@
 """Support for Overkiz covers - shutters etc."""
+
 from pyoverkiz.enums import OverkizCommand, UIClass
 
 from homeassistant.config_entries import ConfigEntry

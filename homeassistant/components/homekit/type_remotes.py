@@ -1,4 +1,5 @@
 """Class to hold remote accessories."""
+
 from abc import ABC, abstractmethod
 import logging
 from typing import Any

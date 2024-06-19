@@ -1,4 +1,5 @@
 """Sensor platform for the Flipr's pool_sensor."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
@@ -20,12 +21,10 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="chlorine",
         translation_key="chlorine",
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
-        icon="mdi:pool",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="ph",
-        icon="mdi:pool",
         device_class=SensorDeviceClass.PH,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -45,7 +44,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="red_ox",
         translation_key="red_ox",
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
-        icon="mdi:pool",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(

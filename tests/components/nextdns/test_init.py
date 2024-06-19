@@ -1,4 +1,5 @@
 """Test init of NextDNS integration."""
+
 from unittest.mock import patch
 
 from nextdns import ApiError

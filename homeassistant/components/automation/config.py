@@ -1,7 +1,7 @@
 """Config validation helper for the automation integration."""
+
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 from contextlib import suppress
 from typing import Any
@@ -255,15 +255,15 @@ async def async_validate_config_item(
 
 async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> ConfigType:
     """Validate config."""
+    # No gather here since _try_async_validate_config_item is unlikely to suspend
+    # and the cost of creating many tasks is not worth the benefit.
     automations = list(
         filter(
             lambda x: x is not None,
-            await asyncio.gather(
-                *(
-                    _try_async_validate_config_item(hass, p_config)
-                    for _, p_config in config_per_platform(config, DOMAIN)
-                )
-            ),
+            [
+                await _try_async_validate_config_item(hass, p_config)
+                for _, p_config in config_per_platform(config, DOMAIN)
+            ],
         )
     )
 

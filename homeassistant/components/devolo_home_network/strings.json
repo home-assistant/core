@@ -50,7 +50,7 @@
     },
     "image": {
       "image_guest_wifi": {
-        "name": "Guest Wifi credentials as QR code"
+        "name": "Guest Wi-Fi credentials as QR code"
       }
     },
     "sensor": {
@@ -58,10 +58,10 @@
         "name": "Connected PLC devices"
       },
       "connected_wifi_clients": {
-        "name": "Connected Wifi clients"
+        "name": "Connected Wi-Fi clients"
       },
       "neighboring_wifi_networks": {
-        "name": "Neighboring Wifi networks"
+        "name": "Neighboring Wi-Fi networks"
       },
       "plc_rx_rate": {
         "name": "PLC downlink PHY rate"
@@ -72,11 +72,25 @@
     },
     "switch": {
       "switch_guest_wifi": {
-        "name": "Enable guest Wifi"
+        "name": "Enable guest Wi-Fi"
       },
       "switch_leds": {
         "name": "Enable LEDs"
       }
+    }
+  },
+  "exceptions": {
+    "connection_failed": {
+      "message": "Unable to connect to {ip_address}"
+    },
+    "no_response": {
+      "message": "Device {title} did not respond"
+    },
+    "password_protected": {
+      "message": "Device {title} requires re-authenticatication to set or change the password"
+    },
+    "password_wrong": {
+      "message": "The used password is wrong"
     }
   }
 }

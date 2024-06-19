@@ -1,4 +1,5 @@
 """Support for CM15A/CM19A X10 Controller using mochad daemon."""
+
 import logging
 import threading
 
@@ -44,8 +45,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     try:
         mochad_controller = MochadCtrl(host, port)
-    except exceptions.ConfigurationError as err:
-        _LOGGER.exception(str(err))
+    except exceptions.ConfigurationError:
+        _LOGGER.exception("Unexpected exception")
         return False
 
     def stop_mochad(event):

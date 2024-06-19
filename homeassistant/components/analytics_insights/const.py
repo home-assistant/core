@@ -1,4 +1,5 @@
 """Constants for the Homeassistant Analytics integration."""
+
 import logging
 
 DOMAIN = "analytics_insights"

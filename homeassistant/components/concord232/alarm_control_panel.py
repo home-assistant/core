@@ -1,4 +1,5 @@
 """Support for Concord232 alarm control panels."""
+
 from __future__ import annotations
 
 import datetime
@@ -8,10 +9,11 @@ from concord232 import client as concord232_client
 import requests
 import voluptuous as vol
 
-import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 from homeassistant.const import (
     CONF_CODE,
@@ -69,10 +71,10 @@ def setup_platform(
         _LOGGER.error("Unable to connect to Concord232: %s", str(ex))
 
 
-class Concord232Alarm(alarm.AlarmControlPanelEntity):
+class Concord232Alarm(AlarmControlPanelEntity):
     """Representation of the Concord232-based alarm panel."""
 
-    _attr_code_format = alarm.CodeFormat.NUMBER
+    _attr_code_format = CodeFormat.NUMBER
     _attr_state: str | None
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
@@ -84,6 +86,7 @@ class Concord232Alarm(alarm.AlarmControlPanelEntity):
 
         self._attr_name = name
         self._code = code
+        self._alarm_control_panel_option_default_code = code
         self._mode = mode
         self._url = url
         self._alarm = concord232_client.Client(self._url)

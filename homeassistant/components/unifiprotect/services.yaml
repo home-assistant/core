@@ -22,18 +22,6 @@ remove_doorbell_text:
       required: true
       selector:
         text:
-set_default_doorbell_text:
-  fields:
-    device_id:
-      required: true
-      selector:
-        device:
-          integration: unifiprotect
-    message:
-      example: Welcome!
-      required: true
-      selector:
-        text:
 set_chime_paired_doorbells:
   fields:
     device_id:
@@ -52,3 +40,16 @@ set_chime_paired_doorbells:
             integration: unifiprotect
             domain: binary_sensor
             device_class: occupancy
+remove_privacy_zone:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: unifiprotect
+          entity:
+            domain: camera
+    name:
+      required: true
+      selector:
+        text:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 import logging
 
 from govee_local_api import GoveeController
@@ -15,6 +16,7 @@ from .const import (
     CONF_LISTENING_PORT_DEFAULT,
     CONF_MULTICAST_ADDRESS_DEFAULT,
     CONF_TARGET_PORT_DEFAULT,
+    DISCOVERY_TIMEOUT,
     DOMAIN,
 )
 
@@ -38,17 +40,23 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
         update_enabled=False,
     )
 
-    await controller.start()
+    try:
+        await controller.start()
+    except OSError as ex:
+        _LOGGER.error("Start failed, errno: %d", ex.errno)
+        return False
 
     try:
-        async with asyncio.timeout(delay=5):
+        async with asyncio.timeout(delay=DISCOVERY_TIMEOUT):
             while not controller.devices:
                 await asyncio.sleep(delay=1)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _LOGGER.debug("No devices found")
 
     devices_count = len(controller.devices)
-    controller.cleanup()
+    cleanup_complete: asyncio.Event = controller.cleanup()
+    with suppress(TimeoutError):
+        await asyncio.wait_for(cleanup_complete.wait(), 1)
 
     return devices_count > 0
 

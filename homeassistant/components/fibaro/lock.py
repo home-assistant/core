@@ -1,4 +1,5 @@
 """Support for Fibaro locks."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -43,7 +44,7 @@ class FibaroLock(FibaroDevice, LockEntity):
 
     def unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
-        self.action("unsecure")
+        self.action("unsecure")  # codespell:ignore unsecure
         self._attr_is_locked = False
 
     def update(self) -> None:

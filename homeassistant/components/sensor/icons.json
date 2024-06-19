@@ -117,7 +117,7 @@
     "speed": {
       "default": "mdi:speedometer"
     },
-    "sulfur_dioxide": {
+    "sulphur_dioxide": {
       "default": "mdi:molecule"
     },
     "temperature": {

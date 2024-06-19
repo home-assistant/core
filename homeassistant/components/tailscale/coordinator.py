@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for the Tailscale integration."""
+
 from __future__ import annotations
 
 from tailscale import Device, Tailscale, TailscaleAuthenticationError

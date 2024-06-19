@@ -1,4 +1,5 @@
 """ZHA device automation trigger tests."""
+
 from datetime import timedelta
 import time
 from unittest.mock import patch
@@ -6,16 +7,16 @@ from unittest.mock import patch
 import pytest
 from zigpy.application import ControllerApplication
 import zigpy.profiles.zha
-import zigpy.zcl.clusters.general as general
+from zigpy.zcl.clusters import general
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.zha.core.const import ATTR_ENDPOINT_ID
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -71,14 +72,11 @@ def _same_lists(list_a, list_b):
     if len(list_a) != len(list_b):
         return False
 
-    for item in list_a:
-        if item not in list_b:
-            return False
-    return True
+    return all(item in list_b for item in list_a)
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -95,7 +93,9 @@ async def mock_devices(hass, zigpy_device_mock, zha_device_joined_restored):
     return zigpy_device, zha_device
 
 
-async def test_triggers(hass: HomeAssistant, mock_devices) -> None:
+async def test_triggers(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, mock_devices
+) -> None:
     """Test ZHA device triggers."""
 
     zigpy_device, zha_device = mock_devices
@@ -110,10 +110,7 @@ async def test_triggers(hass: HomeAssistant, mock_devices) -> None:
 
     ieee_address = str(zha_device.ieee)
 
-    ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device(
-        identifiers={("zha", ieee_address)}
-    )
+    reg_device = device_registry.async_get_device(identifiers={("zha", ieee_address)})
 
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, reg_device.id
@@ -172,16 +169,15 @@ async def test_triggers(hass: HomeAssistant, mock_devices) -> None:
     assert _same_lists(triggers, expected_triggers)
 
 
-async def test_no_triggers(hass: HomeAssistant, mock_devices) -> None:
+async def test_no_triggers(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, mock_devices
+) -> None:
     """Test ZHA device with no triggers."""
 
     _, zha_device = mock_devices
     ieee_address = str(zha_device.ieee)
 
-    ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device(
-        identifiers={("zha", ieee_address)}
-    )
+    reg_device = device_registry.async_get_device(identifiers={("zha", ieee_address)})
 
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, reg_device.id
@@ -198,7 +194,12 @@ async def test_no_triggers(hass: HomeAssistant, mock_devices) -> None:
     ]
 
 
-async def test_if_fires_on_event(hass: HomeAssistant, mock_devices, calls) -> None:
+async def test_if_fires_on_event(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_devices,
+    calls: list[ServiceCall],
+) -> None:
     """Test for remote triggers firing."""
 
     zigpy_device, zha_device = mock_devices
@@ -212,10 +213,7 @@ async def test_if_fires_on_event(hass: HomeAssistant, mock_devices, calls) -> No
     }
 
     ieee_address = str(zha_device.ieee)
-    ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device(
-        identifiers={("zha", ieee_address)}
-    )
+    reg_device = device_registry.async_get_device(identifiers={("zha", ieee_address)})
 
     assert await async_setup_component(
         hass,
@@ -250,7 +248,10 @@ async def test_if_fires_on_event(hass: HomeAssistant, mock_devices, calls) -> No
 
 
 async def test_device_offline_fires(
-    hass: HomeAssistant, zigpy_device_mock, zha_device_restored, calls
+    hass: HomeAssistant,
+    zigpy_device_mock,
+    zha_device_restored,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for device offline triggers firing."""
 
@@ -316,17 +317,18 @@ async def test_device_offline_fires(
 
 
 async def test_exception_no_triggers(
-    hass: HomeAssistant, mock_devices, calls, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_devices,
+    calls: list[ServiceCall],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test for exception when validating device triggers."""
 
     _, zha_device = mock_devices
 
     ieee_address = str(zha_device.ieee)
-    ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device(
-        identifiers={("zha", ieee_address)}
-    )
+    reg_device = device_registry.async_get_device(identifiers={("zha", ieee_address)})
 
     await async_setup_component(
         hass,
@@ -357,7 +359,11 @@ async def test_exception_no_triggers(
 
 
 async def test_exception_bad_trigger(
-    hass: HomeAssistant, mock_devices, calls, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_devices,
+    calls: list[ServiceCall],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test for exception when validating device triggers."""
 
@@ -372,10 +378,7 @@ async def test_exception_bad_trigger(
     }
 
     ieee_address = str(zha_device.ieee)
-    ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device(
-        identifiers={("zha", ieee_address)}
-    )
+    reg_device = device_registry.async_get_device(identifiers={("zha", ieee_address)})
 
     await async_setup_component(
         hass,
@@ -407,6 +410,7 @@ async def test_exception_bad_trigger(
 
 async def test_validate_trigger_config_missing_info(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
     zigpy_device_mock,
     mock_zigpy_connect: ControllerApplication,
@@ -423,8 +427,7 @@ async def test_validate_trigger_config_missing_info(
     # it be pulled from the current device, making it impossible to validate triggers
     await hass.config_entries.async_unload(config_entry.entry_id)
 
-    ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device(
+    reg_device = device_registry.async_get_device(
         identifiers={("zha", str(switch.ieee))}
     )
 
@@ -460,6 +463,7 @@ async def test_validate_trigger_config_missing_info(
 
 async def test_validate_trigger_config_unloaded_bad_info(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
     zigpy_device_mock,
     mock_zigpy_connect: ControllerApplication,
@@ -481,8 +485,7 @@ async def test_validate_trigger_config_unloaded_bad_info(
     await hass.async_block_till_done()
     await hass.config_entries.async_unload(config_entry.entry_id)
 
-    ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device(
+    reg_device = device_registry.async_get_device(
         identifiers={("zha", str(switch.ieee))}
     )
 

@@ -1,4 +1,5 @@
 """Adds config flow for Trafikverket Ferry integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,9 +9,8 @@ from pytrafikverket import TrafikverketFerry
 from pytrafikverket.exceptions import InvalidAuthentication, NoFerryFound
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -44,12 +44,12 @@ DATA_SCHEMA_REAUTH = vol.Schema(
 )
 
 
-class TVFerryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class TVFerryConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Trafikverket Ferry integration."""
 
     VERSION = 1
 
-    entry: config_entries.ConfigEntry | None
+    entry: ConfigEntry | None
 
     async def validate_input(
         self, api_key: str, ferry_from: str, ferry_to: str
@@ -59,7 +59,9 @@ class TVFerryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         ferry_api = TrafikverketFerry(web_session, api_key)
         await ferry_api.async_get_next_ferry_stop(ferry_from, ferry_to)
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle re-authentication with Trafikverket."""
 
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
@@ -67,7 +69,7 @@ class TVFerryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm re-authentication with Trafikverket."""
         errors: dict[str, str] = {}
 
@@ -83,7 +85,7 @@ class TVFerryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except NoFerryFound:
                 errors["base"] = "invalid_route"
-            except Exception:  # pylint: disable=broad-exception-caught
+            except Exception:  # noqa: BLE001
                 errors["base"] = "cannot_connect"
             else:
                 self.hass.config_entries.async_update_entry(
@@ -104,7 +106,7 @@ class TVFerryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user step."""
         errors: dict[str, str] = {}
 
@@ -119,7 +121,7 @@ class TVFerryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if ferry_to:
                 name = name + f" to {ferry_to}"
             if ferry_time != "00:00:00":
-                name = name + f" at {str(ferry_time)}"
+                name = name + f" at {ferry_time!s}"
 
             try:
                 await self.validate_input(api_key, ferry_from, ferry_to)
@@ -127,7 +129,7 @@ class TVFerryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except NoFerryFound:
                 errors["base"] = "invalid_route"
-            except Exception:  # pylint: disable=broad-exception-caught
+            except Exception:  # noqa: BLE001
                 errors["base"] = "cannot_connect"
             else:
                 if not errors:

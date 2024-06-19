@@ -1,4 +1,5 @@
 """Test reproduce state for Counter."""
+
 import pytest
 
 from homeassistant.core import HomeAssistant, State

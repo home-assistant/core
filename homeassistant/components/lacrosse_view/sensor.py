@@ -1,4 +1,5 @@
 """Sensor component for LaCrosse View."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -35,18 +36,11 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class LaCrosseSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class LaCrosseSensorEntityDescription(SensorEntityDescription):
+    """Description for LaCrosse View sensor."""
 
     value_fn: Callable[[Sensor, str], float | int | str | None]
-
-
-@dataclass(frozen=True)
-class LaCrosseSensorEntityDescription(
-    SensorEntityDescription, LaCrosseSensorEntityDescriptionMixin
-):
-    """Description for LaCrosse View sensor."""
 
 
 def get_value(sensor: Sensor, field: str) -> float | int | str | None:
@@ -171,11 +165,13 @@ async def async_setup_entry(
                 message = (
                     f"Unsupported sensor field: {field}\nPlease create an issue on "
                     "GitHub."
-                    " https://github.com/home-assistant/core/issues/new?assignees=&la"
-                    "bels=&template=bug_report.yml&integration_name=LaCrosse%20View&integrat"
-                    "ion_link=https://www.home-assistant.io/integrations/lacrosse_view/&addi"
-                    f"tional_information=Field:%20{field}%0ASensor%20Model:%20{sensor.model}&"
-                    f"title=LaCrosse%20View%20Unsupported%20sensor%20field:%20{field}"
+                    " https://github.com/home-assistant/core/issues/new?assignees="
+                    "&labels=&template=bug_report.yml&integration_name=LaCrosse%20View"
+                    "&integration_link="
+                    "https://www.home-assistant.io/integrations/lacrosse_view/"
+                    "&additional_information="
+                    f"Field:%20{field}%0ASensor%20Model:%20{sensor.model}"
+                    f"&title=LaCrosse%20View%20Unsupported%20sensor%20field:%20{field}"
                 )
 
                 _LOGGER.warning(message)

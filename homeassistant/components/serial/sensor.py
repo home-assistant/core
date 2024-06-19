@@ -1,4 +1,5 @@
 """Support for reading data from a serial port."""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,7 +7,7 @@ import json
 import logging
 
 from serial import SerialException
-import serial_asyncio
+import serial_asyncio_fast as serial_asyncio
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -186,12 +187,10 @@ class SerialSensor(SensorEntity):
                     **kwargs,
                 )
 
-            except SerialException as exc:
+            except SerialException:
                 if not logged_error:
                     _LOGGER.exception(
-                        "Unable to connect to the serial device %s: %s. Will retry",
-                        device,
-                        exc,
+                        "Unable to connect to the serial device %s. Will retry", device
                     )
                     logged_error = True
                 await self._handle_error()
@@ -200,9 +199,9 @@ class SerialSensor(SensorEntity):
                 while True:
                     try:
                         line = await reader.readline()
-                    except SerialException as exc:
+                    except SerialException:
                         _LOGGER.exception(
-                            "Error while reading serial device %s: %s", device, exc
+                            "Error while reading serial device %s", device
                         )
                         await self._handle_error()
                         break

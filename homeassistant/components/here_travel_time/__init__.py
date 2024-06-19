@@ -1,9 +1,11 @@
 """The HERE Travel Time integration."""
+
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_MODE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.start import async_at_started
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -48,22 +50,19 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         departure=departure,
     )
 
+    cls: type[HERETransitDataUpdateCoordinator | HERERoutingDataUpdateCoordinator]
     if config_entry.data[CONF_MODE] in {TRAVEL_MODE_PUBLIC, "publicTransportTimeTable"}:
-        hass.data.setdefault(DOMAIN, {})[
-            config_entry.entry_id
-        ] = HERETransitDataUpdateCoordinator(
-            hass,
-            api_key,
-            here_travel_time_config,
-        )
+        cls = HERETransitDataUpdateCoordinator
     else:
-        hass.data.setdefault(DOMAIN, {})[
-            config_entry.entry_id
-        ] = HERERoutingDataUpdateCoordinator(
-            hass,
-            api_key,
-            here_travel_time_config,
-        )
+        cls = HERERoutingDataUpdateCoordinator
+
+    data_coordinator = cls(hass, api_key, here_travel_time_config)
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = data_coordinator
+
+    async def _async_update_at_start(_: HomeAssistant) -> None:
+        await data_coordinator.async_refresh()
+
+    config_entry.async_on_unload(async_at_started(hass, _async_update_at_start))
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True

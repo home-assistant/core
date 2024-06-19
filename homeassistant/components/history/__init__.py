@@ -1,4 +1,5 @@
 """Provide pre-made queries on top of the recorder component."""
+
 from __future__ import annotations
 
 from datetime import datetime as dt, timedelta
@@ -9,7 +10,7 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components import frontend
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE
@@ -74,7 +75,7 @@ class HistoryPeriodView(HomeAssistantView):
                 "filter_entity_id is missing", HTTPStatus.BAD_REQUEST
             )
 
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
 
         for entity_id in entity_ids:
             if not hass.states.get(entity_id) and not valid_entity_id(entity_id):

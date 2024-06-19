@@ -1,4 +1,5 @@
 """Provides device triggers for lutron caseta."""
+
 from __future__ import annotations
 
 import logging
@@ -378,8 +379,6 @@ async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device triggers for lutron caseta devices."""
-    triggers = []
-
     # Check if device is a valid keypad.  Return empty if not.
     if not (data := get_lutron_data_by_dr_id(hass, device_id)) or not (
         keypad := data.keypad_data.dr_device_id_to_keypad.get(device_id)
@@ -394,19 +393,17 @@ async def async_get_triggers(
         keypad_button_names_to_leap[keypad["lutron_device_id"]],
     )
 
-    for trigger in SUPPORTED_INPUTS_EVENTS_TYPES:
-        for subtype in valid_buttons:
-            triggers.append(
-                {
-                    CONF_PLATFORM: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_TYPE: trigger,
-                    CONF_SUBTYPE: subtype,
-                }
-            )
-
-    return triggers
+    return [
+        {
+            CONF_PLATFORM: "device",
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_TYPE: trigger,
+            CONF_SUBTYPE: subtype,
+        }
+        for trigger in SUPPORTED_INPUTS_EVENTS_TYPES
+        for subtype in valid_buttons
+    ]
 
 
 async def async_attach_trigger(

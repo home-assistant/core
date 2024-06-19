@@ -1,4 +1,5 @@
 """The binary_sensor tests for the august platform."""
+
 import datetime
 import time
 from unittest.mock import Mock, patch

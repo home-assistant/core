@@ -1,4 +1,5 @@
 """The sensor tests for the griddy platform."""
+
 from unittest.mock import patch
 
 from pydexcom import SessionError
@@ -68,12 +69,15 @@ async def test_sensors_options_changed(hass: HomeAssistant) -> None:
     test_username_glucose_trend = hass.states.get("sensor.test_username_glucose_trend")
     assert test_username_glucose_trend.state == GLUCOSE_READING.trend_description
 
-    with patch(
-        "homeassistant.components.dexcom.Dexcom.get_current_glucose_reading",
-        return_value=GLUCOSE_READING,
-    ), patch(
-        "homeassistant.components.dexcom.Dexcom.create_session",
-        return_value="test_session_id",
+    with (
+        patch(
+            "homeassistant.components.dexcom.Dexcom.get_current_glucose_reading",
+            return_value=GLUCOSE_READING,
+        ),
+        patch(
+            "homeassistant.components.dexcom.Dexcom.create_session",
+            return_value="test_session_id",
+        ),
     ):
         hass.config_entries.async_update_entry(
             entry=entry,

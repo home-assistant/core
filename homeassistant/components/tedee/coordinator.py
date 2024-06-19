@@ -1,4 +1,5 @@
 """Coordinator for Tedee locks."""
+
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
@@ -102,9 +103,9 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
 
         except TedeeDataUpdateException as ex:
             _LOGGER.debug("Error while updating data: %s", str(ex))
-            raise UpdateFailed("Error while updating data: %s" % str(ex)) from ex
+            raise UpdateFailed(f"Error while updating data: {ex!s}") from ex
         except (TedeeClientException, TimeoutError) as ex:
-            raise UpdateFailed("Querying API failed. Error: %s" % str(ex)) from ex
+            raise UpdateFailed(f"Querying API failed. Error: {ex!s}") from ex
 
     def webhook_received(self, message: dict[str, Any]) -> None:
         """Handle webhook message."""
@@ -120,10 +121,8 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         if self.tedee_webhook_id is not None:
             try:
                 await self.tedee_client.delete_webhook(self.tedee_webhook_id)
-            except TedeeWebhookException as ex:
-                _LOGGER.warning(
-                    "Failed to unregister Tedee webhook from bridge: %s", ex
-                )
+            except TedeeWebhookException:
+                _LOGGER.exception("Failed to unregister Tedee webhook from bridge")
             else:
                 _LOGGER.debug("Unregistered Tedee webhook")
 

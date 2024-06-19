@@ -1,4 +1,5 @@
 """Tests for the Stookalert config flow."""
+
 from unittest.mock import patch
 
 from homeassistant.components.stookalert.const import CONF_PROVINCE, DOMAIN
@@ -15,7 +16,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     with patch(
@@ -28,7 +29,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "Overijssel"
     assert result2.get("data") == {
         CONF_PROVINCE: "Overijssel",
@@ -54,5 +55,5 @@ async def test_already_configured(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result2.get("type") == FlowResultType.ABORT
+    assert result2.get("type") is FlowResultType.ABORT
     assert result2.get("reason") == "already_configured"

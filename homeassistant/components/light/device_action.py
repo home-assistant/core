@@ -1,4 +1,5 @@
 """Provides device actions for lights."""
+
 from __future__ import annotations
 
 import voluptuous as vol
@@ -46,8 +47,12 @@ _ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
         vol.Required(ATTR_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Required(CONF_DOMAIN): DOMAIN,
         vol.Required(CONF_TYPE): vol.In(
-            toggle_entity.DEVICE_ACTION_TYPES
-            + [TYPE_BRIGHTNESS_INCREASE, TYPE_BRIGHTNESS_DECREASE, TYPE_FLASH]
+            [
+                *toggle_entity.DEVICE_ACTION_TYPES,
+                TYPE_BRIGHTNESS_INCREASE,
+                TYPE_BRIGHTNESS_DECREASE,
+                TYPE_FLASH,
+            ]
         ),
         vol.Optional(ATTR_BRIGHTNESS_PCT): VALID_BRIGHTNESS_PCT,
         vol.Optional(ATTR_FLASH): VALID_FLASH,

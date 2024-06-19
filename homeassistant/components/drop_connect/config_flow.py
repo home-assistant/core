@@ -1,4 +1,5 @@
 """Config flow for drop_connect integration."""
+
 from __future__ import annotations
 
 import logging
@@ -6,8 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 from dropmqttapi.discovery import DropDiscovery
 
-from homeassistant import config_entries
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from .const import (
@@ -26,14 +26,16 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle DROP config flow."""
 
     VERSION = 1
 
     _drop_discovery: DropDiscovery | None = None
 
-    async def async_step_mqtt(self, discovery_info: MqttServiceInfo) -> FlowResult:
+    async def async_step_mqtt(
+        self, discovery_info: MqttServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by MQTT discovery."""
 
         # Abort if the topic does not match our discovery topic or the payload is empty.
@@ -64,7 +66,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm the setup."""
         if TYPE_CHECKING:
             assert self._drop_discovery is not None
@@ -93,6 +95,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         return self.async_abort(reason="not_supported")

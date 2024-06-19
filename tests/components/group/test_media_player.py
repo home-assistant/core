@@ -1,4 +1,5 @@
 """The tests for the Media group platform."""
+
 import asyncio
 from unittest.mock import Mock, patch
 

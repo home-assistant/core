@@ -1,4 +1,5 @@
 """The duotecno integration."""
+
 from __future__ import annotations
 
 from duotecno.controller import PyDuotecno
@@ -12,11 +13,11 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import DOMAIN
 
 PLATFORMS: list[Platform] = [
-    Platform.SWITCH,
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
     Platform.COVER,
     Platform.LIGHT,
-    Platform.CLIMATE,
-    Platform.BINARY_SENSOR,
+    Platform.SWITCH,
 ]
 
 

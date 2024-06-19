@@ -1,5 +1,5 @@
 """Implement the Ingress Panel feature for Hass.io Add-ons."""
-import asyncio
+
 from http import HTTPStatus
 import logging
 from typing import Any
@@ -27,18 +27,13 @@ async def async_setup_addon_panel(hass: HomeAssistant, hassio: HassIO) -> None:
         return
 
     # Register available panels
-    jobs: list[asyncio.Task[None]] = []
     for addon, data in panels.items():
         if not data[ATTR_ENABLE]:
             continue
-        jobs.append(
-            asyncio.create_task(
-                _register_panel(hass, addon, data), name=f"register panel {addon}"
-            )
-        )
-
-    if jobs:
-        await asyncio.wait(jobs)
+        # _register_panel never suspends and is only
+        # a coroutine because it would be a breaking change
+        # to make it a normal function
+        await _register_panel(hass, addon, data)
 
 
 class HassIOAddonPanel(HomeAssistantView):

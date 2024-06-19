@@ -1,4 +1,5 @@
 """Test KNX date."""
+
 from homeassistant.components.date import ATTR_DATE, DOMAIN, SERVICE_SET_VALUE
 from homeassistant.components.knx.const import CONF_RESPOND_TO_READ, KNX_ADDRESS
 from homeassistant.components.knx.schema import DateSchema

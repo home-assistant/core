@@ -1,4 +1,5 @@
 """Tracks devices by sending a ICMP echo request (ping)."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -36,7 +37,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from . import PingDomainData
+from . import PingConfigEntry
 from .const import CONF_IMPORTED_BY, CONF_PING_COUNT, DOMAIN
 from .coordinator import PingUpdateCoordinator
 
@@ -124,13 +125,10 @@ async def async_setup_scanner(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: PingConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up a Ping config entry."""
-
-    data: PingDomainData = hass.data[DOMAIN]
-
-    async_add_entities([PingDeviceTracker(entry, data.coordinators[entry.entry_id])])
+    async_add_entities([PingDeviceTracker(entry, entry.runtime_data)])
 
 
 class PingDeviceTracker(CoordinatorEntity[PingUpdateCoordinator], ScannerEntity):

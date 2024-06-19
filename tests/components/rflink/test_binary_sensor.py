@@ -3,6 +3,7 @@
 Test setup of rflink sensor component/platform. Verify manual and
 automatic sensor creation.
 """
+
 from datetime import timedelta
 
 from freezegun import freeze_time

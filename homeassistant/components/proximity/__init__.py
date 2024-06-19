@@ -1,7 +1,9 @@
 """Support for tracking the proximity of a device."""
+
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 import voluptuous as vol
 
@@ -11,13 +13,14 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_ZONE,
+    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import (
     async_track_entity_registry_updated_event,
-    async_track_state_change,
+    async_track_state_change_event,
 )
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
@@ -35,7 +38,7 @@ from .const import (
     DOMAIN,
     UNITS,
 )
-from .coordinator import ProximityDataUpdateCoordinator
+from .coordinator import ProximityConfigEntry, ProximityDataUpdateCoordinator
 from .helpers import entity_used_in
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,7 +65,9 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def _async_setup_legacy(
-    hass: HomeAssistant, entry: ConfigEntry, coordinator: ProximityDataUpdateCoordinator
+    hass: HomeAssistant,
+    entry: ProximityConfigEntry,
+    coordinator: ProximityDataUpdateCoordinator,
 ) -> None:
     """Legacy proximity entity handling, can be removed in 2024.8."""
     friendly_name = entry.data[CONF_NAME]
@@ -130,16 +135,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ProximityConfigEntry) -> bool:
     """Set up Proximity from a config entry."""
     _LOGGER.debug("setup %s with config:%s", entry.title, entry.data)
-
-    hass.data.setdefault(DOMAIN, {})
 
     coordinator = ProximityDataUpdateCoordinator(hass, entry.title, dict(entry.data))
 
     entry.async_on_unload(
-        async_track_state_change(
+        async_track_state_change_event(
             hass,
             entry.data[CONF_TRACKED_ENTITIES],
             coordinator.async_check_proximity_state_change,
@@ -155,7 +158,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await coordinator.async_config_entry_first_refresh()
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     if entry.source == SOURCE_IMPORT:
         await _async_setup_legacy(hass, entry, coordinator)
@@ -167,13 +170,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        entry, [Platform.SENSOR]
-    )
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, [Platform.SENSOR])
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -203,16 +200,21 @@ class Proximity(CoordinatorEntity[ProximityDataUpdateCoordinator]):
         self._attr_unit_of_measurement = self.coordinator.unit_of_measurement
 
     @property
-    def state(self) -> str | int | float:
+    def data(self) -> dict[str, str | int | None]:
+        """Get data from coordinator."""
+        return self.coordinator.data.proximity
+
+    @property
+    def state(self) -> str | float:
         """Return the state."""
-        return self.coordinator.data.proximity[ATTR_DIST_TO]
+        if isinstance(distance := self.data[ATTR_DIST_TO], str):
+            return distance
+        return self.coordinator.convert_legacy(cast(int, distance))
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
         return {
-            ATTR_DIR_OF_TRAVEL: str(
-                self.coordinator.data.proximity[ATTR_DIR_OF_TRAVEL]
-            ),
-            ATTR_NEAREST: str(self.coordinator.data.proximity[ATTR_NEAREST]),
+            ATTR_DIR_OF_TRAVEL: str(self.data[ATTR_DIR_OF_TRAVEL] or STATE_UNKNOWN),
+            ATTR_NEAREST: str(self.data[ATTR_NEAREST]),
         }

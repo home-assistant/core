@@ -1,4 +1,5 @@
 """Support for namecheap DNS services."""
+
 from datetime import timedelta
 import logging
 

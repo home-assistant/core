@@ -1,0 +1,36 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "leaving_dock": {
+        "default": "mdi:debug-step-out"
+      },
+      "returning_to_dock": {
+        "default": "mdi:debug-step-into"
+      }
+    },
+    "number": {
+      "cutting_height": {
+        "default": "mdi:grass"
+      }
+    },
+    "select": {
+      "headlight_mode": {
+        "default": "mdi:car-light-high"
+      }
+    },
+    "sensor": {
+      "error": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "number_of_charging_cycles": {
+        "default": "mdi:battery-sync-outline"
+      },
+      "number_of_collisions": {
+        "default": "mdi:counter"
+      },
+      "restricted_reason": {
+        "default": "mdi:tooltip-question"
+      }
+    }
+  }
+}

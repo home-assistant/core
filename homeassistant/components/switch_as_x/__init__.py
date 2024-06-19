@@ -1,4 +1,5 @@
 """Component to wrap switch entities in entities of other domains."""
+
 from __future__ import annotations
 
 import logging
@@ -8,10 +9,9 @@ import voluptuous as vol
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
-from homeassistant.helpers.typing import EventType
 
 from .const import CONF_INVERT, CONF_TARGET_DOMAIN
 from .light import LightSwitch
@@ -57,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     async def async_registry_updated(
-        event: EventType[er.EventEntityRegistryUpdatedData],
+        event: Event[er.EventEntityRegistryUpdatedData],
     ) -> None:
         """Handle entity registry update."""
         data = event.data
@@ -114,8 +114,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         options = {**config_entry.options}
         if config_entry.minor_version < 2:
             options.setdefault(CONF_INVERT, False)
-        config_entry.minor_version = 2
-        hass.config_entries.async_update_entry(config_entry, options=options)
+        hass.config_entries.async_update_entry(
+            config_entry, options=options, minor_version=2
+        )
 
     _LOGGER.debug(
         "Migration to version %s.%s successful",

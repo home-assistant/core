@@ -1,8 +1,9 @@
 """An abstract class common to all Bond entities."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
-from asyncio import Lock, TimeoutError as AsyncIOTimeoutError
+from asyncio import Lock
 from datetime import datetime
 import logging
 
@@ -127,7 +128,9 @@ class BondEntity(Entity):
                 _FALLBACK_SCAN_INTERVAL,
             )
             return
-        self.hass.async_create_task(self._async_update())
+        self.hass.async_create_background_task(
+            self._async_update(), f"{DOMAIN} {self.name} update", eager_start=True
+        )
 
     async def _async_update(self) -> None:
         """Fetch via the API."""
@@ -139,7 +142,7 @@ class BondEntity(Entity):
         """Fetch via the API."""
         try:
             state: dict = await self._hub.bond.device_state(self._device_id)
-        except (ClientError, AsyncIOTimeoutError, OSError) as error:
+        except (ClientError, TimeoutError, OSError) as error:
             if self.available:
                 _LOGGER.warning(
                     "Entity %s has become unavailable", self.entity_id, exc_info=error

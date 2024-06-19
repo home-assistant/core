@@ -1,4 +1,5 @@
 """Allows the creation of a sensor that breaks out state_attributes."""
+
 from __future__ import annotations
 
 from datetime import date, datetime
@@ -236,8 +237,7 @@ def async_create_preview_sensor(
 ) -> SensorTemplate:
     """Create a preview sensor."""
     validated_config = SENSOR_SCHEMA(config | {CONF_NAME: name})
-    entity = SensorTemplate(hass, validated_config, None)
-    return entity
+    return SensorTemplate(hass, validated_config, None)
 
 
 class SensorTemplate(TemplateEntity, SensorEntity):
@@ -257,7 +257,7 @@ class SensorTemplate(TemplateEntity, SensorEntity):
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
         self._template: template.Template = config[CONF_STATE]
-        self._attr_last_reset_template: None | template.Template = config.get(
+        self._attr_last_reset_template: template.Template | None = config.get(
             ATTR_LAST_RESET
         )
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:

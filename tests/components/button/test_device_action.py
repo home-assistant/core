@@ -1,4 +1,5 @@
 """The tests for Button device actions."""
+
 import pytest
 from pytest_unordered import unordered
 
@@ -49,12 +50,12 @@ async def test_get_actions(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (er.RegistryEntryHider.INTEGRATION, None),
         (er.RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_actions_hidden_auxiliary(
     hass: HomeAssistant,
@@ -62,7 +63,7 @@ async def test_get_actions_hidden_auxiliary(
     entity_registry: er.EntityRegistry,
     hidden_by: er.RegistryEntryHider | None,
     entity_category: EntityCategory | None,
-):
+) -> None:
     """Test we get the expected actions from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -87,7 +88,7 @@ async def test_get_actions_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for action in ["press"]
+        for action in ("press",)
     ]
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id

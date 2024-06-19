@@ -1,4 +1,5 @@
 """Common code for TCP component."""
+
 from __future__ import annotations
 
 import logging
@@ -148,7 +149,6 @@ class TcpEntity(Entity):
         if value_template is not None:
             try:
                 self._state = value_template.render(parse_result=False, value=value)
-                return
             except TemplateError:
                 _LOGGER.error(
                     "Unable to render template of %r with value: %r",
@@ -156,5 +156,6 @@ class TcpEntity(Entity):
                     value,
                 )
                 return
+            return
 
         self._state = value

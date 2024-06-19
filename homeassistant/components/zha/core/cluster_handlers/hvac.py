@@ -3,6 +3,7 @@
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -89,7 +90,7 @@ class PumpClusterHandler(ClusterHandler):
 class ThermostatClusterHandler(ClusterHandler):
     """Thermostat cluster handler."""
 
-    REPORT_CONFIG = (
+    REPORT_CONFIG: tuple[AttrReportConfig, ...] = (
         AttrReportConfig(
             attr=Thermostat.AttributeDefs.local_temperature.name,
             config=REPORT_CONFIG_CLIMATE,

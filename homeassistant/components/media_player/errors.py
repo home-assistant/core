@@ -1,4 +1,5 @@
 """Errors for the Media Player component."""
+
 from homeassistant.exceptions import HomeAssistantError
 
 

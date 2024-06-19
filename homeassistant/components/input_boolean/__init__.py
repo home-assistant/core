@@ -1,4 +1,5 @@
 """Support to keep track of user controlled booleans for within automation."""
+
 from __future__ import annotations
 
 import logging

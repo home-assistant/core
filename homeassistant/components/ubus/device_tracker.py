@@ -1,4 +1,5 @@
 """Support for OpenWRT (ubus) routers."""
+
 from __future__ import annotations
 
 import logging
@@ -105,8 +106,7 @@ class UbusDeviceScanner(DeviceScanner):
         if self.mac2name is None:
             # Generation of mac2name dictionary failed
             return None
-        name = self.mac2name.get(device.upper(), None)
-        return name
+        return self.mac2name.get(device.upper(), None)
 
     async def async_get_extra_attributes(self, device: str) -> dict[str, str]:
         """Return the host to distinguish between multiple routers."""

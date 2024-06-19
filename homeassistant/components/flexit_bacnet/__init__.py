@@ -1,4 +1,5 @@
 """The Flexit Nordic (BACnet) integration."""
+
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
@@ -11,6 +12,7 @@ from .coordinator import FlexitCoordinator
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
 ]

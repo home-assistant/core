@@ -1,4 +1,5 @@
 """Config flow for proximity."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -8,16 +9,21 @@ import voluptuous as vol
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
-from homeassistant.const import CONF_ZONE
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
+from homeassistant.const import CONF_ZONE, UnitOfLength
 from homeassistant.core import State, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     EntitySelector,
     EntitySelectorConfig,
     NumberSelector,
     NumberSelectorConfig,
 )
+from homeassistant.util import slugify
 
 from .const import (
     CONF_IGNORED_ZONES,
@@ -49,7 +55,9 @@ def _base_schema(user_input: dict[str, Any]) -> vol.Schema:
             CONF_TOLERANCE,
             default=user_input.get(CONF_TOLERANCE, DEFAULT_TOLERANCE),
         ): NumberSelector(
-            NumberSelectorConfig(min=1, max=100, step=1),
+            NumberSelectorConfig(
+                min=1, max=100, step=1, unit_of_measurement=UnitOfLength.METERS
+            ),
         ),
     }
 
@@ -84,16 +92,24 @@ class ProximityConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if user_input is not None:
             self._async_abort_entries_match(user_input)
 
-            zone = self.hass.states.get(user_input[CONF_ZONE])
+            title = cast(State, self.hass.states.get(user_input[CONF_ZONE])).name
 
-            return self.async_create_entry(
-                title=cast(State, zone).name, data=user_input
-            )
+            slugified_existing_entry_titles = [
+                slugify(e.title) for e in self._async_current_entries()
+            ]
+
+            possible_title = title
+            tries = 1
+            while slugify(possible_title) in slugified_existing_entry_titles:
+                tries += 1
+                possible_title = f"{title} {tries}"
+
+            return self.async_create_entry(title=possible_title, data=user_input)
 
         return self.async_show_form(
             step_id="user",
@@ -102,7 +118,7 @@ class ProximityConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Import a yaml config entry."""
         return await self.async_step_user(user_input)
 
@@ -119,7 +135,7 @@ class ProximityOptionsFlow(OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
             self.hass.config_entries.async_update_entry(

@@ -1,4 +1,5 @@
 """Tests for the aws component config and setup."""
+
 import json
 from unittest.mock import AsyncMock, MagicMock, call, patch as async_patch
 
@@ -160,10 +161,13 @@ async def test_access_key_credential(hass: HomeAssistant) -> None:
 async def test_notify_credential(hass: HomeAssistant) -> None:
     """Test notify service can use access key directly."""
     mock_session = MockAioSession()
-    with async_patch(
-        "homeassistant.components.aws.AioSession", return_value=mock_session
-    ), async_patch(
-        "homeassistant.components.aws.notify.AioSession", return_value=mock_session
+    with (
+        async_patch(
+            "homeassistant.components.aws.AioSession", return_value=mock_session
+        ),
+        async_patch(
+            "homeassistant.components.aws.notify.AioSession", return_value=mock_session
+        ),
     ):
         await async_setup_component(
             hass,
@@ -194,10 +198,13 @@ async def test_notify_credential(hass: HomeAssistant) -> None:
 async def test_notify_credential_profile(hass: HomeAssistant) -> None:
     """Test notify service can use profile directly."""
     mock_session = MockAioSession()
-    with async_patch(
-        "homeassistant.components.aws.AioSession", return_value=mock_session
-    ), async_patch(
-        "homeassistant.components.aws.notify.AioSession", return_value=mock_session
+    with (
+        async_patch(
+            "homeassistant.components.aws.AioSession", return_value=mock_session
+        ),
+        async_patch(
+            "homeassistant.components.aws.notify.AioSession", return_value=mock_session
+        ),
     ):
         await async_setup_component(
             hass,

@@ -9,6 +9,8 @@ ATTR_DIST_TO: Final = "dist_to_zone"
 ATTR_ENTITIES_DATA: Final = "entities_data"
 ATTR_IN_IGNORED_ZONE: Final = "is_in_ignored_zone"
 ATTR_NEAREST: Final = "nearest"
+ATTR_NEAREST_DIR_OF_TRAVEL: Final = "nearest_dir_of_travel"
+ATTR_NEAREST_DIST_TO: Final = "nearest_dist_to_zone"
 ATTR_PROXIMITY_DATA: Final = "proximity_data"
 
 CONF_IGNORED_ZONES = "ignored_zones"

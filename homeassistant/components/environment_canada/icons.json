@@ -1,0 +1,24 @@
+{
+  "entity": {
+    "sensor": {
+      "advisories": {
+        "default": "mdi:bell-alert"
+      },
+      "endings": {
+        "default": "mdi:alert-circle-check"
+      },
+      "statements": {
+        "default": "mdi:bell-alert"
+      },
+      "warnings": {
+        "default": "mdi:alert-octagon"
+      },
+      "watches": {
+        "default": "mdi:alert"
+      }
+    }
+  },
+  "services": {
+    "set_radar_type": "mdi:radar"
+  }
+}

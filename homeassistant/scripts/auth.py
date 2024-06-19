@@ -1,4 +1,5 @@
 """Script to manage users for the Home Assistant auth provider."""
+
 import argparse
 import asyncio
 import logging

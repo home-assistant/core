@@ -9,7 +9,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -17,37 +16,49 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_DIR_OF_TRAVEL, ATTR_DIST_TO, ATTR_NEAREST, DOMAIN
-from .coordinator import ProximityDataUpdateCoordinator
+from .const import (
+    ATTR_DIR_OF_TRAVEL,
+    ATTR_DIST_TO,
+    ATTR_NEAREST,
+    ATTR_NEAREST_DIR_OF_TRAVEL,
+    ATTR_NEAREST_DIST_TO,
+    DOMAIN,
+)
+from .coordinator import ProximityConfigEntry, ProximityDataUpdateCoordinator
+
+DIRECTIONS = ["arrived", "away_from", "stationary", "towards"]
 
 SENSORS_PER_ENTITY: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key=ATTR_DIST_TO,
-        name="Distance",
+        translation_key=ATTR_DIST_TO,
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.METERS,
     ),
     SensorEntityDescription(
         key=ATTR_DIR_OF_TRAVEL,
-        name="Direction of travel",
         translation_key=ATTR_DIR_OF_TRAVEL,
-        icon="mdi:compass-outline",
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "arrived",
-            "away_from",
-            "stationary",
-            "towards",
-        ],
+        options=DIRECTIONS,
     ),
 ]
 
 SENSORS_PER_PROXIMITY: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key=ATTR_NEAREST,
-        name="Nearest",
         translation_key=ATTR_NEAREST,
-        icon="mdi:near-me",
+    ),
+    SensorEntityDescription(
+        key=ATTR_DIST_TO,
+        translation_key=ATTR_NEAREST_DIST_TO,
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.METERS,
+    ),
+    SensorEntityDescription(
+        key=ATTR_DIR_OF_TRAVEL,
+        translation_key=ATTR_NEAREST_DIR_OF_TRAVEL,
+        device_class=SensorDeviceClass.ENUM,
+        options=DIRECTIONS,
     ),
 ]
 
@@ -57,6 +68,7 @@ class TrackedEntityDescriptor(NamedTuple):
 
     entity_id: str
     identifier: str
+    name: str
 
 
 def _device_info(coordinator: ProximityDataUpdateCoordinator) -> DeviceInfo:
@@ -68,11 +80,13 @@ def _device_info(coordinator: ProximityDataUpdateCoordinator) -> DeviceInfo:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ProximityConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the proximity sensors."""
 
-    coordinator: ProximityDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     entities: list[ProximitySensor | ProximityTrackedEntitySensor] = [
         ProximitySensor(description, coordinator)
@@ -83,13 +97,24 @@ async def async_setup_entry(
 
     entity_reg = er.async_get(hass)
     for tracked_entity_id in coordinator.tracked_entities:
+        tracked_entity_object_id = tracked_entity_id.split(".")[-1]
         if (entity_entry := entity_reg.async_get(tracked_entity_id)) is not None:
             tracked_entity_descriptors.append(
-                TrackedEntityDescriptor(tracked_entity_id, entity_entry.id)
+                TrackedEntityDescriptor(
+                    tracked_entity_id,
+                    entity_entry.id,
+                    entity_entry.name
+                    or entity_entry.original_name
+                    or tracked_entity_object_id,
+                )
             )
         else:
             tracked_entity_descriptors.append(
-                TrackedEntityDescriptor(tracked_entity_id, tracked_entity_id)
+                TrackedEntityDescriptor(
+                    tracked_entity_id,
+                    tracked_entity_id,
+                    tracked_entity_object_id,
+                )
             )
 
     entities += [
@@ -151,8 +176,10 @@ class ProximityTrackedEntitySensor(
         self.tracked_entity_id = tracked_entity_descriptor.entity_id
 
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{tracked_entity_descriptor.identifier}_{description.key}"
-        self._attr_name = f"{self.tracked_entity_id.split('.')[-1]} {description.name}"
         self._attr_device_info = _device_info(coordinator)
+        self._attr_translation_placeholders = {
+            "tracked_entity": tracked_entity_descriptor.name
+        }
 
     async def async_added_to_hass(self) -> None:
         """Register entity mapping."""
@@ -162,18 +189,19 @@ class ProximityTrackedEntitySensor(
         )
 
     @property
-    def data(self) -> dict[str, str | int | None] | None:
+    def data(self) -> dict[str, str | int | None]:
         """Get data from coordinator."""
-        return self.coordinator.data.entities.get(self.tracked_entity_id)
+        return self.coordinator.data.entities[self.tracked_entity_id]
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self.data is not None
+        return (
+            super().available
+            and self.tracked_entity_id in self.coordinator.data.entities
+        )
 
     @property
     def native_value(self) -> str | float | None:
         """Return native sensor value."""
-        if self.data is None:
-            return None
         return self.data.get(self.entity_description.key)

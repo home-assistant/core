@@ -1,4 +1,5 @@
 """Test the Anthem A/V Receivers config flow."""
+
 from collections.abc import Callable
 from unittest.mock import AsyncMock
 

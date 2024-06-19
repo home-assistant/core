@@ -6,11 +6,9 @@ import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Literal
 
 from reolink_aio.api import RETRY_ATTEMPTS
 from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
-from reolink_aio.software_version import NewSoftwareVersion
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
@@ -47,9 +45,7 @@ class ReolinkData:
 
     host: ReolinkHost
     device_coordinator: DataUpdateCoordinator[None]
-    firmware_coordinator: DataUpdateCoordinator[
-        str | Literal[False] | NewSoftwareVersion
-    ]
+    firmware_coordinator: DataUpdateCoordinator[None]
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -67,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     ) as err:
         await host.stop()
         raise ConfigEntryNotReady(
-            f"Error while trying to setup {host.api.host}:{host.api.port}: {str(err)}"
+            f"Error while trying to setup {host.api.host}:{host.api.port}: {err!s}"
         ) from err
     except Exception:
         await host.stop()
@@ -84,33 +80,28 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
             try:
                 await host.update_states()
+            except CredentialsInvalidError as err:
+                await host.stop()
+                raise ConfigEntryAuthFailed(err) from err
             except ReolinkError as err:
                 raise UpdateFailed(str(err)) from err
 
         async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
             await host.renew()
 
-    async def async_check_firmware_update() -> (
-        str | Literal[False] | NewSoftwareVersion
-    ):
+    async def async_check_firmware_update() -> None:
         """Check for firmware updates."""
-        if not host.api.supported(None, "update"):
-            return False
-
         async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
             try:
-                return await host.api.check_new_firmware()
-            except (ReolinkError, asyncio.exceptions.CancelledError) as err:
-                task = asyncio.current_task()
-                if task is not None:
-                    task.uncancel()
+                await host.api.check_new_firmware(host.firmware_ch_list)
+            except ReolinkError as err:
                 if starting:
                     _LOGGER.debug(
                         "Error checking Reolink firmware update at startup "
                         "from %s, possibly internet access is blocked",
                         host.api.nvr_name,
                     )
-                    return False
+                    return
 
                 raise UpdateFailed(
                     f"Error checking Reolink firmware update from {host.api.nvr_name}, "
@@ -133,15 +124,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         update_interval=FIRMWARE_UPDATE_INTERVAL,
     )
     # Fetch initial data so we have data when entities subscribe
-    try:
-        # If camera WAN blocked, firmware check fails, do not prevent setup
-        await asyncio.gather(
-            device_coordinator.async_config_entry_first_refresh(),
-            firmware_coordinator.async_config_entry_first_refresh(),
-        )
-    except ConfigEntryNotReady:
+    results = await asyncio.gather(
+        device_coordinator.async_config_entry_first_refresh(),
+        firmware_coordinator.async_config_entry_first_refresh(),
+        return_exceptions=True,
+    )
+    # If camera WAN blocked, firmware check fails, do not prevent setup
+    # so don't check firmware_coordinator exceptions
+    if isinstance(results[0], BaseException):
         await host.stop()
-        raise
+        raise results[0]
 
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = ReolinkData(
         host=host,
@@ -150,13 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
 
     cleanup_disconnected_cams(hass, config_entry.entry_id, host)
-
-    # Can be remove in HA 2024.6.0
-    entity_reg = er.async_get(hass)
-    entities = er.async_entries_for_config_entry(entity_reg, config_entry.entry_id)
-    for entity in entities:
-        if entity.domain == "light" and entity.unique_id.endswith("ir_lights"):
-            entity_reg.async_remove(entity.entity_id)
+    migrate_entity_ids(hass, config_entry.entry_id, host)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -233,3 +219,17 @@ def cleanup_disconnected_cams(
 
         # clean device registry and associated entities
         device_reg.async_remove_device(device.id)
+
+
+def migrate_entity_ids(
+    hass: HomeAssistant, config_entry_id: str, host: ReolinkHost
+) -> None:
+    """Migrate entity IDs if needed."""
+    entity_reg = er.async_get(hass)
+    entities = er.async_entries_for_config_entry(entity_reg, config_entry_id)
+    for entity in entities:
+        # Can be remove in HA 2025.1.0
+        if entity.domain == "update" and entity.unique_id == host.unique_id:
+            entity_reg.async_update_entity(
+                entity.entity_id, new_unique_id=f"{host.unique_id}_firmware"
+            )

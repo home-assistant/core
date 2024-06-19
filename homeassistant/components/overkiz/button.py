@@ -1,4 +1,5 @@
 """Support for Overkiz (virtual) buttons."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -94,15 +95,15 @@ async def async_setup_entry(
         ):
             continue
 
-        for command in device.definition.commands:
-            if description := SUPPORTED_COMMANDS.get(command.command_name):
-                entities.append(
-                    OverkizButton(
-                        device.device_url,
-                        data.coordinator,
-                        description,
-                    )
-                )
+        entities.extend(
+            OverkizButton(
+                device.device_url,
+                data.coordinator,
+                description,
+            )
+            for command in device.definition.commands
+            if (description := SUPPORTED_COMMANDS.get(command.command_name))
+        )
 
     async_add_entities(entities)
 

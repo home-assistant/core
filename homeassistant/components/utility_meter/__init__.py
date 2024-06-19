@@ -1,4 +1,5 @@
 """Support for tracking consumption over given periods of time."""
+
 from datetime import timedelta
 import logging
 
@@ -149,7 +150,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     DOMAIN,
                     {meter: {CONF_METER: meter}},
                     config,
-                )
+                ),
+                eager_start=True,
             )
         else:
             # create tariff selection
@@ -160,11 +162,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     DOMAIN,
                     {CONF_METER: meter, CONF_TARIFFS: conf[CONF_TARIFFS]},
                     config,
-                )
+                ),
+                eager_start=True,
             )
 
-            hass.data[DATA_UTILITY][meter][CONF_TARIFF_ENTITY] = "{}.{}".format(
-                SELECT_DOMAIN, meter
+            hass.data[DATA_UTILITY][meter][CONF_TARIFF_ENTITY] = (
+                f"{SELECT_DOMAIN}.{meter}"
             )
 
             # add one meter for each tariff
@@ -179,7 +182,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass.async_create_task(
                 discovery.async_load_platform(
                     hass, SENSOR_DOMAIN, DOMAIN, tariff_confs, config
-                )
+                ),
+                eager_start=True,
             )
 
     return True
@@ -187,6 +191,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Utility Meter from a config entry."""
+
+    await async_remove_stale_device_links(
+        hass, entry.entry_id, entry.options[CONF_SOURCE_SENSOR]
+    )
+
     entity_registry = er.async_get(hass)
     hass.data[DATA_UTILITY][entry.entry_id] = {
         "source": entry.options[CONF_SOURCE_SENSOR],
@@ -212,9 +221,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entity_entry = entity_registry.async_get_or_create(
             Platform.SELECT, DOMAIN, entry.entry_id, suggested_object_id=entry.title
         )
-        hass.data[DATA_UTILITY][entry.entry_id][
-            CONF_TARIFF_ENTITY
-        ] = entity_entry.entity_id
+        hass.data[DATA_UTILITY][entry.entry_id][CONF_TARIFF_ENTITY] = (
+            entity_entry.entity_id
+        )
         await hass.config_entries.async_forward_entry_setups(
             entry, (Platform.SELECT, Platform.SENSOR)
         )
@@ -226,22 +235,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update listener, called when the config entry options are changed."""
-    old_source = hass.data[DATA_UTILITY][entry.entry_id]["source"]
+
     await hass.config_entries.async_reload(entry.entry_id)
-
-    if old_source == entry.options[CONF_SOURCE_SENSOR]:
-        return
-
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
-    old_source_entity = entity_registry.async_get(old_source)
-    if not old_source_entity or not old_source_entity.device_id:
-        return
-
-    device_registry.async_update_device(
-        old_source_entity.device_id, remove_config_entry_id=entry.entry_id
-    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -266,9 +261,32 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     if config_entry.version == 1:
         new = {**config_entry.options}
         new[CONF_METER_PERIODICALLY_RESETTING] = True
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, options=new)
+        hass.config_entries.async_update_entry(config_entry, options=new, version=2)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
 
     return True
+
+
+async def async_remove_stale_device_links(
+    hass: HomeAssistant, entry_id: str, entity_id: str
+) -> None:
+    """Remove device link for entry, the source device may have changed."""
+
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+
+    # Resolve source entity device
+    current_device_id = None
+    if ((source_entity := entity_registry.async_get(entity_id)) is not None) and (
+        source_entity.device_id is not None
+    ):
+        current_device_id = source_entity.device_id
+
+    devices_in_entry = device_registry.devices.get_devices_for_config_entry_id(entry_id)
+
+    # Removes all devices from the config entry that are not the same as the current device
+    for device in devices_in_entry:
+        if device.id == current_device_id:
+            continue
+        device_registry.async_update_device(device.id, remove_config_entry_id=entry_id)

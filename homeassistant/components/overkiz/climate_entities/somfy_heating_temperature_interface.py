@@ -1,4 +1,5 @@
 """Support for Somfy Heating Temperature Interface."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -81,6 +82,7 @@ class SomfyHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
     # Both min and max temp values have been retrieved from the Somfy Application.
     _attr_min_temp = 15.0
     _attr_max_temp = 26.0
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
@@ -164,7 +166,9 @@ class SomfyHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]:
+        if self.temperature_device is not None and (
+            temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]
+        ):
             return temperature.value_as_float
         return None
 

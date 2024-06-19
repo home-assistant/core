@@ -1,4 +1,5 @@
 """Test OTBR Silicon Labs Multiprotocol support."""
+
 from unittest.mock import patch
 
 import pytest
@@ -40,9 +41,12 @@ async def test_async_change_channel(
     assert len(store.datasets) == 1
     assert list(store.datasets.values())[0].tlv == DATASET_CH16.hex()
 
-    with patch("python_otbr_api.OTBR.set_channel") as mock_set_channel, patch(
-        "python_otbr_api.OTBR.get_pending_dataset_tlvs",
-        return_value=bytes.fromhex(DATASET_CH16_PENDING),
+    with (
+        patch("python_otbr_api.OTBR.set_channel") as mock_set_channel,
+        patch(
+            "python_otbr_api.OTBR.get_pending_dataset_tlvs",
+            return_value=bytes.fromhex(DATASET_CH16_PENDING),
+        ),
     ):
         await otbr_silabs_multiprotocol.async_change_channel(hass, 15, delay=5 * 300)
     mock_set_channel.assert_awaited_once_with(15, delay=5 * 300 * 1000)
@@ -65,12 +69,16 @@ async def test_async_change_channel_no_pending(
     assert len(store.datasets) == 1
     assert list(store.datasets.values())[0].tlv == DATASET_CH16.hex()
 
-    with patch("python_otbr_api.OTBR.set_channel") as mock_set_channel, patch(
-        "python_otbr_api.OTBR.get_active_dataset_tlvs",
-        return_value=bytes.fromhex(DATASET_CH16_PENDING),
-    ), patch(
-        "python_otbr_api.OTBR.get_pending_dataset_tlvs",
-        return_value=None,
+    with (
+        patch("python_otbr_api.OTBR.set_channel") as mock_set_channel,
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset_tlvs",
+            return_value=bytes.fromhex(DATASET_CH16_PENDING),
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_pending_dataset_tlvs",
+            return_value=None,
+        ),
     ):
         await otbr_silabs_multiprotocol.async_change_channel(hass, 15, delay=5 * 300)
     mock_set_channel.assert_awaited_once_with(15, delay=5 * 300 * 1000)
@@ -93,12 +101,16 @@ async def test_async_change_channel_no_update(
     assert len(store.datasets) == 1
     assert list(store.datasets.values())[0].tlv == DATASET_CH16.hex()
 
-    with patch("python_otbr_api.OTBR.set_channel") as mock_set_channel, patch(
-        "python_otbr_api.OTBR.get_active_dataset_tlvs",
-        return_value=None,
-    ), patch(
-        "python_otbr_api.OTBR.get_pending_dataset_tlvs",
-        return_value=None,
+    with (
+        patch("python_otbr_api.OTBR.set_channel") as mock_set_channel,
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset_tlvs",
+            return_value=None,
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_pending_dataset_tlvs",
+            return_value=None,
+        ),
     ):
         await otbr_silabs_multiprotocol.async_change_channel(hass, 15, delay=5 * 300)
     mock_set_channel.assert_awaited_once_with(15, delay=5 * 300 * 1000)

@@ -1,4 +1,5 @@
 """Button entity for LIFX devices.."""
+
 from __future__ import annotations
 
 from homeassistant.components.button import (

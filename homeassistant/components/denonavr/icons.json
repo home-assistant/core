@@ -1,0 +1,7 @@
+{
+  "services": {
+    "get_command": "mdi:console",
+    "set_dynamic_eq": "mdi:tune",
+    "update_audyssey": "mdi:waveform"
+  }
+}

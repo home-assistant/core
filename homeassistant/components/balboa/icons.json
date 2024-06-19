@@ -1,0 +1,42 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "filter_1": {
+        "default": "mdi:sync",
+        "state": {
+          "off": "mdi:sync-off"
+        }
+      },
+      "filter_2": {
+        "default": "mdi:sync",
+        "state": {
+          "off": "mdi:sync-off"
+        }
+      },
+      "circ_pump": {
+        "default": "mdi:pump",
+        "state": {
+          "off": "mdi:pump-off"
+        }
+      }
+    },
+    "climate": {
+      "balboa": {
+        "default": "mdi:hot-tub"
+      }
+    },
+    "fan": {
+      "pump": {
+        "default": "mdi:pump",
+        "state": {
+          "off": "mdi:pump-off"
+        }
+      }
+    },
+    "select": {
+      "temperature_range": {
+        "default": "mdi:thermometer-lines"
+      }
+    }
+  }
+}

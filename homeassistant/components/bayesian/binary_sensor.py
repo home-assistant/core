@@ -1,4 +1,5 @@
 """Use Bayesian Inference to trigger a binary sensor."""
+
 from __future__ import annotations
 
 from collections import OrderedDict
@@ -27,13 +28,12 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import ConditionError, TemplateError
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     TrackTemplate,
     TrackTemplateResult,
     TrackTemplateResultInfo,
@@ -42,7 +42,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import Template, result_as_boolean
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, PLATFORMS
 from .const import (
@@ -233,7 +233,7 @@ class BayesianBinarySensor(BinarySensorEntity):
 
         @callback
         def async_threshold_sensor_state_listener(
-            event: EventType[EventStateChangedData],
+            event: Event[EventStateChangedData],
         ) -> None:
             """Handle sensor state changes.
 
@@ -259,7 +259,7 @@ class BayesianBinarySensor(BinarySensorEntity):
 
         @callback
         def _async_template_result_changed(
-            event: EventType[EventStateChangedData] | None,
+            event: Event[EventStateChangedData] | None,
             updates: list[TrackTemplateResult],
         ) -> None:
             track_template_result = updates.pop()
@@ -312,9 +312,9 @@ class BayesianBinarySensor(BinarySensorEntity):
                 self.hass, observations, text=f"{self._attr_name}/{entity}"
             )
 
-        all_template_observations: list[Observation] = []
-        for observations in self.observations_by_template.values():
-            all_template_observations.append(observations[0])
+        all_template_observations: list[Observation] = [
+            observations[0] for observations in self.observations_by_template.values()
+        ]
         if len(all_template_observations) == 2:
             raise_mirrored_entries(
                 self.hass,

@@ -32,18 +32,11 @@ async def async_setup_entry(
     )
 
 
-@dataclass(frozen=True)
-class StarlinkBinarySensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class StarlinkBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes a Starlink binary sensor entity."""
 
     value_fn: Callable[[StarlinkData], bool | None]
-
-
-@dataclass(frozen=True)
-class StarlinkBinarySensorEntityDescription(
-    BinarySensorEntityDescription, StarlinkBinarySensorEntityDescriptionMixin
-):
-    """Describes a Starlink binary sensor entity."""
 
 
 class StarlinkBinarySensorEntity(StarlinkEntity, BinarySensorEntity):

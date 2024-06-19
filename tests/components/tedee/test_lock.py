@@ -1,4 +1,5 @@
 """Tests for tedee lock."""
+
 from datetime import timedelta
 from unittest.mock import MagicMock
 from urllib.parse import urlparse
@@ -292,7 +293,11 @@ async def test_webhook_update(
     ].state = TedeeLockState.LOCKED  # is updated in the lib, so mock and assert in L296
     client = await hass_client_no_auth()
     webhook_url = async_generate_url(hass, WEBHOOK_ID)
-    await client.post(urlparse(webhook_url).path, json=webhook_data)
+
+    await client.post(
+        urlparse(webhook_url).path,
+        json=webhook_data,
+    )
     mock_tedee.parse_webhook_message.assert_called_once_with(webhook_data)
 
     state = hass.states.get("lock.lock_1a2b")

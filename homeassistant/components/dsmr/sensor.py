@@ -1,4 +1,5 @@
 """Support for Dutch Smart Meter (also known as Smartmeter or P1 port)."""
+
 from __future__ import annotations
 
 import asyncio
@@ -106,7 +107,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         device_class=SensorDeviceClass.ENUM,
         options=["low", "normal"],
-        icon="mdi:flash",
     ),
     DSMRSensorEntityDescription(
         key="electricity_used_tariff_1",
@@ -194,7 +194,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.SHORT_POWER_FAILURE_COUNT,
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
-        icon="mdi:flash-off",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
@@ -203,7 +202,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.LONG_POWER_FAILURE_COUNT,
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
-        icon="mdi:flash-off",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
@@ -236,7 +234,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.VOLTAGE_SWELL_L1_COUNT,
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
-        icon="mdi:pulse",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
@@ -245,7 +242,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.VOLTAGE_SWELL_L2_COUNT,
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
-        icon="mdi:pulse",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
@@ -254,7 +250,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.VOLTAGE_SWELL_L3_COUNT,
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
-        icon="mdi:pulse",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
@@ -353,6 +348,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.BELGIUM_CURRENT_AVERAGE_DEMAND,
         dsmr_versions={"5B"},
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRSensorEntityDescription(
         key="belgium_maximum_demand_current_month",
@@ -360,6 +356,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.BELGIUM_MAXIMUM_DEMAND_MONTH,
         dsmr_versions={"5B"},
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRSensorEntityDescription(
         key="hourly_gas_meter_reading",
@@ -534,9 +531,7 @@ async def async_setup_entry(
         add_entities_handler = None
 
         if dsmr_version == "5B":
-            mbus_entities = create_mbus_entities(hass, telegram, entry)
-            for mbus_entity in mbus_entities:
-                entities.append(mbus_entity)
+            entities.extend(create_mbus_entities(hass, telegram, entry))
 
         entities.extend(
             [

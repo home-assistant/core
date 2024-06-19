@@ -1,4 +1,5 @@
 """Init the tedee component."""
+
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 import logging
@@ -6,10 +7,11 @@ from typing import Any
 
 from aiohttp.hdrs import METH_POST
 from aiohttp.web import Request, Response
-from pytedee_async.exception import TedeeWebhookException
+from pytedee_async.exception import TedeeDataUpdateException, TedeeWebhookException
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.webhook import (
+    async_generate_id as webhook_generate_id,
     async_generate_url as webhook_generate_url,
     async_register as webhook_register,
     async_unregister as webhook_unregister,
@@ -18,6 +20,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.network import get_url
 
 from .const import DOMAIN, NAME
 from .coordinator import TedeeApiCoordinator
@@ -30,8 +33,10 @@ PLATFORMS = [
 
 _LOGGER = logging.getLogger(__name__)
 
+type TedeeConfigEntry = ConfigEntry[TedeeApiCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: TedeeConfigEntry) -> bool:
     """Integration setup."""
 
     coordinator = TedeeApiCoordinator(hass)
@@ -48,14 +53,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         serial_number=coordinator.bridge.serial,
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     async def unregister_webhook(_: Any) -> None:
         await coordinator.async_unregister_webhook()
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
 
     async def register_webhook() -> None:
-        webhook_url = webhook_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
+        instance_url = get_url(hass, allow_ip=True, allow_external=False)
+        # first make sure we don't have leftover callbacks to the same instance
+        try:
+            await coordinator.tedee_client.cleanup_webhooks_by_host(instance_url)
+        except (TedeeDataUpdateException, TedeeWebhookException) as ex:
+            _LOGGER.warning("Failed to cleanup Tedee webhooks by host: %s", ex)
+
+        webhook_url = webhook_generate_url(
+            hass, entry.data[CONF_WEBHOOK_ID], allow_external=False, allow_ip=True
+        )
         webhook_name = "Tedee"
         if entry.title != NAME:
             webhook_name = f"{NAME} {entry.title}"
@@ -72,8 +86,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         try:
             await coordinator.async_register_webhook(webhook_url)
-        except TedeeWebhookException as ex:
-            _LOGGER.warning("Failed to register Tedee webhook from bridge: %s", ex)
+        except TedeeWebhookException:
+            _LOGGER.exception("Failed to register Tedee webhook from bridge")
         else:
             entry.async_on_unload(
                 hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
@@ -89,11 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 def get_webhook_handler(
@@ -121,3 +131,22 @@ def get_webhook_handler(
         return HomeAssistantView.json(result="OK", status_code=HTTPStatus.OK)
 
     return async_webhook_handler
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    if config_entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    version = config_entry.version
+    minor_version = config_entry.minor_version
+
+    if version == 1 and minor_version == 1:
+        _LOGGER.debug(
+            "Migrating Tedee config entry from version %s.%s", version, minor_version
+        )
+        data = {**config_entry.data, CONF_WEBHOOK_ID: webhook_generate_id()}
+        hass.config_entries.async_update_entry(config_entry, data=data, minor_version=2)
+        _LOGGER.debug("Migration to version 1.2 successful")
+    return True

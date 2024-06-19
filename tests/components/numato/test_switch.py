@@ -1,4 +1,5 @@
 """Tests for the numato switch platform."""
+
 from homeassistant.components import switch
 from homeassistant.const import (
     ATTR_ENTITY_ID,

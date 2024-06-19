@@ -1,23 +1,25 @@
 """Backup manager for the Backup integration."""
+
 from __future__ import annotations
 
 import asyncio
 from dataclasses import asdict, dataclass
 import hashlib
+import io
 import json
 from pathlib import Path
 import tarfile
 from tarfile import TarError
-from tempfile import TemporaryDirectory
+import time
 from typing import Any, Protocol, cast
 
 from securetar import SecureTarFile, atomic_contents_add
 
 from homeassistant.const import __version__ as HAVERSION
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import integration_platform
-from homeassistant.helpers.json import save_json
+from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads_object
 
@@ -64,7 +66,8 @@ class BackupManager:
         self.loaded_backups = False
         self.loaded_platforms = False
 
-    async def _add_platform(
+    @callback
+    def _add_platform(
         self,
         hass: HomeAssistant,
         integration_domain: str,
@@ -81,6 +84,38 @@ class BackupManager:
             return
         self.platforms[integration_domain] = platform
 
+    async def pre_backup_actions(self) -> None:
+        """Perform pre backup actions."""
+        if not self.loaded_platforms:
+            await self.load_platforms()
+
+        pre_backup_results = await asyncio.gather(
+            *(
+                platform.async_pre_backup(self.hass)
+                for platform in self.platforms.values()
+            ),
+            return_exceptions=True,
+        )
+        for result in pre_backup_results:
+            if isinstance(result, Exception):
+                raise result
+
+    async def post_backup_actions(self) -> None:
+        """Perform post backup actions."""
+        if not self.loaded_platforms:
+            await self.load_platforms()
+
+        post_backup_results = await asyncio.gather(
+            *(
+                platform.async_post_backup(self.hass)
+                for platform in self.platforms.values()
+            ),
+            return_exceptions=True,
+        )
+        for result in post_backup_results:
+            if isinstance(result, Exception):
+                raise result
+
     async def load_backups(self) -> None:
         """Load data of stored backup files."""
         backups = await self.hass.async_add_executor_job(self._read_backups)
@@ -91,7 +126,7 @@ class BackupManager:
     async def load_platforms(self) -> None:
         """Load backup platforms."""
         await integration_platform.async_process_integration_platforms(
-            self.hass, DOMAIN, self._add_platform
+            self.hass, DOMAIN, self._add_platform, wait_for_platforms=True
         )
         LOGGER.debug("Loaded %s platforms", len(self.platforms))
         self.loaded_platforms = True
@@ -159,22 +194,9 @@ class BackupManager:
         if self.backing_up:
             raise HomeAssistantError("Backup already in progress")
 
-        if not self.loaded_platforms:
-            await self.load_platforms()
-
         try:
             self.backing_up = True
-            pre_backup_results = await asyncio.gather(
-                *(
-                    platform.async_pre_backup(self.hass)
-                    for platform in self.platforms.values()
-                ),
-                return_exceptions=True,
-            )
-            for result in pre_backup_results:
-                if isinstance(result, Exception):
-                    raise result
-
+            await self.pre_backup_actions()
             backup_name = f"Core {HAVERSION}"
             date_str = dt_util.now().isoformat()
             slug = _generate_slug(date_str, backup_name)
@@ -207,16 +229,7 @@ class BackupManager:
             return backup
         finally:
             self.backing_up = False
-            post_backup_results = await asyncio.gather(
-                *(
-                    platform.async_post_backup(self.hass)
-                    for platform in self.platforms.values()
-                ),
-                return_exceptions=True,
-            )
-            for result in post_backup_results:
-                if isinstance(result, Exception):
-                    raise result
+            await self.post_backup_actions()
 
     def _mkdir_and_generate_backup_contents(
         self,
@@ -228,18 +241,18 @@ class BackupManager:
             LOGGER.debug("Creating backup directory")
             self.backup_dir.mkdir()
 
-        with TemporaryDirectory() as tmp_dir, SecureTarFile(
+        outer_secure_tarfile = SecureTarFile(
             tar_file_path, "w", gzip=False, bufsize=BUF_SIZE
-        ) as tar_file:
-            tmp_dir_path = Path(tmp_dir)
-            save_json(
-                tmp_dir_path.joinpath("./backup.json").as_posix(),
-                backup_data,
-            )
-            with SecureTarFile(
-                tmp_dir_path.joinpath("./homeassistant.tar.gz").as_posix(),
-                "w",
-                bufsize=BUF_SIZE,
+        )
+        with outer_secure_tarfile as outer_secure_tarfile_tarfile:
+            raw_bytes = json_bytes(backup_data)
+            fileobj = io.BytesIO(raw_bytes)
+            tar_info = tarfile.TarInfo(name="./backup.json")
+            tar_info.size = len(raw_bytes)
+            tar_info.mtime = int(time.time())
+            outer_secure_tarfile_tarfile.addfile(tar_info, fileobj=fileobj)
+            with outer_secure_tarfile.create_inner_tar(
+                "./homeassistant.tar.gz", gzip=True
             ) as core_tar:
                 atomic_contents_add(
                     tar_file=core_tar,
@@ -247,7 +260,7 @@ class BackupManager:
                     excludes=EXCLUDE_FROM_BACKUP,
                     arcname="data",
                 )
-            tar_file.add(tmp_dir_path, arcname=".")
+
         return tar_file_path.stat().st_size
 
 

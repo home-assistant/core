@@ -1,4 +1,5 @@
 """Protocol cluster handlers module for Zigbee Home Automation."""
+
 from zigpy.zcl.clusters.protocol import (
     AnalogInputExtended,
     AnalogInputRegular,

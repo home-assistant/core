@@ -1,4 +1,5 @@
 """Support for Panasonic Blu-ray players."""
+
 from __future__ import annotations
 
 from datetime import timedelta

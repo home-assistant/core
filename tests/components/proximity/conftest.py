@@ -1,4 +1,5 @@
 """Config test for proximity."""
+
 import pytest
 
 from homeassistant.core import HomeAssistant

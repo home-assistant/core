@@ -1,4 +1,5 @@
 """Data update coordinator for the Lidarr integration."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -39,7 +40,6 @@ class LidarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
         )
         self.api_client = api_client
         self.host_configuration = host_configuration
-        self.system_version: str | None = None
 
     async def _async_update_data(self) -> T:
         """Get the latest data from Lidarr."""

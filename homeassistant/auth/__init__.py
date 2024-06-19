@@ -1,4 +1,5 @@
 """Provide an authentication layer for Home Assistant."""
+
 from __future__ import annotations
 
 import asyncio
@@ -19,22 +20,22 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
 from . import auth_store, jwt_wrapper, models
 from .const import ACCESS_TOKEN_EXPIRATION, GROUP_ID_ADMIN, REFRESH_TOKEN_EXPIRATION
 from .mfa_modules import MultiFactorAuthModule, auth_mfa_module_from_config
+from .models import AuthFlowResult
 from .providers import AuthProvider, LoginFlow, auth_provider_from_config
 
 EVENT_USER_ADDED = "user_added"
 EVENT_USER_UPDATED = "user_updated"
 EVENT_USER_REMOVED = "user_removed"
 
-_MfaModuleDict = dict[str, MultiFactorAuthModule]
-_ProviderKey = tuple[str, str | None]
-_ProviderDict = dict[_ProviderKey, AuthProvider]
+type _MfaModuleDict = dict[str, MultiFactorAuthModule]
+type _ProviderKey = tuple[str, str | None]
+type _ProviderDict = dict[_ProviderKey, AuthProvider]
 
 
 class InvalidAuthError(Exception):
@@ -52,7 +53,7 @@ async def auth_manager_from_config(
 ) -> AuthManager:
     """Initialize an auth manager from config.
 
-    CORE_CONFIG_SCHEMA will make sure do duplicated auth providers or
+    CORE_CONFIG_SCHEMA will make sure no duplicated auth providers or
     mfa modules exist in configs.
     """
     store = auth_store.AuthStore(hass)
@@ -84,12 +85,16 @@ async def auth_manager_from_config(
         module_hash[module.id] = module
 
     manager = AuthManager(hass, store, provider_hash, module_hash)
-    manager.async_setup()
+    await manager.async_setup()
     return manager
 
 
-class AuthManagerFlowManager(data_entry_flow.FlowManager):
+class AuthManagerFlowManager(
+    data_entry_flow.FlowManager[AuthFlowResult, tuple[str, str]]
+):
     """Manage authentication flows."""
+
+    _flow_result = AuthFlowResult
 
     def __init__(self, hass: HomeAssistant, auth_manager: AuthManager) -> None:
         """Init auth manager flows."""
@@ -98,11 +103,11 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
 
     async def async_create_flow(
         self,
-        handler_key: str,
+        handler_key: tuple[str, str],
         *,
         context: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
-    ) -> data_entry_flow.FlowHandler:
+    ) -> LoginFlow:
         """Create a login flow."""
         auth_provider = self.auth_manager.get_auth_provider(*handler_key)
         if not auth_provider:
@@ -110,8 +115,10 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
         return await auth_provider.async_login_flow(context)
 
     async def async_finish_flow(
-        self, flow: data_entry_flow.FlowHandler, result: FlowResult
-    ) -> FlowResult:
+        self,
+        flow: data_entry_flow.FlowHandler[AuthFlowResult, tuple[str, str]],
+        result: AuthFlowResult,
+    ) -> AuthFlowResult:
         """Return a user as result of login flow."""
         flow = cast(LoginFlow, flow)
 
@@ -174,8 +181,7 @@ class AuthManager:
             self._async_remove_expired_refresh_tokens, job_type=HassJobType.Callback
         )
 
-    @callback
-    def async_setup(self) -> None:
+    async def async_setup(self) -> None:
         """Set up the auth manager."""
         hass = self.hass
         hass.async_add_shutdown_job(
@@ -509,6 +515,13 @@ class AuthManager:
         callbacks = self._revoke_callbacks.pop(refresh_token.id, ())
         for revoke_callback in callbacks:
             revoke_callback()
+
+    @callback
+    def async_set_expiry(
+        self, refresh_token: models.RefreshToken, *, enable_expiry: bool
+    ) -> None:
+        """Enable or disable expiry of a refresh token."""
+        self._store.async_set_expiry(refresh_token, enable_expiry=enable_expiry)
 
     @callback
     def _async_remove_expired_refresh_tokens(self, _: datetime | None = None) -> None:

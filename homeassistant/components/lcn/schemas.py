@@ -1,4 +1,5 @@
 """Schema definitions for LCN configuration and websockets api."""
+
 import voluptuous as vol
 
 from homeassistant.components.climate import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP

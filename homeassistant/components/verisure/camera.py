@@ -1,4 +1,5 @@
 """Support for Verisure cameras."""
+
 from __future__ import annotations
 
 import errno
@@ -71,7 +72,6 @@ class VerisureSmartcam(CoordinatorEntity[VerisureDataUpdateCoordinator], Camera)
         area = self.coordinator.data["cameras"][self.serial_number]["device"]["area"]
         return DeviceInfo(
             name=area,
-            suggested_area=area,
             manufacturer="Verisure",
             model="SmartCam",
             identifiers={(DOMAIN, self.serial_number)},

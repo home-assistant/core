@@ -1,4 +1,5 @@
 """Support for Vivotek IP Cameras."""
+
 from __future__ import annotations
 
 from libpyvivotek import VivotekCamera

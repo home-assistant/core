@@ -1,0 +1,22 @@
+{
+  "entity": {
+    "sensor": {
+      "sign": {
+        "default": "mdi:zodiac-aries",
+        "state": {
+          "taurus": "mdi:zodiac-taurus",
+          "gemini": "mdi:zodiac-gemini",
+          "cancer": "mdi:zodiac-cancer",
+          "leo": "mdi:zodiac-leo",
+          "virgo": "mdi:zodiac-virgo",
+          "libra": "mdi:zodiac-libra",
+          "scorpio": "mdi:zodiac-scorpio",
+          "sagittarius": "mdi:zodiac-sagittarius",
+          "capricorn": "mdi:zodiac-capricorn",
+          "aquarius": "mdi:zodiac-aquarius",
+          "pisces": "mdi:zodiac-pisces"
+        }
+      }
+    }
+  }
+}

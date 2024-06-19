@@ -1,7 +1,9 @@
 """The tests for mqtt select component."""
+
 from collections.abc import Generator
 import copy
 import json
+import logging
 from typing import Any
 from unittest.mock import patch
 
@@ -15,12 +17,7 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
-    ATTR_ENTITY_ID,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.typing import ConfigType
 
@@ -70,13 +67,6 @@ DEFAULT_CONFIG = {
 }
 
 
-@pytest.fixture(autouse=True)
-def select_platform_only():
-    """Only setup the select platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SELECT]):
-        yield
-
-
 def _test_run_select_setup_params(
     topic: str,
 ) -> Generator[tuple[ConfigType, str], None]:
@@ -102,10 +92,14 @@ def _test_run_select_setup_params(
 async def test_run_select_setup(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
     topic: str,
 ) -> None:
     """Test that it fetches the given payload."""
     await mqtt_mock_entry()
+
+    state = hass.states.get("select.test_select")
+    assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, topic, "milk")
 
@@ -117,6 +111,15 @@ async def test_run_select_setup(
     async_fire_mqtt_message(hass, topic, "beer")
 
     await hass.async_block_till_done()
+
+    state = hass.states.get("select.test_select")
+    assert state.state == "beer"
+
+    if caplog.at_level(logging.DEBUG):
+        async_fire_mqtt_message(hass, topic, "")
+        await hass.async_block_till_done()
+
+        assert "Ignoring empty payload" in caplog.text
 
     state = hass.states.get("select.test_select")
     assert state.state == "beer"
@@ -848,3 +851,32 @@ async def test_skipped_async_ha_write_state(
     """Test a write state command is only called when there is change."""
     await mqtt_mock_entry()
     await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            select.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "state_topic": "test-topic",
+                    "value_template": "{{ value_json.some_var * 1 }}",
+                },
+            ),
+        )
+    ],
+)
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
+    )

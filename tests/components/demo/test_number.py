@@ -1,4 +1,5 @@
 """The tests for the demo number component."""
+
 from unittest.mock import patch
 
 import pytest
@@ -15,6 +16,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 ENTITY_VOLUME = "number.volume"
@@ -96,7 +98,7 @@ async def test_set_value_bad_range(hass: HomeAssistant) -> None:
     state = hass.states.get(ENTITY_VOLUME)
     assert state.state == "42.0"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_VALUE,

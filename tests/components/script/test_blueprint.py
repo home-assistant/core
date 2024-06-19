@@ -1,4 +1,5 @@
 """Test script blueprints."""
+
 import asyncio
 from collections.abc import Iterator
 import contextlib
@@ -7,9 +8,9 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components import script
 from homeassistant.components.blueprint.models import Blueprint, DomainBlueprints
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, template
 from homeassistant.setup import async_setup_component
@@ -47,7 +48,7 @@ async def test_confirmable_notification(
 ) -> None:
     """Test confirmable notification blueprint."""
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.state = config_entries.ConfigEntryState.LOADED
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
 
     frodo = device_registry.async_get_or_create(

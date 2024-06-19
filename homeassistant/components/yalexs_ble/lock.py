@@ -1,4 +1,5 @@
 """Support for Yale Access Bluetooth locks."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,23 +7,20 @@ from typing import Any
 from yalexs_ble import ConnectionInfo, LockInfo, LockState, LockStatus
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import YALEXSBLEConfigEntry
 from .entity import YALEXSBLEEntity
-from .models import YaleXSBLEData
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: YALEXSBLEConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up locks."""
-    data: YaleXSBLEData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([YaleXSBLELock(data)])
+    async_add_entities([YaleXSBLELock(entry.runtime_data)])
 
 
 class YaleXSBLELock(YALEXSBLEEntity, LockEntity):

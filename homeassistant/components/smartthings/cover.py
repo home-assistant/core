@@ -1,4 +1,5 @@
 """Support for covers through the SmartThings cloud API."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -62,7 +63,8 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
     # Must have one of the min_required
     if any(capability in capabilities for capability in min_required):
         # Return all capabilities supported/consumed
-        return min_required + [
+        return [
+            *min_required,
             Capability.battery,
             Capability.switch_level,
             Capability.window_shade_level,

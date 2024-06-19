@@ -1,4 +1,5 @@
 """Test the Mythic Beasts DNS component."""
+
 import logging
 from unittest.mock import patch
 

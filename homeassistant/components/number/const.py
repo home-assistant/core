@@ -1,4 +1,5 @@
 """Provides the constants needed for the component."""
+
 from __future__ import annotations
 
 from enum import StrEnum
@@ -53,6 +54,7 @@ ATTR_VALUE = "value"
 ATTR_MIN = "min"
 ATTR_MAX = "max"
 ATTR_STEP = "step"
+ATTR_STEP_VALIDATION = "step_validation"
 
 DEFAULT_MIN_VALUE = 0.0
 DEFAULT_MAX_VALUE = 100.0
