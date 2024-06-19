@@ -39,8 +39,8 @@
     }
   },
   "exceptions": {
-    "username_exists": {
-      "message": "Username already exists"
+    "username_already_exists": {
+      "message": "Username \"{username}\" already exists"
     },
     "username_not_normalized": {
       "message": "Username \"{new_username}\" is not normalized"

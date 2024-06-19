@@ -33,6 +33,12 @@ def legacy_data(hass: HomeAssistant) -> hass_auth.Data:
     return data
 
 
+@pytest.fixture
+async def load_auth_component(hass: HomeAssistant) -> None:
+    """Load the auth component for translations."""
+    await async_setup_component(hass, "auth", {})
+
+
 async def test_validating_password_invalid_user(data: hass_auth.Data) -> None:
     """Test validating an invalid user."""
     with pytest.raises(hass_auth.InvalidAuth):
@@ -79,19 +85,25 @@ async def test_adding_user(data: hass_auth.Data) -> None:
     data.validate_login(" test-user ", "test-pass")
 
 
-async def test_adding_user_duplicate_username(
-    data: hass_auth.Data, hass: HomeAssistant
-) -> None:
+@pytest.mark.parametrize("username", ["test-user ", "TEST-USER"])
+@pytest.mark.usefixtures("load_auth_component")
+def test_adding_user_not_normalized(data: hass_auth.Data, username: str) -> None:
+    """Test adding a user."""
+    with pytest.raises(
+        hass_auth.InvalidUsername, match=f'Username "{username}" is not normalized'
+    ):
+        data.add_auth(username, "test-pass")
+
+
+@pytest.mark.usefixtures("load_auth_component")
+def test_adding_user_duplicate_username(data: hass_auth.Data) -> None:
     """Test adding a user with duplicate username."""
     data.add_auth("test-user", "test-pass")
 
-    # load translations
-    await async_setup_component(hass, "auth", {})
-
     with pytest.raises(
-        hass_auth.InvalidUsername, match='Username "TEST-user " is not normalized'
+        hass_auth.InvalidUsername, match='Username "test-user" already exists'
     ):
-        data.add_auth("TEST-user ", "other-pass")
+        data.add_auth("test-user", "other-pass")
 
 
 async def test_validating_password_invalid_password(data: hass_auth.Data) -> None:
@@ -313,3 +325,67 @@ async def test_race_condition_in_data_loading(hass: HomeAssistant) -> None:
         assert isinstance(results[0], hass_auth.InvalidAuth)
         # results[1] will be a TypeError if race condition occurred
         assert isinstance(results[1], hass_auth.InvalidAuth)
+
+
+def test_change_username(data: hass_auth.Data) -> None:
+    """Test changing username."""
+    data.add_auth("test-user", "test-pass")
+    users = data.users
+    assert len(users) == 1
+    assert users[0]["username"] == "test-user"
+
+    data.change_username("test-user", "new-user")
+
+    users = data.users
+    assert len(users) == 1
+    assert users[0]["username"] == "new-user"
+
+
+@pytest.mark.parametrize("username", ["test-user ", "TEST-USER"])
+def test_change_username_legacy(legacy_data: hass_auth.Data, username: str) -> None:
+    """Test changing username."""
+    # Cannot use add_auth as it normalizes username
+    legacy_data.users.append(
+        {
+            "username": username,
+            "password": legacy_data.hash_password("test-pass", True).decode(),
+        }
+    )
+
+    users = legacy_data.users
+    assert len(users) == 1
+    assert users[0]["username"] == username
+
+    legacy_data.change_username(username, "test-user")
+
+    users = legacy_data.users
+    assert len(users) == 1
+    assert users[0]["username"] == "test-user"
+
+
+def test_change_username_invalid_user(data: hass_auth.Data) -> None:
+    """Test changing username raises on invalid user."""
+    data.add_auth("test-user", "test-pass")
+    users = data.users
+    assert len(users) == 1
+    assert users[0]["username"] == "test-user"
+
+    with pytest.raises(hass_auth.InvalidUser):
+        data.change_username("non-existing", "new-user")
+
+    users = data.users
+    assert len(users) == 1
+    assert users[0]["username"] == "test-user"
+
+
+@pytest.mark.usefixtures("load_auth_component")
+async def test_change_username_not_normalized(
+    data: hass_auth.Data, hass: HomeAssistant
+) -> None:
+    """Test changing username raises on not normalized username."""
+    data.add_auth("test-user", "test-pass")
+
+    with pytest.raises(
+        hass_auth.InvalidUsername, match='Username "TEST-user " is not normalized'
+    ):
+        data.change_username("test-user", "TEST-user ")

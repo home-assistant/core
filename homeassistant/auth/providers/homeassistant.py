@@ -247,7 +247,8 @@ class Data:
             for user in self.users
         ):
             raise InvalidUsername(
-                translation_key="username_exists",
+                translation_key="username_already_exists",
+                translation_placeholders={"username": new_username},
             )
 
     def change_username(self, username: str, new_username: str) -> None:
