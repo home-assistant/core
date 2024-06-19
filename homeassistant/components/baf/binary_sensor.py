@@ -45,12 +45,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up BAF binary sensors."""
     device = entry.runtime_data
-    sensors_descriptions: list[BAFBinarySensorDescription] = []
     if device.has_occupancy:
-        sensors_descriptions.extend(OCCUPANCY_SENSORS)
-    async_add_entities(
-        BAFBinarySensor(device, description) for description in sensors_descriptions
-    )
+        async_add_entities(
+            BAFBinarySensor(device, description) for description in OCCUPANCY_SENSORS
+        )
 
 
 class BAFBinarySensor(BAFDescriptionEntity, BinarySensorEntity):
