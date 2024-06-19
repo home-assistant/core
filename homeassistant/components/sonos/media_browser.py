@@ -68,7 +68,7 @@ def fix_image_url(url: str) -> str:
         )
     )
     if original_url != new_url:
-        _LOGGER.debug("fix_sonos_image_url original: %s new: %s", original_uri, new_url)
+        _LOGGER.debug("fix_sonos_image_url original: %s new: %s", original_url, new_url)
     return new_url
 
 
