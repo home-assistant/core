@@ -10,6 +10,7 @@ from homeassistant.components.airgradient import DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -77,3 +78,34 @@ async def test_pressing_button(
         blocking=True,
     )
     mock_airgradient_client.request_led_bar_test.assert_called_once()
+
+
+async def test_pressing_button_cloud(
+    hass: HomeAssistant,
+    mock_cloud_airgradient_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test pressing button on cloud configured device."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {
+                ATTR_ENTITY_ID: "button.airgradient_calibrate_co2_sensor",
+            },
+            blocking=True,
+        )
+    mock_cloud_airgradient_client.request_co2_calibration.assert_not_called()
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {
+                ATTR_ENTITY_ID: "button.airgradient_test_led_bar",
+            },
+            blocking=True,
+        )
+    mock_cloud_airgradient_client.request_led_bar_test.assert_not_called()

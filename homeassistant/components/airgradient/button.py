@@ -3,13 +3,14 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
-from airgradient import AirGradientClient
+from airgradient import AirGradientClient, ConfigurationControl
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AirGradientConfigEntry
+from . import DOMAIN, AirGradientConfigEntry
 from .coordinator import AirGradientConfigCoordinator
 from .entity import AirGradientEntity
 
@@ -67,4 +68,12 @@ class AirGradientButton(AirGradientEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
+        if (
+            self.coordinator.data.configuration_control
+            is not ConfigurationControl.LOCAL
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_local_configuration",
+            )
         await self.entity_description.press_fn(self.coordinator.client)
