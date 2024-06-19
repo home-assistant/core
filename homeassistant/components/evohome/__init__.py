@@ -160,8 +160,8 @@ class EvoAuthenticator:
         self.client_v2 = client_v2
 
         self.client_v1 = ev1.EvohomeClient(
-            self.client_v2.username,
-            self.client_v2.password,
+            username,
+            password,
             session_id=self.session_id,
             session=self._session,
         )
