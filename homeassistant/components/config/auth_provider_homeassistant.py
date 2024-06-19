@@ -234,15 +234,5 @@ async def websocket_admin_change_username(
         )
         return
 
-    try:
-        await provider.async_change_username(username, msg["username"])
-    except auth_ha.InvalidUsername:
-        # As InvalidUsername is a subclass of InvalidAuth and is translated, we raise
-        # to use the translations
-        raise
-    except auth_ha.InvalidUser:
-        connection.send_error(
-            msg["id"], "credentials_not_found", "Credentials not found"
-        )
-    else:
-        connection.send_result(msg["id"])
+    await provider.async_change_username(username, msg["username"])
+    connection.send_result(msg["id"])
