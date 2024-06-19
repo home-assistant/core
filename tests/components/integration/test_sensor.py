@@ -105,7 +105,7 @@ async def test_state(hass: HomeAssistant, method) -> None:
     state = hass.states.get("sensor.integration")
     assert state is not None
     assert state.attributes.get("state_class") is SensorStateClass.TOTAL
-    assert state.attributes.get("device_class") is None
+    assert "device_class" not in state.attributes
 
     now = dt_util.utcnow()
     with freeze_time(now):
@@ -114,7 +114,6 @@ async def test_state(hass: HomeAssistant, method) -> None:
             entity_id,
             1,
             {
-                "device_class": SensorDeviceClass.POWER,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT,
             },
         )
@@ -123,7 +122,7 @@ async def test_state(hass: HomeAssistant, method) -> None:
     state = hass.states.get("sensor.integration")
     assert state is not None
     assert state.attributes.get("state_class") is SensorStateClass.TOTAL
-    assert state.attributes.get("device_class") == SensorDeviceClass.ENERGY
+    assert "device_class" not in state.attributes
 
     now += timedelta(seconds=3600)
     with freeze_time(now):
