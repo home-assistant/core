@@ -106,6 +106,9 @@ class _FakeApp(ControllerApplication):
     ) -> None:
         pass
 
+    def _persist_coordinator_model_strings_in_db(self) -> None:
+        pass
+
 
 def _wrap_mock_instance(obj: Any) -> MagicMock:
     """Auto-mock every attribute and method in an object."""
@@ -180,10 +183,14 @@ async def zigpy_app_controller():
 async def config_entry_fixture() -> MockConfigEntry:
     """Fixture representing a config entry."""
     return MockConfigEntry(
-        version=3,
+        version=4,
         domain=zha_const.DOMAIN,
         data={
-            zigpy.config.CONF_DEVICE: {zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB0"},
+            zigpy.config.CONF_DEVICE: {
+                zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB0",
+                zigpy.config.CONF_DEVICE_BAUDRATE: 115200,
+                zigpy.config.CONF_DEVICE_FLOW_CONTROL: "hardware",
+            },
             zha_const.CONF_RADIO_TYPE: "ezsp",
         },
         options={
