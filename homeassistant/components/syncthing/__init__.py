@@ -1,4 +1,5 @@
 """The syncthing integration."""
+
 import asyncio
 import logging
 

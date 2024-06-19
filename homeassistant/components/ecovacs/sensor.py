@@ -1,4 +1,5 @@
 """Ecovacs sensor module."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -23,7 +24,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     ATTR_BATTERY_LEVEL,
@@ -36,8 +36,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
-from .controller import EcovacsController
+from . import EcovacsConfigEntry
+from .const import SUPPORTED_LIFESPANS
 from .entity import (
     EcovacsCapabilityEntityDescription,
     EcovacsDescriptionEntity,
@@ -72,6 +72,7 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         capability_fn=lambda caps: caps.stats.clean,
         value_fn=lambda e: e.time,
         translation_key="stats_time",
+        device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.MINUTES,
     ),
@@ -89,7 +90,8 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         value_fn=lambda e: e.time,
         key="total_stats_time",
         translation_key="total_stats_time",
-        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -152,35 +154,32 @@ LIFESPAN_ENTITY_DESCRIPTIONS = tuple(
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
     )
-    for component in (
-        LifeSpan.BRUSH,
-        LifeSpan.FILTER,
-        LifeSpan.SIDE_BRUSH,
-    )
+    for component in SUPPORTED_LIFESPANS
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EcovacsConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add entities for passed config_entry in HA."""
-    controller: EcovacsController = hass.data[DOMAIN][config_entry.entry_id]
+    controller = config_entry.runtime_data
 
     entities: list[EcovacsEntity] = get_supported_entitites(
         controller, EcovacsSensor, ENTITY_DESCRIPTIONS
     )
-    for device in controller.devices:
-        lifespan_capability = device.capabilities.life_span
-        for description in LIFESPAN_ENTITY_DESCRIPTIONS:
-            if description.component in lifespan_capability.types:
-                entities.append(
-                    EcovacsLifespanSensor(device, lifespan_capability, description)
-                )
-
-        if capability := device.capabilities.error:
-            entities.append(EcovacsErrorSensor(device, capability))
+    entities.extend(
+        EcovacsLifespanSensor(device, device.capabilities.life_span, description)
+        for device in controller.devices
+        for description in LIFESPAN_ENTITY_DESCRIPTIONS
+        if description.component in device.capabilities.life_span.types
+    )
+    entities.extend(
+        EcovacsErrorSensor(device, capability)
+        for device in controller.devices
+        if (capability := device.capabilities.error)
+    )
 
     async_add_entities(entities)
 

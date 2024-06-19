@@ -1,4 +1,5 @@
 """Offer webhook triggered automation rules."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

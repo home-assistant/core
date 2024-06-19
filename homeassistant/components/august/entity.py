@@ -1,7 +1,9 @@
 """Base class for August entity."""
+
 from abc import abstractmethod
 
 from yalexs.doorbell import Doorbell, DoorbellDetail
+from yalexs.keypad import KeypadDetail
 from yalexs.lock import Lock, LockDetail
 from yalexs.util import get_configuration_url
 
@@ -9,7 +11,7 @@ from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 
 from . import DOMAIN, AugustData
 from .const import MANUFACTURER
@@ -23,12 +25,15 @@ class AugustEntityMixin(Entity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(self, data: AugustData, device: Doorbell | Lock) -> None:
+    def __init__(
+        self, data: AugustData, device: Doorbell | Lock | KeypadDetail, unique_id: str
+    ) -> None:
         """Initialize an August device."""
         super().__init__()
         self._data = data
         self._device = device
         detail = self._detail
+        self._attr_unique_id = f"{device.device_id}_{unique_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
             manufacturer=MANUFACTURER,
@@ -75,6 +80,21 @@ class AugustEntityMixin(Entity):
                 self._device_id, self._update_from_data_and_write_state
             )
         )
+        self._update_from_data()
+
+
+class AugustDescriptionEntity(AugustEntityMixin):
+    """An August entity with a description."""
+
+    def __init__(
+        self,
+        data: AugustData,
+        device: Doorbell | Lock | KeypadDetail,
+        description: EntityDescription,
+    ) -> None:
+        """Initialize an August entity with a description."""
+        super().__init__(data, device, description.key)
+        self.entity_description = description
 
 
 def _remove_device_types(name: str, device_types: list[str]) -> str:

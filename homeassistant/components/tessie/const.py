@@ -1,4 +1,5 @@
 """Constants used by Tessie integration."""
+
 from __future__ import annotations
 
 from enum import IntEnum, StrEnum
@@ -68,3 +69,13 @@ class TessieChargeCableLockStates(StrEnum):
 
     ENGAGED = "Engaged"
     DISENGAGED = "Disengaged"
+
+
+TessieChargeStates = {
+    "Starting": "starting",
+    "Charging": "charging",
+    "Stopped": "stopped",
+    "Complete": "complete",
+    "Disconnected": "disconnected",
+    "NoPower": "no_power",
+}

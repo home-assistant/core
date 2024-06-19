@@ -1,4 +1,5 @@
 """Conftest for rainforest_eagle."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -65,7 +66,7 @@ async def setup_rainforest_100(hass):
         },
     ).add_to_hass(hass)
     with patch(
-        "homeassistant.components.rainforest_eagle.data.Eagle100Reader",
+        "homeassistant.components.rainforest_eagle.coordinator.Eagle100Reader",
         return_value=Mock(
             get_instantaneous_demand=Mock(
                 return_value={"InstantaneousDemand": {"Demand": "1.152000"}}

@@ -1,4 +1,5 @@
 """Tests for the Switch as X Siren platform."""
+
 from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.switch_as_x.config_flow import SwitchAsXConfigFlowHandler

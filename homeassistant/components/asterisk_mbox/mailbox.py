@@ -1,4 +1,5 @@
 """Support for the Asterisk Voicemail interface."""
+
 from __future__ import annotations
 
 from functools import partial

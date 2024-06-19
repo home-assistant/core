@@ -1,12 +1,16 @@
 """Support for Ness D8X/D16X alarm panel."""
+
 from __future__ import annotations
 
 import logging
 
 from nessclient import ArmingMode, ArmingState, Client
 
-import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
+    CodeFormat,
+)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -50,10 +54,10 @@ async def async_setup_platform(
     async_add_entities([device])
 
 
-class NessAlarmPanel(alarm.AlarmControlPanelEntity):
+class NessAlarmPanel(AlarmControlPanelEntity):
     """Representation of a Ness alarm panel."""
 
-    _attr_code_format = alarm.CodeFormat.NUMBER
+    _attr_code_format = CodeFormat.NUMBER
     _attr_should_poll = False
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
@@ -100,9 +104,7 @@ class NessAlarmPanel(alarm.AlarmControlPanelEntity):
             self._attr_state = None
         elif arming_state == ArmingState.DISARMED:
             self._attr_state = STATE_ALARM_DISARMED
-        elif arming_state == ArmingState.ARMING:
-            self._attr_state = STATE_ALARM_ARMING
-        elif arming_state == ArmingState.EXIT_DELAY:
+        elif arming_state in (ArmingState.ARMING, ArmingState.EXIT_DELAY):
             self._attr_state = STATE_ALARM_ARMING
         elif arming_state == ArmingState.ARMED:
             self._attr_state = ARMING_MODE_TO_STATE.get(

@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "hot_water_availability": {
+        "default": "mdi:water-thermometer"
+      }
+    }
+  }
+}

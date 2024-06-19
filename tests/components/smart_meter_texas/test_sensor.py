@@ -1,4 +1,5 @@
 """Test the Smart Meter Texas sensor entity."""
+
 from unittest.mock import patch
 
 from homeassistant.components.homeassistant import (

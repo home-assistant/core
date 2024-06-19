@@ -1,4 +1,5 @@
 """Test HomematicIP Cloud setup process."""
+
 from unittest.mock import AsyncMock, Mock, patch
 
 from homematicip.base.base_connection import HmipConnectionError
@@ -120,11 +121,14 @@ async def test_load_entry_fails_due_to_generic_exception(
     """Test load entry fails due to generic exception."""
     hmip_config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.homematicip_cloud.hap.AsyncHome.get_current_state",
-        side_effect=Exception,
-    ), patch(
-        "homematicip.aio.connection.AsyncConnection.init",
+    with (
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.AsyncHome.get_current_state",
+            side_effect=Exception,
+        ),
+        patch(
+            "homematicip.aio.connection.AsyncConnection.init",
+        ),
     ):
         assert await async_setup_component(hass, HMIPC_DOMAIN, {})
 

@@ -1,4 +1,5 @@
 """Component providing HA sensor support for Travis CI framework."""
+
 from __future__ import annotations
 
 from datetime import timedelta

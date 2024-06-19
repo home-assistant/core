@@ -1,4 +1,5 @@
 """Select platform for Sensibo integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -8,11 +9,11 @@ from typing import TYPE_CHECKING, Any
 from pysensibo.model import SensiboDevice
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import SensiboConfigEntry
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity, async_handle_api_call
@@ -20,9 +21,9 @@ from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
-class SensiboSelectDescriptionMixin:
-    """Mixin values for Sensibo entities."""
+@dataclass(frozen=True, kw_only=True)
+class SensiboSelectEntityDescription(SelectEntityDescription):
+    """Class describing Sensibo Select entities."""
 
     data_key: str
     value_fn: Callable[[SensiboDevice], str | None]
@@ -30,18 +31,10 @@ class SensiboSelectDescriptionMixin:
     transformation: Callable[[SensiboDevice], dict | None]
 
 
-@dataclass(frozen=True)
-class SensiboSelectEntityDescription(
-    SelectEntityDescription, SensiboSelectDescriptionMixin
-):
-    """Class describing Sensibo Select entities."""
-
-
 DEVICE_SELECT_TYPES = (
     SensiboSelectEntityDescription(
         key="horizontalSwing",
         data_key="horizontal_swing_mode",
-        icon="mdi:air-conditioner",
         value_fn=lambda data: data.horizontal_swing_mode,
         options_fn=lambda data: data.horizontal_swing_modes,
         translation_key="horizontalswing",
@@ -50,7 +43,6 @@ DEVICE_SELECT_TYPES = (
     SensiboSelectEntityDescription(
         key="light",
         data_key="light_mode",
-        icon="mdi:flashlight",
         value_fn=lambda data: data.light_mode,
         options_fn=lambda data: data.light_modes,
         translation_key="light",
@@ -60,11 +52,13 @@ DEVICE_SELECT_TYPES = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SensiboConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Sensibo number platform."""
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         SensiboSelect(coordinator, device_id, description)
@@ -108,8 +102,6 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
         if self.entity_description.key not in self.device_data.active_features:
             hvac_mode = self.device_data.hvac_mode if self.device_data.hvac_mode else ""
             raise HomeAssistantError(
-                f"Current mode {self.device_data.hvac_mode} doesn't support setting"
-                f" {self.entity_description.name}",
                 translation_domain=DOMAIN,
                 translation_key="select_option_not_available",
                 translation_placeholders={

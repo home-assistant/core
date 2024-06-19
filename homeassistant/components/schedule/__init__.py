@@ -1,4 +1,5 @@
 """Support for schedules in Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -255,8 +256,7 @@ class Schedule(CollectionEntity):
     @classmethod
     def from_storage(cls, config: ConfigType) -> Schedule:
         """Return entity instance initialized from storage."""
-        schedule = cls(config, editable=True)
-        return schedule
+        return cls(config, editable=True)
 
     @classmethod
     def from_yaml(cls, config: ConfigType) -> Schedule:

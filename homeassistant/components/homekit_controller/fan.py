@@ -1,7 +1,9 @@
 """Support for Homekit fans."""
+
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from functools import cached_property
+from typing import Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
@@ -24,12 +26,6 @@ from homeassistant.util.percentage import (
 from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import HomeKitEntity
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 # 0 is clockwise, 1 is counter-clockwise. The match to forward and reverse is so that
 # its consistent with homeassistant.components.homekit.
@@ -206,6 +202,7 @@ class HomeKitFanV2(BaseHomeKitFan):
 ENTITY_TYPES = {
     ServicesTypes.FAN: HomeKitFanV1,
     ServicesTypes.FAN_V2: HomeKitFanV2,
+    ServicesTypes.AIR_PURIFIER: HomeKitFanV2,
 }
 
 

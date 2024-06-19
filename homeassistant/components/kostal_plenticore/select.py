@@ -1,4 +1,5 @@
 """Platform for Kostal Plenticore select widgets."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -14,23 +15,16 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .helper import Plenticore, SelectDataUpdateCoordinator
+from .coordinator import Plenticore, SelectDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class PlenticoreRequiredKeysMixin:
-    """A class that describes required properties for plenticore select entities."""
+@dataclass(frozen=True, kw_only=True)
+class PlenticoreSelectEntityDescription(SelectEntityDescription):
+    """A class that describes plenticore select entities."""
 
     module_id: str
-
-
-@dataclass(frozen=True)
-class PlenticoreSelectEntityDescription(
-    SelectEntityDescription, PlenticoreRequiredKeysMixin
-):
-    """A class that describes plenticore select entities."""
 
 
 SELECT_SETTINGS_DATA = [

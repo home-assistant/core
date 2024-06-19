@@ -125,9 +125,9 @@ class HolidayFixFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the first step of a fix flow."""
-        return await self.async_step_named_holiday()
+        return await self.async_step_fix_remove_holiday()
 
-    async def async_step_named_holiday(
+    async def async_step_fix_remove_holiday(
         self, user_input: dict[str, Any] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the options step of a fix flow."""
@@ -139,7 +139,7 @@ class HolidayFixFlow(RepairsFlow):
                 await self.hass.async_add_executor_job(
                     validate_custom_dates, new_options
                 )
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 errors["remove_holidays"] = "remove_holiday_error"
             else:
                 self.hass.config_entries.async_update_entry(
@@ -168,7 +168,7 @@ class HolidayFixFlow(RepairsFlow):
             {CONF_REMOVE_HOLIDAYS: removed_named_holiday},
         )
         return self.async_show_form(
-            step_id="named_holiday",
+            step_id="fix_remove_holiday",
             data_schema=new_schema,
             description_placeholders={
                 CONF_COUNTRY: self.country if self.country else "-",

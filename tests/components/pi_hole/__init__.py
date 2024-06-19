@@ -1,4 +1,5 @@
 """Tests for the pi_hole component."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from hole.exceptions import HoleError

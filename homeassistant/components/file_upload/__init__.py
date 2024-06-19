@@ -1,4 +1,5 @@
 """The File Upload integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,14 +7,14 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
+from queue import SimpleQueue
 import shutil
 import tempfile
 
 from aiohttp import BodyPartReader, web
-import janus
 import voluptuous as vol
 
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
@@ -127,24 +128,25 @@ class FileUploadView(HomeAssistantView):
     async def _upload_file(self, request: web.Request) -> web.Response:
         """Handle uploaded file."""
         # Increase max payload
-        request._client_max_size = MAX_SIZE  # pylint: disable=protected-access
+        request._client_max_size = MAX_SIZE  # noqa: SLF001
 
         reader = await request.multipart()
         file_field_reader = await reader.next()
+        filename: str | None
 
         if (
             not isinstance(file_field_reader, BodyPartReader)
             or file_field_reader.name != "file"
-            or file_field_reader.filename is None
+            or (filename := file_field_reader.filename) is None
         ):
             raise vol.Invalid("Expected a file")
 
         try:
-            raise_if_invalid_filename(file_field_reader.filename)
+            raise_if_invalid_filename(filename)
         except ValueError as err:
             raise web.HTTPBadRequest from err
 
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         file_id = ulid_hex()
 
         if DOMAIN not in hass.data:
@@ -152,55 +154,62 @@ class FileUploadView(HomeAssistantView):
 
         file_upload_data: FileUploadData = hass.data[DOMAIN]
         file_dir = file_upload_data.file_dir(file_id)
-        queue: janus.Queue[bytes | None] = janus.Queue()
+        queue: SimpleQueue[tuple[bytes, asyncio.Future[None] | None] | None] = (
+            SimpleQueue()
+        )
 
-        def _sync_queue_consumer(
-            sync_q: janus.SyncQueue[bytes | None], _file_name: str
-        ) -> None:
+        def _sync_queue_consumer() -> None:
             file_dir.mkdir()
-            with (file_dir / _file_name).open("wb") as file_handle:
+            with (file_dir / filename).open("wb") as file_handle:
                 while True:
-                    _chunk = sync_q.get()
-                    if _chunk is None:
+                    if (_chunk_future := queue.get()) is None:
                         break
-
+                    _chunk, _future = _chunk_future
+                    if _future is not None:
+                        hass.loop.call_soon_threadsafe(_future.set_result, None)
                     file_handle.write(_chunk)
-                    sync_q.task_done()
 
         fut: asyncio.Future[None] | None = None
         try:
-            fut = hass.async_add_executor_job(
-                _sync_queue_consumer,
-                queue.sync_q,
-                file_field_reader.filename,
-            )
-
+            fut = hass.async_add_executor_job(_sync_queue_consumer)
+            megabytes_sending = 0
             while chunk := await file_field_reader.read_chunk(ONE_MEGABYTE):
-                queue.async_q.put_nowait(chunk)
-                if queue.async_q.qsize() > 5:  # Allow up to 5 MB buffer size
-                    await queue.async_q.join()
-            queue.async_q.put_nowait(None)  # terminate queue consumer
+                megabytes_sending += 1
+                if megabytes_sending % 5 != 0:
+                    queue.put_nowait((chunk, None))
+                    continue
+
+                chunk_future = hass.loop.create_future()
+                queue.put_nowait((chunk, chunk_future))
+                await asyncio.wait(
+                    (fut, chunk_future), return_when=asyncio.FIRST_COMPLETED
+                )
+                if fut.done():
+                    # The executor job failed
+                    break
+
+            queue.put_nowait(None)  # terminate queue consumer
         finally:
             if fut is not None:
                 await fut
 
-        file_upload_data.files[file_id] = file_field_reader.filename
+        file_upload_data.files[file_id] = filename
 
         return self.json({"file_id": file_id})
 
     @RequestDataValidator({vol.Required("file_id"): str})
     async def delete(self, request: web.Request, data: dict[str, str]) -> web.Response:
         """Delete a file."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
 
         if DOMAIN not in hass.data:
-            raise web.HTTPNotFound()
+            raise web.HTTPNotFound
 
         file_id = data["file_id"]
         file_upload_data: FileUploadData = hass.data[DOMAIN]
 
         if file_upload_data.files.pop(file_id, None) is None:
-            raise web.HTTPNotFound()
+            raise web.HTTPNotFound
 
         await hass.async_add_executor_job(
             lambda: shutil.rmtree(file_upload_data.file_dir(file_id))

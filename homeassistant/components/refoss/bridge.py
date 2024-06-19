@@ -1,4 +1,5 @@
 """Refoss integration."""
+
 from __future__ import annotations
 
 from refoss_ha.device import DeviceInfo

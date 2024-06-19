@@ -1,4 +1,5 @@
 """Support for myStrom Wifi bulbs."""
+
 from __future__ import annotations
 
 import logging

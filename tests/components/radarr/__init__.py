@@ -1,4 +1,5 @@
 """Tests for the Radarr component."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -159,7 +160,7 @@ async def setup_integration(
     aioclient_mock: AiohttpClientMocker,
     url: str = URL,
     api_key: str = API_KEY,
-    unique_id: str = None,
+    unique_id: str | None = None,
     skip_entry_setup: bool = False,
     connection_error: bool = False,
     invalid_auth: bool = False,

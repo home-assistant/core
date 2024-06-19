@@ -1,4 +1,5 @@
 """Config flow for simplepush integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,9 +7,8 @@ from typing import Any
 from simplepush import UnknownError, send
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_PASSWORD
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import ATTR_ENCRYPTED, CONF_DEVICE_KEY, CONF_SALT, DEFAULT_NAME, DOMAIN
 
@@ -36,12 +36,12 @@ def validate_input(entry: dict[str, str]) -> dict[str, str] | None:
     return None
 
 
-class SimplePushFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class SimplePushFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for simplepush."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors: dict[str, str] | None = None
         if user_input is not None:

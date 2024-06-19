@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for Elgato."""
+
 from dataclasses import dataclass
 
 from elgato import BatteryInfo, Elgato, ElgatoConnectionError, Info, Settings, State

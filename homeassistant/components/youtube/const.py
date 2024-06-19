@@ -1,4 +1,5 @@
 """Constants for YouTube integration."""
+
 import logging
 
 DEFAULT_ACCESS = ["https://www.googleapis.com/auth/youtube.readonly"]

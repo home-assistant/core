@@ -1,4 +1,5 @@
 """The lookin integration entity."""
+
 from __future__ import annotations
 
 from abc import abstractmethod

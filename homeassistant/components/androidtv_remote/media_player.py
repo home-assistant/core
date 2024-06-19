@@ -1,4 +1,5 @@
 """Media player support for Android TV Remote."""
+
 from __future__ import annotations
 
 import asyncio
@@ -13,12 +14,11 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import AndroidTVRemoteConfigEntry
 from .entity import AndroidTVRemoteBaseEntity
 
 PARALLEL_UPDATES = 0
@@ -26,11 +26,11 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AndroidTVRemoteConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Android TV media player entity based on a config entry."""
-    api: AndroidTVRemote = hass.data[DOMAIN][config_entry.entry_id]
+    api = config_entry.runtime_data
     async_add_entities([AndroidTVRemoteMediaPlayerEntity(api, config_entry)])
 
 
@@ -52,7 +52,9 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
         | MediaPlayerEntityFeature.PLAY_MEDIA
     )
 
-    def __init__(self, api: AndroidTVRemote, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, api: AndroidTVRemote, config_entry: AndroidTVRemoteConfigEntry
+    ) -> None:
         """Initialize the entity."""
         super().__init__(api, config_entry)
 

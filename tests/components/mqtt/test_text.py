@@ -1,4 +1,5 @@
 """The tests for the MQTT text platform."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -7,12 +8,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import mqtt, text
-from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
-    ATTR_ENTITY_ID,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .test_common import (
@@ -52,13 +48,6 @@ from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {text.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
-
-
-@pytest.fixture(autouse=True)
-def text_platform_only():
-    """Only setup the text platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.TEXT]):
-        yield
 
 
 async def async_set_value(
@@ -153,7 +142,7 @@ async def test_forced_text_length(
     state = hass.states.get("text.test")
     assert state.state == "12345"
     assert (
-        "ValueError: Entity text.test provides state 123456 "
+        "Entity text.test provides state 123456 "
         "which is too long (maximum length 5)" in caplog.text
     )
 
@@ -163,7 +152,7 @@ async def test_forced_text_length(
     state = hass.states.get("text.test")
     assert state.state == "12345"
     assert (
-        "ValueError: Entity text.test provides state 1 "
+        "Entity text.test provides state 1 "
         "which is too short (minimum length 5)" in caplog.text
     )
     # Valid update
@@ -211,7 +200,7 @@ async def test_controlling_validation_state_via_topic(
     async_fire_mqtt_message(hass, "state-topic", "other")
     await hass.async_block_till_done()
     assert (
-        "ValueError: Entity text.test provides state other which does not match expected pattern (y|n)"
+        "Entity text.test provides state other which does not match expected pattern (y|n)"
         in caplog.text
     )
     state = hass.states.get("text.test")
@@ -222,7 +211,7 @@ async def test_controlling_validation_state_via_topic(
     async_fire_mqtt_message(hass, "state-topic", "yesyesyesyes")
     await hass.async_block_till_done()
     assert (
-        "ValueError: Entity text.test provides state yesyesyesyes which is too long (maximum length 10)"
+        "Entity text.test provides state yesyesyesyes which is too long (maximum length 10)"
         in caplog.text
     )
     state = hass.states.get("text.test")
@@ -233,7 +222,7 @@ async def test_controlling_validation_state_via_topic(
     async_fire_mqtt_message(hass, "state-topic", "y")
     await hass.async_block_till_done()
     assert (
-        "ValueError: Entity text.test provides state y which is too short (minimum length 2)"
+        "Entity text.test provides state y which is too short (minimum length 2)"
         in caplog.text
     )
     state = hass.states.get("text.test")
@@ -294,6 +283,36 @@ async def test_attribute_validation_max_not_greater_then_max_state_length(
     """Test the max value of of max configuration attribute."""
     assert await mqtt_mock_entry()
     assert "max text length must be <= 255" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                text.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "command-topic",
+                    "state_topic": "state-topic",
+                }
+            }
+        }
+    ],
+)
+async def test_validation_payload_greater_then_max_state_length(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the max value of of max configuration attribute."""
+    assert await mqtt_mock_entry()
+
+    state = hass.states.get("text.test")
+    assert state.state == STATE_UNKNOWN
+
+    async_fire_mqtt_message(hass, "state-topic", "".join("x" for _ in range(310)))
+
+    assert "Cannot update state for entity text.test" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -861,3 +880,32 @@ async def test_skipped_async_ha_write_state(
     """Test a write state command is only called when there is change."""
     await mqtt_mock_entry()
     await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            text.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "state_topic": "test-topic",
+                    "value_template": "{{ value_json.some_var * 1 }}",
+                },
+            ),
+        )
+    ],
+)
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
+    )

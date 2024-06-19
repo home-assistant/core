@@ -1,25 +1,23 @@
 """Diagnostics support for devolo Home Network."""
+
 from __future__ import annotations
 
 from typing import Any
 
-from devolo_plc_api import Device
-
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from . import DevoloHomeNetworkConfigEntry
 
 TO_REDACT = {CONF_PASSWORD}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: DevoloHomeNetworkConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    device: Device = hass.data[DOMAIN][entry.entry_id]["device"]
+    device = entry.runtime_data.device
 
     diag_data = {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),

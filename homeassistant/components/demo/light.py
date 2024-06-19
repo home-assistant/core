@@ -1,4 +1,5 @@
 """Demo light platform that implements lights."""
+
 from __future__ import annotations
 
 import random

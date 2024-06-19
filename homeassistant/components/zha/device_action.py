@@ -1,4 +1,5 @@
 """Provides device actions for ZHA devices."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -135,8 +136,7 @@ async def async_validate_action_config(
 ) -> ConfigType:
     """Validate config."""
     schema = ACTION_SCHEMA_MAP.get(config[CONF_TYPE], DEFAULT_ACTION_SCHEMA)
-    config = schema(config)
-    return config
+    return schema(config)
 
 
 async def async_get_actions(

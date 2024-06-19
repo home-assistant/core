@@ -1,4 +1,5 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
+
 from __future__ import annotations
 
 import logging
@@ -52,16 +53,17 @@ async def async_setup_entry(
         elif node["category"] == FreeboxHomeCategory.DWS:
             binary_entities.append(FreeboxDwsSensor(hass, router, node))
 
-        for endpoint in node["show_endpoints"]:
+        binary_entities.extend(
+            FreeboxCoverSensor(hass, router, node)
+            for endpoint in node["show_endpoints"]
             if (
                 endpoint["name"] == "cover"
                 and endpoint["ep_type"] == "signal"
                 and endpoint.get("value") is not None
-            ):
-                binary_entities.append(FreeboxCoverSensor(hass, router, node))
+            )
+        )
 
-    if binary_entities:
-        async_add_entities(binary_entities, True)
+    async_add_entities(binary_entities, True)
 
 
 class FreeboxHomeBinarySensor(FreeboxHomeEntity, BinarySensorEntity):

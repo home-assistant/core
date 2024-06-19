@@ -1,4 +1,5 @@
 """Support for consuming values for the Volkszaehler API."""
+
 from __future__ import annotations
 
 from datetime import timedelta

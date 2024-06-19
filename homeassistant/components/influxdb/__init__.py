@@ -1,4 +1,5 @@
 """Support for sending data to an Influx database."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -512,7 +513,9 @@ class InfluxThread(threading.Thread):
     def __init__(self, hass, influx, event_to_json, max_tries):
         """Initialize the listener."""
         threading.Thread.__init__(self, name=DOMAIN)
-        self.queue = queue.Queue()
+        self.queue: queue.SimpleQueue[threading.Event | tuple[float, Event] | None] = (
+            queue.SimpleQueue()
+        )
         self.influx = influx
         self.event_to_json = event_to_json
         self.max_tries = max_tries
@@ -548,16 +551,17 @@ class InfluxThread(threading.Thread):
 
                 if item is None:
                     self.shutdown = True
-                else:
+                elif type(item) is tuple:
                     timestamp, event = item
                     age = time.monotonic() - timestamp
 
                     if age < queue_seconds:
-                        event_json = self.event_to_json(event)
-                        if event_json:
+                        if event_json := self.event_to_json(event):
                             json.append(event_json)
                     else:
                         dropped += 1
+                elif isinstance(item, threading.Event):
+                    item.set()
 
         if dropped:
             _LOGGER.warning(CATCHING_UP_MESSAGE, dropped)
@@ -590,12 +594,15 @@ class InfluxThread(threading.Thread):
     def run(self):
         """Process incoming events."""
         while not self.shutdown:
-            count, json = self.get_events_json()
+            _, json = self.get_events_json()
             if json:
                 self.write_to_influxdb(json)
-            for _ in range(count):
-                self.queue.task_done()
 
     def block_till_done(self):
-        """Block till all events processed."""
-        self.queue.join()
+        """Block till all events processed.
+
+        Currently only used for testing.
+        """
+        event = threading.Event()
+        self.queue.put(event)
+        event.wait()

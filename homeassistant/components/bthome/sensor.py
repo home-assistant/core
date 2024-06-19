@@ -1,5 +1,8 @@
 """Support for BTHome sensors."""
+
 from __future__ import annotations
+
+from typing import cast
 
 from bthome_ble import SensorDeviceClass as BTHomeSensorDeviceClass, SensorUpdate, Units
 from bthome_ble.const import (
@@ -333,6 +336,7 @@ SENSOR_DESCRIPTIONS = {
         Units.VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
     ): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.VOLUME_FLOW_RATE}_{Units.VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR}",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -361,7 +365,7 @@ SENSOR_DESCRIPTIONS = {
 
 def sensor_update_to_bluetooth_data_update(
     sensor_update: SensorUpdate,
-) -> PassiveBluetoothDataUpdate:
+) -> PassiveBluetoothDataUpdate[float | None]:
     """Convert a sensor update to a bluetooth data update."""
     return PassiveBluetoothDataUpdate(
         devices={
@@ -376,7 +380,9 @@ def sensor_update_to_bluetooth_data_update(
             if description.device_class
         },
         entity_data={
-            device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
+            device_key_to_bluetooth_entity_key(device_key): cast(
+                float | None, sensor_values.native_value
+            )
             for device_key, sensor_values in sensor_update.entity_values.items()
         },
         entity_names={
@@ -409,7 +415,7 @@ async def async_setup_entry(
 
 
 class BTHomeBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[BTHomePassiveBluetoothDataProcessor],
+    PassiveBluetoothProcessorEntity[BTHomePassiveBluetoothDataProcessor[float | None]],
     SensorEntity,
 ):
     """Representation of a BTHome BLE sensor."""

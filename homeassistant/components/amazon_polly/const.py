@@ -1,4 +1,5 @@
 """Constants for the Amazon Polly text to speech service."""
+
 from __future__ import annotations
 
 from typing import Final
@@ -65,7 +66,7 @@ SUPPORTED_VOICES: Final[list[str]] = [
     "Hans",  # German
     "Hiujin",  # Chinese (Cantonese), Neural
     "Ida",  # Norwegian, Neural
-    "Ines",  # Portuguese, European
+    "Ines",  # Portuguese, European  # codespell:ignore ines
     "Ivy",  # English
     "Jacek",  # Polish
     "Jan",  # Polish

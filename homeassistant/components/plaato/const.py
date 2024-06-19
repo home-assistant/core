@@ -1,4 +1,5 @@
 """Const for Plaato."""
+
 from datetime import timedelta
 
 from homeassistant.const import Platform

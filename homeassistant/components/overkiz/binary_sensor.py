@@ -1,4 +1,5 @@
 """Support for Overkiz binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -22,18 +23,11 @@ from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
 from .entity import OverkizDescriptiveEntity
 
 
-@dataclass(frozen=True)
-class OverkizBinarySensorDescriptionMixin:
-    """Define an entity description mixin for binary sensor entities."""
+@dataclass(frozen=True, kw_only=True)
+class OverkizBinarySensorDescription(BinarySensorEntityDescription):
+    """Class to describe an Overkiz binary sensor."""
 
     value_fn: Callable[[OverkizStateType], bool]
-
-
-@dataclass(frozen=True)
-class OverkizBinarySensorDescription(
-    BinarySensorEntityDescription, OverkizBinarySensorDescriptionMixin
-):
-    """Class to describe an Overkiz binary sensor."""
 
 
 BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
@@ -111,6 +105,22 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
         )
         == 1,
     ),
+    OverkizBinarySensorDescription(
+        key=OverkizState.CORE_HEATING_STATUS,
+        name="Heating status",
+        device_class=BinarySensorDeviceClass.HEAT,
+        value_fn=lambda state: state == OverkizCommandParam.ON,
+    ),
+    OverkizBinarySensorDescription(
+        key=OverkizState.MODBUSLINK_DHW_ABSENCE_MODE,
+        name="Absence mode",
+        value_fn=lambda state: state == OverkizCommandParam.ON,
+    ),
+    OverkizBinarySensorDescription(
+        key=OverkizState.MODBUSLINK_DHW_BOOST_MODE,
+        name="Boost mode",
+        value_fn=lambda state: state == OverkizCommandParam.ON,
+    ),
 ]
 
 SUPPORTED_STATES = {
@@ -134,15 +144,15 @@ async def async_setup_entry(
         ):
             continue
 
-        for state in device.definition.states:
-            if description := SUPPORTED_STATES.get(state.qualified_name):
-                entities.append(
-                    OverkizBinarySensor(
-                        device.device_url,
-                        data.coordinator,
-                        description,
-                    )
-                )
+        entities.extend(
+            OverkizBinarySensor(
+                device.device_url,
+                data.coordinator,
+                description,
+            )
+            for state in device.definition.states
+            if (description := SUPPORTED_STATES.get(state.qualified_name))
+        )
 
     async_add_entities(entities)
 

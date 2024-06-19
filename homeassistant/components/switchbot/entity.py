@@ -1,4 +1,5 @@
 """An abstract class common to all Switchbot entities."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

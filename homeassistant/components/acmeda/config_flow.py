@@ -1,7 +1,7 @@
 """Config flow for Rollease Acmeda Automate Pulse Hub."""
+
 from __future__ import annotations
 
-import asyncio
 from asyncio import timeout
 from contextlib import suppress
 from typing import Any
@@ -9,14 +9,13 @@ from typing import Any
 import aiopulse
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_ID
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
 
-class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class AcmedaFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Acmeda config flow."""
 
     VERSION = 1
@@ -27,7 +26,7 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if (
             user_input is not None
@@ -41,12 +40,13 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             entry.unique_id for entry in self._async_current_entries()
         }
 
-        hubs: list[aiopulse.Hub] = []
-        with suppress(asyncio.TimeoutError):
+        with suppress(TimeoutError):
             async with timeout(5):
-                async for hub in aiopulse.Hub.discover():
-                    if hub.id not in already_configured:
-                        hubs.append(hub)
+                hubs: list[aiopulse.Hub] = [
+                    hub
+                    async for hub in aiopulse.Hub.discover()
+                    if hub.id not in already_configured
+                ]
 
         if not hubs:
             return self.async_abort(reason="no_devices_found")
@@ -67,7 +67,7 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_create(self, hub: aiopulse.Hub) -> FlowResult:
+    async def async_create(self, hub: aiopulse.Hub) -> ConfigFlowResult:
         """Create the Acmeda Hub entry."""
         await self.async_set_unique_id(hub.id, raise_on_progress=False)
         return self.async_create_entry(title=hub.id, data={CONF_HOST: hub.host})

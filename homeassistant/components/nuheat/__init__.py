@@ -1,4 +1,5 @@
 """Support for NuHeat thermostats."""
+
 from datetime import timedelta
 from http import HTTPStatus
 import logging
@@ -51,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.error("Failed to login to nuheat: %s", ex)
             return False
         raise ConfigEntryNotReady from ex
-    except Exception as ex:  # pylint: disable=broad-except
+    except Exception as ex:  # noqa: BLE001
         _LOGGER.error("Failed to login to nuheat: %s", ex)
         return False
 

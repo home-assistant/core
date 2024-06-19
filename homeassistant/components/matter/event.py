@@ -1,4 +1,5 @@
 """Matter event entities from Node events."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -78,7 +79,7 @@ class MatterEventEntity(MatterEntity, EventEntity):
             clusters.FixedLabel.Attributes.LabelList
         ):
             for label in labels:
-                if label.label == "Label":
+                if label.label in ["Label", "Button"]:
                     label_value: str = label.value
                     # in the case the label is only the label id, prettify it a bit
                     if label_value.isnumeric():
@@ -104,7 +105,7 @@ class MatterEventEntity(MatterEntity, EventEntity):
         """Call when Node attribute(s) changed."""
 
     @callback
-    def _on_matter_node_event(  # noqa: F821
+    def _on_matter_node_event(
         self,
         event: EventType,
         data: MatterNodeEvent,

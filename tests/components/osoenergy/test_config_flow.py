@@ -1,12 +1,14 @@
 """Test the OSO Energy config flow."""
+
 from unittest.mock import patch
 
 from apyosoenergyapi.helper import osoenergy_exceptions
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.osoenergy.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -22,22 +24,25 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.osoenergy.config_flow.OSOEnergy.get_user_email",
-        return_value=TEST_USER_EMAIL,
-    ), patch(
-        "homeassistant.components.osoenergy.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.osoenergy.config_flow.OSOEnergy.get_user_email",
+            return_value=TEST_USER_EMAIL,
+        ),
+        patch(
+            "homeassistant.components.osoenergy.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_API_KEY: SUBSCRIPTION_KEY},
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == TEST_USER_EMAIL
     assert result2["data"] == {
         CONF_API_KEY: SUBSCRIPTION_KEY,
@@ -70,7 +75,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
             data=mock_config.data,
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
     with patch(
@@ -86,7 +91,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert mock_config.data.get(CONF_API_KEY) == SUBSCRIPTION_KEY
-    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
@@ -112,7 +117,7 @@ async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -122,7 +127,7 @@ async def test_user_flow_invalid_subscription_key(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -134,7 +139,7 @@ async def test_user_flow_invalid_subscription_key(hass: HomeAssistant) -> None:
             {CONF_API_KEY: SUBSCRIPTION_KEY},
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "invalid_auth"}
 
@@ -147,7 +152,7 @@ async def test_user_flow_exception_on_subscription_key_check(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -159,6 +164,6 @@ async def test_user_flow_exception_on_subscription_key_check(
             {CONF_API_KEY: SUBSCRIPTION_KEY},
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "invalid_auth"}

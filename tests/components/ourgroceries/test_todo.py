@@ -1,5 +1,5 @@
 """Unit tests for the OurGroceries todo platform."""
-from asyncio import TimeoutError as AsyncIOTimeoutError
+
 from unittest.mock import AsyncMock
 
 from aiohttp import ClientError
@@ -257,7 +257,7 @@ async def test_version_id_optimization(
     ("exception"),
     [
         (ClientError),
-        (AsyncIOTimeoutError),
+        (TimeoutError),
     ],
 )
 async def test_coordinator_error(
@@ -275,7 +275,7 @@ async def test_coordinator_error(
     ourgroceries.get_list_items.side_effect = exception
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("todo.test_list")
     assert state.state == STATE_UNAVAILABLE

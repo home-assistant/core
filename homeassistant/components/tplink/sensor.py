@@ -1,4 +1,5 @@
 """Support for TPLink HS100/HS110/HS200 smart switch energy sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -20,7 +21,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfPower,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import legacy_device_id
@@ -170,8 +171,17 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
             else:
                 assert description.device_class
                 self._attr_translation_key = f"{description.device_class.value}_child"
+        self._async_update_attrs()
 
-    @property
-    def native_value(self) -> float | None:
-        """Return the sensors state."""
-        return async_emeter_from_device(self.device, self.entity_description)
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update the entity's attributes."""
+        self._attr_native_value = async_emeter_from_device(
+            self.device, self.entity_description
+        )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._async_update_attrs()
+        super()._handle_coordinator_update()

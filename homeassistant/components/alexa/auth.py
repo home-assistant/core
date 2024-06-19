@@ -1,4 +1,5 @@
 """Support for Alexa skill auth."""
+
 import asyncio
 from asyncio import timeout
 from datetime import datetime, timedelta
@@ -122,7 +123,7 @@ class Auth:
                     allow_redirects=True,
                 )
 
-        except (asyncio.TimeoutError, aiohttp.ClientError):
+        except (TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Timeout calling LWA to get auth token")
             return None
 

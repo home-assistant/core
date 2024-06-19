@@ -1,4 +1,5 @@
 """Support for the LiteJet lighting system."""
+
 import logging
 
 import pylitejet

@@ -1,4 +1,5 @@
 """Platform for the KEF Wireless Speakers."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -78,11 +79,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def get_ip_mode(host):
     """Get the 'mode' used to retrieve the MAC address."""
     try:
-        if ipaddress.ip_address(host).version == 6:
-            return "ip6"
-        return "ip"
+        ip_address = ipaddress.ip_address(host)
     except ValueError:
         return "hostname"
+
+    if ip_address.version == 6:
+        return "ip6"
+    return "ip"
 
 
 async def async_setup_platform(
@@ -269,7 +272,7 @@ class KefMediaPlayer(MediaPlayerEntity):
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
         if not self._supports_on:
-            raise NotImplementedError()
+            raise NotImplementedError
         await self._speaker.turn_on()
 
     async def async_volume_up(self) -> None:

@@ -1,4 +1,5 @@
 """The EufyLife integration."""
+
 from __future__ import annotations
 
 from eufylife_ble_client import EufyLifeBLEDevice

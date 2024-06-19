@@ -1,4 +1,5 @@
 """Test the Lutron Caseta diagnostics."""
+
 from unittest.mock import ANY, patch
 
 from homeassistant.components.lutron_caseta import DOMAIN

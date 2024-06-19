@@ -1,4 +1,5 @@
 """Matter lock."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -166,6 +167,9 @@ class MatterLock(MatterEntity, LockEntity):
 
             self._attr_is_jammed = (
                 door_state is clusters.DoorLock.Enums.DoorStateEnum.kDoorJammed
+            )
+            self._attr_is_open = (
+                door_state is clusters.DoorLock.Enums.DoorStateEnum.kDoorOpen
             )
 
 

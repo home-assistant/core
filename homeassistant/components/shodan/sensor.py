@@ -1,4 +1,5 @@
 """Sensor for displaying the number of result on Shodan.io."""
+
 from __future__ import annotations
 
 from datetime import timedelta

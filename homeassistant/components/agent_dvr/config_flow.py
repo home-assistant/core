@@ -1,4 +1,5 @@
 """Config flow to configure Agent devices."""
+
 from contextlib import suppress
 from typing import Any
 
@@ -6,9 +7,8 @@ from agent import AgentConnectionError, AgentError
 from agent.a import Agent
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, SERVER_URL
@@ -17,12 +17,12 @@ from .helpers import generate_url
 DEFAULT_PORT = 8090
 
 
-class AgentFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class AgentFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an Agent config flow."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle an Agent config flow."""
         errors = {}
 

@@ -20,23 +20,11 @@ from .coordinator import LockData, SchlageDataUpdateCoordinator
 from .entity import SchlageEntity
 
 
-@dataclass(frozen=True)
-class SchlageBinarySensorEntityDescriptionMixin:
-    """Mixin for required keys."""
-
-    # NOTE: This has to be a mixin because these are required keys.
-    # BinarySensorEntityDescription has attributes with default values,
-    # which means we can't inherit from it because you haven't have
-    # non-default arguments follow default arguments in an initializer.
+@dataclass(frozen=True, kw_only=True)
+class SchlageBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Entity description for a Schlage binary_sensor."""
 
     value_fn: Callable[[LockData], bool]
-
-
-@dataclass(frozen=True)
-class SchlageBinarySensorEntityDescription(
-    BinarySensorEntityDescription, SchlageBinarySensorEntityDescriptionMixin
-):
-    """Entity description for a Schlage binary_sensor."""
 
 
 _DESCRIPTIONS: tuple[SchlageBinarySensorEntityDescription] = (
@@ -57,17 +45,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up binary_sensors based on a config entry."""
     coordinator: SchlageDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    entities = []
-    for device_id in coordinator.data.locks:
-        for description in _DESCRIPTIONS:
-            entities.append(
-                SchlageBinarySensor(
-                    coordinator=coordinator,
-                    description=description,
-                    device_id=device_id,
-                )
-            )
-    async_add_entities(entities)
+    async_add_entities(
+        SchlageBinarySensor(
+            coordinator=coordinator,
+            description=description,
+            device_id=device_id,
+        )
+        for device_id in coordinator.data.locks
+        for description in _DESCRIPTIONS
+    )
 
 
 class SchlageBinarySensor(SchlageEntity, BinarySensorEntity):

@@ -18,6 +18,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -43,6 +45,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.technove_station_current',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '23.75',
   })
@@ -66,6 +69,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -91,6 +96,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.technove_station_input_voltage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '238',
   })
@@ -114,6 +120,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -139,6 +147,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.technove_station_last_session_energy_usage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '12.34',
   })
@@ -162,6 +171,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -187,6 +198,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.technove_station_max_station_current',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '32',
   })
@@ -210,6 +222,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -235,6 +249,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.technove_station_output_voltage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '238',
   })
@@ -258,6 +273,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -283,6 +300,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.technove_station_signal_strength',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-82',
   })
@@ -297,6 +315,8 @@
         'unplugged',
         'plugged_waiting',
         'plugged_charging',
+        'out_of_activation_period',
+        'high_charge_period',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -310,6 +330,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -333,11 +355,14 @@
         'unplugged',
         'plugged_waiting',
         'plugged_charging',
+        'out_of_activation_period',
+        'high_charge_period',
       ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.technove_station_status',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'plugged_charging',
   })
@@ -361,6 +386,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -386,6 +413,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.technove_station_total_energy_usage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1234',
   })
@@ -407,11 +435,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi',
+    'original_icon': None,
     'original_name': 'Wi-Fi network name',
     'platform': 'technove',
     'previous_unique_id': None,
@@ -425,11 +455,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TechnoVE Station Wi-Fi network name',
-      'icon': 'mdi:wifi',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.technove_station_wi_fi_network_name',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Connecting...',
   })

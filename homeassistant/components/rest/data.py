@@ -1,9 +1,9 @@
 """Support for RESTful API."""
+
 from __future__ import annotations
 
 import logging
 import ssl
-from xml.parsers.expat import ExpatError
 
 import httpx
 import xmltodict
@@ -55,6 +55,10 @@ class RestData:
         self.last_exception: Exception | None = None
         self.headers: httpx.Headers | None = None
 
+    def set_payload(self, payload: str) -> None:
+        """Set request data."""
+        self._request_data = payload
+
     @property
     def url(self) -> str:
         """Get url."""
@@ -74,14 +78,8 @@ class RestData:
             and (content_type := headers.get("content-type"))
             and content_type.startswith(XML_MIME_TYPES)
         ):
-            try:
-                value = json_dumps(xmltodict.parse(value))
-            except ExpatError:
-                _LOGGER.warning(
-                    "REST xml result could not be parsed and converted to JSON"
-                )
-            else:
-                _LOGGER.debug("JSON converted from XML: %s", value)
+            value = json_dumps(xmltodict.parse(value))
+            _LOGGER.debug("JSON converted from XML: %s", value)
         return value
 
     async def async_update(self, log_errors: bool = True) -> None:

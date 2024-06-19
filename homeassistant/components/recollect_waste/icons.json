@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "calendar": {
+      "calendar": {
+        "default": "mdi:delete-empty"
+      }
+    }
+  }
+}

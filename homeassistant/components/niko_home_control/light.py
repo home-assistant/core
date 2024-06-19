@@ -1,4 +1,5 @@
 """Support for Niko Home Control."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -66,7 +67,7 @@ class NikoHomeControlLight(LightEntity):
         self._attr_is_on = light.is_on
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}
-        if light._state["type"] == 2:
+        if light._state["type"] == 2:  # noqa: SLF001
             self._attr_color_mode = ColorMode.BRIGHTNESS
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 

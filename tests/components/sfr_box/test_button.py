@@ -1,10 +1,11 @@
 """Test the SFR Box buttons."""
-from collections.abc import Generator
+
 from unittest.mock import patch
 
 import pytest
 from sfrbox_api.exceptions import SFRBoxError
 from syrupy.assertion import SnapshotAssertion
+from typing_extensions import Generator
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.config_entries import ConfigEntry
@@ -17,11 +18,14 @@ pytestmark = pytest.mark.usefixtures("system_get_info", "dsl_get_info", "wan_get
 
 
 @pytest.fixture(autouse=True)
-def override_platforms() -> Generator[None, None, None]:
+def override_platforms() -> Generator[None]:
     """Override PLATFORMS_WITH_AUTH."""
-    with patch(
-        "homeassistant.components.sfr_box.PLATFORMS_WITH_AUTH", [Platform.BUTTON]
-    ), patch("homeassistant.components.sfr_box.coordinator.SFRBox.authenticate"):
+    with (
+        patch(
+            "homeassistant.components.sfr_box.PLATFORMS_WITH_AUTH", [Platform.BUTTON]
+        ),
+        patch("homeassistant.components.sfr_box.coordinator.SFRBox.authenticate"),
+    ):
         yield
 
 
@@ -72,10 +76,13 @@ async def test_reboot(hass: HomeAssistant, config_entry_with_auth: ConfigEntry) 
 
     # Reboot failed
     service_data = {ATTR_ENTITY_ID: "button.sfr_box_restart"}
-    with patch(
-        "homeassistant.components.sfr_box.button.SFRBox.system_reboot",
-        side_effect=SFRBoxError,
-    ) as mock_action, pytest.raises(HomeAssistantError):
+    with (
+        patch(
+            "homeassistant.components.sfr_box.button.SFRBox.system_reboot",
+            side_effect=SFRBoxError,
+        ) as mock_action,
+        pytest.raises(HomeAssistantError),
+    ):
         await hass.services.async_call(
             BUTTON_DOMAIN, SERVICE_PRESS, service_data=service_data, blocking=True
         )

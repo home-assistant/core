@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "last_gas_reading": {
+        "default": "mdi:gas-cylinder"
+      },
+      "last_gas_cost": {
+        "default": "mdi:cash-multiple"
+      }
+    }
+  }
+}

@@ -1,4 +1,5 @@
 """The tests for the Reddit platform."""
+
 import copy
 from unittest.mock import patch
 
@@ -110,7 +111,7 @@ class MockPraw:
         username: str,
         password: str,
         user_agent: str,
-    ):
+    ) -> None:
         """Add mock data for API return."""
         self._data = MOCK_RESULTS
 
@@ -122,7 +123,7 @@ class MockPraw:
 class MockSubreddit:
     """Mock class for a subreddit instance."""
 
-    def __init__(self, subreddit: str, data):
+    def __init__(self, subreddit: str, data) -> None:
         """Add mock data for API return."""
         self._subreddit = subreddit
         self._data = data

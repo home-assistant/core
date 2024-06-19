@@ -1,4 +1,5 @@
 """Tests for the Reolink media_source platform."""
+
 from datetime import datetime, timedelta
 import logging
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -50,11 +51,14 @@ TEST_DAY2 = 15
 TEST_HOUR = 13
 TEST_MINUTE = 12
 TEST_FILE_NAME = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}{TEST_HOUR}{TEST_MINUTE}00"
+TEST_FILE_NAME_MP4 = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}{TEST_HOUR}{TEST_MINUTE}00.mp4"
 TEST_STREAM = "main"
 TEST_CHANNEL = "0"
 
 TEST_MIME_TYPE = "application/x-mpegURL"
-TEST_URL = "http:test_url"
+TEST_MIME_TYPE_MP4 = "video/mp4"
+TEST_URL = "http:test_url&user=admin&password=test"
+TEST_URL2 = "http:test_url&token=test"
 
 
 @pytest.fixture(autouse=True)
@@ -62,6 +66,17 @@ async def setup_component(hass: HomeAssistant) -> None:
     """Set up component."""
     assert await async_setup_component(hass, MEDIA_SOURCE_DOMAIN, {})
     assert await async_setup_component(hass, MEDIA_STREAM_DOMAIN, {})
+
+
+async def test_platform_loads_before_config_entry(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test that the platform can be loaded before the config entry."""
+    # Fake that the config entry is not loaded before the media_source platform
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    assert mock_setup_entry.call_count == 0
 
 
 async def test_resolve(
@@ -73,16 +88,35 @@ async def test_resolve(
     """Test resolving Reolink media items."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-
-    reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE, TEST_URL)
     caplog.set_level(logging.DEBUG)
 
     file_id = (
         f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}"
     )
+    reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE, TEST_URL)
 
-    play_media = await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}/{file_id}")
+    play_media = await async_resolve_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
+    )
+    assert play_media.mime_type == TEST_MIME_TYPE
 
+    file_id = f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME_MP4}"
+    reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE_MP4, TEST_URL2)
+
+    play_media = await async_resolve_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
+    )
+    assert play_media.mime_type == TEST_MIME_TYPE_MP4
+
+    file_id = (
+        f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}"
+    )
+    reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE, TEST_URL)
+    reolink_connect.is_nvr = False
+
+    play_media = await async_resolve_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
+    )
     assert play_media.mime_type == TEST_MIME_TYPE
 
 
@@ -245,7 +279,7 @@ async def test_browsing_errors(
     with pytest.raises(Unresolvable):
         await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/UNKNOWN")
     with pytest.raises(Unresolvable):
-        await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}/UNKNOWN")
+        await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}/UNKNOWN", None)
 
 
 async def test_browsing_not_loaded(

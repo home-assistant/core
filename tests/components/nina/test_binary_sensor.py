@@ -1,4 +1,5 @@
 """Test the Nina binary sensor."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -47,7 +48,7 @@ ENTRY_DATA_NO_AREA: dict[str, Any] = {
 }
 
 
-async def test_sensors(hass: HomeAssistant) -> None:
+async def test_sensors(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
     """Test the creation and values of the NINA sensors."""
 
     with patch(
@@ -57,14 +58,12 @@ async def test_sensors(hass: HomeAssistant) -> None:
         conf_entry: MockConfigEntry = MockConfigEntry(
             domain=DOMAIN, title="NINA", data=ENTRY_DATA
         )
-
-        entity_registry: er = er.async_get(hass)
         conf_entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(conf_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert conf_entry.state == ConfigEntryState.LOADED
+        assert conf_entry.state is ConfigEntryState.LOADED
 
         state_w1 = hass.states.get("binary_sensor.warning_aach_stadt_1")
         entry_w1 = entity_registry.async_get("binary_sensor.warning_aach_stadt_1")
@@ -163,7 +162,9 @@ async def test_sensors(hass: HomeAssistant) -> None:
         assert state_w5.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
 
-async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
+async def test_sensors_without_corona_filter(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test the creation and values of the NINA sensors without the corona filter."""
 
     with patch(
@@ -173,14 +174,12 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         conf_entry: MockConfigEntry = MockConfigEntry(
             domain=DOMAIN, title="NINA", data=ENTRY_DATA_NO_CORONA
         )
-
-        entity_registry: er = er.async_get(hass)
         conf_entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(conf_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert conf_entry.state == ConfigEntryState.LOADED
+        assert conf_entry.state is ConfigEntryState.LOADED
 
         state_w1 = hass.states.get("binary_sensor.warning_aach_stadt_1")
         entry_w1 = entity_registry.async_get("binary_sensor.warning_aach_stadt_1")
@@ -291,7 +290,9 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         assert state_w5.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
 
-async def test_sensors_with_area_filter(hass: HomeAssistant) -> None:
+async def test_sensors_with_area_filter(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test the creation and values of the NINA sensors with an area filter."""
 
     with patch(
@@ -301,14 +302,12 @@ async def test_sensors_with_area_filter(hass: HomeAssistant) -> None:
         conf_entry: MockConfigEntry = MockConfigEntry(
             domain=DOMAIN, title="NINA", data=ENTRY_DATA_NO_AREA
         )
-
-        entity_registry: er = er.async_get(hass)
         conf_entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(conf_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert conf_entry.state == ConfigEntryState.LOADED
+        assert conf_entry.state is ConfigEntryState.LOADED
 
         state_w1 = hass.states.get("binary_sensor.warning_aach_stadt_1")
         entry_w1 = entity_registry.async_get("binary_sensor.warning_aach_stadt_1")

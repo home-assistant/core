@@ -1,4 +1,5 @@
 """Test the NEW_NAME config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries

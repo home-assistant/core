@@ -1,4 +1,7 @@
 """API for Google Mail bound to Home Assistant OAuth."""
+
+from functools import partial
+
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
@@ -6,6 +9,7 @@ from googleapiclient.discovery import Resource, build
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -19,9 +23,11 @@ class AsyncConfigEntryAuth:
 
     def __init__(
         self,
+        hass: HomeAssistant,
         oauth2_session: config_entry_oauth2_flow.OAuth2Session,
     ) -> None:
         """Initialize Google Mail Auth."""
+        self._hass = hass
         self.oauth_session = oauth2_session
 
     @property
@@ -57,4 +63,6 @@ class AsyncConfigEntryAuth:
     async def get_resource(self) -> Resource:
         """Get current resource."""
         credentials = Credentials(await self.check_and_refresh_token())
-        return build("gmail", "v1", credentials=credentials)
+        return await self._hass.async_add_executor_job(
+            partial(build, "gmail", "v1", credentials=credentials)
+        )

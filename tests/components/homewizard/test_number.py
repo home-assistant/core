@@ -1,4 +1,5 @@
 """Test the number entity for HomeWizard."""
+
 from unittest.mock import MagicMock
 
 from homewizard_energy.errors import DisabledError, RequestError
@@ -21,7 +22,7 @@ pytestmark = [
 ]
 
 
-@pytest.mark.parametrize("device_fixture", ["HWE-SKT"])
+@pytest.mark.parametrize("device_fixture", ["HWE-SKT-11", "HWE-SKT-21"])
 async def test_number_entities(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -97,7 +98,9 @@ async def test_number_entities(
         )
 
 
-@pytest.mark.parametrize("device_fixture", ["HWE-P1", "HWE-WTR", "SDM230", "SDM630"])
+@pytest.mark.parametrize(
+    "device_fixture", ["HWE-P1", "HWE-WTR", "SDM230", "SDM630", "HWE-KWH1", "HWE-KWH3"]
+)
 async def test_entities_not_created_for_device(hass: HomeAssistant) -> None:
     """Does not load number when device has no support for it."""
     assert not hass.states.get("number.device_status_light_brightness")

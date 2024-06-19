@@ -1,4 +1,5 @@
 """Tests for the PVOutput integration."""
+
 from unittest.mock import MagicMock
 
 from pvo import (

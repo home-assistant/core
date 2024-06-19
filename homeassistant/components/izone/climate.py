@@ -1,9 +1,10 @@
 """Support for the iZone HVAC."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from pizone import Controller, Zone
 import voluptuous as vol
@@ -47,11 +48,7 @@ from .const import (
     IZONE,
 )
 
-_DeviceT = TypeVar("_DeviceT", bound="ControllerDevice | ZoneDevice")
-_T = TypeVar("_T")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
-_FuncType = Callable[Concatenate[_T, _P], _R]
+type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], _R]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,7 +115,7 @@ async def async_setup_entry(
     )
 
 
-def _return_on_connection_error(
+def _return_on_connection_error[_DeviceT: ControllerDevice | ZoneDevice, **_P, _R, _T](
     ret: _T = None,  # type: ignore[assignment]
 ) -> Callable[[_FuncType[_DeviceT, _P, _R]], _FuncType[_DeviceT, _P, _R | _T]]:
     def wrap(func: _FuncType[_DeviceT, _P, _R]) -> _FuncType[_DeviceT, _P, _R | _T]:
@@ -144,12 +141,17 @@ class ControllerDevice(ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_target_temperature_step = 0.5
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, controller: Controller) -> None:
         """Initialise ControllerDevice."""
         self._controller = controller
 
-        self._attr_supported_features = ClimateEntityFeature.FAN_MODE
+        self._attr_supported_features = (
+            ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
+        )
 
         # If mode RAS, or mode master with CtrlZone 13 then can set master temperature,
         # otherwise the unit determines which zone to use as target. See interface manual p. 8

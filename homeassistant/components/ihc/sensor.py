@@ -1,4 +1,5 @@
 """Support for IHC sensors."""
+
 from __future__ import annotations
 
 from ihcsdk.ihccontroller import IHCController

@@ -1,4 +1,5 @@
 """Constants used for Insteon test cases."""
+
 from homeassistant.components.insteon.const import (
     CONF_CAT,
     CONF_DIM_STEPS,

@@ -1,18 +1,19 @@
 """The Nibe Heat Pump coordinator."""
+
 from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Iterable
 from datetime import date, timedelta
-from typing import Any, Generic, TypeVar
+from functools import cached_property
+from typing import Any
 
 from nibe.coil import Coil, CoilData
 from nibe.connection import Connection
 from nibe.exceptions import CoilNotFoundException, ReadException
 from nibe.heatpump import HeatPump, Series
 
-from homeassistant.backports.functools import cached_property
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -25,13 +26,8 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DOMAIN, LOGGER
 
-_DataTypeT = TypeVar("_DataTypeT")
-_ContextTypeT = TypeVar("_ContextTypeT")
 
-
-class ContextCoordinator(
-    Generic[_DataTypeT, _ContextTypeT], DataUpdateCoordinator[_DataTypeT]
-):
+class ContextCoordinator[_DataTypeT, _ContextTypeT](DataUpdateCoordinator[_DataTypeT]):
     """Update coordinator with context adjustments."""
 
     @cached_property
@@ -135,7 +131,7 @@ class Coordinator(ContextCoordinator[dict[int, CoilData], int]):
             return float(value)  # type: ignore[arg-type]
         return None
 
-    async def async_write_coil(self, coil: Coil, value: int | float | str) -> None:
+    async def async_write_coil(self, coil: Coil, value: float | str) -> None:
         """Write coil and update state."""
         data = CoilData(coil, value)
         await self.connection.write_coil(data)
@@ -223,7 +219,7 @@ class CoilEntity(CoordinatorEntity[Coordinator]):
     def _async_read_coil(self, data: CoilData):
         """Update state of entity based on coil data."""
 
-    async def _async_write_coil(self, value: int | float | str):
+    async def _async_write_coil(self, value: float | str):
         """Write coil and update state."""
         await self.coordinator.async_write_coil(self._coil, value)
 

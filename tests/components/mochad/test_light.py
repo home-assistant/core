@@ -1,5 +1,6 @@
 """The tests for the mochad light platform."""
-import unittest.mock as mock
+
+from unittest import mock
 
 import pytest
 

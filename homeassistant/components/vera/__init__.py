@@ -1,11 +1,11 @@
 """Support for Vera devices."""
+
 from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Awaitable
 import logging
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 import pyvera as veraApi
 from requests.exceptions import RequestException
@@ -128,14 +128,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if device_type is not None:
             vera_devices[device_type].append(device)
 
-    vera_scenes = []
-    for scene in all_scenes:
-        vera_scenes.append(scene)
-
     controller_data = ControllerData(
         controller=controller,
         devices=vera_devices,
-        scenes=vera_scenes,
+        scenes=all_scenes,
         config_entry=entry,
     )
 
@@ -160,16 +156,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Unload Withings config entry."""
+    """Unload vera config entry."""
     controller_data: ControllerData = get_controller_data(hass, config_entry)
-
-    tasks: list[Awaitable] = [
-        hass.config_entries.async_forward_entry_unload(config_entry, platform)
-        for platform in get_configured_platforms(controller_data)
-    ]
-    tasks.append(hass.async_add_executor_job(controller_data.controller.stop))
-    await asyncio.gather(*tasks)
-
+    await asyncio.gather(
+        *(
+            hass.config_entries.async_unload_platforms(
+                config_entry, get_configured_platforms(controller_data)
+            ),
+            hass.async_add_executor_job(controller_data.controller.stop),
+        )
+    )
     return True
 
 
@@ -210,10 +206,7 @@ def map_vera_device(
     )
 
 
-_DeviceTypeT = TypeVar("_DeviceTypeT", bound=veraApi.VeraDevice)
-
-
-class VeraDevice(Generic[_DeviceTypeT], Entity):
+class VeraDevice[_DeviceTypeT: veraApi.VeraDevice](Entity):
     """Representation of a Vera device entity."""
 
     def __init__(

@@ -1,4 +1,5 @@
 """Support for Litter-Robot "Vacuum"."""
+
 from __future__ import annotations
 
 from datetime import time
@@ -34,6 +35,7 @@ LITTER_BOX_STATUS_STATE_MAP = {
     LitterBoxStatus.CLEAN_CYCLE: STATE_CLEANING,
     LitterBoxStatus.EMPTY_CYCLE: STATE_CLEANING,
     LitterBoxStatus.CLEAN_CYCLE_COMPLETE: STATE_DOCKED,
+    LitterBoxStatus.CAT_DETECTED: STATE_DOCKED,
     LitterBoxStatus.CAT_SENSOR_TIMING: STATE_DOCKED,
     LitterBoxStatus.DRAWER_FULL_1: STATE_DOCKED,
     LitterBoxStatus.DRAWER_FULL_2: STATE_DOCKED,

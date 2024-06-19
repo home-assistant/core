@@ -1,4 +1,5 @@
 """Test Roborock Select platform."""
+
 from unittest.mock import patch
 
 import pytest
@@ -29,7 +30,7 @@ async def test_update_success(
     # Ensure that the entity exist, as these test can pass even if there is no entity.
     assert hass.states.get(entity_id) is not None
     with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_message"
+        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_message"
     ) as mock_send_message:
         await hass.services.async_call(
             "select",
@@ -47,10 +48,13 @@ async def test_update_failure(
     setup_entry: MockConfigEntry,
 ) -> None:
     """Test that changing a value will raise a homeassistanterror when it fails."""
-    with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_message",
-        side_effect=RoborockException(),
-    ), pytest.raises(HomeAssistantError):
+    with (
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_message",
+            side_effect=RoborockException(),
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
         await hass.services.async_call(
             "select",
             SERVICE_SELECT_OPTION,

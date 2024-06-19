@@ -1,4 +1,5 @@
 """Constants for the iCloud tests."""
+
 from homeassistant.components.icloud.const import (
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,

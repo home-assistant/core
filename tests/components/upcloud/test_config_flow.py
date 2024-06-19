@@ -1,4 +1,5 @@
 """Tests for the UpCloud config flow."""
+
 from unittest.mock import patch
 
 import requests.exceptions
@@ -30,7 +31,7 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -43,7 +44,7 @@ async def test_connection_error(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=FIXTURE_USER_INPUT
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -64,7 +65,7 @@ async def test_login_error(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=FIXTURE_USER_INPUT
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -79,7 +80,7 @@ async def test_success(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=FIXTURE_USER_INPUT
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
     assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
 
@@ -97,7 +98,7 @@ async def test_options(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -109,7 +110,9 @@ async def test_options(hass: HomeAssistant) -> None:
     )
 
 
-async def test_already_configured(hass: HomeAssistant, requests_mock) -> None:
+async def test_already_configured(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Test duplicate entry aborts and updates data."""
 
     config_entry = MockConfigEntry(
@@ -128,7 +131,7 @@ async def test_already_configured(hass: HomeAssistant, requests_mock) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=new_user_input
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry.data[CONF_USERNAME] == new_user_input[CONF_USERNAME]
     assert config_entry.data[CONF_PASSWORD] == new_user_input[CONF_PASSWORD]

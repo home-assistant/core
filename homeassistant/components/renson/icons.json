@@ -1,0 +1,24 @@
+{
+  "entity": {
+    "fan": {
+      "fan": {
+        "default": "mdi:air-conditioner"
+      }
+    },
+    "number": {
+      "filter_change": {
+        "default": "mdi:filter"
+      }
+    },
+    "switch": {
+      "breeze": {
+        "default": "mdi:weather-dust"
+      }
+    }
+  },
+  "services": {
+    "set_timer_level": "mdi:timer",
+    "set_breeze": "mdi:weather-windy",
+    "set_pollution_settings": "mdi:air-filter"
+  }
+}

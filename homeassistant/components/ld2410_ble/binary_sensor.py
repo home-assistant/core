@@ -1,6 +1,5 @@
 """LD2410 BLE integration binary sensor platform."""
 
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,

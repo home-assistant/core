@@ -1,4 +1,5 @@
 """Reproduce an Alarm control panel state."""
+
 from __future__ import annotations
 
 import asyncio

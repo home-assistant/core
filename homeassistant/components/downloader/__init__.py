@@ -1,8 +1,8 @@
 """Support for functionality to download files."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
-import logging
 import os
 import re
 import threading
@@ -10,33 +10,30 @@ import threading
 import requests
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    HomeAssistant,
+    ServiceCall,
+)
+from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
-_LOGGER = logging.getLogger(__name__)
-
-ATTR_FILENAME = "filename"
-ATTR_SUBDIR = "subdir"
-ATTR_URL = "url"
-ATTR_OVERWRITE = "overwrite"
-
-CONF_DOWNLOAD_DIR = "download_dir"
-
-DOMAIN = "downloader"
-DOWNLOAD_FAILED_EVENT = "download_failed"
-DOWNLOAD_COMPLETED_EVENT = "download_completed"
-
-SERVICE_DOWNLOAD_FILE = "download_file"
-
-SERVICE_DOWNLOAD_FILE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_URL): cv.url,
-        vol.Optional(ATTR_SUBDIR): cv.string,
-        vol.Optional(ATTR_FILENAME): cv.string,
-        vol.Optional(ATTR_OVERWRITE, default=False): cv.boolean,
-    }
+from .const import (
+    _LOGGER,
+    ATTR_FILENAME,
+    ATTR_OVERWRITE,
+    ATTR_SUBDIR,
+    ATTR_URL,
+    CONF_DOWNLOAD_DIR,
+    DOMAIN,
+    DOWNLOAD_COMPLETED_EVENT,
+    DOWNLOAD_FAILED_EVENT,
+    SERVICE_DOWNLOAD_FILE,
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -45,19 +42,74 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Downloader component, via the YAML file."""
+    if DOMAIN not in config:
+        return True
+
+    hass.async_create_task(_async_import_config(hass, config))
+    return True
+
+
+async def _async_import_config(hass: HomeAssistant, config: ConfigType) -> None:
+    """Import the Downloader component from the YAML file."""
+
+    import_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_DOWNLOAD_DIR: config[DOMAIN][CONF_DOWNLOAD_DIR],
+        },
+    )
+
+    if (
+        import_result["type"] == FlowResultType.ABORT
+        and import_result["reason"] != "single_instance_allowed"
+    ):
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.10.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="directory_does_not_exist",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Downloader",
+                "url": "/config/integrations/dashboard/add?domain=downloader",
+            },
+        )
+    else:
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.10.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Downloader",
+            },
+        )
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Listen for download events to download files."""
-    download_path = config[DOMAIN][CONF_DOWNLOAD_DIR]
+    download_path = entry.data[CONF_DOWNLOAD_DIR]
 
     # If path is relative, we assume relative to Home Assistant config dir
     if not os.path.isabs(download_path):
         download_path = hass.config.path(download_path)
 
-    if not os.path.isdir(download_path):
+    if not await hass.async_add_executor_job(os.path.isdir, download_path):
         _LOGGER.error(
             "Download path %s does not exist. File Downloader not active", download_path
         )
-
         return False
 
     def download_file(service: ServiceCall) -> None:
@@ -168,11 +220,19 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         threading.Thread(target=do_download).start()
 
-    hass.services.register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_DOWNLOAD_FILE,
         download_file,
-        schema=SERVICE_DOWNLOAD_FILE_SCHEMA,
+        schema=vol.Schema(
+            {
+                vol.Optional(ATTR_FILENAME): cv.string,
+                vol.Optional(ATTR_SUBDIR): cv.string,
+                vol.Required(ATTR_URL): cv.url,
+                vol.Optional(ATTR_OVERWRITE, default=False): cv.boolean,
+            }
+        ),
     )
 
     return True

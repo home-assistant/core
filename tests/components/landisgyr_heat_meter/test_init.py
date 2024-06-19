@@ -1,4 +1,5 @@
 """Test the Landis + Gyr Heat Meter init."""
+
 from unittest.mock import patch
 
 from homeassistant.components.landisgyr_heat_meter.const import (

@@ -1,4 +1,5 @@
 """Errors for the Konnected component."""
+
 from homeassistant.exceptions import HomeAssistantError
 
 

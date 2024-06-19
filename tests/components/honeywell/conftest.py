@@ -40,6 +40,15 @@ def config_data():
 
 
 @pytest.fixture
+def another_config_data():
+    """Provide configuration data for tests."""
+    return {
+        CONF_USERNAME: "user2",
+        CONF_PASSWORD: "fake2",
+    }
+
+
+@pytest.fixture
 def config_options():
     """Provide configuratio options for test."""
     return {CONF_COOL_AWAY_TEMPERATURE: 12, CONF_HEAT_AWAY_TEMPERATURE: 22}
@@ -51,6 +60,16 @@ def config_entry(config_data, config_options):
     return MockConfigEntry(
         domain=DOMAIN,
         data=config_data,
+        options=config_options,
+    )
+
+
+@pytest.fixture
+def config_entry2(another_config_data, config_options):
+    """Create a mock config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data=another_config_data,
         options=config_options,
     )
 

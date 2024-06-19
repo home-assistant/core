@@ -1,9 +1,10 @@
 """Standard setup for tests."""
-from collections.abc import Generator
+
 from unittest.mock import AsyncMock, create_autospec, patch
 
 from haphilipsjs import PhilipsTV
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.philips_js.const import DOMAIN
 
@@ -13,12 +14,15 @@ from tests.common import MockConfigEntry, mock_device_registry
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Disable component setup."""
-    with patch(
-        "homeassistant.components.philips_js.async_setup_entry", return_value=True
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.philips_js.async_unload_entry", return_value=True
+    with (
+        patch(
+            "homeassistant.components.philips_js.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.philips_js.async_unload_entry", return_value=True
+        ),
     ):
         yield mock_setup_entry
 
@@ -48,9 +52,12 @@ def mock_tv():
     tv.ambilight_styles = {}
     tv.ambilight_cached = {}
 
-    with patch(
-        "homeassistant.components.philips_js.config_flow.PhilipsTV", return_value=tv
-    ), patch("homeassistant.components.philips_js.PhilipsTV", return_value=tv):
+    with (
+        patch(
+            "homeassistant.components.philips_js.config_flow.PhilipsTV", return_value=tv
+        ),
+        patch("homeassistant.components.philips_js.PhilipsTV", return_value=tv),
+    ):
         yield tv
 
 

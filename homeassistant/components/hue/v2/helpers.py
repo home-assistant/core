@@ -1,4 +1,5 @@
 """Helper functions for Philips Hue v2."""
+
 from __future__ import annotations
 
 

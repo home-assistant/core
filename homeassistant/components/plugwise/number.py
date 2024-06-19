@@ -1,4 +1,5 @@
 """Number platform for Plugwise integration."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -12,12 +13,12 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, NumberType
+from . import PlugwiseConfigEntry
+from .const import NumberType
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
@@ -66,24 +67,28 @@ NUMBER_TYPES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: PlugwiseConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Plugwise number platform."""
+    coordinator = entry.runtime_data
 
-    coordinator: PlugwiseDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    @callback
+    def _add_entities() -> None:
+        """Add Entities."""
+        if not coordinator.new_devices:
+            return
 
-    entities: list[PlugwiseNumberEntity] = []
-    for device_id, device in coordinator.data.devices.items():
-        for description in NUMBER_TYPES:
-            if description.key in device:
-                entities.append(
-                    PlugwiseNumberEntity(coordinator, device_id, description)
-                )
+        async_add_entities(
+            PlugwiseNumberEntity(coordinator, device_id, description)
+            for device_id, device in coordinator.data.devices.items()
+            for description in NUMBER_TYPES
+            if description.key in device
+        )
 
-    async_add_entities(entities)
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
+
+    _add_entities()
 
 
 class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):

@@ -1,4 +1,5 @@
 """Test the Z-Wave JS cover platform."""
+
 import logging
 
 from zwave_js_server.const import (

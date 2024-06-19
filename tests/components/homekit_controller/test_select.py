@@ -1,4 +1,5 @@
 """Basic checks for HomeKit select entities."""
+
 from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.characteristics.const import TemperatureDisplayUnits

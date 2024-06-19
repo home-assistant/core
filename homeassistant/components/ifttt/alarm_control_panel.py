@@ -1,4 +1,5 @@
 """Support for alarm control panels that can be controlled through IFTTT."""
+
 from __future__ import annotations
 
 import logging

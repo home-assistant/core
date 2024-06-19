@@ -1,4 +1,5 @@
 """Binary sensor module."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Generic
@@ -10,13 +11,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .controller import EcovacsController
+from . import EcovacsConfigEntry
 from .entity import EcovacsCapabilityEntityDescription, EcovacsDescriptionEntity, EventT
 from .util import get_supported_entitites
 
@@ -36,8 +35,8 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsBinarySensorEntityDescription, ...] = (
     EcovacsBinarySensorEntityDescription[WaterInfoEvent](
         capability_fn=lambda caps: caps.water,
         value_fn=lambda e: e.mop_attached,
-        key="mop_attached",
-        translation_key="mop_attached",
+        key="water_mop_attached",
+        translation_key="water_mop_attached",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
@@ -45,13 +44,14 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EcovacsConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add entities for passed config_entry in HA."""
-    controller: EcovacsController = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
-        get_supported_entitites(controller, EcovacsBinarySensor, ENTITY_DESCRIPTIONS)
+        get_supported_entitites(
+            config_entry.runtime_data, EcovacsBinarySensor, ENTITY_DESCRIPTIONS
+        )
     )
 
 

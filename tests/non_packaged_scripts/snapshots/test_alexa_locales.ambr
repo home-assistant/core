@@ -1,0 +1,62 @@
+# serializer version: 1
+# name: test_alexa_locales
+  '''
+  Missing interfaces:
+  ['Alexa.ApplicationStateReporter',
+   'Alexa.AuthorizationController',
+   'Alexa.AutomationManagement',
+   'Alexa.Commissionable',
+   'Alexa.Cooking',
+   'Alexa.DataController',
+   'Alexa.InventoryLevelSensor',
+   'Alexa.InventoryLevelUsageSensor',
+   'Alexa.InventoryUsageSensor',
+   'Alexa.KeypadController',
+   'Alexa.Launcher',
+   'Alexa.PercentageController',
+   'Alexa.ProactiveNotificationSource',
+   'Alexa.RecordController',
+   'Alexa.RemoteVideoPlayer',
+   'Alexa.RTCSessionController',
+   'Alexa.SimpleEventSource',
+   'Alexa.UIController',
+   'Alexa.UserPreference',
+   'Alexa.VideoRecorder',
+   'Alexa.WakeOnLANController']
+  
+  
+  Interfaces where upstream locales are not subsets of the core locales:
+  []
+  
+  
+  Interfaces checked ok:
+  ['AlexaBrightnessController',
+   'AlexaCameraStreamController',
+   'AlexaChannelController',
+   'AlexaColorController',
+   'AlexaColorTemperatureController',
+   'AlexaContactSensor',
+   'AlexaDoorbellEventSource',
+   'AlexaEndpointHealth',
+   'AlexaEqualizerController',
+   'AlexaInputController',
+   'AlexaLockController',
+   'AlexaModeController',
+   'AlexaMotionSensor',
+   'AlexaPlaybackController',
+   'AlexaPlaybackStateReporter',
+   'AlexaPowerController',
+   'AlexaPowerLevelController',
+   'AlexaRangeController',
+   'AlexaSceneController',
+   'AlexaSecurityPanelController',
+   'AlexaSeekController',
+   'AlexaSpeaker',
+   'AlexaStepSpeaker',
+   'AlexaTemperatureSensor',
+   'AlexaThermostatController',
+   'AlexaTimeHoldController',
+   'AlexaToggleController']
+  
+  '''
+# ---

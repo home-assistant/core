@@ -1,4 +1,5 @@
 """Test ZHA WebSocket API."""
+
 from __future__ import annotations
 
 from binascii import unhexlify
@@ -13,12 +14,16 @@ import zigpy.backups
 import zigpy.profiles.zha
 import zigpy.types
 from zigpy.types.named import EUI64
-import zigpy.zcl.clusters.general as general
+import zigpy.util
+from zigpy.zcl.clusters import general, security
 from zigpy.zcl.clusters.general import Groups
-import zigpy.zcl.clusters.security as security
 import zigpy.zdo.types as zdo_types
 
-from homeassistant.components.websocket_api import const
+from homeassistant.components.websocket_api import (
+    ERR_INVALID_FORMAT,
+    ERR_NOT_FOUND,
+    TYPE_RESULT,
+)
 from homeassistant.components.zha import DOMAIN
 from homeassistant.components.zha.core.const import (
     ATTR_CLUSTER_ID,
@@ -63,6 +68,7 @@ from .conftest import (
 from .data import BASE_CUSTOM_CONFIGURATION, CONFIG_WITH_ALARM_OPTIONS
 
 from tests.common import MockConfigEntry, MockUser
+from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 IEEE_SWITCH_DEVICE = "01:2d:6f:00:0a:90:69:e7"
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
@@ -150,7 +156,12 @@ async def device_groupable(hass, zigpy_device_mock, zha_device_joined):
 
 
 @pytest.fixture
-async def zha_client(hass, hass_ws_client, device_switch, device_groupable):
+async def zha_client(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_switch,
+    device_groupable,
+) -> MockHAClientWebSocket:
     """Get ZHA WebSocket client."""
 
     # load the ZHA API
@@ -301,7 +312,7 @@ async def test_update_zha_config(
     app_controller: ControllerApplication,
 ) -> None:
     """Test updating ZHA custom configuration."""
-    configuration: dict = deepcopy(CONFIG_WITH_ALARM_OPTIONS)
+    configuration: dict = deepcopy(BASE_CUSTOM_CONFIGURATION)
     configuration["data"]["zha_options"]["default_light_transition"] = 10
 
     with patch(
@@ -316,8 +327,8 @@ async def test_update_zha_config(
 
     await zha_client.send_json({ID: 6, TYPE: "zha/configuration"})
     msg = await zha_client.receive_json()
-    configuration = msg["result"]
-    assert configuration == configuration
+    test_configuration = msg["result"]
+    assert test_configuration == configuration
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
@@ -329,9 +340,9 @@ async def test_device_not_found(zha_client) -> None:
     )
     msg = await zha_client.receive_json()
     assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert not msg["success"]
-    assert msg["error"]["code"] == const.ERR_NOT_FOUND
+    assert msg["error"]["code"] == ERR_NOT_FOUND
 
 
 async def test_list_groups(zha_client) -> None:
@@ -340,7 +351,7 @@ async def test_list_groups(zha_client) -> None:
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 7
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     groups = msg["result"]
     assert len(groups) == 1
@@ -357,7 +368,7 @@ async def test_get_group(zha_client) -> None:
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 8
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     group = msg["result"]
     assert group is not None
@@ -373,9 +384,9 @@ async def test_get_group_not_found(zha_client) -> None:
     msg = await zha_client.receive_json()
 
     assert msg["id"] == 9
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert not msg["success"]
-    assert msg["error"]["code"] == const.ERR_NOT_FOUND
+    assert msg["error"]["code"] == ERR_NOT_FOUND
 
 
 async def test_list_groupable_devices(
@@ -390,7 +401,7 @@ async def test_list_groupable_devices(
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 10
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     device_endpoints = msg["result"]
     assert len(device_endpoints) == 1
@@ -420,7 +431,7 @@ async def test_list_groupable_devices(
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 11
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     device_endpoints = msg["result"]
     assert len(device_endpoints) == 0
@@ -432,7 +443,7 @@ async def test_add_group(zha_client) -> None:
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 12
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     added_group = msg["result"]
 
@@ -443,7 +454,7 @@ async def test_add_group(zha_client) -> None:
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 13
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     groups = msg["result"]
     assert len(groups) == 2
@@ -459,7 +470,7 @@ async def test_remove_group(zha_client) -> None:
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 14
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     groups = msg["result"]
     assert len(groups) == 1
@@ -470,7 +481,7 @@ async def test_remove_group(zha_client) -> None:
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 15
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     groups_remaining = msg["result"]
     assert len(groups_remaining) == 0
@@ -479,7 +490,7 @@ async def test_remove_group(zha_client) -> None:
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 16
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     groups = msg["result"]
     assert len(groups) == 0
@@ -497,7 +508,7 @@ async def app_controller(
 
 @pytest.mark.parametrize(
     ("params", "duration", "node"),
-    (
+    [
         ({}, 60, None),
         ({ATTR_DURATION: 30}, 30, None),
         (
@@ -510,7 +521,7 @@ async def app_controller(
             60,
             zigpy.types.EUI64.convert("aa:bb:cc:dd:aa:bb:cc:d1"),
         ),
-    ),
+    ],
 )
 async def test_permit_ha12(
     hass: HomeAssistant,
@@ -528,7 +539,7 @@ async def test_permit_ha12(
     assert app_controller.permit.await_count == 1
     assert app_controller.permit.await_args[1]["time_s"] == duration
     assert app_controller.permit.await_args[1]["node"] == node
-    assert app_controller.permit_with_key.call_count == 0
+    assert app_controller.permit_with_link_key.call_count == 0
 
 
 IC_TEST_PARAMS = (
@@ -538,7 +549,9 @@ IC_TEST_PARAMS = (
             ATTR_INSTALL_CODE: "5279-7BF4-A508-4DAA-8E17-12B6-1741-CA02-4051",
         },
         zigpy.types.EUI64.convert(IEEE_SWITCH_DEVICE),
-        unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
+        zigpy.util.convert_install_code(
+            unhexlify("52797BF4A5084DAA8E1712B61741CA024051")
+        ),
     ),
     (
         {
@@ -546,7 +559,9 @@ IC_TEST_PARAMS = (
             ATTR_INSTALL_CODE: "52797BF4A5084DAA8E1712B61741CA024051",
         },
         zigpy.types.EUI64.convert(IEEE_SWITCH_DEVICE),
-        unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
+        zigpy.util.convert_install_code(
+            unhexlify("52797BF4A5084DAA8E1712B61741CA024051")
+        ),
     ),
 )
 
@@ -566,10 +581,10 @@ async def test_permit_with_install_code(
         DOMAIN, SERVICE_PERMIT, params, True, Context(user_id=hass_admin_user.id)
     )
     assert app_controller.permit.await_count == 0
-    assert app_controller.permit_with_key.call_count == 1
-    assert app_controller.permit_with_key.await_args[1]["time_s"] == 60
-    assert app_controller.permit_with_key.await_args[1]["node"] == src_ieee
-    assert app_controller.permit_with_key.await_args[1]["code"] == code
+    assert app_controller.permit_with_link_key.call_count == 1
+    assert app_controller.permit_with_link_key.await_args[1]["time_s"] == 60
+    assert app_controller.permit_with_link_key.await_args[1]["node"] == src_ieee
+    assert app_controller.permit_with_link_key.await_args[1]["link_key"] == code
 
 
 IC_FAIL_PARAMS = (
@@ -621,19 +636,23 @@ async def test_permit_with_install_code_fail(
             DOMAIN, SERVICE_PERMIT, params, True, Context(user_id=hass_admin_user.id)
         )
     assert app_controller.permit.await_count == 0
-    assert app_controller.permit_with_key.call_count == 0
+    assert app_controller.permit_with_link_key.call_count == 0
 
 
 IC_QR_CODE_TEST_PARAMS = (
     (
         {ATTR_QR_CODE: "000D6FFFFED4163B|52797BF4A5084DAA8E1712B61741CA024051"},
         zigpy.types.EUI64.convert("00:0D:6F:FF:FE:D4:16:3B"),
-        unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
+        zigpy.util.convert_install_code(
+            unhexlify("52797BF4A5084DAA8E1712B61741CA024051")
+        ),
     ),
     (
         {ATTR_QR_CODE: "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024051"},
         zigpy.types.EUI64.convert("00:0D:6F:FF:FE:D4:16:3B"),
-        unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
+        zigpy.util.convert_install_code(
+            unhexlify("52797BF4A5084DAA8E1712B61741CA024051")
+        ),
     ),
     (
         {
@@ -643,7 +662,22 @@ IC_QR_CODE_TEST_PARAMS = (
             )
         },
         zigpy.types.EUI64.convert("04:CF:8C:DF:3C:3C:3C:3C"),
-        unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
+        zigpy.util.convert_install_code(
+            unhexlify("52797BF4A5084DAA8E1712B61741CA024051")
+        ),
+    ),
+    (
+        {
+            ATTR_QR_CODE: (
+                "RB01SG"
+                "0D836591B3CC0010000000000000000000"
+                "000D6F0019107BB1"
+                "DLK"
+                "E4636CB6C41617C3E08F7325FFBFE1F9"
+            )
+        },
+        zigpy.types.EUI64.convert("00:0D:6F:00:19:10:7B:B1"),
+        zigpy.types.KeyData.convert("E4:63:6C:B6:C4:16:17:C3:E0:8F:73:25:FF:BF:E1:F9"),
     ),
 )
 
@@ -663,10 +697,10 @@ async def test_permit_with_qr_code(
         DOMAIN, SERVICE_PERMIT, params, True, Context(user_id=hass_admin_user.id)
     )
     assert app_controller.permit.await_count == 0
-    assert app_controller.permit_with_key.call_count == 1
-    assert app_controller.permit_with_key.await_args[1]["time_s"] == 60
-    assert app_controller.permit_with_key.await_args[1]["node"] == src_ieee
-    assert app_controller.permit_with_key.await_args[1]["code"] == code
+    assert app_controller.permit_with_link_key.call_count == 1
+    assert app_controller.permit_with_link_key.await_args[1]["time_s"] == 60
+    assert app_controller.permit_with_link_key.await_args[1]["node"] == src_ieee
+    assert app_controller.permit_with_link_key.await_args[1]["link_key"] == code
 
 
 @pytest.mark.parametrize(("params", "src_ieee", "code"), IC_QR_CODE_TEST_PARAMS)
@@ -679,16 +713,22 @@ async def test_ws_permit_with_qr_code(
         {ID: 14, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}", **params}
     )
 
-    msg = await zha_client.receive_json()
+    msg_type = None
+    while msg_type != TYPE_RESULT:
+        # There will be logging events coming over the websocket
+        # as well so we want to ignore those
+        msg = await zha_client.receive_json()
+        msg_type = msg["type"]
+
     assert msg["id"] == 14
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
     assert app_controller.permit.await_count == 0
-    assert app_controller.permit_with_key.call_count == 1
-    assert app_controller.permit_with_key.await_args[1]["time_s"] == 60
-    assert app_controller.permit_with_key.await_args[1]["node"] == src_ieee
-    assert app_controller.permit_with_key.await_args[1]["code"] == code
+    assert app_controller.permit_with_link_key.call_count == 1
+    assert app_controller.permit_with_link_key.await_args[1]["time_s"] == 60
+    assert app_controller.permit_with_link_key.await_args[1]["node"] == src_ieee
+    assert app_controller.permit_with_link_key.await_args[1]["link_key"] == code
 
 
 @pytest.mark.parametrize("params", IC_FAIL_PARAMS)
@@ -703,16 +743,16 @@ async def test_ws_permit_with_install_code_fail(
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 14
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"] is False
 
     assert app_controller.permit.await_count == 0
-    assert app_controller.permit_with_key.call_count == 0
+    assert app_controller.permit_with_link_key.call_count == 0
 
 
 @pytest.mark.parametrize(
     ("params", "duration", "node"),
-    (
+    [
         ({}, 60, None),
         ({ATTR_DURATION: 30}, 30, None),
         (
@@ -725,7 +765,7 @@ async def test_ws_permit_with_install_code_fail(
             60,
             zigpy.types.EUI64.convert("aa:bb:cc:dd:aa:bb:cc:d1"),
         ),
-    ),
+    ],
 )
 async def test_ws_permit_ha12(
     app_controller: ControllerApplication, zha_client, params, duration, node
@@ -736,15 +776,21 @@ async def test_ws_permit_ha12(
         {ID: 14, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}", **params}
     )
 
-    msg = await zha_client.receive_json()
+    msg_type = None
+    while msg_type != TYPE_RESULT:
+        # There will be logging events coming over the websocket
+        # as well so we want to ignore those
+        msg = await zha_client.receive_json()
+        msg_type = msg["type"]
+
     assert msg["id"] == 14
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
     assert app_controller.permit.await_count == 1
     assert app_controller.permit.await_args[1]["time_s"] == duration
     assert app_controller.permit.await_args[1]["node"] == node
-    assert app_controller.permit_with_key.call_count == 0
+    assert app_controller.permit_with_link_key.call_count == 0
 
 
 async def test_get_network_settings(
@@ -758,7 +804,7 @@ async def test_get_network_settings(
     msg = await zha_client.receive_json()
 
     assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert "radio_type" in msg["result"]
     assert "network_info" in msg["result"]["settings"]
@@ -776,7 +822,7 @@ async def test_list_network_backups(
     msg = await zha_client.receive_json()
 
     assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert "network_info" in msg["result"][0]
 
@@ -792,7 +838,7 @@ async def test_create_network_backup(
     assert len(app_controller.backups.backups) == 1
 
     assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert "backup" in msg["result"] and "is_complete" in msg["result"]
 
@@ -818,7 +864,7 @@ async def test_restore_network_backup_success(
     assert "ezsp" not in backup.network_info.stack_specific
 
     assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
 
@@ -850,7 +896,7 @@ async def test_restore_network_backup_force_write_eui64(
     )
 
     assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
 
@@ -873,9 +919,9 @@ async def test_restore_network_backup_failure(
     p.assert_called_once_with("a backup")
 
     assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert not msg["success"]
-    assert msg["error"]["code"] == const.ERR_INVALID_FORMAT
+    assert msg["error"]["code"] == ERR_INVALID_FORMAT
 
 
 @pytest.mark.parametrize("new_channel", ["auto", 15])
@@ -898,10 +944,10 @@ async def test_websocket_change_channel(
         msg = await zha_client.receive_json()
 
     assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
-    change_channel_mock.mock_calls == [call(ANY, new_channel)]
+    change_channel_mock.assert_has_calls([call(ANY, new_channel)])
 
 
 @pytest.mark.parametrize(
@@ -931,7 +977,7 @@ async def test_websocket_bind_unbind_devices(
         msg = await zha_client.receive_json()
 
     assert msg["id"] == 27
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert binding_operation_mock.mock_calls == [
         call(
@@ -985,7 +1031,7 @@ async def test_websocket_bind_unbind_group(
         msg = await zha_client.receive_json()
 
     assert msg["id"] == 27
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     if command_type == "bind":
         assert bind_mock.mock_calls == [call(test_group_id, ANY)]

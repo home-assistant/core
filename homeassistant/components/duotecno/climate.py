@@ -1,4 +1,5 @@
 """Support for Duotecno climate devices."""
+
 from __future__ import annotations
 
 from typing import Any, Final
@@ -47,12 +48,16 @@ class DuotecnoClimate(DuotecnoEntity, ClimateEntity):
 
     _unit: SensUnit
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = list(HVACMODE_REVERSE)
     _attr_preset_modes = list(PRESETMODES)
     _attr_translation_key = "duotecno"
+    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def current_temperature(self) -> float | None:

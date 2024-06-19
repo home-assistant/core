@@ -1,4 +1,5 @@
 """The tests for the USGS Earthquake Hazards Program Feed platform."""
+
 import datetime
 from unittest.mock import ANY, MagicMock, call, patch
 
@@ -115,9 +116,10 @@ async def test_setup(hass: HomeAssistant) -> None:
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with freeze_time(utcnow), patch(
-        "aio_geojson_client.feed.GeoJsonFeed.update"
-    ) as mock_feed_update:
+    with (
+        freeze_time(utcnow),
+        patch("aio_geojson_client.feed.GeoJsonFeed.update") as mock_feed_update,
+    ):
         mock_feed_update.return_value = (
             "OK",
             [mock_entry_1, mock_entry_2, mock_entry_3],
@@ -218,12 +220,13 @@ async def test_setup_with_custom_location(hass: HomeAssistant) -> None:
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 20.5, (-31.1, 150.1))
 
-    with patch(
-        "aio_geojson_usgs_earthquakes.feed_manager.UsgsEarthquakeHazardsProgramFeed",
-        wraps=UsgsEarthquakeHazardsProgramFeed,
-    ) as mock_feed, patch(
-        "aio_geojson_client.feed.GeoJsonFeed.update"
-    ) as mock_feed_update:
+    with (
+        patch(
+            "aio_geojson_usgs_earthquakes.feed_manager.UsgsEarthquakeHazardsProgramFeed",
+            wraps=UsgsEarthquakeHazardsProgramFeed,
+        ) as mock_feed,
+        patch("aio_geojson_client.feed.GeoJsonFeed.update") as mock_feed_update,
+    ):
         mock_feed_update.return_value = "OK", [mock_entry_1]
 
         with assert_setup_component(1, geo_location.DOMAIN):

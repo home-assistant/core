@@ -17,6 +17,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Tedee',
     'model': 'Bridge',
     'name': 'Bridge-AB1C',

@@ -1,310 +1,310 @@
 """Tradfri lights platform tests."""
-from copy import deepcopy
-from unittest.mock import MagicMock, Mock, PropertyMock, patch
+
+from typing import Any
 
 import pytest
+from pytradfri.const import ATTR_DEVICE_STATE, ATTR_LIGHT_CONTROL, ATTR_REACHABLE_STATE
 from pytradfri.device import Device
-from pytradfri.device.light import Light
-from pytradfri.device.light_control import LightControl
 
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_MODE,
+    ATTR_COLOR_TEMP,
+    ATTR_HS_COLOR,
+    ATTR_MAX_MIREDS,
+    ATTR_MIN_MIREDS,
+    ATTR_SUPPORTED_COLOR_MODES,
+    DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
+)
+from homeassistant.components.tradfri.const import DOMAIN
+from homeassistant.const import (
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 
-from .common import setup_integration
+from .common import CommandStore, setup_integration
 
-DEFAULT_TEST_FEATURES = {
-    "can_set_dimmer": False,
-    "can_set_color": False,
-    "can_set_temp": False,
-}
-# [
-#     {bulb features},
-#     {turn_on arguments},
-#     {expected result}
-# ]
-TURN_ON_TEST_CASES = [
-    # Turn On
-    [{}, {}, {"state": "on"}],
-    # Brightness > 0
-    [{"can_set_dimmer": True}, {"brightness": 100}, {"state": "on", "brightness": 100}],
-    # Brightness == 1
-    [{"can_set_dimmer": True}, {"brightness": 1}, {"brightness": 1}],
-    # Brightness > 254
-    [{"can_set_dimmer": True}, {"brightness": 1000}, {"brightness": 254}],
-    # color_temp
-    [{"can_set_temp": True}, {"color_temp": 250}, {"color_temp": 250}],
-    # color_temp < 250
-    [{"can_set_temp": True}, {"color_temp": 1}, {"color_temp": 250}],
-    # color_temp > 454
-    [{"can_set_temp": True}, {"color_temp": 1000}, {"color_temp": 454}],
-    # hs color
+from tests.common import load_fixture
+
+
+@pytest.fixture(scope="module")
+def bulb_w() -> str:
+    """Return a bulb W response."""
+    return load_fixture("bulb_w.json", DOMAIN)
+
+
+@pytest.fixture(scope="module")
+def bulb_ws() -> str:
+    """Return a bulb WS response."""
+    return load_fixture("bulb_ws.json", DOMAIN)
+
+
+@pytest.fixture(scope="module")
+def bulb_cws() -> str:
+    """Return a bulb CWS response."""
+    return load_fixture("bulb_cws.json", DOMAIN)
+
+
+@pytest.mark.parametrize(
+    ("device", "entity_id", "state_attributes"),
     [
-        {"can_set_color": True},
-        {"hs_color": [300, 100]},
-        {"state": "on", "hs_color": [300, 100]},
+        (
+            "bulb_w",
+            "light.test_w",
+            {
+                ATTR_BRIGHTNESS: 250,
+                ATTR_SUPPORTED_COLOR_MODES: [ColorMode.BRIGHTNESS],
+                ATTR_COLOR_MODE: ColorMode.BRIGHTNESS,
+            },
+        ),
+        (
+            "bulb_ws",
+            "light.test_ws",
+            {
+                ATTR_BRIGHTNESS: 250,
+                ATTR_COLOR_TEMP: 400,
+                ATTR_MIN_MIREDS: 250,
+                ATTR_MAX_MIREDS: 454,
+                ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP],
+                ATTR_COLOR_MODE: ColorMode.COLOR_TEMP,
+            },
+        ),
+        (
+            "bulb_cws",
+            "light.test_cws",
+            {
+                ATTR_BRIGHTNESS: 250,
+                ATTR_HS_COLOR: (29.812, 65.252),
+                ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
+                ATTR_COLOR_MODE: ColorMode.HS,
+            },
+        ),
     ],
-    # ct + brightness
-    [
-        {"can_set_dimmer": True, "can_set_temp": True},
-        {"color_temp": 250, "brightness": 200},
-        {"state": "on", "color_temp": 250, "brightness": 200},
-    ],
-    # ct + brightness (no temp support)
-    [
-        {"can_set_dimmer": True, "can_set_temp": False, "can_set_color": True},
-        {"color_temp": 250, "brightness": 200},
-        {"state": "on", "hs_color": [26.807, 34.869], "brightness": 200},
-    ],
-    # ct + brightness (no temp or color support)
-    [
-        {"can_set_dimmer": True, "can_set_temp": False, "can_set_color": False},
-        {"color_temp": 250, "brightness": 200},
-        {"state": "on", "brightness": 200},
-    ],
-    # hs + brightness
-    [
-        {"can_set_dimmer": True, "can_set_color": True},
-        {"hs_color": [300, 100], "brightness": 200},
-        {"state": "on", "hs_color": [300, 100], "brightness": 200},
-    ],
-]
-
-# Result of transition is not tested, but data is passed to turn on service.
-TRANSITION_CASES_FOR_TESTS = [None, 0, 1]
-
-
-@pytest.fixture(autouse=True, scope="module")
-def setup():
-    """Set up patches for pytradfri methods."""
-    p_1 = patch(
-        "pytradfri.device.LightControl.raw",
-        new_callable=PropertyMock,
-        return_value=[{"mock": "mock"}],
-    )
-    p_2 = patch("pytradfri.device.LightControl.lights")
-    p_1.start()
-    p_2.start()
-
-    yield
-
-    p_1.stop()
-    p_2.stop()
-
-
-async def generate_psk(self, code):
-    """Mock psk."""
-    return "mock"
-
-
-def mock_light(test_features=None, test_state=None, light_number=0):
-    """Mock a tradfri light."""
-    if test_features is None:
-        test_features = {}
-    if test_state is None:
-        test_state = {}
-    mock_light_data = Mock(**test_state)
-
-    dev_info_mock = MagicMock()
-    dev_info_mock.manufacturer = "manufacturer"
-    dev_info_mock.model_number = "model"
-    dev_info_mock.firmware_version = "1.2.3"
-    _mock_light = Mock(
-        id=f"mock-light-id-{light_number}",
-        reachable=True,
-        observe=Mock(),
-        device_info=dev_info_mock,
-        has_light_control=True,
-        has_socket_control=False,
-        has_blind_control=False,
-        has_signal_repeater_control=False,
-        has_air_purifier_control=False,
-    )
-    _mock_light.name = f"tradfri_light_{light_number}"
-
-    # Set supported features for the light.
-    features = {**DEFAULT_TEST_FEATURES, **test_features}
-    light_control = LightControl(_mock_light)
-    for attr, value in features.items():
-        setattr(light_control, attr, value)
-    # Store the initial state.
-    setattr(light_control, "lights", [mock_light_data])
-    _mock_light.light_control = light_control
-    return _mock_light
-
-
-async def test_light(hass: HomeAssistant, mock_gateway, mock_api_factory) -> None:
-    """Test that lights are correctly added."""
-    features = {"can_set_dimmer": True, "can_set_color": True, "can_set_temp": True}
-
-    state = {
-        "state": True,
-        "dimmer": 100,
-        "color_temp": 250,
-        "hsb_xy_color": (100, 100, 100, 100, 100),
-    }
-
-    mock_gateway.mock_devices.append(
-        mock_light(test_features=features, test_state=state)
-    )
-    await setup_integration(hass)
-
-    lamp_1 = hass.states.get("light.tradfri_light_0")
-    assert lamp_1 is not None
-    assert lamp_1.state == "on"
-    assert lamp_1.attributes["brightness"] == 100
-    assert lamp_1.attributes["hs_color"] == (0.549, 0.153)
-
-
-async def test_light_observed(
-    hass: HomeAssistant, mock_gateway, mock_api_factory
+    indirect=["device"],
+)
+async def test_light_state(
+    hass: HomeAssistant,
+    device: Device,
+    entity_id: str,
+    state_attributes: dict[str, Any],
 ) -> None:
-    """Test that lights are correctly observed."""
-    light = mock_light()
-    mock_gateway.mock_devices.append(light)
+    """Test light state."""
     await setup_integration(hass)
-    assert len(light.observe.mock_calls) > 0
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    for key, value in state_attributes.items():
+        assert state.attributes[key] == value
 
 
+@pytest.mark.parametrize("device", ["bulb_w"], indirect=True)
 async def test_light_available(
-    hass: HomeAssistant, mock_gateway, mock_api_factory
+    hass: HomeAssistant,
+    command_store: CommandStore,
+    device: Device,
 ) -> None:
     """Test light available property."""
-    light = mock_light({"state": True}, light_number=1)
-    light.reachable = True
-
-    light2 = mock_light({"state": True}, light_number=2)
-    light2.reachable = False
-
-    mock_gateway.mock_devices.append(light)
-    mock_gateway.mock_devices.append(light2)
+    entity_id = "light.test_w"
     await setup_integration(hass)
 
-    assert hass.states.get("light.tradfri_light_1").state == "on"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
 
-    assert hass.states.get("light.tradfri_light_2").state == "unavailable"
+    await command_store.trigger_observe_callback(
+        hass, device, {ATTR_REACHABLE_STATE: 0}
+    )
 
-
-def create_all_turn_on_cases():
-    """Create all turn on test cases."""
-    # Combine TURN_ON_TEST_CASES and TRANSITION_CASES_FOR_TESTS
-    all_turn_on_test_cases = [
-        ["test_features", "test_data", "expected_result", "device_id"],
-        [],
-    ]
-    index = 1
-    for test_case in TURN_ON_TEST_CASES:
-        for trans in TRANSITION_CASES_FOR_TESTS:
-            case = deepcopy(test_case)
-            if trans is not None:
-                case[1]["transition"] = trans
-            case.append(index)
-            index += 1
-            all_turn_on_test_cases[1].append(case)
-
-    return all_turn_on_test_cases
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize(*create_all_turn_on_cases())
+@pytest.mark.parametrize(
+    "transition",
+    [{}, {"transition": 0}, {"transition": 1}],
+    ids=["transition_none", "transition_0", "transition_1"],
+)
+@pytest.mark.parametrize(
+    ("device", "entity_id", "service_data", "state_attributes"),
+    [
+        # turn_on
+        (
+            "bulb_w",
+            "light.test_w",
+            {},
+            {},
+        ),
+        # brightness > 0
+        (
+            "bulb_w",
+            "light.test_w",
+            {"brightness": 100},
+            {"brightness": 100},
+        ),
+        # brightness == 1
+        (
+            "bulb_w",
+            "light.test_w",
+            {"brightness": 1},
+            {"brightness": 1},
+        ),
+        # brightness > 254
+        (
+            "bulb_w",
+            "light.test_w",
+            {"brightness": 1000},
+            {"brightness": 254},
+        ),
+        # color_temp
+        (
+            "bulb_ws",
+            "light.test_ws",
+            {"color_temp": 250},
+            {"color_temp": 250},
+        ),
+        # color_temp < 250
+        (
+            "bulb_ws",
+            "light.test_ws",
+            {"color_temp": 1},
+            {"color_temp": 250},
+        ),
+        # color_temp > 454
+        (
+            "bulb_ws",
+            "light.test_ws",
+            {"color_temp": 1000},
+            {"color_temp": 454},
+        ),
+        # hs_color
+        (
+            "bulb_cws",
+            "light.test_cws",
+            {"hs_color": [300, 100]},
+            {"hs_color": [300, 100]},
+        ),
+        # ct + brightness
+        (
+            "bulb_ws",
+            "light.test_ws",
+            {"color_temp": 250, "brightness": 200},
+            {"color_temp": 250, "brightness": 200},
+        ),
+        # ct + brightness (no temp support)
+        (
+            "bulb_cws",
+            "light.test_cws",
+            {"color_temp": 250, "brightness": 200},
+            {"hs_color": [26.807, 34.869], "brightness": 200},
+        ),
+        # ct + brightness (no temp or color support)
+        (
+            "bulb_w",
+            "light.test_w",
+            {"color_temp": 250, "brightness": 200},
+            {"brightness": 200},
+        ),
+        # hs + brightness
+        (
+            "bulb_cws",
+            "light.test_cws",
+            {"hs_color": [300, 100], "brightness": 200},
+            {"hs_color": [300, 100], "brightness": 200},
+        ),
+    ],
+    indirect=["device"],
+    ids=[
+        "turn_on",
+        "brightness > 0",
+        "brightness == 1",
+        "brightness > 254",
+        "color_temp",
+        "color_temp < 250",
+        "color_temp > 454",
+        "hs_color",
+        "ct + brightness",
+        "ct + brightness (no temp support)",
+        "ct + brightness (no temp or color support)",
+        "hs + brightness",
+    ],
+)
 async def test_turn_on(
     hass: HomeAssistant,
-    mock_gateway,
-    mock_api_factory,
-    test_features,
-    test_data,
-    expected_result,
-    device_id,
+    command_store: CommandStore,
+    device: Device,
+    entity_id: str,
+    service_data: dict[str, Any],
+    transition: dict[str, int],
+    state_attributes: dict[str, Any],
 ) -> None:
     """Test turning on a light."""
-    # Note pytradfri style, not hass. Values not really important.
-    initial_state = {
-        "state": False,
-        "dimmer": 0,
-        "color_temp": 250,
-        "hsb_xy_color": (100, 100, 100, 100, 100),
-    }
-
-    # Setup the gateway with a mock light.
-    light = mock_light(
-        test_features=test_features, test_state=initial_state, light_number=device_id
-    )
-    mock_gateway.mock_devices.append(light)
+    # Make sure the light is off.
+    device.raw[ATTR_LIGHT_CONTROL][0][ATTR_DEVICE_STATE] = 0
     await setup_integration(hass)
 
-    # Use the turn_on service call to change the light state.
     await hass.services.async_call(
-        "light",
-        "turn_on",
-        {"entity_id": f"light.tradfri_light_{device_id}", **test_data},
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {"entity_id": entity_id, **service_data, **transition},
         blocking=True,
     )
     await hass.async_block_till_done()
 
-    # Check that the light is observed.
-    mock_func = light.observe
-    assert len(mock_func.mock_calls) > 0
-    _, callkwargs = mock_func.call_args
-    assert "callback" in callkwargs
-    # Callback function to refresh light state.
-    callback = callkwargs["callback"]
+    await command_store.trigger_observe_callback(
+        hass, device, {ATTR_LIGHT_CONTROL: [{ATTR_DEVICE_STATE: 1}]}
+    )
 
-    responses = mock_gateway.mock_responses
-    # State on command data.
-    data = {"3311": [{"5850": 1}]}
-    # Add data for all sent commands.
-    for resp in responses:
-        data["3311"][0] = {**data["3311"][0], **resp["3311"][0]}
-
-    # Use the callback function to update the light state.
-    dev = Device(data)
-    light_data = Light(dev, 0)
-    light.light_control.lights[0] = light_data
-    callback(light)
-    await hass.async_block_till_done()
-
-    # Check that the state is correct.
-    states = hass.states.get(f"light.tradfri_light_{device_id}")
-    for result, value in expected_result.items():
-        if result == "state":
-            assert states.state == value
-        else:
-            # Allow some rounding error in color conversions.
-            assert states.attributes[result] == pytest.approx(value, abs=0.01)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    for key, value in state_attributes.items():
+        # Allow some rounding error in color conversions.
+        assert state.attributes[key] == pytest.approx(value, abs=0.01)
 
 
-async def test_turn_off(hass: HomeAssistant, mock_gateway, mock_api_factory) -> None:
+@pytest.mark.parametrize(
+    "transition",
+    [{}, {"transition": 0}, {"transition": 1}],
+    ids=["transition_none", "transition_0", "transition_1"],
+)
+@pytest.mark.parametrize(
+    ("device", "entity_id"),
+    [
+        ("bulb_w", "light.test_w"),
+        ("bulb_ws", "light.test_ws"),
+        ("bulb_cws", "light.test_cws"),
+    ],
+    indirect=["device"],
+)
+async def test_turn_off(
+    hass: HomeAssistant,
+    command_store: CommandStore,
+    device: Device,
+    entity_id: str,
+    transition: dict[str, int],
+) -> None:
     """Test turning off a light."""
-    state = {"state": True, "dimmer": 100}
-
-    light = mock_light(test_state=state)
-    mock_gateway.mock_devices.append(light)
     await setup_integration(hass)
 
-    # Use the turn_off service call to change the light state.
     await hass.services.async_call(
-        "light", "turn_off", {"entity_id": "light.tradfri_light_0"}, blocking=True
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {"entity_id": entity_id, **transition},
+        blocking=True,
     )
     await hass.async_block_till_done()
 
-    # Check that the light is observed.
-    mock_func = light.observe
-    assert len(mock_func.mock_calls) > 0
-    _, callkwargs = mock_func.call_args
-    assert "callback" in callkwargs
-    # Callback function to refresh light state.
-    callback = callkwargs["callback"]
+    await command_store.trigger_observe_callback(
+        hass, device, {ATTR_LIGHT_CONTROL: [{ATTR_DEVICE_STATE: 0}]}
+    )
 
-    responses = mock_gateway.mock_responses
-    data = {"3311": [{}]}
-    # Add data for all sent commands.
-    for resp in responses:
-        data["3311"][0] = {**data["3311"][0], **resp["3311"][0]}
-
-    # Use the callback function to update the light state.
-    dev = Device(data)
-    light_data = Light(dev, 0)
-    light.light_control.lights[0] = light_data
-    callback(light)
-    await hass.async_block_till_done()
-
-    # Check that the state is correct.
-    states = hass.states.get("light.tradfri_light_0")
-    assert states.state == "off"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF

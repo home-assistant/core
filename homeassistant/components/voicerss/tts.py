@@ -1,4 +1,5 @@
 """Support for the voicerss speech service."""
+
 import asyncio
 from http import HTTPStatus
 import logging
@@ -79,7 +80,7 @@ SUPPORT_LANGUAGES = [
     "vi-vn",
 ]
 
-SUPPORT_CODECS = ["mp3", "wav", "aac", "ogg", "caf"]
+SUPPORT_CODECS = ["mp3", "wav", "aac", "ogg", "caf"]  # codespell:ignore caf
 
 SUPPORT_FORMATS = [
     "8khz_8bit_mono",
@@ -209,7 +210,7 @@ class VoiceRSSProvider(Provider):
                     _LOGGER.error("Error receive %s from VoiceRSS", str(data, "utf-8"))
                     return (None, None)
 
-        except (asyncio.TimeoutError, aiohttp.ClientError):
+        except (TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Timeout for VoiceRSS API")
             return (None, None)
 

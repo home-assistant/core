@@ -1,4 +1,5 @@
 """Support for Verisure devices."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -108,7 +109,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
             hass.config_entries.async_update_entry(entry, options=new_options)
 
-        entry.version = 2
+        hass.config_entries.async_update_entry(entry, version=2)
 
     LOGGER.info("Migration to version %s successful", entry.version)
 

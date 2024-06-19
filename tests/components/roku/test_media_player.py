@@ -1,4 +1,5 @@
 """Tests for the Roku Media Player platform."""
+
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
@@ -35,7 +36,7 @@ from homeassistant.components.roku.const import (
     SERVICE_SEARCH,
 )
 from homeassistant.components.stream import FORMAT_CONTENT_TYPE, HLS_PROVIDER
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -69,11 +70,13 @@ MAIN_ENTITY_ID = f"{MP_DOMAIN}.my_roku_3"
 TV_ENTITY_ID = f"{MP_DOMAIN}.58_onn_roku_tv"
 
 
-async def test_setup(hass: HomeAssistant, init_integration: MockConfigEntry) -> None:
+async def test_setup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
     """Test setup with basic config."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
     state = hass.states.get(MAIN_ENTITY_ID)
     entry = entity_registry.async_get(MAIN_ENTITY_ID)
 
@@ -114,13 +117,12 @@ async def test_idle_setup(
 @pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_tv_setup(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
     mock_roku: MagicMock,
 ) -> None:
     """Test Roku TV setup."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
     state = hass.states.get(TV_ENTITY_ID)
     entry = entity_registry.async_get(TV_ENTITY_ID)
 
@@ -189,7 +191,8 @@ async def test_supported_features(
     # Features supported for Rokus
     state = hass.states.get(MAIN_ENTITY_ID)
     assert (
-        MediaPlayerEntityFeature.PREVIOUS_TRACK
+        state.attributes.get("supported_features")
+        == MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.VOLUME_STEP
         | MediaPlayerEntityFeature.VOLUME_MUTE
@@ -200,7 +203,6 @@ async def test_supported_features(
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.BROWSE_MEDIA
-        == state.attributes.get("supported_features")
     )
 
 
@@ -214,7 +216,8 @@ async def test_tv_supported_features(
     state = hass.states.get(TV_ENTITY_ID)
     assert state
     assert (
-        MediaPlayerEntityFeature.PREVIOUS_TRACK
+        state.attributes.get("supported_features")
+        == MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.VOLUME_STEP
         | MediaPlayerEntityFeature.VOLUME_MUTE
@@ -225,7 +228,6 @@ async def test_tv_supported_features(
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.BROWSE_MEDIA
-        == state.attributes.get("supported_features")
     )
 
 

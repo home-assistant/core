@@ -1,8 +1,10 @@
 """Support for the Torque OBD application."""
+
 from __future__ import annotations
 
 import re
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
@@ -42,19 +44,19 @@ def convert_pid(value):
     return int(value, 16)
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Torque platform."""
-    vehicle = config.get(CONF_NAME)
-    email = config.get(CONF_EMAIL)
+    vehicle: str | None = config.get(CONF_NAME)
+    email: str | None = config.get(CONF_EMAIL)
     sensors: dict[int, TorqueSensor] = {}
 
     hass.http.register_view(
-        TorqueReceiveDataView(email, vehicle, sensors, add_entities)
+        TorqueReceiveDataView(email, vehicle, sensors, async_add_entities)
     )
 
 
@@ -64,21 +66,26 @@ class TorqueReceiveDataView(HomeAssistantView):
     url = API_PATH
     name = "api:torque"
 
-    def __init__(self, email, vehicle, sensors, add_entities):
+    def __init__(
+        self,
+        email: str | None,
+        vehicle: str | None,
+        sensors: dict[int, TorqueSensor],
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
         """Initialize a Torque view."""
         self.email = email
         self.vehicle = vehicle
         self.sensors = sensors
-        self.add_entities = add_entities
+        self.async_add_entities = async_add_entities
 
     @callback
-    def get(self, request):
+    def get(self, request: web.Request) -> str | None:
         """Handle Torque data request."""
-        hass = request.app["hass"]
         data = request.query
 
         if self.email is not None and self.email != data[SENSOR_EMAIL_FIELD]:
-            return
+            return None
 
         names = {}
         units = {}
@@ -103,12 +110,17 @@ class TorqueReceiveDataView(HomeAssistantView):
                 if pid in self.sensors:
                     self.sensors[pid].async_on_update(data[key])
 
+        new_sensor_entities: list[TorqueSensor] = []
         for pid, name in names.items():
             if pid not in self.sensors:
-                self.sensors[pid] = TorqueSensor(
+                torque_sensor_entity = TorqueSensor(
                     ENTITY_NAME_FORMAT.format(self.vehicle, name), units.get(pid)
                 )
-                hass.async_add_job(self.add_entities, [self.sensors[pid]])
+                new_sensor_entities.append(torque_sensor_entity)
+                self.sensors[pid] = torque_sensor_entity
+
+        if new_sensor_entities:
+            self.async_add_entities(new_sensor_entities)
 
         return "OK!"
 

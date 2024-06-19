@@ -1,4 +1,5 @@
 """Component to integrate the Home Assistant cloud."""
+
 from __future__ import annotations
 
 import asyncio
@@ -11,7 +12,7 @@ from hass_nabucasa import Cloud
 import voluptuous as vol
 
 from homeassistant.components import alexa, google_assistant
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import (
     CONF_DESCRIPTION,
     CONF_MODE,
@@ -26,7 +27,6 @@ from homeassistant.helpers import config_validation as cv, entityfilter
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
-    SignalType,
     async_dispatcher_connect,
     async_dispatcher_send,
 )
@@ -34,6 +34,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.util.signal_type import SignalType
 
 from . import account_link, http_api
 from .client import CloudClient
@@ -264,18 +265,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
     _remote_handle_prefs_updated(cloud)
-
-    async def _service_handler(service: ServiceCall) -> None:
-        """Handle service for cloud."""
-        if service.service == SERVICE_REMOTE_CONNECT:
-            await prefs.async_update(remote_enabled=True)
-        elif service.service == SERVICE_REMOTE_DISCONNECT:
-            await prefs.async_update(remote_enabled=False)
-
-    async_register_admin_service(hass, DOMAIN, SERVICE_REMOTE_CONNECT, _service_handler)
-    async_register_admin_service(
-        hass, DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler
-    )
+    _setup_services(hass, prefs)
 
     async def async_startup_repairs(_: datetime) -> None:
         """Create repair issues after startup."""
@@ -304,7 +294,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             return
         loaded = True
 
-        await hass.config_entries.flow.async_init(DOMAIN, context={"source": "system"})
+        await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SYSTEM}
+        )
 
     async def _on_connect() -> None:
         """Handle cloud connect."""
@@ -340,7 +332,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             DOMAIN,
             {"platform_loaded": tts_platform_loaded},
             config,
-        )
+        ),
+        eager_start=True,
     )
 
     async_call_later(
@@ -390,6 +383,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    return unload_ok
+
+@callback
+def _setup_services(hass: HomeAssistant, prefs: CloudPreferences) -> None:
+    """Set up services for cloud component."""
+
+    async def _service_handler(service: ServiceCall) -> None:
+        """Handle service for cloud."""
+        if service.service == SERVICE_REMOTE_CONNECT:
+            await prefs.async_update(remote_enabled=True)
+        elif service.service == SERVICE_REMOTE_DISCONNECT:
+            await prefs.async_update(remote_enabled=False)
+
+    async_register_admin_service(hass, DOMAIN, SERVICE_REMOTE_CONNECT, _service_handler)
+    async_register_admin_service(
+        hass, DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler
+    )

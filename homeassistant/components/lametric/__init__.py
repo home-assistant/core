@@ -1,4 +1,5 @@
 """Support for LaMetric time."""
+
 from homeassistant.components import notify as hass_notify
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, Platform

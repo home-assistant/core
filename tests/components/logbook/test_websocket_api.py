@@ -1,4 +1,5 @@
 """The tests for the logbook component."""
+
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
@@ -14,7 +15,7 @@ from homeassistant.components.logbook import websocket_api
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.util import get_instance
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
@@ -46,9 +47,9 @@ from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
 
 
 @pytest.fixture
-def set_utc(hass):
+async def set_utc(hass):
     """Set timezone to UTC."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
 
 
 def listeners_without_writes(listeners: dict[str, int]) -> dict[str, int]:
@@ -82,7 +83,7 @@ async def _async_mock_logbook_platform_with_broken_describe(
 
             async_describe_event("test", "mock_event", async_describe_test_event)
 
-    await logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
+    logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
 
 
 async def _async_mock_logbook_platform(hass: HomeAssistant) -> None:
@@ -108,7 +109,7 @@ async def _async_mock_logbook_platform(hass: HomeAssistant) -> None:
 
             async_describe_event("test", "mock_event", async_describe_test_event)
 
-    await logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
+    logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
 
 
 async def _async_mock_entity_with_broken_logbook_platform(
@@ -629,7 +630,7 @@ async def test_subscribe_unsubscribe_logbook_stream_excluded_entities(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
-            "when": state.last_updated.timestamp(),
+            "when": state.last_updated_timestamp,
         }
     ]
     assert msg["event"]["start_time"] == now.timestamp()
@@ -678,17 +679,17 @@ async def test_subscribe_unsubscribe_logbook_stream_excluded_entities(
         {
             "entity_id": "light.alpha",
             "state": "off",
-            "when": alpha_off_state.last_updated.timestamp(),
+            "when": alpha_off_state.last_updated_timestamp,
         },
         {
             "entity_id": "light.zulu",
             "state": "off",
-            "when": zulu_off_state.last_updated.timestamp(),
+            "when": zulu_off_state.last_updated_timestamp,
         },
         {
             "entity_id": "light.zulu",
             "state": "on",
-            "when": zulu_on_state.last_updated.timestamp(),
+            "when": zulu_on_state.last_updated_timestamp,
         },
     ]
 
@@ -1032,7 +1033,7 @@ async def test_logbook_stream_excluded_entities_inherits_filters_from_recorder(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
-            "when": state.last_updated.timestamp(),
+            "when": state.last_updated_timestamp,
         }
     ]
     assert msg["event"]["start_time"] == now.timestamp()
@@ -1081,17 +1082,17 @@ async def test_logbook_stream_excluded_entities_inherits_filters_from_recorder(
         {
             "entity_id": "light.alpha",
             "state": "off",
-            "when": alpha_off_state.last_updated.timestamp(),
+            "when": alpha_off_state.last_updated_timestamp,
         },
         {
             "entity_id": "light.zulu",
             "state": "off",
-            "when": zulu_off_state.last_updated.timestamp(),
+            "when": zulu_off_state.last_updated_timestamp,
         },
         {
             "entity_id": "light.zulu",
             "state": "on",
-            "when": zulu_on_state.last_updated.timestamp(),
+            "when": zulu_on_state.last_updated_timestamp,
         },
     ]
 
@@ -1200,7 +1201,7 @@ async def test_subscribe_unsubscribe_logbook_stream(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
-            "when": state.last_updated.timestamp(),
+            "when": state.last_updated_timestamp,
         }
     ]
     assert msg["event"]["start_time"] == now.timestamp()
@@ -1240,17 +1241,17 @@ async def test_subscribe_unsubscribe_logbook_stream(
         {
             "entity_id": "light.alpha",
             "state": "off",
-            "when": alpha_off_state.last_updated.timestamp(),
+            "when": alpha_off_state.last_updated_timestamp,
         },
         {
             "entity_id": "light.zulu",
             "state": "off",
-            "when": zulu_off_state.last_updated.timestamp(),
+            "when": zulu_off_state.last_updated_timestamp,
         },
         {
             "entity_id": "light.zulu",
             "state": "on",
-            "when": zulu_on_state.last_updated.timestamp(),
+            "when": zulu_on_state.last_updated_timestamp,
         },
     ]
 
@@ -1513,7 +1514,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
-            "when": state.last_updated.timestamp(),
+            "when": state.last_updated_timestamp,
         }
     ]
 
@@ -1612,7 +1613,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_with_end_time(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
-            "when": state.last_updated.timestamp(),
+            "when": state.last_updated_timestamp,
         }
     ]
 
@@ -1715,7 +1716,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_past_only(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
-            "when": state.last_updated.timestamp(),
+            "when": state.last_updated_timestamp,
         }
     ]
 
@@ -1803,7 +1804,7 @@ async def test_subscribe_unsubscribe_logbook_stream_big_query(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "on",
-            "when": current_state.last_updated.timestamp(),
+            "when": current_state.last_updated_timestamp,
         }
     ]
 
@@ -1816,7 +1817,7 @@ async def test_subscribe_unsubscribe_logbook_stream_big_query(
         {
             "entity_id": "binary_sensor.four_days_ago",
             "state": "off",
-            "when": four_day_old_state.last_updated.timestamp(),
+            "when": four_day_old_state.last_updated_timestamp,
         }
     ]
 
@@ -2284,7 +2285,7 @@ async def test_live_stream_with_one_second_commit_interval(
 
     hass.bus.async_fire("mock_event", {"device_id": device.id, "message": "7"})
 
-    while len(recieved_rows) != 7:
+    while len(recieved_rows) < 7:
         msg = await asyncio.wait_for(websocket_client.receive_json(), 2.5)
         assert msg["id"] == 7
         assert msg["type"] == "event"
@@ -2362,7 +2363,7 @@ async def test_subscribe_disconnected(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
-            "when": state.last_updated.timestamp(),
+            "when": state.last_updated_timestamp,
         }
     ]
 
@@ -2399,8 +2400,9 @@ async def test_stream_consumer_stop_processing(
 
     after_ws_created_listeners = hass.bus.async_listeners()
 
-    with patch.object(websocket_api, "MAX_PENDING_LOGBOOK_EVENTS", 5), patch.object(
-        websocket_api, "_async_events_consumer"
+    with (
+        patch.object(websocket_api, "MAX_PENDING_LOGBOOK_EVENTS", 5),
+        patch.object(websocket_api, "_async_events_consumer"),
     ):
         await websocket_client.send_json(
             {
@@ -2788,7 +2790,7 @@ async def test_logbook_stream_ignores_forced_updates(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
-            "when": state.last_updated.timestamp(),
+            "when": state.last_updated_timestamp,
         }
     ]
     assert msg["event"]["start_time"] == now.timestamp()

@@ -1,4 +1,5 @@
 """AVM FRITZ!Box binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -26,13 +27,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from .common import (
-    AvmWrapper,
-    ConnectionInfo,
-    FritzBoxBaseCoordinatorEntity,
-    FritzEntityDescription,
-)
 from .const import DOMAIN, DSL_CONNECTION, UPTIME_DEVIATION
+from .coordinator import AvmWrapper, ConnectionInfo
+from .entity import FritzBoxBaseCoordinatorEntity, FritzEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,7 +139,7 @@ def _retrieve_link_attenuation_received_state(
     return status.attenuation[1] / 10  # type: ignore[no-any-return]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class FritzSensorEntityDescription(SensorEntityDescription, FritzEntityDescription):
     """Describes Fritz sensor entity."""
 
@@ -153,13 +150,11 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
     FritzSensorEntityDescription(
         key="external_ip",
         translation_key="external_ip",
-        icon="mdi:earth",
         value_fn=_retrieve_external_ip_state,
     ),
     FritzSensorEntityDescription(
         key="external_ipv6",
         translation_key="external_ipv6",
-        icon="mdi:earth",
         value_fn=_retrieve_external_ipv6_state,
         is_suitable=lambda info: info.ipv6_active,
     ),
@@ -184,7 +179,6 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
-        icon="mdi:upload",
         value_fn=_retrieve_kb_s_sent_state,
     ),
     FritzSensorEntityDescription(
@@ -193,7 +187,6 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
-        icon="mdi:download",
         value_fn=_retrieve_kb_s_received_state,
     ),
     FritzSensorEntityDescription(
@@ -201,7 +194,6 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         translation_key="max_kb_s_sent",
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
-        icon="mdi:upload",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_max_kb_s_sent_state,
     ),
@@ -210,7 +202,6 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         translation_key="max_kb_s_received",
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
-        icon="mdi:download",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_max_kb_s_received_state,
     ),
@@ -220,7 +211,6 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:upload",
         value_fn=_retrieve_gb_sent_state,
     ),
     FritzSensorEntityDescription(
@@ -229,7 +219,6 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:download",
         value_fn=_retrieve_gb_received_state,
     ),
     FritzSensorEntityDescription(
@@ -237,7 +226,6 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         translation_key="link_kb_s_sent",
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
-        icon="mdi:upload",
         value_fn=_retrieve_link_kb_s_sent_state,
     ),
     FritzSensorEntityDescription(
@@ -245,14 +233,12 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         translation_key="link_kb_s_received",
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
-        icon="mdi:download",
         value_fn=_retrieve_link_kb_s_received_state,
     ),
     FritzSensorEntityDescription(
         key="link_noise_margin_sent",
         translation_key="link_noise_margin_sent",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
-        icon="mdi:upload",
         value_fn=_retrieve_link_noise_margin_sent_state,
         is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
     ),
@@ -260,7 +246,6 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         key="link_noise_margin_received",
         translation_key="link_noise_margin_received",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
-        icon="mdi:download",
         value_fn=_retrieve_link_noise_margin_received_state,
         is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
     ),
@@ -268,7 +253,6 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         key="link_attenuation_sent",
         translation_key="link_attenuation_sent",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
-        icon="mdi:upload",
         value_fn=_retrieve_link_attenuation_sent_state,
         is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
     ),
@@ -276,7 +260,6 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         key="link_attenuation_received",
         translation_key="link_attenuation_received",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
-        icon="mdi:download",
         value_fn=_retrieve_link_attenuation_received_state,
         is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
     ),
@@ -298,7 +281,7 @@ async def async_setup_entry(
         if description.is_suitable(connection_info)
     ]
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class FritzBoxSensor(FritzBoxBaseCoordinatorEntity, SensorEntity):

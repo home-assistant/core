@@ -1,4 +1,5 @@
 """The tests for the Sure Petcare lock platform."""
+
 import pytest
 from surepy.exceptions import SurePetcareError
 
@@ -20,10 +21,12 @@ EXPECTED_ENTITY_IDS = {
 
 
 async def test_locks(
-    hass: HomeAssistant, surepetcare, mock_config_entry_setup: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    surepetcare,
+    mock_config_entry_setup: MockConfigEntry,
 ) -> None:
     """Test the generation of unique ids."""
-    entity_registry = er.async_get(hass)
     state_entity_ids = hass.states.async_entity_ids()
 
     for entity_id, unique_id in EXPECTED_ENTITY_IDS.items():

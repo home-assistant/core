@@ -1,4 +1,5 @@
 """Support for climate devices through the SmartThings cloud API."""
+
 from __future__ import annotations
 
 import asyncio
@@ -162,6 +163,8 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
 class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
     """Define a SmartThings climate entities."""
 
+    _enable_turn_on_off_backwards_compatibility = False
+
     def __init__(self, device):
         """Init the class."""
         super().__init__(device)
@@ -173,6 +176,8 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         flags = (
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
         if self._device.get_capability(
             Capability.thermostat_fan_mode, Capability.thermostat
@@ -341,6 +346,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     """Define a SmartThings Air Conditioner."""
 
     _hvac_modes: list[HVACMode]
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, device) -> None:
         """Init the class."""
@@ -353,7 +359,10 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
 
     def _determine_supported_features(self) -> ClimateEntityFeature:
         features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
         if self._device.get_capability(Capability.fan_oscillation_mode):
             features |= ClimateEntityFeature.SWING_MODE

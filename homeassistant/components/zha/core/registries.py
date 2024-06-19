@@ -1,11 +1,12 @@
 """Mapping registries for Zigbee Home Automation."""
+
 from __future__ import annotations
 
 import collections
 from collections.abc import Callable
 import dataclasses
 from operator import attrgetter
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING
 
 import attr
 from zigpy import zcl
@@ -21,9 +22,6 @@ if TYPE_CHECKING:
     from ..entity import ZhaEntity, ZhaGroupEntity
     from .cluster_handlers import ClientClusterHandler, ClusterHandler
 
-
-_ZhaEntityT = TypeVar("_ZhaEntityT", bound=type["ZhaEntity"])
-_ZhaGroupEntityT = TypeVar("_ZhaGroupEntityT", bound=type["ZhaGroupEntity"])
 
 GROUP_ENTITY_DOMAINS = [Platform.LIGHT, Platform.SWITCH, Platform.FAN]
 
@@ -107,12 +105,12 @@ DEVICE_CLASS = {
 DEVICE_CLASS = collections.defaultdict(dict, DEVICE_CLASS)
 
 CLUSTER_HANDLER_ONLY_CLUSTERS = SetRegistry()
-CLIENT_CLUSTER_HANDLER_REGISTRY: DictRegistry[
-    type[ClientClusterHandler]
-] = DictRegistry()
-ZIGBEE_CLUSTER_HANDLER_REGISTRY: NestedDictRegistry[
-    type[ClusterHandler]
-] = NestedDictRegistry()
+CLIENT_CLUSTER_HANDLER_REGISTRY: DictRegistry[type[ClientClusterHandler]] = (
+    DictRegistry()
+)
+ZIGBEE_CLUSTER_HANDLER_REGISTRY: NestedDictRegistry[type[ClusterHandler]] = (
+    NestedDictRegistry()
+)
 
 WEIGHT_ATTR = attrgetter("weight")
 
@@ -277,9 +275,9 @@ class ZHAEntityRegistry:
 
     def __init__(self) -> None:
         """Initialize Registry instance."""
-        self._strict_registry: dict[
-            Platform, dict[MatchRule, type[ZhaEntity]]
-        ] = collections.defaultdict(dict)
+        self._strict_registry: dict[Platform, dict[MatchRule, type[ZhaEntity]]] = (
+            collections.defaultdict(dict)
+        )
         self._multi_entity_registry: dict[
             Platform, dict[int | str | None, dict[MatchRule, list[type[ZhaEntity]]]]
         ] = collections.defaultdict(
@@ -291,9 +289,9 @@ class ZHAEntityRegistry:
             lambda: collections.defaultdict(lambda: collections.defaultdict(list))
         )
         self._group_registry: dict[str, type[ZhaGroupEntity]] = {}
-        self.single_device_matches: dict[
-            Platform, dict[EUI64, list[str]]
-        ] = collections.defaultdict(lambda: collections.defaultdict(list))
+        self.single_device_matches: dict[Platform, dict[EUI64, list[str]]] = (
+            collections.defaultdict(lambda: collections.defaultdict(list))
+        )
 
     def get_entity(
         self,
@@ -323,9 +321,9 @@ class ZHAEntityRegistry:
         dict[Platform, list[EntityClassAndClusterHandlers]], list[ClusterHandler]
     ]:
         """Match ZHA cluster handlers to potentially multiple ZHA Entity classes."""
-        result: dict[
-            Platform, list[EntityClassAndClusterHandlers]
-        ] = collections.defaultdict(list)
+        result: dict[Platform, list[EntityClassAndClusterHandlers]] = (
+            collections.defaultdict(list)
+        )
         all_claimed: set[ClusterHandler] = set()
         for component, stop_match_groups in self._multi_entity_registry.items():
             for stop_match_grp, matches in stop_match_groups.items():
@@ -356,9 +354,9 @@ class ZHAEntityRegistry:
         dict[Platform, list[EntityClassAndClusterHandlers]], list[ClusterHandler]
     ]:
         """Match ZHA cluster handlers to potentially multiple ZHA Entity classes."""
-        result: dict[
-            Platform, list[EntityClassAndClusterHandlers]
-        ] = collections.defaultdict(list)
+        result: dict[Platform, list[EntityClassAndClusterHandlers]] = (
+            collections.defaultdict(list)
+        )
         all_claimed: set[ClusterHandler] = set()
         for (
             component,
@@ -386,7 +384,7 @@ class ZHAEntityRegistry:
         """Match a ZHA group to a ZHA Entity class."""
         return self._group_registry.get(component)
 
-    def strict_match(
+    def strict_match[_ZhaEntityT: type[ZhaEntity]](
         self,
         component: Platform,
         cluster_handler_names: set[str] | str | None = None,
@@ -417,7 +415,7 @@ class ZHAEntityRegistry:
 
         return decorator
 
-    def multipass_match(
+    def multipass_match[_ZhaEntityT: type[ZhaEntity]](
         self,
         component: Platform,
         cluster_handler_names: set[str] | str | None = None,
@@ -452,7 +450,7 @@ class ZHAEntityRegistry:
 
         return decorator
 
-    def config_diagnostic_match(
+    def config_diagnostic_match[_ZhaEntityT: type[ZhaEntity]](
         self,
         component: Platform,
         cluster_handler_names: set[str] | str | None = None,
@@ -487,7 +485,7 @@ class ZHAEntityRegistry:
 
         return decorator
 
-    def group_match(
+    def group_match[_ZhaGroupEntityT: type[ZhaGroupEntity]](
         self, component: Platform
     ) -> Callable[[_ZhaGroupEntityT], _ZhaGroupEntityT]:
         """Decorate a group match rule."""

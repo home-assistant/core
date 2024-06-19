@@ -1,4 +1,5 @@
 """Test hassio system health."""
+
 import asyncio
 import os
 from unittest.mock import patch
@@ -28,8 +29,8 @@ async def test_hassio_system_health(
     )
 
     hass.config.components.add("hassio")
-    with patch.dict(os.environ, MOCK_ENVIRON):
-        assert await async_setup_component(hass, "system_health", {})
+    assert await async_setup_component(hass, "system_health", {})
+    await hass.async_block_till_done()
 
     hass.data["hassio_info"] = {
         "channel": "stable",
@@ -42,6 +43,8 @@ async def test_hassio_system_health(
         "agent_version": "1337",
         "disk_total": "32.0",
         "disk_used": "30.0",
+        "dt_synchronized": True,
+        "virtualization": "qemu",
     }
     hass.data["hassio_os_info"] = {"board": "odroid-n2"}
     hass.data["hassio_supervisor_info"] = {
@@ -49,8 +52,13 @@ async def test_hassio_system_health(
         "supported": True,
         "addons": [{"name": "Awesome Addon", "version": "1.0.0"}],
     }
+    hass.data["hassio_network_info"] = {
+        "host_internet": True,
+        "supervisor_internet": True,
+    }
 
-    info = await get_system_health_info(hass, "hassio")
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        info = await get_system_health_info(hass, "hassio")
 
     for key, val in info.items():
         if asyncio.iscoroutine(val):
@@ -63,13 +71,17 @@ async def test_hassio_system_health(
         "disk_used": "30.0 GB",
         "docker_version": "19.0.3",
         "healthy": True,
+        "host_connectivity": True,
+        "supervisor_connectivity": True,
         "host_os": "Home Assistant OS 5.9",
         "installed_addons": "Awesome Addon (1.0.0)",
+        "ntp_synchronized": True,
         "supervisor_api": "ok",
         "supervisor_version": "supervisor-2020.11.1",
         "supported": True,
         "update_channel": "stable",
         "version_api": "ok",
+        "virtualization": "qemu",
     }
 
 
@@ -87,8 +99,8 @@ async def test_hassio_system_health_with_issues(
     )
 
     hass.config.components.add("hassio")
-    with patch.dict(os.environ, MOCK_ENVIRON):
-        assert await async_setup_component(hass, "system_health", {})
+    assert await async_setup_component(hass, "system_health", {})
+    await hass.async_block_till_done()
 
     hass.data["hassio_info"] = {"channel": "stable"}
     hass.data["hassio_host_info"] = {}
@@ -97,8 +109,10 @@ async def test_hassio_system_health_with_issues(
         "healthy": False,
         "supported": False,
     }
+    hass.data["hassio_network_info"] = {}
 
-    info = await get_system_health_info(hass, "hassio")
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        info = await get_system_health_info(hass, "hassio")
 
     for key, val in info.items():
         if asyncio.iscoroutine(val):

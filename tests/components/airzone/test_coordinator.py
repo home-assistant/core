@@ -30,21 +30,27 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
-        side_effect=HotWaterNotAvailable,
-    ), patch(
-        "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
-        return_value=HVAC_MOCK,
-    ) as mock_hvac, patch(
-        "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
-        side_effect=SystemOutOfRange,
-    ), patch(
-        "homeassistant.components.airzone.AirzoneLocalApi.get_version",
-        return_value=HVAC_VERSION_MOCK,
-    ), patch(
-        "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
-        side_effect=InvalidMethod,
+    with (
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
+            side_effect=HotWaterNotAvailable,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
+            return_value=HVAC_MOCK,
+        ) as mock_hvac,
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
+            side_effect=SystemOutOfRange,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_version",
+            return_value=HVAC_VERSION_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
+            side_effect=InvalidMethod,
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

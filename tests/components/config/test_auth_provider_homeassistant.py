@@ -1,4 +1,5 @@
 """Test config entries API."""
+
 from typing import Any
 
 import pytest
@@ -13,9 +14,11 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
-async def setup_config(hass, local_auth):
+async def setup_config(
+    hass: HomeAssistant, local_auth: prov_ha.HassAuthProvider
+) -> None:
     """Fixture that sets up the auth provider ."""
-    await auth_ha.async_setup(hass)
+    auth_ha.async_setup(hass)
 
 
 @pytest.fixture
@@ -27,7 +30,7 @@ async def auth_provider(
 
 
 @pytest.fixture
-async def owner_access_token(hass, hass_owner_user):
+async def owner_access_token(hass: HomeAssistant, hass_owner_user: MockUser) -> str:
     """Access token for owner user."""
     refresh_token = await hass.auth.async_create_refresh_token(
         hass_owner_user, CLIENT_ID

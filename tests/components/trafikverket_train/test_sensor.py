@@ -1,10 +1,12 @@
 """The test for the Trafikverket train sensor platform."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from pytrafikverket.exceptions import InvalidAuthentication, NoTrainAnnouncementFound
 from pytrafikverket.trafikverket_train import TrainStop
 from syrupy.assertion import SnapshotAssertion
@@ -16,10 +18,10 @@ from homeassistant.core import HomeAssistant
 from tests.common import async_fire_time_changed
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_next(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     get_trains_next: list[TrainStop],
     get_train_stop: TrainStop,
@@ -37,12 +39,15 @@ async def test_sensor_next(
         state = hass.states.get(entity)
         assert state == snapshot
 
-    with patch(
-        "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_next_train_stops",
-        return_value=get_trains_next,
-    ), patch(
-        "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_train_stop",
-        return_value=get_train_stop,
+    with (
+        patch(
+            "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_next_train_stops",
+            return_value=get_trains_next,
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_train_stop",
+            return_value=get_train_stop,
+        ),
     ):
         freezer.tick(timedelta(minutes=6))
         async_fire_time_changed(hass)
@@ -60,10 +65,10 @@ async def test_sensor_next(
         assert state == snapshot
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_single_stop(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     get_trains_next: list[TrainStop],
     snapshot: SnapshotAssertion,
@@ -76,10 +81,10 @@ async def test_sensor_single_stop(
     assert state == snapshot
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_update_auth_failure(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     get_trains_next: list[TrainStop],
     snapshot: SnapshotAssertion,
@@ -88,12 +93,15 @@ async def test_sensor_update_auth_failure(
     state = hass.states.get("sensor.stockholm_c_to_uppsala_c_departure_time_2")
     assert state.state == "2023-05-01T11:00:00+00:00"
 
-    with patch(
-        "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_next_train_stops",
-        side_effect=InvalidAuthentication,
-    ), patch(
-        "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_train_stop",
-        side_effect=InvalidAuthentication,
+    with (
+        patch(
+            "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_next_train_stops",
+            side_effect=InvalidAuthentication,
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_train_stop",
+            side_effect=InvalidAuthentication,
+        ),
     ):
         freezer.tick(timedelta(minutes=6))
         async_fire_time_changed(hass)
@@ -106,10 +114,10 @@ async def test_sensor_update_auth_failure(
         assert flow == snapshot
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_update_failure(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     get_trains_next: list[TrainStop],
     snapshot: SnapshotAssertion,
@@ -118,12 +126,15 @@ async def test_sensor_update_failure(
     state = hass.states.get("sensor.stockholm_c_to_uppsala_c_departure_time_2")
     assert state.state == "2023-05-01T11:00:00+00:00"
 
-    with patch(
-        "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_next_train_stops",
-        side_effect=NoTrainAnnouncementFound,
-    ), patch(
-        "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_train_stop",
-        side_effect=NoTrainAnnouncementFound,
+    with (
+        patch(
+            "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_next_train_stops",
+            side_effect=NoTrainAnnouncementFound,
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_train_stop",
+            side_effect=NoTrainAnnouncementFound,
+        ),
     ):
         freezer.tick(timedelta(minutes=6))
         async_fire_time_changed(hass)
@@ -133,10 +144,10 @@ async def test_sensor_update_failure(
     assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_update_failure_no_state(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     get_trains_next: list[TrainStop],
     snapshot: SnapshotAssertion,

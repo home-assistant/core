@@ -3,6 +3,7 @@
 This file contains the model definitions for schema version 30.
 It is used to test the schema migration logic.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -374,6 +375,9 @@ class States(Base):  # type: ignore[misc,valid-type]
     last_changed_ts = Column(
         TIMESTAMP_TYPE
     )  # *** Not originally in v30, only added for recorder to startup ok
+    last_reported_ts = Column(
+        TIMESTAMP_TYPE
+    )  # *** Not originally in v30, only added for recorder to startup ok
     last_updated = Column(DATETIME_TYPE, default=dt_util.utcnow, index=True)
     last_updated_ts = Column(
         TIMESTAMP_TYPE, default=time.time, index=True
@@ -737,13 +741,11 @@ OLD_STATE = aliased(States, name="old_state")
 
 
 @overload
-def process_timestamp(ts: None) -> None:
-    ...
+def process_timestamp(ts: None) -> None: ...
 
 
 @overload
-def process_timestamp(ts: datetime) -> datetime:
-    ...
+def process_timestamp(ts: datetime) -> datetime: ...
 
 
 def process_timestamp(ts: datetime | None) -> datetime | None:

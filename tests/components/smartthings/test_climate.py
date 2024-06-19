@@ -3,6 +3,7 @@
 The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.
 """
+
 from pysmartthings import Attribute, Capability
 from pysmartthings.device import Status
 import pytest
@@ -16,6 +17,7 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_PRESET_MODE,
+    ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
@@ -28,7 +30,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.climate.const import ATTR_SWING_MODE
 from homeassistant.components.smartthings import climate
 from homeassistant.components.smartthings.const import DOMAIN
 from homeassistant.const import (
@@ -213,6 +214,8 @@ async def test_legacy_thermostat_entity_state(
         == ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
     assert sorted(state.attributes[ATTR_HVAC_MODES]) == [
@@ -240,6 +243,8 @@ async def test_basic_thermostat_entity_state(
         state.attributes[ATTR_SUPPORTED_FEATURES]
         == ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert ATTR_HVAC_ACTION not in state.attributes
     assert sorted(state.attributes[ATTR_HVAC_MODES]) == [
@@ -261,6 +266,8 @@ async def test_thermostat_entity_state(hass: HomeAssistant, thermostat) -> None:
         == ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
     assert sorted(state.attributes[ATTR_HVAC_MODES]) == [
@@ -288,6 +295,8 @@ async def test_buggy_thermostat_entity_state(
         state.attributes[ATTR_SUPPORTED_FEATURES]
         == ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.state is STATE_UNKNOWN
     assert state.attributes[ATTR_TEMPERATURE] is None
@@ -320,6 +329,8 @@ async def test_air_conditioner_entity_state(
         | ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert sorted(state.attributes[ATTR_HVAC_MODES]) == [
         HVACMode.COOL,
@@ -586,11 +597,14 @@ async def test_set_turn_on(hass: HomeAssistant, air_conditioner) -> None:
     assert state.state == HVACMode.HEAT_COOL
 
 
-async def test_entity_and_device_attributes(hass: HomeAssistant, thermostat) -> None:
+async def test_entity_and_device_attributes(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    thermostat,
+) -> None:
     """Test the attributes of the entries are correct."""
     await setup_platform(hass, CLIMATE_DOMAIN, devices=[thermostat])
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     entry = entity_registry.async_get("climate.thermostat")
     assert entry

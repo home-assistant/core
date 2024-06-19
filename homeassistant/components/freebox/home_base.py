@@ -1,4 +1,5 @@
 """Support for Freebox base features."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -128,9 +129,9 @@ class FreeboxHomeEntity(Entity):
         if self._remove_signal_update is not None:
             self._remove_signal_update()
 
-    def remove_signal_update(self, dispacher: Callable[[], None]) -> None:
+    def remove_signal_update(self, dispatcher: Callable[[], None]) -> None:
         """Register state update callback."""
-        self._remove_signal_update = dispacher
+        self._remove_signal_update = dispatcher
 
     def get_value(self, ep_type: str, name: str):
         """Get the value."""

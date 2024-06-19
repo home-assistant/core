@@ -17,6 +17,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': None,
     'model': 'Mock Model',
     'name': 'Mock Title',

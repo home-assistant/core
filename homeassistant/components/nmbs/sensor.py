@@ -1,4 +1,5 @@
 """Get ride details and liveboard details for NMBS (Belgian railway)."""
+
 from __future__ import annotations
 
 import logging

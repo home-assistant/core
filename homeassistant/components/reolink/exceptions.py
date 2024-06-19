@@ -1,4 +1,5 @@
 """Exceptions for the Reolink Camera integration."""
+
 from homeassistant.exceptions import HomeAssistantError
 
 

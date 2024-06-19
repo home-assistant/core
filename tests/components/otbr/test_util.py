@@ -1,4 +1,5 @@
 """Test OTBR Utility functions."""
+
 from unittest.mock import patch
 
 import pytest
@@ -34,9 +35,12 @@ async def test_factory_reset(hass: HomeAssistant, otbr_config_entry_multipan) ->
     """Test factory_reset."""
     data: otbr.OTBRData = hass.data[otbr.DOMAIN]
 
-    with patch("python_otbr_api.OTBR.factory_reset") as factory_reset_mock, patch(
-        "python_otbr_api.OTBR.delete_active_dataset"
-    ) as delete_active_dataset_mock:
+    with (
+        patch("python_otbr_api.OTBR.factory_reset") as factory_reset_mock,
+        patch(
+            "python_otbr_api.OTBR.delete_active_dataset"
+        ) as delete_active_dataset_mock,
+    ):
         await data.factory_reset()
 
     delete_active_dataset_mock.assert_not_called()
@@ -49,12 +53,15 @@ async def test_factory_reset_not_supported(
     """Test factory_reset."""
     data: otbr.OTBRData = hass.data[otbr.DOMAIN]
 
-    with patch(
-        "python_otbr_api.OTBR.factory_reset",
-        side_effect=python_otbr_api.FactoryResetNotSupportedError,
-    ) as factory_reset_mock, patch(
-        "python_otbr_api.OTBR.delete_active_dataset"
-    ) as delete_active_dataset_mock:
+    with (
+        patch(
+            "python_otbr_api.OTBR.factory_reset",
+            side_effect=python_otbr_api.FactoryResetNotSupportedError,
+        ) as factory_reset_mock,
+        patch(
+            "python_otbr_api.OTBR.delete_active_dataset"
+        ) as delete_active_dataset_mock,
+    ):
         await data.factory_reset()
 
     delete_active_dataset_mock.assert_called_once_with()
@@ -67,13 +74,17 @@ async def test_factory_reset_error_1(
     """Test factory_reset."""
     data: otbr.OTBRData = hass.data[otbr.DOMAIN]
 
-    with patch(
-        "python_otbr_api.OTBR.factory_reset",
-        side_effect=python_otbr_api.OTBRError,
-    ) as factory_reset_mock, patch(
-        "python_otbr_api.OTBR.delete_active_dataset"
-    ) as delete_active_dataset_mock, pytest.raises(
-        HomeAssistantError,
+    with (
+        patch(
+            "python_otbr_api.OTBR.factory_reset",
+            side_effect=python_otbr_api.OTBRError,
+        ) as factory_reset_mock,
+        patch(
+            "python_otbr_api.OTBR.delete_active_dataset"
+        ) as delete_active_dataset_mock,
+        pytest.raises(
+            HomeAssistantError,
+        ),
     ):
         await data.factory_reset()
 
@@ -87,14 +98,18 @@ async def test_factory_reset_error_2(
     """Test factory_reset."""
     data: otbr.OTBRData = hass.data[otbr.DOMAIN]
 
-    with patch(
-        "python_otbr_api.OTBR.factory_reset",
-        side_effect=python_otbr_api.FactoryResetNotSupportedError,
-    ) as factory_reset_mock, patch(
-        "python_otbr_api.OTBR.delete_active_dataset",
-        side_effect=python_otbr_api.OTBRError,
-    ) as delete_active_dataset_mock, pytest.raises(
-        HomeAssistantError,
+    with (
+        patch(
+            "python_otbr_api.OTBR.factory_reset",
+            side_effect=python_otbr_api.FactoryResetNotSupportedError,
+        ) as factory_reset_mock,
+        patch(
+            "python_otbr_api.OTBR.delete_active_dataset",
+            side_effect=python_otbr_api.OTBRError,
+        ) as delete_active_dataset_mock,
+        pytest.raises(
+            HomeAssistantError,
+        ),
     ):
         await data.factory_reset()
 

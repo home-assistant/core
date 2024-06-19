@@ -1,4 +1,5 @@
 """Support for media browsing."""
+
 from typing import Any
 
 from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType

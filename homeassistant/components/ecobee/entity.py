@@ -1,4 +1,5 @@
 """Base classes shared among Ecobee entities."""
+
 from __future__ import annotations
 
 import logging

@@ -1,4 +1,5 @@
 """Test Hue diagnostics."""
+
 from homeassistant.core import HomeAssistant
 
 from .conftest import setup_platform

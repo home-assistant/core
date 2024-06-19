@@ -1,4 +1,5 @@
 """Provides core stream functionality."""
+
 from __future__ import annotations
 
 import asyncio
@@ -13,7 +14,7 @@ from typing import TYPE_CHECKING, Any
 from aiohttp import web
 import numpy as np
 
-from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.decorator import Registry
@@ -333,7 +334,7 @@ class StreamOutput:
         try:
             async with asyncio.timeout(timeout):
                 await self._part_event.wait()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return False
         return True
 
@@ -380,7 +381,7 @@ class StreamView(HomeAssistantView):
         self, request: web.Request, token: str, sequence: str = "", part_num: str = ""
     ) -> web.StreamResponse:
         """Start a GET request."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
 
         stream = next(
             (s for s in hass.data[DOMAIN][ATTR_STREAMS] if s.access_token == token),
@@ -388,7 +389,7 @@ class StreamView(HomeAssistantView):
         )
 
         if not stream:
-            raise web.HTTPNotFound()
+            raise web.HTTPNotFound
 
         # Start worker if not already started
         await stream.start()
@@ -399,7 +400,7 @@ class StreamView(HomeAssistantView):
         self, request: web.Request, stream: Stream, sequence: str, part_num: str
     ) -> web.StreamResponse:
         """Handle the stream request."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 TRANSFORM_IMAGE_FUNCTION = (

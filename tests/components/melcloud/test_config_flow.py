@@ -1,5 +1,5 @@
 """Test the MELCloud config flow."""
-import asyncio
+
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -52,7 +52,7 @@ async def test_form(hass: HomeAssistant, mock_login, mock_get_devices) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -64,7 +64,7 @@ async def test_form(hass: HomeAssistant, mock_login, mock_get_devices) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test-email@test-domain.com"
     assert result2["data"] == {
         "username": "test-email@test-domain.com",
@@ -75,7 +75,7 @@ async def test_form(hass: HomeAssistant, mock_login, mock_get_devices) -> None:
 
 @pytest.mark.parametrize(
     ("error", "reason"),
-    [(ClientError(), "cannot_connect"), (asyncio.TimeoutError(), "cannot_connect")],
+    [(ClientError(), "cannot_connect"), (TimeoutError(), "cannot_connect")],
 )
 async def test_form_errors(
     hass: HomeAssistant, mock_login, mock_get_devices, error, reason
@@ -90,7 +90,7 @@ async def test_form_errors(
     )
 
     assert len(mock_login.mock_calls) == 1
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
 
 
@@ -114,7 +114,7 @@ async def test_form_response_errors(
         data={"username": "test-email@test-domain.com", "password": "test-password"},
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == message
 
 
@@ -139,7 +139,7 @@ async def test_token_refresh(hass: HomeAssistant, mock_login, mock_get_devices) 
             },
         )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 0
@@ -174,7 +174,7 @@ async def test_token_reauthentication(
         },
         data=mock_entry.data,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     with patch(
@@ -187,7 +187,7 @@ async def test_token_reauthentication(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -195,7 +195,7 @@ async def test_token_reauthentication(
 @pytest.mark.parametrize(
     ("error", "reason"),
     [
-        (asyncio.TimeoutError(), "cannot_connect"),
+        (TimeoutError(), "cannot_connect"),
         (AttributeError(name="get"), "invalid_auth"),
     ],
 )
@@ -231,7 +231,7 @@ async def test_form_errors_reauthentication(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == reason
 
     mock_login.side_effect = None
@@ -245,7 +245,7 @@ async def test_form_errors_reauthentication(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
 
@@ -290,7 +290,7 @@ async def test_client_errors_reauthentication(
         await hass.async_block_till_done()
 
     assert result["errors"]["base"] == reason
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     mock_login.side_effect = None
     with patch(
@@ -303,5 +303,5 @@ async def test_client_errors_reauthentication(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"

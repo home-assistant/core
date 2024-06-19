@@ -1,5 +1,5 @@
 """Tests for the Somfy config flow."""
-import asyncio
+
 from http import HTTPStatus
 import logging
 import time
@@ -90,7 +90,7 @@ class MockOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implementa
 
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh a token."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 def test_inherit_enforces_domain_set() -> None:
@@ -104,9 +104,10 @@ def test_inherit_enforces_domain_set() -> None:
             """Return logger."""
             return logging.getLogger(__name__)
 
-    with patch.dict(
-        config_entries.HANDLERS, {TEST_DOMAIN: TestFlowHandler}
-    ), pytest.raises(TypeError):
+    with (
+        patch.dict(config_entries.HANDLERS, {TEST_DOMAIN: TestFlowHandler}),
+        pytest.raises(TypeError),
+    ):
         TestFlowHandler()
 
 
@@ -132,8 +133,9 @@ async def test_missing_credentials_for_domain(
     assert result["reason"] == "missing_credentials"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_abort_if_authorization_timeout(
-    hass: HomeAssistant, flow_handler, local_impl, current_request_with_host: None
+    hass: HomeAssistant, flow_handler, local_impl
 ) -> None:
     """Check timeout generating authorization url."""
     flow_handler.async_register_implementation(hass, local_impl)
@@ -143,7 +145,7 @@ async def test_abort_if_authorization_timeout(
 
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.asyncio.timeout",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result = await flow.async_step_user()
 
@@ -151,8 +153,9 @@ async def test_abort_if_authorization_timeout(
     assert result["reason"] == "authorize_url_timeout"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_abort_if_no_url_available(
-    hass: HomeAssistant, flow_handler, local_impl, current_request_with_host: None
+    hass: HomeAssistant, flow_handler, local_impl
 ) -> None:
     """Check no_url_available generating authorization url."""
     flow_handler.async_register_implementation(hass, local_impl)
@@ -170,13 +173,13 @@ async def test_abort_if_no_url_available(
 
 
 @pytest.mark.parametrize("expires_in_dict", [{}, {"expires_in": "badnumber"}])
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_abort_if_oauth_error(
     hass: HomeAssistant,
     flow_handler,
     local_impl,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     expires_in_dict: dict[str, str],
 ) -> None:
     """Check bad oauth token."""
@@ -233,13 +236,12 @@ async def test_abort_if_oauth_error(
     assert result["reason"] == "oauth_error"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_abort_if_oauth_rejected(
     hass: HomeAssistant,
     flow_handler,
     local_impl,
     hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Check bad oauth token."""
     flow_handler.async_register_implementation(hass, local_impl)
@@ -288,13 +290,13 @@ async def test_abort_if_oauth_rejected(
     assert result["description_placeholders"] == {"error": "access_denied"}
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_abort_on_oauth_timeout_error(
     hass: HomeAssistant,
     flow_handler,
     local_impl,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Check timeout during oauth token exchange."""
     flow_handler.async_register_implementation(hass, local_impl)
@@ -336,7 +338,7 @@ async def test_abort_on_oauth_timeout_error(
 
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.asyncio.timeout",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -396,19 +398,19 @@ async def test_abort_discovered_multiple(
             HTTPStatus.UNAUTHORIZED,
             {},
             "oauth_unauthorized",
-            "Token request failed (unknown): unknown",
+            "Token request for oauth2_test failed (unknown): unknown",
         ),
         (
             HTTPStatus.NOT_FOUND,
             {},
             "oauth_failed",
-            "Token request failed (unknown): unknown",
+            "Token request for oauth2_test failed (unknown): unknown",
         ),
         (
             HTTPStatus.INTERNAL_SERVER_ERROR,
             {},
             "oauth_failed",
-            "Token request failed (unknown): unknown",
+            "Token request for oauth2_test failed (unknown): unknown",
         ),
         (
             HTTPStatus.BAD_REQUEST,
@@ -418,17 +420,17 @@ async def test_abort_discovered_multiple(
                 "error_uri": "See the full API docs at https://authorization-server.com/docs/access_token",
             },
             "oauth_failed",
-            "Token request failed (invalid_request): Request was missing the",
+            "Token request for oauth2_test failed (invalid_request): Request was missing the",
         ),
     ],
 )
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_abort_if_oauth_token_error(
     hass: HomeAssistant,
     flow_handler,
     local_impl,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     status_code: HTTPStatus,
     error_body: dict[str, Any],
     error_reason: str,
@@ -486,13 +488,13 @@ async def test_abort_if_oauth_token_error(
     assert error_log in caplog.text
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_abort_if_oauth_token_closing_error(
     hass: HomeAssistant,
     flow_handler,
     local_impl,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Check error when obtaining an oauth token."""
@@ -541,7 +543,7 @@ async def test_abort_if_oauth_token_closing_error(
 
     with caplog.at_level(logging.DEBUG):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert "Token request failed (unknown): unknown" in caplog.text
+    assert "Token request for oauth2_test failed (unknown): unknown" in caplog.text
 
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "oauth_unauthorized"
@@ -572,13 +574,13 @@ async def test_abort_discovered_existing_entries(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     flow_handler,
     local_impl,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Check full flow."""
     flow_handler.async_register_implementation(hass, local_impl)
@@ -710,6 +712,7 @@ async def test_oauth_session(
             },
         },
     )
+    config_entry.add_to_hass(hass)
 
     now = time.time()
     session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
@@ -756,6 +759,7 @@ async def test_oauth_session_with_clock_slightly_out_of_sync(
             },
         },
     )
+    config_entry.add_to_hass(hass)
 
     now = time.time()
     session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)

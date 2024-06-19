@@ -1,5 +1,7 @@
 """Fixtures for cloud tests."""
-from collections.abc import AsyncGenerator, Callable, Coroutine
+
+from collections.abc import Callable, Coroutine
+from pathlib import Path
 from typing import Any
 from unittest.mock import DEFAULT, MagicMock, PropertyMock, patch
 
@@ -13,6 +15,7 @@ from hass_nabucasa.remote import RemoteUI
 from hass_nabucasa.voice import Voice
 import jwt
 import pytest
+from typing_extensions import AsyncGenerator
 
 from homeassistant.components.cloud import CloudClient, const, prefs
 from homeassistant.core import HomeAssistant
@@ -32,7 +35,7 @@ async def load_homeassistant(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture(name="cloud")
-async def cloud_fixture() -> AsyncGenerator[MagicMock, None]:
+async def cloud_fixture() -> AsyncGenerator[MagicMock]:
     """Mock the cloud object.
 
     See the real hass_nabucasa.Cloud class for how to configure the mock.
@@ -115,6 +118,13 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock, None]:
         type(mock_cloud).is_connected = is_connected
         type(mock_cloud.iot).connected = is_connected
 
+        def mock_username() -> bool:
+            """Return the subscription username."""
+            return "abcdefghjkl"
+
+        username = PropertyMock(side_effect=mock_username)
+        type(mock_cloud).username = username
+
         # Properties that we mock as attributes.
         mock_cloud.expiration_date = utcnow()
         mock_cloud.subscription_expired = False
@@ -172,13 +182,13 @@ def set_cloud_prefs_fixture(
 
 
 @pytest.fixture(autouse=True)
-def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir: Path) -> Path:
     """Mock the TTS cache dir with empty dir."""
     return mock_tts_cache_dir
 
 
 @pytest.fixture(autouse=True)
-def tts_mutagen_mock_fixture_autouse(tts_mutagen_mock):
+def tts_mutagen_mock_fixture_autouse(tts_mutagen_mock: MagicMock) -> None:
     """Mock writing tags."""
 
 
@@ -193,7 +203,7 @@ def mock_user_data():
 def mock_cloud_fixture(hass):
     """Fixture for cloud component."""
     hass.loop.run_until_complete(mock_cloud(hass))
-    return mock_cloud_prefs(hass)
+    return mock_cloud_prefs(hass, {})
 
 
 @pytest.fixture
@@ -228,8 +238,9 @@ def mock_cloud_login(hass, mock_cloud_setup):
 @pytest.fixture(name="mock_auth")
 def mock_auth_fixture():
     """Mock check token."""
-    with patch("hass_nabucasa.auth.CognitoAuth.async_check_token"), patch(
-        "hass_nabucasa.auth.CognitoAuth.async_renew_access_token"
+    with (
+        patch("hass_nabucasa.auth.CognitoAuth.async_check_token"),
+        patch("hass_nabucasa.auth.CognitoAuth.async_renew_access_token"),
     ):
         yield
 

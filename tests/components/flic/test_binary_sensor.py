@@ -1,4 +1,5 @@
 """Tests for Flic button integration."""
+
 from unittest import mock
 
 from homeassistant.core import HomeAssistant
@@ -11,6 +12,7 @@ class _MockFlicClient:
         self.addresses = button_addresses
         self.get_info_callback = None
         self.scan_wizard = None
+        self.channel = None
 
     def close(self):
         pass

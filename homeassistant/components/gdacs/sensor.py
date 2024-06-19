@@ -1,4 +1,5 @@
 """Feed Entity Manager Sensor support for GDACS Feed."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -17,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import GdacsFeedEntityManager
-from .const import DEFAULT_ICON, DOMAIN, FEED
+from .const import DOMAIN, FEED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,10 +49,10 @@ class GdacsSensor(SensorEntity):
     """Status sensor for the GDACS integration."""
 
     _attr_should_poll = False
-    _attr_icon = DEFAULT_ICON
     _attr_native_unit_of_measurement = DEFAULT_UNIT_OF_MEASUREMENT
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = "alerts"
 
     def __init__(
         self, config_entry: ConfigEntry, manager: GdacsFeedEntityManager

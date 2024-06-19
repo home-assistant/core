@@ -1,0 +1,29 @@
+{
+  "entity": {
+    "device_tracker": {
+      "location": {
+        "default": "mdi:car"
+      }
+    },
+    "sensor": {
+      "odometer": {
+        "default": "mdi:road-variant"
+      },
+      "average_fuel_consumption": {
+        "default": "mdi:leaf"
+      },
+      "range": {
+        "default": "mdi:gas-station"
+      },
+      "fuel_level": {
+        "default": "mdi:gas-station"
+      },
+      "ev_range": {
+        "default": "mdi:ev-station"
+      }
+    }
+  },
+  "services": {
+    "unlock_specific_door": "mdi:lock-open-variant"
+  }
+}

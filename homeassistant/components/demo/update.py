@@ -1,4 +1,5 @@
 """Demo platform that offers fake update entities."""
+
 from __future__ import annotations
 
 import asyncio

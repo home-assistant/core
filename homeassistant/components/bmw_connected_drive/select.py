@@ -1,4 +1,5 @@
 """Select platform for BMW."""
+
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
@@ -22,24 +23,18 @@ from .coordinator import BMWDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class BMWRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class BMWSelectEntityDescription(SelectEntityDescription):
+    """Describes BMW sensor entity."""
 
     current_option: Callable[[MyBMWVehicle], str]
     remote_service: Callable[[MyBMWVehicle, str], Coroutine[Any, Any, Any]]
-
-
-@dataclass(frozen=True)
-class BMWSelectEntityDescription(SelectEntityDescription, BMWRequiredKeysMixin):
-    """Describes BMW sensor entity."""
-
     is_available: Callable[[MyBMWVehicle], bool] = lambda _: False
     dynamic_options: Callable[[MyBMWVehicle], list[str]] | None = None
 
 
-SELECT_TYPES: dict[str, BMWSelectEntityDescription] = {
-    "ac_limit": BMWSelectEntityDescription(
+SELECT_TYPES: tuple[BMWSelectEntityDescription, ...] = (
+    BMWSelectEntityDescription(
         key="ac_limit",
         translation_key="ac_limit",
         is_available=lambda v: v.is_remote_set_ac_limit_enabled,
@@ -51,21 +46,19 @@ SELECT_TYPES: dict[str, BMWSelectEntityDescription] = {
         remote_service=lambda v, o: v.remote_services.trigger_charging_settings_update(
             ac_limit=int(o)
         ),
-        icon="mdi:current-ac",
         unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
-    "charging_mode": BMWSelectEntityDescription(
+    BMWSelectEntityDescription(
         key="charging_mode",
         translation_key="charging_mode",
         is_available=lambda v: v.is_charging_plan_supported,
-        options=[c.value for c in ChargingMode if c != ChargingMode.UNKNOWN],
-        current_option=lambda v: str(v.charging_profile.charging_mode.value),  # type: ignore[union-attr]
+        options=[c.value.lower() for c in ChargingMode if c != ChargingMode.UNKNOWN],
+        current_option=lambda v: v.charging_profile.charging_mode.value.lower(),  # type: ignore[union-attr]
         remote_service=lambda v, o: v.remote_services.trigger_charging_profile_update(
             charging_mode=ChargingMode(o)
         ),
-        icon="mdi:vector-point-select",
     ),
-}
+)
 
 
 async def async_setup_entry(
@@ -83,7 +76,7 @@ async def async_setup_entry(
             entities.extend(
                 [
                     BMWSelect(coordinator, vehicle, description)
-                    for description in SELECT_TYPES.values()
+                    for description in SELECT_TYPES
                     if description.is_available(vehicle)
                 ]
             )

@@ -1,4 +1,5 @@
 """Tests for the DLNA DMR data module."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable

@@ -1,4 +1,5 @@
 """Config flow for Vogel's MotionMount."""
+
 import logging
 import socket
 from typing import Any
@@ -6,10 +7,13 @@ from typing import Any
 import motionmount
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import (
+    DEFAULT_DISCOVERY_UNIQUE_ID,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_UUID
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN, EMPTY_MAC
@@ -23,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 # 3. New CE but old Pro FW -> It doesn't supply the mac using DNS-SD but we can read it (returning the EMPTY_MAC)
 # 4. New CE and new Pro FW -> Both DNS-SD and a read gives us the mac
 # If we can't get the mac, we use DEFAULT_DISCOVERY_UNIQUE_ID as an ID, so we can always configure a single MotionMount. Most households will only have a single MotionMount
-class MotionMountFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Vogel's MotionMount config flow."""
 
     VERSION = 1
@@ -34,7 +38,7 @@ class MotionMountFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self._show_setup_form()
@@ -55,13 +59,13 @@ class MotionMountFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
 
             # Otherwise we try to continue with the generic uid
-            info[CONF_UUID] = config_entries.DEFAULT_DISCOVERY_UNIQUE_ID
+            info[CONF_UUID] = DEFAULT_DISCOVERY_UNIQUE_ID
 
         # If the device mac is valid we use it, otherwise we use the default id
         if info.get(CONF_UUID, EMPTY_MAC) != EMPTY_MAC:
             unique_id = info[CONF_UUID]
         else:
-            unique_id = config_entries.DEFAULT_DISCOVERY_UNIQUE_ID
+            unique_id = DEFAULT_DISCOVERY_UNIQUE_ID
 
         name = info.get(CONF_NAME, user_input[CONF_HOST])
 
@@ -77,7 +81,7 @@ class MotionMountFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
 
         # Extract information from discovery
@@ -137,7 +141,7 @@ class MotionMountFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a confirmation flow initiated by zeroconf."""
         if user_input is None:
             return self.async_show_form(
@@ -162,7 +166,9 @@ class MotionMountFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return {CONF_UUID: format_mac(mm.mac.hex()), CONF_NAME: mm.name}
 
-    def _show_setup_form(self, errors: dict[str, str] | None = None) -> FlowResult:
+    def _show_setup_form(
+        self, errors: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",

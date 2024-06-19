@@ -1,4 +1,5 @@
 """Support for AVM FRITZ!SmartHome lightbulbs."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -12,22 +13,23 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzboxDataUpdateCoordinator, FritzBoxDeviceEntity
-from .common import get_coordinator
 from .const import COLOR_MODE, COLOR_TEMP_MODE, LOGGER
+from .coordinator import FritzboxConfigEntry
 
 SUPPORTED_COLOR_MODES = {ColorMode.COLOR_TEMP, ColorMode.HS}
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FritzboxConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the FRITZ!SmartHome light from ConfigEntry."""
-    coordinator = get_coordinator(hass, entry.entry_id)
+    coordinator = entry.runtime_data
 
     @callback
     def _add_entities(devices: set[str] | None = None) -> None:

@@ -1,4 +1,5 @@
 """Support for exposing a templated binary sensor."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -482,7 +483,7 @@ class AutoOffExtraStoredData(ExtraStoredData):
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of additional data."""
-        auto_off_time: datetime | None | dict[str, str] = self.auto_off_time
+        auto_off_time: datetime | dict[str, str] | None = self.auto_off_time
         if isinstance(auto_off_time, datetime):
             auto_off_time = {
                 "__type": str(type(auto_off_time)),

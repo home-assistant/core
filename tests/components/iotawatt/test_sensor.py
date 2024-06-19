@@ -1,4 +1,5 @@
 """Test setting up sensors."""
+
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
@@ -62,9 +63,9 @@ async def test_sensor_type_output(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_iotawatt
 ) -> None:
     """Tests the sensor type of Output."""
-    mock_iotawatt.getSensors.return_value["sensors"][
-        "my_watthour_sensor_key"
-    ] = OUTPUT_SENSOR
+    mock_iotawatt.getSensors.return_value["sensors"]["my_watthour_sensor_key"] = (
+        OUTPUT_SENSOR
+    )
     assert await async_setup_component(hass, "iotawatt", {})
     await hass.async_block_till_done()
 

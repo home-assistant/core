@@ -1,4 +1,5 @@
 """Code to handle a Dynalite bridge."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

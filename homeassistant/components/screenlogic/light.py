@@ -1,4 +1,5 @@
 """Support for a ScreenLogic light 'circuit' switch."""
+
 from dataclasses import dataclass
 import logging
 
@@ -60,7 +61,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ScreenLogicLightDescription(
     LightEntityDescription, ScreenLogicPushEntityDescription
 ):

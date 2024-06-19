@@ -1,4 +1,5 @@
 """Support for Airthings sensors."""
+
 from __future__ import annotations
 
 from airthings import AirthingsDevice
@@ -9,7 +10,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AirthingsDataCoordinatorType
+from . import AirthingsConfigEntry, AirthingsDataCoordinatorType
 from .const import DOMAIN
 
 SENSORS: dict[str, SensorEntityDescription] = {
@@ -47,7 +47,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "pressure": SensorEntityDescription(
         key="pressure",
-        device_class=SensorDeviceClass.PRESSURE,
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         native_unit_of_measurement=UnitOfPressure.MBAR,
     ),
     "battery": SensorEntityDescription(
@@ -101,12 +101,12 @@ SENSORS: dict[str, SensorEntityDescription] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AirthingsConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Airthings sensor."""
 
-    coordinator: AirthingsDataCoordinatorType = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     entities = [
         AirthingsHeaterEnergySensor(
             coordinator,
@@ -156,3 +156,11 @@ class AirthingsHeaterEnergySensor(
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.coordinator.data[self._id].sensors[self.entity_description.key]  # type: ignore[no-any-return]
+
+    @property
+    def available(self) -> bool:
+        """Check if device and sensor is available in data."""
+        return (
+            super().available
+            and self.entity_description.key in self.coordinator.data[self._id].sensors
+        )

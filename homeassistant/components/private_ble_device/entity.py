@@ -1,4 +1,5 @@
 """Tracking for bluetooth low energy devices."""
+
 from __future__ import annotations
 
 from abc import abstractmethod

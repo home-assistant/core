@@ -1,10 +1,14 @@
 """The tests for Home Assistant frontend."""
-from datetime import timedelta
+
+from asyncio import AbstractEventLoop
 from http import HTTPStatus
+from pathlib import Path
 import re
 from typing import Any
 from unittest.mock import patch
 
+from aiohttp.test_utils import TestClient
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.frontend import (
@@ -15,15 +19,22 @@ from homeassistant.components.frontend import (
     DOMAIN,
     EVENT_PANELS_UPDATED,
     THEMES_STORAGE_KEY,
+    add_extra_js_url,
+    async_register_built_in_panel,
+    async_remove_panel,
+    remove_extra_js_url,
 )
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
 from tests.common import MockUser, async_capture_events, async_fire_time_changed
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
+from tests.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 
 MOCK_THEMES = {
     "happy": {"primary-color": "red", "app-header-background-color": "blue"},
@@ -82,31 +93,43 @@ async def frontend_themes(hass):
 
 
 @pytest.fixture
-def aiohttp_client(event_loop, aiohttp_client, socket_enabled):
+def aiohttp_client(
+    event_loop: AbstractEventLoop,
+    aiohttp_client: ClientSessionGenerator,
+    socket_enabled: None,
+) -> ClientSessionGenerator:
     """Return aiohttp_client and allow opening sockets."""
     return aiohttp_client
 
 
 @pytest.fixture
-async def mock_http_client(hass, aiohttp_client, frontend):
+async def mock_http_client(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, frontend
+) -> TestClient:
     """Start the Home Assistant HTTP component."""
     return await aiohttp_client(hass.http.app)
 
 
 @pytest.fixture
-async def themes_ws_client(hass, hass_ws_client, frontend_themes):
+async def themes_ws_client(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, frontend_themes
+) -> MockHAClientWebSocket:
     """Start the Home Assistant HTTP component."""
     return await hass_ws_client(hass)
 
 
 @pytest.fixture
-async def ws_client(hass, hass_ws_client, frontend):
+async def ws_client(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, frontend
+) -> MockHAClientWebSocket:
     """Start the Home Assistant HTTP component."""
     return await hass_ws_client(hass)
 
 
 @pytest.fixture
-async def mock_http_client_with_extra_js(hass, aiohttp_client, ignore_frontend_deps):
+async def mock_http_client_with_extra_js(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, ignore_frontend_deps
+) -> TestClient:
     """Start the Home Assistant HTTP component."""
     assert await async_setup_component(
         hass,
@@ -220,7 +243,10 @@ async def test_themes_persist(
 
 
 async def test_themes_save_storage(
-    hass: HomeAssistant, hass_storage: dict[str, Any], frontend_themes
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    frontend_themes,
 ) -> None:
     """Test that theme settings are restores after restart."""
 
@@ -233,7 +259,8 @@ async def test_themes_save_storage(
     )
 
     # To trigger the call_later
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+    freezer.tick(60.0)
+    async_fire_time_changed(hass)
     # To execute the save
     await hass.async_block_till_done()
 
@@ -381,27 +408,90 @@ async def test_missing_themes(hass: HomeAssistant, ws_client) -> None:
     assert msg["result"]["themes"] == {}
 
 
+@pytest.mark.usefixtures("mock_onboarded")
 async def test_extra_js(
-    hass: HomeAssistant, mock_http_client_with_extra_js, mock_onboarded
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_http_client_with_extra_js,
+) -> None:
     """Test that extra javascript is loaded."""
-    resp = await mock_http_client_with_extra_js.get("")
-    assert resp.status == 200
-    assert "cache-control" not in resp.headers
 
-    text = await resp.text()
+    async def get_response():
+        resp = await mock_http_client_with_extra_js.get("")
+        assert resp.status == 200
+        assert "cache-control" not in resp.headers
+
+        return await resp.text()
+
+    text = await get_response()
     assert '"/local/my_module.js"' in text
     assert '"/local/my_es5.js"' in text
 
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "frontend/subscribe_extra_js"})
+    msg = await client.receive_json()
+
+    assert msg["success"] is True
+    subscription_id = msg["id"]
+
+    # Test dynamically adding and removing extra javascript
+    add_extra_js_url(hass, "/local/my_module_2.js", False)
+    add_extra_js_url(hass, "/local/my_es5_2.js", True)
+    text = await get_response()
+    assert '"/local/my_module_2.js"' in text
+    assert '"/local/my_es5_2.js"' in text
+
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["event"] == {
+        "change_type": "added",
+        "item": {"type": "module", "url": "/local/my_module_2.js"},
+    }
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["event"] == {
+        "change_type": "added",
+        "item": {"type": "es5", "url": "/local/my_es5_2.js"},
+    }
+
+    remove_extra_js_url(hass, "/local/my_module_2.js", False)
+    remove_extra_js_url(hass, "/local/my_es5_2.js", True)
+    text = await get_response()
+    assert '"/local/my_module_2.js"' not in text
+    assert '"/local/my_es5_2.js"' not in text
+
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["event"] == {
+        "change_type": "removed",
+        "item": {"type": "module", "url": "/local/my_module_2.js"},
+    }
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["event"] == {
+        "change_type": "removed",
+        "item": {"type": "es5", "url": "/local/my_es5_2.js"},
+    }
+
+    # Remove again should not raise
+    remove_extra_js_url(hass, "/local/my_module_2.js", False)
+    remove_extra_js_url(hass, "/local/my_es5_2.js", True)
+    text = await get_response()
+    assert '"/local/my_module_2.js"' not in text
+    assert '"/local/my_es5_2.js"' not in text
+
     # safe mode
     hass.config.safe_mode = True
-    resp = await mock_http_client_with_extra_js.get("")
-    assert resp.status == 200
-    assert "cache-control" not in resp.headers
-
-    text = await resp.text()
+    text = await get_response()
     assert '"/local/my_module.js"' not in text
     assert '"/local/my_es5.js"' not in text
+
+    # Test dynamically adding extra javascript
+    add_extra_js_url(hass, "/local/my_module_2.js", False)
+    add_extra_js_url(hass, "/local/my_es5_2.js", True)
+    text = await get_response()
+    assert '"/local/my_module_2.js"' not in text
+    assert '"/local/my_es5_2.js"' not in text
 
 
 async def test_get_panels(
@@ -413,8 +503,8 @@ async def test_get_panels(
     resp = await mock_http_client.get("/map")
     assert resp.status == HTTPStatus.NOT_FOUND
 
-    hass.components.frontend.async_register_built_in_panel(
-        "map", "Map", "mdi:tooltip-account", require_admin=True
+    async_register_built_in_panel(
+        hass, "map", "Map", "mdi:tooltip-account", require_admin=True
     )
 
     resp = await mock_http_client.get("/map")
@@ -436,7 +526,7 @@ async def test_get_panels(
     assert msg["result"]["map"]["title"] == "Map"
     assert msg["result"]["map"]["require_admin"] is True
 
-    hass.components.frontend.async_remove_panel("map")
+    async_remove_panel(hass, "map")
 
     resp = await mock_http_client.get("/map")
     assert resp.status == HTTPStatus.NOT_FOUND
@@ -450,12 +540,10 @@ async def test_get_panels_non_admin(
     """Test get_panels command."""
     hass_admin_user.groups = []
 
-    hass.components.frontend.async_register_built_in_panel(
-        "map", "Map", "mdi:tooltip-account", require_admin=True
+    async_register_built_in_panel(
+        hass, "map", "Map", "mdi:tooltip-account", require_admin=True
     )
-    hass.components.frontend.async_register_built_in_panel(
-        "history", "History", "mdi:history"
-    )
+    async_register_built_in_panel(hass, "history", "History", "mdi:history")
 
     await ws_client.send_json({"id": 5, "type": "get_panels"})
 
@@ -737,3 +825,23 @@ async def test_get_icons_for_single_integration(
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {"resources": {"http": {}}}
+
+
+async def test_www_local_dir(
+    hass: HomeAssistant, tmp_path: Path, hass_client: ClientSessionGenerator
+) -> None:
+    """Test local www folder."""
+    hass.config.config_dir = str(tmp_path)
+    tmp_path_www = tmp_path / "www"
+    x_txt_file = tmp_path_www / "x.txt"
+
+    def _create_www_and_x_txt():
+        tmp_path_www.mkdir()
+        x_txt_file.write_text("any")
+
+    await hass.async_add_executor_job(_create_www_and_x_txt)
+
+    assert await async_setup_component(hass, "frontend", {})
+    client = await hass_client()
+    resp = await client.get("/local/x.txt")
+    assert resp.status == HTTPStatus.OK

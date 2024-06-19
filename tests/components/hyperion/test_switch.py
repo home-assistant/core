@@ -1,4 +1,5 @@
 """Tests for the Hyperion integration."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, call, patch
 
@@ -169,7 +170,7 @@ async def test_device_info(
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, device_identifer)})
     assert device
-    assert device.config_entries == {TEST_CONFIG_ENTRY_ID}
+    assert device.config_entries == [TEST_CONFIG_ENTRY_ID]
     assert device.identifiers == {(DOMAIN, device_identifer)}
     assert device.manufacturer == HYPERION_MANUFACTURER_NAME
     assert device.model == HYPERION_MODEL_NAME

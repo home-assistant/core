@@ -1,0 +1,54 @@
+{
+  "entity": {
+    "sensor": {
+      "media_location": {
+        "default": "mdi:monitor"
+      },
+      "play_status": {
+        "default": "mdi:monitor"
+      },
+      "play_speed": {
+        "default": "mdi:monitor"
+      },
+      "video_mode": {
+        "default": "mdi:monitor-screenshot"
+      },
+      "video_color_eotf": {
+        "default": "mdi:monitor-eye"
+      },
+      "video_color_space": {
+        "default": "mdi:monitor-eye"
+      },
+      "video_color_depth": {
+        "default": "mdi:monitor-eye"
+      },
+      "video_color_sampling": {
+        "default": "mdi:monitor-eye"
+      },
+      "screen_mask_ratio": {
+        "default": "mdi:monitor-screenshot"
+      },
+      "screen_mask_top_trim_rel": {
+        "default": "mdi:monitor-screenshot"
+      },
+      "screen_mask_bottom_trim_rel": {
+        "default": "mdi:monitor-screenshot"
+      },
+      "screen_mask_conservative_ratio": {
+        "default": "mdi:monitor-screenshot"
+      },
+      "screen_mask_top_mask_abs": {
+        "default": "mdi:monitor-screenshot"
+      },
+      "screen_mask_bottom_mask_abs": {
+        "default": "mdi:monitor-screenshot"
+      },
+      "cinemascape_mask": {
+        "default": "mdi:monitor-star"
+      },
+      "cinemascape_mode": {
+        "default": "mdi:monitor-star"
+      }
+    }
+  }
+}

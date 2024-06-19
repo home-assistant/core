@@ -1,4 +1,5 @@
 """Support for Hue groups (room/zone)."""
+
 from __future__ import annotations
 
 import asyncio
@@ -269,10 +270,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         self._dynamic_mode_active = lights_in_dynamic_mode > 0
         self._attr_supported_color_modes = supported_color_modes
         # pick a winner for the current colormode
-        if (
-            lights_with_color_temp_support > 0
-            and lights_in_colortemp_mode == lights_with_color_temp_support
-        ):
+        if lights_with_color_temp_support > 0 and lights_in_colortemp_mode > 0:
             self._attr_color_mode = ColorMode.COLOR_TEMP
         elif lights_with_color_support > 0:
             self._attr_color_mode = ColorMode.XY

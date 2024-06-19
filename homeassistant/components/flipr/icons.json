@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "chlorine": {
+        "default": "mdi:pool"
+      },
+      "red_ox": {
+        "default": "mdi:pool"
+      }
+    }
+  }
+}

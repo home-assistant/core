@@ -10,6 +10,7 @@
     'context': <ANY>,
     'entity_id': 'switch.wled_rgb_light_nightlight',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -31,6 +32,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -67,6 +70,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'WLED',
     'model': 'DIY light',
     'name': 'WLED RGB Light',
@@ -85,6 +90,7 @@
     'context': <ANY>,
     'entity_id': 'switch.wled_rgb_light_reverse',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -106,6 +112,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -142,6 +150,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'WLED',
     'model': 'DIY light',
     'name': 'WLED RGB Light',
@@ -161,6 +171,7 @@
     'context': <ANY>,
     'entity_id': 'switch.wled_rgb_light_sync_receive',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -182,6 +193,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -218,6 +231,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'WLED',
     'model': 'DIY light',
     'name': 'WLED RGB Light',
@@ -237,6 +252,7 @@
     'context': <ANY>,
     'entity_id': 'switch.wled_rgb_light_sync_send',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -258,6 +274,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -294,6 +312,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'WLED',
     'model': 'DIY light',
     'name': 'WLED RGB Light',

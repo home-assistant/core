@@ -1,0 +1,11 @@
+{
+  "services": {
+    "create_vacation": "mdi:umbrella-beach",
+    "delete_vacation": "mdi:umbrella-beach-outline",
+    "resume_program": "mdi:play",
+    "set_fan_min_on_time": "mdi:fan-clock",
+    "set_dst_mode": "mdi:sun-clock",
+    "set_mic_mode": "mdi:microphone",
+    "set_occupancy_modes": "mdi:eye-settings"
+  }
+}

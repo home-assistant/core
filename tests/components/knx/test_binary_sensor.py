@@ -1,4 +1,5 @@
 """Test KNX binary sensor."""
+
 from datetime import timedelta
 
 from homeassistant.components.knx.const import CONF_STATE_ADDRESS, CONF_SYNC_STATE

@@ -1,10 +1,11 @@
 """Config flow for Spider."""
+
 import logging
 
 from spiderpy.spiderapi import SpiderApi, SpiderApiException, UnauthorizedException
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -20,7 +21,7 @@ RESULT_CONN_ERROR = "conn_error"
 RESULT_SUCCESS = "success"
 
 
-class SpiderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SpiderConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Spider config flow."""
 
     VERSION = 1

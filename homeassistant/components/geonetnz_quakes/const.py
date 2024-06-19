@@ -1,4 +1,5 @@
 """Define constants for the GeoNet NZ Quakes integration."""
+
 from datetime import timedelta
 
 from homeassistant.const import Platform

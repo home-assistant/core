@@ -1,4 +1,5 @@
 """Support for Valve devices."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -214,7 +215,7 @@ class ValveEntity(Entity):
 
     def open_valve(self) -> None:
         """Open the valve."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_open_valve(self) -> None:
         """Open the valve."""
@@ -229,7 +230,7 @@ class ValveEntity(Entity):
 
     def close_valve(self) -> None:
         """Close valve."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_close_valve(self) -> None:
         """Close valve."""
@@ -256,7 +257,7 @@ class ValveEntity(Entity):
 
     def set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
@@ -264,7 +265,7 @@ class ValveEntity(Entity):
 
     def stop_valve(self) -> None:
         """Stop the valve."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_stop_valve(self) -> None:
         """Stop the valve."""

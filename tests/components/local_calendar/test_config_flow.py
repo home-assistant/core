@@ -1,4 +1,5 @@
 """Test the Local Calendar config flow."""
+
 from unittest.mock import patch
 
 from homeassistant import config_entries
@@ -18,7 +19,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -33,7 +34,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "My Calendar"
     assert result2["data"] == {
         CONF_CALENDAR_NAME: "My Calendar",
@@ -50,7 +51,7 @@ async def test_duplicate_name(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert not result.get("errors")
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -62,5 +63,5 @@ async def test_duplicate_name(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"

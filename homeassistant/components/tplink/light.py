@@ -1,4 +1,5 @@
 """Support for TPLink lights."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -163,6 +164,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
 
     _attr_supported_features = LightEntityFeature.TRANSITION
     _attr_name = None
+    _fixed_color_mode: ColorMode | None = None
 
     device: SmartBulb
 
@@ -193,6 +195,9 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         if device.is_dimmable:
             modes.add(ColorMode.BRIGHTNESS)
         self._attr_supported_color_modes = filter_supported_color_modes(modes)
+        if len(self._attr_supported_color_modes) == 1:
+            # If the light supports only a single color mode, set it now
+            self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
         self._async_update_attrs()
 
     @callback
@@ -223,7 +228,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         await self.device.set_hsv(hue, sat, brightness, transition=transition)
 
     async def _async_set_color_temp(
-        self, color_temp: float | int, brightness: int | None, transition: int | None
+        self, color_temp: float, brightness: int | None, transition: int | None
     ) -> None:
         device = self.device
         valid_temperature_range = device.valid_temperature_range
@@ -273,14 +278,14 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
 
     def _determine_color_mode(self) -> ColorMode:
         """Return the active color mode."""
-        if self.device.is_color:
-            if self.device.is_variable_color_temp and self.device.color_temp:
-                return ColorMode.COLOR_TEMP
-            return ColorMode.HS
-        if self.device.is_variable_color_temp:
-            return ColorMode.COLOR_TEMP
+        if self._fixed_color_mode:
+            # The light supports only a single color mode, return it
+            return self._fixed_color_mode
 
-        return ColorMode.BRIGHTNESS
+        # The light supports both color temp and color, determine which on is active
+        if self.device.is_variable_color_temp and self.device.color_temp:
+            return ColorMode.COLOR_TEMP
+        return ColorMode.HS
 
     @callback
     def _async_update_attrs(self) -> None:

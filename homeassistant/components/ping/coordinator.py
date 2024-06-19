@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for the ping integration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -20,7 +21,7 @@ class PingResult:
 
     ip_address: str
     is_alive: bool
-    data: dict[str, Any] | None
+    data: dict[str, Any]
 
 
 class PingUpdateCoordinator(DataUpdateCoordinator[PingResult]):
@@ -49,5 +50,5 @@ class PingUpdateCoordinator(DataUpdateCoordinator[PingResult]):
         return PingResult(
             ip_address=self.ping.ip_address,
             is_alive=self.ping.is_alive,
-            data=self.ping.data,
+            data=self.ping.data or {},
         )

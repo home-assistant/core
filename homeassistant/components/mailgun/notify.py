@@ -1,4 +1,5 @@
 """Support for the Mailgun mail notifications."""
+
 from __future__ import annotations
 
 import logging
@@ -85,8 +86,8 @@ class MailgunNotificationService(BaseNotificationService):
         except MailgunCredentialsError:
             _LOGGER.exception("Invalid credentials")
             return False
-        except MailgunDomainError as mailgun_error:
-            _LOGGER.exception(mailgun_error)
+        except MailgunDomainError:
+            _LOGGER.exception("Unexpected exception")
             return False
         return True
 
@@ -109,5 +110,5 @@ class MailgunNotificationService(BaseNotificationService):
                 files=files,
             )
             _LOGGER.debug("Message sent: %s", resp)
-        except MailgunError as mailgun_error:
-            _LOGGER.exception("Failed to send message: %s", mailgun_error)
+        except MailgunError:
+            _LOGGER.exception("Failed to send message")

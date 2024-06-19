@@ -1,4 +1,5 @@
 """Buttons for the Elexa Guardian integration."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable

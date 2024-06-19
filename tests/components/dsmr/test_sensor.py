@@ -4,25 +4,52 @@ Tests setup of the DSMR component and ensure incoming telegrams cause
 Entity to be updated with new values.
 
 """
+
 import asyncio
 import datetime
 from decimal import Decimal
 from itertools import chain, repeat
 from unittest.mock import DEFAULT, MagicMock
 
+from dsmr_parser.obis_references import (
+    BELGIUM_CURRENT_AVERAGE_DEMAND,
+    BELGIUM_MAXIMUM_DEMAND_MONTH,
+    BELGIUM_MBUS1_DEVICE_TYPE,
+    BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
+    BELGIUM_MBUS1_METER_READING1,
+    BELGIUM_MBUS1_METER_READING2,
+    BELGIUM_MBUS2_DEVICE_TYPE,
+    BELGIUM_MBUS2_EQUIPMENT_IDENTIFIER,
+    BELGIUM_MBUS2_METER_READING1,
+    BELGIUM_MBUS2_METER_READING2,
+    BELGIUM_MBUS3_DEVICE_TYPE,
+    BELGIUM_MBUS3_EQUIPMENT_IDENTIFIER,
+    BELGIUM_MBUS3_METER_READING1,
+    BELGIUM_MBUS3_METER_READING2,
+    BELGIUM_MBUS4_DEVICE_TYPE,
+    BELGIUM_MBUS4_EQUIPMENT_IDENTIFIER,
+    BELGIUM_MBUS4_METER_READING1,
+    BELGIUM_MBUS4_METER_READING2,
+    CURRENT_ELECTRICITY_USAGE,
+    ELECTRICITY_ACTIVE_TARIFF,
+    ELECTRICITY_EXPORTED_TOTAL,
+    ELECTRICITY_IMPORTED_TOTAL,
+    GAS_METER_READING,
+    HOURLY_GAS_METER_READING,
+)
+from dsmr_parser.objects import CosemObject, MBusObject
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNKNOWN,
     UnitOfEnergy,
@@ -40,13 +67,6 @@ async def test_default_setup(
 ) -> None:
     """Test the default setup."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
-
-    from dsmr_parser.obis_references import (
-        CURRENT_ELECTRICITY_USAGE,
-        ELECTRICITY_ACTIVE_TARIFF,
-        GAS_METER_READING,
-    )
-    from dsmr_parser.objects import CosemObject, MBusObject
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -106,7 +126,6 @@ async def test_default_setup(
     assert (
         power_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
     )
-    assert power_consumption.attributes.get(ATTR_ICON) is None
     assert (
         power_consumption.attributes.get(ATTR_STATE_CLASS)
         == SensorStateClass.MEASUREMENT
@@ -145,7 +164,6 @@ async def test_default_setup(
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
     assert active_tariff.state == "low"
     assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
-    assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
     assert (
         active_tariff.attributes.get(ATTR_FRIENDLY_NAME)
         == "Electricity Meter Active tariff"
@@ -177,12 +195,6 @@ async def test_setup_only_energy(
 ) -> None:
     """Test the default setup."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
-
-    from dsmr_parser.obis_references import (
-        CURRENT_ELECTRICITY_USAGE,
-        ELECTRICITY_ACTIVE_TARIFF,
-    )
-    from dsmr_parser.objects import CosemObject
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -232,12 +244,6 @@ async def test_v4_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test if v4 meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
-    from dsmr_parser.obis_references import (
-        ELECTRICITY_ACTIVE_TARIFF,
-        HOURLY_GAS_METER_READING,
-    )
-    from dsmr_parser.objects import CosemObject, MBusObject
-
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "4",
@@ -282,7 +288,6 @@ async def test_v4_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
     assert active_tariff.state == "low"
     assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
-    assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
     assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
     assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
@@ -318,12 +323,6 @@ async def test_v5_meter(
 ) -> None:
     """Test if v5 meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
-
-    from dsmr_parser.obis_references import (
-        ELECTRICITY_ACTIVE_TARIFF,
-        HOURLY_GAS_METER_READING,
-    )
-    from dsmr_parser.objects import CosemObject, MBusObject
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -369,7 +368,6 @@ async def test_v5_meter(
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
     assert active_tariff.state == "low"
     assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
-    assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
     assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
     assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
@@ -391,13 +389,6 @@ async def test_v5_meter(
 async def test_luxembourg_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test if v5 meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
-
-    from dsmr_parser.obis_references import (
-        ELECTRICITY_EXPORTED_TOTAL,
-        ELECTRICITY_IMPORTED_TOTAL,
-        HOURLY_GAS_METER_READING,
-    )
-    from dsmr_parser.objects import CosemObject, MBusObject
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -447,7 +438,6 @@ async def test_luxembourg_meter(hass: HomeAssistant, dsmr_connection_fixture) ->
     active_tariff = hass.states.get("sensor.electricity_meter_energy_consumption_total")
     assert active_tariff.state == "123.456"
     assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
-    assert active_tariff.attributes.get(ATTR_ICON) is None
     assert (
         active_tariff.attributes.get(ATTR_STATE_CLASS)
         == SensorStateClass.TOTAL_INCREASING
@@ -481,25 +471,6 @@ async def test_luxembourg_meter(hass: HomeAssistant, dsmr_connection_fixture) ->
 async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test if Belgian meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
-
-    from dsmr_parser.obis_references import (
-        BELGIUM_CURRENT_AVERAGE_DEMAND,
-        BELGIUM_MAXIMUM_DEMAND_MONTH,
-        BELGIUM_MBUS1_DEVICE_TYPE,
-        BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS1_METER_READING2,
-        BELGIUM_MBUS2_DEVICE_TYPE,
-        BELGIUM_MBUS2_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS2_METER_READING1,
-        BELGIUM_MBUS3_DEVICE_TYPE,
-        BELGIUM_MBUS3_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS3_METER_READING2,
-        BELGIUM_MBUS4_DEVICE_TYPE,
-        BELGIUM_MBUS4_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS4_METER_READING1,
-        ELECTRICITY_ACTIVE_TARIFF,
-    )
-    from dsmr_parser.objects import CosemObject, MBusObject
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -605,7 +576,6 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
     assert active_tariff.state == "normal"
     assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
-    assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
     assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
     assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
@@ -614,7 +584,7 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     avg_demand = hass.states.get("sensor.electricity_meter_current_average_demand")
     assert avg_demand.state == "1.75"
     assert avg_demand.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.KILO_WATT
-    assert avg_demand.attributes.get(ATTR_STATE_CLASS) is None
+    assert avg_demand.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     # check max average demand is parsed correctly
     max_demand = hass.states.get(
@@ -622,7 +592,7 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     )
     assert max_demand.state == "4.11"
     assert max_demand.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.KILO_WATT
-    assert max_demand.attributes.get(ATTR_STATE_CLASS) is None
+    assert max_demand.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     # check if gas consumption mbus1 is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
@@ -684,22 +654,6 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
 async def test_belgian_meter_alt(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test if Belgian meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
-
-    from dsmr_parser.obis_references import (
-        BELGIUM_MBUS1_DEVICE_TYPE,
-        BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS1_METER_READING1,
-        BELGIUM_MBUS2_DEVICE_TYPE,
-        BELGIUM_MBUS2_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS2_METER_READING2,
-        BELGIUM_MBUS3_DEVICE_TYPE,
-        BELGIUM_MBUS3_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS3_METER_READING1,
-        BELGIUM_MBUS4_DEVICE_TYPE,
-        BELGIUM_MBUS4_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS4_METER_READING2,
-    )
-    from dsmr_parser.objects import CosemObject, MBusObject
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -848,20 +802,6 @@ async def test_belgian_meter_mbus(hass: HomeAssistant, dsmr_connection_fixture) 
     """Test if Belgian meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
-    from dsmr_parser.obis_references import (
-        BELGIUM_MBUS1_DEVICE_TYPE,
-        BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS2_DEVICE_TYPE,
-        BELGIUM_MBUS2_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS3_DEVICE_TYPE,
-        BELGIUM_MBUS3_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS3_METER_READING2,
-        BELGIUM_MBUS4_DEVICE_TYPE,
-        BELGIUM_MBUS4_METER_READING1,
-        ELECTRICITY_ACTIVE_TARIFF,
-    )
-    from dsmr_parser.objects import CosemObject, MBusObject
-
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "5B",
@@ -969,9 +909,6 @@ async def test_belgian_meter_low(hass: HomeAssistant, dsmr_connection_fixture) -
     """Test if Belgian meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
-    from dsmr_parser.obis_references import ELECTRICITY_ACTIVE_TARIFF
-    from dsmr_parser.objects import CosemObject
-
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "5B",
@@ -1009,7 +946,6 @@ async def test_belgian_meter_low(hass: HomeAssistant, dsmr_connection_fixture) -
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
     assert active_tariff.state == "low"
     assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
-    assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
     assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
     assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
@@ -1018,12 +954,6 @@ async def test_belgian_meter_low(hass: HomeAssistant, dsmr_connection_fixture) -
 async def test_swedish_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test if v5 meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
-
-    from dsmr_parser.obis_references import (
-        ELECTRICITY_EXPORTED_TOTAL,
-        ELECTRICITY_IMPORTED_TOTAL,
-    )
-    from dsmr_parser.objects import CosemObject
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -1066,7 +996,6 @@ async def test_swedish_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     active_tariff = hass.states.get("sensor.electricity_meter_energy_consumption_total")
     assert active_tariff.state == "123.456"
     assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
-    assert active_tariff.attributes.get(ATTR_ICON) is None
     assert (
         active_tariff.attributes.get(ATTR_STATE_CLASS)
         == SensorStateClass.TOTAL_INCREASING
@@ -1091,12 +1020,6 @@ async def test_swedish_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
 async def test_easymeter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """Test if Q3D meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
-
-    from dsmr_parser.obis_references import (
-        ELECTRICITY_EXPORTED_TOTAL,
-        ELECTRICITY_IMPORTED_TOTAL,
-    )
-    from dsmr_parser.objects import CosemObject
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -1142,7 +1065,6 @@ async def test_easymeter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     active_tariff = hass.states.get("sensor.electricity_meter_energy_consumption_total")
     assert active_tariff.state == "54184.632"
     assert active_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
-    assert active_tariff.attributes.get(ATTR_ICON) is None
     assert (
         active_tariff.attributes.get(ATTR_STATE_CLASS)
         == SensorStateClass.TOTAL_INCREASING
@@ -1257,11 +1179,6 @@ async def test_connection_errors_retry(
 @patch("homeassistant.components.dsmr.sensor.DEFAULT_RECONNECT_INTERVAL", 0)
 async def test_reconnect(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """If transport disconnects, the connection should be retried."""
-    from dsmr_parser.obis_references import (
-        CURRENT_ELECTRICITY_USAGE,
-        ELECTRICITY_ACTIVE_TARIFF,
-    )
-    from dsmr_parser.objects import CosemObject
 
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -1334,7 +1251,7 @@ async def test_reconnect(hass: HomeAssistant, dsmr_connection_fixture) -> None:
 
     await hass.config_entries.async_unload(mock_entry.entry_id)
 
-    assert mock_entry.state == config_entries.ConfigEntryState.NOT_LOADED
+    assert mock_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_gas_meter_providing_energy_reading(
@@ -1342,9 +1259,6 @@ async def test_gas_meter_providing_energy_reading(
 ) -> None:
     """Test that gas providing energy readings use the correct device class."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
-
-    from dsmr_parser.obis_references import GAS_METER_READING
-    from dsmr_parser.objects import MBusObject
 
     entry_data = {
         "port": "/dev/ttyUSB0",

@@ -1,4 +1,5 @@
 """Tests for the diagnostics data provided by the VeSync integration."""
+
 from unittest.mock import patch
 
 from pyvesync.helpers import Helpers
@@ -65,6 +66,7 @@ async def test_async_get_config_entry_diagnostics__single_humidifier(
 
 async def test_async_get_device_diagnostics__single_fan(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     hass_client: ClientSessionGenerator,
     config_entry: ConfigEntry,
     config: ConfigType,
@@ -76,7 +78,6 @@ async def test_async_get_device_diagnostics__single_fan(
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={(DOMAIN, "abcdefghabcdefghabcdefghabcdefgh")},
     )
@@ -92,10 +93,13 @@ async def test_async_get_device_diagnostics__single_fan(
         matcher=path_type(
             {
                 "home_assistant.entities.0.state.last_changed": (str,),
+                "home_assistant.entities.0.state.last_reported": (str,),
                 "home_assistant.entities.0.state.last_updated": (str,),
                 "home_assistant.entities.1.state.last_changed": (str,),
+                "home_assistant.entities.1.state.last_reported": (str,),
                 "home_assistant.entities.1.state.last_updated": (str,),
                 "home_assistant.entities.2.state.last_changed": (str,),
+                "home_assistant.entities.2.state.last_reported": (str,),
                 "home_assistant.entities.2.state.last_updated": (str,),
             }
         )

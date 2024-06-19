@@ -1,4 +1,5 @@
 """Test the Z-Wave JS config validation helpers."""
+
 import pytest
 import voluptuous as vol
 

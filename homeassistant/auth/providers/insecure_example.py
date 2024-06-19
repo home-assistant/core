@@ -1,4 +1,5 @@
 """Example auth provider."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,10 +9,9 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from ..models import Credentials, UserMeta
+from ..models import AuthFlowResult, Credentials, UserMeta
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 
 USER_SCHEMA = vol.Schema(
@@ -98,7 +98,7 @@ class ExampleLoginFlow(LoginFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> AuthFlowResult:
         """Handle the step of the form."""
         errors = None
 

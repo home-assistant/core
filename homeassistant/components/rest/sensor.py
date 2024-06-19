@@ -1,9 +1,11 @@
 """Support for RESTful API sensors."""
+
 from __future__ import annotations
 
 import logging
 import ssl
 from typing import Any
+from xml.parsers.expat import ExpatError
 
 import voluptuous as vol
 
@@ -158,7 +160,13 @@ class RestSensor(ManualTriggerSensorEntity, RestEntity):
 
     def _update_from_rest_data(self) -> None:
         """Update state from the rest data."""
-        value = self.rest.data_without_xml()
+        try:
+            value = self.rest.data_without_xml()
+        except ExpatError as err:
+            _LOGGER.warning(
+                "REST xml result could not be parsed and converted to JSON: %s", err
+            )
+            value = self.rest.data
 
         if self._json_attrs:
             self._attr_extra_state_attributes = parse_json_attributes(

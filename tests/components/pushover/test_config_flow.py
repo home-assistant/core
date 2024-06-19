@@ -1,4 +1,5 @@
 """Test pushbullet config flow."""
+
 from unittest.mock import MagicMock, patch
 
 from pushover_complete import BadAPIRequestError
@@ -43,7 +44,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input=MOCK_CONFIG,
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Pushover"
     assert result["data"] == MOCK_CONFIG
 
@@ -65,7 +66,7 @@ async def test_flow_user_key_api_key_exists(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input=MOCK_CONFIG,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -90,7 +91,7 @@ async def test_flow_name_already_configured(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input=new_config,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -105,7 +106,7 @@ async def test_flow_invalid_user_key(
         context={"source": config_entries.SOURCE_USER},
         data=MOCK_CONFIG,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_USER_KEY: "invalid_user_key"}
 
@@ -121,7 +122,7 @@ async def test_flow_invalid_api_key(
         context={"source": config_entries.SOURCE_USER},
         data=MOCK_CONFIG,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
 
@@ -135,7 +136,7 @@ async def test_flow_conn_err(hass: HomeAssistant, mock_pushover: MagicMock) -> N
         context={"source": config_entries.SOURCE_USER},
         data=MOCK_CONFIG,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -157,7 +158,7 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
         data=MOCK_CONFIG,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -167,7 +168,7 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
 
 
@@ -188,7 +189,7 @@ async def test_reauth_failed(hass: HomeAssistant, mock_pushover: MagicMock) -> N
         data=MOCK_CONFIG,
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     mock_pushover.side_effect = BadAPIRequestError("400: application token is invalid")
@@ -199,7 +200,7 @@ async def test_reauth_failed(hass: HomeAssistant, mock_pushover: MagicMock) -> N
         },
     )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {
         CONF_API_KEY: "invalid_api_key",
     }
@@ -231,7 +232,7 @@ async def test_reauth_with_existing_config(hass: HomeAssistant) -> None:
         data=MOCK_CONFIG,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -241,5 +242,5 @@ async def test_reauth_with_existing_config(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"

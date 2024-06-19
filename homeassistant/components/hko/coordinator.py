@@ -1,4 +1,5 @@
 """Weather data coordinator for the HKO API."""
+
 from asyncio import timeout
 from datetime import timedelta
 import logging
@@ -100,7 +101,7 @@ class HKOUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _convert_current(self, data: dict[str, Any]) -> dict[str, Any]:
         """Return temperature and humidity in the appropriate format."""
-        current = {
+        return {
             API_HUMIDITY: data[API_HUMIDITY][API_DATA][0][API_VALUE],
             API_TEMPERATURE: next(
                 (
@@ -111,12 +112,11 @@ class HKOUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 0,
             ),
         }
-        return current
 
     def _convert_forecast(self, data: dict[str, Any]) -> dict[str, Any]:
         """Return daily forecast in the appropriate format."""
         date = data[API_FORECAST_DATE]
-        forecast = {
+        return {
             ATTR_FORECAST_CONDITION: self._convert_icon_condition(
                 data[API_FORECAST_ICON], data[API_FORECAST_WEATHER]
             ),
@@ -124,7 +124,6 @@ class HKOUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ATTR_FORECAST_TEMP_LOW: data[API_FORECAST_MIN_TEMP][API_VALUE],
             ATTR_FORECAST_TIME: f"{date[0:4]}-{date[4:6]}-{date[6:8]}T00:00:00+08:00",
         }
-        return forecast
 
     def _convert_icon_condition(self, icon_code: int, info: str) -> str:
         """Return the condition corresponding to an icon code."""

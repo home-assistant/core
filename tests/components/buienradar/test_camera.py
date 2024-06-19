@@ -1,4 +1,5 @@
 """The tests for generic camera component."""
+
 import asyncio
 from contextlib import suppress
 import copy
@@ -9,7 +10,7 @@ from aiohttp.client_exceptions import ClientResponseError
 from homeassistant.components.buienradar.const import CONF_DELTA, DOMAIN
 from homeassistant.const import CONF_COUNTRY_CODE, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import async_get
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
@@ -31,7 +32,7 @@ def radar_map_url(country_code: str = "NL") -> str:
 
 
 async def _setup_config_entry(hass, entry):
-    entity_registry = async_get(hass)
+    entity_registry = er.async_get(hass)
     entity_registry.async_get_or_create(
         domain="camera",
         platform="buienradar",
