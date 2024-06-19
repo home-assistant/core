@@ -52,7 +52,7 @@ from .const import DOMAIN, REG_KEY
 
 # EXCLUDED_DOMAINS and ON_OFF_STATES are considered immutable
 # in respect that new platforms should not be added.
-# The the only maintenance allowed here is
+# The only maintenance allowed here is
 # if existing platforms add new ON or OFF states.
 EXCLUDED_DOMAINS: set[Platform | str] = {
     Platform.AIR_QUALITY,
