@@ -9,11 +9,10 @@ from typing import Any
 from kasa import Device, Feature
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import TPLinkConfigEntry
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import (
     CoordinatedTPLinkEntity,
@@ -22,7 +21,6 @@ from .entity import (
     _entities_for_device_and_its_children,
     async_refresh_after,
 )
-from .models import TPLinkData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,11 +45,11 @@ def _new_switch_description(feature: Feature) -> TPLinkSwitchEntityDescription:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: TPLinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches."""
-    data: TPLinkData = hass.data[DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     parent_coordinator = data.parent_coordinator
     device = parent_coordinator.device
 

@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_VOLTAGE,
     UnitOfElectricCurrent,
@@ -25,12 +24,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import TPLinkConfigEntry
 from .const import (
     ATTR_CURRENT_A,
     ATTR_CURRENT_POWER_W,
     ATTR_TODAY_ENERGY_KWH,
     ATTR_TOTAL_ENERGY_KWH,
-    DOMAIN,
 )
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import (
@@ -39,7 +38,6 @@ from .entity import (
     _category_for_feature,
     _entities_for_device_and_its_children,
 )
-from .models import TPLinkData
 
 
 @dataclass(frozen=True)
@@ -124,11 +122,11 @@ def _new_sensor_description(feature: Feature) -> TPLinkSensorEntityDescription:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: TPLinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors."""
-    data: TPLinkData = hass.data[DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     parent_coordinator = data.parent_coordinator
     children_coordinators = data.children_coordinators
     entities: list[CoordinatedTPLinkEntity] = []

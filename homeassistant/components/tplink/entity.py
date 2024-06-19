@@ -325,6 +325,8 @@ def _entities_for_device_and_its_children[_E: CoordinatedTPLinkEntity](
     if device.children:
         _LOGGER.debug("Initializing device with %s children", len(device.children))
         for idx, child in enumerate(device.children):
+            # HS300 does not like too many concurrent requests and its emeter data requires
+            # a request for each socket, so we receive separate coordinators.
             if child_coordinators:
                 child_coordinator = child_coordinators[idx]
             else:
