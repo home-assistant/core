@@ -9,7 +9,7 @@ import yaml
 
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.util.yaml import parse_yaml
+from homeassistant.util.yaml import UndefinedSubstitution, parse_yaml
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
@@ -568,4 +568,34 @@ async def test_substituting_blueprint_inputs_incomplete_input(
     assert msg["error"] == {
         "code": "unknown_error",
         "message": "Missing input trigger_event",
+    }
+
+
+async def test_substituting_blueprint_inputs_incomplete_input_2(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test substituting blueprint inputs."""
+    client = await hass_ws_client(hass)
+    with patch(
+        "homeassistant.components.blueprint.models.BlueprintInputs.async_substitute",
+        side_effect=UndefinedSubstitution("blah"),
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "blueprint/substitute",
+                "domain": "automation",
+                "path": "test_event_service.yaml",
+                "input": {
+                    "trigger_event": "test_event",
+                    "service_to_call": "test.automation",
+                    "a_number": 5,
+                },
+            }
+        )
+        msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "unknown_error",
+        "message": "No substitution found for input blah",
     }
