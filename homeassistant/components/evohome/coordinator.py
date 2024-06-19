@@ -16,7 +16,6 @@ from evohomeasync2.schema.const import (
     SZ_LOCATION_ID,
     SZ_LOCATION_INFO,
     SZ_TIME_ZONE,
-    SZ_USE_DAYLIGHT_SAVE_SWITCHING,
 )
 
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -80,15 +79,16 @@ class EvoBroker:
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
             loc_info = {
-                k: loc_config[SZ_LOCATION_INFO][k]
-                for k in (SZ_LOCATION_ID, SZ_USE_DAYLIGHT_SAVE_SWITCHING, SZ_TIME_ZONE)
+                SZ_LOCATION_ID: loc_config[SZ_LOCATION_INFO][SZ_LOCATION_ID],
+                SZ_TIME_ZONE: loc_config[SZ_LOCATION_INFO][SZ_TIME_ZONE],
             }
             gwy_info = {
                 SZ_GATEWAY_ID: loc_config[GWS][0][SZ_GATEWAY_INFO][SZ_GATEWAY_ID],
+                TCS: loc_config[GWS][0][TCS],
             }
             config = {
                 SZ_LOCATION_INFO: loc_info,
-                GWS: [{SZ_GATEWAY_INFO: gwy_info, TCS: loc_config[GWS][0][TCS]}],
+                GWS: [{SZ_GATEWAY_INFO: gwy_info}],
             }
             _LOGGER.debug("Config = %s", config)
 
