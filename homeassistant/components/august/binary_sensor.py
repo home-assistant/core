@@ -185,22 +185,13 @@ class AugustDoorBinarySensor(AugustDescriptionEntity, BinarySensorEntity):
     @callback
     def _update_from_data(self) -> None:
         """Get the latest state of the sensor and update activity."""
-        assert self._data.activity_stream is not None
-        door_activity = self._data.activity_stream.get_latest_device_activity(
-            self._device_id, {ActivityType.DOOR_OPERATION}
-        )
-
-        if door_activity is not None:
+        if door_activity := self._get_latest({ActivityType.DOOR_OPERATION}):
             update_lock_detail_from_activity(self._detail, door_activity)
             # If the source is pubnub the lock must be online since its a live update
             if door_activity.source == SOURCE_PUBNUB:
                 self._detail.set_online(True)
 
-        bridge_activity = self._data.activity_stream.get_latest_device_activity(
-            self._device_id, {ActivityType.BRIDGE_OPERATION}
-        )
-
-        if bridge_activity is not None:
+        if bridge_activity := self._get_latest({ActivityType.BRIDGE_OPERATION}):
             update_lock_detail_from_activity(self._detail, bridge_activity)
         self._attr_available = self._detail.bridge_is_online
         self._attr_is_on = self._detail.door_state == LockDoorStatus.OPEN

@@ -2,6 +2,7 @@
 
 from abc import abstractmethod
 
+from yalexs.activity import Activity, ActivityType
 from yalexs.doorbell import Doorbell, DoorbellDetail
 from yalexs.keypad import KeypadDetail
 from yalexs.lock import Lock, LockDetail
@@ -31,6 +32,8 @@ class AugustEntityMixin(Entity):
         """Initialize an August device."""
         super().__init__()
         self._data = data
+        assert data.activity_stream is not None
+        self._stream = data.activity_stream
         self._device = device
         detail = self._detail
         self._device_id = device.device_id
@@ -55,6 +58,11 @@ class AugustEntityMixin(Entity):
     def _hyper_bridge(self) -> bool:
         """Check if the lock has a paired hyper bridge."""
         return bool(self._detail.bridge and self._detail.bridge.hyper_bridge)
+
+    @callback
+    def _get_latest(self, activity_types: set[ActivityType]) -> Activity | None:
+        """Get the latest activity for the device."""
+        return self._stream.get_latest_device_activity(self._device_id, activity_types)
 
     @callback
     def _update_from_data_and_write_state(self) -> None:
