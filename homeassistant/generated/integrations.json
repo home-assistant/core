@@ -885,12 +885,6 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "circuit": {
-      "name": "Unify Circuit",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_push"
-    },
     "cisco": {
       "name": "Cisco",
       "integrations": {
