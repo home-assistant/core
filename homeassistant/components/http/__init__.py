@@ -34,7 +34,7 @@ from homeassistant.components.network import async_get_source_ip
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, SERVER_PORT
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import storage
+from homeassistant.helpers import frame, storage
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.http import (
     KEY_ALLOW_CONFIGURED_CORS,
@@ -480,6 +480,16 @@ class HomeAssistantHTTP:
         self, url_path: str, path: str, cache_headers: bool = True
     ) -> None:
         """Register a folder or file to serve as a static path."""
+        frame.report(
+            "calls hass.http.register_static_path which is deprecated because "
+            "it does blocking I/O in the event loop, instead "
+            "call `await hass.http.async_register_static_path("
+            f'[StaticPathConfig("{url_path}", "{path}", {cache_headers})])`; '
+            "This function will be removed in 2025.7",
+            exclude_integrations={"http"},
+            error_if_core=False,
+            error_if_integration=False,
+        )
         configs = [StaticPathConfig(url_path, path, cache_headers)]
         resources = self._make_static_resources(configs)
         self._async_register_static_paths(configs, resources)
