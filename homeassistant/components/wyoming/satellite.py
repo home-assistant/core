@@ -1,12 +1,12 @@
 """Support for Wyoming satellite services."""
 
 import asyncio
-from collections.abc import AsyncGenerator
 import io
 import logging
 from typing import Final
 import wave
 
+from typing_extensions import AsyncGenerator
 from wyoming.asr import Transcribe, Transcript
 from wyoming.audio import AudioChunk, AudioChunkConverter, AudioStart, AudioStop
 from wyoming.client import AsyncTcpClient
@@ -550,7 +550,7 @@ class WyomingSatellite:
             await self._client.write_event(AudioStop(timestamp=timestamp).event())
             _LOGGER.debug("TTS streaming complete")
 
-    async def _stt_stream(self) -> AsyncGenerator[bytes, None]:
+    async def _stt_stream(self) -> AsyncGenerator[bytes]:
         """Yield audio chunks from a queue."""
         try:
             is_first_chunk = True

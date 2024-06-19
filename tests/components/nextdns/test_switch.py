@@ -29,9 +29,9 @@ from . import init_integration, mock_nextdns
 from tests.common import async_fire_time_changed, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_switch(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:

@@ -64,7 +64,7 @@ class IdasenDeskConfigFlow(ConfigFlow, domain=DOMAIN):
 
             desk = Desk(None, monitor_height=False)
             try:
-                await desk.connect(discovery_info.device, auto_reconnect=False)
+                await desk.connect(discovery_info.device, retry=False)
             except AuthFailedError:
                 errors["base"] = "auth_failed"
             except TimeoutError:

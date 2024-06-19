@@ -16,7 +16,7 @@
       "fv_power": {
         "default": "mdi:solar-power-variant"
       },
-      "slave_error": {
+      "meter_error": {
         "default": "mdi:alert"
       },
       "battery_power": {

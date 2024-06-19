@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import AsyncGenerator, Callable, Coroutine, Iterable
+from collections.abc import Callable, Coroutine, Iterable
 import contextlib
 from dataclasses import dataclass
 from functools import lru_cache, partial
@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Any
 import uuid
 
 import certifi
+from typing_extensions import AsyncGenerator
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -90,6 +91,8 @@ if TYPE_CHECKING:
     # Only import for paho-mqtt type checking here, imports are done locally
     # because integrations should be able to optionally rely on MQTT.
     import paho.mqtt.client as mqtt
+
+    from .async_client import AsyncMQTTClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -274,13 +277,30 @@ class Subscription:
 class MqttClientSetup:
     """Helper class to setup the paho mqtt client from config."""
 
-    def __init__(self, config: ConfigType) -> None:
-        """Initialize the MQTT client setup helper."""
+    _client: AsyncMQTTClient
 
+    def __init__(self, config: ConfigType) -> None:
+        """Initialize the MQTT client setup helper.
+
+        self.setup must be run in an executor job.
+        """
+
+        self._config = config
+
+    def setup(self) -> None:
+        """Set up the MQTT client.
+
+        The setup of the MQTT client should be run in an executor job,
+        because it accesses files, so it does IO.
+        """
         # We don't import on the top because some integrations
         # should be able to optionally rely on MQTT.
         import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
 
+        # pylint: disable-next=import-outside-toplevel
+        from .async_client import AsyncMQTTClient
+
+        config = self._config
         if (protocol := config.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)) == PROTOCOL_31:
             proto = mqtt.MQTTv31
         elif protocol == PROTOCOL_5:
@@ -292,10 +312,14 @@ class MqttClientSetup:
             # PAHO MQTT relies on the MQTT server to generate random client IDs.
             # However, that feature is not mandatory so we generate our own.
             client_id = mqtt.base62(uuid.uuid4().int, padding=22)
-        transport = config.get(CONF_TRANSPORT, DEFAULT_TRANSPORT)
-        self._client = mqtt.Client(
-            client_id, protocol=proto, transport=transport, reconnect_on_failure=False
+        transport: str = config.get(CONF_TRANSPORT, DEFAULT_TRANSPORT)
+        self._client = AsyncMQTTClient(
+            client_id,
+            protocol=proto,
+            transport=transport,
+            reconnect_on_failure=False,
         )
+        self._client.setup()
 
         # Enable logging
         self._client.enable_logger()
@@ -329,7 +353,7 @@ class MqttClientSetup:
                 self._client.tls_insecure_set(tls_insecure)
 
     @property
-    def client(self) -> mqtt.Client:
+    def client(self) -> AsyncMQTTClient:
         """Return the paho MQTT client."""
         return self._client
 
@@ -434,7 +458,7 @@ class EnsureJobAfterCooldown:
 class MQTT:
     """Home Assistant MQTT client."""
 
-    _mqttc: mqtt.Client
+    _mqttc: AsyncMQTTClient
     _last_subscribe: float
     _mqtt_data: MqttData
 
@@ -465,7 +489,7 @@ class MQTT:
         self._subscribe_debouncer = EnsureJobAfterCooldown(
             INITIAL_SUBSCRIBE_COOLDOWN, self._async_perform_subscriptions
         )
-        self._misc_task: asyncio.Task | None = None
+        self._misc_timer: asyncio.TimerHandle | None = None
         self._reconnect_task: asyncio.Task | None = None
         self._should_reconnect: bool = True
         self._available_future: asyncio.Future[bool] | None = None
@@ -515,7 +539,7 @@ class MQTT:
             self._cleanup_on_unload.pop()()
 
     @contextlib.asynccontextmanager
-    async def _async_connect_in_executor(self) -> AsyncGenerator[None, None]:
+    async def _async_connect_in_executor(self) -> AsyncGenerator[None]:
         # While we are connecting in the executor we need to
         # handle on_socket_open and on_socket_register_write
         # in the executor as well.
@@ -533,9 +557,13 @@ class MQTT:
     async def async_init_client(self) -> None:
         """Initialize paho client."""
         with async_pause_setup(self.hass, SetupPhases.WAIT_IMPORT_PACKAGES):
-            await async_import_module(self.hass, "paho.mqtt.client")
+            await async_import_module(
+                self.hass, "homeassistant.components.mqtt.async_client"
+            )
 
-        mqttc = MqttClientSetup(self.conf).client
+        mqttc_setup = MqttClientSetup(self.conf)
+        await self.hass.async_add_executor_job(mqttc_setup.setup)
+        mqttc = mqttc_setup.client
         # on_socket_unregister_write and _async_on_socket_close
         # are only ever called in the event loop
         mqttc.on_socket_close = self._async_on_socket_close
@@ -563,14 +591,6 @@ class MQTT:
 
         self._mqttc = mqttc
 
-    async def _misc_loop(self) -> None:
-        """Start the MQTT client misc loop."""
-        # pylint: disable=import-outside-toplevel
-        import paho.mqtt.client as mqtt
-
-        while self._mqttc.loop_misc() == mqtt.MQTT_ERR_SUCCESS:
-            await asyncio.sleep(1)
-
     @callback
     def _async_reader_callback(self, client: mqtt.Client) -> None:
         """Handle reading data from the socket."""
@@ -578,13 +598,22 @@ class MQTT:
             self._async_on_disconnect(status)
 
     @callback
-    def _async_start_misc_loop(self) -> None:
-        """Start the misc loop."""
-        if self._misc_task is None or self._misc_task.done():
-            _LOGGER.debug("%s: Starting client misc loop", self.config_entry.title)
-            self._misc_task = self.config_entry.async_create_background_task(
-                self.hass, self._misc_loop(), name="mqtt misc loop"
-            )
+    def _async_start_misc_periodic(self) -> None:
+        """Start the misc periodic."""
+        assert self._misc_timer is None, "Misc periodic already started"
+        _LOGGER.debug("%s: Starting client misc loop", self.config_entry.title)
+        # pylint: disable=import-outside-toplevel
+        import paho.mqtt.client as mqtt
+
+        # Inner function to avoid having to check late import
+        # each time the function is called.
+        @callback
+        def _async_misc() -> None:
+            """Start the MQTT client misc loop."""
+            if self._mqttc.loop_misc() == mqtt.MQTT_ERR_SUCCESS:
+                self._misc_timer = self.loop.call_at(self.loop.time() + 1, _async_misc)
+
+        self._misc_timer = self.loop.call_at(self.loop.time() + 1, _async_misc)
 
     def _increase_socket_buffer_size(self, sock: SocketType) -> None:
         """Increase the socket buffer size."""
@@ -635,7 +664,8 @@ class MQTT:
         if fileno > -1:
             self._increase_socket_buffer_size(sock)
             self.loop.add_reader(sock, partial(self._async_reader_callback, client))
-        self._async_start_misc_loop()
+        if not self._misc_timer:
+            self._async_start_misc_periodic()
         # Try to consume the buffer right away so it doesn't fill up
         # since add_reader will wait for the next loop iteration
         self._async_reader_callback(client)
@@ -652,8 +682,9 @@ class MQTT:
         self._async_connection_result(False)
         if fileno > -1:
             self.loop.remove_reader(sock)
-        if self._misc_task is not None and not self._misc_task.done():
-            self._misc_task.cancel()
+        if self._misc_timer:
+            self._misc_timer.cancel()
+            self._misc_timer = None
 
     @callback
     def _async_writer_callback(self, client: mqtt.Client) -> None:
@@ -772,8 +803,12 @@ class MQTT:
 
             await asyncio.sleep(RECONNECT_INTERVAL_SECONDS)
 
-    async def async_disconnect(self) -> None:
-        """Stop the MQTT client."""
+    async def async_disconnect(self, disconnect_paho_client: bool = False) -> None:
+        """Stop the MQTT client.
+
+        We only disconnect grafully if disconnect_paho_client is set, but not
+        when Home Assistant is shut down.
+        """
 
         # stop waiting for any pending subscriptions
         await self._subscribe_debouncer.async_cleanup()
@@ -793,7 +828,9 @@ class MQTT:
             self._should_reconnect = False
             self._async_cancel_reconnect()
             # We do not gracefully disconnect to ensure
-            # the broker publishes the will message
+            # the broker publishes the will message unless the entry is reloaded
+            if disconnect_paho_client:
+                self._mqttc.disconnect()
 
     @callback
     def async_restore_tracked_subscriptions(
@@ -1243,7 +1280,8 @@ class MQTT:
         self._async_connection_result(False)
         self.connected = False
         async_dispatcher_send(self.hass, MQTT_CONNECTION_STATE, False)
-        _LOGGER.warning(
+        _LOGGER.log(
+            logging.INFO if result_code == 0 else logging.DEBUG,
             "Disconnected from MQTT server %s:%s (%s)",
             self.conf[CONF_BROKER],
             self.conf.get(CONF_PORT, DEFAULT_PORT),

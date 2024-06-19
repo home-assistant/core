@@ -140,6 +140,7 @@ async def async_handle(
     except IntentError:
         raise  # bubble up intent related errors
     except Exception as err:
+        _LOGGER.exception("Error handling %s", intent_type)
         raise IntentUnexpectedError(f"Error handling {intent_type}") from err
     return result
 
@@ -712,6 +713,7 @@ def async_match_states(
     domains: Collection[str] | None = None,
     device_classes: Collection[str] | None = None,
     states: list[State] | None = None,
+    assistant: str | None = None,
 ) -> Iterable[State]:
     """Simplified interface to async_match_targets that returns states matching the constraints."""
     result = async_match_targets(
@@ -722,6 +724,7 @@ def async_match_states(
             floor_name=floor_name,
             domains=domains,
             device_classes=device_classes,
+            assistant=assistant,
         ),
         states=states,
     )
@@ -1360,6 +1363,8 @@ class IntentResponse:
 
         if self.reprompt:
             response_dict["reprompt"] = self.reprompt
+        if self.speech_slots:
+            response_dict["speech_slots"] = self.speech_slots
 
         response_data: dict[str, Any] = {}
 

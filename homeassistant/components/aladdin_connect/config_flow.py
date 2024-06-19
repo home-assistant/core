@@ -4,22 +4,21 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-import voluptuous as vol
+import jwt
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
+from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
-from .const import CONFIG_FLOW_MINOR_VERSION, CONFIG_FLOW_VERSION, DOMAIN
+from .const import DOMAIN
 
 
-class OAuth2FlowHandler(
-    config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
-):
+class AladdinConnectOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Config flow to handle Aladdin Connect Genie OAuth2 authentication."""
 
     DOMAIN = DOMAIN
-    VERSION = CONFIG_FLOW_VERSION
-    MINOR_VERSION = CONFIG_FLOW_MINOR_VERSION
+    VERSION = 2
+    MINOR_VERSION = 1
 
     reauth_entry: ConfigEntry | None = None
 
@@ -37,20 +36,33 @@ class OAuth2FlowHandler(
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=vol.Schema({}),
-            )
+            return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
 
-    async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
-        if self.reauth_entry:
+        token_payload = jwt.decode(
+            data[CONF_TOKEN][CONF_ACCESS_TOKEN], options={"verify_signature": False}
+        )
+        if not self.reauth_entry:
+            await self.async_set_unique_id(token_payload["sub"])
+            self._abort_if_unique_id_configured()
+
+            return self.async_create_entry(
+                title=token_payload["username"],
+                data=data,
+            )
+
+        if self.reauth_entry.unique_id == token_payload["username"]:
             return self.async_update_reload_and_abort(
                 self.reauth_entry,
                 data=data,
+                unique_id=token_payload["sub"],
             )
-        return await super().async_oauth_create_entry(data)
+        if self.reauth_entry.unique_id == token_payload["sub"]:
+            return self.async_update_reload_and_abort(self.reauth_entry, data=data)
+
+        return self.async_abort(reason="wrong_account")
 
     @property
     def logger(self) -> logging.Logger:

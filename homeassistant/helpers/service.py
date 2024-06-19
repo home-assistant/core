@@ -187,7 +187,20 @@ _SERVICE_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-_SERVICES_SCHEMA = vol.Schema({cv.slug: vol.Any(None, _SERVICE_SCHEMA)})
+
+def starts_with_dot(key: str) -> str:
+    """Check if key starts with dot."""
+    if not key.startswith("."):
+        raise vol.Invalid("Key does not start with .")
+    return key
+
+
+_SERVICES_SCHEMA = vol.Schema(
+    {
+        vol.Remove(vol.All(str, starts_with_dot)): object,
+        cv.slug: vol.Any(None, _SERVICE_SCHEMA),
+    }
+)
 
 
 class ServiceParams(TypedDict):
@@ -653,6 +666,14 @@ def _load_services_files(
 ) -> list[JSON_TYPE]:
     """Load service files for multiple integrations."""
     return [_load_services_file(hass, integration) for integration in integrations]
+
+
+@callback
+def async_get_cached_service_description(
+    hass: HomeAssistant, domain: str, service: str
+) -> dict[str, Any] | None:
+    """Return the cached description for a service."""
+    return hass.data.get(SERVICE_DESCRIPTION_CACHE, {}).get((domain, service))
 
 
 @bind_hass

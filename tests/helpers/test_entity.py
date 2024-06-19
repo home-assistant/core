@@ -107,6 +107,7 @@ async def test_async_update_support(hass: HomeAssistant) -> None:
         """Async update."""
         async_update.append(1)
 
+    # pylint: disable-next=attribute-defined-outside-init
     ent.async_update = async_update_func
 
     await ent.async_update_ha_state(True)
@@ -1600,7 +1601,7 @@ async def test_translation_key(hass: HomeAssistant) -> None:
     assert mock_entity2.translation_key == "from_entity_description"
 
 
-async def test_repr(hass) -> None:
+async def test_repr(hass: HomeAssistant) -> None:
     """Test Entity.__repr__."""
 
     class MyEntity(MockEntity):
@@ -1662,11 +1663,6 @@ async def test_warn_no_platform(
     ent.entity_id = "hello.world"
     error_message = "does not have a platform"
 
-    # No warning if the entity has a platform
-    caplog.clear()
-    ent.async_write_ha_state()
-    assert error_message not in caplog.text
-
     # Without a platform, it should trigger the warning
     ent.platform = None
     caplog.clear()
@@ -1674,6 +1670,11 @@ async def test_warn_no_platform(
     assert error_message in caplog.text
 
     # Without a platform, it should not trigger the warning again
+    caplog.clear()
+    ent.async_write_ha_state()
+    assert error_message not in caplog.text
+
+    # No warning if the entity has a platform
     caplog.clear()
     ent.async_write_ha_state()
     assert error_message not in caplog.text
@@ -1872,7 +1873,7 @@ async def test_change_entity_id(
     assert len(ent.remove_calls) == 2
 
 
-def test_entity_description_as_dataclass(snapshot: SnapshotAssertion):
+def test_entity_description_as_dataclass(snapshot: SnapshotAssertion) -> None:
     """Test EntityDescription behaves like a dataclass."""
 
     obj = entity.EntityDescription("blah", device_class="test")
@@ -1887,7 +1888,7 @@ def test_entity_description_as_dataclass(snapshot: SnapshotAssertion):
     assert repr(obj) == snapshot
 
 
-def test_extending_entity_description(snapshot: SnapshotAssertion):
+def test_extending_entity_description(snapshot: SnapshotAssertion) -> None:
     """Test extending entity descriptions."""
 
     @dataclasses.dataclass(frozen=True)
@@ -2617,13 +2618,12 @@ async def test_async_write_ha_state_thread_safety(hass: HomeAssistant) -> None:
     assert not hass.states.get(ent2.entity_id)
 
 
-async def test_async_write_ha_state_thread_safety_custom_component(
+async def test_async_write_ha_state_thread_safety_always(
     hass: HomeAssistant,
 ) -> None:
-    """Test async_write_ha_state thread safe for custom components."""
+    """Test async_write_ha_state thread safe check."""
 
     ent = entity.Entity()
-    ent._is_custom_component = True
     ent.entity_id = "test.any"
     ent.hass = hass
     ent.platform = MockEntityPlatform(hass, domain="test")
@@ -2631,7 +2631,6 @@ async def test_async_write_ha_state_thread_safety_custom_component(
     assert hass.states.get(ent.entity_id)
 
     ent2 = entity.Entity()
-    ent2._is_custom_component = True
     ent2.entity_id = "test.any2"
     ent2.hass = hass
     ent2.platform = MockEntityPlatform(hass, domain="test")

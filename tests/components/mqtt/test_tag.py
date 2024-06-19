@@ -2,9 +2,10 @@
 
 import copy
 import json
-from unittest.mock import ANY, AsyncMock
+from unittest.mock import ANY, AsyncMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN
@@ -43,6 +44,13 @@ DEFAULT_TAG_SCAN = "E9F35959"
 DEFAULT_TAG_SCAN_JSON = (
     '{"Time":"2020-09-28T17:02:10","PN532":{"UID":"E9F35959", "DATA":"ILOVETASMOTA"}}'
 )
+
+
+@pytest.fixture
+def tag_mock() -> Generator[AsyncMock]:
+    """Fixture to mock tag."""
+    with patch("homeassistant.components.tag.async_scan_tag") as mock_tag:
+        yield mock_tag
 
 
 @pytest.mark.no_fail_on_log_exception
@@ -579,7 +587,7 @@ async def test_cleanup_tag(
         identifiers={("mqtt", "helloworld")}
     )
     assert device_entry1 is not None
-    assert device_entry1.config_entries == {config_entry.entry_id, mqtt_entry.entry_id}
+    assert device_entry1.config_entries == [config_entry.entry_id, mqtt_entry.entry_id]
     device_entry2 = device_registry.async_get_device(identifiers={("mqtt", "hejhopp")})
     assert device_entry2 is not None
 
@@ -591,7 +599,7 @@ async def test_cleanup_tag(
         identifiers={("mqtt", "helloworld")}
     )
     assert device_entry1 is not None
-    assert device_entry1.config_entries == {mqtt_entry.entry_id}
+    assert device_entry1.config_entries == [mqtt_entry.entry_id]
     device_entry2 = device_registry.async_get_device(identifiers={("mqtt", "hejhopp")})
     assert device_entry2 is not None
     mqtt_mock.async_publish.assert_not_called()
