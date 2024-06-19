@@ -14,6 +14,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.storage import Store
 
 from ..models import AuthFlowResult, Credentials, UserMeta
@@ -67,7 +68,7 @@ class Data:
         self._data: dict[str, list[dict[str, str]]] | None = None
         # Legacy mode will allow usernames to start/end with whitespace
         # and will compare usernames case-insensitive.
-        # Remove in 2020 or when we launch 1.0.
+        # Deprecated in June 2019 and will be removed in 2026.7
         self.is_legacy = False
 
     @callback
@@ -84,6 +85,7 @@ class Data:
             data = cast(dict[str, list[dict[str, str]]], {"users": []})
 
         seen: set[str] = set()
+        not_normalized_usernames: set[str] = set()
 
         for user in data["users"]:
             username = user["username"]
@@ -100,13 +102,10 @@ class Data:
                     ),
                     username,
                 )
-
-                break
-
-            seen.add(folded)
+                not_normalized_usernames.add(username)
 
             # check if we have unstripped usernames
-            if username != username.strip():
+            elif username != username.strip():
                 self.is_legacy = True
 
                 logging.getLogger(__name__).warning(
@@ -117,10 +116,25 @@ class Data:
                     ),
                     username,
                 )
+                not_normalized_usernames.add(username)
 
-                break
+            seen.add(folded)
 
         self._data = data
+        if not_normalized_usernames:
+            ir.async_create_issue(
+                self.hass,
+                "auth",
+                "homeassistant_provider_not_normalized_usernames",
+                breaks_in_ha_version="2026.7.0",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="homeassistant_provider_not_normalized_usernames",
+                translation_placeholders={
+                    "usernames": f'- "{'"\n'.join(not_normalized_usernames)}"'
+                },
+                learn_more_url="homeassistant://config/users",
+            )
 
     @property
     def users(self) -> list[dict[str, str]]:
