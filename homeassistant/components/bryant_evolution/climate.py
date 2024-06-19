@@ -15,10 +15,11 @@ from homeassistant.components.climate import (
 from homeassistant.const import CONF_HOST, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BryantEvolutionConfigEntry
-from .const import CONF_SYSTEM_ID, CONF_ZONE_ID
+from .const import CONF_SYSTEM_ID, CONF_ZONE_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,11 +33,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
-    host = config_entry.data[CONF_HOST]
-    system_id = config_entry.data[CONF_SYSTEM_ID]
-    zone_id = config_entry.data[CONF_ZONE_ID]
     client = config_entry.runtime_data
-    climate = BryantEvolutionClimate(host, system_id, zone_id, client)
+    climate = BryantEvolutionClimate(
+        config_entry.data[CONF_HOST],
+        config_entry.data[CONF_SYSTEM_ID],
+        config_entry.data[CONF_ZONE_ID],
+        client,
+    )
     async_add_entities([climate], update_before_add=True)
 
 
@@ -60,7 +63,7 @@ class BryantEvolutionClimate(ClimateEntity):
     ) -> None:
         """Initialize an entity from parts."""
         self._client = client
-        self._attr_name = f"Bryant Evolution (System {system_id}, Zone {zone_id})"
+        self._attr_name = None
         self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE
@@ -69,8 +72,20 @@ class BryantEvolutionClimate(ClimateEntity):
             | ClimateEntityFeature.TURN_ON
             | ClimateEntityFeature.TURN_OFF
         )
+        self._attr_hvac_modes = [
+            HVACMode.HEAT,
+            HVACMode.COOL,
+            HVACMode.HEAT_COOL,
+            HVACMode.OFF,
+        ]
+        self._attr_fan_modes = ["AUTO", "LOW", "MED", "HIGH"]
         self._enable_turn_on_off_backwards_compatibility = False
         self._attr_unique_id = f"bryant_evolution_{host}_{system_id}_{zone_id}"
+        assert self.unique_id is not None  # Prevent mypy failure on next line
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            name=f"Bryant Evolution (System {system_id}, Zone {zone_id})",
+        )
 
     async def async_update(self) -> None:
         """Update the entity state."""
@@ -200,13 +215,3 @@ class BryantEvolutionClimate(ClimateEntity):
             raise HomeAssistantError("Failed to set fan mode")
         self._attr_fan_mode = fan_mode
         self.async_write_ha_state()
-
-    @property
-    def hvac_modes(self) -> list[HVACMode]:
-        """Return the list of available HVAC operation modes."""
-        return [HVACMode.HEAT, HVACMode.COOL, HVACMode.HEAT_COOL, HVACMode.OFF]
-
-    @property
-    def fan_modes(self) -> list[str]:
-        """Return the list of available fan modes."""
-        return ["AUTO", "LOW", "MED", "HIGH"]
