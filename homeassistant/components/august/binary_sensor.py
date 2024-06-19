@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from functools import partial
 import logging
 
 from yalexs.activity import (
@@ -51,26 +52,14 @@ def _retrieve_online_state(
     return detail.bridge_is_online
 
 
-def _retrieve_motion_state(data: AugustData, detail: DoorbellDetail) -> bool:
-    latest = data.activity_stream.get_latest_device_activity(
-        detail.device_id, {ActivityType.DOORBELL_MOTION}
-    )
-
-    if latest is None:
-        return False
-
-    return _activity_time_based_state(latest)
-
-
-_IMAGE_ACTIVITIES = {ActivityType.DOORBELL_IMAGE_CAPTURE}
-
-
-def _retrieve_image_capture_state(data: AugustData, detail: DoorbellDetail) -> bool:
+def _retrieve_time_based_state(
+    activities: set[ActivityType], data: AugustData, detail: DoorbellDetail
+) -> bool:
+    """Get the latest state of the sensor."""
     stream = data.activity_stream
-    latest = stream.get_latest_device_activity(detail.device_id, _IMAGE_ACTIVITIES)
-    if latest is None:
-        return False
-    return _activity_time_based_state(latest)
+    if latest := stream.get_latest_device_activity(detail.device_id, activities):
+        return _activity_time_based_state(latest)
+    return False
 
 
 _RING_ACTIVITIES = {ActivityType.DOORBELL_DING}
@@ -115,13 +104,15 @@ SENSOR_TYPES_VIDEO_DOORBELL = (
     AugustDoorbellBinarySensorEntityDescription(
         key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
-        value_fn=_retrieve_motion_state,
+        value_fn=partial(_retrieve_time_based_state, {ActivityType.DOORBELL_MOTION}),
         is_time_based=True,
     ),
     AugustDoorbellBinarySensorEntityDescription(
         key="image capture",
         translation_key="image_capture",
-        value_fn=_retrieve_image_capture_state,
+        value_fn=partial(
+            _retrieve_time_based_state, {ActivityType.DOORBELL_IMAGE_CAPTURE}
+        ),
         is_time_based=True,
     ),
     AugustDoorbellBinarySensorEntityDescription(
