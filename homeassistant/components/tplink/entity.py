@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable, Coroutine
-from datetime import datetime
 import logging
 from typing import Any, Concatenate
 
@@ -19,7 +18,7 @@ from kasa import (
 from kasa.iot import IotDevice
 
 from homeassistant.components.light import LightEntity
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -242,7 +241,6 @@ def _entities_for_device[_E: CoordinatedTPLinkEntity](
         )
         for feat in device.features.values()
         if feat.type == feature_type
-        and (not isinstance(feat.value, datetime) or feat.value.tzinfo)
         and (
             feat.category != Feature.Category.Primary
             or device.device_type not in DEVICETYPES_WITH_SPECIALIZED_PLATFORMS
@@ -343,8 +341,6 @@ def _description_for_feature[_D: EntityDescription](
     kwargs["entity_category"] = _category_for_feature(feature)
 
     if feature.type == Feature.Type.Sensor:
-        if isinstance(feature.value, datetime):
-            kwargs["device_class"] = SensorDeviceClass.TIMESTAMP
         kwargs["native_unit_of_measurement"] = feature.unit
         kwargs["precision"] = feature.precision_hint
     return desc_cls(**kwargs)
