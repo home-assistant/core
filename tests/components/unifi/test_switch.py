@@ -1544,6 +1544,10 @@ async def test_updating_unique_id(
     assert hass.states.get("switch.switch_port_1_poe")
 
 
+@pytest.mark.parametrize(
+    "config_entry_options", [{CONF_BLOCK_CLIENT: [UNBLOCKED["mac"]]}]
+)
+@pytest.mark.parametrize("client_payload", [[UNBLOCKED]])
 @pytest.mark.parametrize("device_payload", [[DEVICE_1, OUTLET_UP1]])
 @pytest.mark.parametrize("dpi_app_payload", [DPI_APPS])
 @pytest.mark.parametrize("dpi_group_payload", [DPI_GROUPS])
@@ -1553,6 +1557,7 @@ async def test_updating_unique_id(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_hub_state_change(hass: HomeAssistant, mock_websocket_state) -> None:
     """Verify entities state reflect on hub connection becoming unavailable."""
+    assert hass.states.get("switch.block_client_2").state == STATE_ON
     assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_ON
     assert hass.states.get("switch.plug_outlet_1").state == STATE_ON
     assert hass.states.get("switch.block_media_streaming").state == STATE_ON
@@ -1561,6 +1566,7 @@ async def test_hub_state_change(hass: HomeAssistant, mock_websocket_state) -> No
 
     # Controller disconnects
     await mock_websocket_state.disconnect()
+    assert hass.states.get("switch.block_client_2").state == STATE_UNAVAILABLE
     assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_UNAVAILABLE
     assert hass.states.get("switch.plug_outlet_1").state == STATE_UNAVAILABLE
     assert hass.states.get("switch.block_media_streaming").state == STATE_UNAVAILABLE
@@ -1569,6 +1575,7 @@ async def test_hub_state_change(hass: HomeAssistant, mock_websocket_state) -> No
 
     # Controller reconnects
     await mock_websocket_state.reconnect()
+    assert hass.states.get("switch.block_client_2").state == STATE_ON
     assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_ON
     assert hass.states.get("switch.plug_outlet_1").state == STATE_ON
     assert hass.states.get("switch.block_media_streaming").state == STATE_ON
