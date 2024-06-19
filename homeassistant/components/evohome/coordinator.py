@@ -38,6 +38,7 @@ class EvoBroker:
         """Initialize the evohome broker and its data structure."""
 
         self._sess = sess
+        self.hass = sess.hass
 
         assert isinstance(sess.client_v2, evo.EvohomeClient)  # mypy
 
@@ -107,7 +108,7 @@ class EvoBroker:
             return None
 
         if update_state:  # wait a moment for system to quiesce before updating state
-            async_call_later(self._sess.hass, 1, self._update_v2_api_state)
+            async_call_later(self.hass, 1, self._update_v2_api_state)
 
         return result
 
@@ -176,7 +177,7 @@ class EvoBroker:
         except evo.RequestFailed as err:
             handle_evo_exception(err)
         else:
-            async_dispatcher_send(self._sess.hass, DOMAIN)
+            async_dispatcher_send(self.hass, DOMAIN)
             _LOGGER.debug("Status = %s", status)
         finally:
             if access_token != self.client.access_token:
