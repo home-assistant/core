@@ -2726,6 +2726,9 @@ async def test_subscription_done_when_birth_message_is_sent(
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data=mqtt_config_entry_data)
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
     await hass.async_block_till_done()
     mqtt_client_mock.on_disconnect(None, None, 0, 0)
     await hass.async_block_till_done()
@@ -2741,7 +2744,6 @@ async def test_subscription_done_when_birth_message_is_sent(
     await mqtt.async_subscribe(hass, "homeassistant/status", wait_birth)
     await hass.async_block_till_done()
     mqtt_client_mock.on_connect(None, None, 0, 0)
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     # We wait until we receive a birth message
     await asyncio.wait_for(birth.wait(), 1)
 
