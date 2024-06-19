@@ -7,7 +7,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientResponseError
-from yalexs.activity import SOURCE_PUBNUB, ActivityType, ActivityTypes
+from yalexs.activity import ActivityType, ActivityTypes
 from yalexs.lock import Lock, LockStatus
 from yalexs.util import get_latest_activity, update_lock_detail_from_activity
 
@@ -111,8 +111,7 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
         if latest_activity := get_latest_activity(
             lock_activity_without_operator, lock_activity
         ):
-            if latest_activity.source == SOURCE_PUBNUB:
-                # If the source is pubnub the lock must be online since its a live update
+            if latest_activity.was_pushed:
                 self._detail.set_online(True)
             update_lock_detail_from_activity(detail, latest_activity)
 
