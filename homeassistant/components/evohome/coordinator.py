@@ -16,6 +16,7 @@ from evohomeasync2.schema.const import (
     SZ_LOCATION_ID,
     SZ_LOCATION_INFO,
     SZ_TIME_ZONE,
+    SZ_USE_DAYLIGHT_SAVE_SWITCHING,
 )
 
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -25,7 +26,7 @@ from .const import CONF_LOCATION_IDX, DOMAIN, GWS, TCS, UTC_OFFSET
 from .helpers import handle_evo_exception
 
 if TYPE_CHECKING:
-    from . import EvoAuthenticator
+    from . import EvoSession
 
 _LOGGER = logging.getLogger(__name__.rpartition(".")[0])
 
@@ -33,15 +34,15 @@ _LOGGER = logging.getLogger(__name__.rpartition(".")[0])
 class EvoBroker:
     """Broker for evohome client broker."""
 
-    def __init__(self, auth: EvoAuthenticator) -> None:
+    def __init__(self, sess: EvoSession) -> None:
         """Initialize the evohome broker and its data structure."""
 
-        self._auth = auth
+        self._sess = sess
 
-        assert isinstance(auth.client_v2, evo.EvohomeClient)  # mypy
+        assert isinstance(sess.client_v2, evo.EvohomeClient)  # mypy
 
-        self.client = auth.client_v2
-        self.client_v1 = auth.client_v1
+        self.client = sess.client_v2
+        self.client_v1 = sess.client_v1
 
         self.loc_idx: int = None  # type: ignore[assignment]
         self.loc: evo.Location = None  # type: ignore[assignment]
@@ -78,16 +79,15 @@ class EvoBroker:
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
             loc_info = {
-                SZ_LOCATION_ID: loc_config[SZ_LOCATION_INFO][SZ_LOCATION_ID],
-                SZ_TIME_ZONE: loc_config[SZ_LOCATION_INFO][SZ_TIME_ZONE],
+                k: loc_config[SZ_LOCATION_INFO][k]
+                for k in (SZ_LOCATION_ID, SZ_USE_DAYLIGHT_SAVE_SWITCHING, SZ_TIME_ZONE)
             }
             gwy_info = {
                 SZ_GATEWAY_ID: loc_config[GWS][0][SZ_GATEWAY_INFO][SZ_GATEWAY_ID],
-                TCS: loc_config[GWS][0][TCS],
             }
             config = {
                 SZ_LOCATION_INFO: loc_info,
-                GWS: [{SZ_GATEWAY_INFO: gwy_info}],
+                GWS: [{SZ_GATEWAY_INFO: gwy_info, TCS: loc_config[GWS][0][TCS]}],
             }
             _LOGGER.debug("Config = %s", config)
 
@@ -107,7 +107,7 @@ class EvoBroker:
             return None
 
         if update_state:  # wait a moment for system to quiesce before updating state
-            async_call_later(self._auth.hass, 1, self._update_v2_api_state)
+            async_call_later(self._sess.hass, 1, self._update_v2_api_state)
 
         return result
 
@@ -116,7 +116,7 @@ class EvoBroker:
 
         assert self.client_v1 is not None  # mypy check
 
-        old_session_id = self._auth.session_id
+        old_session_id = self._sess.session_id
 
         try:
             temps = await self.client_v1.get_temperatures()
@@ -162,7 +162,7 @@ class EvoBroker:
 
         finally:
             if self.client_v1 and self.client_v1.broker.session_id != old_session_id:
-                await self._auth.save_auth_tokens()
+                await self._sess.save_auth_tokens()
 
         _LOGGER.debug("Temperatures = %s", self.temps)
 
@@ -176,11 +176,11 @@ class EvoBroker:
         except evo.RequestFailed as err:
             handle_evo_exception(err)
         else:
-            async_dispatcher_send(self._auth.hass, DOMAIN)
+            async_dispatcher_send(self._sess.hass, DOMAIN)
             _LOGGER.debug("Status = %s", status)
         finally:
             if access_token != self.client.access_token:
-                await self._auth.save_auth_tokens()
+                await self._sess.save_auth_tokens()
 
     async def async_update(self, *args: Any) -> None:
         """Get the latest state data of an entire Honeywell TCC Location.

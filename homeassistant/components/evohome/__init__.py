@@ -113,7 +113,7 @@ SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
 )
 
 
-class EvoAuthenticator:
+class EvoSession:
     """Class for evohome client instantiation & authentication."""
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -230,9 +230,9 @@ class EvoAuthenticator:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Evohome integration."""
 
-    auth = EvoAuthenticator(hass)
+    sess = EvoSession(hass)
 
-    if not await auth.authenticate(
+    if not await sess.authenticate(
         config[DOMAIN][CONF_USERNAME],
         config[DOMAIN][CONF_PASSWORD],
     ):
@@ -240,7 +240,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     config[DOMAIN][CONF_PASSWORD] = "REDACTED"
 
-    broker = EvoBroker(auth)
+    broker = EvoBroker(sess)
 
     if not broker.validate_location(
         config[DOMAIN][CONF_LOCATION_IDX],
