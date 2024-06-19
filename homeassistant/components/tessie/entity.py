@@ -123,36 +123,21 @@ class TessieEntity(TessieBaseEntity):
         # Not used in this class yet
 
 
-class TessieEnergyInfoEntity(TessieBaseEntity):
-    """Parent class for Tessie energy site info entities."""
+class TessieEnergyEntity(TessieBaseEntity):
+    """Parent class for Tessie energy site entities."""
 
     def __init__(
         self,
         data: TessieEnergyData,
+        coordinator: TessieEnergySiteInfoCoordinator | TessieEnergySiteLiveCoordinator,
         key: str,
     ) -> None:
-        """Initialize common aspects of a Tessie energy site info entity."""
+        """Initialize common aspects of a Tessie energy site entity."""
 
         self._attr_unique_id = f"{data.id}-{key}"
         self._attr_device_info = data.device
 
-        super().__init__(data.info_coordinator, key)
-
-
-class TessieEnergyLiveEntity(TessieBaseEntity):
-    """Parent class for Tessie energy site live entities."""
-
-    def __init__(
-        self,
-        data: TessieEnergyData,
-        key: str,
-    ) -> None:
-        """Initialize common aspects of a Tessie energy site live entity."""
-
-        self._attr_unique_id = f"{data.id}-{key}"
-        self._attr_device_info = data.device
-
-        super().__init__(data.live_coordinator, key)
+        super().__init__(coordinator, key)
 
 
 class TessieWallConnectorEntity(TessieBaseEntity):

@@ -36,12 +36,7 @@ from homeassistant.util.variance import ignore_variance
 from . import TessieConfigEntry
 from .const import TessieChargeStates, TessieWallConnectorStates
 from .coordinator import TessieStateUpdateCoordinator
-from .entity import (
-    TessieEnergyInfoEntity,
-    TessieEnergyLiveEntity,
-    TessieEntity,
-    TessieWallConnectorEntity,
-)
+from .entity import TessieEnergyEntity, TessieEntity, TessieWallConnectorEntity
 from .models import TessieEnergyData
 
 
@@ -437,7 +432,7 @@ class TessieVehicleSensorEntity(TessieEntity, SensorEntity):
         return super().available and self.entity_description.available_fn(self.get())
 
 
-class TessieEnergyLiveSensorEntity(TessieEnergyLiveEntity, SensorEntity):
+class TessieEnergyLiveSensorEntity(TessieEnergyEntity, SensorEntity):
     """Base class for Tessie energy site sensor entity."""
 
     entity_description: TessieSensorEntityDescription
@@ -449,7 +444,7 @@ class TessieEnergyLiveSensorEntity(TessieEnergyLiveEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
-        super().__init__(data, description.key)
+        super().__init__(data, data.live_coordinator, description.key)
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
@@ -457,7 +452,7 @@ class TessieEnergyLiveSensorEntity(TessieEnergyLiveEntity, SensorEntity):
         self._attr_native_value = self.entity_description.value_fn(self._value)
 
 
-class TessieEnergyInfoSensorEntity(TessieEnergyInfoEntity, SensorEntity):
+class TessieEnergyInfoSensorEntity(TessieEnergyEntity, SensorEntity):
     """Base class for Tessie energy site sensor entity."""
 
     entity_description: TessieSensorEntityDescription
@@ -469,7 +464,7 @@ class TessieEnergyInfoSensorEntity(TessieEnergyInfoEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
-        super().__init__(data, description.key)
+        super().__init__(data, data.info_coordinator, description.key)
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
