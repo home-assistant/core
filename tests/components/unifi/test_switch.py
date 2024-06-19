@@ -761,6 +761,19 @@ WLAN = {
     "x_passphrase": "password",
 }
 
+PORT_FORWARD_PLEX = {
+    "_id": "5a32aa4ee4b0412345678911",
+    "dst_port": "12345",
+    "enabled": True,
+    "fwd_port": "23456",
+    "fwd": "10.0.0.2",
+    "name": "plex",
+    "pfwd_interface": "wan",
+    "proto": "tcp_udp",
+    "site_id": "5a32aa4ee4b0412345678910",
+    "src": "any",
+}
+
 
 @pytest.mark.parametrize("client_payload", [[CONTROLLER_HOST]])
 @pytest.mark.parametrize("device_payload", [[DEVICE_1]])
@@ -1446,31 +1459,12 @@ async def test_wlan_switches(
     assert hass.states.get("switch.ssid_1").state == STATE_OFF
 
 
-@pytest.mark.parametrize(
-    "port_forward_payload",
-    [
-        [
-            {
-                "_id": "5a32aa4ee4b0412345678911",
-                "dst_port": "12345",
-                "enabled": True,
-                "fwd_port": "23456",
-                "fwd": "10.0.0.2",
-                "name": "plex",
-                "pfwd_interface": "wan",
-                "proto": "tcp_udp",
-                "site_id": "5a32aa4ee4b0412345678910",
-                "src": "any",
-            }
-        ]
-    ],
-)
+@pytest.mark.parametrize("port_forward_payload", [[PORT_FORWARD_PLEX]])
 async def test_port_forwarding_switches(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
     mock_websocket_message,
-    mock_websocket_state,
     config_entry_setup: ConfigEntry,
     port_forward_payload: list[dict[str, Any]],
 ) -> None:
@@ -1521,16 +1515,6 @@ async def test_port_forwarding_switches(
     )
     assert aioclient_mock.call_count == 2
     assert aioclient_mock.mock_calls[1][2] == port_forward_payload[0]
-
-    # Availability signalling
-
-    # Controller disconnects
-    await mock_websocket_state.disconnect()
-    assert hass.states.get("switch.unifi_network_plex").state == STATE_UNAVAILABLE
-
-    # Controller reconnects
-    await mock_websocket_state.reconnect()
-    assert hass.states.get("switch.unifi_network_plex").state == STATE_OFF
 
     # Remove entity on deleted message
     mock_websocket_message(
@@ -1604,3 +1588,22 @@ async def test_updating_unique_id(
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
     assert hass.states.get("switch.plug_outlet_1")
     assert hass.states.get("switch.switch_port_1_poe")
+
+
+@pytest.mark.parametrize("port_forward_payload", [[PORT_FORWARD_PLEX]])
+@pytest.mark.usefixtures("config_entry_setup")
+@pytest.mark.usefixtures("mock_device_registry")
+async def test_hub_state_change(hass: HomeAssistant, mock_websocket_state) -> None:
+    """Verify entities state reflect on hub connection becoming unavailable."""
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+    assert hass.states.get("switch.unifi_network_plex").state == STATE_ON
+
+    # Availability signalling
+
+    # Controller disconnects
+    await mock_websocket_state.disconnect()
+    assert hass.states.get("switch.unifi_network_plex").state == STATE_UNAVAILABLE
+
+    # Controller reconnects
+    await mock_websocket_state.reconnect()
+    assert hass.states.get("switch.unifi_network_plex").state == STATE_ON
