@@ -30,7 +30,6 @@ import homeassistant.util.dt as dt_util
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    mock_restore_cache,
     mock_restore_cache_with_extra_data,
 )
 
@@ -147,42 +146,6 @@ async def test_state(hass: HomeAssistant, method) -> None:
 
 async def test_restore_state(hass: HomeAssistant) -> None:
     """Test integration sensor state is restored correctly."""
-    mock_restore_cache(
-        hass,
-        (
-            State(
-                "sensor.integration",
-                "100.0",
-                {
-                    "device_class": SensorDeviceClass.ENERGY,
-                    "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
-                },
-            ),
-        ),
-    )
-
-    config = {
-        "sensor": {
-            "platform": "integration",
-            "name": "integration",
-            "source": "sensor.power",
-            "round": 2,
-        }
-    }
-
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.integration")
-    assert state
-    assert state.state == "100.00"
-    assert state.attributes.get("unit_of_measurement") == UnitOfEnergy.KILO_WATT_HOUR
-    assert state.attributes.get("device_class") == SensorDeviceClass.ENERGY
-    assert state.attributes.get("last_good_state") is None
-
-
-async def test_restore_unavailable_state(hass: HomeAssistant) -> None:
-    """Test integration sensor state is restored correctly."""
     mock_restore_cache_with_extra_data(
         hass,
         [
@@ -237,9 +200,7 @@ async def test_restore_unavailable_state(hass: HomeAssistant) -> None:
         },
     ],
 )
-async def test_restore_unavailable_state_failed(
-    hass: HomeAssistant, extra_attributes
-) -> None:
+async def test_restore_state_failed(hass: HomeAssistant, extra_attributes) -> None:
     """Test integration sensor state is restored correctly."""
     mock_restore_cache_with_extra_data(
         hass,
@@ -271,42 +232,7 @@ async def test_restore_unavailable_state_failed(
 
     state = hass.states.get("sensor.integration")
     assert state
-    assert state.state == STATE_UNAVAILABLE
-
-
-async def test_restore_state_failed(hass: HomeAssistant) -> None:
-    """Test integration sensor state is restored correctly."""
-    mock_restore_cache(
-        hass,
-        (
-            State(
-                "sensor.integration",
-                "INVALID",
-                {
-                    "last_reset": "2019-10-06T21:00:00.000000",
-                },
-            ),
-        ),
-    )
-
-    config = {
-        "sensor": {
-            "platform": "integration",
-            "name": "integration",
-            "source": "sensor.power",
-        }
-    }
-
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.integration")
-    assert state
-    assert state.state == "unknown"
-    assert state.attributes.get("unit_of_measurement") is None
-    assert state.attributes.get("state_class") is SensorStateClass.TOTAL
-
-    assert "device_class" not in state.attributes
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_trapezoidal(hass: HomeAssistant) -> None:

@@ -122,7 +122,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.30
+SQLAlchemy==2.0.31
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -2939,7 +2939,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==2.4.2
 
 # homeassistant.components.august
-yalexs==6.1.0
+yalexs==6.3.0
 
 # homeassistant.components.yeelight
 yeelight==0.7.14

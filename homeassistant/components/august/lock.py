@@ -44,11 +44,9 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
 
     def __init__(self, data: AugustData, device: Lock) -> None:
         """Initialize the lock."""
-        super().__init__(data, device)
-        self._attr_unique_id = f"{self._device_id:s}_lock"
+        super().__init__(data, device, "lock")
         if self._detail.unlatch_supported:
             self._attr_supported_features = LockEntityFeature.OPEN
-        self._update_from_data()
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""

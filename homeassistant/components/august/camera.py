@@ -6,8 +6,7 @@ import logging
 
 from aiohttp import ClientSession
 from yalexs.activity import ActivityType
-from yalexs.const import Brand
-from yalexs.doorbell import ContentTokenExpired, Doorbell
+from yalexs.doorbell import Doorbell
 from yalexs.util import update_doorbell_image_from_activity
 
 from homeassistant.components.camera import Camera
@@ -46,17 +45,15 @@ class AugustCamera(AugustEntityMixin, Camera):
     _attr_motion_detection_enabled = True
     _attr_brand = DEFAULT_NAME
     _image_url: str | None = None
-    _content_token: str | None = None
     _image_content: bytes | None = None
 
     def __init__(
         self, data: AugustData, device: Doorbell, session: ClientSession, timeout: int
     ) -> None:
         """Initialize an August security camera."""
-        super().__init__(data, device)
+        super().__init__(data, device, "camera")
         self._timeout = timeout
         self._session = session
-        self._attr_unique_id = f"{self._device_id:s}_camera"
 
     @property
     def is_recording(self) -> bool:
@@ -91,24 +88,9 @@ class AugustCamera(AugustEntityMixin, Camera):
         self._update_from_data()
 
         if self._image_url is not self._detail.image_url:
-            self._image_url = self._detail.image_url
-            self._content_token = self._detail.content_token or self._content_token
-            _LOGGER.debug(
-                "calling doorbell async_get_doorbell_image, %s",
-                self._detail.device_name,
+            self._image_content = await self._data.async_get_doorbell_image(
+                self._device_id, self._session, timeout=self._timeout
             )
-            try:
-                self._image_content = await self._detail.async_get_doorbell_image(
-                    self._session, timeout=self._timeout
-                )
-            except ContentTokenExpired:
-                if self._data.brand == Brand.YALE_HOME:
-                    _LOGGER.debug(
-                        "Error fetching camera image, updating content-token from api to retry"
-                    )
-                    await self._async_update()
-                    self._image_content = await self._detail.async_get_doorbell_image(
-                        self._session, timeout=self._timeout
-                    )
+            self._image_url = self._detail.image_url
 
         return self._image_content
