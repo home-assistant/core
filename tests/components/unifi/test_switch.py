@@ -1398,7 +1398,6 @@ async def test_wlan_switches(
     entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
     mock_websocket_message,
-    mock_websocket_state,
     config_entry_setup: ConfigEntry,
     wlan_payload: list[dict[str, Any]],
 ) -> None:
@@ -1447,16 +1446,6 @@ async def test_wlan_switches(
     )
     assert aioclient_mock.call_count == 2
     assert aioclient_mock.mock_calls[1][2] == {"enabled": True}
-
-    # Availability signalling
-
-    # Controller disconnects
-    await mock_websocket_state.disconnect()
-    assert hass.states.get("switch.ssid_1").state == STATE_UNAVAILABLE
-
-    # Controller reconnects
-    await mock_websocket_state.reconnect()
-    assert hass.states.get("switch.ssid_1").state == STATE_OFF
 
 
 @pytest.mark.parametrize("port_forward_payload", [[PORT_FORWARD_PLEX]])
@@ -1591,19 +1580,23 @@ async def test_updating_unique_id(
 
 
 @pytest.mark.parametrize("port_forward_payload", [[PORT_FORWARD_PLEX]])
+@pytest.mark.parametrize("wlan_payload", [[WLAN]])
 @pytest.mark.usefixtures("config_entry_setup")
 @pytest.mark.usefixtures("mock_device_registry")
 async def test_hub_state_change(hass: HomeAssistant, mock_websocket_state) -> None:
     """Verify entities state reflect on hub connection becoming unavailable."""
-    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
     assert hass.states.get("switch.unifi_network_plex").state == STATE_ON
+    assert hass.states.get("switch.ssid_1").state == STATE_ON
 
     # Availability signalling
 
     # Controller disconnects
     await mock_websocket_state.disconnect()
     assert hass.states.get("switch.unifi_network_plex").state == STATE_UNAVAILABLE
+    assert hass.states.get("switch.ssid_1").state == STATE_UNAVAILABLE
 
     # Controller reconnects
     await mock_websocket_state.reconnect()
     assert hass.states.get("switch.unifi_network_plex").state == STATE_ON
+    assert hass.states.get("switch.ssid_1").state == STATE_ON
