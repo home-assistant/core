@@ -51,10 +51,9 @@ class AugustCamera(AugustEntityMixin, Camera):
         self, data: AugustData, device: Doorbell, session: ClientSession, timeout: int
     ) -> None:
         """Initialize an August security camera."""
-        super().__init__(data, device)
+        super().__init__(data, device, "camera")
         self._timeout = timeout
         self._session = session
-        self._attr_unique_id = f"{self._device_id:s}_camera"
 
     @property
     def is_recording(self) -> bool:

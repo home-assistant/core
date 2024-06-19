@@ -27,7 +27,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AugustConfigEntry, AugustData
+from . import AugustConfigEntry
 from .const import (
     ATTR_OPERATION_AUTORELOCK,
     ATTR_OPERATION_KEYPAD,
@@ -91,7 +91,7 @@ async def async_setup_entry(
 
     for device in data.locks:
         detail = data.get_device_detail(device.device_id)
-        entities.append(AugustOperatorSensor(data, device))
+        entities.append(AugustOperatorSensor(data, device, "lock_operator"))
         if SENSOR_TYPE_DEVICE_BATTERY.value_fn(detail):
             entities.append(
                 AugustBatterySensor[LockDetail](
@@ -123,12 +123,6 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreSensor):
     _operated_manual: bool | None = None
     _operated_tag: bool | None = None
     _operated_autorelock: bool | None = None
-
-    def __init__(self, data: AugustData, device) -> None:
-        """Initialize the sensor."""
-        super().__init__(data, device)
-        self._attr_unique_id = f"{self._device_id}_lock_operator"
-        self._update_from_data()
 
     @callback
     def _update_from_data(self) -> None:
