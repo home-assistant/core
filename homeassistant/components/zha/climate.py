@@ -83,11 +83,15 @@ class Thermostat(ZHAEntity, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return the current HVAC action."""
+        if self.entity_data.entity.hvac_action is None:
+            return None
         return HVACAction(self.entity_data.entity.hvac_action)
 
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return HVAC operation mode."""
+        if self.entity_data.entity.hvac_mode is None:
+            return None
         return HVACMode(self.entity_data.entity.hvac_mode)
 
     @property
