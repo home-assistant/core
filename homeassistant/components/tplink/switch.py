@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, Final
 
 from kasa import Device, Feature
 
@@ -14,13 +15,39 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import TPLinkConfigEntry
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import (
-    CoordinatedTPLinkEntity,
+    CoordinatedTPLinkFeatureEntity,
+    TPLinkFeatureEntityDescription,
     _description_for_feature,
     _entities_for_device_and_its_children,
     async_refresh_after,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True, kw_only=True)
+class TPLinkSwitchEntityDescription(
+    SwitchEntityDescription, TPLinkFeatureEntityDescription
+):
+    """Base class for a TPLink feature based sensor entity description."""
+
+
+SWITCH_DESCRIPTIONS: Final = [
+    TPLinkSwitchEntityDescription(
+        key="state",
+    ),
+    TPLinkSwitchEntityDescription(
+        key="led",
+    ),
+    TPLinkSwitchEntityDescription(
+        key="auto_update_enabled",
+    ),
+    TPLinkSwitchEntityDescription(
+        key="auto_off_enabled",
+    ),
+]
+
+SWITCH_DESCRIPTIONS_MAP = {desc.key: desc for desc in SWITCH_DESCRIPTIONS}
 
 
 async def async_setup_entry(
@@ -43,8 +70,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class TPLinkSwitch(CoordinatedTPLinkEntity, SwitchEntity):
+class TPLinkSwitch(CoordinatedTPLinkFeatureEntity, SwitchEntity):
     """Representation of a feature-based TPLink switch."""
+
+    entity_description: TPLinkSwitchEntityDescription
 
     def __init__(
         self,
@@ -55,20 +84,16 @@ class TPLinkSwitch(CoordinatedTPLinkEntity, SwitchEntity):
         parent: Device | None = None,
     ) -> None:
         """Initialize the switch."""
+        description = _description_for_feature(
+            TPLinkSwitchEntityDescription,
+            feature,
+            SWITCH_DESCRIPTIONS_MAP,
+            child_alias=device.alias if parent else None,
+        )
         super().__init__(
-            device,
-            coordinator,
-            feature=feature,
-            parent=parent,
+            device, coordinator, description=description, feature=feature, parent=parent
         )
-        self._feature: Feature
 
-        # Use the device name for the primary switch control
-        if feature.category is Feature.Category.Primary and not parent:
-            self._attr_name = None
-        self.entity_description = _description_for_feature(
-            SwitchEntityDescription, feature
-        )
         self._async_call_update_attrs()
 
     @async_refresh_after

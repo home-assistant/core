@@ -8,6 +8,7 @@ from typing import Any, Final
 
 from kasa import Device, DeviceType, LightState, Module
 from kasa.interfaces import Light, LightEffect
+from kasa.iot import IotDevice
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -27,7 +28,7 @@ from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TPLinkConfigEntry
+from . import TPLinkConfigEntry, legacy_device_id
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkEntity, async_refresh_after
 
@@ -205,6 +206,20 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             # If the light supports only a single color mode, set it now
             self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
         self._async_call_update_attrs()
+
+    def _get_unique_id(self) -> str:
+        """Return unique ID for the entity."""
+        device = self._device
+
+        # For backwards compat with pyHS100
+        if device.device_type is DeviceType.Dimmer and isinstance(device, IotDevice):
+            # Dimmers used to use the switch format since
+            # pyHS100 treated them as SmartPlug but the old code
+            # created them as lights
+            # https://github.com/home-assistant/core/blob/2021.9.7/homeassistant/components/tplink/common.py#L86
+            return legacy_device_id(device)
+
+        return device.mac.replace(":", "").upper()
 
     @callback
     def _async_extract_brightness_transition(

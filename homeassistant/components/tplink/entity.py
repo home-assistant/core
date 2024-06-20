@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Awaitable, Callable, Coroutine, Mapping
+from dataclasses import dataclass, replace
 import logging
 from typing import Any, Concatenate
 
@@ -15,20 +16,25 @@ from kasa import (
     KasaException,
     TimeoutError,
 )
-from kasa.iot import IotDevice
 
-from homeassistant.components.light import LightEntity
-from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import legacy_device_id
-from .const import DOMAIN, ENTITY_EXTRAS, PRIMARY_STATE_ID
+from .const import (
+    ATTR_CURRENT_A,
+    ATTR_CURRENT_POWER_W,
+    ATTR_TODAY_ENERGY_KWH,
+    ATTR_TOTAL_ENERGY_KWH,
+    DOMAIN,
+    PRIMARY_STATE_ID,
+)
 from .coordinator import TPLinkDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,6 +53,18 @@ DEVICETYPES_WITH_SPECIALIZED_PLATFORMS = {
     DeviceType.LightStrip,
     DeviceType.Dimmer,
 }
+
+LEGACY_KEY_MAPPING = {
+    "current": ATTR_CURRENT_A,
+    "current_consumption": ATTR_CURRENT_POWER_W,
+    "consumption_today": ATTR_TODAY_ENERGY_KWH,
+    "consumption_total": ATTR_TOTAL_ENERGY_KWH,
+}
+
+
+@dataclass(frozen=True, kw_only=True)
+class TPLinkFeatureEntityDescription(EntityDescription):
+    """Base class for a TPLink feature based entity description."""
 
 
 def async_refresh_after[_T: CoordinatedTPLinkEntity, **_P](
@@ -110,30 +128,26 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         self._feature = feature
 
         registry_device = device
-        name = device.alias
+        device_name = device.alias
         if parent and parent.device_type != Device.Type.Hub:
-            # Check for SensorEntity can be removed when sensor features are implemented
-            if not isinstance(self, SensorEntity) and (
-                not feature or feature.category == Feature.Category.Primary
-            ):
+            if not feature or feature.id == PRIMARY_STATE_ID:
                 # Entity will be added to parent if not a hub and no feature parameter
-                # (i.e. core platform like Light, Fan) or feature is primary like state
+                # (i.e. core platform like Light, Fan) or the feature is the primary state
                 registry_device = parent
-                name = registry_device.alias
-                self._attr_name = device.alias
+                device_name = registry_device.alias
             else:
                 # Prefix the device name with the parent name unless it is a hub attached device.
                 # Sensible default for child devices like strip plugs or the ks240 where the child
                 # alias makes more sense in the context of the parent.
                 # i.e. Hall Ceiling Fan & Bedroom Ceiling Fan; Child device aliases will be Ceiling Fan
                 # and Dimmer Switch for both so should be distinguished by the parent name.
-                name = f"{parent.alias} {device.alias}"
+                device_name = f"{parent.alias} {device.alias}"
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(registry_device.device_id))},
             manufacturer="TP-Link",
             model=registry_device.model,
-            name=name,
+            name=device_name,
             sw_version=registry_device.hw_info["sw_ver"],
             hw_version=registry_device.hw_info["hw_ver"],
         )
@@ -149,34 +163,11 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
 
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""
-        device = self._device
-        if not isinstance(self, SensorEntity) and self._feature is not None:
-            feature_id = self._feature.id
-            # Special handling for primary state attribute (backwards compat for the main switch).
-            if feature_id == PRIMARY_STATE_ID:
-                return legacy_device_id(device)
-
-            return f"{legacy_device_id(device)}_{feature_id}"
-
-        # Light entities were handled historically differently
-        if isinstance(self, LightEntity):
-            unique_id = device.mac.replace(":", "").upper()
-            # For backwards compat with pyHS100
-            if device.device_type is DeviceType.Dimmer and isinstance(
-                device, IotDevice
-            ):
-                # Dimmers used to use the switch format since
-                # pyHS100 treated them as SmartPlug but the old code
-                # created them as lights
-                # https://github.com/home-assistant/core/blob/2021.9.7/homeassistant/components/tplink/common.py#L86
-                unique_id = legacy_device_id(device)
-            return unique_id
-
-        # For legacy sensors, we construct our IDs from the entity description
-        if isinstance(self, SensorEntity) and self.entity_description is not None:
-            return f"{legacy_device_id(device)}_{self.entity_description.key}"
-
-        return legacy_device_id(device)
+        # The light has it's own implementation and switch and sensor use
+        # the FeatureEntity implementation. When a new non-feature based
+        # platform is added it should provide an implementation here to
+        # return legacy_device_id(self._device)
+        raise NotImplementedError
 
     @abstractmethod
     @callback
@@ -215,6 +206,35 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.last_update_success and self._attr_available
+
+
+class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
+    """Common base class for all coordinated tplink feature entities."""
+
+    entity_description: TPLinkFeatureEntityDescription
+    _feature: Feature
+
+    def __init__(
+        self,
+        device: Device,
+        coordinator: TPLinkDataUpdateCoordinator,
+        *,
+        feature: Feature,
+        description: TPLinkFeatureEntityDescription,
+        parent: Device | None = None,
+    ) -> None:
+        """Initialize the entity."""
+        self.entity_description = description
+        super().__init__(device, coordinator, parent=parent, feature=feature)
+
+    def _get_unique_id(self) -> str:
+        """Return unique ID for the entity."""
+        key = self.entity_description.key
+        if key == PRIMARY_STATE_ID:
+            return legacy_device_id(self._device)
+
+        key = LEGACY_KEY_MAPPING.get(key, key)
+        return f"{legacy_device_id(self._device)}_{key}"
 
 
 def _entities_for_device[_E: CoordinatedTPLinkEntity](
@@ -311,6 +331,9 @@ def _category_for_feature(feature: Feature | None) -> EntityCategory | None:
 def _description_for_feature[_D: EntityDescription](
     desc_cls: type[_D],
     feature: Feature,
+    descriptions: Mapping[str, _D],
+    *,
+    child_alias: str | None = None,
 ) -> _D:
     """Return description object for the given feature.
 
@@ -318,26 +341,39 @@ def _description_for_feature[_D: EntityDescription](
     which additional parameters are passed.
     """
 
-    kwargs: dict = {}
-    # Key can be overridden for legacy support
-    if (entity_extras := ENTITY_EXTRAS.get(feature.id)) and (
-        key := entity_extras.get("key")
-    ):
-        kwargs["key"] = key
+    enabled_default = feature.category is not Feature.Category.Debug
+    category = _category_for_feature(feature)
+    if descriptions and (desc := descriptions.get(feature.id)):
+        # The state feature gets the device name or the child device
+        # name if it's a child device
+        if feature.id == PRIMARY_STATE_ID:
+            translation_key = None
+            entity_name: str | None | UndefinedType = child_alias
+        else:
+            translation_key = feature.id
+            entity_name = UNDEFINED
+        desc = replace(
+            desc,
+            translation_key=translation_key,
+            name=entity_name,
+            entity_category=category,
+            entity_registry_enabled_default=enabled_default,
+        )
     else:
-        kwargs["key"] = feature.id
-    # Use translation keys for all features configured in extras
-    if entity_extras:
-        kwargs["translation_key"] = feature.id
-        kwargs["state_class"] = entity_extras.get("state_class")
-        kwargs["device_class"] = entity_extras.get("device_class")
-    else:
-        kwargs["name"] = feature.name
-        kwargs["icon"] = feature.icon
-
-    kwargs["entity_registry_enabled_default"] = (
-        feature.category is not Feature.Category.Debug
-    )
-    kwargs["entity_category"] = _category_for_feature(feature)
-
-    return desc_cls(**kwargs)
+        # Entity are named in the base class based on the following logic:
+        # _attr_name > translation.name > description.name
+        # > device_class if base platform supports.
+        desc = desc_cls(
+            key=feature.id,
+            name=feature.name,
+            icon=feature.icon,
+            entity_category=category,
+            entity_registry_enabled_default=enabled_default,
+        )
+        _LOGGER.warning(
+            "Device feature: %s (%s) needs an entity description defined, "
+            "it has been added to hass but may not be presented properly",
+            feature.name,
+            feature.id,
+        )
+    return desc

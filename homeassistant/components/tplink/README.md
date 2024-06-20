@@ -4,9 +4,9 @@ This document covers details that new contributors may find helpful when getting
 
 ## Modules vs Features
 
-The kasa library which this integration depends on exposes functionality via modules and features.
-The `Module` apis encapsulate groups of functionality provided by a device,
-e.g. Light which has multiple attributes and methods such as `set_has`, `brightness` etc.
+The python-kasa library which this integration depends on exposes functionality via modules and features.
+The `Module` APIs encapsulate groups of functionality provided by a device,
+e.g. Light which has multiple attributes and methods such as `set_hsv`, `brightness` etc.
 The `features` encapsulate unitary functions and allow for introspection.
 e.g. `on_since`, `voltage` etc.
 
@@ -17,15 +17,18 @@ use modules.
 
 ## Dynamic feature creation
 
-Entities can be dynamically created by inspecting various properties of a feature such
-as `type`, `unit` or `precision`. If more data is needed than the feature provides,
-i.e. to set HA `device_class` or `state_class` on a sensor entity, then a static `EntityExtras` entry
-should be created in `const.py`.
+Entity attributes are dynamically set by inspecting various properties of a feature such
+as `type`, `unit` or `precision`.
+If more data is needed than the feature provides,
+i.e. to set HA `device_class` or `state_class` on a sensor entity, then add it to the static
+`PLATFORM_DESCRIPTIONS` entry in the appropriate platform.
+All feature ids should be described in the static entity descriptions but if a new feature
+is not yet added it will be created manually and a warning will be logged.
 
 ### Translation keys and icons
 
-For `Feature` based platforms translation keys should match `feature.id`.
-If a translation key and icon has been added to `strings.json` and `icons.json` it should be added to
-`ENTITY_EXTRAS` as an indication not to set the `name` or `icon` from the feature,
-as it will override the translation otherwise.
+For features to use translation keys they should be added to `strings.json` and `icons.json`
+with the feature.id as key.
+
+**All described features must have corresponding entries in `strings.json` and `icons.json`**
 
