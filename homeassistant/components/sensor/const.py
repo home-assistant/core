@@ -142,7 +142,7 @@ class SensorDeviceClass(StrEnum):
     CONDUCTIVITY = "conductivity"
     """Conductivity.
 
-    Unit of measurement: `mS/cm`, `µS/cm`
+    Unit of measurement: `S/cm`, `mS/cm`, `µS/cm`
     """
 
     CURRENT = "current"
