@@ -47,10 +47,14 @@ class IntegerTypeData:
 
     def scale_value(self, value: float) -> float:
         """Scale a value."""
+        if not isinstance(value, float):
+            value = float(value)
         return value / (10**self.scale)
 
     def scale_value_back(self, value: float) -> int:
         """Return raw value for scaled."""
+        if not isinstance(value, float):
+            value = float(value)
         return int(value * (10**self.scale))
 
     def remap_value_to(
@@ -61,6 +65,8 @@ class IntegerTypeData:
         reverse: bool = False,
     ) -> float:
         """Remap a value from this range to a new range."""
+        if not isinstance(value, float):
+            value = float(value)
         return remap_value(value, self.min, self.max, to_min, to_max, reverse)
 
     def remap_value_from(
@@ -71,6 +77,8 @@ class IntegerTypeData:
         reverse: bool = False,
     ) -> float:
         """Remap a value from its current range to this range."""
+        if not isinstance(value, float):
+            value = float(value)
         return remap_value(value, from_min, from_max, self.min, self.max, reverse)
 
     @classmethod
