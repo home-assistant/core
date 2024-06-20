@@ -188,7 +188,7 @@ class BaseProtectEntity(Entity):
                 self._async_get_ufp_enabled = description.get_ufp_enabled
 
         self._async_set_device_info()
-        self._async_update(device)
+        self._async_update_device_from_protect(device)
         self._state_getters = tuple(
             partial(attrgetter(attr), self) for attr in self._state_attrs
         )
@@ -213,7 +213,7 @@ class BaseProtectEntity(Entity):
         )
 
     @callback
-    def _async_update(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         """Update Entity object from Protect device."""
         if TYPE_CHECKING:
             assert isinstance(device, ProtectAdoptableDeviceModel)
@@ -235,7 +235,7 @@ class BaseProtectEntity(Entity):
     def _async_updated_event(self, device: ProtectAdoptableDeviceModel | NVR) -> None:
         """When device is updated from Protect."""
         previous_attrs = [getter() for getter in self._state_getters]
-        self._async_update(device)
+        self._async_update_device_from_protect(device)
         changed = False
         for idx, getter in enumerate(self._state_getters):
             if previous_attrs[idx] != getter():
@@ -289,7 +289,7 @@ class ProtectNVREntity(BaseProtectEntity):
         )
 
     @callback
-    def _async_update(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         data = self.data
         if last_update_success := data.last_update_success:
             self.device = data.api.bootstrap.nvr

@@ -268,8 +268,8 @@ class ProtectNumbers(ProtectDeviceEntity, NumberEntity):
         self._attr_native_step = self.entity_description.ufp_step
 
     @callback
-    def _async_update(self, device: ProtectModelWithId) -> None:
-        super()._async_update(device)
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
         self._attr_native_value = self.entity_description.get_ufp_value(self.device)
 
     async def async_set_native_value(self, value: float) -> None:

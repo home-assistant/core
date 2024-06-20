@@ -634,8 +634,8 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
     _state_attrs: tuple[str, ...] = ("_attr_available", "_attr_is_on")
 
     @callback
-    def _async_update(self, device: ProtectModelWithId) -> None:
-        super()._async_update(device)
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
         self._attr_is_on = self.entity_description.get_ufp_value(self.device)
 
 
@@ -650,8 +650,8 @@ class MountableProtectDeviceBinarySensor(ProtectDeviceBinarySensor):
     )
 
     @callback
-    def _async_update(self, device: ProtectModelWithId) -> None:
-        super()._async_update(device)
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
         # UP Sense can be any of the 3 contact sensor device classes
         self._attr_device_class = MOUNT_DEVICE_CLASS_MAP.get(
             self.device.mount_type, BinarySensorDeviceClass.DOOR
@@ -685,8 +685,8 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
         super().__init__(data, device, description)
 
     @callback
-    def _async_update(self, device: ProtectModelWithId) -> None:
-        super()._async_update(device)
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
         slot = self._disk.slot
         self._attr_available = False
 
@@ -709,8 +709,8 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
     _state_attrs = ("_attr_available", "_attr_is_on", "_attr_extra_state_attributes")
 
     @callback
-    def _async_update(self, device: ProtectModelWithId) -> None:
-        super()._async_update(device)
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
         description = self.entity_description
         event = self._event = self.entity_description.get_event_obj(device)
         if is_on := bool(description.get_ufp_value(device)):
@@ -734,9 +734,9 @@ class ProtectSmartEventBinarySensor(EventEntityMixin, BinarySensorEntity):
         self._attr_extra_state_attributes = {}
 
     @callback
-    def _async_update(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         previous_event = self._event
-        super()._async_update(device)
+        super()._async_update_device_from_protect(device)
         event = self._event = self.entity_description.get_event_obj(device)
         if event and previous_event and previous_event.id == event.id and event.end:
             # Event already ended

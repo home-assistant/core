@@ -216,8 +216,8 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
             self._attr_supported_features = _EMPTY_CAMERA_FEATURES
 
     @callback
-    def _async_update(self, device: ProtectModelWithId) -> None:
-        super()._async_update(device)
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
         updated_device = self.device
         channel = updated_device.channels[self.channel.id]
         self.channel = channel

@@ -721,8 +721,8 @@ class BaseProtectSensor(BaseProtectEntity, SensorEntity):
     entity_description: ProtectSensorEntityDescription
     _state_attrs = ("_attr_available", "_attr_native_value")
 
-    def _async_update(self, device: ProtectModelWithId) -> None:
-        super()._async_update(device)
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
         self._attr_native_value = self.entity_description.get_ufp_value(self.device)
 
 
@@ -756,9 +756,9 @@ class ProtectLicensePlateEventSensor(ProtectEventSensor):
         self._attr_extra_state_attributes = {}
 
     @callback
-    def _async_update(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         previous_event = self._event
-        super()._async_update(device)
+        super()._async_update_device_from_protect(device)
         event = self._event = self.entity_description.get_event_obj(device)
         if event and previous_event and previous_event.id == event.id and event.end:
             # Event already ended

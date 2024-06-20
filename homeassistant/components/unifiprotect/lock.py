@@ -60,8 +60,8 @@ class ProtectLock(ProtectDeviceEntity, LockEntity):
     )
 
     @callback
-    def _async_update(self, device: ProtectModelWithId) -> None:
-        super()._async_update(device)
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
         lock_status = self.device.lock_status
 
         self._attr_is_locked = False

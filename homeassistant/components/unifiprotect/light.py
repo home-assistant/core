@@ -66,8 +66,8 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
     _state_attrs = ("_attr_available", "_attr_is_on", "_attr_brightness")
 
     @callback
-    def _async_update(self, device: ProtectModelWithId) -> None:
-        super()._async_update(device)
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
         updated_device = self.device
         self._attr_is_on = updated_device.is_light_on
         self._attr_brightness = unifi_brightness_to_hass(
