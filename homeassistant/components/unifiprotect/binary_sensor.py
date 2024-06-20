@@ -8,7 +8,6 @@ import dataclasses
 from uiprotect.data import (
     NVR,
     Camera,
-    Event,
     Light,
     ModelType,
     MountType,
@@ -739,27 +738,15 @@ class ProtectSmartEventBinarySensor(EventEntityMixin, BinarySensorEntity):
     def _async_update(self, device: ProtectModelWithId, msg: WSMsg | None) -> None:
         had_previous_event = self._event is not None
         super()._async_update(device, msg)
+        description = self.entity_description
         if (
             (event := self._event)
             and self.device.is_smart_detected
-            and (
-                not (obj_type := self.entity_description.ufp_obj_type)
-                or obj_type in event.smart_detect_types
-            )
-            and (
-                (
-                    is_end_of_event := (
-                        msg
-                        and (new_obj := msg.new_obj)
-                        and isinstance(new_obj, Event)
-                        and new_obj.end
-                    )
-                )
-                or not event.end
-            )
+            and description.smart_event_is_detected(event)
+            and ((is_end := description.wsmsg_is_end(msg)) or not event.end)
         ):
             self._attr_is_on = True
-            if is_end_of_event:
+            if is_end:
                 self._process_end_event(had_previous_event)
             return
         self._async_clear_event()
