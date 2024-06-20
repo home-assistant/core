@@ -850,7 +850,7 @@ class MockModule:
         }
 
 
-class MockPlatform:
+class MockPlatform(entity_platform.EntityPlatformModule):
     """Provide a fake platform."""
 
     __name__ = "homeassistant.components.light.bla"
