@@ -743,24 +743,27 @@ class ProtectSmartEventBinarySensor(EventEntityMixin, BinarySensorEntity):
             # Event already ended
             return
 
-        if (
+        if not (
             event
-            and self.entity_description.smart_event_is_detected(event)
+            and self.entity_description.has_matching_smart(event)
             and ((is_end := self._end_of_current_event(msg)) or not event.end)
             and (is_end or self.device.is_smart_detected)
         ):
-            self._attr_is_on = True
-            self._set_event_attrs(event)
-            if not is_end:
-                return
-            # If the event is so short that the detection is received
-            # in the same message as the end of the event we need to write
-            # state and than clear the event and write state again.
-            self.async_write_ha_state()
             self._set_off()
-            self.async_write_ha_state()
-        else:
-            self._set_off()
+            return
+
+        self._attr_is_on = True
+        self._set_event_attrs(event)
+
+        if not is_end:
+            return
+
+        # If the event is so short that the detection is received
+        # in the same message as the end of the event we need to write
+        # state and than clear the event and write state again.
+        self.async_write_ha_state()
+        self._set_off()
+        self.async_write_ha_state()
 
 
 MODEL_DESCRIPTIONS_WITH_CLASS = (

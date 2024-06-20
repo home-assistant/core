@@ -90,8 +90,8 @@ class ProtectEventMixin(ProtectEntityDescription[T]):
         """Return value from UniFi Protect device."""
         return None
 
-    def smart_event_is_detected(self, event: Event) -> bool:
-        """Determine if a smart event is detected."""
+    def has_matching_smart(self, event: Event) -> bool:
+        """Determine if the detection type is a match."""
         return (
             not (obj_type := self.ufp_obj_type) or obj_type in event.smart_detect_types
         )

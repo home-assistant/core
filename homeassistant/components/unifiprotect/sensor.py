@@ -761,43 +761,30 @@ class ProtectLicensePlateEventSensor(ProtectEventSensor):
         previous_event = self._event
         super()._async_update(device, msg)
         event = self._event = self.entity_description.get_event_obj(device)
-        if (
-            event
-            and previous_event
-            and previous_event.id == event.id
-            and previous_event.end
-        ):
+        if event and previous_event and previous_event.id == event.id and event.end:
             # Event already ended
             return
 
-        description = self.entity_description
-        _LOGGER.info(
-            "Updating license plate sensor %s - is_end: %s - is_matching_event: %s metadata: %s msg: %s plate: %s",
-            self.entity_id,
-            self._end_of_current_event(msg),
-            event and description.smart_event_is_detected(event),
-            event and event.metadata,
-            msg,
-            event and event.metadata and event.metadata.license_plate,
-        )
-
-        if (
+        if not (
             event
-            and self.entity_description.smart_event_is_detected(event)
+            and self.entity_description.has_matching_smart(event)
             and ((is_end := self._end_of_current_event(msg)) or not event.end)
             and (is_end or self.device.is_smart_detected)
             and (metadata := event.metadata)
             and (license_plate := metadata.license_plate)
         ):
-            self._attr_native_value = license_plate.name
-            self._set_event_attrs(event)
-            if not is_end:
-                return
-            # If the event is so short that the detection is received
-            # in the same message as the end of the event we need to write
-            # state and than clear the event and write state again.
-            self.async_write_ha_state()
             self._set_none()
-            self.async_write_ha_state()
-        else:
-            self._set_none()
+            return
+
+        self._attr_native_value = license_plate.name
+        self._set_event_attrs(event)
+
+        if not is_end:
+            return
+
+        # If the event is so short that the detection is received
+        # in the same message as the end of the event we need to write
+        # state and than clear the event and write state again.
+        self.async_write_ha_state()
+        self._set_none()
+        self.async_write_ha_state()
