@@ -10,7 +10,11 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -70,9 +74,9 @@ async def test_no_sensor_and_water_state(
     ("hydrawise_unit_system", "unit_system", "expected_state"),
     [
         ("imperial", METRIC_SYSTEM, "454.6279552584"),
-        ("imperial", IMPERIAL_SYSTEM, "120.1"),
+        ("imperial", US_CUSTOMARY_SYSTEM, "120.1"),
         ("metric", METRIC_SYSTEM, "120.1"),
-        ("metric", IMPERIAL_SYSTEM, "31.7270634882136"),
+        ("metric", US_CUSTOMARY_SYSTEM, "31.7270634882136"),
     ],
 )
 async def test_volume_unit_conversion(
