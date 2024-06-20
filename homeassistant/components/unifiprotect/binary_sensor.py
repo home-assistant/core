@@ -707,17 +707,19 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
         self, device: ProtectModelWithId, msg: WSSubscriptionMessage | None
     ) -> None:
         super()._async_protect_update(device, msg)
-        is_on = self.entity_description.get_is_on(self.device, self._event)
+        is_on = bool(self._event and self.entity_description.get_ufp_value(device))
         self._attr_is_on = is_on
         if not is_on:
             self._event = None
             self._attr_extra_state_attributes = {}
 
 
-class ProtectSmartEventBinarySensor(ProtectEventBinarySensor):
+class ProtectSmartEventBinarySensor(EventEntityMixin, BinarySensorEntity):
     """A UniFi Protect Device Binary Sensor for smart events."""
 
     device: Camera
+    entity_description: ProtectBinaryEventEntityDescription
+    _state_attrs = ("_attr_available", "_attr_is_on", "_attr_extra_state_attributes")
 
     @callback
     def _async_clear_event(self) -> None:
@@ -772,7 +774,7 @@ def _async_event_entities(
     data: ProtectData,
     ufp_device: ProtectAdoptableDeviceModel | None = None,
 ) -> list[ProtectDeviceEntity]:
-    entities: list[BaseProtectEntity] = []
+    entities: list[ProtectDeviceEntity] = []
     for device in data.get_cameras() if ufp_device is None else [ufp_device]:
         entities.extend(
             ProtectSmartEventBinarySensor(data, device, description)

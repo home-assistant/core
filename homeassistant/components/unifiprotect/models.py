@@ -90,10 +90,6 @@ class ProtectEventMixin(ProtectEntityDescription[T]):
             object.__setattr__(self, "get_event_obj", attrgetter(_ufp_event_obj))
         super().__post_init__()
 
-    def get_is_on(self, obj: T, event: Event | None) -> bool:
-        """Return value if event is active."""
-        return event is not None and self.get_ufp_value(obj)
-
 
 @dataclass(frozen=True, kw_only=True)
 class ProtectSetableKeysMixin(ProtectEntityDescription[T]):
