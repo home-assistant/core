@@ -38,23 +38,38 @@
           "c": "Celsius",
           "f": "Fahrenheit"
         }
+      },
+      "display_pm_standard": {
+        "name": "Display PM standard",
+        "state": {
+          "ugm3": "µg/m³",
+          "us_aqi": "US AQI"
+        }
+      },
+      "led_bar_mode": {
+        "name": "LED bar mode",
+        "state": {
+          "off": "Off",
+          "co2": "Carbon dioxide",
+          "pm": "Particulate matter"
+        }
       }
     },
     "sensor": {
       "total_volatile_organic_component_index": {
-        "name": "Total VOC index"
+        "name": "VOC index"
       },
       "nitrogen_index": {
-        "name": "Nitrogen index"
+        "name": "NOx index"
       },
       "pm003_count": {
         "name": "PM0.3"
       },
       "raw_total_volatile_organic_component": {
-        "name": "Raw total VOC"
+        "name": "Raw VOC"
       },
       "raw_nitrogen": {
-        "name": "Raw nitrogen"
+        "name": "Raw NOx"
       }
     }
   },
