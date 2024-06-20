@@ -283,7 +283,7 @@ async def test_shutdown_on_ha_stop(
     zha_data = get_zha_data(hass)
 
     with patch.object(
-        zha_data.gateway, "shutdown", wraps=zha_data.gateway.shutdown
+        zha_data.gateway_proxy, "shutdown", wraps=zha_data.gateway_proxy.shutdown
     ) as mock_shutdown:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         hass.set_state(CoreState.stopping)
