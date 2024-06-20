@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -17,18 +18,23 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_ID,
+    CONF_SCAN_INTERVAL,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
     CONF_VALUE_TEMPLATE,
     STATE_UNKNOWN,
     UnitOfPower,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import template
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,19 +90,29 @@ async def async_setup_platform(
     exclude_feeds = config.get(CONF_EXCLUDE_FEEDID)
     include_only_feeds = config.get(CONF_ONLY_INCLUDE_FEEDID)
     sensor_names = config.get(CONF_SENSOR_NAMES)
+    scan_interval = config.get(CONF_SCAN_INTERVAL, timedelta(seconds=30))
 
     if value_template is not None:
         value_template.hass = hass
 
     emoncms_client = EmoncmsClient(url, apikey, session=async_get_clientsession(hass))
-    elems = await emoncms_client.async_list_feeds()
-
+    coordinator: DataUpdateCoordinator[list[dict[str, Any]] | None] = (
+        DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name="emoncms",
+            update_method=emoncms_client.async_list_feeds,
+            update_interval=scan_interval,
+        )
+    )
+    await coordinator.async_config_entry_first_refresh()
+    elems = coordinator.data
     if elems is None:
         return
 
-    sensors = []
+    sensors: list[EmonCmsSensor] = []
 
-    for elem in elems:
+    for idx, elem in enumerate(elems):
         if exclude_feeds is not None and int(elem["id"]) in exclude_feeds:
             continue
 
@@ -115,31 +131,38 @@ async def async_setup_platform(
         sensors.append(
             EmonCmsSensor(
                 hass,
-                emoncms_client,
+                coordinator,
                 name,
                 value_template,
                 unit_of_measurement,
                 str(sensorid),
-                elem,
+                idx,
             )
         )
     async_add_entities(sensors)
 
 
-class EmonCmsSensor(SensorEntity):
+class EmonCmsSensor(
+    CoordinatorEntity[DataUpdateCoordinator[list[dict[str, Any]] | None]], SensorEntity
+):
     """Implementation of an Emoncms sensor."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        emoncms_client: EmoncmsClient,
+        coordinator: DataUpdateCoordinator[list[dict[str, Any]] | None],
         name: str | None,
         value_template: template.Template | None,
         unit_of_measurement: str | None,
         sensorid: str,
-        elem: dict[str, Any],
+        idx: int,
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(coordinator)
+        self.idx = idx
+        elem = {}
+        if self.coordinator.data:
+            elem = self.coordinator.data[self.idx]
         if name is None:
             # Suppress ID in sensor name if it's 1, since most people won't
             # have more than one EmonCMS source and it's redundant to show the
@@ -151,11 +174,9 @@ class EmonCmsSensor(SensorEntity):
         else:
             self._attr_name = name
         self._hass = hass
-        self._emoncms_client = emoncms_client
         self._value_template = value_template
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._sensorid = sensorid
-        self._feed_id = elem["id"]
 
         if unit_of_measurement in ("kWh", "Wh"):
             self._attr_device_class = SensorDeviceClass.ENERGY
@@ -208,9 +229,10 @@ class EmonCmsSensor(SensorEntity):
         elif elem["value"] is not None:
             self._attr_native_value = round(float(elem["value"]), DECIMALS)
 
-    async def async_update(self) -> None:
-        """Get the latest data and updates the state."""
-        elem = await self._emoncms_client.async_get_feed_fields(self._feed_id)
-        if elem is None:
-            return
-        self._update_attributes(elem)
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        data = self.coordinator.data
+        if data:
+            self._update_attributes(data[self.idx])
+        super()._handle_coordinator_update()
