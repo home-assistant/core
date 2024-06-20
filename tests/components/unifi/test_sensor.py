@@ -1045,7 +1045,6 @@ async def test_device_system_stats(
     device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that device stats sensors are working as expected."""
-
     assert len(hass.states.async_all()) == 8
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
 
@@ -1134,14 +1133,13 @@ async def test_device_system_stats(
         ]
     ],
 )
-@pytest.mark.usefixtures("config_entry_setup")
 async def test_bandwidth_port_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_websocket_message,
     config_entry_setup: ConfigEntry,
     config_entry_options: MappingProxyType[str, Any],
-    device_payload,
+    device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that port bandwidth sensors are working as expected."""
     assert len(hass.states.async_all()) == 5
@@ -1227,3 +1225,110 @@ async def test_bandwidth_port_sensors(
     assert hass.states.get("sensor.mock_name_port_1_tx") is None
     assert hass.states.get("sensor.mock_name_port_2_rx") is None
     assert hass.states.get("sensor.mock_name_port_2_tx") is None
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "device_id": "mock-id1",
+                "mac": "01:00:00:00:00:00",
+                "model": "US16P150",
+                "name": "Wired Device",
+                "state": 1,
+                "version": "4.0.42.10433",
+            },
+            {
+                "device_id": "mock-id2",
+                "mac": "02:00:00:00:00:00",
+                "model": "US16P150",
+                "name": "Wireless Device",
+                "state": 1,
+                "version": "4.0.42.10433",
+            },
+        ]
+    ],
+)
+async def test_device_client_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory,
+    mock_websocket_message,
+    client_payload,
+) -> None:
+    """Verify that WLAN client sensors are working as expected."""
+    client_payload += [
+        {
+            "hostname": "Wired client 1",
+            "is_wired": True,
+            "mac": "00:00:00:00:00:01",
+            "oui": "Producer",
+            "sw_mac": "01:00:00:00:00:00",
+            "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
+        },
+        {
+            "hostname": "Wired client 2",
+            "is_wired": True,
+            "mac": "00:00:00:00:00:02",
+            "oui": "Producer",
+            "sw_mac": "01:00:00:00:00:00",
+            "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
+        },
+        {
+            "is_wired": False,
+            "mac": "00:00:00:00:00:03",
+            "name": "Wireless client 1",
+            "oui": "Producer",
+            "ap_mac": "02:00:00:00:00:00",
+            "sw_mac": "01:00:00:00:00:00",
+            "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
+        },
+    ]
+    await config_entry_factory()
+
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
+
+    ent_reg_entry = entity_registry.async_get("sensor.wired_device_clients")
+    assert ent_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+    assert ent_reg_entry.entity_category is EntityCategory.DIAGNOSTIC
+    assert ent_reg_entry.unique_id == "device_clients-01:00:00:00:00:00"
+
+    ent_reg_entry = entity_registry.async_get("sensor.wireless_device_clients")
+    assert ent_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+    assert ent_reg_entry.entity_category is EntityCategory.DIAGNOSTIC
+    assert ent_reg_entry.unique_id == "device_clients-02:00:00:00:00:00"
+
+    # Enable entity
+    entity_registry.async_update_entity(
+        entity_id="sensor.wired_device_clients", disabled_by=None
+    )
+    entity_registry.async_update_entity(
+        entity_id="sensor.wireless_device_clients", disabled_by=None
+    )
+
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    # Validate state object
+    assert len(hass.states.async_all()) == 13
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
+
+    assert hass.states.get("sensor.wired_device_clients").state == "2"
+    assert hass.states.get("sensor.wireless_device_clients").state == "1"
+
+    # Verify state update - decreasing number
+    wireless_client_1 = client_payload[2]
+    wireless_client_1["last_seen"] = 0
+    mock_websocket_message(message=MessageKey.CLIENT, data=wireless_client_1)
+
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.wired_device_clients").state == "2"
+    assert hass.states.get("sensor.wireless_device_clients").state == "0"

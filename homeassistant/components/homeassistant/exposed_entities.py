@@ -417,7 +417,7 @@ def ws_expose_entity(
         None,
     ):
         connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_ALLOWED, f"can't expose '{blocked}'"
+            msg["id"], websocket_api.ERR_NOT_ALLOWED, f"can't expose '{blocked}'"
         )
         return
 

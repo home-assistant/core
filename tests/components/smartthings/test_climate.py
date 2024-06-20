@@ -17,6 +17,7 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_PRESET_MODE,
+    ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
@@ -29,7 +30,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.climate.const import ATTR_SWING_MODE
 from homeassistant.components.smartthings import climate
 from homeassistant.components.smartthings.const import DOMAIN
 from homeassistant.const import (

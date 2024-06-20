@@ -66,9 +66,12 @@ class YoLinkHomeMessageListener(MessageListener):
         device_coordinators = entry_data.device_coordinators
         if not device_coordinators:
             return
-        device_coordinator = device_coordinators.get(device.device_id)
+        device_coordinator: YoLinkCoordinator = device_coordinators.get(
+            device.device_id
+        )
         if device_coordinator is None:
             return
+        device_coordinator.dev_online = True
         device_coordinator.async_set_updated_data(msg_data)
         # handling events
         if (

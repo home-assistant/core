@@ -90,6 +90,7 @@ omit =
     homeassistant/components/apsystems/__init__.py
     homeassistant/components/apsystems/coordinator.py
     homeassistant/components/apsystems/entity.py
+    homeassistant/components/apsystems/number.py
     homeassistant/components/apsystems/sensor.py
     homeassistant/components/aqualogic/*
     homeassistant/components/aquostv/media_player.py
@@ -120,6 +121,7 @@ omit =
     homeassistant/components/awair/coordinator.py
     homeassistant/components/azure_service_bus/*
     homeassistant/components/baf/__init__.py
+    homeassistant/components/baf/binary_sensor.py
     homeassistant/components/baf/climate.py
     homeassistant/components/baf/entity.py
     homeassistant/components/baf/fan.py
@@ -180,7 +182,6 @@ omit =
     homeassistant/components/canary/camera.py
     homeassistant/components/cert_expiry/helper.py
     homeassistant/components/channels/*
-    homeassistant/components/circuit/*
     homeassistant/components/cisco_ios/device_tracker.py
     homeassistant/components/cisco_mobility_express/device_tracker.py
     homeassistant/components/cisco_webex_teams/notify.py
@@ -853,6 +854,7 @@ omit =
     homeassistant/components/nad/media_player.py
     homeassistant/components/nanoleaf/__init__.py
     homeassistant/components/nanoleaf/button.py
+    homeassistant/components/nanoleaf/coordinator.py
     homeassistant/components/nanoleaf/entity.py
     homeassistant/components/nanoleaf/light.py
     homeassistant/components/neato/__init__.py
@@ -1061,7 +1063,6 @@ omit =
     homeassistant/components/pushbullet/sensor.py
     homeassistant/components/pushover/notify.py
     homeassistant/components/pushsafer/notify.py
-    homeassistant/components/pyload/sensor.py
     homeassistant/components/qbittorrent/__init__.py
     homeassistant/components/qbittorrent/coordinator.py
     homeassistant/components/qbittorrent/sensor.py

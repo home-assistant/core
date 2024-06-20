@@ -16,6 +16,7 @@ from homeassistant.components.update import (
     UpdateDeviceClass,
     UpdateEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -138,18 +139,18 @@ async def test_not_admin(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize("device_payload", [[DEVICE_1]])
 async def test_install(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, config_entry_setup
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: ConfigEntry,
 ) -> None:
     """Test the device update install call."""
-    config_entry = config_entry_setup
-
     assert len(hass.states.async_entity_ids(UPDATE_DOMAIN)) == 1
     device_state = hass.states.get("update.device_1")
     assert device_state.state == STATE_ON
 
     url = (
-        f"https://{config_entry.data[CONF_HOST]}:1234"
-        f"/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/devmgr"
+        f"https://{config_entry_setup.data[CONF_HOST]}:1234"
+        f"/api/s/{config_entry_setup.data[CONF_SITE_ID]}/cmd/devmgr"
     )
     aioclient_mock.clear_requests()
     aioclient_mock.post(url)

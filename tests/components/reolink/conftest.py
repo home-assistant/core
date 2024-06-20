@@ -84,8 +84,11 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.model = TEST_HOST_MODEL
         host_mock.camera_model.return_value = TEST_CAM_MODEL
         host_mock.camera_name.return_value = TEST_NVR_NAME
+        host_mock.camera_hardware_version.return_value = "IPC_00001"
         host_mock.camera_sw_version.return_value = "v1.1.0.0.0.0000"
         host_mock.camera_uid.return_value = TEST_UID
+        host_mock.get_encoding.return_value = "h264"
+        host_mock.firmware_update_available.return_value = False
         host_mock.session_active = True
         host_mock.timeout = 60
         host_mock.renewtimer.return_value = 600
