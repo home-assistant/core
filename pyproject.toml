@@ -28,7 +28,7 @@ dependencies    = [
     "aiohttp_cors==0.7.0",
     "aiohttp-fast-url-dispatcher==0.3.0",
     "aiohttp-fast-zlib==0.1.0",
-    "aiozoneinfo==0.1.0",
+    "aiozoneinfo==0.2.0",
     "astral==2.2",
     "async-interrupt==1.1.1",
     "attrs==23.2.0",
@@ -60,7 +60,7 @@ dependencies    = [
     "python-slugify==8.0.4",
     "PyYAML==6.0.1",
     "requests==2.32.3",
-    "SQLAlchemy==2.0.30",
+    "SQLAlchemy==2.0.31",
     "typing-extensions>=4.12.2,<5.0",
     "ulid-transform==0.9.0",
     # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
@@ -402,9 +402,10 @@ enable = [
     "use-symbolic-message-instead",
 ]
 per-file-ignores = [
-    # hass-component-root-import: Tests test non-public APIs
     # redefined-outer-name: Tests reference fixtures in the test function
-    "/tests/:hass-component-root-import,redefined-outer-name",
+    # use-implicit-booleaness-not-comparison: Tests need to validate that a list
+    # or a dict is returned
+    "/tests/:redefined-outer-name,use-implicit-booleaness-not-comparison",
 ]
 
 [tool.pylint.REPORTS]
@@ -767,7 +768,6 @@ ignore = [
     "PLW2901", # Outer {outer_kind} variable {name} overwritten by inner {inner_kind} target
     "PT004", # Fixture {fixture} does not return anything, add leading underscore
     "PT011", # pytest.raises({exception}) is too broad, set the `match` parameter or use a more specific exception
-    "PT012", # `pytest.raises()` block should contain a single simple statement
     "PT018", # Assertion should be broken down into multiple parts
     "RUF001", # String contains ambiguous unicode character.
     "RUF002", # Docstring contains ambiguous unicode character.

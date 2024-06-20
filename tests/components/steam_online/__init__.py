@@ -7,8 +7,11 @@ import urllib.parse
 
 import steam
 
-from homeassistant.components.steam_online import DOMAIN
-from homeassistant.components.steam_online.const import CONF_ACCOUNT, CONF_ACCOUNTS
+from homeassistant.components.steam_online.const import (
+    CONF_ACCOUNT,
+    CONF_ACCOUNTS,
+    DOMAIN,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 

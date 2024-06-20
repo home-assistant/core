@@ -295,7 +295,7 @@ async def test_services_exception(
 
     service_call = SERVICE_KV_CALL_PARAMS[0]
 
+    service_call["service_data"]["device_id"] = "DOES_NOT_EXISTS"
+
     with pytest.raises(ValueError):
-        service_call["service_data"]["device_id"] = "DOES_NOT_EXISTS"
         await hass.services.async_call(**service_call)
-        await hass.async_block_till

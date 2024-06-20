@@ -126,9 +126,9 @@ def test_load_translations_files_by_language(
         ),
     ],
 )
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_load_translations_files_invalid_localized_placeholders(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
     caplog: pytest.LogCaptureFixture,
     language: str,
     expected_translation: dict,
@@ -151,9 +151,8 @@ async def test_load_translations_files_invalid_localized_placeholders(
         )
 
 
-async def test_get_translations(
-    hass: HomeAssistant, mock_config_flows, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_get_translations(hass: HomeAssistant, mock_config_flows) -> None:
     """Test the get translations helper."""
     translations = await translation.async_get_translations(hass, "en", "entity")
     assert translations == {}
@@ -484,18 +483,16 @@ async def test_caching(hass: HomeAssistant) -> None:
         assert len(mock_build.mock_calls) > 1
 
 
-async def test_custom_component_translations(
-    hass: HomeAssistant, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_custom_component_translations(hass: HomeAssistant) -> None:
     """Test getting translation from custom components."""
     hass.config.components.add("test_embedded")
     hass.config.components.add("test_package")
     assert await translation.async_get_translations(hass, "en", "state") == {}
 
 
-async def test_get_cached_translations(
-    hass: HomeAssistant, mock_config_flows, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_get_cached_translations(hass: HomeAssistant, mock_config_flows) -> None:
     """Test the get cached translations helper."""
     translations = await translation.async_get_translations(hass, "en", "entity")
     assert translations == {}
@@ -549,7 +546,7 @@ async def test_get_cached_translations(
     }
 
 
-async def test_setup(hass: HomeAssistant):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test the setup load listeners helper."""
     translation.async_setup(hass)
 
@@ -577,7 +574,7 @@ async def test_setup(hass: HomeAssistant):
         mock.assert_not_called()
 
 
-async def test_translate_state(hass: HomeAssistant):
+async def test_translate_state(hass: HomeAssistant) -> None:
     """Test the state translation helper."""
     result = translation.async_translate_state(
         hass, "unavailable", "binary_sensor", "platform", "translation_key", None

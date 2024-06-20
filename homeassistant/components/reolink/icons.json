@@ -264,6 +264,9 @@
       "record": {
         "default": "mdi:record-rec"
       },
+      "manual_record": {
+        "default": "mdi:record-rec"
+      },
       "buzzer": {
         "default": "mdi:room-service"
       },
