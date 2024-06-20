@@ -11,6 +11,8 @@ from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 
 async def test_full_flow(
     hass: HomeAssistant,
@@ -40,6 +42,31 @@ async def test_full_flow(
     assert result["result"].unique_id == "test-id"
     assert len(mock_knocki_client.link.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_duplcate_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_knocki_client: AsyncMock,
+) -> None:
+    """Test abort when setting up duplicate entry."""
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(("field"), ["login", "link"])

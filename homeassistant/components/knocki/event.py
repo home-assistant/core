@@ -24,10 +24,13 @@ async def async_setup_entry(
     )
 
 
+EVENT_TRIGGERED = "triggered"
+
+
 class KnockiTrigger(EventEntity):
     """Representation of a Knocki trigger."""
 
-    _attr_event_types = ["triggered"]
+    _attr_event_types = [EVENT_TRIGGERED]
     _attr_has_entity_name = True
     _attr_translation_key = "knocki"
 
@@ -57,5 +60,5 @@ class KnockiTrigger(EventEntity):
             event.payload.details.trigger_id == self._trigger.details.trigger_id
             and event.payload.device_id == self._trigger.device_id
         ):
-            self._trigger_event("triggered")
+            self._trigger_event(EVENT_TRIGGERED)
             self.schedule_update_ha_state()

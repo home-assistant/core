@@ -41,6 +41,7 @@ class KnockiConfigFlow(ConfigFlow, domain=DOMAIN):
                 client.token = token_response.token
                 await client.link()
             except HomeAssistantError:
+                # Catch the unique_id abort and reraise it to keep the code clean
                 raise
             except KnockiConnectionError:
                 errors["base"] = "cannot_connect"
