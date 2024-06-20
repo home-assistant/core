@@ -31,7 +31,7 @@ from .entity import WeatherFlowCloudEntity
 class WeatherFlowCloudSensorEntityDescription(
     SensorEntityDescription,
 ):
-    """Describes a WF Sensor."""
+    """Describes a weatherflow sensor."""
 
     value_fn: Callable[[WeatherFlowDataREST], int | str | datetime | None]
     icon_fn: Callable[[WeatherFlowDataREST], str] | None = None
