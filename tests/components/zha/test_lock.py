@@ -21,12 +21,6 @@ from homeassistant.core import HomeAssistant
 from .common import find_entity_id, send_attributes_report
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
-LOCK_DOOR = 0
-UNLOCK_DOOR = 1
-SET_PIN_CODE = 5
-CLEAR_PIN_CODE = 7
-SET_USER_STATUS = 9
-
 
 @pytest.fixture(autouse=True)
 def lock_platform_only():
@@ -74,11 +68,19 @@ async def test_lock(hass: HomeAssistant, setup_zha, zigpy_device_mock) -> None:
     assert hass.states.get(entity_id).state == STATE_UNLOCKED
 
     # set state to locked
-    await send_attributes_report(hass, cluster, {1: 0, 0: 1, 2: 2})
+    await send_attributes_report(
+        hass,
+        cluster,
+        {closures.DoorLock.AttributeDefs.lock_state.id: closures.LockState.Locked},
+    )
     assert hass.states.get(entity_id).state == STATE_LOCKED
 
     # set state to unlocked
-    await send_attributes_report(hass, cluster, {1: 0, 0: 2, 2: 3})
+    await send_attributes_report(
+        hass,
+        cluster,
+        {closures.DoorLock.AttributeDefs.lock_state.id: closures.LockState.Unlocked},
+    )
     assert hass.states.get(entity_id).state == STATE_UNLOCKED
 
     # lock from HA
@@ -109,7 +111,10 @@ async def async_lock(hass: HomeAssistant, cluster: Cluster, entity_id: str):
         )
         assert cluster.request.call_count == 1
         assert cluster.request.call_args[0][0] is False
-        assert cluster.request.call_args[0][1] == LOCK_DOOR
+        assert (
+            cluster.request.call_args[0][1]
+            == closures.DoorLock.ServerCommandDefs.lock_door.id
+        )
 
 
 async def async_unlock(hass: HomeAssistant, cluster: Cluster, entity_id: str):
@@ -121,7 +126,10 @@ async def async_unlock(hass: HomeAssistant, cluster: Cluster, entity_id: str):
         )
         assert cluster.request.call_count == 1
         assert cluster.request.call_args[0][0] is False
-        assert cluster.request.call_args[0][1] == UNLOCK_DOOR
+        assert (
+            cluster.request.call_args[0][1]
+            == closures.DoorLock.ServerCommandDefs.unlock_door.id
+        )
 
 
 async def async_set_user_code(hass: HomeAssistant, cluster: Cluster, entity_id: str):
@@ -136,7 +144,10 @@ async def async_set_user_code(hass: HomeAssistant, cluster: Cluster, entity_id: 
         )
         assert cluster.request.call_count == 1
         assert cluster.request.call_args[0][0] is False
-        assert cluster.request.call_args[0][1] == SET_PIN_CODE
+        assert (
+            cluster.request.call_args[0][1]
+            == closures.DoorLock.ServerCommandDefs.set_pin_code.id
+        )
         assert cluster.request.call_args[0][3] == 2  # user slot 3 => internal slot 2
         assert cluster.request.call_args[0][4] == closures.DoorLock.UserStatus.Enabled
         assert (
@@ -160,7 +171,10 @@ async def async_clear_user_code(hass: HomeAssistant, cluster: Cluster, entity_id
         )
         assert cluster.request.call_count == 1
         assert cluster.request.call_args[0][0] is False
-        assert cluster.request.call_args[0][1] == CLEAR_PIN_CODE
+        assert (
+            cluster.request.call_args[0][1]
+            == closures.DoorLock.ServerCommandDefs.clear_pin_code.id
+        )
         assert cluster.request.call_args[0][3] == 2  # user slot 3 => internal slot 2
 
 
@@ -179,7 +193,10 @@ async def async_enable_user_code(hass: HomeAssistant, cluster: Cluster, entity_i
         )
         assert cluster.request.call_count == 1
         assert cluster.request.call_args[0][0] is False
-        assert cluster.request.call_args[0][1] == SET_USER_STATUS
+        assert (
+            cluster.request.call_args[0][1]
+            == closures.DoorLock.ServerCommandDefs.set_user_status.id
+        )
         assert cluster.request.call_args[0][3] == 2  # user slot 3 => internal slot 2
         assert cluster.request.call_args[0][4] == closures.DoorLock.UserStatus.Enabled
 
@@ -201,6 +218,9 @@ async def async_disable_user_code(
         )
         assert cluster.request.call_count == 1
         assert cluster.request.call_args[0][0] is False
-        assert cluster.request.call_args[0][1] == SET_USER_STATUS
+        assert (
+            cluster.request.call_args[0][1]
+            == closures.DoorLock.ServerCommandDefs.set_user_status.id
+        )
         assert cluster.request.call_args[0][3] == 2  # user slot 3 => internal slot 2
         assert cluster.request.call_args[0][4] == closures.DoorLock.UserStatus.Disabled
