@@ -1,5 +1,7 @@
 """The Aprilaire sensor component."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import cast
 
@@ -21,7 +23,7 @@ from .const import DOMAIN
 from .coordinator import AprilaireCoordinator
 from .entity import BaseAprilaireEntity
 
-DEHUMIDIFICATION_STATUS_MAP = {
+DEHUMIDIFICATION_STATUS_MAP: dict[StateType, str] = {
     0: "idle",
     1: "idle",
     2: "on",
@@ -29,14 +31,14 @@ DEHUMIDIFICATION_STATUS_MAP = {
     4: "off",
 }
 
-HUMIDIFICATION_STATUS_MAP = {
+HUMIDIFICATION_STATUS_MAP: dict[StateType, str] = {
     0: "idle",
     1: "idle",
     2: "on",
     3: "off",
 }
 
-VENTILATION_STATUS_MAP = {
+VENTILATION_STATUS_MAP: dict[StateType, str] = {
     0: "idle",
     1: "idle",
     2: "on",
@@ -46,14 +48,62 @@ VENTILATION_STATUS_MAP = {
     6: "off",
 }
 
-AIR_CLEANING_STATUS_MAP = {
+AIR_CLEANING_STATUS_MAP: dict[StateType, str] = {
     0: "idle",
     1: "idle",
     2: "on",
     3: "off",
 }
 
-FAN_STATUS_MAP = {0: "off", 1: "on"}
+FAN_STATUS_MAP: dict[StateType, str] = {0: "off", 1: "on"}
+
+
+def get_entities(
+    entity_class: type[BaseAprilaireSensor],
+    coordinator: AprilaireCoordinator,
+    unique_id: str,
+    descriptions: tuple[AprilaireSensorDescription, ...],
+) -> list[BaseAprilaireSensor]:
+    """Get the entities for a list of sensor descriptions."""
+
+    entities = (
+        entity_class(coordinator, description, unique_id)
+        for description in descriptions
+    )
+
+    return [entity for entity in entities if entity.exists]
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Aprilaire sensor devices."""
+
+    coordinator: AprilaireCoordinator = hass.data[DOMAIN][config_entry.unique_id]
+
+    assert config_entry.unique_id is not None
+
+    entities = (
+        get_entities(
+            AprilaireHumiditySensor,
+            coordinator,
+            config_entry.unique_id,
+            HUMIDITY_SENSORS,
+        )
+        + get_entities(
+            AprilaireTemperatureSensor,
+            coordinator,
+            config_entry.unique_id,
+            TEMPERATURE_SENSORS,
+        )
+        + get_entities(
+            AprilaireStatusSensor, coordinator, config_entry.unique_id, STATUS_SENSORS
+        )
+    )
+
+    async_add_entities(entities)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -68,7 +118,7 @@ class AprilaireSensorDescription(SensorEntityDescription):
 class AprilaireStatusSensorDescription(AprilaireSensorDescription):
     """Class describing Aprilaire status sensor entities."""
 
-    status_map: dict[int, str]
+    status_map: dict[StateType, str]
 
 
 HUMIDITY_SENSORS: tuple[AprilaireSensorDescription, ...] = (
@@ -167,7 +217,7 @@ class BaseAprilaireSensor(BaseAprilaireEntity, SensorEntity):
 
     entity_description: AprilaireSensorDescription
     status_sensor_available_value: int | None = None
-    status_sensor_exists_values: list[int] | None = None
+    status_sensor_exists_values: list[int]
 
     def __init__(
         self,
@@ -185,10 +235,7 @@ class BaseAprilaireSensor(BaseAprilaireEntity, SensorEntity):
     def exists(self) -> bool:
         """Return True if the sensor exists."""
 
-        if (
-            self.entity_description.status_key is None
-            or self.status_sensor_exists_values is None
-        ):
+        if self.entity_description.status_key is None:
             return True
 
         return (
@@ -258,52 +305,4 @@ class AprilaireStatusSensor(BaseAprilaireSensor):
 
         raw_value = super().native_value
 
-        return self.entity_description.status_map.get(cast(int, raw_value))
-
-
-def get_entities(
-    entity_class: type[BaseAprilaireSensor],
-    coordinator: AprilaireCoordinator,
-    unique_id: str,
-    descriptions: tuple[AprilaireSensorDescription, ...],
-) -> list[BaseAprilaireSensor]:
-    """Get the entities for a list of sensor descriptions."""
-
-    entities = (
-        entity_class(coordinator, description, unique_id)
-        for description in descriptions
-    )
-
-    return [entity for entity in entities if entity.exists]
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up Aprilaire sensor devices."""
-
-    coordinator: AprilaireCoordinator = hass.data[DOMAIN][config_entry.unique_id]
-
-    assert config_entry.unique_id is not None
-
-    entities = (
-        get_entities(
-            AprilaireHumiditySensor,
-            coordinator,
-            config_entry.unique_id,
-            HUMIDITY_SENSORS,
-        )
-        + get_entities(
-            AprilaireTemperatureSensor,
-            coordinator,
-            config_entry.unique_id,
-            TEMPERATURE_SENSORS,
-        )
-        + get_entities(
-            AprilaireStatusSensor, coordinator, config_entry.unique_id, STATUS_SENSORS
-        )
-    )
-
-    async_add_entities(entities)
+        return self.entity_description.status_map.get(raw_value)

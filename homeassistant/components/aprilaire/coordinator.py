@@ -37,7 +37,7 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
 
         self.hass = hass
         self.unique_id = unique_id
-        self.data: dict[str, Any] = {}
+        self.data: dict[str, str | int | float] = {}
 
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
 
@@ -99,8 +99,7 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
                 new_device_info.pop("connections", None)
 
                 device_registry.async_update_device(
-                    device_id=device.id,
-                    **new_device_info,  # type: ignore[misc]
+                    device_id=device.id, **new_device_info
                 )
 
     async def start_listen(self):
