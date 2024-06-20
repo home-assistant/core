@@ -405,12 +405,12 @@ async def websocket_get_groupable_devices(
     devices = [
         device
         for device in zha_gateway_proxy.device_proxies.values()
-        if device.is_groupable
+        if device.device.is_groupable
     ]
     groupable_devices: list[dict[str, Any]] = []
 
     for device in devices:
-        entity_refs = zha_gateway_proxy.ha_entity_refs[device.ieee]
+        entity_refs = zha_gateway_proxy.ha_entity_refs[device.device.ieee]
         groupable_devices.extend(
             {
                 "endpoint_id": ep_id,
@@ -429,7 +429,7 @@ async def websocket_get_groupable_devices(
                 ],
                 "device": device.zha_device_info,
             }
-            for ep_id in device.async_get_groupable_endpoints()
+            for ep_id in device.device.async_get_groupable_endpoints()
         )
 
     connection.send_result(msg[ID], groupable_devices)
@@ -486,10 +486,10 @@ async def websocket_get_group(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Get ZHA group."""
-    zha_gateway = get_zha_gateway(hass)
+    zha_gateway_proxy = get_zha_gateway_proxy(hass)
     group_id: int = msg[GROUP_ID]
 
-    if not (zha_group := zha_gateway.groups.get(group_id)):
+    if not (zha_group := zha_gateway_proxy.group_proxies.get(group_id)):
         connection.send_message(
             websocket_api.error_message(
                 msg[ID], websocket_api.const.ERR_NOT_FOUND, "ZHA Group not found"
@@ -515,13 +515,17 @@ async def websocket_add_group(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Add a new ZHA group."""
-    zha_gateway = get_zha_gateway(hass)
+    zha_gateway = get_zha_gateway_proxy(hass)
     group_name: str = msg[GROUP_NAME]
     group_id: int | None = msg.get(GROUP_ID)
     members: list[GroupMember] | None = msg.get(ATTR_MEMBERS)
-    group = await zha_gateway.async_create_zigpy_group(group_name, members, group_id)
+    group = await zha_gateway.gateway.async_create_zigpy_group(
+        group_name, members, group_id
+    )
     assert group
-    connection.send_result(msg[ID], group.group_info)
+    connection.send_result(
+        msg[ID], zha_gateway.group_proxies[group.group_id].group_info
+    )
 
 
 @websocket_api.require_admin
@@ -536,17 +540,18 @@ async def websocket_remove_groups(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Remove the specified ZHA groups."""
-    zha_gateway = get_zha_gateway(hass)
+    zha_gateway = get_zha_gateway_proxy(hass)
     group_ids: list[int] = msg[GROUP_IDS]
 
     if len(group_ids) > 1:
         tasks = [
-            zha_gateway.async_remove_zigpy_group(group_id) for group_id in group_ids
+            zha_gateway.gateway.async_remove_zigpy_group(group_id)
+            for group_id in group_ids
         ]
         await asyncio.gather(*tasks)
     else:
-        await zha_gateway.async_remove_zigpy_group(group_ids[0])
-    ret_groups = [group.group_info for group in zha_gateway.groups.values()]
+        await zha_gateway.gateway.async_remove_zigpy_group(group_ids[0])
+    ret_groups = [group.group_info for group in zha_gateway.group_proxies.values()]
     connection.send_result(msg[ID], ret_groups)
 
 

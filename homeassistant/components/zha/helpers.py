@@ -587,7 +587,7 @@ class ZHAGatewayProxy(EventBase):
     def handle_group_removed(self, event: GroupEvent) -> None:
         """Handle a group removed event."""
         self._send_group_gateway_message(event.group_info, ZHA_GW_MSG_GROUP_REMOVED)
-        zha_group_proxy = self._groups.pop(event.group_info.group_id)
+        zha_group_proxy = self.group_proxies.pop(event.group_info.group_id)
         zha_group_proxy.info("group_removed")
         self._cleanup_group_entity_registry_entries(zha_group_proxy)
 
@@ -756,7 +756,7 @@ class ZHAGatewayProxy(EventBase):
         self, zigpy_group: zigpy.group.Group, gateway_message_type: str
     ) -> None:
         """Send the gateway event for a zigpy group event."""
-        zha_group = self._groups.get(zigpy_group.group_id)
+        zha_group = self.group_proxies.get(zigpy_group.group_id)
         if zha_group is not None:
             async_dispatcher_send(
                 self.hass,

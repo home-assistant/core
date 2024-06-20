@@ -24,16 +24,24 @@ from zha.application.const import (
     CLUSTER_TYPE_IN,
 )
 import zigpy.backups
+from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 import zigpy.profiles.zha
 import zigpy.types
 from zigpy.types.named import EUI64
 import zigpy.util
+from zigpy.zcl.clusters import general, security
 from zigpy.zcl.clusters.general import Groups
 import zigpy.zdo.types as zdo_types
 
 from homeassistant.components.websocket_api import const
 from homeassistant.components.zha import DOMAIN
 from homeassistant.components.zha.const import EZSP_OVERWRITE_EUI64
+from homeassistant.components.zha.helpers import (
+    ZHADeviceProxy,
+    ZHAGatewayProxy,
+    get_zha_gateway,
+    get_zha_gateway_proxy,
+)
 from homeassistant.components.zha.websocket_api import (
     ATTR_DURATION,
     ATTR_INSTALL_CODE,
@@ -84,8 +92,49 @@ def required_platform_only():
 async def zha_client(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    setup_zha,
+    zigpy_device_mock,
 ) -> MockHAClientWebSocket:
     """Get ZHA WebSocket client."""
+
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+
+    zigpy_device_switch = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [general.OnOff.cluster_id, general.Basic.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+            }
+        },
+        ieee=IEEE_SWITCH_DEVICE,
+    )
+
+    zigpy_device_groupable = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [
+                    general.OnOff.cluster_id,
+                    general.Basic.cluster_id,
+                    general.Groups.cluster_id,
+                ],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+            }
+        },
+        ieee=IEEE_GROUPABLE_DEVICE,
+    )
+
+    gateway.get_or_create_device(zigpy_device_switch)
+    await gateway.async_device_initialized(zigpy_device_switch)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    gateway.get_or_create_device(zigpy_device_groupable)
+    await gateway.async_device_initialized(zigpy_device_groupable)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # load the ZHA API
     async_load_api(hass)
@@ -170,7 +219,7 @@ async def test_list_devices(zha_client) -> None:
     msg = await zha_client.receive_json()
 
     devices = msg["result"]
-    assert len(devices) == 2 + 1  # the coordinator is included as well
+    assert len(devices) == 3  # the coordinator is included as well
 
     msg_id = 100
     for device in devices:
@@ -207,9 +256,31 @@ async def test_get_zha_config(zha_client) -> None:
 
 
 async def test_get_zha_config_with_alarm(
-    hass: HomeAssistant, zha_client, device_ias_ace
+    hass: HomeAssistant, zha_client, zigpy_device_mock
 ) -> None:
     """Test getting ZHA custom configuration."""
+
+    gateway = get_zha_gateway(hass)
+    gateway_proxy: ZHAGatewayProxy = get_zha_gateway_proxy(hass)
+
+    zigpy_device_ias = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [security.IasAce.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.IAS_ANCILLARY_CONTROL,
+                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+            }
+        },
+    )
+
+    gateway.get_or_create_device(zigpy_device_ias)
+    await gateway.async_device_initialized(zigpy_device_ias)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    zha_device_proxy: ZHADeviceProxy = gateway_proxy.get_device_proxy(
+        zigpy_device_ias.ieee
+    )
+
     await zha_client.send_json({ID: 5, TYPE: "zha/configuration"})
 
     msg = await zha_client.receive_json()
@@ -218,7 +289,7 @@ async def test_get_zha_config_with_alarm(
     assert configuration == CONFIG_WITH_ALARM_OPTIONS
 
     # test that the alarm options are not in the config when we remove the device
-    device_ias_ace.gateway.device_removed(device_ias_ace.device)
+    zha_device_proxy.gateway_proxy.gateway.device_removed(zha_device_proxy.device)
     await hass.async_block_till_done()
     await zha_client.send_json({ID: 6, TYPE: "zha/configuration"})
 
@@ -313,11 +384,12 @@ async def test_get_group_not_found(zha_client) -> None:
 
 
 async def test_list_groupable_devices(
-    zha_client, device_groupable, zigpy_app_controller
+    hass: HomeAssistant, zha_client, zigpy_app_controller
 ) -> None:
     """Test getting ZHA devices that have a group cluster."""
     # Ensure the coordinator doesn't have a group cluster
     coordinator = zigpy_app_controller.get_device(nwk=0x0000)
+
     del coordinator.endpoints[1].in_clusters[Groups.cluster_id]
 
     await zha_client.send_json({ID: 10, TYPE: "zha/devices/groupable"})
@@ -348,7 +420,10 @@ async def test_list_groupable_devices(
 
     # Make sure there are no groupable devices when the device is unavailable
     # Make device unavailable
-    device_groupable.available = False
+    get_zha_gateway_proxy(hass).device_proxies[
+        EUI64.convert(IEEE_GROUPABLE_DEVICE)
+    ].device.available = False
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     await zha_client.send_json({ID: 11, TYPE: "zha/devices/groupable"})
 
