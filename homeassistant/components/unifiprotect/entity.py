@@ -261,9 +261,7 @@ class BaseProtectEntity(Entity):
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            self.data.async_subscribe_device_id(
-                self.device.mac, self._async_updated_event
-            )
+            self.data.async_subscribe(self.device.mac, self._async_updated_event)
         )
 
 
