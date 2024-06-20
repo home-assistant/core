@@ -173,9 +173,6 @@ class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
                 except AttributeError:
                     pass
 
-                if hub and hub.available:
-                    return self.async_abort(reason="already_configured")
-
                 return self.async_update_reload_and_abort(
                     config_entry, data=self.config, reason=abort_reason
                 )
