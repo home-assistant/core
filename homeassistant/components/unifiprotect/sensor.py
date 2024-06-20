@@ -761,16 +761,29 @@ class ProtectLicensePlateEventSensor(ProtectEventSensor):
     def _async_update(self, device: ProtectModelWithId, msg: WSMsg | None) -> None:
         super()._async_update(device, msg)
         description = self.entity_description
+        event = self._event
+
+        _LOGGER.info(
+            "Updating license plate sensor %s - is_end: %s - is_matching_event: %s metadata: %s msg: %s plate: %s",
+            self.entity_id,
+            self._end_of_current_event(msg),
+            event and description.smart_event_is_detected(event),
+            event and event.metadata,
+            msg,
+            event and event.metadata and event.metadata.license_plate,
+        )
+
         if (
             (event := self._event)
-            and self.device.is_smart_detected
             and description.smart_event_is_detected(event)
-            and ((is_end := self._wsmsg_is_end(msg)) or not event.end)
+            and ((is_end := self._end_of_current_event(msg)) or not event.end)
+            and (is_end or self.device.is_smart_detected)
             and (metadata := event.metadata)
             and (license_plate := metadata.license_plate)
         ):
             self._attr_native_value = license_plate.name
             if is_end:
+                _LOGGER.warning("WRITE STATE FOR END EVENT: %s", event)
                 # If the event has ended we need to always
                 # write state since the license plate may have changed
                 # since the protect model might initially detect a plate

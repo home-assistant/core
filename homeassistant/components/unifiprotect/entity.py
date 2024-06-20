@@ -310,17 +310,15 @@ class EventEntityMixin(ProtectDeviceEntity):
     _event: Event | None = None
 
     @callback
-    def _wsmsg_is_end(self, msg: WSMsg | None) -> bool:
+    def _end_of_current_event(self, msg: WSMsg | None) -> bool:
         """Determine if the websocket message is the end of an event."""
-        if (
-            not msg
-            or (new_obj := msg.new_obj) is None
-            or new_obj.model is not ModelType.EVENT
-        ):
-            return False
-        if TYPE_CHECKING:
-            assert isinstance(new_obj, Event)
-        return bool(new_obj.end)
+        return bool(
+            (event := self._event)
+            and msg
+            and msg.new_obj
+            and event.id == msg.new_obj.id
+            and event.end
+        )
 
     @callback
     def _async_clear_event(self) -> None:

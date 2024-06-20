@@ -741,9 +741,9 @@ class ProtectSmartEventBinarySensor(EventEntityMixin, BinarySensorEntity):
         description = self.entity_description
         if (
             (event := self._event)
-            and self.device.is_smart_detected
             and description.smart_event_is_detected(event)
-            and ((is_end := self._wsmsg_is_end(msg)) or not event.end)
+            and ((is_end := self._end_of_current_event(msg)) or not event.end)
+            and (is_end or self.device.is_smart_detected)
         ):
             self._attr_is_on = True
             if is_end:
