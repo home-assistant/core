@@ -8,12 +8,7 @@ from datetime import datetime, timedelta
 from functools import partial
 import logging
 
-from yalexs.activity import (
-    ACTION_DOORBELL_CALL_MISSED,
-    SOURCE_PUBNUB,
-    Activity,
-    ActivityType,
-)
+from yalexs.activity import ACTION_DOORBELL_CALL_MISSED, Activity, ActivityType
 from yalexs.doorbell import DoorbellDetail
 from yalexs.lock import LockDetail, LockDoorStatus
 from yalexs.manager.const import ACTIVITY_UPDATE_INTERVAL
@@ -175,8 +170,7 @@ class AugustDoorBinarySensor(AugustDescriptionEntity, BinarySensorEntity):
         """Get the latest state of the sensor and update activity."""
         if door_activity := self._get_latest({ActivityType.DOOR_OPERATION}):
             update_lock_detail_from_activity(self._detail, door_activity)
-            # If the source is pubnub the lock must be online since its a live update
-            if door_activity.source == SOURCE_PUBNUB:
+            if door_activity.was_pushed:
                 self._detail.set_online(True)
 
         if bridge_activity := self._get_latest({ActivityType.BRIDGE_OPERATION}):
