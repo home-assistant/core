@@ -211,10 +211,9 @@ class ProtectData:
 
     @callback
     def _async_update_device(
-        self, device: ProtectAdoptableDeviceModel | NVR, msg: WSMsg
+        self, device: ProtectAdoptableDeviceModel | NVR, changed_data: dict[str, Any]
     ) -> None:
         self._async_signal_device_update(device)
-        changed_data = msg.changed_data
         if (
             device.model is ModelType.CAMERA
             and device.id in self._pending_camera_ids
@@ -277,7 +276,7 @@ class ProtectData:
         if getattr(new_obj, "is_adopted_by_us", True) and hasattr(new_obj, "mac"):
             if TYPE_CHECKING:
                 assert isinstance(new_obj, (ProtectAdoptableDeviceModel, NVR))
-            self._async_update_device(new_obj, msg)
+            self._async_update_device(new_obj, msg.changed_data)
 
     @callback
     def _async_process_updates(self, updates: Bootstrap | None) -> None:
