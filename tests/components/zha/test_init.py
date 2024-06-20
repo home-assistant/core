@@ -16,7 +16,7 @@ from homeassistant.components.zha.const import (
     CONF_USB_PATH,
     DOMAIN,
 )
-from homeassistant.components.zha.core.helpers import get_zha_data
+from homeassistant.components.zha.helpers import get_zha_data
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     MAJOR_VERSION,
@@ -43,7 +43,7 @@ def disable_platform_only():
 
 
 @pytest.fixture
-def config_entry_v1(hass):
+def config_entry_v1(hass: HomeAssistant):
     """Config entry version 1 fixture."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -139,7 +139,6 @@ async def test_config_depreciation(hass: HomeAssistant, zha_config) -> None:
         ("socket://[1.2.3.4]:5678 ", "socket://1.2.3.4:5678"),
     ],
 )
-@patch("homeassistant.components.zha.setup_quirks", Mock(return_value=True))
 @patch(
     "homeassistant.components.zha.websocket_api.async_load_api", Mock(return_value=True)
 )
@@ -236,6 +235,8 @@ async def test_zha_retry_unique_ids(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that ZHA retrying creates unique entity IDs."""
+
+    # TODO we have a lingering thread here...
 
     config_entry.add_to_hass(hass)
 
