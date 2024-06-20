@@ -118,7 +118,7 @@ class AprilaireSensorDescription(SensorEntityDescription):
 class AprilaireStatusSensorDescription(AprilaireSensorDescription):
     """Class describing Aprilaire status sensor entities."""
 
-    status_map: dict[StateType, StateType]
+    status_map: dict[StateType, str]
 
 
 HUMIDITY_SENSORS: tuple[AprilaireSensorDescription, ...] = (

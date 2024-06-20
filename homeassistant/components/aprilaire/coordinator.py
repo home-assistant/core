@@ -37,7 +37,7 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
 
         self.hass = hass
         self.unique_id = unique_id
-        self.data: dict[str, str | int | float] = {}
+        self.data: dict[str, Any] = {}
 
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
 
