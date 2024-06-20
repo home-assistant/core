@@ -16,12 +16,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED, StateType
+from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 from .coordinator import AprilaireCoordinator
 from .entity import BaseAprilaireEntity
-from .util import convert_temperature_if_needed
 
 DEHUMIDIFICATION_STATUS_MAP = {
     0: "idle",
@@ -104,9 +103,7 @@ SENSOR_TYPES: tuple[AprilaireSensorDescription, ...] = (
         status_sensor_available_value=0,
         status_sensor_exists_values=[0, 1, 2],
         value_key=Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE,
-        value_fn=lambda sensor, value: convert_temperature_if_needed(
-            sensor.unit_of_measurement, value
-        ),
+        value_fn=None,
     ),
     AprilaireSensorDescription(
         key="outdoor_temperature_controlling_sensor",
@@ -117,9 +114,7 @@ SENSOR_TYPES: tuple[AprilaireSensorDescription, ...] = (
         status_sensor_available_value=0,
         status_sensor_exists_values=[0, 1, 2],
         value_key=Attribute.OUTDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE,
-        value_fn=lambda sensor, value: convert_temperature_if_needed(
-            sensor.unit_of_measurement, value
-        ),
+        value_fn=None,
     ),
     AprilaireSensorDescription(
         key="dehumidification_status",
@@ -233,20 +228,6 @@ class AprilaireSensor(BaseAprilaireEntity, SensorEntity):
             self.coordinator.data.get(self.entity_description.status_key)
             == self.entity_description.status_sensor_available_value
         )
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement."""
-        if (
-            self.entity_description.native_unit_of_measurement is None
-            and self.entity_description.state_class is not None
-        ):
-            if self._sensor_option_unit_of_measurement is UNDEFINED:
-                return self.hass.config.units.temperature_unit
-
-            return self._sensor_option_unit_of_measurement
-
-        return super().native_unit_of_measurement
 
     @property
     def native_value(self) -> StateType:

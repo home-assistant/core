@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 from pyaprilaire.const import Attribute
 
@@ -30,7 +30,6 @@ from .const import (
 )
 from .coordinator import AprilaireCoordinator
 from .entity import BaseAprilaireEntity
-from .util import convert_temperature_if_needed
 
 HVAC_MODE_MAP = {
     1: HVACMode.OFF,
@@ -157,14 +156,8 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Get current temperature."""
-        return convert_temperature_if_needed(
-            self.hass.config.units.temperature_unit,
-            cast(
-                float,
-                self.coordinator.data.get(
-                    Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE
-                ),
-            ),
+        return self.coordinator.data.get(
+            Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE
         )
 
     @property
@@ -192,18 +185,12 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     @property
     def target_temperature_high(self) -> float | None:
         """Get cool setpoint."""
-        return convert_temperature_if_needed(
-            self.hass.config.units.temperature_unit,
-            cast(float, self.coordinator.data.get(Attribute.COOL_SETPOINT)),
-        )
+        return self.coordinator.data.get(Attribute.COOL_SETPOINT)
 
     @property
     def target_temperature_low(self) -> float | None:
         """Get heat setpoint."""
-        return convert_temperature_if_needed(
-            self.hass.config.units.temperature_unit,
-            cast(float, self.coordinator.data.get(Attribute.HEAT_SETPOINT)),
-        )
+        return self.coordinator.data.get(Attribute.HEAT_SETPOINT)
 
     @property
     def preset_mode(self) -> str | None:
