@@ -1697,6 +1697,7 @@ async def test_automation_bad_config_validation(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
+    hass_admin_user,
     broken_config,
     problem,
     details,
@@ -1745,6 +1746,30 @@ async def test_automation_bad_config_validation(
     }
     # The automation failing validation should be unavailable
     assert hass.states.get("automation.bad_automation").state == STATE_UNAVAILABLE
+
+    # Reloading the automation with fixed config should clear the issue
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={
+            automation.DOMAIN: {
+                "alias": "bad_automation",
+                "trigger": {"platform": "event", "event_type": "test_event2"},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"event": "{{ trigger.event.event_type }}"},
+                },
+            }
+        },
+    ):
+        await hass.services.async_call(
+            automation.DOMAIN,
+            SERVICE_RELOAD,
+            context=Context(user_id=hass_admin_user.id),
+            blocking=True,
+        )
+    issues = await get_repairs(hass, hass_ws_client)
+    assert len(issues) == 0
 
 
 async def test_automation_with_error_in_script(
