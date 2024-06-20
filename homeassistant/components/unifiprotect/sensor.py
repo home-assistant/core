@@ -544,7 +544,6 @@ LICENSE_PLATE_EVENT_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
         name="License plate detected",
         icon="mdi:car",
         translation_key="license_plate",
-        ufp_value="is_license_plate_currently_detected",
         ufp_required_field="can_detect_license_plate",
         ufp_event_obj="last_license_plate_detect_event",
     ),
