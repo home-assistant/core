@@ -65,6 +65,7 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
                     and preset.turn == self.mm.turn
                 ):
                     self._attr_current_option = f"{preset.index}: {preset.name}"
+                    break
 
         return self._attr_current_option
 
