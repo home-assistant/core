@@ -35,8 +35,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Nanoleaf light."""
-    coordinator = entry.runtime_data
-    async_add_entities([NanoleafLight(coordinator)])
+    async_add_entities([NanoleafLight(entry.runtime_data)])
 
 
 class NanoleafLight(NanoleafEntity, LightEntity):
