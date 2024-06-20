@@ -13,22 +13,22 @@
   "entity": {
     "sensor": {
       "power": {
-        "name": "{channel_name} Power"
+        "name": "{channel_name} power"
       },
       "voltage": {
-        "name": "{channel_name} Voltage"
+        "name": "{channel_name} voltage"
       },
       "current": {
-        "name": "{channel_name} Current"
+        "name": "{channel_name} current"
       },
       "power_factor": {
-        "name": "{channel_name} Power Factor"
+        "name": "{channel_name} power factor"
       },
       "this_month_energy": {
-        "name": "{channel_name} This Month Energy"
+        "name": "{channel_name} this month energy"
       },
       "this_month_energy_returned": {
-        "name": "{channel_name} This Month Energy Returned"
+        "name": "{channel_name} this month energy returned"
       }
     }
   }
