@@ -15,6 +15,7 @@ from uiprotect.data import (
     ProtectModelWithId,
     RecordingMode,
     VideoMode,
+    WSSubscriptionMessage,
 )
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -478,8 +479,10 @@ class ProtectBaseSwitch(BaseProtectEntity, SwitchEntity):
     entity_description: ProtectSwitchEntityDescription
     _state_attrs = ("_attr_available", "_attr_is_on")
 
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        super()._async_update_device_from_protect(device)
+    def _async_protect_update(
+        self, device: ProtectModelWithId, msg: WSSubscriptionMessage | None
+    ) -> None:
+        super()._async_protect_update(device, msg)
         self._attr_is_on = self.entity_description.get_ufp_value(self.device) is True
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -533,8 +536,10 @@ class ProtectPrivacyModeSwitch(RestoreEntity, ProtectSwitch):
             self._attr_extra_state_attributes = {}
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        super()._async_update_device_from_protect(device)
+    def _async_protect_update(
+        self, device: ProtectModelWithId, msg: WSSubscriptionMessage | None
+    ) -> None:
+        super()._async_protect_update(device, msg)
         # do not add extra state attribute on initialize
         if self.entity_id:
             self._update_previous_attr()

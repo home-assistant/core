@@ -7,7 +7,12 @@ from dataclasses import dataclass
 import logging
 from typing import Final
 
-from uiprotect.data import ModelType, ProtectAdoptableDeviceModel, ProtectModelWithId
+from uiprotect.data import (
+    ModelType,
+    ProtectAdoptableDeviceModel,
+    ProtectModelWithId,
+    WSSubscriptionMessage,
+)
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -171,8 +176,10 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
     entity_description: ProtectButtonEntityDescription
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        super()._async_update_device_from_protect(device)
+    def _async_protect_update(
+        self, device: ProtectModelWithId, msg: WSSubscriptionMessage | None
+    ) -> None:
+        super()._async_protect_update(device, msg)
         if self.entity_description.key == KEY_ADOPT:
             device = self.device
             self._attr_available = device.can_adopt and device.can_create(

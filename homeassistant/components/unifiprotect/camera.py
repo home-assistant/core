@@ -11,6 +11,7 @@ from uiprotect.data import (
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
     StateType,
+    WSSubscriptionMessage,
 )
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
@@ -216,8 +217,10 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
             self._attr_supported_features = _EMPTY_CAMERA_FEATURES
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        super()._async_update_device_from_protect(device)
+    def _async_protect_update(
+        self, device: ProtectModelWithId, msg: WSSubscriptionMessage | None
+    ) -> None:
+        super()._async_protect_update(device, msg)
         updated_device = self.device
         channel = updated_device.channels[self.channel.id]
         self.channel = channel

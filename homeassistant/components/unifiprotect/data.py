@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta
 from functools import partial
@@ -48,6 +49,9 @@ from .utils import async_get_devices_by_type
 _LOGGER = logging.getLogger(__name__)
 type ProtectDeviceType = ProtectAdoptableDeviceModel | NVR
 type UFPConfigEntry = ConfigEntry[ProtectData]
+type ProtectSubscriptionType = Callable[
+    [ProtectDeviceType, WSSubscriptionMessage | None], None
+]
 
 
 @callback
@@ -78,7 +82,9 @@ class ProtectData:
         self._entry = entry
         self._hass = hass
         self._update_interval = update_interval
-        self._subscriptions: dict[str, list[Callable[[ProtectDeviceType], None]]] = {}
+        self._subscriptions: defaultdict[str, set[ProtectSubscriptionType]] = (
+            defaultdict(set)
+        )
         self._pending_camera_ids: set[str] = set()
         self._unsub_interval: CALLBACK_TYPE | None = None
         self._unsub_websocket: CALLBACK_TYPE | None = None
@@ -207,9 +213,10 @@ class ProtectData:
 
     @callback
     def _async_update_device(
-        self, device: ProtectAdoptableDeviceModel | NVR, changed_data: dict[str, Any]
+        self, device: ProtectAdoptableDeviceModel | NVR, msg: WSSubscriptionMessage
     ) -> None:
-        self._async_signal_device_update(device)
+        self._async_signal_device_update(device, msg)
+        changed_data = msg.changed_data
         if (
             device.model is ModelType.CAMERA
             and device.id in self._pending_camera_ids
@@ -226,14 +233,14 @@ class ProtectData:
             self.api.bootstrap.nvr.update_all_messages()
             for camera in self.get_cameras():
                 if camera.feature_flags.has_lcd_screen:
-                    self._async_signal_device_update(camera)
+                    self._async_signal_device_update(camera, msg)
 
     @callback
-    def _async_process_ws_message(self, message: WSSubscriptionMessage) -> None:
+    def _async_process_ws_message(self, msg: WSSubscriptionMessage) -> None:
         """Process a message from the websocket."""
-        if (new_obj := message.new_obj) is None:
-            if isinstance(message.old_obj, ProtectAdoptableDeviceModel):
-                self._async_remove_device(message.old_obj)
+        if (new_obj := msg.new_obj) is None:
+            if isinstance(msg.old_obj, ProtectAdoptableDeviceModel):
+                self._async_remove_device(msg.old_obj)
             return
 
         model_type = new_obj.model
@@ -250,11 +257,11 @@ class ProtectData:
             ):
                 self._async_add_device(device)
             elif camera := new_obj.camera:
-                self._async_signal_device_update(camera)
+                self._async_signal_device_update(camera, msg)
             elif light := new_obj.light:
-                self._async_signal_device_update(light)
+                self._async_signal_device_update(light, msg)
             elif sensor := new_obj.sensor:
-                self._async_signal_device_update(sensor)
+                self._async_signal_device_update(sensor, msg)
             return
 
         if model_type is ModelType.LIVEVIEW and len(self.api.bootstrap.viewers) > 0:
@@ -265,14 +272,14 @@ class ProtectData:
             )
             return
 
-        if message.old_obj is None and isinstance(new_obj, ProtectAdoptableDeviceModel):
+        if msg.old_obj is None and isinstance(new_obj, ProtectAdoptableDeviceModel):
             self._async_add_device(new_obj)
             return
 
         if getattr(new_obj, "is_adopted_by_us", True) and hasattr(new_obj, "mac"):
             if TYPE_CHECKING:
                 assert isinstance(new_obj, (ProtectAdoptableDeviceModel, NVR))
-            self._async_update_device(new_obj, message.changed_data)
+            self._async_update_device(new_obj, msg)
 
     @callback
     def _async_process_updates(self, updates: Bootstrap | None) -> None:
@@ -282,9 +289,9 @@ class ProtectData:
         if updates is None:
             return
 
-        self._async_signal_device_update(self.api.bootstrap.nvr)
+        self._async_signal_device_update(self.api.bootstrap.nvr, None)
         for device in self.get_by_types(DEVICES_THAT_ADOPT):
-            self._async_signal_device_update(device)
+            self._async_signal_device_update(device, None)
 
     @callback
     def _async_poll(self, now: datetime) -> None:
@@ -302,20 +309,20 @@ class ProtectData:
         )
 
     @callback
-    def async_subscribe_device_id(
-        self, mac: str, update_callback: Callable[[ProtectDeviceType], None]
+    def async_subscribe(
+        self, mac: str, update_callback: ProtectSubscriptionType
     ) -> CALLBACK_TYPE:
         """Add an callback subscriber."""
         if not self._subscriptions:
             self._unsub_interval = async_track_time_interval(
                 self._hass, self._async_poll, self._update_interval
             )
-        self._subscriptions.setdefault(mac, []).append(update_callback)
-        return partial(self.async_unsubscribe_device_id, mac, update_callback)
+        self._subscriptions[mac].add(update_callback)
+        return partial(self._async_unsubscribe, mac, update_callback)
 
     @callback
-    def async_unsubscribe_device_id(
-        self, mac: str, update_callback: Callable[[ProtectDeviceType], None]
+    def _async_unsubscribe(
+        self, mac: str, update_callback: ProtectSubscriptionType
     ) -> None:
         """Remove a callback subscriber."""
         self._subscriptions[mac].remove(update_callback)
@@ -326,13 +333,16 @@ class ProtectData:
             self._unsub_interval = None
 
     @callback
-    def _async_signal_device_update(self, device: ProtectDeviceType) -> None:
+    def _async_signal_device_update(
+        self, device: ProtectDeviceType, msg: WSSubscriptionMessage | None
+    ) -> None:
         """Call the callbacks for a device_id."""
-        if not (subscriptions := self._subscriptions.get(device.mac)):
+        mac = device.mac
+        if not (subscriptions := self._subscriptions.get(mac)):
             return
-        _LOGGER.debug("Updating device: %s (%s)", device.name, device.mac)
+        _LOGGER.debug("Updating device: %s (%s)", device.name, mac)
         for update_callback in subscriptions:
-            update_callback(device)
+            update_callback(device, msg)
 
 
 @callback

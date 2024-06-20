@@ -10,6 +10,7 @@ from uiprotect.data import (
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
     StateType,
+    WSSubscriptionMessage,
 )
 from uiprotect.exceptions import StreamError
 
@@ -77,8 +78,10 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
     _state_attrs = ("_attr_available", "_attr_state", "_attr_volume_level")
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        super()._async_update_device_from_protect(device)
+    def _async_protect_update(
+        self, device: ProtectModelWithId, msg: WSSubscriptionMessage | None
+    ) -> None:
+        super()._async_protect_update(device, msg)
         updated_device = self.device
         self._attr_volume_level = float(updated_device.speaker_settings.volume / 100)
 
@@ -111,7 +114,7 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         ):
             _LOGGER.debug("Stopping playback for %s Speaker", self.device.display_name)
             await self.device.stop_audio()
-            self._async_updated_event(self.device)
+            self._async_updated_event(self.device, None)
 
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
@@ -137,11 +140,11 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             raise HomeAssistantError(err) from err
 
         # update state after starting player
-        self._async_updated_event(self.device)
+        self._async_updated_event(self.device, None)
         # wait until player finishes to update state again
         await self.device.wait_until_audio_completes()
 
-        self._async_updated_event(self.device)
+        self._async_updated_event(self.device, None)
 
     async def async_browse_media(
         self,
