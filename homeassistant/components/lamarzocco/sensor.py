@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from lmcloud.const import BoilerType, PhysicalKey
+from lmcloud.const import BoilerType, MachineModel, PhysicalKey
 from lmcloud.lm_machine import LaMarzoccoMachine
 
 from homeassistant.components.sensor import (
@@ -80,6 +80,8 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
         value_fn=lambda device: device.config.boilers[
             BoilerType.STEAM
         ].current_temperature,
+        supported_fn=lambda coordinator: coordinator.device.model
+        != MachineModel.LINEA_MINI,
     ),
 )
 

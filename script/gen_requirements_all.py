@@ -219,6 +219,9 @@ scapy>=2.5.0
 # Only tuf>=4 includes a constraint to <1.0.
 # https://github.com/theupdateframework/python-tuf/releases/tag/v4.0.0
 tuf>=4.0.0
+
+# https://github.com/jd/tenacity/issues/471
+tenacity<8.4.0
 """
 
 GENERATED_MESSAGE = (

@@ -127,7 +127,6 @@ async def async_get_conversation_languages(
     """
     agent_manager = get_agent_manager(hass)
     entity_component: EntityComponent[ConversationEntity] = hass.data[DOMAIN]
-    languages: set[str] = set()
     agents: list[ConversationEntity | AbstractConversationAgent]
 
     if agent_id:
@@ -136,6 +135,10 @@ async def async_get_conversation_languages(
         if agent is None:
             raise ValueError(f"Agent {agent_id} not found")
 
+        # Shortcut
+        if agent.supported_languages == MATCH_ALL:
+            return MATCH_ALL
+
         agents = [agent]
 
     else:
@@ -143,11 +146,16 @@ async def async_get_conversation_languages(
         for info in agent_manager.async_get_agent_info():
             agent = agent_manager.async_get_agent(info.id)
             assert agent is not None
+
+            # Shortcut
+            if agent.supported_languages == MATCH_ALL:
+                return MATCH_ALL
+
             agents.append(agent)
 
+    languages: set[str] = set()
+
     for agent in agents:
-        if agent.supported_languages == MATCH_ALL:
-            return MATCH_ALL
         for language_tag in agent.supported_languages:
             languages.add(language_tag)
 
