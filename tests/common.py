@@ -778,7 +778,7 @@ def ensure_auth_manager_loaded(auth_mgr: auth.AuthManager) -> None:
         store._set_defaults()
 
 
-class MockModule:
+class MockModule(loader.ComponentProtocol):
     """Representation of a fake module."""
 
     def __init__(
