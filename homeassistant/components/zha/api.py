@@ -10,7 +10,7 @@ from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.types import Channels
 from zigpy.util import pick_optimal_channel
 
-from .const import CONF_RADIO_TYPE, DOMAIN
+from .const import CONF_RADIO_TYPE, DATA_ZHA, DOMAIN
 from .helpers import get_zha_data, get_zha_gateway
 from .radio_manager import ZhaRadioManager
 
@@ -23,13 +23,14 @@ def _get_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Find the singleton ZHA config entry, if one exists."""
 
     # If ZHA is already running, use its config entry
-    try:
-        zha_data = get_zha_data(hass)
-    except ValueError:
-        pass
-    else:
-        assert zha_data.config_entry is not None
-        return zha_data.config_entry
+    if DATA_ZHA in hass.data:
+        try:
+            zha_data = get_zha_data(hass)
+        except ValueError:
+            pass
+        else:
+            assert zha_data.config_entry is not None
+            return zha_data.config_entry
 
     # Otherwise, find one
     entries = hass.config_entries.async_entries(DOMAIN)
