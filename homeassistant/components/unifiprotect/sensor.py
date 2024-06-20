@@ -760,14 +760,16 @@ class ProtectLicensePlateEventSensor(ProtectEventSensor):
         prev_event = self._event
         super()._async_update_device_from_protect(device)
         event = self._event = self.entity_description.get_event_obj(device)
-        if event and event.end and (not prev_event or prev_event.id == event.id):
+        if event and event.end and prev_event and prev_event.id == event.id:
             # Event already ended
             return
 
         if not (
             event
             and self.entity_description.has_matching_smart(event)
-            and ((is_end := event.end) or self.device.is_smart_detected)
+            and (
+                ((is_end := event.end) and prev_event) or self.device.is_smart_detected
+            )
             and (metadata := event.metadata)
             and (license_plate := metadata.license_plate)
         ):
