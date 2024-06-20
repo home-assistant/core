@@ -693,7 +693,7 @@ def mock_device_registry(
 class MockGroup(auth_models.Group):
     """Mock a group in Home Assistant."""
 
-    def __init__(self, id=None, name="Mock Group"):
+    def __init__(self, id: str | None = None, name: str | None = "Mock Group") -> None:
         """Mock a group."""
         kwargs = {"name": name, "policy": system_policies.ADMIN_POLICY}
         if id is not None:
@@ -701,11 +701,11 @@ class MockGroup(auth_models.Group):
 
         super().__init__(**kwargs)
 
-    def add_to_hass(self, hass):
+    def add_to_hass(self, hass: HomeAssistant) -> MockGroup:
         """Test helper to add entry to hass."""
         return self.add_to_auth_manager(hass.auth)
 
-    def add_to_auth_manager(self, auth_mgr):
+    def add_to_auth_manager(self, auth_mgr: auth.AuthManager) -> MockGroup:
         """Test helper to add entry to hass."""
         ensure_auth_manager_loaded(auth_mgr)
         auth_mgr._store._groups[self.id] = self
@@ -717,13 +717,13 @@ class MockUser(auth_models.User):
 
     def __init__(
         self,
-        id=None,
-        is_owner=False,
-        is_active=True,
-        name="Mock User",
-        system_generated=False,
-        groups=None,
-    ):
+        id: str | None = None,
+        is_owner: bool = False,
+        is_active: bool = True,
+        name: str | None = "Mock User",
+        system_generated: bool = False,
+        groups: list[auth_models.Group] | None = None,
+    ) -> None:
         """Initialize mock user."""
         kwargs = {
             "is_owner": is_owner,
@@ -737,17 +737,17 @@ class MockUser(auth_models.User):
             kwargs["id"] = id
         super().__init__(**kwargs)
 
-    def add_to_hass(self, hass):
+    def add_to_hass(self, hass: HomeAssistant) -> MockUser:
         """Test helper to add entry to hass."""
         return self.add_to_auth_manager(hass.auth)
 
-    def add_to_auth_manager(self, auth_mgr):
+    def add_to_auth_manager(self, auth_mgr: auth.AuthManager) -> MockUser:
         """Test helper to add entry to hass."""
         ensure_auth_manager_loaded(auth_mgr)
         auth_mgr._store._users[self.id] = self
         return self
 
-    def mock_policy(self, policy):
+    def mock_policy(self, policy: auth_permissions.PolicyType) -> None:
         """Mock a policy for a user."""
         self.permissions = auth_permissions.PolicyPermissions(policy, self.perm_lookup)
 
@@ -771,7 +771,7 @@ async def register_auth_provider(
 
 
 @callback
-def ensure_auth_manager_loaded(auth_mgr):
+def ensure_auth_manager_loaded(auth_mgr: auth.AuthManager) -> None:
     """Ensure an auth manager is considered loaded."""
     store = auth_mgr._store
     if store._users is None:

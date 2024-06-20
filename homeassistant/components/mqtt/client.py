@@ -803,8 +803,12 @@ class MQTT:
 
             await asyncio.sleep(RECONNECT_INTERVAL_SECONDS)
 
-    async def async_disconnect(self) -> None:
-        """Stop the MQTT client."""
+    async def async_disconnect(self, disconnect_paho_client: bool = False) -> None:
+        """Stop the MQTT client.
+
+        We only disconnect grafully if disconnect_paho_client is set, but not
+        when Home Assistant is shut down.
+        """
 
         # stop waiting for any pending subscriptions
         await self._subscribe_debouncer.async_cleanup()
@@ -824,7 +828,9 @@ class MQTT:
             self._should_reconnect = False
             self._async_cancel_reconnect()
             # We do not gracefully disconnect to ensure
-            # the broker publishes the will message
+            # the broker publishes the will message unless the entry is reloaded
+            if disconnect_paho_client:
+                self._mqttc.disconnect()
 
     @callback
     def async_restore_tracked_subscriptions(
@@ -1029,7 +1035,8 @@ class MQTT:
         self, birth_message: PublishMessage
     ) -> None:
         """Resubscribe to all topics and publish birth message."""
-        await self._async_perform_subscriptions()
+        self._async_queue_resubscribe()
+        self._subscribe_debouncer.async_schedule()
         await self._ha_started.wait()  # Wait for Home Assistant to start
         await self._discovery_cooldown()  # Wait for MQTT discovery to cool down
         # Update subscribe cooldown period to a shorter time
@@ -1085,7 +1092,6 @@ class MQTT:
             result_code,
         )
 
-        self._async_queue_resubscribe()
         birth: dict[str, Any]
         if birth := self.conf.get(CONF_BIRTH_MESSAGE, DEFAULT_BIRTH):
             birth_message = PublishMessage(**birth)
@@ -1096,13 +1102,8 @@ class MQTT:
             )
         else:
             # Update subscribe cooldown period to a shorter time
-            self.config_entry.async_create_background_task(
-                self.hass,
-                self._async_perform_subscriptions(),
-                name="mqtt re-subscribe",
-            )
-            self._subscribe_debouncer.set_timeout(SUBSCRIBE_COOLDOWN)
-            _LOGGER.info("MQTT client initialized")
+            self._async_queue_resubscribe()
+            self._subscribe_debouncer.async_schedule()
 
         self._async_connection_result(True)
 
@@ -1274,7 +1275,8 @@ class MQTT:
         self._async_connection_result(False)
         self.connected = False
         async_dispatcher_send(self.hass, MQTT_CONNECTION_STATE, False)
-        _LOGGER.warning(
+        _LOGGER.log(
+            logging.INFO if result_code == 0 else logging.DEBUG,
             "Disconnected from MQTT server %s:%s (%s)",
             self.conf[CONF_BROKER],
             self.conf.get(CONF_PORT, DEFAULT_PORT),

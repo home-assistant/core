@@ -6,7 +6,7 @@ from collections.abc import Callable, Sequence
 from functools import partial
 import logging
 from operator import attrgetter
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from uiprotect.data import (
     NVR,
@@ -21,7 +21,6 @@ from homeassistant.core import callback
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
-from homeassistant.helpers.typing import UNDEFINED
 
 from .const import (
     ATTR_EVENT_ID,
@@ -31,7 +30,7 @@ from .const import (
     DOMAIN,
 )
 from .data import ProtectData
-from .models import PermRequired, ProtectEventMixin, ProtectRequiredKeysMixin
+from .models import PermRequired, ProtectEntityDescription, ProtectEventMixin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,8 +40,8 @@ def _async_device_entities(
     data: ProtectData,
     klass: type[BaseProtectEntity],
     model_type: ModelType,
-    descs: Sequence[ProtectRequiredKeysMixin],
-    unadopted_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
+    descs: Sequence[ProtectEntityDescription],
+    unadopted_descs: Sequence[ProtectEntityDescription] | None = None,
     ufp_device: ProtectAdoptableDeviceModel | None = None,
 ) -> list[BaseProtectEntity]:
     if not descs and not unadopted_descs:
@@ -119,11 +118,11 @@ _ALL_MODEL_TYPES = (
 @callback
 def _combine_model_descs(
     model_type: ModelType,
-    model_descriptions: dict[ModelType, Sequence[ProtectRequiredKeysMixin]] | None,
-    all_descs: Sequence[ProtectRequiredKeysMixin] | None,
-) -> list[ProtectRequiredKeysMixin]:
+    model_descriptions: dict[ModelType, Sequence[ProtectEntityDescription]] | None,
+    all_descs: Sequence[ProtectEntityDescription] | None,
+) -> list[ProtectEntityDescription]:
     """Combine all the descriptions with descriptions a model type."""
-    descs: list[ProtectRequiredKeysMixin] = list(all_descs) if all_descs else []
+    descs: list[ProtectEntityDescription] = list(all_descs) if all_descs else []
     if model_descriptions and (model_descs := model_descriptions.get(model_type)):
         descs.extend(model_descs)
     return descs
@@ -133,10 +132,10 @@ def _combine_model_descs(
 def async_all_device_entities(
     data: ProtectData,
     klass: type[BaseProtectEntity],
-    model_descriptions: dict[ModelType, Sequence[ProtectRequiredKeysMixin]]
+    model_descriptions: dict[ModelType, Sequence[ProtectEntityDescription]]
     | None = None,
-    all_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
-    unadopted_descs: list[ProtectRequiredKeysMixin] | None = None,
+    all_descs: Sequence[ProtectEntityDescription] | None = None,
+    unadopted_descs: list[ProtectEntityDescription] | None = None,
     ufp_device: ProtectAdoptableDeviceModel | None = None,
 ) -> list[BaseProtectEntity]:
     """Generate a list of all the device entities."""
@@ -163,7 +162,10 @@ class BaseProtectEntity(Entity):
     device: ProtectAdoptableDeviceModel | NVR
 
     _attr_should_poll = False
+    _attr_attribution = DEFAULT_ATTRIBUTION
     _state_attrs: tuple[str, ...] = ("_attr_available",)
+    _attr_has_entity_name = True
+    _async_get_ufp_enabled: Callable[[ProtectAdoptableDeviceModel], bool] | None = None
 
     def __init__(
         self,
@@ -173,28 +175,18 @@ class BaseProtectEntity(Entity):
     ) -> None:
         """Initialize the entity."""
         super().__init__()
-        self.data: ProtectData = data
+        self.data = data
         self.device = device
-        self._async_get_ufp_enabled: (
-            Callable[[ProtectAdoptableDeviceModel], bool] | None
-        ) = None
 
         if description is None:
-            self._attr_unique_id = f"{self.device.mac}"
-            self._attr_name = f"{self.device.display_name}"
+            self._attr_unique_id = self.device.mac
+            self._attr_name = None
         else:
             self.entity_description = description
             self._attr_unique_id = f"{self.device.mac}_{description.key}"
-            name = (
-                description.name
-                if description.name and description.name is not UNDEFINED
-                else ""
-            )
-            self._attr_name = f"{self.device.display_name} {name.title()}"
-            if isinstance(description, ProtectRequiredKeysMixin):
+            if isinstance(description, ProtectEntityDescription):
                 self._async_get_ufp_enabled = description.get_ufp_enabled
 
-        self._attr_attribution = DEFAULT_ATTRIBUTION
         self._async_set_device_info()
         self._async_update_device_from_protect(device)
         self._state_getters = tuple(
@@ -301,8 +293,7 @@ class ProtectNVREntity(BaseProtectEntity):
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         data = self.data
-        last_update_success = data.last_update_success
-        if last_update_success:
+        if last_update_success := data.last_update_success:
             self.device = data.api.bootstrap.nvr
 
         self._attr_available = last_update_success
@@ -311,28 +302,18 @@ class ProtectNVREntity(BaseProtectEntity):
 class EventEntityMixin(ProtectDeviceEntity):
     """Adds motion event attributes to sensor."""
 
-    _unrecorded_attributes = frozenset({ATTR_EVENT_ID, ATTR_EVENT_SCORE})
-
     entity_description: ProtectEventMixin
-
-    def __init__(
-        self,
-        *args: Any,
-        **kwarg: Any,
-    ) -> None:
-        """Init an sensor that has event thumbnails."""
-        super().__init__(*args, **kwarg)
-        self._event: Event | None = None
+    _unrecorded_attributes = frozenset({ATTR_EVENT_ID, ATTR_EVENT_SCORE})
+    _event: Event | None = None
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        event = self.entity_description.get_event_obj(device)
-        if event is not None:
+        if (event := self.entity_description.get_event_obj(device)) is None:
+            self._attr_extra_state_attributes = {}
+        else:
             self._attr_extra_state_attributes = {
                 ATTR_EVENT_ID: event.id,
                 ATTR_EVENT_SCORE: event.score,
             }
-        else:
-            self._attr_extra_state_attributes = {}
         self._event = event
         super()._async_update_device_from_protect(device)
