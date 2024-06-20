@@ -5,6 +5,15 @@ from __future__ import annotations
 import functools
 from typing import Any
 
+from zha.application.const import (
+    WARNING_DEVICE_MODE_BURGLAR,
+    WARNING_DEVICE_MODE_EMERGENCY,
+    WARNING_DEVICE_MODE_EMERGENCY_PANIC,
+    WARNING_DEVICE_MODE_FIRE,
+    WARNING_DEVICE_MODE_FIRE_PANIC,
+    WARNING_DEVICE_MODE_POLICE_PANIC,
+)
+
 from homeassistant.components.siren import (
     ATTR_DURATION,
     ATTR_TONE,
@@ -55,18 +64,28 @@ class ZHASiren(ZHAEntity, SirenEntity):
         self._attr_supported_features = SirenEntityFeature(
             self.entity_data.entity._attr_supported_features.value  # noqa: SLF001
         )
+        self._attr_available_tones: list[int | str] | dict[int, str] | None = {
+            WARNING_DEVICE_MODE_BURGLAR: "Burglar",
+            WARNING_DEVICE_MODE_FIRE: "Fire",
+            WARNING_DEVICE_MODE_EMERGENCY: "Emergency",
+            WARNING_DEVICE_MODE_POLICE_PANIC: "Police Panic",
+            WARNING_DEVICE_MODE_FIRE_PANIC: "Fire Panic",
+            WARNING_DEVICE_MODE_EMERGENCY_PANIC: "Emergency Panic",
+        }
 
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        return self.entity_data.entity.is_on
+        return self.entity_data.entity.state[
+            "state"
+        ]  # TODO are we going to use info objects / state dicts or platform entity props? pylint: disable=fixme
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on siren."""
         await self.entity_data.entity.async_turn_on(
-            duration=ATTR_DURATION,
-            tone=ATTR_TONE,
-            volume_level=ATTR_VOLUME_LEVEL,
+            duration=kwargs.get(ATTR_DURATION),
+            tone=kwargs.get(ATTR_TONE),
+            volume_level=kwargs.get(ATTR_VOLUME_LEVEL),
         )
         self.async_write_ha_state()
 
