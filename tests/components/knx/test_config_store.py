@@ -93,7 +93,7 @@ async def test_create_entity_error(
     await client.send_json_auto_id(
         {
             "type": "knx/create_entity",
-            "platform": Platform.TTS,  # "tts" is not a supported platform (and is unlikely te ever be)
+            "platform": Platform.TTS,  # "tts" is not a supported platform (and is unlikely to ever be)
             "data": {
                 "entity": {"name": "Test invalid platform"},
                 "knx": {"ga_switch": {"write": "1/2/3"}},
