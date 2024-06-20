@@ -14,6 +14,7 @@ from uiprotect.data import (
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
     Sensor,
+    SmartDetectObjectType,
     WSSubscriptionMessage,
 )
 from uiprotect.data.nvr import UOSDisk
@@ -455,6 +456,7 @@ SMART_EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_required_field="can_detect_person",
         ufp_enabled="is_person_detection_on",
         ufp_event_obj="last_person_detect_event",
+        ufp_obj_type=SmartDetectObjectType.PERSON,
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_obj_vehicle",
@@ -463,6 +465,7 @@ SMART_EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_required_field="can_detect_vehicle",
         ufp_enabled="is_vehicle_detection_on",
         ufp_event_obj="last_vehicle_detect_event",
+        ufp_obj_type=SmartDetectObjectType.VEHICLE,
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_obj_animal",
@@ -471,6 +474,7 @@ SMART_EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_required_field="can_detect_animal",
         ufp_enabled="is_animal_detection_on",
         ufp_event_obj="last_animal_detect_event",
+        ufp_obj_type=SmartDetectObjectType.ANIMAL,
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_obj_package",
@@ -480,6 +484,7 @@ SMART_EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_required_field="can_detect_package",
         ufp_enabled="is_package_detection_on",
         ufp_event_obj="last_package_detect_event",
+        ufp_obj_type=SmartDetectObjectType.PACKAGE,
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_audio_any",
@@ -495,6 +500,7 @@ SMART_EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_required_field="can_detect_smoke",
         ufp_enabled="is_smoke_detection_on",
         ufp_event_obj="last_smoke_detect_event",
+        ufp_obj_type=SmartDetectObjectType.SMOKE,
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_audio_cmonx",
@@ -503,6 +509,7 @@ SMART_EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_required_field="can_detect_co",
         ufp_enabled="is_co_detection_on",
         ufp_event_obj="last_cmonx_detect_event",
+        ufp_obj_type=SmartDetectObjectType.CMONX,
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_audio_siren",
@@ -511,6 +518,7 @@ SMART_EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_required_field="can_detect_siren",
         ufp_enabled="is_siren_detection_on",
         ufp_event_obj="last_siren_detect_event",
+        ufp_obj_type=SmartDetectObjectType.SIREN,
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_audio_baby_cry",
@@ -519,6 +527,7 @@ SMART_EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_required_field="can_detect_baby_cry",
         ufp_enabled="is_baby_cry_detection_on",
         ufp_event_obj="last_baby_cry_detect_event",
+        ufp_obj_type=SmartDetectObjectType.BABY_CRY,
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_audio_speak",
@@ -527,6 +536,7 @@ SMART_EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_required_field="can_detect_speaking",
         ufp_enabled="is_speaking_detection_on",
         ufp_event_obj="last_speaking_detect_event",
+        ufp_obj_type=SmartDetectObjectType.SPEAK,
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_audio_bark",
@@ -535,6 +545,7 @@ SMART_EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_required_field="can_detect_bark",
         ufp_enabled="is_bark_detection_on",
         ufp_event_obj="last_bark_detect_event",
+        ufp_obj_type=SmartDetectObjectType.BARK,
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_audio_car_alarm",
@@ -543,6 +554,7 @@ SMART_EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_required_field="can_detect_car_alarm",
         ufp_enabled="is_car_alarm_detection_on",
         ufp_event_obj="last_car_alarm_detect_event",
+        ufp_obj_type=SmartDetectObjectType.BURGLAR,
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_audio_car_horn",
@@ -551,6 +563,7 @@ SMART_EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_required_field="can_detect_car_horn",
         ufp_enabled="is_car_horn_detection_on",
         ufp_event_obj="last_car_horn_detect_event",
+        ufp_obj_type=SmartDetectObjectType.CAR_HORN,
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_audio_glass_break",
@@ -559,6 +572,7 @@ SMART_EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_required_field="can_detect_glass_break",
         ufp_enabled="is_glass_break_detection_on",
         ufp_event_obj="last_glass_break_detect_event",
+        ufp_obj_type=SmartDetectObjectType.GLASS_BREAK,
     ),
 )
 
@@ -738,6 +752,10 @@ class ProtectSmartEventBinarySensor(EventEntityMixin, BinarySensorEntity):
         if (
             (event := self._event)
             and self.device.is_smart_detected
+            and (
+                not (obj_type := self.entity_description.ufp_obj_type)
+                or obj_type in event.smart_detect_types
+            )
             and (
                 (is_end_of_event := websocket_message_is_end_of_event(msg))
                 or not event.end

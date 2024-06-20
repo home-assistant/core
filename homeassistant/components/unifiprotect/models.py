@@ -10,7 +10,12 @@ import logging
 from operator import attrgetter
 from typing import Any, Generic, TypeVar
 
-from uiprotect.data import NVR, Event, ProtectAdoptableDeviceModel
+from uiprotect.data import (
+    NVR,
+    Event,
+    ProtectAdoptableDeviceModel,
+    SmartDetectObjectType,
+)
 
 from homeassistant.helpers.entity import EntityDescription
 
@@ -79,6 +84,7 @@ class ProtectEventMixin(ProtectEntityDescription[T]):
     """Mixin for events."""
 
     ufp_event_obj: str | None = None
+    ufp_obj_type: SmartDetectObjectType | None = None
 
     def get_event_obj(self, obj: T) -> Event | None:
         """Return value from UniFi Protect device."""

@@ -18,6 +18,7 @@ from uiprotect.data import (
     ProtectDeviceModel,
     ProtectModelWithId,
     Sensor,
+    SmartDetectObjectType,
     WSSubscriptionMessage,
 )
 
@@ -545,6 +546,7 @@ LICENSE_PLATE_EVENT_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
         translation_key="license_plate",
         ufp_required_field="can_detect_license_plate",
         ufp_event_obj="last_license_plate_detect_event",
+        ufp_obj_type=SmartDetectObjectType.LICENSE_PLATE,
     ),
 )
 
@@ -765,9 +767,13 @@ class ProtectLicensePlateEventSensor(ProtectEventSensor):
         super()._async_update(device, msg)
         if (
             (event := self._event)
+            and self.device.is_smart_detected
+            and (
+                not (obj_type := self.entity_description.ufp_obj_type)
+                or obj_type in event.smart_detect_types
+            )
             and (metadata := event.metadata)
             and (license_plate := metadata.license_plate)
-            and self.device.is_smart_detected
             and (
                 (is_end_of_event := websocket_message_is_end_of_event(msg))
                 or not event.end
