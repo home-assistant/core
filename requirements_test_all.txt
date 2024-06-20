@@ -762,7 +762,7 @@ gassist-text==0.0.11
 gcal-sync==6.0.4
 
 # homeassistant.components.aladdin_connect
-genie-partner-sdk==1.0.2
+genie-partner-sdk==1.0.4
 
 # homeassistant.components.geocaching
 geocachingapi==0.2.1
