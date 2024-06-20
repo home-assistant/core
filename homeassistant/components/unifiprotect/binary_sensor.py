@@ -447,7 +447,6 @@ SMART_EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         icon="mdi:eye",
         ufp_required_field="feature_flags.has_smart_detect",
         ufp_event_obj="last_smart_detect_event",
-        entity_registry_enabled_default=False,
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_obj_person",
@@ -492,7 +491,6 @@ SMART_EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         icon="mdi:eye",
         ufp_required_field="feature_flags.has_smart_detect",
         ufp_event_obj="last_smart_audio_detect_event",
-        entity_registry_enabled_default=False,
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_audio_smoke",
