@@ -23,7 +23,7 @@ from .const import DOMAIN
 from .coordinator import AprilaireCoordinator
 from .entity import BaseAprilaireEntity
 
-DEHUMIDIFICATION_STATUS_MAP: dict[StateType, StateType] = {
+DEHUMIDIFICATION_STATUS_MAP: dict[StateType, str] = {
     0: "idle",
     1: "idle",
     2: "on",
@@ -31,14 +31,14 @@ DEHUMIDIFICATION_STATUS_MAP: dict[StateType, StateType] = {
     4: "off",
 }
 
-HUMIDIFICATION_STATUS_MAP: dict[StateType, StateType] = {
+HUMIDIFICATION_STATUS_MAP: dict[StateType, str] = {
     0: "idle",
     1: "idle",
     2: "on",
     3: "off",
 }
 
-VENTILATION_STATUS_MAP: dict[StateType, StateType] = {
+VENTILATION_STATUS_MAP: dict[StateType, str] = {
     0: "idle",
     1: "idle",
     2: "on",
@@ -48,14 +48,14 @@ VENTILATION_STATUS_MAP: dict[StateType, StateType] = {
     6: "off",
 }
 
-AIR_CLEANING_STATUS_MAP: dict[StateType, StateType] = {
+AIR_CLEANING_STATUS_MAP: dict[StateType, str] = {
     0: "idle",
     1: "idle",
     2: "on",
     3: "off",
 }
 
-FAN_STATUS_MAP: dict[StateType, StateType] = {0: "off", 1: "on"}
+FAN_STATUS_MAP: dict[StateType, str] = {0: "off", 1: "on"}
 
 
 def get_entities(
