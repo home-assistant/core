@@ -3,6 +3,7 @@
 import datetime
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
 
@@ -518,6 +519,7 @@ async def test_set_target_humidity_humidifier_on(hass: HomeAssistant) -> None:
     calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 36)
     await hass.async_block_till_done()
+    calls.clear()
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_HUMIDITY,
@@ -538,6 +540,7 @@ async def test_set_target_humidity_humidifier_off(hass: HomeAssistant) -> None:
     calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
+    calls.clear()
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_HUMIDITY,
@@ -1729,7 +1732,9 @@ async def test_away_fixed_humidity_mode(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("setup_comp_1")
 async def test_sensor_stale_duration(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory
 ) -> None:
     """Test turn off on sensor stale."""
 
@@ -1771,14 +1776,31 @@ async def test_sensor_stale_duration(
     assert hass.states.get(humidifier_switch).state == STATE_ON
 
     # Wait 11 minutes
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=11))
+    freezer.tick(datetime.timedelta(minutes=11))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # 11 minutes later, no news from the sensor : emergency cut off
     assert hass.states.get(humidifier_switch).state == STATE_OFF
     assert "emergency" in caplog.text
 
-    # Updated value from sensor received
+    # Updated value from sensor received (same value)
+    _setup_sensor(hass, 23)
+    await hass.async_block_till_done()
+
+    # A new value has arrived, the humidifier should go ON
+    assert hass.states.get(humidifier_switch).state == STATE_ON
+
+    # Wait 11 minutes
+    freezer.tick(datetime.timedelta(minutes=11))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # 11 minutes later, no news from the sensor : emergency cut off
+    assert hass.states.get(humidifier_switch).state == STATE_OFF
+    assert "emergency" in caplog.text
+
+    # Updated value from sensor received (new value)
     _setup_sensor(hass, 24)
     await hass.async_block_till_done()
 
