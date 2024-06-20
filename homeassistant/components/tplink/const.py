@@ -59,4 +59,9 @@ ENTITY_EXTRAS: Final = {
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    "temperature": EntityExtras(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 }

@@ -340,7 +340,4 @@ def _description_for_feature[_D: EntityDescription](
     )
     kwargs["entity_category"] = _category_for_feature(feature)
 
-    if feature.type == Feature.Type.Sensor:
-        kwargs["native_unit_of_measurement"] = feature.unit
-        kwargs["precision"] = feature.precision_hint
     return desc_cls(**kwargs)
