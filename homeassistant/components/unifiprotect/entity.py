@@ -321,35 +321,9 @@ class EventEntityMixin(ProtectDeviceEntity):
         )
 
     @callback
-    def _async_clear_event(self) -> None:
-        """Clear the event."""
-        self._event = None
-        self._attr_extra_state_attributes = {}
-
-    @callback
-    def _async_update(self, device: ProtectModelWithId, msg: WSMsg | None) -> None:
-        if (event := self.entity_description.get_event_obj(device)) is None:
-            self._attr_extra_state_attributes = {}
-        else:
-            self._attr_extra_state_attributes = {
-                ATTR_EVENT_ID: event.id,
-                ATTR_EVENT_SCORE: event.score,
-            }
-        self._event = event
-        super()._async_update(device, msg)
-
-    def _process_event(self, is_end: bool, had_previous_event: bool) -> None:
-        """Process the end of an event."""
-        if not is_end:
-            return
-        if had_previous_event:
-            # If the event was already registered and we are at the
-            # end of the event no need to write state again.
-            self._async_clear_event()
-            return
-        # If the event is so short that the detection is received
-        # in the same message as the end of the event we need to write
-        # state twice to ensure the detection is still registered.
-        self.async_write_ha_state()
-        self._async_clear_event()
-        self.async_write_ha_state()
+    def _set_event_attrs(self, event: Event) -> None:
+        """Set event attrs."""
+        self._attr_extra_state_attributes = {
+            ATTR_EVENT_ID: event.id,
+            ATTR_EVENT_SCORE: event.score,
+        }

@@ -712,13 +712,14 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
     @callback
     def _async_update(self, device: ProtectModelWithId, msg: WSMsg | None) -> None:
         super()._async_update(device, msg)
-        is_on = self._event is not None and self.entity_description.get_ufp_value(
-            device
-        )
-        self._attr_is_on = is_on
-        if not is_on:
-            self._event = None
+        description = self.entity_description
+        event = self._event = self.entity_description.get_event_obj(device)
+        if is_on := bool(description.get_ufp_value(device)):
+            if event:
+                self._set_event_attrs(event)
+        else:
             self._attr_extra_state_attributes = {}
+        self._attr_is_on = is_on
 
 
 class ProtectSmartEventBinarySensor(EventEntityMixin, BinarySensorEntity):
@@ -729,37 +730,37 @@ class ProtectSmartEventBinarySensor(EventEntityMixin, BinarySensorEntity):
     _state_attrs = ("_attr_available", "_attr_is_on", "_attr_extra_state_attributes")
 
     @callback
-    def _async_clear_event(self) -> None:
-        """Clear the event."""
+    def _set_off(self) -> None:
         self._attr_is_on = False
-        super()._async_clear_event()
+        self._attr_extra_state_attributes = {}
 
     @callback
     def _async_update(self, device: ProtectModelWithId, msg: WSMsg | None) -> None:
-        had_previous_event = self._event is not None
+        previous_event = self._event
         super()._async_update(device, msg)
-        description = self.entity_description
+        event = self._event = self.entity_description.get_event_obj(device)
+        if event and previous_event and previous_event.id == event.id and event.end:
+            # Event already ended
+            return
+
         if (
-            (event := self._event)
-            and description.smart_event_is_detected(event)
+            event
+            and self.entity_description.smart_event_is_detected(event)
             and ((is_end := self._end_of_current_event(msg)) or not event.end)
             and (is_end or self.device.is_smart_detected)
         ):
             self._attr_is_on = True
-            if is_end:
-                if had_previous_event:
-                    # If the event was already registered and we are at the
-                    # end of the event no need to write state again.
-                    self._async_clear_event()
-                    return
-                # If the event is so short that the detection is received
-                # in the same message as the end of the event we need to write
-                # state and than clear the event and write state again.
-                self.async_write_ha_state()
-                self._async_clear_event()
-                self.async_write_ha_state()
-            return
-        self._async_clear_event()
+            self._set_event_attrs(event)
+            if not is_end:
+                return
+            # If the event is so short that the detection is received
+            # in the same message as the end of the event we need to write
+            # state and than clear the event and write state again.
+            self.async_write_ha_state()
+            self._set_off()
+            self.async_write_ha_state()
+        else:
+            self._set_off()
 
 
 MODEL_DESCRIPTIONS_WITH_CLASS = (

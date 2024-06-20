@@ -752,17 +752,25 @@ class ProtectLicensePlateEventSensor(ProtectEventSensor):
     device: Camera
 
     @callback
-    def _async_clear_event(self) -> None:
-        """Clear the event."""
+    def _set_none(self) -> None:
         self._attr_native_value = OBJECT_TYPE_NONE
-        super()._async_clear_event()
+        self._attr_extra_state_attributes = {}
 
     @callback
     def _async_update(self, device: ProtectModelWithId, msg: WSMsg | None) -> None:
+        previous_event = self._event
         super()._async_update(device, msg)
-        description = self.entity_description
-        event = self._event
+        event = self._event = self.entity_description.get_event_obj(device)
+        if (
+            event
+            and previous_event
+            and previous_event.id == event.id
+            and previous_event.end
+        ):
+            # Event already ended
+            return
 
+        description = self.entity_description
         _LOGGER.info(
             "Updating license plate sensor %s - is_end: %s - is_matching_event: %s metadata: %s msg: %s plate: %s",
             self.entity_id,
@@ -774,22 +782,22 @@ class ProtectLicensePlateEventSensor(ProtectEventSensor):
         )
 
         if (
-            (event := self._event)
-            and description.smart_event_is_detected(event)
+            event
+            and self.entity_description.smart_event_is_detected(event)
             and ((is_end := self._end_of_current_event(msg)) or not event.end)
             and (is_end or self.device.is_smart_detected)
             and (metadata := event.metadata)
             and (license_plate := metadata.license_plate)
         ):
             self._attr_native_value = license_plate.name
-            if is_end:
-                _LOGGER.warning("WRITE STATE FOR END EVENT: %s", event)
-                # If the event has ended we need to always
-                # write state since the license plate may have changed
-                # since the protect model might initially detect a plate
-                # as something like A00045 and then later update to AO0045
-                self.async_write_ha_state()
-                self._async_clear_event()
-                self.async_write_ha_state()
-            return
-        self._async_clear_event()
+            self._set_event_attrs(event)
+            if not is_end:
+                return
+            # If the event is so short that the detection is received
+            # in the same message as the end of the event we need to write
+            # state and than clear the event and write state again.
+            self.async_write_ha_state()
+            self._set_none()
+            self.async_write_ha_state()
+        else:
+            self._set_none()
