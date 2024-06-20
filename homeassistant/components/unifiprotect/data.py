@@ -49,7 +49,6 @@ from .utils import async_get_devices_by_type
 _LOGGER = logging.getLogger(__name__)
 type ProtectDeviceType = ProtectAdoptableDeviceModel | NVR
 type UFPConfigEntry = ConfigEntry[ProtectData]
-type ProtectSubscriptionType = Callable[[ProtectDeviceType], None]
 
 
 @callback
@@ -80,9 +79,9 @@ class ProtectData:
         self._entry = entry
         self._hass = hass
         self._update_interval = update_interval
-        self._subscriptions: defaultdict[str, set[ProtectSubscriptionType]] = (
-            defaultdict(set)
-        )
+        self._subscriptions: defaultdict[
+            str, set[Callable[[ProtectDeviceType], None]]
+        ] = defaultdict(set)
         self._pending_camera_ids: set[str] = set()
         self._unsub_interval: CALLBACK_TYPE | None = None
         self._unsub_websocket: CALLBACK_TYPE | None = None
@@ -307,7 +306,7 @@ class ProtectData:
 
     @callback
     def async_subscribe(
-        self, mac: str, update_callback: ProtectSubscriptionType
+        self, mac: str, update_callback: Callable[[ProtectDeviceType], None]
     ) -> CALLBACK_TYPE:
         """Add an callback subscriber."""
         if not self._subscriptions:
@@ -319,7 +318,7 @@ class ProtectData:
 
     @callback
     def _async_unsubscribe(
-        self, mac: str, update_callback: ProtectSubscriptionType
+        self, mac: str, update_callback: Callable[[ProtectDeviceType], None]
     ) -> None:
         """Remove a callback subscriber."""
         self._subscriptions[mac].remove(update_callback)
