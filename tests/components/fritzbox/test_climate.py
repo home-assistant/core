@@ -70,8 +70,8 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     assert state.attributes[ATTR_PRESET_MODE] is None
     assert state.attributes[ATTR_PRESET_MODES] == [PRESET_ECO, PRESET_COMFORT]
     assert state.attributes[ATTR_STATE_BATTERY_LOW] is True
-    assert not state.attributes[ATTR_STATE_HOLIDAY_MODE]
-    assert not state.attributes[ATTR_STATE_SUMMER_MODE]
+    assert state.attributes[ATTR_STATE_HOLIDAY_MODE] is False
+    assert state.attributes[ATTR_STATE_SUMMER_MODE] is False
     assert state.attributes[ATTR_STATE_WINDOW_OPEN] == "fake_window"
     assert state.attributes[ATTR_TEMPERATURE] == 19.5
     assert ATTR_STATE_CLASS not in state.attributes
@@ -460,8 +460,8 @@ async def test_holidy_summer_mode(
     # initial state
     state = hass.states.get(ENTITY_ID)
     assert state
-    assert not state.attributes[ATTR_STATE_HOLIDAY_MODE]
-    assert not state.attributes[ATTR_STATE_SUMMER_MODE]
+    assert state.attributes[ATTR_STATE_HOLIDAY_MODE] is False
+    assert state.attributes[ATTR_STATE_SUMMER_MODE] is False
     assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.HEAT, HVACMode.OFF]
     assert state.attributes[ATTR_PRESET_MODE] is None
     assert state.attributes[ATTR_PRESET_MODES] == [PRESET_ECO, PRESET_COMFORT]
@@ -476,7 +476,7 @@ async def test_holidy_summer_mode(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.attributes[ATTR_STATE_HOLIDAY_MODE]
-    assert not state.attributes[ATTR_STATE_SUMMER_MODE]
+    assert state.attributes[ATTR_STATE_SUMMER_MODE] is False
     assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.HEAT]
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_HOLIDAY
     assert state.attributes[ATTR_PRESET_MODES] == [PRESET_HOLIDAY]
@@ -490,7 +490,7 @@ async def test_holidy_summer_mode(
 
     state = hass.states.get(ENTITY_ID)
     assert state
-    assert not state.attributes[ATTR_STATE_HOLIDAY_MODE]
+    assert state.attributes[ATTR_STATE_HOLIDAY_MODE] is False
     assert state.attributes[ATTR_STATE_SUMMER_MODE]
     assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.OFF]
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_SUMMER
@@ -505,8 +505,8 @@ async def test_holidy_summer_mode(
 
     state = hass.states.get(ENTITY_ID)
     assert state
-    assert not state.attributes[ATTR_STATE_HOLIDAY_MODE]
-    assert not state.attributes[ATTR_STATE_SUMMER_MODE]
+    assert state.attributes[ATTR_STATE_HOLIDAY_MODE] is False
+    assert state.attributes[ATTR_STATE_SUMMER_MODE] is False
     assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.HEAT, HVACMode.OFF]
     assert state.attributes[ATTR_PRESET_MODE] is None
     assert state.attributes[ATTR_PRESET_MODES] == [PRESET_ECO, PRESET_COMFORT]
