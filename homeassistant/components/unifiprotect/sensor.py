@@ -776,10 +776,11 @@ class ProtectLicensePlateEventSensor(ProtectEventSensor):
             self._set_none()
             return
 
+        previous_plate = self._attr_native_value
         self._attr_native_value = license_plate.name
         self._set_event_attrs(event)
 
-        if not is_end:
+        if not is_end or previous_plate == license_plate.name:
             return
 
         # If the event is so short that the detection is received

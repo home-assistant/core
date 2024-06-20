@@ -752,10 +752,11 @@ class ProtectSmartEventBinarySensor(EventEntityMixin, BinarySensorEntity):
             self._set_off()
             return
 
+        was_on = self._attr_is_on
         self._attr_is_on = True
         self._set_event_attrs(event)
 
-        if not is_end:
+        if not is_end or was_on:
             return
 
         # If the event is so short that the detection is received
