@@ -29,9 +29,10 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-            session = async_get_clientsession(self.hass)
             client = MealieClient(
-                user_input[CONF_HOST], token=user_input[CONF_API_TOKEN], session=session
+                user_input[CONF_HOST],
+                token=user_input[CONF_API_TOKEN],
+                session=async_get_clientsession(self.hass),
             )
             try:
                 await client.get_mealplan_today()

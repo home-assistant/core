@@ -28,13 +28,11 @@ async def async_setup_entry(
     )
 
 
-def get_event_from_mealplan(mealplan: Mealplan) -> CalendarEvent:
+def _get_event_from_mealplan(mealplan: Mealplan) -> CalendarEvent:
     """Create a CalendarEvent from a Mealplan."""
-    description: str | None
-    if mealplan.recipe is None:
-        name = "No recipe"
-        description = None
-    else:
+    description: str | None = None
+    name = "No recipe"
+    if mealplan.recipe:
         name = mealplan.recipe.name
         description = mealplan.recipe.description
     return CalendarEvent(
@@ -65,7 +63,7 @@ class MealieMealplanCalendarEntity(MealieEntity, CalendarEntity):
         mealplans = self.coordinator.data[self._entry_type]
         if not mealplans:
             return None
-        return get_event_from_mealplan(mealplans[0])
+        return _get_event_from_mealplan(mealplans[0])
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
@@ -77,7 +75,7 @@ class MealieMealplanCalendarEntity(MealieEntity, CalendarEntity):
             )
         ).items
         return [
-            get_event_from_mealplan(mealplan)
+            _get_event_from_mealplan(mealplan)
             for mealplan in mealplans
             if mealplan.entry_type is self._entry_type
         ]
