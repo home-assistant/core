@@ -11,7 +11,6 @@ from switchbot import (
     SwitchbotApiError,
     SwitchbotAuthenticationError,
     SwitchbotLock,
-    SwitchbotModel,
     parse_advertisement_data,
 )
 import voluptuous as vol
@@ -44,6 +43,7 @@ from .const import (
     DEFAULT_RETRY_COUNT,
     DOMAIN,
     NON_CONNECTABLE_SUPPORTED_MODEL_TYPES,
+    SUPPORTED_LOCK_TYPES,
     SUPPORTED_MODEL_TYPES,
 )
 
@@ -109,7 +109,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             "name": data["modelFriendlyName"],
             "address": short_address(discovery_info.address),
         }
-        if model_name in {SwitchbotModel.LOCK, SwitchbotModel.LOCK_PRO}:
+        if model_name in SUPPORTED_LOCK_TYPES:
             return await self.async_step_lock_choose_method()
         if self._discovered_adv.data["isEncrypted"]:
             return await self.async_step_password()
@@ -306,10 +306,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             device_adv = self._discovered_advs[user_input[CONF_ADDRESS]]
             await self._async_set_device(device_adv)
-            if device_adv.data.get("modelName") in {
-                SwitchbotModel.LOCK,
-                SwitchbotModel.LOCK_PRO,
-            }:
+            if device_adv.data.get("modelName") in SUPPORTED_LOCK_TYPES:
                 return await self.async_step_lock_choose_method()
             if device_adv.data["isEncrypted"]:
                 return await self.async_step_password()
@@ -321,7 +318,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             # or simply confirm it
             device_adv = list(self._discovered_advs.values())[0]
             await self._async_set_device(device_adv)
-            if device_adv.data.get("modelName") == SwitchbotModel.LOCK:
+            if device_adv.data.get("modelName") in SUPPORTED_LOCK_TYPES:
                 return await self.async_step_lock_choose_method()
             if device_adv.data["isEncrypted"]:
                 return await self.async_step_password()
