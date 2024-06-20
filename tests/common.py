@@ -783,7 +783,8 @@ class MockModule:
 
     def __init__(
         self,
-        domain=None,
+        domain: str,
+        *,
         dependencies=None,
         setup=None,
         requirements=None,
@@ -797,7 +798,7 @@ class MockModule:
         async_remove_entry=None,
         partial_manifest=None,
         async_remove_config_entry_device=None,
-    ):
+    ) -> None:
         """Initialize the mock module."""
         self.__name__ = f"homeassistant.components.{domain}"
         self.__file__ = f"homeassistant/components/{domain}"
