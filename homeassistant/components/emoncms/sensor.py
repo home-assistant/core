@@ -105,8 +105,7 @@ async def async_setup_platform(
             update_interval=scan_interval,
         )
     )
-    await coordinator.async_config_entry_first_refresh()
-    elems = coordinator.data
+    elems = await emoncms_client.async_list_feeds()
     if elems is None:
         return
 
@@ -136,6 +135,7 @@ async def async_setup_platform(
                 value_template,
                 unit_of_measurement,
                 str(sensorid),
+                elem,
                 idx,
             )
         )
@@ -155,14 +155,12 @@ class EmonCmsSensor(
         value_template: template.Template | None,
         unit_of_measurement: str | None,
         sensorid: str,
+        elem: dict[str, Any],
         idx: int,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.idx = idx
-        elem = {}
-        if self.coordinator.data:
-            elem = self.coordinator.data[self.idx]
         if name is None:
             # Suppress ID in sensor name if it's 1, since most people won't
             # have more than one EmonCMS source and it's redundant to show the
