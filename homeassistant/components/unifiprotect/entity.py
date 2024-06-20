@@ -332,3 +332,17 @@ class EventEntityMixin(ProtectDeviceEntity):
             }
         self._event = event
         super()._async_update(device, msg)
+
+    def _process_end_event(self, had_previous_event: bool) -> None:
+        """Process the end of an event."""
+        if had_previous_event:
+            # If the event was already registered and we are at the
+            # end of the event no need to write state again.
+            self._async_clear_event()
+            return
+        # If the event is so short that the detection is received
+        # in the same message as the end of the event we need to write
+        # state twice to ensure the detection is still registered.
+        self.async_write_ha_state()
+        self._async_clear_event()
+        self.async_write_ha_state()

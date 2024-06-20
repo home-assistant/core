@@ -735,32 +735,17 @@ class ProtectSmartEventBinarySensor(EventEntityMixin, BinarySensorEntity):
     ) -> None:
         had_previous_event = self._event is not None
         super()._async_update(device, msg)
-        device = self.device
         if (
             (event := self._event)
-            and device.is_smart_detected
+            and self.device.is_smart_detected
             and (
                 (is_end_of_event := websocket_message_is_end_of_event(msg))
                 or not event.end
             )
         ):
-            if is_end_of_event:
-                if had_previous_event:
-                    # If the event was already registered and we are at the
-                    # end of the event no need to write state again.
-                    self._async_clear_event()
-                    return
-
-                # If the event is so short that the detection is received
-                # in the same message as the end of the event we need to write
-                # state twice to ensure the detection is still registered.
-                self._attr_is_on = True
-                self.async_write_ha_state()
-
-                self._async_clear_event()
-                self.async_write_ha_state()
-
             self._attr_is_on = True
+            if is_end_of_event:
+                self._process_end_event(had_previous_event)
             return
         self._async_clear_event()
 
