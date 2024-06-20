@@ -8,6 +8,7 @@ import dataclasses
 from uiprotect.data import (
     NVR,
     Camera,
+    Event,
     Light,
     ModelType,
     MountType,
@@ -37,7 +38,6 @@ from .entity import (
     async_all_device_entities,
 )
 from .models import PermRequired, ProtectEntityDescription, ProtectEventMixin
-from .utils import websocket_message_is_end_of_event
 
 _KEY_DOOR = "door"
 
@@ -747,7 +747,14 @@ class ProtectSmartEventBinarySensor(EventEntityMixin, BinarySensorEntity):
                 or obj_type in event.smart_detect_types
             )
             and (
-                (is_end_of_event := websocket_message_is_end_of_event(msg))
+                (
+                    is_end_of_event := (
+                        msg
+                        and (new_obj := msg.new_obj)
+                        and isinstance(new_obj, Event)
+                        and new_obj.end
+                    )
+                )
                 or not event.end
             )
         ):

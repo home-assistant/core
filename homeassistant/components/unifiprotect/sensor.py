@@ -12,6 +12,7 @@ from typing import Any
 from uiprotect.data import (
     NVR,
     Camera,
+    Event,
     Light,
     ModelType,
     ProtectAdoptableDeviceModel,
@@ -51,7 +52,7 @@ from .entity import (
     async_all_device_entities,
 )
 from .models import PermRequired, ProtectEntityDescription, ProtectEventMixin, T
-from .utils import async_get_light_motion_current, websocket_message_is_end_of_event
+from .utils import async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
@@ -771,7 +772,14 @@ class ProtectLicensePlateEventSensor(ProtectEventSensor):
             and (metadata := event.metadata)
             and (license_plate := metadata.license_plate)
             and (
-                (is_end_of_event := websocket_message_is_end_of_event(msg))
+                (
+                    is_end_of_event := (
+                        msg
+                        and (new_obj := msg.new_obj)
+                        and isinstance(new_obj, Event)
+                        and new_obj.end
+                    )
+                )
                 or not event.end
             )
         ):

@@ -15,12 +15,10 @@ from uiprotect import ProtectApiClient
 from uiprotect.data import (
     Bootstrap,
     CameraChannel,
-    Event,
     Light,
     LightModeEnableType,
     LightModeType,
     ProtectAdoptableDeviceModel,
-    WSSubscriptionMessage,
 )
 
 from homeassistant.const import (
@@ -154,10 +152,3 @@ def get_camera_base_name(channel: CameraChannel) -> str:
         camera_name = f"{channel.name} resolution channel"
 
     return camera_name
-
-
-def websocket_message_is_end_of_event(msg: WSSubscriptionMessage | None) -> bool:
-    """Determine if the websocket message is the end of an event."""
-    return bool(
-        msg and (new_obj := msg.new_obj) and isinstance(new_obj, Event) and new_obj.end
-    )
