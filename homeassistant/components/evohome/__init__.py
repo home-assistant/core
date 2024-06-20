@@ -265,7 +265,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # without a listener, _schedule_refresh() won't be invoked by _async_refresh()
     coordinator.async_add_listener(lambda: None)
-    await coordinator.async_config_entry_first_refresh()  # get initial state
+    await coordinator.async_refresh()  # get initial state
 
     hass.async_create_task(
         async_load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)
