@@ -374,7 +374,7 @@ class EnumSensor(Sensor):
     ) -> None:
         """Init this sensor."""
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
-        self._attr_options = [e.name for e in self._enum]
+        self._attr_options = [e.name.lower() for e in self._enum]
 
     def _init_from_quirks_metadata(self, entity_metadata: ZCLEnumMetadata) -> None:
         """Init this entity from the quirks metadata."""

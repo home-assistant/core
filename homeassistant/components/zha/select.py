@@ -119,10 +119,11 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
     def async_restore_last_state(self, last_state) -> None:
         """Restore previous state."""
         if last_state.state and last_state.state != STATE_UNKNOWN:
-            self._cluster_handler.data_cache[self._attribute_name] = self._enum[
-                last_state.state.replace(" ", "_")
-                # after 6months, change to: self._translation_keys[last_state.state]
-            ]
+            try:
+                key = self._translation_keys[last_state.state]
+            except KeyError:  # workaround for existing installations updating
+                key = last_state.state.replace(" ", "_")
+            self._cluster_handler.data_cache[self._attribute_name] = self._enum[key]
 
 
 class ZHANonZCLSelectEntity(ZHAEnumSelectEntity):
