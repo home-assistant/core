@@ -78,6 +78,20 @@
         }
       }
     },
+    "number": {
+      "on_level": {
+        "name": "On level"
+      },
+      "on_transition_time": {
+        "name": "On transition time"
+      },
+      "off_transition_time": {
+        "name": "Off transition time"
+      },
+      "on_off_transition_time": {
+        "name": "On Off transition time"
+      }
+    },
     "sensor": {
       "activated_carbon_filter_condition": {
         "name": "Activated carbon filter condition"

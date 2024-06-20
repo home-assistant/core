@@ -74,9 +74,9 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
-            key="OnLevel",
+            key="on_level",
             entity_category=EntityCategory.CONFIG,
-            name="OnLevel",
+            translation_key="on_level",
             native_max_value=100,
             native_min_value=1,
             mode=NumberMode.BOX,
@@ -91,9 +91,9 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
-            key="OnTransitionTime",
+            key="on_transition_time",
             entity_category=EntityCategory.CONFIG,
-            name="OnTransitionTime",
+            translation_key="on_transition_time",
             native_max_value=65534,
             native_min_value=0,
             measurement_to_ha=lambda x: x / 10,
@@ -108,9 +108,9 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
-            key="OffTransitionTime",
+            key="off_transition_time",
             entity_category=EntityCategory.CONFIG,
-            name="OffTransitionTime",
+            translation_key="off_transition_time",
             native_max_value=65534,
             native_min_value=0,
             measurement_to_ha=lambda x: x / 10,
@@ -125,9 +125,9 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
-            key="OnOffTransitionTime",
+            key="on_off_transition_time",
             entity_category=EntityCategory.CONFIG,
-            name="OnOffTransitionTime",
+            translation_key="on_off_transition_time",
             native_max_value=65534,
             native_min_value=0,
             measurement_to_ha=lambda x: x / 10,
