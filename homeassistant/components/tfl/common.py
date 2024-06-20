@@ -19,7 +19,6 @@ async def call_tfl_api[*_Ts, _T](
         error_code = exception.code
         if error_code in (429, 401, 403):
             raise InvalidAuth from exception
-
         raise
     except URLError as exception:
         raise CannotConnect from exception
