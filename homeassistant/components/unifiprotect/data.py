@@ -19,7 +19,7 @@ from uiprotect.data import (
     EventType,
     ModelType,
     ProtectAdoptableDeviceModel,
-    WSSubscriptionMessage as WSMsg,
+    WSSubscriptionMessage,
 )
 from uiprotect.exceptions import ClientError, NotAuthorized
 from uiprotect.utils import log_event
@@ -232,11 +232,11 @@ class ProtectData:
                     self._async_signal_device_update(camera)
 
     @callback
-    def _async_process_ws_message(self, msg: WSMsg) -> None:
+    def _async_process_ws_message(self, message: WSSubscriptionMessage) -> None:
         """Process a message from the websocket."""
-        if (new_obj := msg.new_obj) is None:
-            if isinstance(msg.old_obj, ProtectAdoptableDeviceModel):
-                self._async_remove_device(msg.old_obj)
+        if (new_obj := message.new_obj) is None:
+            if isinstance(message.old_obj, ProtectAdoptableDeviceModel):
+                self._async_remove_device(message.old_obj)
             return
 
         model_type = new_obj.model
@@ -268,14 +268,14 @@ class ProtectData:
             )
             return
 
-        if msg.old_obj is None and isinstance(new_obj, ProtectAdoptableDeviceModel):
+        if message.old_obj is None and isinstance(new_obj, ProtectAdoptableDeviceModel):
             self._async_add_device(new_obj)
             return
 
         if getattr(new_obj, "is_adopted_by_us", True) and hasattr(new_obj, "mac"):
             if TYPE_CHECKING:
                 assert isinstance(new_obj, (ProtectAdoptableDeviceModel, NVR))
-            self._async_update_device(new_obj, msg.changed_data)
+            self._async_update_device(new_obj, message.changed_data)
 
     @callback
     def _async_process_updates(self, updates: Bootstrap | None) -> None:
