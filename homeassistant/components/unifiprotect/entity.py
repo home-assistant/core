@@ -310,6 +310,19 @@ class EventEntityMixin(ProtectDeviceEntity):
     _event: Event | None = None
 
     @callback
+    def _wsmsg_is_end(self, msg: WSMsg | None) -> bool:
+        """Determine if the websocket message is the end of an event."""
+        if (
+            not msg
+            or (new_obj := msg.new_obj) is None
+            or new_obj.model is not ModelType.EVENT
+        ):
+            return False
+        if TYPE_CHECKING:
+            assert isinstance(new_obj, Event)
+        return bool(new_obj.end)
+
+    @callback
     def _async_clear_event(self) -> None:
         """Clear the event."""
         self._event = None
@@ -327,8 +340,10 @@ class EventEntityMixin(ProtectDeviceEntity):
         self._event = event
         super()._async_update(device, msg)
 
-    def _process_end_event(self, had_previous_event: bool) -> None:
+    def _process_event(self, is_end: bool, had_previous_event: bool) -> None:
         """Process the end of an event."""
+        if not is_end:
+            return
         if had_previous_event:
             # If the event was already registered and we are at the
             # end of the event no need to write state again.
