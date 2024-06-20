@@ -355,7 +355,6 @@ class AppleTvMediaPlayer(
         if (
             self.atv
             and self._playing
-            and self._is_feature_available(FeatureName.Artwork)
             and state not in {None, MediaPlayerState.OFF, MediaPlayerState.IDLE}
         ):
             return self.atv.metadata.artwork_id
