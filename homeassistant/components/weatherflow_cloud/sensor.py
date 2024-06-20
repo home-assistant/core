@@ -183,7 +183,6 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
 )
 
 
-#
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
