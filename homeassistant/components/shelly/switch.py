@@ -9,7 +9,7 @@ from aioshelly.block_device import Block
 from aioshelly.const import MODEL_2, MODEL_25, MODEL_WALL_DISPLAY, RPC_GENERATIONS
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.const import STATE_ON, EntityCategory
+from homeassistant.const import STATE_ON, EntityCategory, Platform
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
@@ -28,6 +28,7 @@ from .utils import (
     async_remove_shelly_entity,
     get_device_entry_gen,
     get_rpc_key_ids,
+    get_virtual_component_key_ids,
     is_block_channel_type_light,
     is_rpc_channel_type_light,
     is_rpc_thermostat_internal_actuator,
@@ -122,6 +123,7 @@ def async_setup_rpc_entry(
     coordinator = config_entry.runtime_data.rpc
     assert coordinator
     switch_key_ids = get_rpc_key_ids(coordinator.device.status, "switch")
+    switches: list[ShellyRpcEntity] = []
 
     switch_ids = []
     for id_ in switch_key_ids:
@@ -148,18 +150,19 @@ def async_setup_rpc_entry(
         unique_id = f"{coordinator.mac}-switch:{id_}"
         async_remove_shelly_entity(hass, "light", unique_id)
 
-    virtual_switches = (
-        component["key"].split(":")[-1]
-        for component in coordinator.device.dynamic_components
-        if "boolean" in component["key"]
-        and component["config"]["meta"]["ui"]["view"] == "toggle"
-    )
-    async_add_entities(RpcVirtualSwitch(coordinator, id_) for id_ in virtual_switches)
+    switches.extend(RpcRelaySwitch(coordinator, id_) for id_ in switch_ids)
 
-    if not switch_ids:
+    virtual_switch_key_ids = get_virtual_component_key_ids(
+        coordinator.device.dynamic_components, Platform.SWITCH
+    )
+    switches.extend(
+        RpcVirtualSwitch(coordinator, id_) for id_ in virtual_switch_key_ids
+    )
+
+    if not switches:
         return
 
-    async_add_entities(RpcRelaySwitch(coordinator, id_) for id_ in switch_ids)
+    async_add_entities(switches)
 
 
 class BlockSleepingMotionSwitch(

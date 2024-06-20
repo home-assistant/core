@@ -26,7 +26,7 @@ from aioshelly.rpc_device import RpcDevice, WsServer
 from homeassistant.components import network
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     device_registry as dr,
@@ -497,3 +497,18 @@ def async_remove_shelly_rpc_entities(
 def is_rpc_thermostat_mode(ident: int, status: dict[str, Any]) -> bool:
     """Return True if 'thermostat:<IDent>' is present in the status."""
     return f"thermostat:{ident}" in status
+
+
+def get_virtual_component_key_ids(
+    components: list[dict[str, Any]], platform: Platform
+) -> list[int]:
+    """Return a list of virtual component key IDs for a platform."""
+    if platform is Platform.SWITCH:
+        return [
+            int(component["key"].split(":")[-1])
+            for component in components
+            if "boolean" in component["key"]
+            and component["config"]["meta"]["ui"]["view"] == "toggle"
+        ]
+
+    return []
