@@ -676,7 +676,7 @@ async def test_quirks_v2_entity_discovery_e1_curtain(
     assert power_source_entity_id is not None
     state = hass.states.get(power_source_entity_id)
     assert state is not None
-    assert state.state == BasicCluster.PowerSource.Mains_single_phase.name
+    assert state.state == BasicCluster.PowerSource.Mains_single_phase.name.lower()
 
     hook_state_entity_id = find_entity_id(
         Platform.SENSOR,
