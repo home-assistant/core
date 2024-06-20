@@ -745,9 +745,7 @@ class ProtectSmartEventBinarySensor(EventEntityMixin, BinarySensorEntity):
         if not (
             event
             and self.entity_description.has_matching_smart(event)
-            and (
-                ((is_end := event.end) and prev_event) or self.device.is_smart_detected
-            )
+            and ((is_end := event.end) or self.device.is_smart_detected)
         ):
             self._set_off()
             return

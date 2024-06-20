@@ -767,9 +767,7 @@ class ProtectLicensePlateEventSensor(ProtectEventSensor):
         if not (
             event
             and self.entity_description.has_matching_smart(event)
-            and (
-                ((is_end := event.end) and prev_event) or self.device.is_smart_detected
-            )
+            and ((is_end := event.end) or self.device.is_smart_detected)
             and (metadata := event.metadata)
             and (license_plate := metadata.license_plate)
         ):
