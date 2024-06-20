@@ -99,7 +99,8 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
                 new_device_info.pop("connections", None)
 
                 device_registry.async_update_device(
-                    device_id=device.id, **new_device_info
+                    device_id=device.id,
+                    **new_device_info,  # type: ignore[misc]
                 )
 
     async def start_listen(self):

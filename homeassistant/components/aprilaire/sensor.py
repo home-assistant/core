@@ -23,7 +23,7 @@ from .const import DOMAIN
 from .coordinator import AprilaireCoordinator
 from .entity import BaseAprilaireEntity
 
-DEHUMIDIFICATION_STATUS_MAP: dict[StateType, str] = {
+DEHUMIDIFICATION_STATUS_MAP: dict[StateType, StateType] = {
     0: "idle",
     1: "idle",
     2: "on",
@@ -31,14 +31,14 @@ DEHUMIDIFICATION_STATUS_MAP: dict[StateType, str] = {
     4: "off",
 }
 
-HUMIDIFICATION_STATUS_MAP: dict[StateType, str] = {
+HUMIDIFICATION_STATUS_MAP: dict[StateType, StateType] = {
     0: "idle",
     1: "idle",
     2: "on",
     3: "off",
 }
 
-VENTILATION_STATUS_MAP: dict[StateType, str] = {
+VENTILATION_STATUS_MAP: dict[StateType, StateType] = {
     0: "idle",
     1: "idle",
     2: "on",
@@ -48,14 +48,14 @@ VENTILATION_STATUS_MAP: dict[StateType, str] = {
     6: "off",
 }
 
-AIR_CLEANING_STATUS_MAP: dict[StateType, str] = {
+AIR_CLEANING_STATUS_MAP: dict[StateType, StateType] = {
     0: "idle",
     1: "idle",
     2: "on",
     3: "off",
 }
 
-FAN_STATUS_MAP: dict[StateType, str] = {0: "off", 1: "on"}
+FAN_STATUS_MAP: dict[StateType, StateType] = {0: "off", 1: "on"}
 
 
 def get_entities(
@@ -118,7 +118,7 @@ class AprilaireSensorDescription(SensorEntityDescription):
 class AprilaireStatusSensorDescription(AprilaireSensorDescription):
     """Class describing Aprilaire status sensor entities."""
 
-    status_map: dict[StateType, str]
+    status_map: dict[StateType, StateType]
 
 
 HUMIDITY_SENSORS: tuple[AprilaireSensorDescription, ...] = (
