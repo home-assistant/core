@@ -757,10 +757,10 @@ class ProtectLicensePlateEventSensor(ProtectEventSensor):
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        previous_event = self._event
+        prev_event = self._event
         super()._async_update_device_from_protect(device)
         event = self._event = self.entity_description.get_event_obj(device)
-        if event and previous_event and previous_event.id == event.id and event.end:
+        if event and event.end and (not prev_event or prev_event.id == event.id):
             # Event already ended
             return
 
