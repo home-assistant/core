@@ -132,7 +132,6 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "hass_ws_client": "WebSocketGenerator",
     "init_tts_cache_dir_side_effect": "Any",
     "issue_registry": "IssueRegistry",
-    "legacy_auth": "LegacyApiPasswordAuthProvider",
     "local_auth": "HassAuthProvider",
     "mock_async_zeroconf": "MagicMock",
     "mock_bleak_scanner_start": "MagicMock",
@@ -154,6 +153,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "recorder_mock": "Recorder",
     "request": "pytest.FixtureRequest",
     "requests_mock": "Mocker",
+    "service_calls": "list[ServiceCall]",
     "snapshot": "SnapshotAssertion",
     "socket_enabled": "None",
     "stub_blueprint_populate": "None",
@@ -3117,7 +3117,7 @@ class HassTypeHintChecker(BaseChecker):
             "Used when method return type is incorrect",
         ),
         "W7433": (
-            "Argument %s is of type %s and could be move to "
+            "Argument %s is of type %s and could be moved to "
             "`@pytest.mark.usefixtures` decorator in %s",
             "hass-consider-usefixtures-decorator",
             "Used when an argument type is None and could be a fixture",

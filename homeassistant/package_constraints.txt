@@ -7,7 +7,7 @@ aiohttp-fast-url-dispatcher==0.3.0
 aiohttp-fast-zlib==0.1.0
 aiohttp==3.9.5
 aiohttp_cors==0.7.0
-aiozoneinfo==0.1.0
+aiozoneinfo==0.2.0
 astral==2.2
 async-interrupt==1.1.1
 async-upnp-client==0.38.3
@@ -31,8 +31,8 @@ ha-ffmpeg==3.2.0
 habluetooth==3.1.1
 hass-nabucasa==0.81.1
 hassil==1.7.1
-home-assistant-bluetooth==1.12.0
-home-assistant-frontend==20240605.0
+home-assistant-bluetooth==1.12.1
+home-assistant-frontend==20240610.1
 home-assistant-intents==2024.6.5
 httpx==0.27.0
 ifaddr==0.2.0
@@ -54,8 +54,8 @@ PyTurboJPEG==1.7.1
 pyudev==0.24.1
 PyYAML==6.0.1
 requests==2.32.3
-SQLAlchemy==2.0.30
-typing-extensions>=4.12.1,<5.0
+SQLAlchemy==2.0.31
+typing-extensions>=4.12.2,<5.0
 ulid-transform==0.9.0
 urllib3>=1.26.5,<2
 voluptuous-serialize==2.6.0
@@ -197,3 +197,6 @@ scapy>=2.5.0
 # Only tuf>=4 includes a constraint to <1.0.
 # https://github.com/theupdateframework/python-tuf/releases/tag/v4.0.0
 tuf>=4.0.0
+
+# https://github.com/jd/tenacity/issues/471
+tenacity<8.4.0

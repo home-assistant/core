@@ -55,16 +55,6 @@
     }
   },
   "services": {
-    "blink_update": {
-      "name": "Update",
-      "description": "Forces a refresh.",
-      "fields": {
-        "device_id": {
-          "name": "Device ID",
-          "description": "The Blink device id."
-        }
-      }
-    },
     "record": {
       "name": "Record",
       "description": "Requests camera to record a clip."

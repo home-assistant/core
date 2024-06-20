@@ -6,18 +6,18 @@ from itertools import chain
 import logging
 from typing import TypedDict
 
-from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data import Bootstrap
+from uiprotect import ProtectApiClient
+from uiprotect.data import Bootstrap
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.issue_registry import IssueSeverity
 
 from .const import DOMAIN
+from .data import UFPConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class EntityUsage(TypedDict):
 
 @callback
 def check_if_used(
-    hass: HomeAssistant, entry: ConfigEntry, entities: dict[str, EntityRef]
+    hass: HomeAssistant, entry: UFPConfigEntry, entities: dict[str, EntityRef]
 ) -> dict[str, EntityUsage]:
     """Check for usages of entities and return them."""
 
@@ -67,7 +67,7 @@ def check_if_used(
 @callback
 def create_repair_if_used(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: UFPConfigEntry,
     breaks_in: str,
     entities: dict[str, EntityRef],
 ) -> None:
@@ -101,7 +101,7 @@ def create_repair_if_used(
 
 async def async_migrate_data(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: UFPConfigEntry,
     protect: ProtectApiClient,
     bootstrap: Bootstrap,
 ) -> None:
@@ -113,7 +113,7 @@ async def async_migrate_data(
 
 
 @callback
-def async_deprecate_hdr_package(hass: HomeAssistant, entry: ConfigEntry) -> None:
+def async_deprecate_hdr_package(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
     """Check for usages of hdr_mode switch and package sensor and raise repair if it is used.
 
     UniFi Protect v3.0.22 changed how HDR works so it is no longer a simple on/off toggle. There is

@@ -39,7 +39,7 @@ from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
 from homeassistant.config import async_process_component_config
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, _DataT
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -71,7 +71,6 @@ from homeassistant.helpers import (
     issue_registry as ir,
     label_registry as lr,
     recorder as recorder_helper,
-    restore_state,
     restore_state as rs,
     storage,
     translation,
@@ -100,7 +99,7 @@ import homeassistant.util.ulid as ulid_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.yaml.loader as yaml_loader
 
-from tests.testing_config.custom_components.test_constant_deprecation import (
+from .testing_config.custom_components.test_constant_deprecation import (
     import_deprecated_constant,
 )
 
@@ -196,9 +195,11 @@ def get_test_home_assistant() -> Generator[HomeAssistant]:
 
     threading.Thread(name="LoopThread", target=run_loop, daemon=False).start()
 
-    yield hass
-    loop.run_until_complete(context_manager.__aexit__(None, None, None))
-    loop.close()
+    try:
+        yield hass
+    finally:
+        loop.run_until_complete(context_manager.__aexit__(None, None, None))
+        loop.close()
 
 
 class StoreWithoutWriteLoad[_T: (Mapping[str, Any] | Sequence[Any])](storage.Store[_T]):
@@ -360,10 +361,11 @@ async def async_test_home_assistant(
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, clear_instance)
 
-    yield hass
-
-    # Restore timezone, it is set when creating the hass object
-    dt_util.set_default_time_zone(orig_tz)
+    try:
+        yield hass
+    finally:
+        # Restore timezone, it is set when creating the hass object
+        dt_util.set_default_time_zone(orig_tz)
 
 
 def async_mock_service(
@@ -414,10 +416,10 @@ def async_mock_intent(hass, intent_typ):
     class MockIntentHandler(intent.IntentHandler):
         intent_type = intent_typ
 
-        async def async_handle(self, intent):
+        async def async_handle(self, intent_obj):
             """Handle the intent."""
-            intents.append(intent)
-            return intent.create_response()
+            intents.append(intent_obj)
+            return intent_obj.create_response()
 
     intent.async_register(hass, MockIntentHandler())
 
@@ -556,7 +558,7 @@ def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.P
 @lru_cache
 def load_fixture(filename: str, integration: str | None = None) -> str:
     """Load a fixture."""
-    return get_fixture_path(filename, integration).read_text()
+    return get_fixture_path(filename, integration).read_text(encoding="utf8")
 
 
 def load_json_value_fixture(
@@ -601,7 +603,7 @@ def mock_state_change_event(
 def mock_component(hass: HomeAssistant, component: str) -> None:
     """Mock a component is setup."""
     if component in hass.config.components:
-        AssertionError(f"Integration {component} is already setup")
+        raise AssertionError(f"Integration {component} is already setup")
 
     hass.config.components.add(component)
 
@@ -691,19 +693,19 @@ def mock_device_registry(
 class MockGroup(auth_models.Group):
     """Mock a group in Home Assistant."""
 
-    def __init__(self, id=None, name="Mock Group", policy=system_policies.ADMIN_POLICY):
+    def __init__(self, id: str | None = None, name: str | None = "Mock Group") -> None:
         """Mock a group."""
-        kwargs = {"name": name, "policy": policy}
+        kwargs = {"name": name, "policy": system_policies.ADMIN_POLICY}
         if id is not None:
             kwargs["id"] = id
 
         super().__init__(**kwargs)
 
-    def add_to_hass(self, hass):
+    def add_to_hass(self, hass: HomeAssistant) -> MockGroup:
         """Test helper to add entry to hass."""
         return self.add_to_auth_manager(hass.auth)
 
-    def add_to_auth_manager(self, auth_mgr):
+    def add_to_auth_manager(self, auth_mgr: auth.AuthManager) -> MockGroup:
         """Test helper to add entry to hass."""
         ensure_auth_manager_loaded(auth_mgr)
         auth_mgr._store._groups[self.id] = self
@@ -715,13 +717,13 @@ class MockUser(auth_models.User):
 
     def __init__(
         self,
-        id=None,
-        is_owner=False,
-        is_active=True,
-        name="Mock User",
-        system_generated=False,
-        groups=None,
-    ):
+        id: str | None = None,
+        is_owner: bool = False,
+        is_active: bool = True,
+        name: str | None = "Mock User",
+        system_generated: bool = False,
+        groups: list[auth_models.Group] | None = None,
+    ) -> None:
         """Initialize mock user."""
         kwargs = {
             "is_owner": is_owner,
@@ -735,17 +737,17 @@ class MockUser(auth_models.User):
             kwargs["id"] = id
         super().__init__(**kwargs)
 
-    def add_to_hass(self, hass):
+    def add_to_hass(self, hass: HomeAssistant) -> MockUser:
         """Test helper to add entry to hass."""
         return self.add_to_auth_manager(hass.auth)
 
-    def add_to_auth_manager(self, auth_mgr):
+    def add_to_auth_manager(self, auth_mgr: auth.AuthManager) -> MockUser:
         """Test helper to add entry to hass."""
         ensure_auth_manager_loaded(auth_mgr)
         auth_mgr._store._users[self.id] = self
         return self
 
-    def mock_policy(self, policy):
+    def mock_policy(self, policy: auth_permissions.PolicyType) -> None:
         """Mock a policy for a user."""
         self.permissions = auth_permissions.PolicyPermissions(policy, self.perm_lookup)
 
@@ -769,7 +771,7 @@ async def register_auth_provider(
 
 
 @callback
-def ensure_auth_manager_loaded(auth_mgr):
+def ensure_auth_manager_loaded(auth_mgr: auth.AuthManager) -> None:
     """Ensure an auth manager is considered loaded."""
     store = auth_mgr._store
     if store._users is None:
@@ -816,6 +818,7 @@ class MockModule:
 
         if setup:
             # We run this in executor, wrap it in function
+            # pylint: disable-next=unnecessary-lambda
             self.setup = lambda *args: setup(*args)
 
         if async_setup is not None:
@@ -873,6 +876,7 @@ class MockPlatform:
 
         if setup_platform is not None:
             # We run this in executor, wrap it in function
+            # pylint: disable-next=unnecessary-lambda
             self.setup_platform = lambda *args: setup_platform(*args)
 
         if async_setup_platform is not None:
@@ -897,7 +901,7 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
         platform=None,
         scan_interval=timedelta(seconds=15),
         entity_namespace=None,
-    ):
+    ) -> None:
         """Initialize a mock entity platform."""
         if logger is None:
             logger = logging.getLogger("homeassistant.helpers.entity_platform")
@@ -972,10 +976,8 @@ class MockToggleEntity(entity.ToggleEntity):
             return None
 
 
-class MockConfigEntry(config_entries.ConfigEntry[_DataT]):
+class MockConfigEntry(config_entries.ConfigEntry):
     """Helper for creating config entries that adds some defaults."""
-
-    runtime_data: _DataT
 
     def __init__(
         self,
@@ -1135,6 +1137,7 @@ def init_recorder_component(hass, add_config=None, db_url="sqlite://"):
     """Initialize the recorder."""
     # Local import to avoid processing recorder and SQLite modules when running a
     # testcase which does not use the recorder.
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.components import recorder
 
     config = dict(add_config) if add_config else {}
@@ -1156,8 +1159,8 @@ def init_recorder_component(hass, add_config=None, db_url="sqlite://"):
 
 def mock_restore_cache(hass: HomeAssistant, states: Sequence[State]) -> None:
     """Mock the DATA_RESTORE_CACHE."""
-    key = restore_state.DATA_RESTORE_STATE
-    data = restore_state.RestoreStateData(hass)
+    key = rs.DATA_RESTORE_STATE
+    data = rs.RestoreStateData(hass)
     now = dt_util.utcnow()
 
     last_states = {}
@@ -1169,14 +1172,14 @@ def mock_restore_cache(hass: HomeAssistant, states: Sequence[State]) -> None:
                 json.dumps(restored_state["attributes"], cls=JSONEncoder)
             ),
         }
-        last_states[state.entity_id] = restore_state.StoredState.from_dict(
+        last_states[state.entity_id] = rs.StoredState.from_dict(
             {"state": restored_state, "last_seen": now}
         )
     data.last_states = last_states
     _LOGGER.debug("Restore cache: %s", data.last_states)
     assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
 
-    restore_state.async_get.cache_clear()
+    rs.async_get.cache_clear()
     hass.data[key] = data
 
 
@@ -1184,8 +1187,8 @@ def mock_restore_cache_with_extra_data(
     hass: HomeAssistant, states: Sequence[tuple[State, Mapping[str, Any]]]
 ) -> None:
     """Mock the DATA_RESTORE_CACHE."""
-    key = restore_state.DATA_RESTORE_STATE
-    data = restore_state.RestoreStateData(hass)
+    key = rs.DATA_RESTORE_STATE
+    data = rs.RestoreStateData(hass)
     now = dt_util.utcnow()
 
     last_states = {}
@@ -1197,22 +1200,22 @@ def mock_restore_cache_with_extra_data(
                 json.dumps(restored_state["attributes"], cls=JSONEncoder)
             ),
         }
-        last_states[state.entity_id] = restore_state.StoredState.from_dict(
+        last_states[state.entity_id] = rs.StoredState.from_dict(
             {"state": restored_state, "extra_data": extra_data, "last_seen": now}
         )
     data.last_states = last_states
     _LOGGER.debug("Restore cache: %s", data.last_states)
     assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
 
-    restore_state.async_get.cache_clear()
+    rs.async_get.cache_clear()
     hass.data[key] = data
 
 
 async def async_mock_restore_state_shutdown_restart(
     hass: HomeAssistant,
-) -> restore_state.RestoreStateData:
+) -> rs.RestoreStateData:
     """Mock shutting down and saving restore state and restoring."""
-    data = restore_state.async_get(hass)
+    data = rs.async_get(hass)
     await data.async_dump_states()
     await async_mock_load_restore_state_from_storage(hass)
     return data
@@ -1225,7 +1228,7 @@ async def async_mock_load_restore_state_from_storage(
 
     hass_storage must already be mocked.
     """
-    await restore_state.async_get(hass).async_load()
+    await rs.async_get(hass).async_load()
 
 
 class MockEntity(entity.Entity):
@@ -1434,7 +1437,10 @@ def mock_config_flow(domain: str, config_flow: type[ConfigFlow]) -> None:
 
 
 def mock_integration(
-    hass: HomeAssistant, module: MockModule, built_in: bool = True
+    hass: HomeAssistant,
+    module: MockModule,
+    built_in: bool = True,
+    top_level_files: set[str] | None = None,
 ) -> loader.Integration:
     """Mock an integration."""
     integration = loader.Integration(
@@ -1444,7 +1450,7 @@ def mock_integration(
         else f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{module.DOMAIN}",
         pathlib.Path(""),
         module.mock_manifest(),
-        set(),
+        top_level_files,
     )
 
     def mock_import_platform(platform_name: str) -> NoReturn:
@@ -1573,6 +1579,7 @@ def async_get_persistent_notifications(
 
 def async_mock_cloud_connection_status(hass: HomeAssistant, connected: bool) -> None:
     """Mock a signal the cloud disconnected."""
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.components.cloud import (
         SIGNAL_CLOUD_CONNECTION_STATE,
         CloudConnectionState,
@@ -1681,7 +1688,7 @@ def import_and_test_deprecated_alias(
 def help_test_all(module: ModuleType) -> None:
     """Test module.__all__ is correctly set."""
     assert set(module.__all__) == {
-        itm for itm in module.__dir__() if not itm.startswith("_")
+        itm for itm in dir(module) if not itm.startswith("_")
     }
 
 

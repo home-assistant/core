@@ -88,6 +88,7 @@ build.json @home-assistant/supervisor
 /tests/components/alert/ @home-assistant/core @frenck
 /homeassistant/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
 /tests/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
+/homeassistant/components/amazon_polly/ @jschlyter
 /homeassistant/components/amberelectric/ @madpilot
 /tests/components/amberelectric/ @madpilot
 /homeassistant/components/ambient_network/ @thomaskistler
@@ -238,7 +239,6 @@ build.json @home-assistant/supervisor
 /tests/components/ccm15/ @ocalvo
 /homeassistant/components/cert_expiry/ @jjlawren
 /tests/components/cert_expiry/ @jjlawren
-/homeassistant/components/circuit/ @braam
 /homeassistant/components/cisco_ios/ @fbradyirl
 /homeassistant/components/cisco_mobility_express/ @fbradyirl
 /homeassistant/components/cisco_webex_teams/ @fbradyirl
@@ -909,8 +909,8 @@ build.json @home-assistant/supervisor
 /tests/components/myuplink/ @pajzo @astrandb
 /homeassistant/components/nam/ @bieniu
 /tests/components/nam/ @bieniu
-/homeassistant/components/nanoleaf/ @milanmeu
-/tests/components/nanoleaf/ @milanmeu
+/homeassistant/components/nanoleaf/ @milanmeu @joostlek
+/tests/components/nanoleaf/ @milanmeu @joostlek
 /homeassistant/components/neato/ @Santobert
 /tests/components/neato/ @Santobert
 /homeassistant/components/nederlandse_spoorwegen/ @YarmoM
@@ -1099,6 +1099,8 @@ build.json @home-assistant/supervisor
 /tests/components/pvoutput/ @frenck
 /homeassistant/components/pvpc_hourly_pricing/ @azogue
 /tests/components/pvpc_hourly_pricing/ @azogue
+/homeassistant/components/pyload/ @tr4nt0r
+/tests/components/pyload/ @tr4nt0r
 /homeassistant/components/qbittorrent/ @geoffreylagaisse @finder39
 /tests/components/qbittorrent/ @geoffreylagaisse @finder39
 /homeassistant/components/qingping/ @bdraco
@@ -1302,8 +1304,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/solaredge/ @frenck @bdraco
 /tests/components/solaredge/ @frenck @bdraco
 /homeassistant/components/solaredge_local/ @drobtravels @scheric
-/homeassistant/components/solarlog/ @Ernst79
-/tests/components/solarlog/ @Ernst79
+/homeassistant/components/solarlog/ @Ernst79 @dontinelli
+/tests/components/solarlog/ @Ernst79 @dontinelli
 /homeassistant/components/solax/ @squishykid
 /tests/components/solax/ @squishykid
 /homeassistant/components/soma/ @ratsept @sebfortier2288

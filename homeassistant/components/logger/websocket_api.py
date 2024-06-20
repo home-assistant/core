@@ -65,7 +65,7 @@ async def handle_integration_log_level(
         await async_get_integration(hass, msg["integration"])
     except IntegrationNotFound:
         connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Integration not found"
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Integration not found"
         )
         return
     await async_get_domain_config(hass).settings.async_update(
