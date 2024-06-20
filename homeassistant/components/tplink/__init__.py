@@ -52,6 +52,8 @@ from .const import (
 from .coordinator import TPLinkDataUpdateCoordinator
 from .models import TPLinkData
 
+type TPLinkConfigEntry = ConfigEntry[TPLinkData]
+
 DISCOVERY_INTERVAL = timedelta(minutes=15)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -127,7 +129,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bool:
     """Set up TPLink from a config entry."""
     host: str = entry.data[CONF_HOST]
     credentials = await get_credentials(hass)
@@ -200,21 +202,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             for child in device.children
         ]
 
-    hass.data[DOMAIN][entry.entry_id] = TPLinkData(
-        parent_coordinator, child_coordinators
-    )
+    entry.runtime_data = TPLinkData(parent_coordinator, child_coordinators)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bool:
     """Unload a config entry."""
-    hass_data: dict[str, Any] = hass.data[DOMAIN]
-    data: TPLinkData = hass_data[entry.entry_id]
+    data = entry.runtime_data
     device = data.parent_coordinator.device
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass_data.pop(entry.entry_id)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     await device.protocol.close()
 
     return unload_ok

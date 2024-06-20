@@ -2,36 +2,61 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, Final
 
 from kasa import Device, Feature
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import TPLinkConfigEntry
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import (
-    CoordinatedTPLinkEntity,
+    CoordinatedTPLinkFeatureEntity,
+    TPLinkFeatureEntityDescription,
     _description_for_feature,
     _entities_for_device_and_its_children,
     async_refresh_after,
 )
-from .models import TPLinkData
 
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True, kw_only=True)
+class TPLinkSwitchEntityDescription(
+    SwitchEntityDescription, TPLinkFeatureEntityDescription
+):
+    """Base class for a TPLink feature based sensor entity description."""
+
+
+SWITCH_DESCRIPTIONS: Final = [
+    TPLinkSwitchEntityDescription(
+        key="state",
+    ),
+    TPLinkSwitchEntityDescription(
+        key="led",
+    ),
+    TPLinkSwitchEntityDescription(
+        key="auto_update_enabled",
+    ),
+    TPLinkSwitchEntityDescription(
+        key="auto_off_enabled",
+    ),
+]
+
+SWITCH_DESCRIPTIONS_MAP = {desc.key: desc for desc in SWITCH_DESCRIPTIONS}
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: TPLinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches."""
-    data: TPLinkData = hass.data[DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     parent_coordinator = data.parent_coordinator
     device = parent_coordinator.device
 
@@ -45,8 +70,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class TPLinkSwitch(CoordinatedTPLinkEntity, SwitchEntity):
-    """Representation of a feature-based TPLink sensor."""
+class TPLinkSwitch(CoordinatedTPLinkFeatureEntity, SwitchEntity):
+    """Representation of a feature-based TPLink switch."""
+
+    entity_description: TPLinkSwitchEntityDescription
 
     def __init__(
         self,
@@ -57,32 +84,27 @@ class TPLinkSwitch(CoordinatedTPLinkEntity, SwitchEntity):
         parent: Device | None = None,
     ) -> None:
         """Initialize the switch."""
+        description = _description_for_feature(
+            TPLinkSwitchEntityDescription,
+            feature,
+            SWITCH_DESCRIPTIONS_MAP,
+            child_alias=device.alias if parent else None,
+        )
         super().__init__(
-            device,
-            coordinator,
-            feature=feature,
-            parent=parent,
+            device, coordinator, description=description, feature=feature, parent=parent
         )
-        self._feature: Feature
 
-        # Use the device name for the primary switch control
-        if feature.category is Feature.Category.Primary and not parent:
-            self._attr_name = None
-
-        self.entity_description = _description_for_feature(
-            SwitchEntityDescription, feature
-        )
         self._async_call_update_attrs()
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self._feature.set_value(True)  # type: ignore[no-untyped-call]
+        await self._feature.set_value(True)
 
     @async_refresh_after
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self._feature.set_value(False)  # type: ignore[no-untyped-call]
+        await self._feature.set_value(False)
 
     @callback
     def _async_update_attrs(self) -> None:

@@ -1,16 +1,17 @@
 """Tests for the TP-Link component."""
 
 from collections import namedtuple
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from kasa import (
-    ConnectionType,
     Device,
     DeviceConfig,
-    DeviceFamilyType,
+    DeviceConnectionParameters,
+    DeviceEncryptionType,
+    DeviceFamily,
     DeviceType,
-    EncryptType,
     Feature,
     KasaException,
     Module,
@@ -53,16 +54,16 @@ CREDENTIALS_HASH_AUTH = "abcdefghijklmnopqrstuv=="
 DEVICE_CONFIG_AUTH = DeviceConfig(
     IP_ADDRESS,
     credentials=CREDENTIALS,
-    connection_type=ConnectionType(
-        DeviceFamilyType.IotSmartPlugSwitch, EncryptType.Klap
+    connection_type=DeviceConnectionParameters(
+        DeviceFamily.IotSmartPlugSwitch, DeviceEncryptionType.Klap
     ),
     uses_http=True,
 )
 DEVICE_CONFIG_AUTH2 = DeviceConfig(
     IP_ADDRESS2,
     credentials=CREDENTIALS,
-    connection_type=ConnectionType(
-        DeviceFamilyType.IotSmartPlugSwitch, EncryptType.Klap
+    connection_type=DeviceConnectionParameters(
+        DeviceFamily.IotSmartPlugSwitch, DeviceEncryptionType.Klap
     ),
     uses_http=True,
 )
@@ -108,7 +109,7 @@ def _mocked_device(
     alias=ALIAS,
     modules: list[str] | None = None,
     children: list[Device] | None = None,
-    features: list[str] | None = None,
+    features: list[str | Feature] | None = None,
     device_type=DeviceType.Unknown,
     spec: type = Device,
 ) -> Device:
@@ -133,8 +134,18 @@ def _mocked_device(
 
     if features:
         device.features = {
-            feature_id: FEATURE_TO_MOCK_GEN[feature_id]() for feature_id in features
+            feature_id: FEATURE_TO_MOCK_GEN[feature_id]()
+            for feature_id in features
+            if isinstance(feature_id, str)
         }
+
+        device.features.update(
+            {
+                feature.id: feature
+                for feature in features
+                if isinstance(feature, Feature)
+            }
+        )
 
     device.children = children if children else []
     device.device_type = device_type
@@ -150,14 +161,23 @@ def _mocked_device(
 
 
 def _mocked_feature(
-    value: Any, id: str, type_=Feature.Type.Sensor, category=Feature.Category.Debug
+    value: Any,
+    id: str,
+    *,
+    name=None,
+    type_=Feature.Type.Sensor,
+    category=Feature.Category.Debug,
+    precision_hint=None,
+    unit=None,
 ) -> Feature:
     feature = MagicMock(spec=Feature, name="Mocked feature")
     feature.id = id
-    feature.name = id
+    feature.name = name or id
     feature.value = value
     feature.type = type_
     feature.category = category
+    feature.precision_hint = precision_hint
+    feature.unit = unit
     feature.set_value = AsyncMock()
     return feature
 
@@ -214,6 +234,73 @@ def _mocked_strip_children(features=None) -> list[Device]:
     return [plug0, plug1]
 
 
+def _mocked_energy_features(
+    power=None, total=None, voltage=None, current=None, today=None
+) -> list[Feature]:
+    feats = []
+    if power is not None:
+        feats.append(
+            _mocked_feature(
+                power,
+                "current_consumption",
+                name="Current consumption",
+                type_=Feature.Type.Sensor,
+                category=Feature.Category.Primary,
+                unit="W",
+                precision_hint=1,
+            )
+        )
+    if total is not None:
+        feats.append(
+            _mocked_feature(
+                total,
+                "consumption_total",
+                name="Total consumption",
+                type_=Feature.Type.Sensor,
+                category=Feature.Category.Info,
+                unit="kWh",
+                precision_hint=3,
+            )
+        )
+    if voltage is not None:
+        feats.append(
+            _mocked_feature(
+                voltage,
+                "voltage",
+                name="Voltage",
+                type_=Feature.Type.Sensor,
+                category=Feature.Category.Primary,
+                unit="V",
+                precision_hint=1,
+            )
+        )
+    if current is not None:
+        feats.append(
+            _mocked_feature(
+                current,
+                "current",
+                name="Current",
+                type_=Feature.Type.Sensor,
+                category=Feature.Category.Primary,
+                unit="A",
+                precision_hint=2,
+            )
+        )
+    # Today is always reported as 0 by the library rather than none
+    feats.append(
+        _mocked_feature(
+            today if today is not None else 0.0,
+            "consumption_today",
+            name="Today's consumption",
+            type_=Feature.Type.Sensor,
+            category=Feature.Category.Info,
+            unit="kWh",
+            precision_hint=3,
+        )
+    )
+    return feats
+
+
 MODULE_TO_MOCK_GEN = {
     Module.Light: _mocked_light_module,
     Module.LightEffect: _mocked_light_effect_module,
@@ -221,10 +308,21 @@ MODULE_TO_MOCK_GEN = {
 
 FEATURE_TO_MOCK_GEN = {
     "state": lambda: _mocked_feature(
-        True, "state", Feature.Type.Switch, Feature.Category.Primary
+        True, "state", type_=Feature.Type.Switch, category=Feature.Category.Primary
     ),
     "led": lambda: _mocked_feature(
-        True, "led", Feature.Type.Switch, Feature.Category.Config
+        True,
+        "led",
+        name="LED",
+        type_=Feature.Type.Switch,
+        category=Feature.Category.Config,
+    ),
+    "on_since": lambda: _mocked_feature(
+        datetime.now(UTC).astimezone() - timedelta(minutes=5),
+        "on_since",
+        name="On since",
+        type_=Feature.Type.Sensor,
+        category=Feature.Category.Info,
     ),
 }
 

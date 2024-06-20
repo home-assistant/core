@@ -1,11 +1,11 @@
-"""Support for TPLink HS100/HS110/HS200 smart switch energy sensors."""
+"""Support for TPLink sensor entities."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import cast
+from typing import Final, cast
 
-from kasa import Device, DeviceType
+from kasa import Device, Feature
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,144 +13,91 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_VOLTAGE,
-    UnitOfElectricCurrent,
-    UnitOfElectricPotential,
-    UnitOfEnergy,
-    UnitOfPower,
-)
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    ATTR_CURRENT_A,
-    ATTR_CURRENT_POWER_W,
-    ATTR_TODAY_ENERGY_KWH,
-    ATTR_TOTAL_ENERGY_KWH,
-    DOMAIN,
-)
+from . import TPLinkConfigEntry
 from .coordinator import TPLinkDataUpdateCoordinator
-from .entity import CoordinatedTPLinkEntity
-from .models import TPLinkData
+from .entity import (
+    CoordinatedTPLinkFeatureEntity,
+    TPLinkFeatureEntityDescription,
+    _description_for_feature,
+    _entities_for_device_and_its_children,
+)
+
+UNIT_MAPPING = {
+    "celsius": UnitOfTemperature.CELSIUS,
+    "fahrenheit": UnitOfTemperature.FAHRENHEIT,
+}
 
 
-@dataclass(frozen=True)
-class TPLinkSensorEntityDescription(SensorEntityDescription):
-    """Describes TPLink sensor entity."""
+@dataclass(frozen=True, kw_only=True)
+class TPLinkSensorEntityDescription(
+    SensorEntityDescription, TPLinkFeatureEntityDescription
+):
+    """Base class for a TPLink feature based sensor entity description."""
 
-    emeter_attr: str | None = None
-    precision: int | None = None
 
-
-ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
+SENSOR_DESCRIPTIONS: Final = [
     TPLinkSensorEntityDescription(
-        key=ATTR_CURRENT_POWER_W,
-        translation_key="current_consumption",
-        native_unit_of_measurement=UnitOfPower.WATT,
+        key="current_consumption",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        emeter_attr="power",
-        precision=1,
     ),
     TPLinkSensorEntityDescription(
-        key=ATTR_TOTAL_ENERGY_KWH,
-        translation_key="total_consumption",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        key="consumption_total",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        emeter_attr="total",
-        precision=3,
     ),
     TPLinkSensorEntityDescription(
-        key=ATTR_TODAY_ENERGY_KWH,
-        translation_key="today_consumption",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        key="consumption_today",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        precision=3,
     ),
     TPLinkSensorEntityDescription(
-        key=ATTR_VOLTAGE,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        key="voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        emeter_attr="voltage",
-        precision=1,
     ),
     TPLinkSensorEntityDescription(
-        key=ATTR_CURRENT_A,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        key="current",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        emeter_attr="current",
-        precision=2,
     ),
-)
+    TPLinkSensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+]
 
-
-def async_emeter_from_device(
-    device: Device, description: TPLinkSensorEntityDescription
-) -> float | None:
-    """Map a sensor key to the device attribute."""
-    if attr := description.emeter_attr:
-        if (val := getattr(device.emeter_realtime, attr)) is None:
-            return None
-        return round(cast(float, val), description.precision)
-
-    # ATTR_TODAY_ENERGY_KWH
-    if (emeter_today := device.emeter_today) is not None:
-        return round(cast(float, emeter_today), description.precision)
-    # today's consumption not available, when device was off all the day
-    # bulb's do not report this information, so filter it out
-    return None if device.device_type == DeviceType.Bulb else 0.0
-
-
-def _async_sensors_for_device(
-    device: Device,
-    coordinator: TPLinkDataUpdateCoordinator,
-    parent: Device | None = None,
-) -> list[SmartPlugSensor]:
-    """Generate the sensors for the device."""
-    return [
-        SmartPlugSensor(device, coordinator, description, parent)
-        for description in ENERGY_SENSORS
-        if async_emeter_from_device(device, description) is not None
-    ]
+SENSOR_DESCRIPTIONS_MAP = {desc.key: desc for desc in SENSOR_DESCRIPTIONS}
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: TPLinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors."""
-    data: TPLinkData = hass.data[DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     parent_coordinator = data.parent_coordinator
     children_coordinators = data.children_coordinators
-    entities: list[SmartPlugSensor] = []
-    parent = parent_coordinator.device
-    if not parent.has_emeter:
-        return
+    device = parent_coordinator.device
 
-    if parent.children:
-        # Historically we only add the children if the device is a strip
-        for idx, child in enumerate(parent.children):
-            # Only iot strips have child coordinators
-            if children_coordinators:
-                coordinator = children_coordinators[idx]
-            else:
-                coordinator = parent_coordinator
-            entities.extend(_async_sensors_for_device(child, coordinator, parent))
-    else:
-        entities.extend(_async_sensors_for_device(parent, parent_coordinator))
-
+    entities = _entities_for_device_and_its_children(
+        device=device,
+        coordinator=parent_coordinator,
+        feature_type=Feature.Type.Sensor,
+        entity_class=Sensor,
+        child_coordinators=children_coordinators,
+    )
     async_add_entities(entities)
 
 
-class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
-    """Representation of a TPLink Smart Plug energy sensor."""
+class Sensor(CoordinatedTPLinkFeatureEntity, SensorEntity):
+    """Representation of a feature-based TPLink sensor."""
 
     entity_description: TPLinkSensorEntityDescription
 
@@ -158,25 +105,31 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
         self,
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
-        description: TPLinkSensorEntityDescription,
+        *,
+        feature: Feature,
         parent: Device | None = None,
     ) -> None:
-        """Initialize the switch."""
-        self.entity_description = description
-        super().__init__(device, coordinator, parent=parent)
-        if parent is not None:
-            assert device.alias
-            self._attr_translation_placeholders = {"device_name": device.alias}
-            if description.translation_key:
-                self._attr_translation_key = f"{description.translation_key}_child"
-            else:
-                assert description.device_class
-                self._attr_translation_key = f"{description.device_class.value}_child"
+        """Initialize the sensor."""
+        description = _description_for_feature(
+            TPLinkSensorEntityDescription, feature, SENSOR_DESCRIPTIONS_MAP
+        )
+        super().__init__(
+            device, coordinator, description=description, feature=feature, parent=parent
+        )
         self._async_call_update_attrs()
 
     @callback
     def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
-        self._attr_native_value = async_emeter_from_device(
-            self._device, self.entity_description
-        )
+        value = self._feature.value
+        if value is not None and self._feature.precision_hint is not None:
+            value = round(cast(float, value), self._feature.precision_hint)
+            # We probably do not need this, when we are rounding already?
+            self._attr_suggested_display_precision = self._feature.precision_hint
+
+        self._attr_native_value = value
+        # Map to homeassistant units and fallback to upstream one if none found
+        if self._feature.unit is not None:
+            self._attr_native_unit_of_measurement = UNIT_MAPPING.get(
+                self._feature.unit, self._feature.unit
+            )
