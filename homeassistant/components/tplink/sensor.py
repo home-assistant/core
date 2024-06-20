@@ -2,11 +2,17 @@
 
 from __future__ import annotations
 
-from typing import cast
+from dataclasses import dataclass
+from typing import Final, cast
 
 from kasa import Device, Feature
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -14,7 +20,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import TPLinkConfigEntry
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import (
-    CoordinatedTPLinkEntity,
+    CoordinatedTPLinkFeatureEntity,
+    TPLinkFeatureEntityDescription,
     _description_for_feature,
     _entities_for_device_and_its_children,
 )
@@ -23,6 +30,49 @@ UNIT_MAPPING = {
     "celsius": UnitOfTemperature.CELSIUS,
     "fahrenheit": UnitOfTemperature.FAHRENHEIT,
 }
+
+
+@dataclass(frozen=True, kw_only=True)
+class TPLinkSensorEntityDescription(
+    SensorEntityDescription, TPLinkFeatureEntityDescription
+):
+    """Base class for a TPLink feature based sensor entity description."""
+
+
+SENSOR_DESCRIPTIONS: Final = [
+    TPLinkSensorEntityDescription(
+        key="current_consumption",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TPLinkSensorEntityDescription(
+        key="consumption_total",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    TPLinkSensorEntityDescription(
+        key="consumption_today",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    TPLinkSensorEntityDescription(
+        key="voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TPLinkSensorEntityDescription(
+        key="current",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TPLinkSensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+]
+
+SENSOR_DESCRIPTIONS_MAP = {desc.key: desc for desc in SENSOR_DESCRIPTIONS}
 
 
 async def async_setup_entry(
@@ -46,8 +96,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class Sensor(CoordinatedTPLinkEntity, SensorEntity):
+class Sensor(CoordinatedTPLinkFeatureEntity, SensorEntity):
     """Representation of a feature-based TPLink sensor."""
+
+    entity_description: TPLinkSensorEntityDescription
 
     def __init__(
         self,
@@ -58,11 +110,12 @@ class Sensor(CoordinatedTPLinkEntity, SensorEntity):
         parent: Device | None = None,
     ) -> None:
         """Initialize the sensor."""
-        self.entity_description = _description_for_feature(
-            SensorEntityDescription, feature
+        description = _description_for_feature(
+            TPLinkSensorEntityDescription, feature, SENSOR_DESCRIPTIONS_MAP
         )
-        super().__init__(device, coordinator, feature=feature, parent=parent)
-        self._feature: Feature
+        super().__init__(
+            device, coordinator, description=description, feature=feature, parent=parent
+        )
         self._async_call_update_attrs()
 
     @callback
