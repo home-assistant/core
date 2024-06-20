@@ -6,11 +6,9 @@ from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.generic_hygrostat import (
-    CONF_AWAY_HUMIDITY,
     CONF_DEVICE_CLASS,
     CONF_DRY_TOLERANCE,
     CONF_HUMIDIFIER,
-    CONF_INITIAL_STATE,
     CONF_NAME,
     CONF_SENSOR,
     CONF_WET_TOLERANCE,
@@ -19,7 +17,7 @@ from homeassistant.components.generic_hygrostat import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, async_mock_service
+from tests.common import MockConfigEntry
 
 SNAPSHOT_FLOW_PROPS = props("type", "title", "result", "error")
 
@@ -38,14 +36,12 @@ async def test_config_flow(hass: HomeAssistant, snapshot: SnapshotAssertion) -> 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_NAME: "My dehumidifier",
+                CONF_NAME: "My hygrostat",
                 CONF_DRY_TOLERANCE: 2,
                 CONF_WET_TOLERANCE: 4,
                 CONF_HUMIDIFIER: "switch.run",
                 CONF_SENSOR: "sensor.humidity",
                 CONF_DEVICE_CLASS: "dehumidifier",
-                CONF_AWAY_HUMIDITY: 35,
-                CONF_INITIAL_STATE: True,
             },
         )
         await hass.async_block_till_done()
@@ -55,33 +51,28 @@ async def test_config_flow(hass: HomeAssistant, snapshot: SnapshotAssertion) -> 
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert config_entry.data == {}
-    assert config_entry.title == "My dehumidifier"
+    assert config_entry.title == "My hygrostat"
 
 
 async def test_options(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Test reconfiguring."""
 
-    turn_off_calls = async_mock_service(hass, "homeassistant", "turn_off")
-    turn_on_calls = async_mock_service(hass, "homeassistant", "turn_on")
-
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
-            CONF_AWAY_HUMIDITY: 35.0,
             CONF_DEVICE_CLASS: "dehumidifier",
             CONF_DRY_TOLERANCE: 2.0,
             CONF_HUMIDIFIER: "switch.run",
-            CONF_INITIAL_STATE: True,
-            CONF_NAME: "My dehumidifier",
+            CONF_NAME: "My hygrostat",
             CONF_SENSOR: "sensor.humidity",
             CONF_WET_TOLERANCE: 4.0,
         },
-        title="My dehumidifier",
+        title="My hygrostat",
     )
     config_entry.add_to_hass(hass)
 
-    # start with a humidity less than max, and a switch that is on
+    # set some initial values
     hass.states.async_set(
         "sensor.humidity",
         "10",
@@ -89,21 +80,15 @@ async def test_options(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None
     )
     hass.states.async_set("switch.run", "on")
 
+    # check that it is setup
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+    assert hass.states.get("humidifier.my_hygrostat") == snapshot(name="dehumidifier")
 
-    # will turn off on start, since humidity is less than max
-    assert len(turn_on_calls) == 0
-    assert len(turn_off_calls) == 1
-
+    # switch to humidifier
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result == snapshot(name="init", include=SNAPSHOT_FLOW_PROPS)
 
-    # check that it is setup
-    await hass.async_block_till_done()
-    assert hass.states.get("humidifier.my_dehumidifier") == snapshot(name="with_away")
-
-    # remove away feature
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
@@ -111,14 +96,11 @@ async def test_options(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None
             CONF_WET_TOLERANCE: 4,
             CONF_HUMIDIFIER: "switch.run",
             CONF_SENSOR: "sensor.humidity",
-            CONF_DEVICE_CLASS: "dehumidifier",
-            CONF_INITIAL_STATE: True,
+            CONF_DEVICE_CLASS: "humidifier",
         },
     )
     assert result == snapshot(name="create_entry", include=SNAPSHOT_FLOW_PROPS)
 
     # Check config entry is reloaded with new options
     await hass.async_block_till_done()
-    assert hass.states.get("humidifier.my_dehumidifier") == snapshot(
-        name="without_away"
-    )
+    assert hass.states.get("humidifier.my_hygrostat") == snapshot(name="humidifier")

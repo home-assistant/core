@@ -2,9 +2,9 @@
 # name: test_config_flow[create]
   FlowResultSnapshot({
     'result': ConfigEntrySnapshot({
-      'title': 'My dehumidifier',
+      'title': 'My hygrostat',
     }),
-    'title': 'My dehumidifier',
+    'title': 'My hygrostat',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
   })
 # ---
@@ -19,55 +19,48 @@
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
   })
 # ---
-# name: test_options[init]
-  FlowResultSnapshot({
-    'type': <FlowResultType.FORM: 'form'>,
-  })
-# ---
-# name: test_options[with_away]
+# name: test_options[dehumidifier]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'action': <HumidifierAction.IDLE: 'idle'>,
-      'available_modes': list([
-        'normal',
-        'away',
-      ]),
+      'action': <HumidifierAction.OFF: 'off'>,
       'current_humidity': 10.0,
       'device_class': 'dehumidifier',
-      'friendly_name': 'My dehumidifier',
+      'friendly_name': 'My hygrostat',
       'humidity': 100,
       'max_humidity': 100,
       'min_humidity': 0,
-      'mode': 'normal',
-      'saved_humidity': 35.0,
-      'supported_features': <HumidifierEntityFeature: 1>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'humidifier.my_dehumidifier',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_options[without_away]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'action': <HumidifierAction.IDLE: 'idle'>,
-      'current_humidity': 10.0,
-      'device_class': 'dehumidifier',
-      'friendly_name': 'My dehumidifier',
-      'humidity': 100,
-      'max_humidity': 100,
-      'min_humidity': 0,
-      'saved_humidity': 35,
       'supported_features': <HumidifierEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'humidifier.my_dehumidifier',
+    'entity_id': 'humidifier.my_hygrostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
+  })
+# ---
+# name: test_options[humidifier]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'action': <HumidifierAction.OFF: 'off'>,
+      'current_humidity': 10.0,
+      'device_class': 'humidifier',
+      'friendly_name': 'My hygrostat',
+      'humidity': 100,
+      'max_humidity': 100,
+      'min_humidity': 0,
+      'supported_features': <HumidifierEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.my_hygrostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_options[init]
+  FlowResultSnapshot({
+    'type': <FlowResultType.FORM: 'form'>,
   })
 # ---

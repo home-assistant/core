@@ -6,30 +6,18 @@
         "title": "Add generic hygrostat sensor",
         "description": "Create a entity that control the humidity via a switch and sensor.",
         "data": {
-          "away_fixed": "Fixed away humidity",
-          "away_humidity": "Away humidity",
-          "device_class": "Type of sensor",
+          "device_class": "Type of device",
           "dry_tolerance": "Dry tolerance",
           "humidifier": "Switch",
-          "initial_state": "Initial state",
           "min_cycle_duration": "Minimum cycle duration",
-          "min_humidity": "Minimum set point",
-          "max_humidity": "Maximum set point",
-          "keep_alive": "Keep alive",
           "name": "[%key:common::config_flow::data::name%]",
-          "sensor_stale_duration": "Stale duration",
           "target_sensor": "Humidity sensor",
           "wet_tolerance": "Wet tolerance"
         },
         "data_description": {
-          "away_humidity": "Set the humidity used by away mode. If this is not specified, the mode feature will not be available.",
-          "away_fixed": "If this parameter is set to enabled, the target humidity for the away mode is fixed at `Away humidity` level and cannot be changed. An attempt to set the target humidity will effectively set the humidity for the normal mode. This can be used to independently control mode and target humidity.",
           "dry_tolerance": "The minimum amount of difference between the humidity read by the sensor specified in the target_sensor option and the target humidity that must change prior to being switched on.",
           "humidifier": "Humidifier or Dehumidifier switch, must be a toggle device.",
-          "initial_state": "This value is used as a fallback when a previous state is not available.",
           "min_cycle_duration": "Set a minimum amount of time that the switch specified in the humidifier option must be in its current state prior to being switched either off or on.",
-          "keep_alive": "If set, the switch specified in the humidifier option will be triggered every time the interval elapses. Use with humidifiers and dehumidifiers that shut off if they don’t receive a signal from their remote for a while. Use also with switches that might lose state.",
-          "sensor_stale_duration": "If the `Humidity sensor` does not update its value within this period, it is considered unavailable until the next update. When the sensor is unavailable, the humidifier is turned off for safety reasons.",
           "target_sensor": "Sensor with current humidity.",
           "wet_tolerance": "The minimum amount of difference between the humidity read by the sensor specified in the target_sensor option and the target humidity that must change prior to being switched off."
         }
@@ -40,29 +28,17 @@
     "step": {
       "init": {
         "data": {
-          "away_humidity": "[%key:component::generic_hygrostat::config::step::user::data::away_humidity%]",
-          "away_fixed": "[%key:component::generic_hygrostat::config::step::user::data::away_fixed%]",
           "device_class": "[%key:component::generic_hygrostat::config::step::user::data::device_class%]",
           "dry_tolerance": "[%key:component::generic_hygrostat::config::step::user::data::dry_tolerance%]",
           "humidifier": "[%key:component::generic_hygrostat::config::step::user::data::humidifier%]",
-          "initial_state": "[%key:component::generic_hygrostat::config::step::user::data::initial_state%]",
           "min_cycle_duration": "[%key:component::generic_hygrostat::config::step::user::data::min_cycle_duration%]",
-          "min_humidity": "[%key:component::generic_hygrostat::config::step::user::data::min_humidity%]",
-          "max_humidity": "[%key:component::generic_hygrostat::config::step::user::data::max_humidity%]",
-          "keep_alive": "[%key:component::generic_hygrostat::config::step::user::data::keep_alive%]",
-          "sensor_stale_duration": "[%key:component::generic_hygrostat::config::step::user::data::sensor_stale_duration%]",
           "target_sensor": "[%key:component::generic_hygrostat::config::step::user::data::target_sensor%]",
           "wet_tolerance": "[%key:component::generic_hygrostat::config::step::user::data::wet_tolerance%]"
         },
         "data_description": {
-          "away_humidity": "[%key:component::generic_hygrostat::config::step::user::data_description::away_humidity%]",
-          "away_fixed": "[%key:component::generic_hygrostat::config::step::user::data_description::away_fixed%]",
           "dry_tolerance": "[%key:component::generic_hygrostat::config::step::user::data_description::dry_tolerance%]",
           "humidifier": "[%key:component::generic_hygrostat::config::step::user::data_description::humidifier%]",
-          "initial_state": "[%key:component::generic_hygrostat::config::step::user::data_description::initial_state%]",
           "min_cycle_duration": "[%key:component::generic_hygrostat::config::step::user::data_description::min_cycle_duration%]",
-          "keep_alive": "[%key:component::generic_hygrostat::config::step::user::data_description::keep_alive%]",
-          "sensor_stale_duration": "[%key:component::generic_hygrostat::config::step::user::data_description::sensor_stale_duration%]",
           "target_sensor": "[%key:component::generic_hygrostat::config::step::user::data_description::target_sensor%]",
           "wet_tolerance": "[%key:component::generic_hygrostat::config::step::user::data_description::wet_tolerance%]"
         }
