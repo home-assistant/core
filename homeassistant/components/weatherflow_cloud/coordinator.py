@@ -37,5 +37,3 @@ class WeatherFlowCloudDataUpdateCoordinator(
             if err.status == 401:
                 raise ConfigEntryAuthFailed(err) from err
             raise UpdateFailed(f"Update failed: {err}") from err
-        except AttributeError as err:
-            raise UpdateFailed(f"Empty or Bad Response - Update failed: {err}") from err
