@@ -8,11 +8,12 @@ from enum import Enum
 from functools import partial
 import logging
 from operator import attrgetter
-from typing import Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from uiprotect.data import (
     NVR,
     Event,
+    ModelType,
     ProtectAdoptableDeviceModel,
     SmartDetectObjectType,
     WSSubscriptionMessage as WSMsg,
@@ -99,12 +100,15 @@ class ProtectEventMixin(ProtectEntityDescription[T]):
 
     def wsmsg_is_end(self, msg: WSMsg | None) -> bool:
         """Determine if the websocket message is the end of an event."""
-        return (
-            msg is not None
-            and (new_obj := msg.new_obj) is not None
-            and isinstance(new_obj, Event)
-            and new_obj.end is not None
-        )
+        if (
+            not msg
+            or (new_obj := msg.new_obj) is None
+            or new_obj.model is not ModelType.EVENT
+        ):
+            return False
+        if TYPE_CHECKING:
+            assert isinstance(new_obj, Event)
+        return bool(new_obj.end)
 
     def __post_init__(self) -> None:
         """Override get_event_obj if ufp_event_obj is set."""
