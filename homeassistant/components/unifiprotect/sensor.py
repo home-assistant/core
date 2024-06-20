@@ -759,7 +759,6 @@ class ProtectLicensePlateEventSensor(ProtectEventSensor):
 
     @callback
     def _async_update(self, device: ProtectModelWithId, msg: WSMsg | None) -> None:
-        had_previous_event = self._event is not None
         super()._async_update(device, msg)
         description = self.entity_description
         if (
@@ -771,6 +770,11 @@ class ProtectLicensePlateEventSensor(ProtectEventSensor):
             and (license_plate := metadata.license_plate)
         ):
             self._attr_native_value = license_plate.name
-            self._process_event(is_end, had_previous_event)
+            if is_end:
+                # If the event has ended we need to always
+                # write state since the license plate may have changed
+                self.async_write_ha_state()
+                self._async_clear_event()
+                self.async_write_ha_state()
             return
         self._async_clear_event()

@@ -746,7 +746,18 @@ class ProtectSmartEventBinarySensor(EventEntityMixin, BinarySensorEntity):
             and ((is_end := self._wsmsg_is_end(msg)) or not event.end)
         ):
             self._attr_is_on = True
-            self._process_event(is_end, had_previous_event)
+            if is_end:
+                if had_previous_event:
+                    # If the event was already registered and we are at the
+                    # end of the event no need to write state again.
+                    self._async_clear_event()
+                    return
+                # If the event is so short that the detection is received
+                # in the same message as the end of the event we need to write
+                # state and than clear the event and write state again.
+                self.async_write_ha_state()
+                self._async_clear_event()
+                self.async_write_ha_state()
             return
         self._async_clear_event()
 
