@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
+from functools import cached_property
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
@@ -15,6 +16,7 @@ from matter_server.common.models import EventType, ServerInfoMessage
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.typing import UndefinedType
 
 from .const import DOMAIN, ID_TYPE_DEVICE_ID
 from .helpers import get_device_id
@@ -71,6 +73,13 @@ class MatterEntity(Entity):
             identifiers={(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
         )
         self._attr_available = self._endpoint.node.available
+        # mark endpoint postfix if the device has the primary attribute on multiple endpoints
+        self._require_name_postfix = not self._endpoint.node.is_bridge_device and any(
+            ep
+            for ep in self._endpoint.node.endpoints.values()
+            if ep != self._endpoint
+            and ep.has_attribute(None, entity_info.primary_attribute)
+        )
 
         # make sure to update the attributes once
         self._update_from_device()
@@ -104,6 +113,14 @@ class MatterEntity(Entity):
                 node_filter=self._endpoint.node.node_id,
             )
         )
+
+    @cached_property
+    def name(self) -> str | UndefinedType | None:
+        """Return the name of the entity."""
+        name = super().name
+        if name and self._require_name_postfix:
+            name = f"{name} ({self._endpoint.endpoint_id})"
+        return name
 
     @callback
     def _on_matter_event(self, event: EventType, data: Any = None) -> None:
