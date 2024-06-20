@@ -33,7 +33,7 @@ async def test_aeon_smart_switch_6_state(
     hass: HomeAssistant, client, aeon_smart_switch_6, integration
 ) -> None:
     """Test that Smart Switch 6 has a meter reset button."""
-    state = hass.states.get("button.node_102_reset_accumulated_values")
+    state = hass.states.get("button.smart_switch_6_reset_accumulated_values")
     assert state
 
 
