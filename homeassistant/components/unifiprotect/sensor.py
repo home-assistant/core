@@ -773,6 +773,8 @@ class ProtectLicensePlateEventSensor(ProtectEventSensor):
             if is_end:
                 # If the event has ended we need to always
                 # write state since the license plate may have changed
+                # since the protect model might initially detect a plate
+                # as something like A00045 and then later update to AO0045
                 self.async_write_ha_state()
                 self._async_clear_event()
                 self.async_write_ha_state()
