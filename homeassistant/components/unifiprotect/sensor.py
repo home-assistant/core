@@ -19,7 +19,7 @@ from uiprotect.data import (
     ProtectModelWithId,
     Sensor,
     SmartDetectObjectType,
-    WSSubscriptionMessage,
+    WSSubscriptionMessage as WSMsg,
 )
 
 from homeassistant.components.sensor import (
@@ -722,9 +722,7 @@ class BaseProtectSensor(BaseProtectEntity, SensorEntity):
     entity_description: ProtectSensorEntityDescription
     _state_attrs = ("_attr_available", "_attr_native_value")
 
-    def _async_update(
-        self, device: ProtectModelWithId, msg: WSSubscriptionMessage | None
-    ) -> None:
+    def _async_update(self, device: ProtectModelWithId, msg: WSMsg | None) -> None:
         super()._async_update(device, msg)
         self._attr_native_value = self.entity_description.get_ufp_value(self.device)
 
@@ -760,9 +758,7 @@ class ProtectLicensePlateEventSensor(ProtectEventSensor):
         super()._async_clear_event()
 
     @callback
-    def _async_update(
-        self, device: ProtectModelWithId, msg: WSSubscriptionMessage | None
-    ) -> None:
+    def _async_update(self, device: ProtectModelWithId, msg: WSMsg | None) -> None:
         had_previous_event = self._event is not None
         super()._async_update(device, msg)
         if (

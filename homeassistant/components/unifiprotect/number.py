@@ -13,7 +13,7 @@ from uiprotect.data import (
     ModelType,
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
-    WSSubscriptionMessage,
+    WSSubscriptionMessage as WSMsg,
 )
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
@@ -269,9 +269,7 @@ class ProtectNumbers(ProtectDeviceEntity, NumberEntity):
         self._attr_native_step = self.entity_description.ufp_step
 
     @callback
-    def _async_update(
-        self, device: ProtectModelWithId, msg: WSSubscriptionMessage | None
-    ) -> None:
+    def _async_update(self, device: ProtectModelWithId, msg: WSMsg | None) -> None:
         super()._async_update(device, msg)
         self._attr_native_value = self.entity_description.get_ufp_value(self.device)
 

@@ -15,7 +15,7 @@ from uiprotect.data import (
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
     StateType,
-    WSSubscriptionMessage,
+    WSSubscriptionMessage as WSMsg,
 )
 
 from homeassistant.core import callback
@@ -214,9 +214,7 @@ class BaseProtectEntity(Entity):
         )
 
     @callback
-    def _async_update(
-        self, device: ProtectModelWithId, msg: WSSubscriptionMessage | None
-    ) -> None:
+    def _async_update(self, device: ProtectModelWithId, msg: WSMsg | None) -> None:
         """Update Entity object from Protect device."""
         if TYPE_CHECKING:
             assert isinstance(device, ProtectAdoptableDeviceModel)
@@ -238,7 +236,7 @@ class BaseProtectEntity(Entity):
     def _async_updated_event(
         self,
         device: ProtectAdoptableDeviceModel | NVR,
-        msg: WSSubscriptionMessage | None,
+        msg: WSMsg | None,
     ) -> None:
         """When device is updated from Protect."""
         previous_attrs = [getter() for getter in self._state_getters]
@@ -296,9 +294,7 @@ class ProtectNVREntity(BaseProtectEntity):
         )
 
     @callback
-    def _async_update(
-        self, device: ProtectModelWithId, msg: WSSubscriptionMessage | None
-    ) -> None:
+    def _async_update(self, device: ProtectModelWithId, msg: WSMsg | None) -> None:
         data = self.data
         if last_update_success := data.last_update_success:
             self.device = data.api.bootstrap.nvr
@@ -320,9 +316,7 @@ class EventEntityMixin(ProtectDeviceEntity):
         self._attr_extra_state_attributes = {}
 
     @callback
-    def _async_update(
-        self, device: ProtectModelWithId, msg: WSSubscriptionMessage | None
-    ) -> None:
+    def _async_update(self, device: ProtectModelWithId, msg: WSMsg | None) -> None:
         if (event := self.entity_description.get_event_obj(device)) is None:
             self._attr_extra_state_attributes = {}
         else:

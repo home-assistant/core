@@ -19,7 +19,7 @@ from uiprotect.data import (
     EventType,
     ModelType,
     ProtectAdoptableDeviceModel,
-    WSSubscriptionMessage,
+    WSSubscriptionMessage as WSMsg,
 )
 from uiprotect.exceptions import ClientError, NotAuthorized
 from uiprotect.utils import log_event
@@ -49,9 +49,7 @@ from .utils import async_get_devices_by_type
 _LOGGER = logging.getLogger(__name__)
 type ProtectDeviceType = ProtectAdoptableDeviceModel | NVR
 type UFPConfigEntry = ConfigEntry[ProtectData]
-type ProtectSubscriptionType = Callable[
-    [ProtectDeviceType, WSSubscriptionMessage | None], None
-]
+type ProtectSubscriptionType = Callable[[ProtectDeviceType, WSMsg | None], None]
 
 
 @callback
@@ -213,7 +211,7 @@ class ProtectData:
 
     @callback
     def _async_update_device(
-        self, device: ProtectAdoptableDeviceModel | NVR, msg: WSSubscriptionMessage
+        self, device: ProtectAdoptableDeviceModel | NVR, msg: WSMsg
     ) -> None:
         self._async_signal_device_update(device, msg)
         changed_data = msg.changed_data
@@ -236,7 +234,7 @@ class ProtectData:
                     self._async_signal_device_update(camera, msg)
 
     @callback
-    def _async_process_ws_message(self, msg: WSSubscriptionMessage) -> None:
+    def _async_process_ws_message(self, msg: WSMsg) -> None:
         """Process a message from the websocket."""
         if (new_obj := msg.new_obj) is None:
             if isinstance(msg.old_obj, ProtectAdoptableDeviceModel):
@@ -334,7 +332,7 @@ class ProtectData:
 
     @callback
     def _async_signal_device_update(
-        self, device: ProtectDeviceType, msg: WSSubscriptionMessage | None
+        self, device: ProtectDeviceType, msg: WSMsg | None
     ) -> None:
         """Call the callbacks for a device_id."""
         mac = device.mac
