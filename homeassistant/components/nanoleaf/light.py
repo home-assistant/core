@@ -22,7 +22,8 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
 
-from . import NanoleafConfigEntry, NanoleafCoordinator
+from . import NanoleafConfigEntry
+from .coordinator import NanoleafCoordinator
 from .entity import NanoleafEntity
 
 RESERVED_EFFECTS = ("*Solid*", "*Static*", "*Dynamic*")
