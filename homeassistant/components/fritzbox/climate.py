@@ -19,6 +19,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxDeviceEntity
@@ -27,15 +28,16 @@ from .const import (
     ATTR_STATE_HOLIDAY_MODE,
     ATTR_STATE_SUMMER_MODE,
     ATTR_STATE_WINDOW_OPEN,
+    DOMAIN,
     LOGGER,
 )
 from .coordinator import FritzboxConfigEntry, FritzboxDataUpdateCoordinator
 from .model import ClimateExtraAttributes
 
 HVAC_MODES = [HVACMode.HEAT, HVACMode.OFF]
-PRESET_MODES = [PRESET_ECO, PRESET_COMFORT]
 PRESET_HOLIDAY = "holiday"
 PRESET_SUMMER = "summer"
+PRESET_MODES = [PRESET_ECO, PRESET_COMFORT]
 SUPPORTED_FEATURES = (
     ClimateEntityFeature.TARGET_TEMPERATURE
     | ClimateEntityFeature.PRESET_MODE
@@ -161,7 +163,10 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         if self.data.holiday_active or self.data.summer_active:
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="change_hvac_while_active_mode",
+            )
         if self.hvac_mode == hvac_mode:
             LOGGER.debug(
                 "%s is already in requested hvac mode %s", self.name, hvac_mode
@@ -188,7 +193,10 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         if self.data.holiday_active or self.data.summer_active:
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="change_preset_while_active_mode",
+            )
         if preset_mode == PRESET_COMFORT:
             await self.async_set_temperature(temperature=self.data.comfort_temperature)
         elif preset_mode == PRESET_ECO:

@@ -79,5 +79,13 @@
       "nextchange_time": { "name": "Next scheduled change time" },
       "scheduled_preset": { "name": "Current scheduled preset" }
     }
+  },
+  "exceptions": {
+    "change_preset_while_active_mode": {
+      "message": "Can't change preset while holiday or summer mode is active on the device."
+    },
+    "change_hvac_while_active_mode": {
+      "message": "Can't change hvac mode while holiday or summer mode is active on the device."
+    }
   }
 }

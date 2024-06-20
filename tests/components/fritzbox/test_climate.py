@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import Mock, call
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from requests.exceptions import HTTPError
 
 from homeassistant.components.climate import (
@@ -42,6 +43,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
 
 from . import FritzDeviceClimateMock, set_devices, setup_config_entry
@@ -481,6 +483,21 @@ async def test_holidy_summer_mode(
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_HOLIDAY
     assert state.attributes[ATTR_PRESET_MODES] == [PRESET_HOLIDAY]
 
+    with pytest.raises(HomeAssistantError, match="change_hvac_while_active_mode"):
+        await hass.services.async_call(
+            "climate",
+            SERVICE_SET_HVAC_MODE,
+            {"entity_id": ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+            blocking=True,
+        )
+    with pytest.raises(HomeAssistantError, match="change_preset_while_active_mode"):
+        await hass.services.async_call(
+            "climate",
+            SERVICE_SET_PRESET_MODE,
+            {"entity_id": ENTITY_ID, ATTR_PRESET_MODE: PRESET_HOLIDAY},
+            blocking=True,
+        )
+
     # test summer mode
     device.holiday_active = False
     device.summer_active = True
@@ -495,6 +512,21 @@ async def test_holidy_summer_mode(
     assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.OFF]
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_SUMMER
     assert state.attributes[ATTR_PRESET_MODES] == [PRESET_SUMMER]
+
+    with pytest.raises(HomeAssistantError, match="change_hvac_while_active_mode"):
+        await hass.services.async_call(
+            "climate",
+            SERVICE_SET_HVAC_MODE,
+            {"entity_id": ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+            blocking=True,
+        )
+    with pytest.raises(HomeAssistantError, match="change_preset_while_active_mode"):
+        await hass.services.async_call(
+            "climate",
+            SERVICE_SET_PRESET_MODE,
+            {"entity_id": ENTITY_ID, ATTR_PRESET_MODE: PRESET_SUMMER},
+            blocking=True,
+        )
 
     # back to normal state
     device.holiday_active = False
