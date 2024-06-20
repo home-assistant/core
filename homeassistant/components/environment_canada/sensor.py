@@ -115,14 +115,6 @@ SENSOR_TYPES: tuple[ECSensorEntityDescription, ...] = (
         value_fn=lambda data: data.conditions.get("pop", {}).get("value"),
     ),
     ECSensorEntityDescription(
-        key="precip_yesterday",
-        translation_key="precip_yesterday",
-        device_class=SensorDeviceClass.PRECIPITATION,
-        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.conditions.get("precip_yesterday", {}).get("value"),
-    ),
-    ECSensorEntityDescription(
         key="pressure",
         translation_key="pressure",
         device_class=SensorDeviceClass.PRESSURE,
