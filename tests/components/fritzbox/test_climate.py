@@ -483,14 +483,20 @@ async def test_holidy_summer_mode(
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_HOLIDAY
     assert state.attributes[ATTR_PRESET_MODES] == [PRESET_HOLIDAY]
 
-    with pytest.raises(HomeAssistantError, match="change_hvac_while_active_mode"):
+    with pytest.raises(
+        HomeAssistantError,
+        match="Can't change hvac mode while holiday or summer mode is active on the device",
+    ):
         await hass.services.async_call(
             "climate",
             SERVICE_SET_HVAC_MODE,
             {"entity_id": ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
             blocking=True,
         )
-    with pytest.raises(HomeAssistantError, match="change_preset_while_active_mode"):
+    with pytest.raises(
+        HomeAssistantError,
+        match="Can't change preset while holiday or summer mode is active on the device",
+    ):
         await hass.services.async_call(
             "climate",
             SERVICE_SET_PRESET_MODE,
@@ -513,14 +519,20 @@ async def test_holidy_summer_mode(
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_SUMMER
     assert state.attributes[ATTR_PRESET_MODES] == [PRESET_SUMMER]
 
-    with pytest.raises(HomeAssistantError, match="change_hvac_while_active_mode"):
+    with pytest.raises(
+        HomeAssistantError,
+        match="Can't change hvac mode while holiday or summer mode is active on the device",
+    ):
         await hass.services.async_call(
             "climate",
             SERVICE_SET_HVAC_MODE,
             {"entity_id": ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
             blocking=True,
         )
-    with pytest.raises(HomeAssistantError, match="change_preset_while_active_mode"):
+    with pytest.raises(
+        HomeAssistantError,
+        match="Can't change preset while holiday or summer mode is active on the device",
+    ):
         await hass.services.async_call(
             "climate",
             SERVICE_SET_PRESET_MODE,
