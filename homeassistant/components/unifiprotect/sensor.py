@@ -19,7 +19,6 @@ from uiprotect.data import (
     ProtectModelWithId,
     Sensor,
     SmartDetectObjectType,
-    WSSubscriptionMessage as WSMsg,
 )
 
 from homeassistant.components.sensor import (
@@ -722,8 +721,8 @@ class BaseProtectSensor(BaseProtectEntity, SensorEntity):
     entity_description: ProtectSensorEntityDescription
     _state_attrs = ("_attr_available", "_attr_native_value")
 
-    def _async_update(self, device: ProtectModelWithId, msg: WSMsg | None) -> None:
-        super()._async_update(device, msg)
+    def _async_update(self, device: ProtectModelWithId) -> None:
+        super()._async_update(device)
         self._attr_native_value = self.entity_description.get_ufp_value(self.device)
 
 
@@ -757,9 +756,9 @@ class ProtectLicensePlateEventSensor(ProtectEventSensor):
         self._attr_extra_state_attributes = {}
 
     @callback
-    def _async_update(self, device: ProtectModelWithId, msg: WSMsg | None) -> None:
+    def _async_update(self, device: ProtectModelWithId) -> None:
         previous_event = self._event
-        super()._async_update(device, msg)
+        super()._async_update(device)
         event = self._event = self.entity_description.get_event_obj(device)
         if event and previous_event and previous_event.id == event.id and event.end:
             # Event already ended
@@ -768,8 +767,7 @@ class ProtectLicensePlateEventSensor(ProtectEventSensor):
         if not (
             event
             and self.entity_description.has_matching_smart(event)
-            and ((is_end := self._end_of_current_event(msg)) or not event.end)
-            and (is_end or self.device.is_smart_detected)
+            and ((is_end := event.end) or self.device.is_smart_detected)
             and (metadata := event.metadata)
             and (license_plate := metadata.license_plate)
         ):

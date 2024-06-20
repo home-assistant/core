@@ -15,7 +15,6 @@ from uiprotect.data import (
     ProtectModelWithId,
     Sensor,
     SmartDetectObjectType,
-    WSSubscriptionMessage as WSMsg,
 )
 from uiprotect.data.nvr import UOSDisk
 
@@ -635,8 +634,8 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
     _state_attrs: tuple[str, ...] = ("_attr_available", "_attr_is_on")
 
     @callback
-    def _async_update(self, device: ProtectModelWithId, msg: WSMsg | None) -> None:
-        super()._async_update(device, msg)
+    def _async_update(self, device: ProtectModelWithId) -> None:
+        super()._async_update(device)
         self._attr_is_on = self.entity_description.get_ufp_value(self.device)
 
 
@@ -651,8 +650,8 @@ class MountableProtectDeviceBinarySensor(ProtectDeviceBinarySensor):
     )
 
     @callback
-    def _async_update(self, device: ProtectModelWithId, msg: WSMsg | None) -> None:
-        super()._async_update(device, msg)
+    def _async_update(self, device: ProtectModelWithId) -> None:
+        super()._async_update(device)
         # UP Sense can be any of the 3 contact sensor device classes
         self._attr_device_class = MOUNT_DEVICE_CLASS_MAP.get(
             self.device.mount_type, BinarySensorDeviceClass.DOOR
@@ -686,8 +685,8 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
         super().__init__(data, device, description)
 
     @callback
-    def _async_update(self, device: ProtectModelWithId, msg: WSMsg | None) -> None:
-        super()._async_update(device, msg)
+    def _async_update(self, device: ProtectModelWithId) -> None:
+        super()._async_update(device)
         slot = self._disk.slot
         self._attr_available = False
 
@@ -710,8 +709,8 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
     _state_attrs = ("_attr_available", "_attr_is_on", "_attr_extra_state_attributes")
 
     @callback
-    def _async_update(self, device: ProtectModelWithId, msg: WSMsg | None) -> None:
-        super()._async_update(device, msg)
+    def _async_update(self, device: ProtectModelWithId) -> None:
+        super()._async_update(device)
         description = self.entity_description
         event = self._event = self.entity_description.get_event_obj(device)
         if is_on := bool(description.get_ufp_value(device)):
@@ -735,9 +734,9 @@ class ProtectSmartEventBinarySensor(EventEntityMixin, BinarySensorEntity):
         self._attr_extra_state_attributes = {}
 
     @callback
-    def _async_update(self, device: ProtectModelWithId, msg: WSMsg | None) -> None:
+    def _async_update(self, device: ProtectModelWithId) -> None:
         previous_event = self._event
-        super()._async_update(device, msg)
+        super()._async_update(device)
         event = self._event = self.entity_description.get_event_obj(device)
         if event and previous_event and previous_event.id == event.id and event.end:
             # Event already ended
@@ -746,8 +745,7 @@ class ProtectSmartEventBinarySensor(EventEntityMixin, BinarySensorEntity):
         if not (
             event
             and self.entity_description.has_matching_smart(event)
-            and ((is_end := self._end_of_current_event(msg)) or not event.end)
-            and (is_end or self.device.is_smart_detected)
+            and ((is_end := event.end) or self.device.is_smart_detected)
         ):
             self._set_off()
             return

@@ -15,7 +15,6 @@ from uiprotect.data import (
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
     StateType,
-    WSSubscriptionMessage as WSMsg,
 )
 
 from homeassistant.core import callback
@@ -189,7 +188,7 @@ class BaseProtectEntity(Entity):
                 self._async_get_ufp_enabled = description.get_ufp_enabled
 
         self._async_set_device_info()
-        self._async_update(device, None)
+        self._async_update(device)
         self._state_getters = tuple(
             partial(attrgetter(attr), self) for attr in self._state_attrs
         )
@@ -214,7 +213,7 @@ class BaseProtectEntity(Entity):
         )
 
     @callback
-    def _async_update(self, device: ProtectModelWithId, msg: WSMsg | None) -> None:
+    def _async_update(self, device: ProtectModelWithId) -> None:
         """Update Entity object from Protect device."""
         if TYPE_CHECKING:
             assert isinstance(device, ProtectAdoptableDeviceModel)
@@ -233,14 +232,10 @@ class BaseProtectEntity(Entity):
         )
 
     @callback
-    def _async_updated_event(
-        self,
-        device: ProtectAdoptableDeviceModel | NVR,
-        msg: WSMsg | None,
-    ) -> None:
+    def _async_updated_event(self, device: ProtectAdoptableDeviceModel | NVR) -> None:
         """When device is updated from Protect."""
         previous_attrs = [getter() for getter in self._state_getters]
-        self._async_update(device, msg)
+        self._async_update(device)
         changed = False
         for idx, getter in enumerate(self._state_getters):
             if previous_attrs[idx] != getter():
@@ -294,7 +289,7 @@ class ProtectNVREntity(BaseProtectEntity):
         )
 
     @callback
-    def _async_update(self, device: ProtectModelWithId, msg: WSMsg | None) -> None:
+    def _async_update(self, device: ProtectModelWithId) -> None:
         data = self.data
         if last_update_success := data.last_update_success:
             self.device = data.api.bootstrap.nvr
@@ -308,17 +303,6 @@ class EventEntityMixin(ProtectDeviceEntity):
     entity_description: ProtectEventMixin
     _unrecorded_attributes = frozenset({ATTR_EVENT_ID, ATTR_EVENT_SCORE})
     _event: Event | None = None
-
-    @callback
-    def _end_of_current_event(self, msg: WSMsg | None) -> bool:
-        """Determine if the websocket message is the end of an event."""
-        return bool(
-            (event := self._event)
-            and msg
-            and msg.new_obj
-            and event.id == msg.new_obj.id
-            and event.end
-        )
 
     @callback
     def _set_event_attrs(self, event: Event) -> None:

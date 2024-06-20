@@ -11,7 +11,6 @@ from uiprotect.data import (
     ModelType,
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
-    WSSubscriptionMessage as WSMsg,
 )
 
 from homeassistant.components.lock import LockEntity, LockEntityDescription
@@ -61,8 +60,8 @@ class ProtectLock(ProtectDeviceEntity, LockEntity):
     )
 
     @callback
-    def _async_update(self, device: ProtectModelWithId, msg: WSMsg | None) -> None:
-        super()._async_update(device, msg)
+    def _async_update(self, device: ProtectModelWithId) -> None:
+        super()._async_update(device)
         lock_status = self.device.lock_status
 
         self._attr_is_locked = False

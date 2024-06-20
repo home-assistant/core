@@ -49,7 +49,7 @@ from .utils import async_get_devices_by_type
 _LOGGER = logging.getLogger(__name__)
 type ProtectDeviceType = ProtectAdoptableDeviceModel | NVR
 type UFPConfigEntry = ConfigEntry[ProtectData]
-type ProtectSubscriptionType = Callable[[ProtectDeviceType, WSMsg | None], None]
+type ProtectSubscriptionType = Callable[[ProtectDeviceType], None]
 
 
 @callback
@@ -213,7 +213,7 @@ class ProtectData:
     def _async_update_device(
         self, device: ProtectAdoptableDeviceModel | NVR, msg: WSMsg
     ) -> None:
-        self._async_signal_device_update(device, msg)
+        self._async_signal_device_update(device)
         changed_data = msg.changed_data
         if (
             device.model is ModelType.CAMERA
@@ -231,7 +231,7 @@ class ProtectData:
             self.api.bootstrap.nvr.update_all_messages()
             for camera in self.get_cameras():
                 if camera.feature_flags.has_lcd_screen:
-                    self._async_signal_device_update(camera, msg)
+                    self._async_signal_device_update(camera)
 
     @callback
     def _async_process_ws_message(self, msg: WSMsg) -> None:
@@ -255,11 +255,11 @@ class ProtectData:
             ):
                 self._async_add_device(device)
             elif camera := new_obj.camera:
-                self._async_signal_device_update(camera, msg)
+                self._async_signal_device_update(camera)
             elif light := new_obj.light:
-                self._async_signal_device_update(light, msg)
+                self._async_signal_device_update(light)
             elif sensor := new_obj.sensor:
-                self._async_signal_device_update(sensor, msg)
+                self._async_signal_device_update(sensor)
             return
 
         if model_type is ModelType.LIVEVIEW and len(self.api.bootstrap.viewers) > 0:
@@ -287,9 +287,9 @@ class ProtectData:
         if updates is None:
             return
 
-        self._async_signal_device_update(self.api.bootstrap.nvr, None)
+        self._async_signal_device_update(self.api.bootstrap.nvr)
         for device in self.get_by_types(DEVICES_THAT_ADOPT):
-            self._async_signal_device_update(device, None)
+            self._async_signal_device_update(device)
 
     @callback
     def _async_poll(self, now: datetime) -> None:
@@ -331,16 +331,14 @@ class ProtectData:
             self._unsub_interval = None
 
     @callback
-    def _async_signal_device_update(
-        self, device: ProtectDeviceType, msg: WSMsg | None
-    ) -> None:
+    def _async_signal_device_update(self, device: ProtectDeviceType) -> None:
         """Call the callbacks for a device_id."""
         mac = device.mac
         if not (subscriptions := self._subscriptions.get(mac)):
             return
         _LOGGER.debug("Updating device: %s (%s)", device.name, mac)
         for update_callback in subscriptions:
-            update_callback(device, msg)
+            update_callback(device)
 
 
 @callback

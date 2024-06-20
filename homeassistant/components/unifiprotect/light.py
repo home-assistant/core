@@ -10,7 +10,6 @@ from uiprotect.data import (
     ModelType,
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
-    WSSubscriptionMessage as WSMsg,
 )
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
@@ -67,8 +66,8 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
     _state_attrs = ("_attr_available", "_attr_is_on", "_attr_brightness")
 
     @callback
-    def _async_update(self, device: ProtectModelWithId, msg: WSMsg | None) -> None:
-        super()._async_update(device, msg)
+    def _async_update(self, device: ProtectModelWithId) -> None:
+        super()._async_update(device)
         updated_device = self.device
         self._attr_is_on = updated_device.is_light_on
         self._attr_brightness = unifi_brightness_to_hass(

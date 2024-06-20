@@ -11,7 +11,6 @@ from uiprotect.data import (
     ModelType,
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
-    WSSubscriptionMessage as WSMsg,
 )
 
 from homeassistant.components.text import TextEntity, TextEntityDescription
@@ -90,8 +89,8 @@ class ProtectDeviceText(ProtectDeviceEntity, TextEntity):
     _state_attrs = ("_attr_available", "_attr_native_value")
 
     @callback
-    def _async_update(self, device: ProtectModelWithId, msg: WSMsg | None) -> None:
-        super()._async_update(device, msg)
+    def _async_update(self, device: ProtectModelWithId) -> None:
+        super()._async_update(device)
         self._attr_native_value = self.entity_description.get_ufp_value(self.device)
 
     async def async_set_value(self, value: str) -> None:

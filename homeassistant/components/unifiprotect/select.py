@@ -25,7 +25,6 @@ from uiprotect.data import (
     RecordingMode,
     Sensor,
     Viewer,
-    WSSubscriptionMessage as WSMsg,
 )
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -372,8 +371,8 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         super().__init__(data, device, description)
 
     @callback
-    def _async_update(self, device: ProtectModelWithId, msg: WSMsg | None) -> None:
-        super()._async_update(device, msg)
+    def _async_update(self, device: ProtectModelWithId) -> None:
+        super()._async_update(device)
         entity_description = self.entity_description
         # entities with categories are not exposed for voice
         # and safe to update dynamically
