@@ -163,7 +163,11 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
 
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""
-        return legacy_device_id(self._device)
+        # The light has it's own implementation and switch and sensor use
+        # the FeatureEntity implementation. When a new non-feature based
+        # platform is added it should provide an implementation here to
+        # return legacy_device_id(self._device)
+        raise NotImplementedError
 
     @abstractmethod
     @callback
