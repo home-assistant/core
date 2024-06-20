@@ -2,12 +2,19 @@
 
 import json
 import logging
+from typing import Any
 
 from plexapi.exceptions import NotFound
+from plexapi.video import Episode, Movie, Show
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -16,17 +23,20 @@ from .const import (
     PLEX_UPDATE_PLATFORMS_SIGNAL,
     PLEX_URI_SCHEME,
     SERVERS,
+    SERVICE_GET_UNWATCHED_MEDIA,
     SERVICE_REFRESH_LIBRARY,
     SERVICE_SCAN_CLIENTS,
 )
 from .errors import MediaNotFound
-from .helpers import get_plex_data
+from .helpers import get_plex_data, pretty_title
 from .models import PlexMediaSearchResult
 from .server import PlexServer
 
 REFRESH_LIBRARY_SCHEMA = vol.Schema(
     {vol.Optional("server_name"): str, vol.Required("library_name"): str}
 )
+
+UNWATCHED_MEDIA_SCHEMA = REFRESH_LIBRARY_SCHEMA
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -46,6 +56,12 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         for server_id in get_plex_data(hass)[SERVERS]:
             async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
 
+    async def async_get_unwatched_media(service_call: ServiceCall) -> ServiceResponse:
+        """Get an unwatched media item."""
+        return await hass.async_add_executor_job(
+            get_unwatched_media, hass, service_call
+        )
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_REFRESH_LIBRARY,
@@ -55,6 +71,44 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     hass.services.async_register(
         DOMAIN, SERVICE_SCAN_CLIENTS, async_scan_clients_service
     )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_UNWATCHED_MEDIA,
+        async_get_unwatched_media,
+        schema=UNWATCHED_MEDIA_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+
+def get_unwatched_media(
+    hass: HomeAssistant, service_call: ServiceCall
+) -> ServiceResponse:
+    """Return the list of unwantched shows and movies."""
+    plex_server_name = service_call.data.get("server_name")
+    library_name = service_call.data["library_name"]
+
+    plex_server = get_plex_server(hass, plex_server_name)
+    response: list[Any] = []
+    try:
+        library = plex_server.library.section(title=library_name)
+    except NotFound:
+        _LOGGER.error(
+            "Library with name '%s' not found in %s",
+            library_name,
+            [x.title for x in plex_server.library.sections()],
+        )
+    else:
+        results: list[Show | Movie] = library.search(unwatched=True)
+        for result in results:
+            if isinstance(result, Show):
+                for episode in result.episodes():
+                    assert isinstance(episode, Episode)
+                    response.append(pretty_title(episode))
+                return {"shows": response}
+            if isinstance(result, Movie):
+                response.append(pretty_title(result))
+                return {"movies": response}
+    return None
 
 
 def refresh_library(hass: HomeAssistant, service_call: ServiceCall) -> None:
