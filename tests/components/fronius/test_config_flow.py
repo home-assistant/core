@@ -473,7 +473,6 @@ async def test_reconfigure_unexpected(hass: HomeAssistant) -> None:
 
 
 async def test_reconfigure_already_configured(hass: HomeAssistant) -> None:
-    """Test reconfiguring entry to already existing data."""
     """Test reconfiguring an entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
