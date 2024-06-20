@@ -323,7 +323,7 @@ class MockMusicServiceItem:
         parent_id: str,
         item_class: str,
         album_art_uri: None | str = None,
-    ):
+    ) -> None:
         """Initialize the mock item."""
         self.title = title
         self.item_id = item_id
