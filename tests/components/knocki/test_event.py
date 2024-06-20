@@ -11,8 +11,9 @@ from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from . import setup_integration
+
 from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.knocki import setup_integration
 
 
 async def test_entities(
