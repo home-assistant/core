@@ -257,6 +257,28 @@ async def test_alarm_control_panel(
     # reset the panel
     await reset_alarm_panel(hass, cluster, entity_id)
 
+    await hass.services.async_call(
+        ALARM_DOMAIN,
+        "alarm_trigger",
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_ALARM_TRIGGERED
+    assert cluster.client_command.call_count == 1
+    assert cluster.client_command.await_count == 1
+    assert cluster.client_command.call_args == call(
+        4,
+        security.IasAce.PanelStatus.In_Alarm,
+        0,
+        security.IasAce.AudibleNotification.Default_Sound,
+        security.IasAce.AlarmStatus.Emergency_Panic,
+    )
+
+    # reset the panel
+    await reset_alarm_panel(hass, cluster, entity_id)
+    cluster.client_command.reset_mock()
+
 
 async def reset_alarm_panel(hass: HomeAssistant, cluster: Cluster, entity_id: str):
     """Reset the state of the alarm panel."""
