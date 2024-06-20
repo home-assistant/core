@@ -314,6 +314,12 @@ class EventEntityMixin(ProtectDeviceEntity):
     _event: Event | None = None
 
     @callback
+    def _async_clear_event(self) -> None:
+        """Clear the event."""
+        self._event = None
+        self._attr_extra_state_attributes = {}
+
+    @callback
     def _async_protect_update(
         self, device: ProtectModelWithId, msg: WSSubscriptionMessage | None
     ) -> None:

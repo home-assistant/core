@@ -12,7 +12,6 @@ from typing import Any
 from uiprotect.data import (
     NVR,
     Camera,
-    Event,
     Light,
     ModelType,
     ProtectAdoptableDeviceModel,
@@ -51,7 +50,7 @@ from .entity import (
     async_all_device_entities,
 )
 from .models import PermRequired, ProtectEntityDescription, ProtectEventMixin, T
-from .utils import async_get_light_motion_current
+from .utils import async_get_light_motion_current, websocket_message_is_end_of_event
 
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
@@ -747,13 +746,6 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
     )
 
 
-def _websocket_message_is_end_of_event(msg: WSSubscriptionMessage | None) -> bool:
-    """Determine if the websocket message is the end of an event."""
-    return bool(
-        msg and (new_obj := msg.new_obj) and isinstance(new_obj, Event) and new_obj.end
-    )
-
-
 class ProtectLicensePlateEventSensor(ProtectEventSensor):
     """A UniFi Protect license plate sensor."""
 
@@ -762,9 +754,8 @@ class ProtectLicensePlateEventSensor(ProtectEventSensor):
     @callback
     def _async_clear_event(self) -> None:
         """Clear the event."""
-        self._event = None
         self._attr_native_value = OBJECT_TYPE_NONE
-        self._attr_extra_state_attributes = {}
+        super()._async_clear_event()
 
     @callback
     def _async_protect_update(
@@ -772,15 +763,14 @@ class ProtectLicensePlateEventSensor(ProtectEventSensor):
     ) -> None:
         had_previous_event = self._event is not None
         super()._async_protect_update(device, msg)
-        event = self._event
         device = self.device
         if (
-            event
+            (event := self._event)
             and (metadata := event.metadata)
             and (license_plate := metadata.license_plate)
             and device.is_smart_detected
             and (
-                (is_end_of_event := _websocket_message_is_end_of_event(msg))
+                (is_end_of_event := websocket_message_is_end_of_event(msg))
                 or not event.end
             )
         ):
