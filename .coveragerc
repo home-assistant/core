@@ -88,6 +88,7 @@ omit =
     homeassistant/components/aprilaire/coordinator.py
     homeassistant/components/aprilaire/entity.py
     homeassistant/components/aprilaire/sensor.py
+    homeassistant/components/aprilaire/util.py
     homeassistant/components/apsystems/__init__.py
     homeassistant/components/apsystems/coordinator.py
     homeassistant/components/apsystems/entity.py
