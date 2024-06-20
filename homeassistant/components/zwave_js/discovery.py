@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any, cast
 
 from awesomeversion import AwesomeVersion
+from typing_extensions import Generator
 from zwave_js_server.const import (
     CURRENT_STATE_PROPERTY,
     CURRENT_VALUE_PROPERTY,
@@ -1186,7 +1186,7 @@ DISCOVERY_SCHEMAS = [
 @callback
 def async_discover_node_values(
     node: ZwaveNode, device: DeviceEntry, discovered_value_ids: dict[str, set[str]]
-) -> Generator[ZwaveDiscoveryInfo, None, None]:
+) -> Generator[ZwaveDiscoveryInfo]:
     """Run discovery on ZWave node and return matching (primary) values."""
     for value in node.values.values():
         # We don't need to rediscover an already processed value_id
@@ -1197,7 +1197,7 @@ def async_discover_node_values(
 @callback
 def async_discover_single_value(
     value: ZwaveValue, device: DeviceEntry, discovered_value_ids: dict[str, set[str]]
-) -> Generator[ZwaveDiscoveryInfo, None, None]:
+) -> Generator[ZwaveDiscoveryInfo]:
     """Run discovery on a single ZWave value and return matching schema info."""
     discovered_value_ids[device.id].add(value.value_id)
     for schema in DISCOVERY_SCHEMAS:
@@ -1318,7 +1318,7 @@ def async_discover_single_value(
 @callback
 def async_discover_single_configuration_value(
     value: ConfigurationValue,
-) -> Generator[ZwaveDiscoveryInfo, None, None]:
+) -> Generator[ZwaveDiscoveryInfo]:
     """Run discovery on single Z-Wave configuration value and return schema matches."""
     if value.metadata.writeable and value.metadata.readable:
         if value.configuration_value_type == ConfigurationValueType.ENUMERATED:

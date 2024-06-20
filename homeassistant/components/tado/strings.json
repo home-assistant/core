@@ -165,6 +165,10 @@
     "import_failed_invalid_auth": {
       "title": "Failed to import, invalid credentials",
       "description": "Failed to import the configuration for the Tado Device Tracker, due to invalid credentials. Please fix the YAML configuration and restart Home Assistant. Alternatively you can use the UI to configure Tado. Don't forget to delete the YAML configuration, once the import is successful."
+    },
+    "water_heater_fallback": {
+      "title": "Tado Water Heater entities now support fallback options",
+      "description": "Due to added support for water heaters entities, these entities may use different overlay. Please configure integration entity and tado app water heater zone overlay options."
     }
   }
 }

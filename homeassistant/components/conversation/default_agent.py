@@ -429,8 +429,15 @@ class DefaultAgent(ConversationEntity):
             intent_context=intent_context,
             language=language,
         ):
-            if ("name" in result.entities) and (
-                not result.entities["name"].is_wildcard
+            # Prioritize results with a "name" slot, but still prefer ones with
+            # more literal text matched.
+            if (
+                ("name" in result.entities)
+                and (not result.entities["name"].is_wildcard)
+                and (
+                    (name_result is None)
+                    or (result.text_chunks_matched > name_result.text_chunks_matched)
+                )
             ):
                 name_result = result
 
@@ -871,7 +878,7 @@ class DefaultAgent(ConversationEntity):
         if device_area is None:
             return None
 
-        return {"area": {"value": device_area.id, "text": device_area.name}}
+        return {"area": {"value": device_area.name, "text": device_area.name}}
 
     def _get_error_text(
         self,

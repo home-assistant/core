@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 
-from deebot_client.capabilities import Capabilities
 from deebot_client.command import Command
 from deebot_client.commands.json import (
     SetAdvancedMode,
@@ -32,7 +31,7 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
-from homeassistant.components.switch.const import DOMAIN as PLATFORM_DOMAIN
+from homeassistant.components.switch import DOMAIN as PLATFORM_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -140,7 +139,7 @@ async def test_switch_entities(
     tests: list[SwitchTestCase],
 ) -> None:
     """Test switch entities."""
-    device = next(controller.devices(Capabilities))
+    device = controller.devices[0]
     event_bus = device.events
 
     assert hass.states.async_entity_ids() == [test.entity_id for test in tests]

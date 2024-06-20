@@ -1,9 +1,9 @@
 """Common fixtures for the AccuWeather tests."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.accuweather.const import DOMAIN
 
@@ -11,7 +11,7 @@ from tests.common import load_json_array_fixture, load_json_object_fixture
 
 
 @pytest.fixture
-def mock_accuweather_client() -> Generator[AsyncMock, None, None]:
+def mock_accuweather_client() -> Generator[AsyncMock]:
     """Mock a AccuWeather client."""
     current = load_json_object_fixture("current_conditions_data.json", DOMAIN)
     forecast = load_json_array_fixture("forecast_data.json", DOMAIN)

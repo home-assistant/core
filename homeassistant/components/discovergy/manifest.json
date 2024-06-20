@@ -1,6 +1,6 @@
 {
   "domain": "discovergy",
-  "name": "Discovergy",
+  "name": "inexogy",
   "codeowners": ["@jpbede"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/discovergy",

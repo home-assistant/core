@@ -23,7 +23,7 @@
     'model': 'Powerwall 2, Tesla Backup Gateway 2',
     'name': 'Energy Site',
     'name_by_user': None,
-    'serial_number': None,
+    'serial_number': '123456',
     'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
@@ -80,7 +80,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tesla',
-    'model': None,
+    'model': 'Gen 3 Wall Connector',
     'name': 'Wall Connector',
     'name_by_user': None,
     'serial_number': '123',
@@ -110,7 +110,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tesla',
-    'model': None,
+    'model': 'Gen 3 Wall Connector',
     'name': 'Wall Connector',
     'name_by_user': None,
     'serial_number': '234',

@@ -6,13 +6,11 @@ from typing import Any
 import pytest
 
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_ENQUEUE,
     DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
-    MediaPlayerEnqueue,
-)
-from homeassistant.components.media_player.const import (
-    ATTR_MEDIA_ENQUEUE,
     SERVICE_SELECT_SOURCE,
+    MediaPlayerEnqueue,
 )
 from homeassistant.components.sonos.const import SOURCE_LINEIN, SOURCE_TV
 from homeassistant.components.sonos.media_player import LONG_SERVICE_TIMEOUT

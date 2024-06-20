@@ -1,6 +1,6 @@
 """Tests for cloud tts."""
 
-from collections.abc import AsyncGenerator, Callable, Coroutine
+from collections.abc import Callable, Coroutine
 from copy import deepcopy
 from http import HTTPStatus
 from typing import Any
@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from hass_nabucasa.voice import TTS_VOICES, VoiceError, VoiceTokenError
 import pytest
+from typing_extensions import AsyncGenerator
 import voluptuous as vol
 
 from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY
@@ -39,7 +40,7 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
-async def delay_save_fixture() -> AsyncGenerator[None, None]:
+async def delay_save_fixture() -> AsyncGenerator[None]:
     """Load the homeassistant integration."""
     with patch("homeassistant.helpers.collection.SAVE_DELAY", new=0):
         yield

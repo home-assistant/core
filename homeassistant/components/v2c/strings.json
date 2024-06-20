@@ -54,18 +54,18 @@
       "battery_power": {
         "name": "Battery power"
       },
-      "slave_error": {
-        "name": "Slave error",
+      "meter_error": {
+        "name": "Meter error",
         "state": {
           "no_error": "No error",
           "communication": "Communication",
           "reading": "Reading",
-          "slave": "Slave",
+          "meter": "Meter",
           "waiting_wifi": "Waiting for Wi-Fi",
           "waiting_communication": "Waiting communication",
           "wrong_ip": "Wrong IP",
-          "slave_not_found": "Slave not found",
-          "wrong_slave": "Wrong slave",
+          "meter_not_found": "Meter not found",
+          "wrong_meter": "Wrong meter",
           "no_response": "No response",
           "clamp_not_connected": "Clamp not connected",
           "illegal_function": "Illegal function",
