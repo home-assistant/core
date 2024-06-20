@@ -78,10 +78,10 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
     _state_attrs = ("_attr_available", "_attr_state", "_attr_volume_level")
 
     @callback
-    def _async_protect_update(
+    def _async_update(
         self, device: ProtectModelWithId, msg: WSSubscriptionMessage | None
     ) -> None:
-        super()._async_protect_update(device, msg)
+        super()._async_update(device, msg)
         updated_device = self.device
         self._attr_volume_level = float(updated_device.speaker_settings.volume / 100)
 

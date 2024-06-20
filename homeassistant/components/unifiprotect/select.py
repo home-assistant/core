@@ -372,10 +372,10 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         super().__init__(data, device, description)
 
     @callback
-    def _async_protect_update(
+    def _async_update(
         self, device: ProtectModelWithId, msg: WSSubscriptionMessage | None
     ) -> None:
-        super()._async_protect_update(device, msg)
+        super()._async_update(device, msg)
         entity_description = self.entity_description
         # entities with categories are not exposed for voice
         # and safe to update dynamically

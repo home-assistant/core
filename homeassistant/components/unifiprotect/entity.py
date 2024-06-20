@@ -189,7 +189,7 @@ class BaseProtectEntity(Entity):
                 self._async_get_ufp_enabled = description.get_ufp_enabled
 
         self._async_set_device_info()
-        self._async_protect_update(device, None)
+        self._async_update(device, None)
         self._state_getters = tuple(
             partial(attrgetter(attr), self) for attr in self._state_attrs
         )
@@ -214,7 +214,7 @@ class BaseProtectEntity(Entity):
         )
 
     @callback
-    def _async_protect_update(
+    def _async_update(
         self, device: ProtectModelWithId, msg: WSSubscriptionMessage | None
     ) -> None:
         """Update Entity object from Protect device."""
@@ -242,7 +242,7 @@ class BaseProtectEntity(Entity):
     ) -> None:
         """When device is updated from Protect."""
         previous_attrs = [getter() for getter in self._state_getters]
-        self._async_protect_update(device, msg)
+        self._async_update(device, msg)
         changed = False
         for idx, getter in enumerate(self._state_getters):
             if previous_attrs[idx] != getter():
@@ -296,7 +296,7 @@ class ProtectNVREntity(BaseProtectEntity):
         )
 
     @callback
-    def _async_protect_update(
+    def _async_update(
         self, device: ProtectModelWithId, msg: WSSubscriptionMessage | None
     ) -> None:
         data = self.data
@@ -320,7 +320,7 @@ class EventEntityMixin(ProtectDeviceEntity):
         self._attr_extra_state_attributes = {}
 
     @callback
-    def _async_protect_update(
+    def _async_update(
         self, device: ProtectModelWithId, msg: WSSubscriptionMessage | None
     ) -> None:
         if (event := self.entity_description.get_event_obj(device)) is None:
@@ -331,4 +331,4 @@ class EventEntityMixin(ProtectDeviceEntity):
                 ATTR_EVENT_SCORE: event.score,
             }
         self._event = event
-        super()._async_protect_update(device, msg)
+        super()._async_update(device, msg)

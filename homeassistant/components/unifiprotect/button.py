@@ -176,10 +176,10 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
     entity_description: ProtectButtonEntityDescription
 
     @callback
-    def _async_protect_update(
+    def _async_update(
         self, device: ProtectModelWithId, msg: WSSubscriptionMessage | None
     ) -> None:
-        super()._async_protect_update(device, msg)
+        super()._async_update(device, msg)
         if self.entity_description.key == KEY_ADOPT:
             device = self.device
             self._attr_available = device.can_adopt and device.can_create(
