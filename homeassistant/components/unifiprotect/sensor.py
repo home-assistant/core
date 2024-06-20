@@ -769,8 +769,6 @@ class ProtectLicensePlateEventSensor(ProtectEventSensor):
                 not (obj_type := self.entity_description.ufp_obj_type)
                 or obj_type in event.smart_detect_types
             )
-            and (metadata := event.metadata)
-            and (license_plate := metadata.license_plate)
             and (
                 (
                     is_end_of_event := (
@@ -782,6 +780,8 @@ class ProtectLicensePlateEventSensor(ProtectEventSensor):
                 )
                 or not event.end
             )
+            and (metadata := event.metadata)
+            and (license_plate := metadata.license_plate)
         ):
             self._attr_native_value = license_plate.name
             if is_end_of_event:
