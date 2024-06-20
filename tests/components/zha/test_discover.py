@@ -687,7 +687,7 @@ async def test_quirks_v2_entity_discovery_e1_curtain(
     assert hook_state_entity_id is not None
     state = hass.states.get(hook_state_entity_id)
     assert state is not None
-    assert state.state == AqaraE1HookState.Unlocked.name
+    assert state.state == AqaraE1HookState.Unlocked.name.lower()
 
     error_detected_entity_id = find_entity_id(
         Platform.BINARY_SENSOR,
