@@ -456,6 +456,7 @@ async def test_play_media_favorite_item_id(
     )
     assert soco_mock.play_uri.call_args_list[0].kwargs["title"] == "66 - Watercolors"
 
+    # Test exception handling with an invalid id.
     with pytest.raises(ValueError) as sve:
         await hass.services.async_call(
             MP_DOMAIN,
