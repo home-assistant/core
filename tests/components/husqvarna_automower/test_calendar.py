@@ -41,6 +41,7 @@ async def test_binary_sensor_snapshot(
     end_date: datetime,
 ) -> None:
     """Snapshot test states of the binary sensors."""
+    await hass.config.async_set_time_zone("Europe/Berlin")
     await setup_integration(hass, mock_config_entry)
     events = await hass.services.async_call(
         CALENDAR_DOMAIN,
