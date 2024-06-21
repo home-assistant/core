@@ -20,6 +20,18 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Connection options",
+        "description": "**WARNING**: Changing any of the below options may significantly reduce battery life of your motor!",
+        "data": {
+          "permanent_connection": "Permanent connection",
+          "disconnect_time": "Disconnect time (seconds)"
+        }
+      }
+    }
+  },
   "selector": {
     "blind_type": {
       "options": {
