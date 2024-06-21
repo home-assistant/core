@@ -83,12 +83,12 @@ async def async_setup_entry(
 
     manage_water_heater_fallback_issue(
         hass=hass,
-        water_heater_entities=entities,
+        water_heater_names=[e.zone_name for e in entities],
         integration_overlay_fallback=tado.fallback,
     )
 
 
-def _generate_entities(tado: TadoConnector) -> list[WaterHeaterEntity]:
+def _generate_entities(tado: TadoConnector) -> list:
     """Create all water heater entities."""
     entities = []
 
