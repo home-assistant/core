@@ -44,6 +44,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from . import (
+    DEVICE_ID,
     MAC_ADDRESS,
     _mocked_device,
     _patch_connect,
@@ -84,7 +85,7 @@ async def test_light_unique_id(
     )
 
 
-async def test_dimmer_unique_id(hass: HomeAssistant) -> None:
+async def test_legacy_dimmer_unique_id(hass: HomeAssistant) -> None:
     """Test a light unique id."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
@@ -97,6 +98,7 @@ async def test_dimmer_unique_id(hass: HomeAssistant) -> None:
         device_id="aa:bb:cc:dd:ee:ff",
     )
     light.device_type = DeviceType.Dimmer
+
     with _patch_discovery(device=light), _patch_connect(device=light):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -442,7 +444,7 @@ async def test_off_at_start_light(hass: HomeAssistant) -> None:
     light.is_color = False
     light.is_variable_color_temp = False
     light.is_dimmable = False
-    device.is_on = False
+    light.state = LightState(light_on=False)
 
     with _patch_discovery(device=device), _patch_connect(device=device):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
@@ -465,7 +467,7 @@ async def test_dimmer_turn_on_fix(hass: HomeAssistant) -> None:
     device = _mocked_device(modules=[Module.Light], alias="my_light")
     light = device.modules[Module.Light]
     device.device_type = DeviceType.Dimmer
-    device.is_on = False
+    light.state = LightState(light_on=False)
 
     with _patch_discovery(device=device), _patch_connect(device=device):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
@@ -551,8 +553,7 @@ async def test_smart_strip_effects(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
     assert state.attributes[ATTR_EFFECT] == EFFECT_OFF
 
-    device.is_off = True
-    device.is_on = False
+    light.state = LightState(light_on=False)
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
     await hass.async_block_till_done()
 
@@ -569,8 +570,7 @@ async def test_smart_strip_effects(hass: HomeAssistant) -> None:
     light.set_state.assert_called_once()
     light.set_state.reset_mock()
 
-    device.is_off = False
-    device.is_on = True
+    light.state = LightState(light_on=True)
     light_effect.effect_list = None
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
@@ -671,8 +671,7 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
-    device.is_off = True
-    device.is_on = False
+    light.state = LightState(light_on=False)
     light_effect.effect = LightEffect.LIGHT_EFFECTS_OFF
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
     await hass.async_block_till_done()
@@ -878,3 +877,42 @@ async def test_light_errors_when_turned_on(
         )
         == reauth_expected
     )
+
+
+async def test_light_child(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test child lights are added to parent device with the right ids."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+
+    child_light_1 = _mocked_device(
+        modules=[Module.Light], alias="my_light_0", device_id=f"{DEVICE_ID}00"
+    )
+    child_light_2 = _mocked_device(
+        modules=[Module.Light], alias="my_light_1", device_id=f"{DEVICE_ID}01"
+    )
+    parent_device = _mocked_device(
+        device_id=DEVICE_ID,
+        alias="my_device",
+        children=[child_light_1, child_light_2],
+        modules=[Module.Light],
+    )
+
+    with _patch_discovery(device=parent_device), _patch_connect(device=parent_device):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_device"
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+
+    for light_id in range(2):
+        child_entity_id = f"light.my_device_my_light_{light_id}"
+        child_entity = entity_registry.async_get(child_entity_id)
+        assert child_entity
+        assert child_entity.unique_id == f"{DEVICE_ID}0{light_id}"
+        assert child_entity.device_id == entity.device_id
