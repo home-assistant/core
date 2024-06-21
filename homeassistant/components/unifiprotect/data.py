@@ -6,7 +6,7 @@ from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta
 from functools import partial
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from typing_extensions import Generator
 from uiprotect import ProtectApiClient
@@ -16,7 +16,6 @@ from uiprotect.data import (
     Camera,
     Event,
     EventType,
-    Liveview,
     ModelType,
     ProtectAdoptableDeviceModel,
     WSSubscriptionMessage,
@@ -44,7 +43,7 @@ from .const import (
     DISPATCH_CHANNELS,
     DOMAIN,
 )
-from .utils import async_dispatch_id as _ufpd, async_get_devices_by_type
+from .utils import async_get_devices_by_type
 
 _LOGGER = logging.getLogger(__name__)
 type ProtectDeviceType = ProtectAdoptableDeviceModel | NVR
@@ -59,6 +58,12 @@ def async_last_update_was_successful(
     return hasattr(entry, "runtime_data") and entry.runtime_data.last_update_success
 
 
+@callback
+def _async_dispatch_id(entry: UFPConfigEntry, dispatch: str) -> str:
+    """Generate entry specific dispatch ID."""
+    return f"{DOMAIN}.{entry.entry_id}.{dispatch}"
+
+
 class ProtectData:
     """Coordinate updates."""
 
@@ -70,9 +75,6 @@ class ProtectData:
         entry: UFPConfigEntry,
     ) -> None:
         """Initialize an subscriber."""
-        super().__init__()
-
-        self._hass = hass
         self._entry = entry
         self._hass = hass
         self._update_interval = update_interval
@@ -81,10 +83,11 @@ class ProtectData:
         self._unsub_interval: CALLBACK_TYPE | None = None
         self._unsub_websocket: CALLBACK_TYPE | None = None
         self._auth_failures = 0
-
         self.last_update_success = False
         self.api = protect
-        self._adopt_signal = _ufpd(self._entry, DISPATCH_ADOPT)
+        self.adopt_signal = _async_dispatch_id(entry, DISPATCH_ADOPT)
+        self.add_signal = _async_dispatch_id(entry, DISPATCH_ADD)
+        self.channels_signal = _async_dispatch_id(entry, DISPATCH_CHANNELS)
 
     @property
     def disable_stream(self) -> bool:
@@ -102,7 +105,7 @@ class ProtectData:
     ) -> None:
         """Add an callback for on device adopt."""
         self._entry.async_on_unload(
-            async_dispatcher_connect(self._hass, self._adopt_signal, add_callback)
+            async_dispatcher_connect(self._hass, self.adopt_signal, add_callback)
         )
 
     def get_by_types(
@@ -185,12 +188,10 @@ class ProtectData:
     def _async_add_device(self, device: ProtectAdoptableDeviceModel) -> None:
         if device.is_adopted_by_us:
             _LOGGER.debug("Device adopted: %s", device.id)
-            async_dispatcher_send(
-                self._hass, _ufpd(self._entry, DISPATCH_ADOPT), device
-            )
+            async_dispatcher_send(self._hass, self.adopt_signal, device)
         else:
             _LOGGER.debug("New device detected: %s", device.id)
-            async_dispatcher_send(self._hass, _ufpd(self._entry, DISPATCH_ADD), device)
+            async_dispatcher_send(self._hass, self.add_signal, device)
 
     @callback
     def _async_remove_device(self, device: ProtectAdoptableDeviceModel) -> None:
@@ -215,9 +216,7 @@ class ProtectData:
             and "channels" in changed_data
         ):
             self._pending_camera_ids.remove(device.id)
-            async_dispatcher_send(
-                self._hass, _ufpd(self._entry, DISPATCH_CHANNELS), device
-            )
+            async_dispatcher_send(self._hass, self.channels_signal, device)
 
         # trigger update for all Cameras with LCD screens when NVR Doorbell settings updates
         if "doorbell_settings" in changed_data:
@@ -231,41 +230,49 @@ class ProtectData:
 
     @callback
     def _async_process_ws_message(self, message: WSSubscriptionMessage) -> None:
-        if message.new_obj is None:
+        """Process a message from the websocket."""
+        if (new_obj := message.new_obj) is None:
             if isinstance(message.old_obj, ProtectAdoptableDeviceModel):
                 self._async_remove_device(message.old_obj)
             return
 
-        obj = message.new_obj
-        if isinstance(obj, (ProtectAdoptableDeviceModel, NVR)):
-            if message.old_obj is None and isinstance(obj, ProtectAdoptableDeviceModel):
-                self._async_add_device(obj)
-            elif getattr(obj, "is_adopted_by_us", True):
-                self._async_update_device(obj, message.changed_data)
-
-        # trigger updates for camera that the event references
-        elif isinstance(obj, Event):
+        model_type = new_obj.model
+        if model_type is ModelType.EVENT:
+            if TYPE_CHECKING:
+                assert isinstance(new_obj, Event)
             if _LOGGER.isEnabledFor(logging.DEBUG):
-                log_event(obj)
-            if obj.type is EventType.DEVICE_ADOPTED:
-                if obj.metadata is not None and obj.metadata.device_id is not None:
-                    device = self.api.bootstrap.get_device_from_id(
-                        obj.metadata.device_id
-                    )
-                    if device is not None:
-                        self._async_add_device(device)
-            elif obj.camera is not None:
-                self._async_signal_device_update(obj.camera)
-            elif obj.light is not None:
-                self._async_signal_device_update(obj.light)
-            elif obj.sensor is not None:
-                self._async_signal_device_update(obj.sensor)
-        # alert user viewport needs restart so voice clients can get new options
-        elif len(self.api.bootstrap.viewers) > 0 and isinstance(obj, Liveview):
+                log_event(new_obj)
+            if (
+                (new_obj.type is EventType.DEVICE_ADOPTED)
+                and (metadata := new_obj.metadata)
+                and (device_id := metadata.device_id)
+                and (device := self.api.bootstrap.get_device_from_id(device_id))
+            ):
+                self._async_add_device(device)
+            elif camera := new_obj.camera:
+                self._async_signal_device_update(camera)
+            elif light := new_obj.light:
+                self._async_signal_device_update(light)
+            elif sensor := new_obj.sensor:
+                self._async_signal_device_update(sensor)
+            return
+
+        if model_type is ModelType.LIVEVIEW and len(self.api.bootstrap.viewers) > 0:
+            # alert user viewport needs restart so voice clients can get new options
             _LOGGER.warning(
                 "Liveviews updated. Restart Home Assistant to update Viewport select"
                 " options"
             )
+            return
+
+        if message.old_obj is None and isinstance(new_obj, ProtectAdoptableDeviceModel):
+            self._async_add_device(new_obj)
+            return
+
+        if getattr(new_obj, "is_adopted_by_us", True) and hasattr(new_obj, "mac"):
+            if TYPE_CHECKING:
+                assert isinstance(new_obj, (ProtectAdoptableDeviceModel, NVR))
+            self._async_update_device(new_obj, message.changed_data)
 
     @callback
     def _async_process_updates(self, updates: Bootstrap | None) -> None:
@@ -330,7 +337,7 @@ class ProtectData:
 
 @callback
 def async_ufp_instance_for_config_entry_ids(
-    hass: HomeAssistant, config_entry_ids: set[str]
+    hass: HomeAssistant, config_entry_ids: list[str]
 ) -> ProtectApiClient | None:
     """Find the UFP instance for the config entry ids."""
     return next(
@@ -338,6 +345,7 @@ def async_ufp_instance_for_config_entry_ids(
             entry.runtime_data.api
             for entry_id in config_entry_ids
             if (entry := hass.config_entries.async_get_entry(entry_id))
+            and hasattr(entry, "runtime_data")
         ),
         None,
     )
@@ -376,7 +384,9 @@ def async_get_data_for_entry_id(
     hass: HomeAssistant, entry_id: str
 ) -> ProtectData | None:
     """Find the ProtectData instance for a config entry id."""
-    if entry := hass.config_entries.async_get_entry(entry_id):
+    if (entry := hass.config_entries.async_get_entry(entry_id)) and hasattr(
+        entry, "runtime_data"
+    ):
         entry = cast(UFPConfigEntry, entry)
         return entry.runtime_data
     return None
