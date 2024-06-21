@@ -118,8 +118,6 @@ DISCOVERY_SCHEMAS = [
             key="WaterLeakDetector",
             translation_key="water_leak",
             device_class=BinarySensorDeviceClass.MOISTURE,
-            # value is inverted on matter to what we expect
-            measurement_to_ha=lambda x: not x,
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.BooleanState.Attributes.StateValue,),
@@ -131,8 +129,6 @@ DISCOVERY_SCHEMAS = [
             key="WaterFreezeDetector",
             translation_key="water_freeze",
             device_class=BinarySensorDeviceClass.COLD,
-            # value is inverted on matter to what we expect
-            measurement_to_ha=lambda x: not x,
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.BooleanState.Attributes.StateValue,),
@@ -144,8 +140,6 @@ DISCOVERY_SCHEMAS = [
             key="RainSensor",
             translation_key="rain",
             device_class=BinarySensorDeviceClass.MOISTURE,
-            # value is inverted on matter to what we expect
-            measurement_to_ha=lambda x: not x,
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.BooleanState.Attributes.StateValue,),
