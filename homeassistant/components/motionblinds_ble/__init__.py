@@ -98,7 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Apply options
-    await hass.async_create_background_task(
+    hass.async_create_background_task(
         name=device.ble_device.address, target=apply_options(hass, entry)
     )
 
