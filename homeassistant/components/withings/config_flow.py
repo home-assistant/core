@@ -34,14 +34,8 @@ class WithingsFlowHandler(
     def extra_authorize_data(self) -> dict[str, str]:
         """Extra data that needs to be appended to the authorize url."""
         return {
-            "scope": ",".join(
-                [
-                    AuthScope.USER_INFO,
-                    AuthScope.USER_METRICS,
-                    AuthScope.USER_ACTIVITY,
-                    AuthScope.USER_SLEEP_EVENTS,
-                ]
-            )
+            "scope": f"{AuthScope.USER_INFO},{AuthScope.USER_METRICS},"
+            f"{AuthScope.USER_ACTIVITY},{AuthScope.USER_SLEEP_EVENTS}"
         }
 
     async def async_step_reauth(
@@ -74,10 +68,8 @@ class WithingsFlowHandler(
             )
 
         if self.reauth_entry.unique_id == user_id:
-            self.hass.config_entries.async_update_entry(
+            return self.async_update_reload_and_abort(
                 self.reauth_entry, data={**self.reauth_entry.data, **data}
             )
-            await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
 
         return self.async_abort(reason="wrong_account")

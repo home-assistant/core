@@ -302,7 +302,7 @@ def _home_conf(hass: HomeAssistant) -> dict:
         CONF_NAME: hass.config.location_name,
         CONF_LATITUDE: hass.config.latitude,
         CONF_LONGITUDE: hass.config.longitude,
-        CONF_RADIUS: DEFAULT_RADIUS,
+        CONF_RADIUS: hass.config.radius,
         CONF_ICON: ICON_HOME,
         CONF_PASSIVE: False,
     }
@@ -363,7 +363,7 @@ class Zone(collection.CollectionEntity):
         """Return entity instance initialized from storage."""
         zone = cls(config)
         zone.editable = True
-        zone._generate_attrs()
+        zone._generate_attrs()  # noqa: SLF001
         return zone
 
     @classmethod
@@ -371,7 +371,7 @@ class Zone(collection.CollectionEntity):
         """Return entity instance initialized from yaml."""
         zone = cls(config)
         zone.editable = False
-        zone._generate_attrs()
+        zone._generate_attrs()  # noqa: SLF001
         return zone
 
     @property

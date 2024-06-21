@@ -1,10 +1,10 @@
 """Configure tests for the OpenSky integration."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from python_opensky import StatesResponse
+from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant.components.opensky.const import (
     CONF_ALTITUDE,
@@ -23,7 +23,7 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.opensky.async_setup_entry",
@@ -87,7 +87,7 @@ def mock_config_entry_authenticated() -> MockConfigEntry:
 
 
 @pytest.fixture
-async def opensky_client() -> Generator[AsyncMock, None, None]:
+async def opensky_client() -> AsyncGenerator[AsyncMock]:
     """Mock the OpenSky client."""
     with (
         patch(

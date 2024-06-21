@@ -65,7 +65,11 @@ from homeassistant.helpers.deprecation import (
 )
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import (
     ATTR_CUR,
@@ -98,7 +102,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime
 
-from .config import AutomationConfig
+from .config import AutomationConfig, ValidationStatus
 from .const import (
     CONF_ACTION,
     CONF_INITIAL_STATE,
@@ -331,17 +335,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await async_get_blueprints(hass).async_reset_cache()
         if (conf := await component.async_prepare_reload(skip_reset=True)) is None:
             return
-        await _async_process_config(hass, conf, component)
+        if automation_id := service_call.data.get(CONF_ID):
+            await _async_process_single_config(hass, conf, component, automation_id)
+        else:
+            await _async_process_config(hass, conf, component)
         hass.bus.async_fire(EVENT_AUTOMATION_RELOADED, context=service_call.context)
 
-    reload_helper = ReloadServiceHelper(reload_service_handler)
+    def reload_targets(service_call: ServiceCall) -> set[str | None]:
+        if automation_id := service_call.data.get(CONF_ID):
+            return {automation_id}
+        return {automation.unique_id for automation in component.entities}
+
+    reload_helper = ReloadServiceHelper(reload_service_handler, reload_targets)
 
     async_register_admin_service(
         hass,
         DOMAIN,
         SERVICE_RELOAD,
         reload_helper.execute_service,
-        schema=vol.Schema({}),
+        schema=vol.Schema({vol.Optional(CONF_ID): str}),
     )
 
     websocket_api.async_register_command(hass, websocket_config)
@@ -418,11 +430,15 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
         automation_id: str | None,
         name: str,
         raw_config: ConfigType | None,
+        validation_error: str,
+        validation_status: ValidationStatus,
     ) -> None:
         """Initialize an automation entity."""
         self._attr_name = name
         self._attr_unique_id = automation_id
         self.raw_config = raw_config
+        self._validation_error = validation_error
+        self._validation_status = validation_status
 
     @cached_property
     def referenced_labels(self) -> set[str]:
@@ -453,6 +469,30 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
     def referenced_entities(self) -> set[str]:
         """Return a set of referenced entities."""
         return set()
+
+    async def async_added_to_hass(self) -> None:
+        """Create a repair issue to notify the user the automation has errors."""
+        await super().async_added_to_hass()
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"{self.entity_id}_validation_{self._validation_status}",
+            is_fixable=False,
+            severity=IssueSeverity.ERROR,
+            translation_key=f"validation_{self._validation_status}",
+            translation_placeholders={
+                "edit": f"/config/automation/edit/{self.unique_id}",
+                "entity_id": self.entity_id,
+                "error": self._validation_error,
+                "name": self._attr_name or self.entity_id,
+            },
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        await super().async_will_remove_from_hass()
+        async_delete_issue(
+            self.hass, DOMAIN, f"{self.entity_id}_validation_{self._validation_status}"
+        )
 
     async def async_trigger(
         self,
@@ -699,7 +739,10 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
             @callback
             def started_action() -> None:
-                self.hass.bus.async_fire(
+                # This is always a callback from a coro so there is no
+                # risk of this running in a thread which allows us to use
+                # async_fire_internal
+                self.hass.bus.async_fire_internal(
                     EVENT_AUTOMATION_TRIGGERED, event_data, context=trigger_context
                 )
 
@@ -736,7 +779,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                     err,
                 )
                 automation_trace.set_error(err)
-            except Exception as err:  # pylint: disable=broad-except
+            except Exception as err:
                 self._logger.exception("While executing automation %s", self.entity_id)
                 automation_trace.set_error(err)
 
@@ -853,12 +896,14 @@ class AutomationEntityConfig:
     list_no: int
     raw_blueprint_inputs: ConfigType | None
     raw_config: ConfigType | None
-    validation_failed: bool
+    validation_error: str | None
+    validation_status: ValidationStatus
 
 
 async def _prepare_automation_config(
     hass: HomeAssistant,
     config: ConfigType,
+    wanted_automation_id: str | None,
 ) -> list[AutomationEntityConfig]:
     """Parse configuration and prepare automation entity configuration."""
     automation_configs: list[AutomationEntityConfig] = []
@@ -866,16 +911,22 @@ async def _prepare_automation_config(
     conf: list[ConfigType] = config[DOMAIN]
 
     for list_no, config_block in enumerate(conf):
+        automation_id: str | None = config_block.get(CONF_ID)
+        if wanted_automation_id is not None and automation_id != wanted_automation_id:
+            continue
+
         raw_config = cast(AutomationConfig, config_block).raw_config
         raw_blueprint_inputs = cast(AutomationConfig, config_block).raw_blueprint_inputs
-        validation_failed = cast(AutomationConfig, config_block).validation_failed
+        validation_error = cast(AutomationConfig, config_block).validation_error
+        validation_status = cast(AutomationConfig, config_block).validation_status
         automation_configs.append(
             AutomationEntityConfig(
                 config_block,
                 list_no,
                 raw_blueprint_inputs,
                 raw_config,
-                validation_failed,
+                validation_error,
+                validation_status,
             )
         )
 
@@ -901,12 +952,14 @@ async def _create_automation_entities(
         automation_id: str | None = config_block.get(CONF_ID)
         name = _automation_name(automation_config)
 
-        if automation_config.validation_failed:
+        if automation_config.validation_status != ValidationStatus.OK:
             entities.append(
                 UnavailableAutomationEntity(
                     automation_id,
                     name,
                     automation_config.raw_config,
+                    cast(str, automation_config.validation_error),
+                    automation_config.validation_status,
                 )
             )
             continue
@@ -1025,7 +1078,7 @@ async def _async_process_config(
 
         return automation_matches, config_matches
 
-    automation_configs = await _prepare_automation_config(hass, config)
+    automation_configs = await _prepare_automation_config(hass, config, None)
     automations: list[BaseAutomationEntity] = list(component.entities)
 
     # Find automations and configurations which have matches
@@ -1046,6 +1099,41 @@ async def _async_process_config(
         if idx not in config_matches
     ]
     entities = await _create_automation_entities(hass, updated_automation_configs)
+    await component.async_add_entities(entities)
+
+
+def _automation_matches_config(
+    automation: BaseAutomationEntity | None, config: AutomationEntityConfig | None
+) -> bool:
+    """Return False if an automation's config has been changed."""
+    if not automation:
+        return False
+    if not config:
+        return False
+    name = _automation_name(config)
+    return automation.name == name and automation.raw_config == config.raw_config
+
+
+async def _async_process_single_config(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    component: EntityComponent[BaseAutomationEntity],
+    automation_id: str,
+) -> None:
+    """Process config and add a single automation."""
+
+    automation_configs = await _prepare_automation_config(hass, config, automation_id)
+    automation = next(
+        (x for x in component.entities if x.unique_id == automation_id), None
+    )
+    automation_config = automation_configs[0] if automation_configs else None
+
+    if _automation_matches_config(automation, automation_config):
+        return
+
+    if automation:
+        await automation.async_remove()
+    entities = await _create_automation_entities(hass, automation_configs)
     await component.async_add_entities(entities)
 
 
@@ -1157,7 +1245,7 @@ def websocket_config(
 
     if automation is None:
         connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Entity not found"
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Entity not found"
         )
         return
 

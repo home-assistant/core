@@ -93,7 +93,7 @@ BUTTON_EDIT = {
 }
 
 
-validate_addr = cv.matches_regex(r"\[\d\d:\d\d:\d\d:\d\d\]")
+validate_addr = cv.matches_regex(r"\[(?:\d\d:)?\d\d:\d\d:\d\d\]")
 
 
 async def validate_add_controller(
@@ -103,14 +103,14 @@ async def validate_add_controller(
     user_input[CONF_CONTROLLER_ID] = slugify(user_input[CONF_NAME])
     user_input[CONF_PORT] = int(user_input[CONF_PORT])
     try:
-        handler._async_abort_entries_match(  # pylint: disable=protected-access
+        handler._async_abort_entries_match(  # noqa: SLF001
             {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
         )
     except AbortFlow as err:
         raise SchemaFlowError("duplicated_host_port") from err
 
     try:
-        handler._async_abort_entries_match(  # pylint: disable=protected-access
+        handler._async_abort_entries_match(  # noqa: SLF001
             {CONF_CONTROLLER_ID: user_input[CONF_CONTROLLER_ID]}
         )
     except AbortFlow as err:
@@ -565,15 +565,7 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_KEYPADS: [
                 {
                     CONF_ADDR: keypad[CONF_ADDR],
-                    CONF_BUTTONS: [
-                        {
-                            CONF_LED: button[CONF_LED],
-                            CONF_NAME: button[CONF_NAME],
-                            CONF_NUMBER: button[CONF_NUMBER],
-                            CONF_RELEASE_DELAY: button[CONF_RELEASE_DELAY],
-                        }
-                        for button in keypad[CONF_BUTTONS]
-                    ],
+                    CONF_BUTTONS: [],
                     CONF_NAME: keypad[CONF_NAME],
                 }
                 for keypad in config[CONF_KEYPADS]
@@ -698,7 +690,10 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     CONF_PORT: user_input[CONF_PORT],
                 }
                 return self.async_update_reload_and_abort(
-                    entry, options=new_options, reason="reconfigure_successful"
+                    entry,
+                    options=new_options,
+                    reason="reconfigure_successful",
+                    reload_even_if_entry_is_unchanged=False,
                 )
 
         return self.async_show_form(

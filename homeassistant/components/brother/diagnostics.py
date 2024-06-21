@@ -5,20 +5,16 @@ from __future__ import annotations
 from dataclasses import asdict
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import BrotherDataUpdateCoordinator
-from .const import DATA_CONFIG_ENTRY, DOMAIN
+from . import BrotherConfigEntry
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: BrotherConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: BrotherDataUpdateCoordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
-        config_entry.entry_id
-    ]
+    coordinator = config_entry.runtime_data
 
     return {
         "info": dict(config_entry.data),

@@ -7,7 +7,7 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable
 from datetime import date, timedelta
 from functools import cached_property
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 from nibe.coil import Coil, CoilData
 from nibe.connection import Connection
@@ -26,13 +26,8 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DOMAIN, LOGGER
 
-_DataTypeT = TypeVar("_DataTypeT")
-_ContextTypeT = TypeVar("_ContextTypeT")
 
-
-class ContextCoordinator(
-    Generic[_DataTypeT, _ContextTypeT], DataUpdateCoordinator[_DataTypeT]
-):
+class ContextCoordinator[_DataTypeT, _ContextTypeT](DataUpdateCoordinator[_DataTypeT]):
     """Update coordinator with context adjustments."""
 
     @cached_property

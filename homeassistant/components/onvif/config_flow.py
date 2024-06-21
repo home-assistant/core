@@ -67,7 +67,7 @@ def wsdiscovery() -> list[Service]:
     finally:
         discovery.stop()
         # Stop the threads started by WSDiscovery since otherwise there is a leak.
-        discovery._stopThreads()  # pylint: disable=protected-access
+        discovery._stopThreads()  # noqa: SLF001
 
 
 async def async_discovery(hass: HomeAssistant) -> list[dict[str, Any]]:

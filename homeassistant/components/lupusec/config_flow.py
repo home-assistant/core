@@ -52,7 +52,7 @@ class LupusecConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except JSONDecodeError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
@@ -84,7 +84,7 @@ class LupusecConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
         except JSONDecodeError:
             return self.async_abort(reason="cannot_connect")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 

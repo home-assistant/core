@@ -4791,6 +4791,59 @@
       "type": "HEATING_THERMOSTAT",
       "updateState": "UP_TO_DATE"
     },
+    "3014F71100000000ETRV0013": {
+      "automaticValveAdaptionNeeded": false,
+      "availableFirmwareVersion": "2.0.2",
+      "connectionType": "HMIP_RF",
+      "firmwareVersion": "2.0.2",
+      "firmwareVersionInteger": 131074,
+      "functionalChannels": {
+        "0": {
+          "configPending": false,
+          "deviceId": "3014F71100000000ETRV0013",
+          "dutyCycle": false,
+          "functionalChannelType": "DEVICE_OPERATIONLOCK",
+          "groupIndex": 0,
+          "groups": ["00000000-0000-0000-0000-000000000014"],
+          "index": 0,
+          "label": "",
+          "lowBat": false,
+          "operationLockActive": false,
+          "routerModuleEnabled": false,
+          "routerModuleSupported": false,
+          "rssiDeviceValue": -58,
+          "rssiPeerValue": -58,
+          "unreach": false,
+          "supportedOptionalFeatures": {}
+        },
+        "1": {
+          "deviceId": "3014F71100000000ETRV0013",
+          "functionalChannelType": "HEATING_THERMOSTAT_CHANNEL",
+          "groupIndex": 1,
+          "groups": ["00000000-0000-0000-0005-000000000019"],
+          "index": 1,
+          "label": "",
+          "valveActualTemperature": 20.0,
+          "setPointTemperature": 5.0,
+          "temperatureOffset": 0.0,
+          "valvePosition": 0.0,
+          "valveState": "ADAPTION_DONE"
+        }
+      },
+      "homeId": "00000000-0000-0000-0000-000000000001",
+      "id": "3014F71100000000ETRV0013",
+      "label": "Heizkörperthermostat4",
+      "lastStatusUpdate": 1524514007132,
+      "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+      "manufacturerCode": 1,
+      "modelId": 269,
+      "modelType": "HMIP-eTRV",
+      "oem": "eQ-3",
+      "permanentlyReachable": true,
+      "serializedGlobalTradeItemNumber": "3014F71100000000ETRV0013",
+      "type": "HEATING_THERMOSTAT",
+      "updateState": "UP_TO_DATE"
+    },
     "3014F7110000000000000014": {
       "automaticValveAdaptionNeeded": false,
       "availableFirmwareVersion": "2.0.2",
@@ -8522,6 +8575,297 @@
           "index": "PROFILE_6",
           "name": "",
           "profileId": "00000000-0000-0000-0000-000000000063",
+          "visible": false
+        }
+      },
+      "setPointTemperature": 5.0,
+      "type": "HEATING",
+      "unreach": false,
+      "valvePosition": 0.0,
+      "valveSilentModeEnabled": false,
+      "valveSilentModeSupported": false,
+      "heatingFailureSupported": true,
+      "windowOpenTemperature": 5.0,
+      "windowState": null
+    },
+    "00000000-0000-0000-0005-000000000019": {
+      "activeProfile": "PROFILE_1",
+      "actualTemperature": null,
+      "boostDuration": 15,
+      "boostMode": false,
+      "channels": [
+        {
+          "channelIndex": 1,
+          "deviceId": "3014F71100000000ETRV0013"
+        }
+      ],
+      "controlMode": "AUTOMATIC",
+      "controllable": true,
+      "cooling": null,
+      "coolingAllowed": false,
+      "coolingIgnored": false,
+      "dutyCycle": false,
+      "ecoAllowed": true,
+      "ecoIgnored": false,
+      "externalClockCoolingTemperature": 23.0,
+      "externalClockEnabled": false,
+      "externalClockHeatingTemperature": 19.0,
+      "floorHeatingMode": "FLOOR_HEATING_STANDARD",
+      "homeId": "00000000-0000-0000-0000-000000000001",
+      "humidity": null,
+      "humidityLimitEnabled": true,
+      "humidityLimitValue": 60,
+      "id": "00000000-0000-0000-0005-000000000019",
+      "label": "Vorzimmer3",
+      "lastSetPointReachedTimestamp": 1557767559939,
+      "lastSetPointUpdatedTimestamp": 1557767559939,
+      "lastStatusUpdate": 1524514007132,
+      "lowBat": false,
+      "maxTemperature": 30.0,
+      "metaGroupId": "00000000-0000-0000-0000-000000000014",
+      "minTemperature": 5.0,
+      "partyMode": false,
+      "profiles": {
+        "PROFILE_1": {
+          "enabled": true,
+          "groupId": "00000000-0000-0000-0005-000000000019",
+          "index": "PROFILE_1",
+          "name": "",
+          "profileId": "00000000-0000-0000-0000-000000000058",
+          "visible": true
+        },
+        "PROFILE_2": {
+          "enabled": true,
+          "groupId": "00000000-0000-0000-0005-000000000019",
+          "index": "PROFILE_2",
+          "name": "",
+          "profileId": "00000000-0000-0000-0000-000000000059",
+          "visible": true
+        },
+        "PROFILE_3": {
+          "enabled": true,
+          "groupId": "00000000-0000-0000-0005-000000000019",
+          "index": "PROFILE_3",
+          "name": "",
+          "profileId": "00000000-0000-0000-0000-000000000060",
+          "visible": false
+        },
+        "PROFILE_4": {
+          "enabled": false,
+          "groupId": "00000000-0000-0000-0005-000000000019",
+          "index": "PROFILE_4",
+          "name": "",
+          "profileId": "00000000-0000-0000-0000-000000000061",
+          "visible": true
+        },
+        "PROFILE_5": {
+          "enabled": false,
+          "groupId": "00000000-0000-0000-0005-000000000019",
+          "index": "PROFILE_5",
+          "name": "",
+          "profileId": "00000000-0000-0000-0000-000000000062",
+          "visible": false
+        },
+        "PROFILE_6": {
+          "enabled": false,
+          "groupId": "00000000-0000-0000-0005-000000000019",
+          "index": "PROFILE_6",
+          "name": "",
+          "profileId": "00000000-0000-0000-0000-000000000063",
+          "visible": false
+        }
+      },
+      "setPointTemperature": 5.0,
+      "type": "HEATING",
+      "unreach": false,
+      "valvePosition": 0.0,
+      "valveSilentModeEnabled": false,
+      "valveSilentModeSupported": false,
+      "heatingFailureSupported": true,
+      "windowOpenTemperature": 5.0,
+      "windowState": null
+    },
+    "00000000-0000-0000-0001-000000000019": {
+      "activeProfile": "PROFILE_1",
+      "actualTemperature": null,
+      "boostDuration": 15,
+      "boostMode": false,
+      "channels": [
+        {
+          "channelIndex": 1,
+          "deviceId": "3014F7110000000000000013"
+        }
+      ],
+      "controlMode": "AUTOMATIC",
+      "controllable": true,
+      "cooling": null,
+      "coolingAllowed": false,
+      "coolingIgnored": false,
+      "dutyCycle": false,
+      "ecoAllowed": true,
+      "ecoIgnored": false,
+      "externalClockCoolingTemperature": 23.0,
+      "externalClockEnabled": false,
+      "externalClockHeatingTemperature": 19.0,
+      "floorHeatingMode": "FLOOR_HEATING_STANDARD",
+      "homeId": "00000000-0000-0000-0000-000000000001",
+      "humidity": null,
+      "humidityLimitEnabled": true,
+      "humidityLimitValue": 60,
+      "id": "00000000-0000-0000-0001-000000000019",
+      "label": "Vorzimmer",
+      "lastSetPointReachedTimestamp": 1557767559939,
+      "lastSetPointUpdatedTimestamp": 1557767559939,
+      "lastStatusUpdate": 1524514007132,
+      "lowBat": false,
+      "maxTemperature": 30.0,
+      "metaGroupId": "00000000-0000-0000-0000-000000000014",
+      "minTemperature": 5.0,
+      "partyMode": false,
+      "profiles": {
+        "PROFILE_1": {
+          "enabled": true,
+          "groupId": "00000000-0000-0000-0001-000000000019",
+          "index": "PROFILE_1",
+          "name": "",
+          "profileId": "00000000-0000-0000-0000-000000000058",
+          "visible": true
+        },
+        "PROFILE_2": {
+          "enabled": true,
+          "groupId": "00000000-0000-0000-0001-000000000019",
+          "index": "PROFILE_2",
+          "name": "",
+          "profileId": "00000000-0000-0000-0000-000000000059",
+          "visible": false
+        },
+        "PROFILE_3": {
+          "enabled": true,
+          "groupId": "00000000-0000-0000-0001-000000000019",
+          "index": "PROFILE_3",
+          "name": "",
+          "profileId": "00000000-0000-0000-0000-000000000060",
+          "visible": false
+        },
+        "PROFILE_4": {
+          "enabled": false,
+          "groupId": "00000000-0000-0000-0001-000000000019",
+          "index": "PROFILE_4",
+          "name": "",
+          "profileId": "00000000-0000-0000-0000-000000000061",
+          "visible": true
+        },
+        "PROFILE_5": {
+          "enabled": false,
+          "groupId": "00000000-0000-0000-0001-000000000019",
+          "index": "PROFILE_5",
+          "name": "",
+          "profileId": "00000000-0000-0000-0000-000000000062",
+          "visible": false
+        },
+        "PROFILE_6": {
+          "enabled": false,
+          "groupId": "00000000-0000-0000-0001-000000000019",
+          "index": "PROFILE_6",
+          "name": "",
+          "profileId": "00000000-0000-0000-0000-000000000063",
+          "visible": false
+        }
+      },
+      "setPointTemperature": 5.0,
+      "type": "HEATING",
+      "unreach": false,
+      "valvePosition": 0.0,
+      "valveSilentModeEnabled": false,
+      "valveSilentModeSupported": false,
+      "heatingFailureSupported": true,
+      "windowOpenTemperature": 5.0,
+      "windowState": null
+    },
+    "00000000-0000-0001-0001-000000000019": {
+      "activeProfile": "PROFILE_1",
+      "actualTemperature": null,
+      "boostDuration": 15,
+      "boostMode": false,
+      "channels": [
+        {
+          "channelIndex": 1,
+          "deviceId": "3014F7110000000000000013"
+        }
+      ],
+      "controlMode": "AUTOMATIC",
+      "controllable": true,
+      "cooling": null,
+      "coolingAllowed": false,
+      "coolingIgnored": false,
+      "dutyCycle": false,
+      "ecoAllowed": true,
+      "ecoIgnored": false,
+      "externalClockCoolingTemperature": 23.0,
+      "externalClockEnabled": false,
+      "externalClockHeatingTemperature": 19.0,
+      "floorHeatingMode": "FLOOR_HEATING_STANDARD",
+      "homeId": "00000000-0000-0000-0000-000000000001",
+      "humidity": null,
+      "humidityLimitEnabled": true,
+      "humidityLimitValue": 60,
+      "id": "00000000-0000-0001-0001-000000000019",
+      "label": "Vorzimmer2",
+      "lastSetPointReachedTimestamp": 1557767559939,
+      "lastSetPointUpdatedTimestamp": 1557767559939,
+      "lastStatusUpdate": 1524514007132,
+      "lowBat": false,
+      "maxTemperature": 30.0,
+      "metaGroupId": "00000000-0000-0000-0000-000000000014",
+      "minTemperature": 5.0,
+      "partyMode": false,
+      "profiles": {
+        "PROFILE_1": {
+          "enabled": true,
+          "groupId": "00000000-0000-0001-0001-000000000019",
+          "index": "PROFILE_1",
+          "name": "Testprofile",
+          "profileId": "00000000-0000-0000-0001-000000000058",
+          "visible": true
+        },
+        "PROFILE_2": {
+          "enabled": true,
+          "groupId": "00000000-0000-0001-0001-000000000019",
+          "index": "PROFILE_2",
+          "name": "",
+          "profileId": "00000000-0000-0000-0001-000000000059",
+          "visible": true
+        },
+        "PROFILE_3": {
+          "enabled": true,
+          "groupId": "00000000-0000-0001-0001-000000000019",
+          "index": "PROFILE_3",
+          "name": "",
+          "profileId": "00000000-0000-0000-0001-000000000060",
+          "visible": false
+        },
+        "PROFILE_4": {
+          "enabled": false,
+          "groupId": "00000000-0000-0001-0001-000000000019",
+          "index": "PROFILE_4",
+          "name": "",
+          "profileId": "00000000-0000-0000-0001-000000000061",
+          "visible": true
+        },
+        "PROFILE_5": {
+          "enabled": false,
+          "groupId": "00000000-0000-0001-0001-000000000019",
+          "index": "PROFILE_5",
+          "name": "",
+          "profileId": "00000000-0000-0000-0001-000000000062",
+          "visible": false
+        },
+        "PROFILE_6": {
+          "enabled": false,
+          "groupId": "00000000-0000-0001-0001-000000000019",
+          "index": "PROFILE_6",
+          "name": "",
+          "profileId": "00000000-0000-0000-0001-000000000063",
           "visible": false
         }
       },

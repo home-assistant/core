@@ -172,7 +172,7 @@ async def test_cloud_setup(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_zeroconf_form_setup_api_not_supported(hass):
+async def test_zeroconf_form_setup_api_not_supported(hass: HomeAssistant) -> None:
     """Test the zeroconf setup case."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -183,7 +183,7 @@ async def test_zeroconf_form_setup_api_not_supported(hass):
     assert result["reason"] == "not_supported"
 
 
-async def test_zeroconf_discovery(hass):
+async def test_zeroconf_discovery(hass: HomeAssistant) -> None:
     """Test discovery of Elmax local api panel."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -195,7 +195,7 @@ async def test_zeroconf_discovery(hass):
     assert result["errors"] is None
 
 
-async def test_zeroconf_setup_show_form(hass):
+async def test_zeroconf_setup_show_form(hass: HomeAssistant) -> None:
     """Test discovery shows a form when activated."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -211,7 +211,7 @@ async def test_zeroconf_setup_show_form(hass):
     assert result["step_id"] == "zeroconf_setup"
 
 
-async def test_zeroconf_setup(hass):
+async def test_zeroconf_setup(hass: HomeAssistant) -> None:
     """Test the successful creation of config entry via discovery flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -231,7 +231,7 @@ async def test_zeroconf_setup(hass):
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_zeroconf_already_configured(hass):
+async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
     """Ensure local discovery aborts when same panel is already added to ha."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -257,7 +257,7 @@ async def test_zeroconf_already_configured(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_zeroconf_panel_changed_ip(hass):
+async def test_zeroconf_panel_changed_ip(hass: HomeAssistant) -> None:
     """Ensure local discovery updates the panel data when a the panel changes its IP."""
     # Simulate an entry already exists for ip MOCK_DIRECT_HOST.
     config_entry = MockConfigEntry(

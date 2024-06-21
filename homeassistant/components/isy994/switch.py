@@ -34,7 +34,7 @@ from .models import IsyData
 
 @dataclass(frozen=True)
 class ISYSwitchEntityDescription(SwitchEntityDescription):
-    """Describes IST switch."""
+    """Describes ISY switch."""
 
     # ISYEnableSwitchEntity does not support UNDEFINED or None,
     # restrict the type to str.

@@ -37,7 +37,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from .conftest import CLIENT_ID, CLIENT_SECRET, EMAIL_ADDRESS, YieldFixture
+from .conftest import CLIENT_ID, CLIENT_SECRET, EMAIL_ADDRESS, AsyncYieldFixture
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -50,9 +50,8 @@ OAUTH2_TOKEN = "https://oauth2.googleapis.com/token"
 
 
 @pytest.fixture(autouse=True)
-async def request_setup(current_request_with_host) -> None:
+async def request_setup(current_request_with_host: None) -> None:
     """Request setup."""
-    return
 
 
 @pytest.fixture(autouse=True)
@@ -70,7 +69,7 @@ async def code_expiration_delta() -> datetime.timedelta:
 @pytest.fixture
 async def mock_code_flow(
     code_expiration_delta: datetime.timedelta,
-) -> YieldFixture[Mock]:
+) -> AsyncYieldFixture[Mock]:
     """Fixture for initiating OAuth flow."""
     with patch(
         "homeassistant.components.google.api.OAuth2WebServerFlow.step1_get_device_and_user_codes",
@@ -88,7 +87,7 @@ async def mock_code_flow(
 
 
 @pytest.fixture
-async def mock_exchange(creds: OAuth2Credentials) -> YieldFixture[Mock]:
+async def mock_exchange(creds: OAuth2Credentials) -> AsyncYieldFixture[Mock]:
     """Fixture for mocking out the exchange for credentials."""
     with patch(
         "homeassistant.components.google.api.OAuth2WebServerFlow.step2_exchange",
@@ -656,9 +655,9 @@ async def test_options_flow_no_changes(
     assert config_entry.options == {"calendar_access": "read_write"}
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_web_auth_compatibility(
     hass: HomeAssistant,
-    current_request_with_host: None,
     mock_code_flow: Mock,
     aioclient_mock: AiohttpClientMocker,
     hass_client_no_auth: ClientSessionGenerator,

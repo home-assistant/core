@@ -221,3 +221,44 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"name": self._name},
             errors=errors,
         )
+
+    async def async_step_reconfigure(
+        self, _: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert entry is not None
+        self._entry = entry
+        self._name = self._entry.data[CONF_HOST]
+        self._host = self._entry.data[CONF_HOST]
+        self._username = self._entry.data[CONF_USERNAME]
+        self._password = self._entry.data[CONF_PASSWORD]
+
+        return await self.async_step_reconfigure_confirm()
+
+    async def async_step_reconfigure_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        errors = {}
+
+        if user_input is not None:
+            self._host = user_input[CONF_HOST]
+
+            result = await self.hass.async_add_executor_job(self._try_connect)
+
+            if result == RESULT_SUCCESS:
+                await self._update_entry()
+                return self.async_abort(reason="reconfigure_successful")
+            errors["base"] = result
+
+        return self.async_show_form(
+            step_id="reconfigure_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default=self._host): str,
+                }
+            ),
+            description_placeholders={"name": self._name},
+            errors=errors,
+        )

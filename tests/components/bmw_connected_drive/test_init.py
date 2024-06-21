@@ -3,7 +3,6 @@
 from unittest.mock import patch
 
 import pytest
-import respx
 
 from homeassistant.components.bmw_connected_drive.const import DOMAIN as BMW_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -137,10 +136,10 @@ async def test_dont_migrate_unique_ids(
     assert entity_migrated != entity_not_changed
 
 
+@pytest.mark.usefixtures("bmw_fixture")
 async def test_remove_stale_devices(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    bmw_fixture: respx.Router,
 ) -> None:
     """Test remove stale device registry entries."""
     mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)

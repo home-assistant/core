@@ -129,8 +129,8 @@ async def test_return_default_get_file_path(
     with patch(
         "homeassistant.components.mqtt.util.TEMP_DIR_NAME",
         f"home-assistant-mqtt-other-{getrandbits(10):03x}",
-    ) as mock_temp_dir:
-        tempdir = Path(tempfile.gettempdir()) / mock_temp_dir
+    ) as temp_dir_name:
+        tempdir = Path(tempfile.gettempdir()) / temp_dir_name
         assert await hass.async_add_executor_job(_get_file_path, tempdir)
 
 

@@ -20,6 +20,7 @@ from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     load_json_value_fixture,
+    snapshot_platform,
 )
 
 
@@ -44,11 +45,11 @@ async def test_binary_sensor_states(
     assert state is not None
     assert state.state == "off"
 
-    for activity, entity in [
+    for activity, entity in (
         (MowerActivities.CHARGING, "test_mower_1_charging"),
         (MowerActivities.LEAVING, "test_mower_1_leaving_dock"),
         (MowerActivities.GOING_HOME, "test_mower_1_returning_to_dock"),
-    ]:
+    ):
         values[TEST_MOWER_ID].mower.activity = activity
         mock_automower_client.get_status.return_value = values
         freezer.tick(SCAN_INTERVAL)
@@ -58,26 +59,19 @@ async def test_binary_sensor_states(
         assert state.state == "on"
 
 
-async def test_snapshot_binary_sensor(
+async def test_binary_sensor_snapshot(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test states of the binary sensors."""
+    """Snapshot test states of the binary sensors."""
     with patch(
         "homeassistant.components.husqvarna_automower.PLATFORMS",
         [Platform.BINARY_SENSOR],
     ):
         await setup_integration(hass, mock_config_entry)
-        entity_entries = er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
+        await snapshot_platform(
+            hass, entity_registry, snapshot, mock_config_entry.entry_id
         )
-
-        assert entity_entries
-        for entity_entry in entity_entries:
-            assert hass.states.get(entity_entry.entity_id) == snapshot(
-                name=f"{entity_entry.entity_id}-state"
-            )
-            assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")

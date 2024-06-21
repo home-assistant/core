@@ -1,18 +1,20 @@
 """Test AirNow diagnostics."""
 
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
+from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.usefixtures("setup_airnow")
 async def test_entry_diagnostics(
     hass: HomeAssistant,
-    config_entry,
+    config_entry: MockConfigEntry,
     hass_client: ClientSessionGenerator,
-    setup_airnow,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""

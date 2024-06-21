@@ -1,9 +1,9 @@
 """Tests for the SolarEdge config flow."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
+from aiohttp import ClientError
 import pytest
-from requests.exceptions import ConnectTimeout, HTTPError
 
 from homeassistant.components.solaredge.const import CONF_SITE_ID, DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER
@@ -22,8 +22,11 @@ API_KEY = "a1b2c3d4e5f6g7h8"
 def mock_controller():
     """Mock a successful Solaredge API."""
     api = Mock()
-    api.get_details.return_value = {"details": {"status": "active"}}
-    with patch("solaredge.Solaredge", return_value=api):
+    api.get_details = AsyncMock(return_value={"details": {"status": "active"}})
+    with patch(
+        "homeassistant.components.solaredge.config_flow.aiosolaredge.SolarEdge",
+        return_value=api,
+    ):
         yield api
 
 
@@ -117,7 +120,7 @@ async def test_asserts(hass: HomeAssistant, test_api: Mock) -> None:
     assert result.get("errors") == {CONF_SITE_ID: "invalid_api_key"}
 
     # test with ConnectionTimeout
-    test_api.get_details.side_effect = ConnectTimeout()
+    test_api.get_details = AsyncMock(side_effect=TimeoutError())
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -127,7 +130,7 @@ async def test_asserts(hass: HomeAssistant, test_api: Mock) -> None:
     assert result.get("errors") == {CONF_SITE_ID: "could_not_connect"}
 
     # test with HTTPError
-    test_api.get_details.side_effect = HTTPError()
+    test_api.get_details = AsyncMock(side_effect=ClientError())
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},

@@ -213,7 +213,7 @@ async def test_config_entry_device_config_invalid(
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that an invalid device config logs an error and loads the config entry."""
     entry_data = copy.deepcopy(CREATE_ENTRY_DATA_AUTH)

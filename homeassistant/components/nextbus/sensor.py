@@ -82,11 +82,13 @@ class NextBusDepartureSensor(
 
     def _log_debug(self, message, *args):
         """Log debug message with prefix."""
-        _LOGGER.debug(":".join((self.agency, self.route, self.stop, message)), *args)
+        msg = f"{self.agency}:{self.route}:{self.stop}:{message}"
+        _LOGGER.debug(msg, *args)
 
     def _log_err(self, message, *args):
         """Log error message with prefix."""
-        _LOGGER.error(":".join((self.agency, self.route, self.stop, message)), *args)
+        msg = f"{self.agency}:{self.route}:{self.stop}:{message}"
+        _LOGGER.error(msg, *args)
 
     async def async_added_to_hass(self) -> None:
         """Read data from coordinator after adding to hass."""

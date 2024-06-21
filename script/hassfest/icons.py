@@ -48,7 +48,7 @@ def ensure_not_same_as_default(value: dict) -> dict:
 
 
 def icon_schema(integration_type: str, no_entity_platform: bool) -> vol.Schema:
-    """Create a icon schema."""
+    """Create an icon schema."""
 
     state_validator = cv.schema_with_slug_keys(
         icon_value_validator,
