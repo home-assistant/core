@@ -185,7 +185,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         }
         _config = {
             SZ_LOCATION_INFO: loc_info,
-            GWS: [{SZ_GATEWAY_INFO: gwy_info, TCS: loc_config[GWS][0][TCS]}],
+            GWS: [{SZ_GATEWAY_INFO: gwy_info}],
         }
         _LOGGER.debug("Config = %s", _config)
 

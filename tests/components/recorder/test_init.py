@@ -694,7 +694,7 @@ async def test_saving_event_exclude_event_type(
 
     await async_wait_recording_done(hass)
 
-    def _get_events(hass: HomeAssistant, event_types: list[str]) -> list[Event]:
+    def _get_events(hass: HomeAssistant, event_type_list: list[str]) -> list[Event]:
         with session_scope(hass=hass, read_only=True) as session:
             events = []
             for event, event_data, event_types in (
@@ -703,7 +703,7 @@ async def test_saving_event_exclude_event_type(
                     EventTypes, (Events.event_type_id == EventTypes.event_type_id)
                 )
                 .outerjoin(EventData, Events.data_id == EventData.data_id)
-                .where(EventTypes.event_type.in_(event_types))
+                .where(EventTypes.event_type.in_(event_type_list))
             ):
                 event = cast(Events, event)
                 event_data = cast(EventData, event_data)

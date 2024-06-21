@@ -1458,6 +1458,7 @@ async def test_set_moes_operation_mode(
     [
         (0, PRESET_AWAY),
         (1, PRESET_SCHEDULE),
+        # pylint: disable-next=fixme
         # (2, PRESET_NONE),  # TODO: why does this not work?
         (4, PRESET_ECO),
         (5, PRESET_BOOST),
