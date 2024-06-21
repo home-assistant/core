@@ -14,8 +14,11 @@ from aioesphomeapi import (
 import pytest
 
 from homeassistant.components.esphome.dashboard import async_get_dashboard
-from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, UpdateEntityFeature
-from homeassistant.components.update.const import SERVICE_INSTALL
+from homeassistant.components.update import (
+    DOMAIN as UPDATE_DOMAIN,
+    SERVICE_INSTALL,
+    UpdateEntityFeature,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,

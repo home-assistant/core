@@ -638,20 +638,20 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         elif media_type == BangOlufsenMediaType.FAVOURITE:
             await self._client.activate_preset(id=int(media_id))
 
-        elif media_type == BangOlufsenMediaType.DEEZER:
+        elif media_type in (BangOlufsenMediaType.DEEZER, BangOlufsenMediaType.TIDAL):
             try:
-                if media_id == "flow":
+                # Play Deezer flow.
+                if media_id == "flow" and media_type == BangOlufsenMediaType.DEEZER:
                     deezer_id = None
 
                     if "id" in kwargs[ATTR_MEDIA_EXTRA]:
                         deezer_id = kwargs[ATTR_MEDIA_EXTRA]["id"]
 
-                    # Play Deezer flow.
                     await self._client.start_deezer_flow(
                         user_flow=UserFlow(user_id=deezer_id)
                     )
 
-                # Play a Deezer playlist or album.
+                # Play a playlist or album.
                 elif any(match in media_id for match in ("playlist", "album")):
                     start_from = 0
                     if "start_from" in kwargs[ATTR_MEDIA_EXTRA]:
@@ -659,18 +659,18 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
                     await self._client.add_to_queue(
                         play_queue_item=PlayQueueItem(
-                            provider=PlayQueueItemType(value="deezer"),
+                            provider=PlayQueueItemType(value=media_type),
                             start_now_from_position=start_from,
                             type="playlist",
                             uri=media_id,
                         )
                     )
 
-                # Play a Deezer track.
+                # Play a track.
                 else:
                     await self._client.add_to_queue(
                         play_queue_item=PlayQueueItem(
-                            provider=PlayQueueItemType(value="deezer"),
+                            provider=PlayQueueItemType(value=media_type),
                             start_now_from_position=0,
                             type="track",
                             uri=media_id,

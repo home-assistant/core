@@ -1,14 +1,52 @@
 """Test the initialization."""
 
+from unittest.mock import AsyncMock
+
+from solarlog_cli.solarlog_exceptions import SolarLogConnectionError
+
 from homeassistant.components.solarlog.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from .test_config_flow import HOST, NAME
+from . import setup_platform
+from .const import HOST, NAME
 
 from tests.common import MockConfigEntry
+
+
+async def test_load_unload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_solarlog_connector: AsyncMock,
+) -> None:
+    """Test load and unload."""
+
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_raise_config_entry_not_ready_when_offline(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_solarlog_connector: AsyncMock,
+) -> None:
+    """Config entry state is SETUP_RETRY when Solarlog is offline."""
+
+    mock_solarlog_connector.update_data.side_effect = SolarLogConnectionError
+
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    assert len(hass.config_entries.flow.async_progress()) == 0
 
 
 async def test_migrate_config_entry(
