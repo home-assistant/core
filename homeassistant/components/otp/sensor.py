@@ -60,7 +60,8 @@ async def async_setup_entry(
     """Set up the OTP sensor."""
 
     async_add_entities(
-        [TOTPSensor(entry.data[CONF_NAME], entry.data[CONF_TOKEN])], True
+        [TOTPSensor(entry.data[CONF_NAME], entry.data[CONF_TOKEN], entry.entry_id)],
+        True,
     )
 
 
@@ -68,14 +69,15 @@ async def async_setup_entry(
 class TOTPSensor(SensorEntity):
     """Representation of a TOTP sensor."""
 
-    _attr_icon = "mdi:update"
+    _attr_translation_key = "token"
     _attr_should_poll = False
     _attr_native_value: StateType = None
     _next_expiration: float | None = None
 
-    def __init__(self, name: str, token: str) -> None:
+    def __init__(self, name: str, token: str, entry_id: str) -> None:
         """Initialize the sensor."""
         self._attr_name = name
+        self._attr_unique_id = entry_id
         self._otp = pyotp.TOTP(token)
 
     async def async_added_to_hass(self) -> None:
