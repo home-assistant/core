@@ -8,10 +8,11 @@ import logging
 import os
 from typing import Any
 from unittest import mock
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from typing_extensions import Generator
 import voluptuous as vol
 from voluptuous import Invalid, MultipleInvalid
 import yaml
@@ -522,6 +523,7 @@ def test_core_config_schema() -> None:
         {"customize": {"entity_id": []}},
         {"country": "xx"},
         {"language": "xx"},
+        {"radius": -10},
     ):
         with pytest.raises(MultipleInvalid):
             config_util.CORE_CONFIG_SCHEMA(value)
@@ -538,6 +540,7 @@ def test_core_config_schema() -> None:
             "customize": {"sensor.temperature": {"hidden": True}},
             "country": "SE",
             "language": "sv",
+            "radius": "10",
         }
     )
 
@@ -709,10 +712,11 @@ async def test_loading_configuration_from_storage(
             "currency": "EUR",
             "country": "SE",
             "language": "sv",
+            "radius": 150,
         },
         "key": "core.config",
         "version": 1,
-        "minor_version": 3,
+        "minor_version": 4,
     }
     await config_util.async_process_ha_core_config(
         hass, {"allowlist_external_dirs": "/etc"}
@@ -729,6 +733,7 @@ async def test_loading_configuration_from_storage(
     assert hass.config.currency == "EUR"
     assert hass.config.country == "SE"
     assert hass.config.language == "sv"
+    assert hass.config.radius == 150
     assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
     assert hass.config.config_source is ConfigSource.STORAGE
@@ -798,15 +803,19 @@ async def test_migration_and_updating_configuration(
     expected_new_core_data["data"]["currency"] = "USD"
     # 1.1 -> 1.2 store migration with migrated unit system
     expected_new_core_data["data"]["unit_system_v2"] = "us_customary"
-    expected_new_core_data["minor_version"] = 3
-    # defaults for country and language
+    # 1.1 -> 1.3 defaults for country and language
     expected_new_core_data["data"]["country"] = None
     expected_new_core_data["data"]["language"] = "en"
+    # 1.1 -> 1.4 defaults for zone radius
+    expected_new_core_data["data"]["radius"] = 100
+    # Bumped minor version
+    expected_new_core_data["minor_version"] = 4
     assert hass_storage["core.config"] == expected_new_core_data
     assert hass.config.latitude == 50
     assert hass.config.currency == "USD"
     assert hass.config.country is None
     assert hass.config.language == "en"
+    assert hass.config.radius == 100
 
 
 async def test_override_stored_configuration(
@@ -860,6 +869,7 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
             "currency": "EUR",
             "country": "SE",
             "language": "sv",
+            "radius": 150,
         },
     )
 
@@ -881,6 +891,7 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
     assert hass.config.currency == "EUR"
     assert hass.config.country == "SE"
     assert hass.config.language == "sv"
+    assert hass.config.radius == 150
 
 
 @pytest.mark.parametrize(
@@ -1072,7 +1083,9 @@ async def test_check_ha_config_file_wrong(mock_check, hass: HomeAssistant) -> No
     ],
 )
 @pytest.mark.usefixtures("mock_hass_config")
-async def test_async_hass_config_yaml_merge(merge_log_err, hass: HomeAssistant) -> None:
+async def test_async_hass_config_yaml_merge(
+    merge_log_err: MagicMock, hass: HomeAssistant
+) -> None:
     """Test merge during async config reload."""
     conf = await config_util.async_hass_config_yaml(hass)
 
@@ -1084,13 +1097,13 @@ async def test_async_hass_config_yaml_merge(merge_log_err, hass: HomeAssistant) 
 
 
 @pytest.fixture
-def merge_log_err(hass):
+def merge_log_err() -> Generator[MagicMock]:
     """Patch _merge_log_error from packages."""
     with patch("homeassistant.config._LOGGER.error") as logerr:
         yield logerr
 
 
-async def test_merge(merge_log_err, hass: HomeAssistant) -> None:
+async def test_merge(merge_log_err: MagicMock, hass: HomeAssistant) -> None:
     """Test if we can merge packages."""
     packages = {
         "pack_dict": {"input_boolean": {"ib1": None}},
@@ -1125,7 +1138,7 @@ async def test_merge(merge_log_err, hass: HomeAssistant) -> None:
     assert isinstance(config["wake_on_lan"], OrderedDict)
 
 
-async def test_merge_try_falsy(merge_log_err, hass: HomeAssistant) -> None:
+async def test_merge_try_falsy(merge_log_err: MagicMock, hass: HomeAssistant) -> None:
     """Ensure we don't add falsy items like empty OrderedDict() to list."""
     packages = {
         "pack_falsy_to_lst": {"automation": OrderedDict()},
@@ -1144,7 +1157,7 @@ async def test_merge_try_falsy(merge_log_err, hass: HomeAssistant) -> None:
     assert len(config["light"]) == 1
 
 
-async def test_merge_new(merge_log_err, hass: HomeAssistant) -> None:
+async def test_merge_new(merge_log_err: MagicMock, hass: HomeAssistant) -> None:
     """Test adding new components to outer scope."""
     packages = {
         "pack_1": {"light": [{"platform": "one"}]},
@@ -1165,7 +1178,9 @@ async def test_merge_new(merge_log_err, hass: HomeAssistant) -> None:
     assert len(config["panel_custom"]) == 1
 
 
-async def test_merge_type_mismatch(merge_log_err, hass: HomeAssistant) -> None:
+async def test_merge_type_mismatch(
+    merge_log_err: MagicMock, hass: HomeAssistant
+) -> None:
     """Test if we have a type mismatch for packages."""
     packages = {
         "pack_1": {"input_boolean": [{"ib1": None}]},
@@ -1186,7 +1201,9 @@ async def test_merge_type_mismatch(merge_log_err, hass: HomeAssistant) -> None:
     assert len(config["light"]) == 2
 
 
-async def test_merge_once_only_keys(merge_log_err, hass: HomeAssistant) -> None:
+async def test_merge_once_only_keys(
+    merge_log_err: MagicMock, hass: HomeAssistant
+) -> None:
     """Test if we have a merge for a comp that may occur only once. Keys."""
     packages = {"pack_2": {"api": None}}
     config = {HA_DOMAIN: {config_util.CONF_PACKAGES: packages}, "api": None}
@@ -1272,7 +1289,9 @@ async def test_merge_id_schema(hass: HomeAssistant) -> None:
         assert typ == expected_type, f"{domain} expected {expected_type}, got {typ}"
 
 
-async def test_merge_duplicate_keys(merge_log_err, hass: HomeAssistant) -> None:
+async def test_merge_duplicate_keys(
+    merge_log_err: MagicMock, hass: HomeAssistant
+) -> None:
     """Test if keys in dicts are duplicates."""
     packages = {"pack_1": {"input_select": {"ib1": None}}}
     config = {
@@ -1316,7 +1335,6 @@ async def test_auth_provider_config(hass: HomeAssistant) -> None:
         "time_zone": "GMT",
         CONF_AUTH_PROVIDERS: [
             {"type": "homeassistant"},
-            {"type": "legacy_api_password", "api_password": "some-pass"},
         ],
         CONF_AUTH_MFA_MODULES: [{"type": "totp"}, {"type": "totp", "id": "second"}],
     }
@@ -1324,9 +1342,8 @@ async def test_auth_provider_config(hass: HomeAssistant) -> None:
         del hass.auth
     await config_util.async_process_ha_core_config(hass, core_config)
 
-    assert len(hass.auth.auth_providers) == 2
+    assert len(hass.auth.auth_providers) == 1
     assert hass.auth.auth_providers[0].type == "homeassistant"
-    assert hass.auth.auth_providers[1].type == "legacy_api_password"
     assert len(hass.auth.auth_mfa_modules) == 2
     assert hass.auth.auth_mfa_modules[0].id == "totp"
     assert hass.auth.auth_mfa_modules[1].id == "second"

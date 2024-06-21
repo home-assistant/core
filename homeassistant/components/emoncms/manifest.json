@@ -3,5 +3,6 @@
   "name": "Emoncms",
   "codeowners": ["@borpin", "@alexandrecuer"],
   "documentation": "https://www.home-assistant.io/integrations/emoncms",
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "requirements": ["pyemoncms==0.0.7"]
 }

@@ -35,7 +35,6 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from . import group as group_pre_import  # noqa: F401
 from .const import (
     ATTR_DICT_OF_UNITS_OF_MEASUREMENT,
     ATTR_MAX_BRIGHTNESS_HISTORY,
