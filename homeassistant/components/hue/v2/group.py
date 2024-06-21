@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from functools import lru_cache
 from typing import Any
 
 from aiohue.v2 import HueBridgeV2
@@ -27,7 +26,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import async_get as get_ent_reg
+import homeassistant.helpers.entity_registry as er
 
 from ..bridge import HueBridge
 from ..const import DOMAIN
@@ -285,12 +284,11 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             self._attr_color_mode = ColorMode.ONOFF
 
     @callback
-    @lru_cache
     def _get_names_and_entity_ids_for_resource_ids(
         self, resource_ids: tuple[str]
     ) -> tuple[set[str], set[str]]:
         """Return the names and entity ids for the given Hue (light) resource IDs."""
-        ent_reg = get_ent_reg(self.hass)
+        ent_reg = er.async_get(self.hass)
         light_names: set[str] = set()
         light_entities: set[str] = set()
         for resource_id in resource_ids:
