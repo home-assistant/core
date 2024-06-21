@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-from pyecotrend_ista.exception_classes import LoginError, ServerError
+from pyecotrend_ista import LoginError, ServerError
 import pytest
 
 from homeassistant.components.ista_ecotrend.const import DOMAIN
