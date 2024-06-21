@@ -46,7 +46,7 @@ class TessieEntity(CoordinatorEntity[TessieStateUpdateCoordinator]):
     @property
     def _value(self) -> Any:
         """Return value from coordinator data."""
-        return self.coordinator.data[self.key]
+        return self.coordinator.data.get(self.key)
 
     def get(self, key: str | None = None, default: Any | None = None) -> Any:
         """Return a specific value from coordinator data."""

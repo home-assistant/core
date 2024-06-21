@@ -10,7 +10,12 @@ import logging
 from operator import attrgetter
 from typing import Any, Generic, TypeVar
 
-from uiprotect.data import NVR, Event, ProtectAdoptableDeviceModel
+from uiprotect.data import (
+    NVR,
+    Event,
+    ProtectAdoptableDeviceModel,
+    SmartDetectObjectType,
+)
 
 from homeassistant.helpers.entity import EntityDescription
 
@@ -41,7 +46,7 @@ class ProtectEntityDescription(EntityDescription, Generic[T]):
 
     # The below are set in __post_init__
     has_required: Callable[[T], bool] = bool
-    get_ufp_enabled: Callable[[T], bool] = bool
+    get_ufp_enabled: Callable[[T], bool] | None = None
 
     def get_ufp_value(self, obj: T) -> Any:
         """Return value from UniFi Protect device; overridden in __post_init__."""
@@ -79,20 +84,23 @@ class ProtectEventMixin(ProtectEntityDescription[T]):
     """Mixin for events."""
 
     ufp_event_obj: str | None = None
+    ufp_obj_type: SmartDetectObjectType | None = None
 
     def get_event_obj(self, obj: T) -> Event | None:
         """Return value from UniFi Protect device."""
         return None
+
+    def has_matching_smart(self, event: Event) -> bool:
+        """Determine if the detection type is a match."""
+        return (
+            not (obj_type := self.ufp_obj_type) or obj_type in event.smart_detect_types
+        )
 
     def __post_init__(self) -> None:
         """Override get_event_obj if ufp_event_obj is set."""
         if (_ufp_event_obj := self.ufp_event_obj) is not None:
             object.__setattr__(self, "get_event_obj", attrgetter(_ufp_event_obj))
         super().__post_init__()
-
-    def get_is_on(self, obj: T, event: Event | None) -> bool:
-        """Return value if event is active."""
-        return event is not None and self.get_ufp_value(obj)
 
 
 @dataclass(frozen=True, kw_only=True)
