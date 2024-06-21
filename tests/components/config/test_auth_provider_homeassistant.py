@@ -540,9 +540,8 @@ async def test_admin_change_username_not_owner(
     """Test that change username fails when not owner."""
     client = await hass_ws_client(hass)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "config/auth_provider/homeassistant/admin_change_username",
             "user_id": "test-user",
             "username": "new-user",
@@ -563,9 +562,8 @@ async def test_admin_change_username_no_user(
     """Test that change username fails with unknown user."""
     client = await hass_ws_client(hass, owner_access_token)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "config/auth_provider/homeassistant/admin_change_username",
             "user_id": "non-existing",
             "username": "new-username",
@@ -588,9 +586,8 @@ async def test_admin_change_username_no_cred(
     hass_admin_user.credentials.clear()
     client = await hass_ws_client(hass, owner_access_token)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "config/auth_provider/homeassistant/admin_change_username",
             "user_id": hass_admin_user.id,
             "username": "new-username",
