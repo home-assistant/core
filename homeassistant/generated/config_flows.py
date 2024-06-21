@@ -279,6 +279,7 @@ FLOWS = {
         "kaleidescape",
         "keenetic_ndms2",
         "kegtron",
+        "kermi",
         "keymitt_ble",
         "kmtronic",
         "knx",
