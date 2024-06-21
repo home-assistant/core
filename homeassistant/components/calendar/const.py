@@ -41,7 +41,6 @@ EVENT_TIME_FIELDS = {
 }
 EVENT_TYPES = "event_types"
 EVENT_DURATION = "duration"
-EVENT_ATTENDEES = "attendees"
 
 # Fields for the list events service
 LIST_EVENT_FIELDS = {

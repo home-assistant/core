@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import dataclasses
 from datetime import datetime, timedelta
 import logging
 from typing import Any, cast
 
 from gcal_sync.api import Range, SyncEventsRequest
 from gcal_sync.exceptions import ApiException
-from gcal_sync.model import AccessRole, DateOrDatetime, Event, ResponseStatus
+from gcal_sync.model import AccessRole, DateOrDatetime, Event, Attendee, ResponseStatus
 from gcal_sync.store import ScopedCalendarStore
 from gcal_sync.sync import CalendarEventSyncManager
 
@@ -232,6 +233,13 @@ async def async_setup_entry(
         )
 
 
+@dataclasses.dataclass
+class GoogleCalendarEvent(CalendarEvent):
+    """A Google Calendar event."""
+
+    attendees: list[Attendee] = []
+
+
 class GoogleCalendarEntity(
     CoordinatorEntity[CalendarSyncUpdateCoordinator | CalendarQueryUpdateCoordinator],
     CalendarEntity,
@@ -254,7 +262,7 @@ class GoogleCalendarEntity(
         super().__init__(coordinator)
         self.calendar_id = calendar_id
         self._ignore_availability: bool = data.get(CONF_IGNORE_AVAILABILITY, False)
-        self._event: CalendarEvent | None = None
+        self._event: GoogleCalendarEvent | None = None
         self._attr_name = data[CONF_NAME].capitalize()
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
         self.entity_id = entity_id
