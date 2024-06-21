@@ -3,6 +3,8 @@
 from http import HTTPStatus
 from unittest.mock import MagicMock
 
+from fullykiosk import FullyKioskError
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -33,3 +35,8 @@ async def test_image(
     assert resp.headers["Content-Type"] == "image/png"
     assert await resp.read() == b"image_bytes"
     assert mock_fully_kiosk.getScreenshot.call_count == 1
+
+    mock_fully_kiosk.getScreenshot.side_effect = FullyKioskError("error", "status")
+    client = await hass_client()
+    resp = await client.get(f"/api/image_proxy/{entity_image}")
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
