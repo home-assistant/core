@@ -138,7 +138,7 @@ type CALLBACK_TYPE = Callable[[], None]
 
 CORE_STORAGE_KEY = "core.config"
 CORE_STORAGE_VERSION = 1
-CORE_STORAGE_MINOR_VERSION = 3
+CORE_STORAGE_MINOR_VERSION = 4
 
 DOMAIN = "homeassistant"
 
@@ -2835,6 +2835,9 @@ class Config:
 
     def __init__(self, hass: HomeAssistant, config_dir: str) -> None:
         """Initialize a new config object."""
+        # pylint: disable-next=import-outside-toplevel
+        from .components.zone import DEFAULT_RADIUS
+
         self.hass = hass
 
         self.latitude: float = 0
@@ -2842,6 +2845,9 @@ class Config:
 
         self.elevation: int = 0
         """Elevation (always in meters regardless of the unit system)."""
+
+        self.radius: int = DEFAULT_RADIUS
+        """Radius of the Home Zone (always in meters regardless of the unit system)."""
 
         self.debug: bool = False
         self.location_name: str = "Home"
@@ -2991,6 +2997,7 @@ class Config:
             "language": self.language,
             "safe_mode": self.safe_mode,
             "debug": self.debug,
+            "radius": self.radius,
         }
 
     async def async_set_time_zone(self, time_zone_str: str) -> None:
@@ -3039,6 +3046,7 @@ class Config:
         currency: str | None = None,
         country: str | UndefinedType | None = UNDEFINED,
         language: str | None = None,
+        radius: int | None = None,
     ) -> None:
         """Update the configuration from a dictionary."""
         self.config_source = source
@@ -3067,6 +3075,8 @@ class Config:
             self.country = country
         if language is not None:
             self.language = language
+        if radius is not None:
+            self.radius = radius
 
     async def async_update(self, **kwargs: Any) -> None:
         """Update the configuration from a dictionary."""
@@ -3115,6 +3125,7 @@ class Config:
             currency=data.get("currency"),
             country=data.get("country"),
             language=data.get("language"),
+            radius=data["radius"],
         )
 
     async def _async_store(self) -> None:
@@ -3133,6 +3144,7 @@ class Config:
             "currency": self.currency,
             "country": self.country,
             "language": self.language,
+            "radius": self.radius,
         }
         await self._store.async_save(data)
 
@@ -3162,6 +3174,10 @@ class Config:
             old_data: dict[str, Any],
         ) -> dict[str, Any]:
             """Migrate to the new version."""
+
+            # pylint: disable-next=import-outside-toplevel
+            from .components.zone import DEFAULT_RADIUS
+
             data = old_data
             if old_major_version == 1 and old_minor_version < 2:
                 # In 1.2, we remove support for "imperial", replaced by "us_customary"
@@ -3198,6 +3214,9 @@ class Config:
                 # pylint: disable-next=broad-except
                 except Exception:
                     _LOGGER.exception("Unexpected error during core config migration")
+            if old_major_version == 1 and old_minor_version < 4:
+                # In 1.4, we add the key "radius", initialize it with the default.
+                data.setdefault("radius", DEFAULT_RADIUS)
 
             if old_major_version > 1:
                 raise NotImplementedError

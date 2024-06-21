@@ -35,13 +35,15 @@ import requests_mock
 from syrupy.assertion import SnapshotAssertion
 from typing_extensions import AsyncGenerator, Generator
 
+from homeassistant import block_async_io
+
 # Setup patching if dt_util time functions before any other Home Assistant imports
 from . import patch_time  # noqa: F401, isort:skip
 
 from homeassistant import core as ha, loader, runner
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
-from homeassistant.auth.providers import homeassistant, legacy_api_password
+from homeassistant.auth.providers import homeassistant
 from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
@@ -741,26 +743,12 @@ async def hass_supervisor_user(
 @pytest.fixture
 async def hass_supervisor_access_token(
     hass: HomeAssistant,
-    hass_supervisor_user,
+    hass_supervisor_user: MockUser,
     local_auth: homeassistant.HassAuthProvider,
 ) -> str:
     """Return a Home Assistant Supervisor access token."""
     refresh_token = await hass.auth.async_create_refresh_token(hass_supervisor_user)
     return hass.auth.async_create_access_token(refresh_token)
-
-
-@pytest.fixture
-def legacy_auth(
-    hass: HomeAssistant,
-) -> legacy_api_password.LegacyApiPasswordAuthProvider:
-    """Load legacy API password provider."""
-    prv = legacy_api_password.LegacyApiPasswordAuthProvider(
-        hass,
-        hass.auth._store,
-        {"type": "legacy_api_password", "api_password": "test-password"},
-    )
-    hass.auth._providers[(prv.type, prv.id)] = prv
-    return prv
 
 
 @pytest.fixture
@@ -834,7 +822,7 @@ def current_request_with_host(current_request: MagicMock) -> None:
 @pytest.fixture
 def hass_ws_client(
     aiohttp_client: ClientSessionGenerator,
-    hass_access_token: str | None,
+    hass_access_token: str,
     hass: HomeAssistant,
     socket_enabled: None,
 ) -> WebSocketGenerator:
@@ -1370,7 +1358,7 @@ def hass_recorder(
     enable_migrate_context_ids: bool,
     enable_migrate_event_type_ids: bool,
     enable_migrate_entity_ids: bool,
-    hass_storage,
+    hass_storage: dict[str, Any],
 ) -> Generator[Callable[..., HomeAssistant]]:
     """Home Assistant fixture with in-memory recorder."""
     # pylint: disable-next=import-outside-toplevel
@@ -1814,3 +1802,15 @@ def service_calls(hass: HomeAssistant) -> Generator[None, None, list[ServiceCall
 def snapshot(snapshot: SnapshotAssertion) -> SnapshotAssertion:
     """Return snapshot assertion fixture with the Home Assistant extension."""
     return snapshot.use_extension(HomeAssistantSnapshotExtension)
+
+
+@pytest.fixture
+def disable_block_async_io() -> Generator[Any, Any, None]:
+    """Fixture to disable the loop protection from block_async_io."""
+    yield
+    calls = block_async_io._BLOCKED_CALLS.calls
+    for blocking_call in calls:
+        setattr(
+            blocking_call.object, blocking_call.function, blocking_call.original_func
+        )
+    calls.clear()

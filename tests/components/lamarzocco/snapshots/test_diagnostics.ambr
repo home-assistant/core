@@ -2,6 +2,7 @@
 # name: test_diagnostics
   dict({
     'config': dict({
+      'backflush_enabled': False,
       'boilers': dict({
         'CoffeeBoiler1': dict({
           'current_temperature': 96.5,

@@ -429,7 +429,7 @@ async def test_assist_api_tools_conversion(
     mock_init_component,
 ) -> None:
     """Test that we are able to convert actual tools from Assist API."""
-    for component in [
+    for component in (
         "intent",
         "todo",
         "light",
@@ -440,7 +440,7 @@ async def test_assist_api_tools_conversion(
         "vacuum",
         "cover",
         "weather",
-    ]:
+    ):
         assert await async_setup_component(hass, component, {})
 
     agent_id = mock_config_entry_with_assist.entry_id

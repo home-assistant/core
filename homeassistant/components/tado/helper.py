@@ -29,3 +29,23 @@ def decide_overlay_mode(
         )
 
     return overlay_mode
+
+
+def decide_duration(
+    tado: TadoConnector,
+    duration: int | None,
+    zone_id: int,
+    overlay_mode: str | None = None,
+) -> None | int:
+    """Return correct duration based on the selected overlay mode/duration and tado config."""
+    # If we ended up with a timer but no duration, set a default duration
+    # If we ended up with a timer but no duration, set a default duration
+    if overlay_mode == CONST_OVERLAY_TIMER and duration is None:
+        duration = (
+            int(tado.data["zone"][zone_id].default_overlay_termination_duration)
+            if tado.data["zone"][zone_id].default_overlay_termination_duration
+            is not None
+            else 3600
+        )
+
+    return duration
