@@ -31,7 +31,7 @@ class UpnpDataUpdateCoordinator(
         """Initialize."""
         self.device = device
         self.device_entry = device_entry
-        self._entities: list["UpnpEntity"] = []
+        self._entities: list[UpnpEntity] = []
 
         super().__init__(
             hass,
