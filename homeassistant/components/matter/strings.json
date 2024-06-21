@@ -89,7 +89,7 @@
         "name": "Off transition time"
       },
       "on_off_transition_time": {
-        "name": "On Off transition time"
+        "name": "On/Off transition time"
       }
     },
     "sensor": {
