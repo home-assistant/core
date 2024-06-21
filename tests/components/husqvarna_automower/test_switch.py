@@ -41,10 +41,10 @@ async def test_switch_states(
     )
     await setup_integration(hass, mock_config_entry)
 
-    for mode, expected_state in [
+    for mode, expected_state in (
         (MowerModes.HOME, "off"),
         (MowerModes.MAIN_AREA, "on"),
-    ]:
+    ):
         values[TEST_MOWER_ID].mower.mode = mode
         mock_automower_client.get_status.return_value = values
         freezer.tick(SCAN_INTERVAL)
