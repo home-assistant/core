@@ -20,9 +20,8 @@ from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import (
     CoordinatedTPLinkFeatureEntity,
     TPLinkFeatureEntityDescription,
-    _description_for_feature,
-    _entities_for_device_and_its_children,
     async_refresh_after,
+    entities_for_device_and_its_children,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +33,7 @@ class TPLinkNumberEntityDescription(
     """Base class for a TPLink feature based sensor entity description."""
 
 
-NUMBER_DESCRIPTIONS: Final = [
+NUMBER_DESCRIPTIONS: Final = (
     TPLinkNumberEntityDescription(
         key="smooth_transition_on",
         mode=NumberMode.BOX,
@@ -51,7 +50,11 @@ NUMBER_DESCRIPTIONS: Final = [
         key="temperature_offset",
         mode=NumberMode.BOX,
     ),
-]
+    TPLinkNumberEntityDescription(
+        key="target_temperature",
+        mode=NumberMode.BOX,
+    ),
+)
 
 NUMBER_DESCRIPTIONS_MAP = {desc.key: desc for desc in NUMBER_DESCRIPTIONS}
 
@@ -67,7 +70,7 @@ async def async_setup_entry(
     children_coordinators = data.children_coordinators
     device = parent_coordinator.device
 
-    entities = _entities_for_device_and_its_children(
+    entities = entities_for_device_and_its_children(
         device=device,
         coordinator=parent_coordinator,
         feature_type=Feature.Type.Number,
@@ -91,7 +94,7 @@ class Number(CoordinatedTPLinkFeatureEntity, NumberEntity):
         parent: Device | None = None,
     ) -> None:
         """Initialize the sensor."""
-        description = _description_for_feature(
+        description = self._description_for_feature(
             TPLinkNumberEntityDescription,
             feature,
             NUMBER_DESCRIPTIONS_MAP,

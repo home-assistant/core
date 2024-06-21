@@ -393,6 +393,3 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
                 )
 
         return entities
-    **kwargs: Any,
-            **kwargs,
-            **kwargs,

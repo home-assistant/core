@@ -58,6 +58,9 @@
       },
       "temperature_offset": {
         "default": "mdi:contrast"
+      },
+      "target_temperature": {
+        "default": "mdi:thermometer"
       }
     }
   },
