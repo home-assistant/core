@@ -10,7 +10,7 @@ import logging
 from operator import attrgetter
 from typing import Any, Generic, TypeVar
 
-from uiprotect import make_enable_getter, make_required_getter, make_value_getter
+from uiprotect import make_enabled_getter, make_required_getter, make_value_getter
 from uiprotect.data import (
     NVR,
     Event,
@@ -66,7 +66,7 @@ class ProtectEntityDescription(EntityDescription, Generic[T]):
             _setter("get_ufp_value", ufp_value_fn)
 
         if (ufp_enabled := self.ufp_enabled) is not None:
-            _setter("get_ufp_enabled", make_enable_getter(ufp_enabled))
+            _setter("get_ufp_enabled", make_enabled_getter(ufp_enabled))
 
         if (ufp_required_field := self.ufp_required_field) is not None:
             _setter("has_required", make_required_getter(ufp_required_field))
