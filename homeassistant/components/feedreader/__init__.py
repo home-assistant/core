@@ -102,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) -
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) -> bool:
     """Unload a config entry."""
     entries = hass.config_entries.async_entries(
         DOMAIN, include_disabled=False, include_ignore=False
@@ -113,6 +113,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_update_listener(
+    hass: HomeAssistant, entry: FeedReaderConfigEntry
+) -> None:
     """Handle reconfiguration."""
     await hass.config_entries.async_reload(entry.entry_id)
