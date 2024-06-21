@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.5.1
+AEMET-OpenData==0.5.2
 
 # homeassistant.components.honeywell
 AIOSomecomfort==0.0.25
@@ -237,7 +237,7 @@ aiohomekit==3.1.5
 aiohue==4.7.1
 
 # homeassistant.components.imap
-aioimaplib==1.0.1
+aioimaplib==1.1.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -463,7 +463,7 @@ azure-kusto-data[aio]==3.1.0
 azure-kusto-ingest==3.1.0
 
 # homeassistant.components.holiday
-babel==2.13.1
+babel==2.15.0
 
 # homeassistant.components.homekit
 base36==0.1.1
@@ -664,7 +664,7 @@ energyzero==2.1.0
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env-canada==0.6.2
+env-canada==0.6.3
 
 # homeassistant.components.season
 ephem==4.1.5
@@ -867,7 +867,7 @@ hass-nabucasa==0.81.1
 hassil==1.7.1
 
 # homeassistant.components.jewish_calendar
-hdate==0.10.8
+hdate==0.10.9
 
 # homeassistant.components.here_travel_time
 here-routing==0.2.0
@@ -886,13 +886,13 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.50
+holidays==0.51
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240610.1
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.6.5
+home-assistant-intents==2024.6.21
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1243,7 +1243,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==0.37.3
+plugwise==0.37.4.1
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1284,7 +1284,7 @@ pvo==2.1.1
 py-aosmith==1.0.8
 
 # homeassistant.components.canary
-py-canary==0.5.3
+py-canary==0.5.4
 
 # homeassistant.components.ccm15
 py-ccm15==0.0.9
@@ -1405,7 +1405,7 @@ pydexcom==0.2.3
 pydiscovergy==3.0.1
 
 # homeassistant.components.hydrawise
-pydrawise==2024.6.3
+pydrawise==2024.6.4
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
@@ -2226,7 +2226,7 @@ wallbox==0.6.0
 watchdog==2.3.1
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==0.2.20
+weatherflow4py==0.2.21
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
