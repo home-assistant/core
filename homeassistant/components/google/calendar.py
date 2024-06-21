@@ -8,14 +8,13 @@ from typing import Any, cast
 
 from gcal_sync.api import Range, SyncEventsRequest
 from gcal_sync.exceptions import ApiException
-from gcal_sync.model import AccessRole, DateOrDatetime, Event
+from gcal_sync.model import AccessRole, DateOrDatetime, Event, ResponseStatus
 from gcal_sync.store import ScopedCalendarStore
 from gcal_sync.sync import CalendarEventSyncManager
 
 from homeassistant.components.calendar import (
     CREATE_EVENT_SCHEMA,
     ENTITY_ID_FORMAT,
-    EVENT_ATTENDEES,
     EVENT_DESCRIPTION,
     EVENT_END,
     EVENT_LOCATION,
@@ -285,11 +284,20 @@ class GoogleCalendarEntity(
         (event, _) = self._event_with_offset()
         return event
 
+    def event_accepted(self, event: Event) -> bool:
+        """Return True if the event is accepted by self."""
+        if not event.attendees:
+            return False
+        for attendee in event.attendees:
+            if attendee.self:
+                return attendee.response_status == ResponseStatus.ACCEPTED
+        return False
+
     def _event_filter(self, event: Event) -> bool:
-        """Return True if the event is visible."""
+        """Return True if the event is visible and accepted."""
         if self._ignore_availability:
-            return True
-        return event.transparency == OPAQUE
+            return not self.event_declined(event)
+        return event.transparency == OPAQUE and not self.event_declined(event)
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -357,7 +365,6 @@ class GoogleCalendarEntity(
                 "start": start,
                 "end": end,
                 EVENT_DESCRIPTION: kwargs.get(EVENT_DESCRIPTION),
-                EVENT_ATTENDEES: kwargs.get(EVENT_ATTENDEES),
             }
         )
         if location := kwargs.get(EVENT_LOCATION):
@@ -456,7 +463,6 @@ async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) ->
     event = Event(
         summary=call.data[EVENT_SUMMARY],
         description=call.data[EVENT_DESCRIPTION],
-        attendees=call.data.get(EVENT_ATTENDEES, []),
         start=start,
         end=end,
     )
