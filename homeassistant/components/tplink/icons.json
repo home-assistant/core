@@ -45,6 +45,20 @@
       "alarm_source": {
         "default": "mdi:bell"
       }
+    },
+    "number": {
+      "smooth_transition_off": {
+        "default": "mdi:weather-sunset-down"
+      },
+      "smooth_transition_on": {
+        "default": "mdi:weather-sunset-up"
+      },
+      "auto_off_minutes": {
+        "default": "mdi:sleep"
+      },
+      "temperature_offset": {
+        "default": "mdi:contrast"
+      }
     }
   },
   "services": {
