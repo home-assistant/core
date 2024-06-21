@@ -626,7 +626,7 @@ jobs:
     timeout-minutes: 20
     if: |
       (github.event.inputs.mypy-only != 'true' || github.event.inputs.pylint-only == 'true')
-      && (needs.info.outputs.tests_glob || needs.info.outputs.test_full_suite == 'false')
+      && (needs.info.outputs.tests_glob || needs.info.outputs.test_full_suite == 'true')
     needs:
       - info
       - base
