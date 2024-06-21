@@ -30,5 +30,6 @@ is not yet added it will be created manually and a warning will be logged.
 For features to use translation keys they should be added to `strings.json` and `icons.json`
 with the feature.id as key.
 
-**All described features must have corresponding entries in `strings.json` and `icons.json`**
+**All described features must have corresponding entries in `strings.json` and `icons.json`
+unless the base platform provides it's own via the device_class**
 
