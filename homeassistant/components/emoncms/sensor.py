@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -17,6 +18,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_ID,
+    CONF_SCAN_INTERVAL,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
     CONF_VALUE_TEMPLATE,
@@ -29,10 +31,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import EmoncmsCoordinator
 
@@ -90,12 +89,13 @@ async def async_setup_platform(
     exclude_feeds = config.get(CONF_EXCLUDE_FEEDID)
     include_only_feeds = config.get(CONF_ONLY_INCLUDE_FEEDID)
     sensor_names = config.get(CONF_SENSOR_NAMES)
+    scan_interval = config.get(CONF_SCAN_INTERVAL, timedelta(seconds=30))
 
     if value_template is not None:
         value_template.hass = hass
 
     emoncms_client = EmoncmsClient(url, apikey, session=async_get_clientsession(hass))
-    coordinator = EmoncmsCoordinator(hass, emoncms_client, config)
+    coordinator = EmoncmsCoordinator(hass, emoncms_client, scan_interval)
     await coordinator.async_refresh()
     elems = coordinator.data
     if elems is None:
@@ -121,7 +121,6 @@ async def async_setup_platform(
 
         sensors.append(
             EmonCmsSensor(
-                hass,
                 coordinator,
                 name,
                 value_template,
@@ -133,15 +132,12 @@ async def async_setup_platform(
     async_add_entities(sensors)
 
 
-class EmonCmsSensor(
-    CoordinatorEntity[DataUpdateCoordinator[list[dict[str, Any]] | None]], SensorEntity
-):
+class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
     """Implementation of an Emoncms sensor."""
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        coordinator: DataUpdateCoordinator[list[dict[str, Any]] | None],
+        coordinator: EmoncmsCoordinator,
         name: str | None,
         value_template: template.Template | None,
         unit_of_measurement: str | None,
@@ -164,7 +160,6 @@ class EmonCmsSensor(
             self._attr_name = f"EmonCMS{id_for_name} {feed_name}"
         else:
             self._attr_name = name
-        self._hass = hass
         self._value_template = value_template
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._sensorid = sensorid
