@@ -24,7 +24,6 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
     _attr_supported_features = (
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.OPERATION_MODE
-        | WaterHeaterEntityFeature.AWAY_MODE
         | WaterHeaterEntityFeature.ON_OFF
     )
     _attr_operation_list = [
@@ -93,14 +92,6 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
         )
 
     @property
-    def is_away_mode_on(self) -> bool:
-        """Return true if away mode is on."""
-        return (
-            self.executor.select_state(OverkizState.MODBUSLINK_DHW_ABSENCE_MODE)
-            == OverkizCommandParam.ON
-        )
-
-    @property
     def current_operation(self) -> str:
         """Return current operation."""
         if self.is_boost_mode_on:
@@ -108,9 +99,6 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
 
         if self.is_eco_mode_on:
             return STATE_ECO
-
-        if self.is_away_mode_on:
-            return STATE_OFF
 
         if (
             cast(str, self.executor.select_state(OverkizState.MODBUSLINK_DHW_MODE))
@@ -123,13 +111,11 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         if operation_mode in (STATE_PERFORMANCE, OverkizCommandParam.BOOST):
-            await self.async_turn_away_mode_off()
             await self.async_turn_boost_mode_on()
         elif operation_mode in (
             OverkizCommandParam.ECO,
             OverkizCommandParam.MANUAL_ECO_ACTIVE,
         ):
-            await self.async_turn_away_mode_off()
             await self.async_turn_boost_mode_off()
             await self.executor.async_execute_command(
                 OverkizCommand.SET_DHW_MODE, OverkizCommandParam.AUTO_MODE
@@ -138,29 +124,15 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
             OverkizCommandParam.MANUAL,
             OverkizCommandParam.MANUAL_ECO_INACTIVE,
         ):
-            await self.async_turn_away_mode_off()
             await self.async_turn_boost_mode_off()
             await self.executor.async_execute_command(
                 OverkizCommand.SET_DHW_MODE, OverkizCommandParam.MANUAL_ECO_INACTIVE
             )
         else:
             await self.async_turn_boost_mode_off()
-            await self.async_turn_away_mode_off()
             await self.executor.async_execute_command(
                 OverkizCommand.SET_DHW_MODE, operation_mode
             )
-
-    async def async_turn_away_mode_on(self) -> None:
-        """Turn away mode on."""
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_ABSENCE_MODE, OverkizCommandParam.ON
-        )
-
-    async def async_turn_away_mode_off(self) -> None:
-        """Turn away mode off."""
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_ABSENCE_MODE, OverkizCommandParam.OFF
-        )
 
     async def async_turn_boost_mode_on(self) -> None:
         """Turn boost mode on."""
