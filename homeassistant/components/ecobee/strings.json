@@ -135,7 +135,7 @@
       "fields": {
         "entity_id": {
           "name": "Entity",
-          "description": "[%key:component::ecobee::services::resume_program::fields::entity_id::description%]"
+          "description": "[%key:component::ecobee::services::set_aux_cutover_threshold::fields::entity_id::description%]"
         },
         "aux_cutover_threshold": {
           "name": "Heat Pump Lockout Threshold",

@@ -110,7 +110,7 @@ set_aux_cutover_threshold:
       required: true
       selector:
         number:
-          min: -25
+          min: -32
           max: 65
           step: 5
           unit_of_measurement: "°"
