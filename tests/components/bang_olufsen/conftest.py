@@ -226,12 +226,12 @@ def mock_mozart_client() -> Generator[AsyncMock]:
                 id="64c9da45-3682-44a4-8030-09ed3ef44160",
             ),
         }
-        # client.post_standby = AsyncMock()
-        # client.set_current_volume_level = AsyncMock()
-        # client.set_volume_mute = AsyncMock()
-        # client.post_playback_command = AsyncMock()
-        # client.seek_to_position = AsyncMock()
-        # client.post_clear_queue = AsyncMock()
+        client.post_standby = AsyncMock()
+        client.set_current_volume_level = AsyncMock()
+        client.set_volume_mute = AsyncMock()
+        client.post_playback_command = AsyncMock()
+        client.seek_to_position = AsyncMock()
+        client.post_clear_queue = AsyncMock()
 
         yield client
 

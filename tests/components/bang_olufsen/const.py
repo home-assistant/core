@@ -123,3 +123,4 @@ TEST_SOURCE_CHANGE = Source(
     type=SourceTypeEnum(value="tidalConnect"),
 )
 TEST_VOLUME = VolumeState(level=VolumeLevel(level=40))
+TEST_PLAYBACK_STATE_TURN_OFF = RenderingState(value="stopped")

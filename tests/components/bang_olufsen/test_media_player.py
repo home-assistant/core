@@ -2,7 +2,10 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.bang_olufsen.const import WebsocketNotification
+from homeassistant.components.bang_olufsen.const import (
+    BANG_OLUFSEN_STATES,
+    WebsocketNotification,
+)
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
@@ -17,6 +20,7 @@ from homeassistant.components.media_player.const import (
     MediaPlayerState,
 )
 from homeassistant.components.siren.const import ATTR_VOLUME_LEVEL
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -28,6 +32,7 @@ from .const import (
     TEST_PLAYBACK_METADATA,
     TEST_PLAYBACK_PROGRESS,
     TEST_PLAYBACK_STATE,
+    TEST_PLAYBACK_STATE_TURN_OFF,
     TEST_SERIAL_NUMBER,
     TEST_SOURCE_CHANGE,
     TEST_SOURCES,
@@ -52,6 +57,12 @@ async def test_initialization(
 
     # Check sources
     assert states.attributes[ATTR_INPUT_SOURCE_LIST] == TEST_SOURCES
+
+    # Check API calls
+    mock_mozart_client.get_softwareupdate_status.assert_called_once()
+    mock_mozart_client.get_product_state.assert_called_once()
+    mock_mozart_client.get_available_sources.assert_called_once()
+    mock_mozart_client.get_remote_menu.assert_called_once()
 
 
 async def test_update_sources_audio_only(
@@ -135,8 +146,6 @@ async def test_update_playback_metadata(
     assert states.attributes[ATTR_MEDIA_TRACK] == TEST_PLAYBACK_METADATA.track
     assert states.attributes[ATTR_MEDIA_CHANNEL] == TEST_PLAYBACK_METADATA.organization
 
-    await hass.async_block_till_done()
-
 
 async def test_update_playback_error(
     hass: HomeAssistant, mock_mozart_client, mock_config_entry
@@ -158,8 +167,6 @@ async def test_update_playback_error(
         )
         # Ensure that the logger has been called with the error message
         mock_logger.assert_called_once_with(TEST_PLAYBACK_ERROR.error)
-
-    await hass.async_block_till_done()
 
 
 async def test_update_playback_progress(
@@ -279,10 +286,32 @@ async def test_update_volume(
     assert states.attributes[ATTR_VOLUME_LEVEL] == (TEST_VOLUME.level.level / 100)
 
 
-# async def test_async_turn_off(
-#     hass: HomeAssistant, mock_mozart_client, mock_config_entry
-# ) -> None:
-#     """Test async_turn_off."""
-#     # Setup entity
-#     mock_config_entry.add_to_hass(hass)
-#     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+async def test_async_turn_off(
+    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+) -> None:
+    """Test async_turn_off."""
+    # Setup entity
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # Check states
+    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert states
+
+    await hass.services.async_call(
+        "media_player", "turn_off", {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID}
+    )
+
+    # The service call will trigger a WebSocket notification
+    async_dispatcher_send(
+        hass,
+        f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.PLAYBACK_STATE}",
+        TEST_PLAYBACK_STATE_TURN_OFF,
+    )
+
+    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert states
+    assert states.state == BANG_OLUFSEN_STATES["stopped"]
+
+    # Check API call
+    mock_mozart_client.post_standby.assert_called_once()
