@@ -694,6 +694,57 @@
     'state': '102',
   })
 # ---
+# name: test_all_entities[sensor.solarlog_self_consumption_year-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.solarlog_self_consumption_year',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Self-consumption year',
+    'platform': 'solarlog',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'self_consumption_year',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8_self_consumption_year',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[sensor.solarlog_self_consumption_year-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'solarlog Self-consumption year',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.solarlog_self_consumption_year',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '545',
+  })
+# ---
 # name: test_all_entities[sensor.solarlog_test_1_2_3_alternator_loss-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

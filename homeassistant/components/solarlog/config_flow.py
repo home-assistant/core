@@ -62,7 +62,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
             self._errors = {CONF_HOST: "unknown"}
             return False
         finally:
-            solarlog.client.close()
+            await solarlog.client.close()
 
         return True
 

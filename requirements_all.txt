@@ -182,7 +182,7 @@ aio-georss-gdacs==0.9
 aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.5.2
+aioairzone-cloud==0.5.3
 
 # homeassistant.components.airzone
 aioairzone==0.7.7
@@ -578,7 +578,7 @@ bleak==0.22.1
 blebox-uniapi==2.4.2
 
 # homeassistant.components.blink
-blinkpy==0.22.6
+blinkpy==0.23.0
 
 # homeassistant.components.bitcoin
 blockchain==1.4.4
@@ -1096,7 +1096,7 @@ holidays==0.51
 home-assistant-frontend==20240610.1
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.6.5
+home-assistant-intents==2024.6.21
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1207,6 +1207,9 @@ kegtron-ble==0.4.0
 
 # homeassistant.components.kiwi
 kiwiki-client==0.1.1
+
+# homeassistant.components.knocki
+knocki==0.1.5
 
 # homeassistant.components.knx
 knx-frontend==2024.1.20.105944
@@ -1353,7 +1356,7 @@ mopeka-iot-ble==0.7.0
 motionblinds==0.6.23
 
 # homeassistant.components.motionblinds_ble
-motionblindsble==0.0.9
+motionblindsble==0.1.0
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.14
@@ -2792,7 +2795,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==1.19.3
+uiprotect==1.20.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
