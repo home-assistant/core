@@ -1688,8 +1688,6 @@ omit =
     homeassistant/components/yolink/siren.py
     homeassistant/components/yolink/switch.py
     homeassistant/components/yolink/valve.py
-    homeassistant/components/youless/__init__.py
-    homeassistant/components/youless/sensor.py
     homeassistant/components/zabbix/*
     homeassistant/components/zamg/coordinator.py
     homeassistant/components/zengge/light.py
