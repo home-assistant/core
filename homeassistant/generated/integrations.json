@@ -3078,6 +3078,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "knocki": {
+      "name": "Knocki",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "knx": {
       "name": "KNX",
       "integration_type": "hub",
