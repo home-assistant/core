@@ -229,7 +229,7 @@ async def test_play_media_lib_track_next(
     soco_factory: SoCoMockFactory,
     async_autosetup_sonos,
 ) -> None:
-    """Tests playing media track with enqueue mode play."""
+    """Tests playing media track with enqueue mode next."""
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     await hass.services.async_call(
         MP_DOMAIN,
@@ -280,7 +280,7 @@ async def test_play_media_lib_track_add(
     soco_factory: SoCoMockFactory,
     async_autosetup_sonos,
 ) -> None:
-    """Tests playing media track with enqueue mode replace."""
+    """Tests playing media track with enqueue mode add."""
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     await hass.services.async_call(
         MP_DOMAIN,
