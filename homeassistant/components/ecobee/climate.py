@@ -583,27 +583,31 @@ class Thermostat(ClimateEntity):
         return HVACAction.IDLE
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return device specific state attributes."""
         status = self.thermostat["equipmentStatus"]
         if self.has_aux_heat:
-            return {
-                "fan": self.fan,
-                "climate_mode": self._preset_modes[
-                    self.thermostat["program"]["currentClimateRef"]
-                ],
-                "equipment_running": status,
-                "fan_min_on_time": self.settings["fanMinOnTime"],
-                "aux_cutover_threshold": self.settings["compressorProtectionMinTemp"] / 10
-            }
+             return {
+            "fan": self.fan,
+            "climate_mode": self.comfort_settings.get(
+                self.thermostat["program"]["currentClimateRef"]
+            ),
+            "equipment_running": status,
+            "fan_min_on_time": self.settings["fanMinOnTime"],
+            "aux_cutover_threshold": TemperatureConverter.convert(
+                self.settings["compressorProtectionMinTemp"] / 10
+                UnitOfTemperature.FAHRENHEIT,
+                self.hass.config.units.temperature_unit,
+            )
+        }
         else:
             return {
                 "fan": self.fan,
-                "climate_mode": self._preset_modes[
+                "climate_mode": self.comfort_settings.get(
                     self.thermostat["program"]["currentClimateRef"]
-                ],
+                ),
                 "equipment_running": status,
-                "fan_min_on_time": self.settings["fanMinOnTime"]
+                "fan_min_on_time": self.settings["fanMinOnTime"],
             }
 
     @property
