@@ -355,6 +355,7 @@ class AppleTvMediaPlayer(
         if (
             self.atv
             and self._playing
+            and self._is_feature_available(FeatureName.Artwork)
             and state not in {None, MediaPlayerState.OFF, MediaPlayerState.IDLE}
         ):
             return self.atv.metadata.artwork_id
@@ -440,7 +441,9 @@ class AppleTvMediaPlayer(
     def _is_feature_available(self, feature: FeatureName) -> bool:
         """Return if a feature is available."""
         if self.atv and self._playing:
-            return self.atv.features.in_state(FeatureState.Available, feature)
+            return self.atv.features.in_state(
+                [FeatureState.Available, FeatureState.Unknown], feature
+            )
         return False
 
     async def async_browse_media(
