@@ -30,11 +30,12 @@ from homeassistant.components.unifiprotect.sensor import (
 )
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event as HAEvent, EventStateChangedData, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .utils import (
@@ -48,6 +49,8 @@ from .utils import (
     reset_objects,
     time_changed,
 )
+
+from tests.common import async_capture_events
 
 CAMERA_SENSORS_WRITE = CAMERA_SENSORS[:5]
 SENSE_SENSORS_WRITE = SENSE_SENSORS[:8]
@@ -554,12 +557,73 @@ async def test_camera_update_license_plate(
 
     ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
     ufp.api.bootstrap.events = {event.id: event}
+
+    state_changes: list[HAEvent[EventStateChangedData]] = async_capture_events(
+        hass, EVENT_STATE_CHANGED
+    )
     ufp.ws_msg(mock_msg)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "ABCD1234"
+
+    assert len(state_changes) == 1
+
+    # ensure reply is ignored
+    ufp.ws_msg(mock_msg)
+    await hass.async_block_till_done()
+    assert len(state_changes) == 1
+
+    event = Event(
+        model=ModelType.EVENT,
+        id="test_event_id",
+        type=EventType.SMART_DETECT,
+        start=fixed_now - timedelta(seconds=1),
+        end=fixed_now + timedelta(seconds=1),
+        score=100,
+        smart_detect_types=[SmartDetectObjectType.LICENSE_PLATE],
+        smart_detect_event_ids=[],
+        metadata=event_metadata,
+        api=ufp.api,
+    )
+
+    ufp.api.bootstrap.events = {event.id: event}
+    new_camera.last_smart_detect_event_ids[SmartDetectObjectType.LICENSE_PLATE] = (
+        event.id
+    )
+    ufp.ws_msg(mock_msg)
+    await hass.async_block_till_done()
+    assert len(state_changes) == 2
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "none"
+
+    # Now send a new event with end already set
+    event = Event(
+        model=ModelType.EVENT,
+        id="new_event",
+        type=EventType.SMART_DETECT,
+        start=fixed_now - timedelta(seconds=1),
+        end=fixed_now + timedelta(seconds=1),
+        score=100,
+        smart_detect_types=[SmartDetectObjectType.LICENSE_PLATE],
+        smart_detect_event_ids=[],
+        metadata=event_metadata,
+        api=ufp.api,
+    )
+
+    ufp.api.bootstrap.events = {event.id: event}
+    new_camera.last_smart_detect_event_ids[SmartDetectObjectType.LICENSE_PLATE] = (
+        event.id
+    )
+    ufp.ws_msg(mock_msg)
+    await hass.async_block_till_done()
+    assert len(state_changes) == 4
+    assert state_changes[2].data["new_state"].state == "ABCD1234"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "none"
 
 
 async def test_sensor_precision(

@@ -72,11 +72,14 @@ def get_unique_prefix(
     havdalah_offset: int | None,
 ) -> str:
     """Create a prefix for unique ids."""
+    # location.altitude was unset before 2024.6 when this method
+    # was used to create the unique id. As such it would always
+    # use the default altitude of 754.
     config_properties = [
         location.latitude,
         location.longitude,
         location.timezone,
-        location.altitude,
+        754,
         location.diaspora,
         language,
         candle_lighting_offset,
