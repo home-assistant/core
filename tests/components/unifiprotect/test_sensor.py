@@ -589,9 +589,38 @@ async def test_camera_update_license_plate(
     )
 
     ufp.api.bootstrap.events = {event.id: event}
+    new_camera.last_smart_detect_event_ids[SmartDetectObjectType.LICENSE_PLATE] = (
+        event.id
+    )
     ufp.ws_msg(mock_msg)
     await hass.async_block_till_done()
     assert len(state_changes) == 2
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "none"
+
+    # Now send a new event with end already set
+    event = Event(
+        model=ModelType.EVENT,
+        id="new_event",
+        type=EventType.SMART_DETECT,
+        start=fixed_now - timedelta(seconds=1),
+        end=fixed_now + timedelta(seconds=1),
+        score=100,
+        smart_detect_types=[SmartDetectObjectType.LICENSE_PLATE],
+        smart_detect_event_ids=[],
+        metadata=event_metadata,
+        api=ufp.api,
+    )
+
+    ufp.api.bootstrap.events = {event.id: event}
+    new_camera.last_smart_detect_event_ids[SmartDetectObjectType.LICENSE_PLATE] = (
+        event.id
+    )
+    ufp.ws_msg(mock_msg)
+    await hass.async_block_till_done()
+    assert len(state_changes) == 4
+    assert state_changes[2].data["new_state"].state == "ABCD1234"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "none"
