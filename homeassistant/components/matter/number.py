@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from chip.clusters import Objects as clusters
-from chip.clusters.Types import NullValue
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
 from homeassistant.components.number import (
@@ -14,7 +13,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, EntityCategory, Platform, UnitOfTime
+from homeassistant.const import EntityCategory, Platform, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -62,9 +61,7 @@ class MatterNumber(MatterEntity, NumberEntity):
     def _update_from_device(self) -> None:
         """Update from device."""
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
-        if value in (None, NullValue):
-            value = None
-        elif value_convert := self.entity_description.measurement_to_ha:
+        if value_convert := self.entity_description.measurement_to_ha:
             value = value_convert(value)
         self._attr_native_value = value
 
@@ -77,13 +74,14 @@ DISCOVERY_SCHEMAS = [
             key="on_level",
             entity_category=EntityCategory.CONFIG,
             translation_key="on_level",
-            native_max_value=100,
-            native_min_value=1,
+            native_max_value=255,
+            native_min_value=0,
             mode=NumberMode.BOX,
-            measurement_to_ha=lambda x: round(x / 2.54),
-            ha_to_native_value=lambda x: round(x * 2.54),
+            # use 255 to indicate that the value should revert to the default
+            measurement_to_ha=lambda x: 255 if x is None else x,
+            ha_to_native_value=lambda x: None if x == 255 else int(x),
             native_step=1,
-            native_unit_of_measurement=PERCENTAGE,
+            native_unit_of_measurement=None,
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.LevelControl.Attributes.OnLevel,),
@@ -96,7 +94,7 @@ DISCOVERY_SCHEMAS = [
             translation_key="on_transition_time",
             native_max_value=65534,
             native_min_value=0,
-            measurement_to_ha=lambda x: x / 10,
+            measurement_to_ha=lambda x: None if x is None else x / 10,
             ha_to_native_value=lambda x: round(x * 10),
             native_step=0.1,
             native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -113,7 +111,7 @@ DISCOVERY_SCHEMAS = [
             translation_key="off_transition_time",
             native_max_value=65534,
             native_min_value=0,
-            measurement_to_ha=lambda x: x / 10,
+            measurement_to_ha=lambda x: None if x is None else x / 10,
             ha_to_native_value=lambda x: round(x * 10),
             native_step=0.1,
             native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -130,7 +128,7 @@ DISCOVERY_SCHEMAS = [
             translation_key="on_off_transition_time",
             native_max_value=65534,
             native_min_value=0,
-            measurement_to_ha=lambda x: x / 10,
+            measurement_to_ha=lambda x: None if x is None else x / 10,
             ha_to_native_value=lambda x: round(x * 10),
             native_step=0.1,
             native_unit_of_measurement=UnitOfTime.SECONDS,
