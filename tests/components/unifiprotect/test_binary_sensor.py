@@ -445,7 +445,7 @@ async def test_binary_sensor_package_detected(
     unadopted_camera: Camera,
     fixed_now: datetime,
 ) -> None:
-    """Test binary_sensor motion entity."""
+    """Test binary_sensor package detection entity."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 15, 15)
