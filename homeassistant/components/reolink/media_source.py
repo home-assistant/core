@@ -34,13 +34,15 @@ async def async_get_media_source(hass: HomeAssistant) -> ReolinkVODMediaSource:
 
 def res_name(stream: str) -> str:
     """Return the user friendly name for a stream."""
-    if stream == "main":
-        return "High res."
-    if stream == "autotrack_sub":
-        return "Autotrack low res."
-    if stream == "autotrack_main":
-        return "Autotrack high res."
-    return "Low res."
+    match stream:
+        case "main":
+            return "High res."
+        case "autotrack_sub":
+            return "Autotrack low res."
+        case "autotrack_main":
+            return "Autotrack high res."
+        case _:
+            return "Low res."
 
 
 class ReolinkVODMediaSource(MediaSource):
