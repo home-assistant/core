@@ -610,8 +610,9 @@ class HomeAssistant:
     @callback
     def async_add_job[_R, *_Ts](
         self,
-        target: Callable[[*_Ts], Coroutine[Any, Any, _R] | _R]
-        | Coroutine[Any, Any, _R],
+        target: (
+            Callable[[*_Ts], Coroutine[Any, Any, _R] | _R] | Coroutine[Any, Any, _R]
+        ),
         *args: *_Ts,
         eager_start: bool = False,
     ) -> asyncio.Future[_R] | None:
@@ -944,8 +945,9 @@ class HomeAssistant:
     @callback
     def async_run_job[_R, *_Ts](
         self,
-        target: Callable[[*_Ts], Coroutine[Any, Any, _R] | _R]
-        | Coroutine[Any, Any, _R],
+        target: (
+            Callable[[*_Ts], Coroutine[Any, Any, _R] | _R] | Coroutine[Any, Any, _R]
+        ),
         *args: *_Ts,
     ) -> asyncio.Future[_R] | None:
         """Run a job from within the event loop.
@@ -2456,20 +2458,14 @@ class ServiceRegistry:
         return service.lower() in self._services.get(domain.lower(), [])
 
     def supports_response(self, domain: str, service: str) -> SupportsResponse:
-        """Return whether the service supports response data.
+        """Return whether or not the service supports response data.
 
         This exists so that callers can return more helpful error messages given
-        the context. Will return NONE if the service or domain do not exist as there is
+        the context. Will return NONE if the service does not exist as there is
         other error handling when calling the service if it does not exist.
         """
-        try:
-            handler = self._services[domain.lower()][service.lower()]
-        except KeyError:
+        if not (handler := self._services[domain.lower()][service.lower()]):
             return SupportsResponse.NONE
-
-        if not handler:
-            return SupportsResponse.NONE
-
         return handler.supports_response
 
     def register(

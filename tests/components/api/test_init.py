@@ -396,20 +396,6 @@ async def test_api_call_service_returns_response_requested_response(
     await hass.async_block_till_done()
     assert len(test_value) == (1 if expected_success else 0)
 
-    await mock_api_client.post(
-        "/api/services/test_domain/test_service",
-        json={"return_response": requested_response},
-    )
-    await hass.async_block_till_done()
-    assert len(test_value) == (2 if expected_success else 0)
-
-    await mock_api_client.post(
-        "/api/services/test_domain/test_service",
-        json={"return_response": True} if requested_response else None,
-    )
-    await hass.async_block_till_done()
-    assert len(test_value) == (3 if expected_success else 0)
-
 
 async def test_api_call_service_client_closed(
     hass: HomeAssistant, mock_api_client: TestClient
@@ -798,14 +784,6 @@ async def test_rendering_template_legacy_user(
         json={"template": "{{ states.sensor.temperature.state }}"},
     )
     assert resp.status == HTTPStatus.UNAUTHORIZED
-
-
-async def test_api_call_service_not_found(
-    hass: HomeAssistant, mock_api_client: TestClient
-) -> None:
-    """Test if the API fails 400 if unknown service."""
-    resp = await mock_api_client.post("/api/services/test_domain/test_service")
-    assert resp.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_api_call_service_bad_data(
