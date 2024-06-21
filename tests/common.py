@@ -783,21 +783,38 @@ class MockModule:
 
     def __init__(
         self,
-        domain=None,
-        dependencies=None,
-        setup=None,
-        requirements=None,
-        config_schema=None,
-        platform_schema=None,
-        platform_schema_base=None,
-        async_setup=None,
-        async_setup_entry=None,
-        async_unload_entry=None,
-        async_migrate_entry=None,
-        async_remove_entry=None,
-        partial_manifest=None,
-        async_remove_config_entry_device=None,
-    ):
+        domain: str | None = None,
+        *,
+        dependencies: list[str] | None = None,
+        setup: Callable[[HomeAssistant, ConfigType], bool] | None = None,
+        requirements: list[str] | None = None,
+        config_schema: vol.Schema | None = None,
+        platform_schema: vol.Schema | None = None,
+        platform_schema_base: vol.Schema | None = None,
+        async_setup: Callable[[HomeAssistant, ConfigType], Coroutine[Any, Any, bool]]
+        | None = None,
+        async_setup_entry: Callable[
+            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool]
+        ]
+        | None = None,
+        async_unload_entry: Callable[
+            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool]
+        ]
+        | None = None,
+        async_migrate_entry: Callable[
+            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool]
+        ]
+        | None = None,
+        async_remove_entry: Callable[
+            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, None]
+        ]
+        | None = None,
+        partial_manifest: dict[str, Any] | None = None,
+        async_remove_config_entry_device: Callable[
+            [HomeAssistant, ConfigEntry, dr.DeviceEntry], Coroutine[Any, Any, bool]
+        ]
+        | None = None,
+    ) -> None:
         """Initialize the mock module."""
         self.__name__ = f"homeassistant.components.{domain}"
         self.__file__ = f"homeassistant/components/{domain}"
