@@ -56,8 +56,8 @@
       }
     },
     "event": {
-      "push": {
-        "name": "[%key:component::event::title%]",
+      "button": {
+        "name": "Button",
         "state_attributes": {
           "event_type": {
             "state": {
