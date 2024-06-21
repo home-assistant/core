@@ -109,7 +109,7 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             try:
                 await self.hass.async_add_executor_job(ista.login)
-            except (ServerError, InternalServerError):
+            except ServerError:
                 errors["base"] = "cannot_connect"
             except (LoginError, KeycloakError):
                 errors["base"] = "invalid_auth"
