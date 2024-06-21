@@ -39,7 +39,7 @@ if TYPE_CHECKING:
 TEMPERATURE_SCALING_FACTOR = 100
 HVAC_SYSTEM_MODE_MAP = {
     HVACMode.OFF: 0,
-    HVACMode.HEAT_COOL: 1,
+    HVACMode.AUTO: 1,
     HVACMode.COOL: 3,
     HVACMode.HEAT: 4,
     HVACMode.DRY: 8,
@@ -60,6 +60,7 @@ SUPPORT_DRY_MODE_DEVICES: set[tuple[int, int]] = {
     # In the list below specify tuples of (vendorid, productid) of devices that
     # support dry mode.
     (0x0001, 0x0108),
+    (0x0001, 0x010A),
     (0x1209, 0x8007),
 }
 
@@ -68,6 +69,7 @@ SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
     # In the list below specify tuples of (vendorid, productid) of devices that
     # support fan-only mode.
     (0x0001, 0x0108),
+    (0x0001, 0x010A),
     (0x1209, 0x8007),
 }
 
@@ -133,9 +135,8 @@ class MatterClimate(MatterEntity, ClimateEntity):
         if (vendor_id, product_id) in SUPPORT_FAN_MODE_DEVICES:
             self._attr_hvac_modes.append(HVACMode.FAN_ONLY)
         if feature_map & ThermostatFeature.kAutoMode:
-            self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
+            self._attr_hvac_modes.append(HVACMode.AUTO)
             # only enable temperature_range feature if the device actually supports that
-
             if (vendor_id, product_id) not in SINGLE_SETPOINT_DEVICES:
                 self._attr_supported_features |= (
                     ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -231,7 +232,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         )
         match system_mode_value:
             case SystemModeEnum.kAuto:
-                self._attr_hvac_mode = HVACMode.HEAT_COOL
+                self._attr_hvac_mode = HVACMode.AUTO
             case SystemModeEnum.kDry:
                 self._attr_hvac_mode = HVACMode.DRY
             case SystemModeEnum.kFanOnly:

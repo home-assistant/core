@@ -47,7 +47,7 @@ class MatterNumber(MatterEntity, NumberEntity):
         """Update the current value."""
         matter_attribute = self._entity_info.primary_attribute
         sendvalue = int(value)
-        if value_convert := self.entity_description.ha_to_native_measurement:
+        if value_convert := self.entity_description.ha_to_native_value:
             sendvalue = value_convert(value)
         await self.matter_client.write_attribute(
             node_id=self._endpoint.node.node_id,
@@ -81,7 +81,7 @@ DISCOVERY_SCHEMAS = [
             native_min_value=1,
             mode=NumberMode.BOX,
             measurement_to_ha=lambda x: round(x / 2.54),
-            ha_to_native_measurement=lambda x: round(x * 2.54),
+            ha_to_native_value=lambda x: round(x * 2.54),
             native_step=1,
             native_unit_of_measurement=PERCENTAGE,
         ),
@@ -97,7 +97,7 @@ DISCOVERY_SCHEMAS = [
             native_max_value=65534,
             native_min_value=0,
             measurement_to_ha=lambda x: x / 10,
-            ha_to_native_measurement=lambda x: round(x * 10),
+            ha_to_native_value=lambda x: round(x * 10),
             native_step=0.1,
             native_unit_of_measurement=UnitOfTime.SECONDS,
             mode=NumberMode.BOX,
@@ -114,7 +114,7 @@ DISCOVERY_SCHEMAS = [
             native_max_value=65534,
             native_min_value=0,
             measurement_to_ha=lambda x: x / 10,
-            ha_to_native_measurement=lambda x: round(x * 10),
+            ha_to_native_value=lambda x: round(x * 10),
             native_step=0.1,
             native_unit_of_measurement=UnitOfTime.SECONDS,
             mode=NumberMode.BOX,
@@ -131,7 +131,7 @@ DISCOVERY_SCHEMAS = [
             native_max_value=65534,
             native_min_value=0,
             measurement_to_ha=lambda x: x / 10,
-            ha_to_native_measurement=lambda x: round(x * 10),
+            ha_to_native_value=lambda x: round(x * 10),
             native_step=0.1,
             native_unit_of_measurement=UnitOfTime.SECONDS,
             mode=NumberMode.BOX,
