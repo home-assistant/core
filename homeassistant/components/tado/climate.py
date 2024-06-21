@@ -36,10 +36,7 @@ from .const import (
     CONST_MODE_OFF,
     CONST_MODE_SMART_SCHEDULE,
     CONST_OVERLAY_MANUAL,
-    CONST_OVERLAY_TADO_DEFAULT,
-    CONST_OVERLAY_TADO_MODE,
     CONST_OVERLAY_TADO_OPTIONS,
-    CONST_OVERLAY_TIMER,
     DATA,
     DOMAIN,
     HA_TERMINATION_DURATION,
@@ -67,6 +64,7 @@ from .const import (
     TYPE_HEATING,
 )
 from .entity import TadoZoneEntity
+from .helper import decide_duration, decide_overlay_mode
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -598,31 +596,18 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             self._tado.reset_zone_overlay(self.zone_id)
             return
 
-        # If user gave duration then overlay mode needs to be timer
-        if duration:
-            overlay_mode = CONST_OVERLAY_TIMER
-        # If no duration or timer set to fallback setting
-        if overlay_mode is None:
-            overlay_mode = (
-                self._tado.fallback
-                if self._tado.fallback is not None
-                else CONST_OVERLAY_TADO_MODE
-            )
-        # If default is Tado default then look it up
-        if overlay_mode == CONST_OVERLAY_TADO_DEFAULT:
-            overlay_mode = (
-                self._tado_zone_data.default_overlay_termination_type
-                if self._tado_zone_data.default_overlay_termination_type is not None
-                else CONST_OVERLAY_TADO_MODE
-            )
-        # If we ended up with a timer but no duration, set a default duration
-        if overlay_mode == CONST_OVERLAY_TIMER and duration is None:
-            duration = (
-                int(self._tado_zone_data.default_overlay_termination_duration)
-                if self._tado_zone_data.default_overlay_termination_duration is not None
-                else 3600
-            )
-
+        overlay_mode = decide_overlay_mode(
+            tado=self._tado,
+            duration=duration,
+            overlay_mode=overlay_mode,
+            zone_id=self.zone_id,
+        )
+        duration = decide_duration(
+            tado=self._tado,
+            duration=duration,
+            zone_id=self.zone_id,
+            overlay_mode=overlay_mode,
+        )
         _LOGGER.debug(
             (
                 "Switching to %s for zone %s (%d) with temperature %s °C and duration"

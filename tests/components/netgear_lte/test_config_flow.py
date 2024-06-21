@@ -2,7 +2,6 @@
 
 from unittest.mock import patch
 
-from homeassistant import data_entry_flow
 from homeassistant.components.netgear_lte.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_SOURCE
@@ -25,7 +24,7 @@ async def test_flow_user_form(hass: HomeAssistant, connection: None) -> None:
         context={CONF_SOURCE: SOURCE_USER},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with _patch_setup():
@@ -33,7 +32,7 @@ async def test_flow_user_form(hass: HomeAssistant, connection: None) -> None:
             result["flow_id"],
             user_input=CONF_DATA,
         )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Netgear LM1200"
     assert result["data"] == CONF_DATA
     assert result["context"]["unique_id"] == "FFFFFFFFFFFFF"
@@ -63,7 +62,7 @@ async def test_flow_user_cannot_connect(
         data=CONF_DATA,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "cannot_connect"
 
@@ -78,6 +77,6 @@ async def test_flow_user_unknown_error(hass: HomeAssistant, unknown: None) -> No
         result["flow_id"],
         user_input=CONF_DATA,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "unknown"

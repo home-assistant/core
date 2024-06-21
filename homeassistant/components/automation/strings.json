@@ -1,4 +1,7 @@
 {
+  "common": {
+    "validation_failed_title": "Automation {name} failed to set up"
+  },
   "title": "Automation",
   "entity_component": {
     "_": {
@@ -43,6 +46,26 @@
           }
         }
       }
+    },
+    "validation_failed_actions": {
+      "title": "[%key:component::automation::common::validation_failed_title%]",
+      "description": "The automation \"{name}\" (`{entity_id}`) is not active because its actions could not be set up.\n\nError:`{error}`.\n\nTo fix this error, [edit the automation]({edit}) to correct it, then save and reload the automation configuration."
+    },
+    "validation_failed_blueprint": {
+      "title": "[%key:component::automation::common::validation_failed_title%]",
+      "description": "The blueprinted automation \"{name}\" (`{entity_id}`) failed to set up.\n\nError:`{error}`.\n\nTo fix this error, [edit the automation]({edit}) to correct it, then save and reload the automation configuration."
+    },
+    "validation_failed_conditions": {
+      "title": "[%key:component::automation::common::validation_failed_title%]",
+      "description": "The automation \"{name}\" (`{entity_id}`) is not active because its conditions could not be set up.\n\nError:`{error}`.\n\nTo fix this error, [edit the automation]({edit}) to correct it, then save and reload the automation configuration."
+    },
+    "validation_failed_schema": {
+      "title": "[%key:component::automation::common::validation_failed_title%]",
+      "description": "The automation \"{name}\" (`{entity_id}`) is not active because the configuration has errors.\n\nError:`{error}`.\n\nTo fix this error, [edit the automation]({edit}) to correct it, then save and reload the automation configuration."
+    },
+    "validation_failed_triggers": {
+      "title": "[%key:component::automation::common::validation_failed_title%]",
+      "description": "The automation \"{name}\" (`{entity_id}`) is not active because its triggers could not be set up.\n\nError:`{error}`.\n\nTo fix this error, [edit the automation]({edit}) to correct it, then save and reload the automation configuration."
     }
   },
   "services": {

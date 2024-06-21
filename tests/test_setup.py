@@ -163,7 +163,7 @@ async def test_validate_platform_config_2(
     mock_platform(
         hass,
         "whatever.platform_conf",
-        MockPlatform("whatever", platform_schema=platform_schema),
+        MockPlatform(platform_schema=platform_schema),
     )
 
     with assert_setup_component(1):
@@ -192,7 +192,7 @@ async def test_validate_platform_config_3(
     mock_platform(
         hass,
         "whatever.platform_conf",
-        MockPlatform("whatever", platform_schema=platform_schema),
+        MockPlatform(platform_schema=platform_schema),
     )
 
     with assert_setup_component(1):
@@ -1057,7 +1057,7 @@ async def test_async_start_setup_simple_integration_end_to_end(
     }
 
 
-async def test_async_get_setup_timings(hass) -> None:
+async def test_async_get_setup_timings(hass: HomeAssistant) -> None:
     """Test we can get the setup timings from the setup time data."""
     setup_time = setup._setup_times(hass)
     # Mock setup time data
@@ -1177,19 +1177,17 @@ async def test_loading_component_loads_translations(hass: HomeAssistant) -> None
     assert translation.async_translations_loaded(hass, {"comp"}) is True
 
 
-async def test_importing_integration_in_executor(
-    hass: HomeAssistant, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_importing_integration_in_executor(hass: HomeAssistant) -> None:
     """Test we can import an integration in an executor."""
     assert await setup.async_setup_component(hass, "test_package_loaded_executor", {})
     assert await setup.async_setup_component(hass, "test_package_loaded_executor", {})
     await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_async_prepare_setup_platform(
-    hass: HomeAssistant,
-    enable_custom_integrations: None,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we can prepare a platform setup."""
     integration = await loader.async_get_integration(hass, "test")
