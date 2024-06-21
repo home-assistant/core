@@ -163,10 +163,10 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
 
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""
-        # The light has it's own implementation and switch and sensor use
-        # the FeatureEntity implementation. When a new non-feature based
-        # platform is added it should provide an implementation here to
-        # return legacy_device_id(self._device)
+        # The light platform has historically had it's own implementation and
+        # feature-based entities use feature ids to create unique ids.
+        # When a new non-feature based platform is added,
+        # it needs to implement this.
         raise NotImplementedError
 
     @abstractmethod
@@ -230,11 +230,85 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""
         key = self.entity_description.key
+        # The unique id for the state feature in the switch platform is the device_id
         if key == PRIMARY_STATE_ID:
             return legacy_device_id(self._device)
 
+        # Historically the legacy device emeter attributes which are now replaced with
+        # features used slightly different keys. This ensures that those entities
+        # are not orphaned. Returns the mapped key or the provided key if not mapped.
         key = LEGACY_KEY_MAPPING.get(key, key)
         return f"{legacy_device_id(self._device)}_{key}"
+
+    @classmethod
+    def _category_for_feature(cls, feature: Feature | None) -> EntityCategory | None:
+        """Return entity category for a feature."""
+        # Main controls have no category
+        if feature is None or feature.category is Feature.Category.Primary:
+            return None
+
+        if (
+            entity_category := FEATURE_CATEGORY_TO_ENTITY_CATEGORY.get(feature.category)
+        ) is None:
+            _LOGGER.error(
+                "Unhandled category %s, fallback to DIAGNOSTIC", feature.category
+            )
+            entity_category = EntityCategory.DIAGNOSTIC
+
+        return entity_category
+
+    @classmethod
+    def _description_for_feature[_D: EntityDescription](
+        cls,
+        desc_cls: type[_D],
+        feature: Feature,
+        descriptions: Mapping[str, _D],
+        *,
+        child_alias: str | None = None,
+    ) -> _D:
+        """Return description object for the given feature.
+
+        This is responsible for setting the common parameters & deciding based on feature id
+        which additional parameters are passed.
+        """
+
+        enabled_default = feature.category is not Feature.Category.Debug
+        category = cls._category_for_feature(feature)
+        if descriptions and (desc := descriptions.get(feature.id)):
+            translation_key: str | None = feature.id
+            # HA logic is to name entities based on the following logic:
+            # _attr_name > translation.name > description.name
+            # > device_class (if base platform supports).
+            entity_name: str | None | UndefinedType = UNDEFINED
+
+            # The state feature gets the device name or the child device
+            # name if it's a child device
+            if feature.id == PRIMARY_STATE_ID:
+                translation_key = None
+                entity_name = child_alias  # if None will use device name
+
+            desc = replace(
+                desc,
+                translation_key=translation_key,
+                name=entity_name,  # if undefined will use translation key
+                entity_category=category,
+                entity_registry_enabled_default=enabled_default,
+            )
+        else:
+            desc = desc_cls(
+                key=feature.id,
+                name=feature.name,
+                icon=feature.icon,
+                entity_category=category,
+                entity_registry_enabled_default=enabled_default,
+            )
+            _LOGGER.warning(
+                "Device feature: %s (%s) needs an entity description defined, "
+                "it has been added to hass but may not be presented properly",
+                feature.name,
+                feature.id,
+            )
+        return desc
 
 
 def _entities_for_device[_E: CoordinatedTPLinkEntity](
@@ -250,9 +324,7 @@ def _entities_for_device[_E: CoordinatedTPLinkEntity](
     This filters out unwanted features to avoid creating unnecessary entities
     for device features that are implemented by specialized platforms like light.
     """
-    entities: list[_E] = []
-
-    entities.extend(
+    entities: list[_E] = [
         entity_class(
             device,
             coordinator,
@@ -265,11 +337,11 @@ def _entities_for_device[_E: CoordinatedTPLinkEntity](
             feat.category != Feature.Category.Primary
             or device.device_type not in DEVICETYPES_WITH_SPECIALIZED_PLATFORMS
         )
-    )
+    ]
     return entities
 
 
-def _entities_for_device_and_its_children[_E: CoordinatedTPLinkEntity](
+def entities_for_device_and_its_children[_E: CoordinatedTPLinkEntity](
     device: Device,
     coordinator: TPLinkDataUpdateCoordinator,
     *,
@@ -311,69 +383,3 @@ def _entities_for_device_and_its_children[_E: CoordinatedTPLinkEntity](
             )
 
     return entities
-
-
-def _category_for_feature(feature: Feature | None) -> EntityCategory | None:
-    """Return entity category for a feature."""
-    # Main controls have no category
-    if feature is None or feature.category is Feature.Category.Primary:
-        return None
-
-    if (
-        entity_category := FEATURE_CATEGORY_TO_ENTITY_CATEGORY.get(feature.category)
-    ) is None:
-        _LOGGER.error("Unhandled category %s, fallback to DIAGNOSTIC", feature.category)
-        entity_category = EntityCategory.DIAGNOSTIC
-
-    return entity_category
-
-
-def _description_for_feature[_D: EntityDescription](
-    desc_cls: type[_D],
-    feature: Feature,
-    descriptions: Mapping[str, _D],
-    *,
-    child_alias: str | None = None,
-) -> _D:
-    """Return description object for the given feature.
-
-    This is responsible for setting the common parameters & deciding based on feature id
-    which additional parameters are passed.
-    """
-
-    enabled_default = feature.category is not Feature.Category.Debug
-    category = _category_for_feature(feature)
-    if descriptions and (desc := descriptions.get(feature.id)):
-        # The state feature gets the device name or the child device
-        # name if it's a child device
-        if feature.id == PRIMARY_STATE_ID:
-            translation_key = None
-            entity_name: str | None | UndefinedType = child_alias
-        else:
-            translation_key = feature.id
-            entity_name = UNDEFINED
-        desc = replace(
-            desc,
-            translation_key=translation_key,
-            name=entity_name,
-            entity_category=category,
-            entity_registry_enabled_default=enabled_default,
-        )
-    else:
-        # Entity are named in the base class based on the following logic:
-        # _attr_name > translation.name > description.name
-        # > device_class if base platform supports.
-        desc = desc_cls(
-            key=feature.id,
-            name=feature.name,
-            icon=feature.icon,
-            entity_category=category,
-            entity_registry_enabled_default=enabled_default,
-        )
-        _LOGGER.warning(
-            "Device feature: %s (%s) needs an entity description defined, "
-            "it has been added to hass but may not be presented properly",
-            feature.name,
-            feature.id,
-        )
-    return desc

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any, Final
+from typing import Any
 
 from kasa import Device, Feature
 
@@ -17,9 +17,8 @@ from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import (
     CoordinatedTPLinkFeatureEntity,
     TPLinkFeatureEntityDescription,
-    _description_for_feature,
-    _entities_for_device_and_its_children,
     async_refresh_after,
+    entities_for_device_and_its_children,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +31,7 @@ class TPLinkSwitchEntityDescription(
     """Base class for a TPLink feature based sensor entity description."""
 
 
-SWITCH_DESCRIPTIONS: Final = [
+SWITCH_DESCRIPTIONS: tuple[TPLinkSwitchEntityDescription, ...] = (
     TPLinkSwitchEntityDescription(
         key="state",
     ),
@@ -45,7 +44,7 @@ SWITCH_DESCRIPTIONS: Final = [
     TPLinkSwitchEntityDescription(
         key="auto_off_enabled",
     ),
-]
+)
 
 SWITCH_DESCRIPTIONS_MAP = {desc.key: desc for desc in SWITCH_DESCRIPTIONS}
 
@@ -60,7 +59,7 @@ async def async_setup_entry(
     parent_coordinator = data.parent_coordinator
     device = parent_coordinator.device
 
-    entities = _entities_for_device_and_its_children(
+    entities = entities_for_device_and_its_children(
         device,
         coordinator=parent_coordinator,
         feature_type=Feature.Switch,
@@ -84,7 +83,7 @@ class TPLinkSwitch(CoordinatedTPLinkFeatureEntity, SwitchEntity):
         parent: Device | None = None,
     ) -> None:
         """Initialize the switch."""
-        description = _description_for_feature(
+        description = self._description_for_feature(
             TPLinkSwitchEntityDescription,
             feature,
             SWITCH_DESCRIPTIONS_MAP,

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final, cast
+from typing import cast
 
 from kasa import Device, Feature
 
@@ -22,8 +22,7 @@ from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import (
     CoordinatedTPLinkFeatureEntity,
     TPLinkFeatureEntityDescription,
-    _description_for_feature,
-    _entities_for_device_and_its_children,
+    entities_for_device_and_its_children,
 )
 
 UNIT_MAPPING = {
@@ -39,7 +38,7 @@ class TPLinkSensorEntityDescription(
     """Base class for a TPLink feature based sensor entity description."""
 
 
-SENSOR_DESCRIPTIONS: Final = [
+SENSOR_DESCRIPTIONS: tuple[TPLinkSensorEntityDescription, ...] = (
     TPLinkSensorEntityDescription(
         key="current_consumption",
         device_class=SensorDeviceClass.POWER,
@@ -70,7 +69,7 @@ SENSOR_DESCRIPTIONS: Final = [
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-]
+)
 
 SENSOR_DESCRIPTIONS_MAP = {desc.key: desc for desc in SENSOR_DESCRIPTIONS}
 
@@ -86,7 +85,7 @@ async def async_setup_entry(
     children_coordinators = data.children_coordinators
     device = parent_coordinator.device
 
-    entities = _entities_for_device_and_its_children(
+    entities = entities_for_device_and_its_children(
         device=device,
         coordinator=parent_coordinator,
         feature_type=Feature.Type.Sensor,
@@ -110,7 +109,7 @@ class Sensor(CoordinatedTPLinkFeatureEntity, SensorEntity):
         parent: Device | None = None,
     ) -> None:
         """Initialize the sensor."""
-        description = _description_for_feature(
+        description = self._description_for_feature(
             TPLinkSensorEntityDescription, feature, SENSOR_DESCRIPTIONS_MAP
         )
         super().__init__(
