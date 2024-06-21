@@ -29,6 +29,10 @@ async def test_raise_for_blocking_call_async_non_strict_core(
     assert "Detected blocking call to banned_function" in caplog.text
     assert "Traceback (most recent call last)" in caplog.text
     assert (
+        "Please create a bug report at https://github.com/home-assistant/core/issues"
+        in caplog.text
+    )
+    assert (
         "For developers, please see "
         "https://developers.home-assistant.io/docs/asyncio_blocking_operations/#banned_function"
     ) in caplog.text
@@ -142,6 +146,10 @@ async def test_raise_for_blocking_call_async_integration_non_strict(
     assert "Traceback (most recent call last)" in caplog.text
     assert (
         'File "/home/paulus/homeassistant/components/hue/light.py", line 23'
+        in caplog.text
+    )
+    assert (
+        "please create a bug report at https://github.com/home-assistant/core/issues"
         in caplog.text
     )
     assert (

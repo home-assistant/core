@@ -51,7 +51,7 @@ def raise_for_blocking_call(
             _LOGGER.warning(
                 "Detected blocking call to %s with args %s in %s, "
                 "line %s: %s inside the event loop; "
-                "This is causing stability issues."
+                "This is causing stability issues. "
                 "Please create a bug report at "
                 "https://github.com/home-assistant/core/issues?q=is%%3Aopen+is%%3Aissue\n"
                 "%s\n"
