@@ -228,7 +228,7 @@ async def test_set_scan_interval_via_platform(hass: HomeAssistant) -> None:
         """Test the platform setup."""
         add_entities([MockEntity(should_poll=True)])
 
-    platform = MockPlatform(platform_setup)
+    platform = MockPlatform(setup_platform=platform_setup)
     platform.SCAN_INTERVAL = timedelta(seconds=30)
 
     mock_platform(hass, "platform.test_domain", platform)

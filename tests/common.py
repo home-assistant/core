@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Coroutine, Mapping, Sequence
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
 from enum import Enum
@@ -858,13 +858,25 @@ class MockPlatform:
 
     def __init__(
         self,
-        setup_platform=None,
-        dependencies=None,
-        platform_schema=None,
-        async_setup_platform=None,
-        async_setup_entry=None,
-        scan_interval=None,
-    ):
+        *,
+        setup_platform: Callable[
+            [HomeAssistant, ConfigType, AddEntitiesCallback, DiscoveryInfoType | None],
+            None,
+        ]
+        | None = None,
+        dependencies: list[str] | None = None,
+        platform_schema: vol.Schema | None = None,
+        async_setup_platform: Callable[
+            [HomeAssistant, ConfigType, AddEntitiesCallback, DiscoveryInfoType | None],
+            Coroutine[Any, Any, None],
+        ]
+        | None = None,
+        async_setup_entry: Callable[
+            [HomeAssistant, ConfigEntry, AddEntitiesCallback], Coroutine[Any, Any, None]
+        ]
+        | None = None,
+        scan_interval: timedelta | None = None,
+    ) -> None:
         """Initialize the platform."""
         self.DEPENDENCIES = dependencies or []
 
