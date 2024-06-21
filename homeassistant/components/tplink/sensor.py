@@ -13,18 +13,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TPLinkConfigEntry
+from .const import UNIT_MAPPING
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkFeatureEntity, TPLinkFeatureEntityDescription
-
-UNIT_MAPPING = {
-    "celsius": UnitOfTemperature.CELSIUS,
-    "fahrenheit": UnitOfTemperature.FAHRENHEIT,
-}
 
 
 @dataclass(frozen=True, kw_only=True)

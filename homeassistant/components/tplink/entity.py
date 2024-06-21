@@ -52,6 +52,7 @@ DEVICETYPES_WITH_SPECIALIZED_PLATFORMS = {
     DeviceType.Bulb,
     DeviceType.LightStrip,
     DeviceType.Dimmer,
+    DeviceType.Thermostat,
 }
 
 LEGACY_KEY_MAPPING = {

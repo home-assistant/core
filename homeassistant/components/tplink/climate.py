@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from kasa import Device, DeviceType
 from kasa.smart.modules.temperaturecontrol import ThermostatState
@@ -15,33 +15,32 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PRECISION_WHOLE, UnitOfTemperature
+from homeassistant.const import PRECISION_WHOLE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import TPLinkConfigEntry
+from .const import UNIT_MAPPING
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkEntity, async_refresh_after
-from .models import TPLinkData
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: TPLinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up thermostats."""
-    data: TPLinkData = hass.data[DOMAIN][config_entry.entry_id]
+    """Set up sensors."""
+    data = config_entry.runtime_data
     parent_coordinator = data.parent_coordinator
     device = parent_coordinator.device
 
-    entities: list[TPLinkClimate] = []
+    entities: list[Climate] = []
     # As there are no standalone thermostats, we just iterate over the children.
     entities.extend(
-        TPLinkClimate(child, parent_coordinator)
+        Climate(child, parent_coordinator)
         for child in device.children
         if child.device_type == DeviceType.Thermostat
     )
@@ -49,24 +48,20 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class TPLinkClimate(CoordinatedTPLinkEntity, ClimateEntity):
+class Climate(CoordinatedTPLinkEntity, ClimateEntity):
     """Representation of a TPLink thermostat."""
 
-    # TODO: should this use ClimateEntityDescription?
-
-    device: Device
     _attr_name = None
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    # This disables the warning for async_turn_{on,off}.
-    _enable_turn_on_off_backwards_compatibility = False
-    # TODO: use unit from the device
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
     _attr_precision = PRECISION_WHOLE
+
+    # This disables the warning for async_turn_{on,off}, can be removed later.
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -74,13 +69,12 @@ class TPLinkClimate(CoordinatedTPLinkEntity, ClimateEntity):
         coordinator: TPLinkDataUpdateCoordinator,
     ) -> None:
         """Initialize the switch."""
-        self._attr_unique_id = f"{device.device_id}_climate"
         super().__init__(device, coordinator)
-        self._temp_feature = self.device.features["temperature"]
-        self._target_feature = self.device.features["target_temperature"]
-        self._state_feature = self.device.features["state"]
-        self._mode_feature = self.device.features["mode"]
-        self._async_update_attrs()
+        self._temp_feature = self._device.features["temperature"]
+        self._target_feature = self._device.features["target_temperature"]
+        self._state_feature = self._device.features["state"]
+        self._mode_feature = self._device.features["mode"]
+        self._async_call_update_attrs()
 
     @async_refresh_after
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -117,9 +111,7 @@ class TPLinkClimate(CoordinatedTPLinkEntity, ClimateEntity):
         self._attr_target_temperature = self._target_feature.value
 
         self._attr_current_temperature = self._temp_feature.value
-        # TODO: use unit from the device
-        # self._attr_temperature_unit = self._temp_feature.unit
-
+        self._attr_temperature_unit = UNIT_MAPPING[cast(str, self._temp_feature.unit)]
         self._attr_hvac_mode = (
             HVACMode.HEAT if self._state_feature.value else HVACMode.OFF
         )
@@ -141,3 +133,7 @@ class TPLinkClimate(CoordinatedTPLinkEntity, ClimateEntity):
             return
 
         self._attr_hvac_action = STATE_TO_ACTION[self._mode_feature.value]
+
+    def _get_unique_id(self) -> str:
+        """Return unique id."""
+        return f"{self._device.device_id}_climate"

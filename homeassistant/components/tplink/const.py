@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Final
 
-from homeassistant.const import Platform
+from homeassistant.const import Platform, UnitOfTemperature
 
 DOMAIN = "tplink"
 
@@ -31,3 +31,9 @@ PLATFORMS: Final = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
+
+UNIT_MAPPING = {
+    "celsius": UnitOfTemperature.CELSIUS,
+    "fahrenheit": UnitOfTemperature.FAHRENHEIT,
+}
+
