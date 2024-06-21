@@ -2476,3 +2476,30 @@ async def test_loading_platforms_gathers(hass: HomeAssistant) -> None:
         ("platform_int", "sensor"),
         ("platform_int2", "sensor"),
     ]
+
+
+async def test_configuration_legacy_template_is_removed(hass: HomeAssistant) -> None:
+    """Test loading core config onto hass object."""
+    await config_util.async_process_ha_core_config(
+        hass,
+        {
+            "latitude": 60,
+            "longitude": 50,
+            "elevation": 25,
+            "name": "Huis",
+            "unit_system": "imperial",
+            "time_zone": "America/New_York",
+            "allowlist_external_dirs": "/etc",
+            "external_url": "https://www.example.com",
+            "internal_url": "http://example.local",
+            "media_dirs": {"mymedia": "/usr"},
+            "legacy_templates": True,
+            "debug": True,
+            "currency": "EUR",
+            "country": "SE",
+            "language": "sv",
+            "radius": 150,
+        },
+    )
+
+    assert not getattr(hass.config, "legacy_templates")
