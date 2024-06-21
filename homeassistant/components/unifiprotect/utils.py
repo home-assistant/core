@@ -41,8 +41,6 @@ from .const import (
 if TYPE_CHECKING:
     from .data import UFPConfigEntry
 
-_SENTINEL = object()
-
 
 @callback
 def _async_unifi_mac_from_hass(mac: str) -> str:
