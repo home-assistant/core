@@ -179,7 +179,7 @@ class HueSceneEntity(HueSceneEntityBase):
                     break
         if brightness is not None:
             # Hue uses a range of [0, 100] to control brightness.
-            brightness = round((dimming.brightness / 100) * 255)
+            brightness = round((brightness / 100) * 255)
         return {
             "group_name": self.group.metadata.name,
             "group_type": self.group.type.value,
