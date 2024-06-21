@@ -161,7 +161,12 @@ class AzureDevOpsBuildSensor(AzureDevOpsEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self.item_key = item_key
-        self._attr_unique_id = f"{self.coordinator.data.organization}_{self.build.project.id}_{self.build.definition.build_id}_{description.key}"
+        self._attr_unique_id = (
+            f"{self.coordinator.data.organization}_"
+            f"{self.build.project.id}_"
+            f"{self.build.definition.build_id}_"
+            f"{description.key}"
+        )
         self._attr_translation_placeholders = {
             "definition_name": self.build.definition.name
         }
