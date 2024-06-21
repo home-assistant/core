@@ -55,6 +55,11 @@ SENSOR_DESCRIPTIONS: tuple[TPLinkSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     TPLinkSensorEntityDescription(
+        key="consumption_this_month",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    TPLinkSensorEntityDescription(
         key="voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -68,6 +73,69 @@ SENSOR_DESCRIPTIONS: tuple[TPLinkSensorEntityDescription, ...] = (
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TPLinkSensorEntityDescription(
+        # Disable as the value reported by the device changes seconds frequently
+        entity_registry_enabled_default=False,
+        key="on_since",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    TPLinkSensorEntityDescription(
+        key="rssi",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TPLinkSensorEntityDescription(
+        key="signal_level",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TPLinkSensorEntityDescription(
+        key="ssid",
+    ),
+    TPLinkSensorEntityDescription(
+        key="battery_level",
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TPLinkSensorEntityDescription(
+        key="auto_off_at",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    TPLinkSensorEntityDescription(
+        key="device_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    TPLinkSensorEntityDescription(
+        key="humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TPLinkSensorEntityDescription(
+        key="report_interval",
+        device_class=SensorDeviceClass.DURATION,
+    ),
+    TPLinkSensorEntityDescription(
+        key="alarm_source",
+    ),
+    TPLinkSensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    # Firmware based features are all disabled by default pending
+    # the update platform
+    TPLinkSensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="current_firmware_version",
+    ),
+    TPLinkSensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="available_firmware_version",
+    ),
+    # Thermostat based features are all disabled by default pending
+    # the climate platform
+    TPLinkSensorEntityDescription(
+        key="thermostat_mode",
+        entity_registry_enabled_default=False,
     ),
 )
 

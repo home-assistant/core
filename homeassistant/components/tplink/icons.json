@@ -8,10 +8,42 @@
         }
       },
       "auto_update_enabled": {
-        "default": "mdi:update"
+        "default": "mdi:autorenew-off",
+        "state": {
+          "on": "mdi:autorenew"
+        }
       },
       "auto_off_enabled": {
-        "default": "mdi:sleep"
+        "default": "mdi:sleep-off",
+        "state": {
+          "on": "mdi:sleep"
+        }
+      },
+      "smooth_transitions": {
+        "default": "mdi:transition-masked",
+        "state": {
+          "on": "mdi:transition"
+        }
+      }
+    },
+    "sensor": {
+      "on_since": {
+        "default": "mdi:clock"
+      },
+      "ssid": {
+        "default": "mdi:wifi"
+      },
+      "signal_level": {
+        "default": "mdi:signal"
+      },
+      "current_firmware_version": {
+        "default": "mdi:information"
+      },
+      "available_firmware_version": {
+        "default": "mdi:information-outline"
+      },
+      "alarm_source": {
+        "default": "mdi:bell"
       }
     }
   },

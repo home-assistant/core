@@ -272,7 +272,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
         which additional parameters are passed.
         """
 
-        enabled_default = feature.category is not Feature.Category.Debug
+        is_debug_feature = feature.category is Feature.Category.Debug
         category = cls._category_for_feature(feature)
         if descriptions and (desc := descriptions.get(feature.id)):
             translation_key: str | None = feature.id
@@ -292,7 +292,9 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
                 translation_key=translation_key,
                 name=entity_name,  # if undefined will use translation key
                 entity_category=category,
-                entity_registry_enabled_default=enabled_default,
+                # enabled_default can be overridden to False in the description
+                entity_registry_enabled_default=(not is_debug_feature)
+                and desc.entity_registry_enabled_default,
             )
         else:
             desc = desc_cls(
@@ -300,7 +302,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
                 name=feature.name,
                 icon=feature.icon,
                 entity_category=category,
-                entity_registry_enabled_default=enabled_default,
+                entity_registry_enabled_default=not is_debug_feature,
             )
             _LOGGER.warning(
                 "Device feature: %s (%s) needs an entity description defined, "
