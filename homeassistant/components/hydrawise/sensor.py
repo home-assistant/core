@@ -71,7 +71,6 @@ FLOW_CONTROLLER_SENSORS: tuple[HydrawiseSensorEntityDescription, ...] = (
         key="daily_total_water_use",
         translation_key="daily_total_water_use",
         device_class=SensorDeviceClass.VOLUME,
-        native_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=1,
         value_fn=_get_controller_daily_total_water_use,
     ),
@@ -79,7 +78,6 @@ FLOW_CONTROLLER_SENSORS: tuple[HydrawiseSensorEntityDescription, ...] = (
         key="daily_active_water_use",
         translation_key="daily_active_water_use",
         device_class=SensorDeviceClass.VOLUME,
-        native_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=1,
         value_fn=_get_controller_daily_active_water_use,
     ),
@@ -87,7 +85,6 @@ FLOW_CONTROLLER_SENSORS: tuple[HydrawiseSensorEntityDescription, ...] = (
         key="daily_inactive_water_use",
         translation_key="daily_inactive_water_use",
         device_class=SensorDeviceClass.VOLUME,
-        native_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=1,
         value_fn=_get_controller_daily_inactive_water_use,
     ),
@@ -98,7 +95,6 @@ FLOW_ZONE_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="daily_active_water_use",
         translation_key="daily_active_water_use",
         device_class=SensorDeviceClass.VOLUME,
-        native_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=1,
         value_fn=_get_zone_daily_active_water_use,
     ),
@@ -164,6 +160,17 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
     """A sensor implementation for Hydrawise device."""
 
     entity_description: HydrawiseSensorEntityDescription
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit_of_measurement of the sensor."""
+        if self.entity_description.device_class != SensorDeviceClass.VOLUME:
+            return self.entity_description.native_unit_of_measurement
+        return (
+            UnitOfVolume.GALLONS
+            if self.coordinator.data.user.units.units_name == "imperial"
+            else UnitOfVolume.LITERS
+        )
 
     @property
     def icon(self) -> str | None:

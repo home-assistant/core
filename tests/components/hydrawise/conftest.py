@@ -15,6 +15,7 @@ from pydrawise.schema import (
     Sensor,
     SensorModel,
     SensorStatus,
+    UnitsSummary,
     User,
     Zone,
 )
@@ -84,7 +85,11 @@ def mock_auth() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def user() -> User:
     """Hydrawise User fixture."""
-    return User(customer_id=12345, email="asdf@asdf.com")
+    return User(
+        customer_id=12345,
+        email="asdf@asdf.com",
+        units=UnitsSummary(units_name="imperial"),
+    )
 
 
 @pytest.fixture
