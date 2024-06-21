@@ -5,21 +5,57 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.components.solarlog.const import DOMAIN as SOLARLOG_DOMAIN
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 
-from tests.common import mock_device_registry, mock_registry
+from .const import HOST, NAME
+
+from tests.common import (
+    MockConfigEntry,
+    load_json_object_fixture,
+    mock_device_registry,
+    mock_registry,
+)
 
 
 @pytest.fixture
-def mock_solarlog():
+def mock_config_entry() -> MockConfigEntry:
+    """Mock a config entry."""
+    return MockConfigEntry(
+        domain=SOLARLOG_DOMAIN,
+        title="solarlog",
+        data={
+            CONF_HOST: HOST,
+            CONF_NAME: NAME,
+            "extended_data": True,
+        },
+        minor_version=2,
+        entry_id="ce5f5431554d101905d31797e1232da8",
+    )
+
+
+@pytest.fixture
+def mock_solarlog_connector():
     """Build a fixture for the SolarLog API that connects successfully and returns one device."""
 
     mock_solarlog_api = AsyncMock()
-    with patch(
-        "homeassistant.components.solarlog.config_flow.SolarLogConnector",
-        return_value=mock_solarlog_api,
-    ) as mock_solarlog_api:
-        mock_solarlog_api.return_value.test_connection.return_value = True
+    mock_solarlog_api.test_connection = AsyncMock(return_value=True)
+    mock_solarlog_api.update_data.return_value = load_json_object_fixture(
+        "solarlog_data.json", SOLARLOG_DOMAIN
+    )
+    with (
+        patch(
+            "homeassistant.components.solarlog.coordinator.SolarLogConnector",
+            autospec=True,
+            return_value=mock_solarlog_api,
+        ),
+        patch(
+            "homeassistant.components.solarlog.config_flow.SolarLogConnector",
+            autospec=True,
+            return_value=mock_solarlog_api,
+        ),
+    ):
         yield mock_solarlog_api
 
 
