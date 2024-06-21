@@ -1,5 +1,7 @@
 """Creates a switch entity for the mower."""
 
+from __future__ import annotations
+
 from datetime import date, datetime, timedelta
 import logging
 
@@ -8,12 +10,11 @@ from ical.event import Event
 from ical.types.recur import Recur
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerBaseEntity
 
@@ -21,10 +22,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AutomowerConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up switch platform."""
-    coordinator: AutomowerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    """Set up lawn mower platform."""
+    coordinator = entry.runtime_data
     async_add_entities(
         AutomowerCalendarEntity(mower_id, coordinator) for mower_id in coordinator.data
     )
@@ -40,8 +43,9 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
         mower_id: str,
         coordinator: AutomowerDataUpdateCoordinator,
     ) -> None:
-        """Set up AutomowerSensors."""
+        """Set up HusqvarnaAutomowerEntity."""
         super().__init__(mower_id, coordinator)
+        self._attr_unique_id = mower_id
         self._event: CalendarEvent | None = None
 
     @property
@@ -54,13 +58,32 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
         calendar = Calendar()
+        schedule_no: dict = {}
         for event in self.mower_attributes.calendar.events:
+            if event.work_area_id is not None:
+                schedule_no[event.work_area_id] = 0
+            if event.work_area_id is None:
+                schedule_no["-1"] = 0
+
+        for event in self.mower_attributes.calendar.events:
+            wa_name = ""
+            if event.work_area_id is not None:
+                if self.mower_attributes.work_areas is not None:
+                    _work_areas = self.mower_attributes.work_areas
+                    wa_name = f"{_work_areas[event.work_area_id].name} "
+                    schedule_no[event.work_area_id] = (
+                        schedule_no[event.work_area_id] + 1
+                    )
+                    number = schedule_no[event.work_area_id]
+            if event.work_area_id is None:
+                schedule_no["-1"] = schedule_no["-1"] + 1
+                number = schedule_no["-1"]
             calendar.events.append(
                 Event(
-                    start=event.start,
-                    end=event.end,
+                    dtstart=event.start,
+                    dtend=event.end,
                     rrule=Recur.from_rrule(event.rrule),
-                    summary=self.mower_id,
+                    summary=f"{wa_name}Schedule {number}",
                 )
             )
         events = calendar.timeline_tz(start_date.tzinfo).overlapping(
