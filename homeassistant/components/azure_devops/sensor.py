@@ -15,13 +15,12 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from . import AzureDevOpsConfigEntry
 from .coordinator import AzureDevOpsDataUpdateCoordinator
 from .entity import AzureDevOpsEntity
 
@@ -128,11 +127,11 @@ def parse_datetime(value: str | None) -> datetime | None:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AzureDevOpsConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Azure DevOps sensor based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     initial_builds: list[Build] = coordinator.data.builds
 
     async_add_entities(
