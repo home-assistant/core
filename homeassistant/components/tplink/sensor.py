@@ -75,6 +75,8 @@ SENSOR_DESCRIPTIONS: tuple[TPLinkSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     TPLinkSensorEntityDescription(
+        # Disable as the value reported by the device changes seconds frequently
+        entity_registry_enabled_default=False,
         key="on_since",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
