@@ -93,12 +93,6 @@ SENSOR_DESCRIPTIONS: tuple[TPLinkSensorEntityDescription, ...] = (
         key="ssid",
     ),
     TPLinkSensorEntityDescription(
-        key="current_firmware_version",
-    ),
-    TPLinkSensorEntityDescription(
-        key="available_firmware_version",
-    ),
-    TPLinkSensorEntityDescription(
         key="battery_level",
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -123,30 +117,24 @@ SENSOR_DESCRIPTIONS: tuple[TPLinkSensorEntityDescription, ...] = (
     TPLinkSensorEntityDescription(
         key="alarm_source",
     ),
+    TPLinkSensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    # Firmware based features are all disabled by default pending
+    # the update platform
+    TPLinkSensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="current_firmware_version",
+    ),
+    TPLinkSensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="available_firmware_version",
+    ),
     # Thermostat based features are all disabled by default pending
     # the climate platform
     TPLinkSensorEntityDescription(
-        key="temperature",
-        entity_registry_enabled_default=False,
-    ),
-    TPLinkSensorEntityDescription(
         key="thermostat_mode",
-        entity_registry_enabled_default=False,
-    ),
-    TPLinkSensorEntityDescription(
-        key="temperature_warning",
-        entity_registry_enabled_default=False,
-    ),
-    TPLinkSensorEntityDescription(
-        key="temperature_unit",
-        entity_registry_enabled_default=False,
-    ),
-    TPLinkSensorEntityDescription(
-        key="target_temperature",
-        entity_registry_enabled_default=False,
-    ),
-    TPLinkSensorEntityDescription(
-        key="temperature_offset",
         entity_registry_enabled_default=False,
     ),
 )
