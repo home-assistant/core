@@ -319,6 +319,7 @@ FLOWS = {
         "lyric",
         "mailgun",
         "matter",
+        "mealie",
         "meater",
         "medcom_ble",
         "media_extractor",
