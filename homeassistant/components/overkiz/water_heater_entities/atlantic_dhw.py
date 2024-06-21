@@ -163,13 +163,13 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
         )
 
     async def async_turn_boost_mode_on(self) -> None:
-        """Turn away mode on."""
+        """Turn boost mode on."""
         await self.executor.async_execute_command(
             OverkizCommand.SET_BOOST_MODE, OverkizCommandParam.ON
         )
 
     async def async_turn_boost_mode_off(self) -> None:
-        """Turn away mode off."""
+        """Turn boost mode off."""
         await self.executor.async_execute_command(
             OverkizCommand.SET_BOOST_MODE, OverkizCommandParam.OFF
         )
