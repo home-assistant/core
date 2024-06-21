@@ -729,7 +729,7 @@ class ProtectSmartEventBinarySensor(EventEntityMixin, BinarySensorEntity):
     _state_attrs = ("_attr_available", "_attr_is_on", "_attr_extra_state_attributes")
 
     @callback
-    def _set_off(self) -> None:
+    def _set_event_done(self) -> None:
         self._attr_is_on = False
         self._attr_extra_state_attributes = {}
 
@@ -747,22 +747,15 @@ class ProtectSmartEventBinarySensor(EventEntityMixin, BinarySensorEntity):
             and self.entity_description.has_matching_smart(event)
             and ((is_end := event.end) or self.device.is_smart_detected)
         ):
-            self._set_off()
+            self._set_event_done()
             return
 
         was_on = self._attr_is_on
         self._attr_is_on = True
         self._set_event_attrs(event)
 
-        if not is_end or was_on:
-            return
-
-        # If the event is so short that the detection is received
-        # in the same message as the end of the event we need to write
-        # state and than clear the event and write state again.
-        self.async_write_ha_state()
-        self._set_off()
-        self.async_write_ha_state()
+        if is_end and not was_on:
+            self._async_event_with_immediate_end()
 
 
 MODEL_DESCRIPTIONS_WITH_CLASS = (

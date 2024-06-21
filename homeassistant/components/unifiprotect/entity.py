@@ -305,9 +305,22 @@ class EventEntityMixin(ProtectDeviceEntity):
     _event: Event | None = None
 
     @callback
+    def _set_event_done(self) -> None:
+        """Clear the event and state."""
+
+    @callback
     def _set_event_attrs(self, event: Event) -> None:
         """Set event attrs."""
         self._attr_extra_state_attributes = {
             ATTR_EVENT_ID: event.id,
             ATTR_EVENT_SCORE: event.score,
         }
+
+    @callback
+    def _async_event_with_immediate_end(self) -> None:
+        # If the event is so short that the detection is received
+        # in the same message as the end of the event we need to write
+        # state and than clear the event and write state again.
+        self.async_write_ha_state()
+        self._set_event_done()
+        self.async_write_ha_state()

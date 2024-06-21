@@ -751,7 +751,7 @@ class ProtectLicensePlateEventSensor(ProtectEventSensor):
     device: Camera
 
     @callback
-    def _set_none(self) -> None:
+    def _set_event_done(self) -> None:
         self._attr_native_value = OBJECT_TYPE_NONE
         self._attr_extra_state_attributes = {}
 
@@ -771,19 +771,12 @@ class ProtectLicensePlateEventSensor(ProtectEventSensor):
             and (metadata := event.metadata)
             and (license_plate := metadata.license_plate)
         ):
-            self._set_none()
+            self._set_event_done()
             return
 
         previous_plate = self._attr_native_value
         self._attr_native_value = license_plate.name
         self._set_event_attrs(event)
 
-        if not is_end or previous_plate == license_plate.name:
-            return
-
-        # If the event is so short that the detection is received
-        # in the same message as the end of the event we need to write
-        # state and than clear the event and write state again.
-        self.async_write_ha_state()
-        self._set_none()
-        self.async_write_ha_state()
+        if is_end and previous_plate != license_plate.name:
+            self._async_event_with_immediate_end()
