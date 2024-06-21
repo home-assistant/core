@@ -251,11 +251,11 @@
       "face_6": "With face 6 activated"
     },
     "extra_fields": {
-      "color": "Color",
-      "duration": "Duration",
+      "color": "Color hue",
+      "duration": "Duration in seconds",
       "effect_type": "Effect type",
       "led_number": "LED number",
-      "level": "Level"
+      "level": "Brightness (%)"
     }
   },
   "services": {
