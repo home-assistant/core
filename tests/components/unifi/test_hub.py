@@ -77,9 +77,9 @@ async def test_reset_fails(
         assert config_entry_setup.state is ConfigEntryState.LOADED
 
 
+@pytest.mark.usefixtures("mock_device_registry")
 async def test_connection_state_signalling(
     hass: HomeAssistant,
-    mock_device_registry,
     mock_websocket_state,
     config_entry_factory: Callable[[], ConfigEntry],
     client_payload: list[dict[str, Any]],

@@ -379,9 +379,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         new_config: list[ConfigType] = config_yaml.get(DOMAIN, [])
         platforms_used = platforms_from_config(new_config)
         new_platforms = platforms_used - mqtt_data.platforms_loaded
-        await async_forward_entry_setup_and_setup_discovery(
-            hass, entry, new_platforms, late=True
-        )
+        await async_forward_entry_setup_and_setup_discovery(hass, entry, new_platforms)
         # Check the schema before continuing reload
         await async_check_config_schema(hass, config_yaml)
 
@@ -537,8 +535,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     registry_hooks = mqtt_data.discovery_registry_hooks
     while registry_hooks:
         registry_hooks.popitem()[1]()
-    # Wait for all ACKs and stop the loop
-    await mqtt_client.async_disconnect()
+    # Wait for all ACKs, stop the loop and disconnect the client
+    await mqtt_client.async_disconnect(disconnect_paho_client=True)
 
     # Cleanup MQTT client availability
     hass.data.pop(DATA_MQTT_AVAILABLE, None)

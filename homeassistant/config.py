@@ -52,6 +52,7 @@ from .const import (
     CONF_NAME,
     CONF_PACKAGES,
     CONF_PLATFORM,
+    CONF_RADIUS,
     CONF_TEMPERATURE_UNIT,
     CONF_TIME_ZONE,
     CONF_TYPE,
@@ -291,41 +292,6 @@ def _raise_issue_if_no_country(hass: HomeAssistant, country: str | None) -> None
     )
 
 
-def _raise_issue_if_legacy_templates(
-    hass: HomeAssistant, legacy_templates: bool | None
-) -> None:
-    # legacy_templates can have the following values:
-    # - None: Using default value (False) -> Delete repair issues
-    # - True: Create repair to adopt templates to new syntax
-    # - False: Create repair to tell user to remove config key
-    if legacy_templates:
-        ir.async_create_issue(
-            hass,
-            HA_DOMAIN,
-            "legacy_templates_true",
-            is_fixable=False,
-            breaks_in_ha_version="2024.7.0",
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="legacy_templates_true",
-        )
-        return
-
-    ir.async_delete_issue(hass, HA_DOMAIN, "legacy_templates_true")
-
-    if legacy_templates is False:
-        ir.async_create_issue(
-            hass,
-            HA_DOMAIN,
-            "legacy_templates_false",
-            is_fixable=False,
-            breaks_in_ha_version="2024.7.0",
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="legacy_templates_false",
-        )
-    else:
-        ir.async_delete_issue(hass, HA_DOMAIN, "legacy_templates_false")
-
-
 def _validate_currency(data: Any) -> Any:
     try:
         return cv.currency(data)
@@ -342,6 +308,7 @@ CORE_CONFIG_SCHEMA = vol.All(
             CONF_LATITUDE: cv.latitude,
             CONF_LONGITUDE: cv.longitude,
             CONF_ELEVATION: vol.Coerce(int),
+            CONF_RADIUS: cv.positive_int,
             vol.Remove(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
             CONF_UNIT_SYSTEM: validate_unit_system,
             CONF_TIME_ZONE: cv.time_zone,
@@ -389,7 +356,7 @@ CORE_CONFIG_SCHEMA = vol.All(
                 _no_duplicate_auth_mfa_module,
             ),
             vol.Optional(CONF_MEDIA_DIRS): cv.schema_with_slug_keys(vol.IsDir()),
-            vol.Optional(CONF_LEGACY_TEMPLATES): cv.boolean,
+            vol.Remove(CONF_LEGACY_TEMPLATES): cv.boolean,
             vol.Optional(CONF_CURRENCY): _validate_currency,
             vol.Optional(CONF_COUNTRY): cv.country,
             vol.Optional(CONF_LANGUAGE): cv.language,
@@ -882,6 +849,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             CONF_CURRENCY,
             CONF_COUNTRY,
             CONF_LANGUAGE,
+            CONF_RADIUS,
         )
     ):
         hac.config_source = ConfigSource.YAML
@@ -894,10 +862,10 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
         (CONF_INTERNAL_URL, "internal_url"),
         (CONF_EXTERNAL_URL, "external_url"),
         (CONF_MEDIA_DIRS, "media_dirs"),
-        (CONF_LEGACY_TEMPLATES, "legacy_templates"),
         (CONF_CURRENCY, "currency"),
         (CONF_COUNTRY, "country"),
         (CONF_LANGUAGE, "language"),
+        (CONF_RADIUS, "radius"),
     ):
         if key in config:
             setattr(hac, attr, config[key])
@@ -905,7 +873,6 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
     if config.get(CONF_DEBUG):
         hac.debug = True
 
-    _raise_issue_if_legacy_templates(hass, config.get(CONF_LEGACY_TEMPLATES))
     _raise_issue_if_historic_currency(hass, hass.config.currency)
     _raise_issue_if_no_country(hass, hass.config.country)
 

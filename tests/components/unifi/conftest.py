@@ -54,8 +54,8 @@ CONTROLLER_HOST = {
 }
 
 
-@pytest.fixture(autouse=True)
-def mock_discovery():
+@pytest.fixture(autouse=True, name="mock_discovery")
+def fixture_discovery():
     """No real network traffic allowed."""
     with patch(
         "homeassistant.components.unifi.config_flow._async_discover_unifi",
@@ -64,8 +64,8 @@ def mock_discovery():
         yield mock
 
 
-@pytest.fixture
-def mock_device_registry(hass, device_registry: dr.DeviceRegistry):
+@pytest.fixture(name="mock_device_registry")
+def fixture_device_registry(hass: HomeAssistant, device_registry: dr.DeviceRegistry):
     """Mock device registry."""
     config_entry = MockConfigEntry(domain="something_else")
     config_entry.add_to_hass(hass)
@@ -93,7 +93,7 @@ def mock_device_registry(hass, device_registry: dr.DeviceRegistry):
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(
+def fixture_config_entry(
     hass: HomeAssistant,
     config_entry_data: MappingProxyType[str, Any],
     config_entry_options: MappingProxyType[str, Any],
@@ -111,7 +111,7 @@ def config_entry_fixture(
 
 
 @pytest.fixture(name="config_entry_data")
-def config_entry_data_fixture() -> MappingProxyType[str, Any]:
+def fixture_config_entry_data() -> MappingProxyType[str, Any]:
     """Define a config entry data fixture."""
     return {
         CONF_HOST: DEFAULT_HOST,
@@ -124,7 +124,7 @@ def config_entry_data_fixture() -> MappingProxyType[str, Any]:
 
 
 @pytest.fixture(name="config_entry_options")
-def config_entry_options_fixture() -> MappingProxyType[str, Any]:
+def fixture_config_entry_options() -> MappingProxyType[str, Any]:
     """Define a config entry options fixture."""
     return {}
 
@@ -133,13 +133,15 @@ def config_entry_options_fixture() -> MappingProxyType[str, Any]:
 
 
 @pytest.fixture(name="known_wireless_clients")
-def known_wireless_clients_fixture() -> list[str]:
+def fixture_known_wireless_clients() -> list[str]:
     """Known previously observed wireless clients."""
     return []
 
 
-@pytest.fixture(autouse=True)
-def mock_wireless_client_storage(hass_storage, known_wireless_clients: list[str]):
+@pytest.fixture(autouse=True, name="mock_wireless_client_storage")
+def fixture_wireless_client_storage(
+    hass_storage: dict[str, Any], known_wireless_clients: list[str]
+):
     """Mock the known wireless storage."""
     data: dict[str, list[str]] = (
         {"wireless_clients": known_wireless_clients} if known_wireless_clients else {}
@@ -151,7 +153,7 @@ def mock_wireless_client_storage(hass_storage, known_wireless_clients: list[str]
 
 
 @pytest.fixture(name="mock_requests")
-def request_fixture(
+def fixture_request(
     aioclient_mock: AiohttpClientMocker,
     client_payload: list[dict[str, Any]],
     clients_all_payload: list[dict[str, Any]],
@@ -198,49 +200,49 @@ def request_fixture(
 
 
 @pytest.fixture(name="client_payload")
-def client_data_fixture() -> list[dict[str, Any]]:
+def fixture_client_data() -> list[dict[str, Any]]:
     """Client data."""
     return []
 
 
 @pytest.fixture(name="clients_all_payload")
-def clients_all_data_fixture() -> list[dict[str, Any]]:
+def fixture_clients_all_data() -> list[dict[str, Any]]:
     """Clients all data."""
     return []
 
 
 @pytest.fixture(name="device_payload")
-def device_data_fixture() -> list[dict[str, Any]]:
+def fixture_device_data() -> list[dict[str, Any]]:
     """Device data."""
     return []
 
 
 @pytest.fixture(name="dpi_app_payload")
-def dpi_app_data_fixture() -> list[dict[str, Any]]:
+def fixture_dpi_app_data() -> list[dict[str, Any]]:
     """DPI app data."""
     return []
 
 
 @pytest.fixture(name="dpi_group_payload")
-def dpi_group_data_fixture() -> list[dict[str, Any]]:
+def fixture_dpi_group_data() -> list[dict[str, Any]]:
     """DPI group data."""
     return []
 
 
 @pytest.fixture(name="port_forward_payload")
-def port_forward_data_fixture() -> list[dict[str, Any]]:
+def fixture_port_forward_data() -> list[dict[str, Any]]:
     """Port forward data."""
     return []
 
 
 @pytest.fixture(name="site_payload")
-def site_data_fixture() -> list[dict[str, Any]]:
+def fixture_site_data() -> list[dict[str, Any]]:
     """Site data."""
     return [{"desc": "Site name", "name": "site_id", "role": "admin", "_id": "1"}]
 
 
 @pytest.fixture(name="system_information_payload")
-def system_information_data_fixture() -> list[dict[str, Any]]:
+def fixture_system_information_data() -> list[dict[str, Any]]:
     """System information data."""
     return [
         {
@@ -262,13 +264,13 @@ def system_information_data_fixture() -> list[dict[str, Any]]:
 
 
 @pytest.fixture(name="wlan_payload")
-def wlan_data_fixture() -> list[dict[str, Any]]:
+def fixture_wlan_data() -> list[dict[str, Any]]:
     """WLAN data."""
     return []
 
 
 @pytest.fixture(name="mock_default_requests")
-def default_requests_fixture(
+def fixture_default_requests(
     mock_requests: Callable[[str, str], None],
 ) -> None:
     """Mock UniFi requests responses with default host and site."""
@@ -276,7 +278,7 @@ def default_requests_fixture(
 
 
 @pytest.fixture(name="config_entry_factory")
-async def config_entry_factory_fixture(
+async def fixture_config_entry_factory(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     mock_requests: Callable[[str, str], None],
@@ -293,7 +295,7 @@ async def config_entry_factory_fixture(
 
 
 @pytest.fixture(name="config_entry_setup")
-async def config_entry_setup_fixture(
+async def fixture_config_entry_setup(
     hass: HomeAssistant, config_entry_factory: Callable[[], ConfigEntry]
 ) -> ConfigEntry:
     """Fixture providing a set up instance of UniFi network integration."""
