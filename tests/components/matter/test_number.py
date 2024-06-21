@@ -26,12 +26,12 @@ async def dimmable_light_node_fixture(
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
-async def test_light_config_entities(
+async def test_level_control_config_entities(
     hass: HomeAssistant,
     matter_client: MagicMock,
     light_node: MatterNode,
 ) -> None:
-    """Test number entities are created for a light's config attributes."""
+    """Test number entities are created for the LevelControl cluster (config) attributes."""
     state = hass.states.get("number.mock_dimmable_light_on_level")
     assert state
     assert state.state == "255"
