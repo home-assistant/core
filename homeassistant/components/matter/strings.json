@@ -45,8 +45,19 @@
     }
   },
   "entity": {
+    "climate": {
+      "thermostat": {
+        "name": "Thermostat"
+      }
+    },
+    "cover": {
+      "cover": {
+        "name": "[%key:component::cover::title%]"
+      }
+    },
     "event": {
-      "push": {
+      "button": {
+        "name": "Button",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -64,6 +75,7 @@
     },
     "fan": {
       "fan": {
+        "name": "[%key:component::fan::title%]",
         "state_attributes": {
           "preset_mode": {
             "state": {
@@ -92,6 +104,16 @@
         "name": "On/Off transition time"
       }
     },
+    "light": {
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
+    "lock": {
+      "lock": {
+        "name": "[%key:component::lock::title%]"
+      }
+    },
     "sensor": {
       "activated_carbon_filter_condition": {
         "name": "Activated carbon filter condition"
@@ -113,6 +135,14 @@
       },
       "hepa_filter_condition": {
         "name": "Hepa filter condition"
+      }
+    },
+    "switch": {
+      "switch": {
+        "name": "[%key:component::switch::title%]"
+      },
+      "power": {
+        "name": "Power"
       }
     }
   },
