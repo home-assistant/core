@@ -2,61 +2,87 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import Final
+
 from kasa import Device, Feature
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN
+from . import TPLinkConfigEntry
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import (
-    CoordinatedTPLinkEntity,
+    CoordinatedTPLinkFeatureEntity,
+    TPLinkFeatureEntityDescription,
     _description_for_feature,
     _entities_for_device_and_its_children,
     async_refresh_after,
 )
-from .models import TPLinkData
+
+
+@dataclass(frozen=True, kw_only=True)
+class TPLinkSelectEntityDescription(
+    SelectEntityDescription, TPLinkFeatureEntityDescription
+):
+    """Base class for a TPLink feature based sensor entity description."""
+
+
+SELECT_DESCRIPTIONS: Final = [
+    TPLinkSelectEntityDescription(
+        key="light_preset",
+    ),
+]
+
+SELECT_DESCRIPTIONS_MAP = {desc.key: desc for desc in SELECT_DESCRIPTIONS}
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: TPLinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up selects."""
-    data: TPLinkData = hass.data[DOMAIN][config_entry.entry_id]
+    """Set up sensors."""
+    data = config_entry.runtime_data
     parent_coordinator = data.parent_coordinator
+    children_coordinators = data.children_coordinators
     device = parent_coordinator.device
 
     entities = _entities_for_device_and_its_children(
-        device,
-        feature_type=Feature.Choice,
-        entity_class=Select,
+        device=device,
         coordinator=parent_coordinator,
+        feature_type=Feature.Type.Choice,
+        entity_class=Select,
+        child_coordinators=children_coordinators,
     )
-
     async_add_entities(entities)
 
 
-class Select(CoordinatedTPLinkEntity, SelectEntity):
+class Select(CoordinatedTPLinkFeatureEntity, SelectEntity):
     """Representation of a tplink select entity."""
+
+    entity_description: TPLinkSelectEntityDescription
 
     def __init__(
         self,
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
+        *,
         feature: Feature,
         parent: Device | None = None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(device, coordinator, feature=feature, parent=parent)
-        self._feature: Feature
-        self.entity_description = _description_for_feature(
-            SelectEntityDescription, feature, options=feature.choices
+        description = _description_for_feature(
+            TPLinkSelectEntityDescription,
+            feature,
+            SELECT_DESCRIPTIONS_MAP,
+            options=feature.choices,
         )
-        self._async_update_attrs()
+        super().__init__(
+            device, coordinator, description=description, feature=feature, parent=parent
+        )
+        self._async_call_update_attrs()
 
     @async_refresh_after
     async def async_select_option(self, option: str) -> None:
