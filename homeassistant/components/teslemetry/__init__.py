@@ -157,7 +157,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         if models:
             energysite.device["model"] = ", ".join(sorted(models))
 
-        # Create the energy site device regardless of direct entities so it can be used for custom service calls
+        # Create the energy site device regardless of it having entities
+        # This is so users with a Wall Connector but without a Powerwall can still make service calls
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id, **energysite.device
         )
