@@ -2,14 +2,8 @@
 
 from unittest.mock import MagicMock
 
-from pyecotrend_ista.exception_classes import (
-    InternalServerError,
-    KeycloakError,
-    LoginError,
-    ServerError,
-)
+from pyecotrend_ista import KeycloakError, LoginError, ParserError, ServerError
 import pytest
-from requests.exceptions import RequestException
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
@@ -39,12 +33,7 @@ async def test_entry_setup_unload(
 
 @pytest.mark.parametrize(
     ("side_effect"),
-    [
-        ServerError,
-        InternalServerError(None),
-        RequestException,
-        TimeoutError,
-    ],
+    [ServerError, ParserError],
 )
 async def test_config_entry_not_ready(
     hass: HomeAssistant,
@@ -63,7 +52,7 @@ async def test_config_entry_not_ready(
 
 @pytest.mark.parametrize(
     ("side_effect"),
-    [LoginError(None), KeycloakError],
+    [LoginError, KeycloakError],
 )
 async def test_config_entry_error(
     hass: HomeAssistant,

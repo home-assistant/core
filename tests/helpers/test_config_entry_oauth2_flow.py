@@ -133,8 +133,9 @@ async def test_missing_credentials_for_domain(
     assert result["reason"] == "missing_credentials"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_abort_if_authorization_timeout(
-    hass: HomeAssistant, flow_handler, local_impl, current_request_with_host: None
+    hass: HomeAssistant, flow_handler, local_impl
 ) -> None:
     """Check timeout generating authorization url."""
     flow_handler.async_register_implementation(hass, local_impl)
@@ -152,8 +153,9 @@ async def test_abort_if_authorization_timeout(
     assert result["reason"] == "authorize_url_timeout"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_abort_if_no_url_available(
-    hass: HomeAssistant, flow_handler, local_impl, current_request_with_host: None
+    hass: HomeAssistant, flow_handler, local_impl
 ) -> None:
     """Check no_url_available generating authorization url."""
     flow_handler.async_register_implementation(hass, local_impl)
@@ -171,13 +173,13 @@ async def test_abort_if_no_url_available(
 
 
 @pytest.mark.parametrize("expires_in_dict", [{}, {"expires_in": "badnumber"}])
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_abort_if_oauth_error(
     hass: HomeAssistant,
     flow_handler,
     local_impl,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     expires_in_dict: dict[str, str],
 ) -> None:
     """Check bad oauth token."""
@@ -234,13 +236,12 @@ async def test_abort_if_oauth_error(
     assert result["reason"] == "oauth_error"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_abort_if_oauth_rejected(
     hass: HomeAssistant,
     flow_handler,
     local_impl,
     hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Check bad oauth token."""
     flow_handler.async_register_implementation(hass, local_impl)
@@ -289,13 +290,13 @@ async def test_abort_if_oauth_rejected(
     assert result["description_placeholders"] == {"error": "access_denied"}
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_abort_on_oauth_timeout_error(
     hass: HomeAssistant,
     flow_handler,
     local_impl,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Check timeout during oauth token exchange."""
     flow_handler.async_register_implementation(hass, local_impl)
@@ -423,13 +424,13 @@ async def test_abort_discovered_multiple(
         ),
     ],
 )
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_abort_if_oauth_token_error(
     hass: HomeAssistant,
     flow_handler,
     local_impl,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     status_code: HTTPStatus,
     error_body: dict[str, Any],
     error_reason: str,
@@ -487,13 +488,13 @@ async def test_abort_if_oauth_token_error(
     assert error_log in caplog.text
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_abort_if_oauth_token_closing_error(
     hass: HomeAssistant,
     flow_handler,
     local_impl,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Check error when obtaining an oauth token."""
@@ -573,13 +574,13 @@ async def test_abort_discovered_existing_entries(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     flow_handler,
     local_impl,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Check full flow."""
     flow_handler.async_register_implementation(hass, local_impl)

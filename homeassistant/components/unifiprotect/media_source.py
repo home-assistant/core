@@ -7,7 +7,7 @@ from datetime import date, datetime, timedelta
 from enum import Enum
 from typing import Any, NoReturn, cast
 
-from uiprotect.data import Camera, Event, EventType, ModelType, SmartDetectObjectType
+from uiprotect.data import Camera, Event, EventType, SmartDetectObjectType
 from uiprotect.exceptions import NvrError
 from uiprotect.utils import from_js_time
 from yarl import URL
@@ -79,12 +79,6 @@ EVENT_NAME_MAP = {
     SimpleEventType.SMART: "Object Detections",
     SimpleEventType.AUDIO: "Audio Detections",
 }
-
-
-def get_ufp_event(event_type: SimpleEventType) -> set[EventType]:
-    """Get UniFi Protect event type from SimpleEventType."""
-
-    return EVENT_MAP[event_type]
 
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
@@ -488,7 +482,7 @@ class ProtectMediaSource(MediaSource):
     ) -> list[BrowseMediaSource]:
         """Build media source for a given range of time and event type."""
 
-        event_types = event_types or get_ufp_event(SimpleEventType.ALL)
+        event_types = event_types or EVENT_MAP[SimpleEventType.ALL]
         types = list(event_types)
         sources: list[BrowseMediaSource] = []
         events = await data.api.get_events_raw(
@@ -554,7 +548,7 @@ class ProtectMediaSource(MediaSource):
             start=now - timedelta(days=days),
             end=now,
             camera_id=event_camera_id,
-            event_types=get_ufp_event(event_type),
+            event_types=EVENT_MAP[event_type],
             reserve=True,
         )
         source.children = events
@@ -686,7 +680,7 @@ class ProtectMediaSource(MediaSource):
             end=end_dt,
             camera_id=event_camera_id,
             reserve=False,
-            event_types=get_ufp_event(event_type),
+            event_types=EVENT_MAP[event_type],
         )
         source.children = events
         source.title = self._breadcrumb(
@@ -848,8 +842,7 @@ class ProtectMediaSource(MediaSource):
 
         cameras: list[BrowseMediaSource] = [await self._build_camera(data, "all")]
 
-        for camera in data.get_by_types({ModelType.CAMERA}):
-            camera = cast(Camera, camera)
+        for camera in data.get_cameras():
             if not camera.can_read_media(data.api.bootstrap.auth_user):
                 continue
             cameras.append(await self._build_camera(data, camera.id))

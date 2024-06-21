@@ -2067,7 +2067,7 @@ def test_states_function(hass: HomeAssistant) -> None:
 
 async def test_state_translated(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
-):
+) -> None:
     """Test state_translated method."""
     assert await async_setup_component(
         hass,

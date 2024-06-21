@@ -1763,7 +1763,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
                     ],
                 },
             ],
-            "ordered": False,
+            "ordered": True,
         }
     }
 
@@ -1905,7 +1905,8 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
             {
                 alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True,
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.TRIGGER
-                | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+                | AlarmControlPanelEntityFeature.ARM_HOME
+                | AlarmControlPanelEntityFeature.ARM_AWAY,
             },
         ),
         PIN_CONFIG,
@@ -1914,10 +1915,19 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         "availableArmLevels": {
             "levels": [
                 {
-                    "level_name": "armed_custom_bypass",
+                    "level_name": "armed_home",
                     "level_values": [
                         {
-                            "level_synonym": ["armed custom bypass", "custom"],
+                            "level_synonym": ["armed home", "home"],
+                            "lang": "en",
+                        }
+                    ],
+                },
+                {
+                    "level_name": "armed_away",
+                    "level_values": [
+                        {
+                            "level_synonym": ["armed away", "away"],
                             "lang": "en",
                         }
                     ],
@@ -1927,12 +1937,12 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
                     "level_values": [{"level_synonym": ["triggered"], "lang": "en"}],
                 },
             ],
-            "ordered": False,
+            "ordered": True,
         }
     }
 
     assert trt.query_attributes() == {
-        "currentArmLevel": "armed_custom_bypass",
+        "currentArmLevel": "armed_home",
         "isArmed": False,
     }
 

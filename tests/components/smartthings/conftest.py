@@ -55,7 +55,9 @@ from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 COMPONENT_PREFIX = "homeassistant.components.smartthings."
 
 
-async def setup_platform(hass, platform: str, *, devices=None, scenes=None):
+async def setup_platform(
+    hass: HomeAssistant, platform: str, *, devices=None, scenes=None
+):
     """Set up the SmartThings platform and prerequisites."""
     hass.config.components.add(DOMAIN)
     config_entry = MockConfigEntry(
