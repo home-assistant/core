@@ -324,3 +324,8 @@ class EventEntityMixin(ProtectDeviceEntity):
         self.async_write_ha_state()
         self._set_event_done()
         self.async_write_ha_state()
+
+    @callback
+    def _event_already_ended(self, prev_event: Event | None) -> bool:
+        event = self._event
+        return bool(event and event.end and prev_event and prev_event.id == event.id)
