@@ -239,7 +239,6 @@ build.json @home-assistant/supervisor
 /tests/components/ccm15/ @ocalvo
 /homeassistant/components/cert_expiry/ @jjlawren
 /tests/components/cert_expiry/ @jjlawren
-/homeassistant/components/circuit/ @braam
 /homeassistant/components/cisco_ios/ @fbradyirl
 /homeassistant/components/cisco_mobility_express/ @fbradyirl
 /homeassistant/components/cisco_webex_teams/ @fbradyirl
@@ -827,6 +826,8 @@ build.json @home-assistant/supervisor
 /tests/components/matrix/ @PaarthShah
 /homeassistant/components/matter/ @home-assistant/matter
 /tests/components/matter/ @home-assistant/matter
+/homeassistant/components/mealie/ @joostlek
+/tests/components/mealie/ @joostlek
 /homeassistant/components/meater/ @Sotolotl @emontnemery
 /tests/components/meater/ @Sotolotl @emontnemery
 /homeassistant/components/medcom_ble/ @elafargue
@@ -910,8 +911,8 @@ build.json @home-assistant/supervisor
 /tests/components/myuplink/ @pajzo @astrandb
 /homeassistant/components/nam/ @bieniu
 /tests/components/nam/ @bieniu
-/homeassistant/components/nanoleaf/ @milanmeu
-/tests/components/nanoleaf/ @milanmeu
+/homeassistant/components/nanoleaf/ @milanmeu @joostlek
+/tests/components/nanoleaf/ @milanmeu @joostlek
 /homeassistant/components/neato/ @Santobert
 /tests/components/neato/ @Santobert
 /homeassistant/components/nederlandse_spoorwegen/ @YarmoM

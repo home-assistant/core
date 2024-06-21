@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from datetime import timedelta
+from types import MappingProxyType
 from typing import Any
 
 from aiounifi.models.message import MessageKey
@@ -23,11 +24,46 @@ from homeassistant.components.unifi.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
+
+WIRED_CLIENT_1 = {
+    "hostname": "wd_client_1",
+    "is_wired": True,
+    "last_seen": 1562600145,
+    "mac": "00:00:00:00:00:02",
+}
+
+WIRELESS_CLIENT_1 = {
+    "ap_mac": "00:00:00:00:02:01",
+    "essid": "ssid",
+    "hostname": "ws_client_1",
+    "ip": "10.0.0.1",
+    "is_wired": False,
+    "last_seen": 1562600145,
+    "mac": "00:00:00:00:00:01",
+}
+
+SWITCH_1 = {
+    "board_rev": 3,
+    "device_id": "mock-id-1",
+    "has_fan": True,
+    "fan_level": 0,
+    "ip": "10.0.1.1",
+    "last_seen": 1562600145,
+    "mac": "00:00:00:00:01:01",
+    "model": "US16P150",
+    "name": "Switch 1",
+    "next_interval": 20,
+    "overheating": True,
+    "state": 1,
+    "type": "usw",
+    "upgradable": True,
+    "version": "4.0.42.10433",
+}
 
 
 @pytest.mark.parametrize(
@@ -496,213 +532,6 @@ async def test_hub_state_change(hass: HomeAssistant, mock_websocket_state) -> No
     assert hass.states.get("device_tracker.device").state == STATE_HOME
 
 
-@pytest.mark.parametrize(
-    "client_payload",
-    [
-        [
-            {
-                "essid": "ssid",
-                "hostname": "wireless_client",
-                "is_wired": False,
-                "last_seen": 1562600145,
-                "mac": "00:00:00:00:00:01",
-            },
-            {
-                "is_wired": True,
-                "last_seen": 1562600145,
-                "mac": "00:00:00:00:00:02",
-                "name": "Wired Client",
-            },
-        ]
-    ],
-)
-@pytest.mark.parametrize(
-    "device_payload",
-    [
-        [
-            {
-                "board_rev": 3,
-                "device_id": "mock-id",
-                "has_fan": True,
-                "fan_level": 0,
-                "ip": "10.0.1.1",
-                "last_seen": 1562600145,
-                "mac": "00:00:00:00:01:01",
-                "model": "US16P150",
-                "name": "Device",
-                "next_interval": 20,
-                "overheating": True,
-                "state": 1,
-                "type": "usw",
-                "upgradable": True,
-                "version": "4.0.42.10433",
-            }
-        ]
-    ],
-)
-@pytest.mark.usefixtures("mock_device_registry")
-async def test_option_track_clients(
-    hass: HomeAssistant, config_entry_setup: ConfigEntry
-) -> None:
-    """Test the tracking of clients can be turned off."""
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 3
-    assert hass.states.get("device_tracker.wireless_client")
-    assert hass.states.get("device_tracker.wired_client")
-    assert hass.states.get("device_tracker.device")
-
-    hass.config_entries.async_update_entry(
-        config_entry_setup, options={CONF_TRACK_CLIENTS: False}
-    )
-    await hass.async_block_till_done()
-
-    assert not hass.states.get("device_tracker.wireless_client")
-    assert not hass.states.get("device_tracker.wired_client")
-    assert hass.states.get("device_tracker.device")
-
-    hass.config_entries.async_update_entry(
-        config_entry_setup, options={CONF_TRACK_CLIENTS: True}
-    )
-    await hass.async_block_till_done()
-
-    assert hass.states.get("device_tracker.wireless_client")
-    assert hass.states.get("device_tracker.wired_client")
-    assert hass.states.get("device_tracker.device")
-
-
-@pytest.mark.parametrize(
-    "client_payload",
-    [
-        [
-            {
-                "essid": "ssid",
-                "hostname": "wireless_client",
-                "is_wired": False,
-                "last_seen": 1562600145,
-                "mac": "00:00:00:00:00:01",
-            },
-            {
-                "is_wired": True,
-                "last_seen": 1562600145,
-                "mac": "00:00:00:00:00:02",
-                "name": "Wired Client",
-            },
-        ]
-    ],
-)
-@pytest.mark.parametrize(
-    "device_payload",
-    [
-        [
-            {
-                "board_rev": 3,
-                "device_id": "mock-id",
-                "has_fan": True,
-                "fan_level": 0,
-                "ip": "10.0.1.1",
-                "last_seen": 1562600145,
-                "mac": "00:00:00:00:01:01",
-                "model": "US16P150",
-                "name": "Device",
-                "next_interval": 20,
-                "overheating": True,
-                "state": 1,
-                "type": "usw",
-                "upgradable": True,
-                "version": "4.0.42.10433",
-            }
-        ]
-    ],
-)
-@pytest.mark.usefixtures("mock_device_registry")
-async def test_option_track_wired_clients(
-    hass: HomeAssistant, config_entry_setup: ConfigEntry
-) -> None:
-    """Test the tracking of wired clients can be turned off."""
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 3
-    assert hass.states.get("device_tracker.wireless_client")
-    assert hass.states.get("device_tracker.wired_client")
-    assert hass.states.get("device_tracker.device")
-
-    hass.config_entries.async_update_entry(
-        config_entry_setup, options={CONF_TRACK_WIRED_CLIENTS: False}
-    )
-    await hass.async_block_till_done()
-
-    assert hass.states.get("device_tracker.wireless_client")
-    assert not hass.states.get("device_tracker.wired_client")
-    assert hass.states.get("device_tracker.device")
-
-    hass.config_entries.async_update_entry(
-        config_entry_setup, options={CONF_TRACK_WIRED_CLIENTS: True}
-    )
-    await hass.async_block_till_done()
-
-    assert hass.states.get("device_tracker.wireless_client")
-    assert hass.states.get("device_tracker.wired_client")
-    assert hass.states.get("device_tracker.device")
-
-
-@pytest.mark.parametrize(
-    "client_payload",
-    [
-        [
-            {
-                "hostname": "client",
-                "is_wired": True,
-                "last_seen": 1562600145,
-                "mac": "00:00:00:00:00:01",
-            }
-        ]
-    ],
-)
-@pytest.mark.parametrize(
-    "device_payload",
-    [
-        [
-            {
-                "board_rev": 3,
-                "device_id": "mock-id",
-                "last_seen": 1562600145,
-                "ip": "10.0.1.1",
-                "mac": "00:00:00:00:01:01",
-                "model": "US16P150",
-                "name": "Device",
-                "next_interval": 20,
-                "overheating": True,
-                "state": 1,
-                "type": "usw",
-                "upgradable": True,
-                "version": "4.0.42.10433",
-            }
-        ]
-    ],
-)
-@pytest.mark.usefixtures("mock_device_registry")
-async def test_option_track_devices(
-    hass: HomeAssistant, config_entry_setup: ConfigEntry
-) -> None:
-    """Test the tracking of devices can be turned off."""
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
-    assert hass.states.get("device_tracker.client")
-    assert hass.states.get("device_tracker.device")
-
-    hass.config_entries.async_update_entry(
-        config_entry_setup, options={CONF_TRACK_DEVICES: False}
-    )
-    await hass.async_block_till_done()
-
-    assert hass.states.get("device_tracker.client")
-    assert not hass.states.get("device_tracker.device")
-
-    hass.config_entries.async_update_entry(
-        config_entry_setup, options={CONF_TRACK_DEVICES: True}
-    )
-    await hass.async_block_till_done()
-
-    assert hass.states.get("device_tracker.client")
-    assert hass.states.get("device_tracker.device")
-
-
 @pytest.mark.usefixtures("mock_device_registry")
 async def test_option_ssid_filter(
     hass: HomeAssistant,
@@ -1031,166 +860,86 @@ async def test_restoring_client(
     assert not hass.states.get("device_tracker.not_restored")
 
 
-@pytest.mark.parametrize("config_entry_options", [{CONF_TRACK_CLIENTS: False}])
 @pytest.mark.parametrize(
-    "client_payload",
+    ("config_entry_options", "counts", "expected"),
     [
-        [
-            {
-                "essid": "ssid",
-                "hostname": "Wireless client",
-                "ip": "10.0.0.1",
-                "is_wired": False,
-                "last_seen": 1562600145,
-                "mac": "00:00:00:00:00:01",
-            },
-            {
-                "hostname": "Wired client",
-                "ip": "10.0.0.2",
-                "is_wired": True,
-                "last_seen": 1562600145,
-                "mac": "00:00:00:00:00:02",
-            },
-        ]
+        (
+            {CONF_TRACK_CLIENTS: True},
+            (3, 1),
+            ((True, True, True), (None, None, True)),
+        ),
+        (
+            {CONF_TRACK_CLIENTS: True, CONF_SSID_FILTER: ["ssid"]},
+            (3, 1),
+            ((True, True, True), (None, None, True)),
+        ),
+        (
+            {CONF_TRACK_CLIENTS: True, CONF_SSID_FILTER: ["ssid-2"]},
+            (2, 1),
+            ((None, True, True), (None, None, True)),
+        ),
+        (
+            {CONF_TRACK_CLIENTS: False, CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"]},
+            (2, 1),
+            ((True, None, True), (None, None, True)),
+        ),
+        (
+            {CONF_TRACK_CLIENTS: False, CONF_CLIENT_SOURCE: ["00:00:00:00:00:02"]},
+            (2, 1),
+            ((None, True, True), (None, None, True)),
+        ),
+        (
+            {CONF_TRACK_WIRED_CLIENTS: True},
+            (3, 2),
+            ((True, True, True), (True, None, True)),
+        ),
+        (
+            {CONF_TRACK_DEVICES: True},
+            (3, 2),
+            ((True, True, True), (True, True, None)),
+        ),
     ],
 )
-@pytest.mark.parametrize(
-    "device_payload",
-    [
-        [
-            {
-                "board_rev": 3,
-                "device_id": "mock-id",
-                "has_fan": True,
-                "fan_level": 0,
-                "ip": "10.0.1.1",
-                "last_seen": 1562600145,
-                "mac": "00:00:00:00:01:01",
-                "model": "US16P150",
-                "name": "Device",
-                "next_interval": 20,
-                "overheating": True,
-                "state": 1,
-                "type": "usw",
-                "upgradable": True,
-                "version": "4.0.42.10433",
-            },
-        ]
-    ],
-)
+@pytest.mark.parametrize("client_payload", [[WIRELESS_CLIENT_1, WIRED_CLIENT_1]])
+@pytest.mark.parametrize("device_payload", [[SWITCH_1]])
 @pytest.mark.usefixtures("mock_device_registry")
-async def test_dont_track_clients(
-    hass: HomeAssistant, config_entry_setup: ConfigEntry
+async def test_config_entry_options_track(
+    hass: HomeAssistant,
+    config_entry_setup: ConfigEntry,
+    config_entry_options: MappingProxyType[str, Any],
+    counts: tuple[int],
+    expected: dict[tuple[bool | None]],
 ) -> None:
-    """Test don't track clients config works."""
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
-    assert not hass.states.get("device_tracker.wireless_client")
-    assert not hass.states.get("device_tracker.wired_client")
-    assert hass.states.get("device_tracker.device")
+    """Test the different config entry options.
 
-    hass.config_entries.async_update_entry(
-        config_entry_setup, options={CONF_TRACK_CLIENTS: True}
-    )
+    Validates how many entities are created
+    and that the specific ones exist as expected.
+    """
+    option = next(iter(config_entry_options))
+
+    def assert_state(state: State | None, expected: bool | None):
+        """Assert if state expected."""
+        assert state is None if expected is None else state
+
+    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == counts[0]
+    assert_state(hass.states.get("device_tracker.ws_client_1"), expected[0][0])
+    assert_state(hass.states.get("device_tracker.wd_client_1"), expected[0][1])
+    assert_state(hass.states.get("device_tracker.switch_1"), expected[0][2])
+
+    # Keep only the primary option and turn it off, everything else uses default
+    hass.config_entries.async_update_entry(config_entry_setup, options={option: False})
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == counts[1]
+    assert_state(hass.states.get("device_tracker.ws_client_1"), expected[1][0])
+    assert_state(hass.states.get("device_tracker.wd_client_1"), expected[1][1])
+    assert_state(hass.states.get("device_tracker.switch_1"), expected[1][2])
+
+    # Turn on the primary option, everything else uses default
+    hass.config_entries.async_update_entry(config_entry_setup, options={option: True})
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 3
-    assert hass.states.get("device_tracker.wireless_client")
-    assert hass.states.get("device_tracker.wired_client")
-    assert hass.states.get("device_tracker.device")
-
-
-@pytest.mark.parametrize("config_entry_options", [{CONF_TRACK_DEVICES: False}])
-@pytest.mark.parametrize(
-    "client_payload",
-    [
-        [
-            {
-                "hostname": "client",
-                "is_wired": True,
-                "last_seen": 1562600145,
-                "mac": "00:00:00:00:00:01",
-            },
-        ]
-    ],
-)
-@pytest.mark.parametrize(
-    "device_payload",
-    [
-        [
-            {
-                "board_rev": 3,
-                "device_id": "mock-id",
-                "has_fan": True,
-                "fan_level": 0,
-                "ip": "10.0.1.1",
-                "last_seen": 1562600145,
-                "mac": "00:00:00:00:01:01",
-                "model": "US16P150",
-                "name": "Device",
-                "next_interval": 20,
-                "overheating": True,
-                "state": 1,
-                "type": "usw",
-                "upgradable": True,
-                "version": "4.0.42.10433",
-            },
-        ]
-    ],
-)
-@pytest.mark.usefixtures("mock_device_registry")
-async def test_dont_track_devices(
-    hass: HomeAssistant, config_entry_setup: ConfigEntry
-) -> None:
-    """Test don't track devices config works."""
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
-    assert hass.states.get("device_tracker.client")
-    assert not hass.states.get("device_tracker.device")
-
-    hass.config_entries.async_update_entry(
-        config_entry_setup, options={CONF_TRACK_DEVICES: True}
-    )
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
-    assert hass.states.get("device_tracker.client")
-    assert hass.states.get("device_tracker.device")
-
-
-@pytest.mark.parametrize("config_entry_options", [{CONF_TRACK_WIRED_CLIENTS: False}])
-@pytest.mark.parametrize(
-    "client_payload",
-    [
-        [
-            {
-                "essid": "ssid",
-                "hostname": "Wireless Client",
-                "is_wired": False,
-                "last_seen": 1562600145,
-                "mac": "00:00:00:00:00:01",
-            },
-            {
-                "is_wired": True,
-                "last_seen": 1562600145,
-                "mac": "00:00:00:00:00:02",
-                "name": "Wired Client",
-            },
-        ]
-    ],
-)
-@pytest.mark.usefixtures("mock_device_registry")
-async def test_dont_track_wired_clients(
-    hass: HomeAssistant, config_entry_setup: ConfigEntry
-) -> None:
-    """Test don't track wired clients config works."""
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
-    assert hass.states.get("device_tracker.wireless_client")
-    assert not hass.states.get("device_tracker.wired_client")
-
-    hass.config_entries.async_update_entry(
-        config_entry_setup, options={CONF_TRACK_WIRED_CLIENTS: True}
-    )
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
-    assert hass.states.get("device_tracker.wireless_client")
-    assert hass.states.get("device_tracker.wired_client")
+    assert_state(hass.states.get("device_tracker.ws_client_1"), True)
+    assert_state(hass.states.get("device_tracker.wd_client_1"), True)
+    assert_state(hass.states.get("device_tracker.switch_1"), True)

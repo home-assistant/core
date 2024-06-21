@@ -59,11 +59,11 @@ async def test_switch_camera_remove(
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.SWITCH, 16, 14)
+    assert_entity_counts(hass, Platform.SWITCH, 17, 15)
     await remove_entities(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.SWITCH, 2, 2)
     await adopt_devices(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.SWITCH, 16, 14)
+    assert_entity_counts(hass, Platform.SWITCH, 17, 15)
 
 
 async def test_switch_light_remove(
@@ -175,7 +175,7 @@ async def test_switch_setup_camera_all(
     """Test switch entity setup for camera devices (all enabled feature flags)."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SWITCH, 16, 14)
+    assert_entity_counts(hass, Platform.SWITCH, 17, 15)
 
     for description in CAMERA_SWITCHES_BASIC:
         unique_id, entity_id = ids_from_device_description(
@@ -295,7 +295,7 @@ async def test_switch_camera_ssh(
     """Tests SSH switch for cameras."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SWITCH, 16, 14)
+    assert_entity_counts(hass, Platform.SWITCH, 17, 15)
 
     description = CAMERA_SWITCHES[0]
 
@@ -328,7 +328,7 @@ async def test_switch_camera_simple(
     """Tests all simple switches for cameras."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SWITCH, 16, 14)
+    assert_entity_counts(hass, Platform.SWITCH, 17, 15)
 
     assert description.ufp_set_method is not None
 
@@ -357,7 +357,7 @@ async def test_switch_camera_highfps(
     """Tests High FPS switch for cameras."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SWITCH, 16, 14)
+    assert_entity_counts(hass, Platform.SWITCH, 17, 15)
 
     description = CAMERA_SWITCHES[3]
 
@@ -388,7 +388,7 @@ async def test_switch_camera_privacy(
     previous_record = doorbell.recording_settings.mode = RecordingMode.DETECTIONS
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SWITCH, 16, 14)
+    assert_entity_counts(hass, Platform.SWITCH, 17, 15)
 
     description = PRIVACY_MODE_SWITCH
 
@@ -440,7 +440,7 @@ async def test_switch_camera_privacy_already_on(
 
     doorbell.add_privacy_zone()
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SWITCH, 16, 14)
+    assert_entity_counts(hass, Platform.SWITCH, 17, 15)
 
     description = PRIVACY_MODE_SWITCH
 

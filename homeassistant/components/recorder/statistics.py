@@ -28,6 +28,7 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
     DurationConverter,
@@ -126,6 +127,7 @@ QUERY_STATISTICS_SUMMARY_SUM = (
 
 
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
+    **{unit: ConductivityConverter for unit in ConductivityConverter.VALID_UNITS},
     **{unit: DataRateConverter for unit in DataRateConverter.VALID_UNITS},
     **{unit: DistanceConverter for unit in DistanceConverter.VALID_UNITS},
     **{unit: DurationConverter for unit in DurationConverter.VALID_UNITS},
@@ -154,7 +156,7 @@ def mean(values: list[float]) -> float | None:
 
     This is a very simple version that only works
     with a non-empty list of floats. The built-in
-    statistics.mean is more robust but is is almost
+    statistics.mean is more robust but is almost
     an order of magnitude slower.
     """
     return sum(values) / len(values)
