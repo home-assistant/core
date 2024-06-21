@@ -20,8 +20,7 @@ from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import (
     CoordinatedTPLinkFeatureEntity,
     TPLinkFeatureEntityDescription,
-    _description_for_feature,
-    _entities_for_device_and_its_children,
+    entities_for_device_and_its_children,
 )
 
 
@@ -32,7 +31,7 @@ class TPLinkBinarySensorEntityDescription(
     """Base class for a TPLink feature based sensor entity description."""
 
 
-BINARYSENSOR_DESCRIPTIONS: Final = [
+BINARYSENSOR_DESCRIPTIONS: Final = (
     TPLinkBinarySensorEntityDescription(
         key="overheated",
         device_class=BinarySensorDeviceClass.HEAT,
@@ -52,12 +51,11 @@ BINARYSENSOR_DESCRIPTIONS: Final = [
     ),
     TPLinkBinarySensorEntityDescription(
         key="temperature_warning",
-        device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     TPLinkBinarySensorEntityDescription(
-        key="humidity_warning", device_class=BinarySensorDeviceClass.PROBLEM
+        key="humidity_warning",
     ),
-]
+)
 
 BINARYSENSOR_DESCRIPTIONS_MAP = {desc.key: desc for desc in BINARYSENSOR_DESCRIPTIONS}
 
@@ -73,7 +71,7 @@ async def async_setup_entry(
     children_coordinators = data.children_coordinators
     device = parent_coordinator.device
 
-    entities = _entities_for_device_and_its_children(
+    entities = entities_for_device_and_its_children(
         device=device,
         coordinator=parent_coordinator,
         feature_type=Feature.Type.BinarySensor,
@@ -97,7 +95,7 @@ class BinarySensor(CoordinatedTPLinkFeatureEntity, BinarySensorEntity):
         parent: Device | None = None,
     ) -> None:
         """Initialize the sensor."""
-        description = _description_for_feature(
+        description = self._description_for_feature(
             TPLinkBinarySensorEntityDescription, feature, BINARYSENSOR_DESCRIPTIONS_MAP
         )
         super().__init__(

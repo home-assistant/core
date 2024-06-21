@@ -1,5 +1,19 @@
 {
   "entity": {
+    "binary_sensor": {
+      "humidity_warning": {
+        "default": "mdi:water-percent",
+        "state": {
+          "on": "mdi:water-percent-alert"
+        }
+      },
+      "temperature_warning": {
+        "default": "mdi:thermometer-check",
+        "state": {
+          "on": "mdi:thermometer-alert"
+        }
+      }
+    },
     "switch": {
       "led": {
         "default": "mdi:led-off",

@@ -59,6 +59,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "humidity_warning": {
+        "name": "Humidity warning"
+      },
+      "temperature_warning": {
+        "name": "Temperature warning"
+      }
+    },
     "sensor": {
       "current_consumption": {
         "name": "Current consumption"
