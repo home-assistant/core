@@ -495,7 +495,10 @@ async def test_extra_js(
 
 
 async def test_get_panels(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, mock_http_client
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_http_client,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test get_panels command."""
     events = async_capture_events(hass, EVENT_PANELS_UPDATED)
@@ -532,6 +535,15 @@ async def test_get_panels(
     assert resp.status == HTTPStatus.NOT_FOUND
 
     assert len(events) == 2
+
+    # Remove again, will warn but not trigger event
+    async_remove_panel(hass, "map")
+    assert "Removing unknown panel map" in caplog.text
+    caplog.clear()
+
+    # Remove again, without warning
+    async_remove_panel(hass, "map", warn_if_unknown=False)
+    assert "Removing unknown panel map" not in caplog.text
 
 
 async def test_get_panels_non_admin(
