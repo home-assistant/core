@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
+from contextlib import suppress
 import logging
 
 from aionanoleaf import EffectsEvent, Nanoleaf, StateEvent, TouchEvent
@@ -28,16 +28,10 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.BUTTON, Platform.LIGHT]
 
 
-@dataclass
-class NanoleafEntryData:
-    """Class for sharing data within the Nanoleaf integration."""
-
-    device: Nanoleaf
-    coordinator: NanoleafCoordinator
-    event_listener: asyncio.Task
+type NanoleafConfigEntry = ConfigEntry[NanoleafCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NanoleafConfigEntry) -> bool:
     """Set up Nanoleaf from a config entry."""
     nanoleaf = Nanoleaf(
         async_get_clientsession(hass), entry.data[CONF_HOST], entry.data[CONF_TOKEN]
@@ -80,18 +74,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = NanoleafEntryData(
-        nanoleaf, coordinator, event_listener
-    )
+    async def _cancel_listener() -> None:
+        event_listener.cancel()
+        with suppress(asyncio.CancelledError):
+            await event_listener
+
+    entry.async_on_unload(_cancel_listener)
+
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NanoleafConfigEntry) -> bool:
     """Unload a config entry."""
-    await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    entry_data: NanoleafEntryData = hass.data[DOMAIN].pop(entry.entry_id)
-    entry_data.event_listener.cancel()
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
