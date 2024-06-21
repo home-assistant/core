@@ -855,6 +855,7 @@ omit =
     homeassistant/components/nanoleaf/button.py
     homeassistant/components/nanoleaf/coordinator.py
     homeassistant/components/nanoleaf/entity.py
+    homeassistant/components/nanoleaf/event.py
     homeassistant/components/nanoleaf/light.py
     homeassistant/components/neato/__init__.py
     homeassistant/components/neato/api.py
@@ -1258,9 +1259,6 @@ omit =
     homeassistant/components/solaredge/__init__.py
     homeassistant/components/solaredge/coordinator.py
     homeassistant/components/solaredge_local/sensor.py
-    homeassistant/components/solarlog/__init__.py
-    homeassistant/components/solarlog/coordinator.py
-    homeassistant/components/solarlog/sensor.py
     homeassistant/components/solax/__init__.py
     homeassistant/components/solax/sensor.py
     homeassistant/components/soma/__init__.py

@@ -266,6 +266,9 @@ aiolookin==1.0.0
 # homeassistant.components.lyric
 aiolyric==1.1.0
 
+# homeassistant.components.mealie
+aiomealie==0.4.0
+
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
 
@@ -670,7 +673,7 @@ energyzero==2.1.0
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env-canada==0.6.2
+env-canada==0.6.3
 
 # homeassistant.components.season
 ephem==4.1.5
@@ -1426,7 +1429,7 @@ pyecoforest==0.4.0
 pyeconet==0.1.22
 
 # homeassistant.components.ista_ecotrend
-pyecotrend-ista==3.2.0
+pyecotrend-ista==3.3.1
 
 # homeassistant.components.efergy
 pyefergy==22.5.0
@@ -2168,7 +2171,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==1.19.2
+uiprotect==1.19.3
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7

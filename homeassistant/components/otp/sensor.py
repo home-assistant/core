@@ -69,7 +69,7 @@ async def async_setup_entry(
 class TOTPSensor(SensorEntity):
     """Representation of a TOTP sensor."""
 
-    _attr_icon = "mdi:update"
+    _attr_translation_key = "token"
     _attr_should_poll = False
     _attr_native_value: StateType = None
     _next_expiration: float | None = None

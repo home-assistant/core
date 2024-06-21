@@ -163,7 +163,7 @@ async def test_validate_platform_config_2(
     mock_platform(
         hass,
         "whatever.platform_conf",
-        MockPlatform("whatever", platform_schema=platform_schema),
+        MockPlatform(platform_schema=platform_schema),
     )
 
     with assert_setup_component(1):
@@ -192,7 +192,7 @@ async def test_validate_platform_config_3(
     mock_platform(
         hass,
         "whatever.platform_conf",
-        MockPlatform("whatever", platform_schema=platform_schema),
+        MockPlatform(platform_schema=platform_schema),
     )
 
     with assert_setup_component(1):

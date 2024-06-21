@@ -1,0 +1,262 @@
+# serializer version: 1
+# name: test_sensor_sources[client_payload0-sensor.wired_client_rx-config_entry_options0]
+  'data_rate'
+# ---
+# name: test_sensor_sources[client_payload0-sensor.wired_client_rx-config_entry_options0].1
+  'data_rate'
+# ---
+# name: test_sensor_sources[client_payload0-sensor.wired_client_rx-config_entry_options0].2
+  <SensorStateClass.MEASUREMENT: 'measurement'>
+# ---
+# name: test_sensor_sources[client_payload0-sensor.wired_client_rx-config_entry_options0].3
+  <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>
+# ---
+# name: test_sensor_sources[client_payload0-sensor.wired_client_rx-config_entry_options0].4
+  '1234.0'
+# ---
+# name: test_sensor_sources[client_payload0-sensor.wired_client_rx-rx--config_entry_options0]
+  'rx-00:00:00:00:00:01'
+# ---
+# name: test_sensor_sources[client_payload0-sensor.wired_client_rx-rx--config_entry_options0].1
+  <EntityCategory.DIAGNOSTIC: 'diagnostic'>
+# ---
+# name: test_sensor_sources[client_payload0-sensor.wired_client_rx-rx--config_entry_options0].2
+  'data_rate'
+# ---
+# name: test_sensor_sources[client_payload0-sensor.wired_client_rx-rx--config_entry_options0].3
+  'Wired client RX'
+# ---
+# name: test_sensor_sources[client_payload0-sensor.wired_client_rx-rx--config_entry_options0].4
+  <SensorStateClass.MEASUREMENT: 'measurement'>
+# ---
+# name: test_sensor_sources[client_payload0-sensor.wired_client_rx-rx--config_entry_options0].5
+  <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>
+# ---
+# name: test_sensor_sources[client_payload0-sensor.wired_client_rx-rx--config_entry_options0].6
+  '1234.0'
+# ---
+# name: test_sensor_sources[client_payload0-sensor.wired_client_uptime-uptime--config_entry_options0]
+  'uptime-00:00:00:00:00:01'
+# ---
+# name: test_sensor_sources[client_payload0-sensor.wired_client_uptime-uptime--config_entry_options0].1
+  <EntityCategory.DIAGNOSTIC: 'diagnostic'>
+# ---
+# name: test_sensor_sources[client_payload0-sensor.wired_client_uptime-uptime--config_entry_options0].2
+  'timestamp'
+# ---
+# name: test_sensor_sources[client_payload0-sensor.wired_client_uptime-uptime--config_entry_options0].3
+  'Wired client Uptime'
+# ---
+# name: test_sensor_sources[client_payload0-sensor.wired_client_uptime-uptime--config_entry_options0].4
+  None
+# ---
+# name: test_sensor_sources[client_payload0-sensor.wired_client_uptime-uptime--config_entry_options0].5
+  None
+# ---
+# name: test_sensor_sources[client_payload0-sensor.wired_client_uptime-uptime--config_entry_options0].6
+  '2020-09-14T14:41:45+00:00'
+# ---
+# name: test_sensor_sources[client_payload1-sensor.wired_client_rx-rx--config_entry_options0]
+  'rx-00:00:00:00:00:01'
+# ---
+# name: test_sensor_sources[client_payload1-sensor.wired_client_rx-rx--config_entry_options0].1
+  <EntityCategory.DIAGNOSTIC: 'diagnostic'>
+# ---
+# name: test_sensor_sources[client_payload1-sensor.wired_client_rx-rx--config_entry_options0].2
+  'data_rate'
+# ---
+# name: test_sensor_sources[client_payload1-sensor.wired_client_rx-rx--config_entry_options0].3
+  'Wired client RX'
+# ---
+# name: test_sensor_sources[client_payload1-sensor.wired_client_rx-rx--config_entry_options0].4
+  <SensorStateClass.MEASUREMENT: 'measurement'>
+# ---
+# name: test_sensor_sources[client_payload1-sensor.wired_client_rx-rx--config_entry_options0].5
+  <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>
+# ---
+# name: test_sensor_sources[client_payload1-sensor.wired_client_rx-rx--config_entry_options0].6
+  '1234.0'
+# ---
+# name: test_sensor_sources[client_payload1-sensor.wired_client_tx-config_entry_options0]
+  'data_rate'
+# ---
+# name: test_sensor_sources[client_payload1-sensor.wired_client_tx-config_entry_options0].1
+  'data_rate'
+# ---
+# name: test_sensor_sources[client_payload1-sensor.wired_client_tx-config_entry_options0].2
+  <SensorStateClass.MEASUREMENT: 'measurement'>
+# ---
+# name: test_sensor_sources[client_payload1-sensor.wired_client_tx-config_entry_options0].3
+  <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>
+# ---
+# name: test_sensor_sources[client_payload1-sensor.wired_client_tx-config_entry_options0].4
+  '5678.0'
+# ---
+# name: test_sensor_sources[client_payload1-sensor.wired_client_tx-tx--config_entry_options0]
+  'tx-00:00:00:00:00:01'
+# ---
+# name: test_sensor_sources[client_payload1-sensor.wired_client_tx-tx--config_entry_options0].1
+  <EntityCategory.DIAGNOSTIC: 'diagnostic'>
+# ---
+# name: test_sensor_sources[client_payload1-sensor.wired_client_tx-tx--config_entry_options0].2
+  'data_rate'
+# ---
+# name: test_sensor_sources[client_payload1-sensor.wired_client_tx-tx--config_entry_options0].3
+  'Wired client TX'
+# ---
+# name: test_sensor_sources[client_payload1-sensor.wired_client_tx-tx--config_entry_options0].4
+  <SensorStateClass.MEASUREMENT: 'measurement'>
+# ---
+# name: test_sensor_sources[client_payload1-sensor.wired_client_tx-tx--config_entry_options0].5
+  <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>
+# ---
+# name: test_sensor_sources[client_payload1-sensor.wired_client_tx-tx--config_entry_options0].6
+  '5678.0'
+# ---
+# name: test_sensor_sources[client_payload2-sensor.wired_client_tx-tx--config_entry_options0]
+  'tx-00:00:00:00:00:01'
+# ---
+# name: test_sensor_sources[client_payload2-sensor.wired_client_tx-tx--config_entry_options0].1
+  <EntityCategory.DIAGNOSTIC: 'diagnostic'>
+# ---
+# name: test_sensor_sources[client_payload2-sensor.wired_client_tx-tx--config_entry_options0].2
+  'data_rate'
+# ---
+# name: test_sensor_sources[client_payload2-sensor.wired_client_tx-tx--config_entry_options0].3
+  'Wired client TX'
+# ---
+# name: test_sensor_sources[client_payload2-sensor.wired_client_tx-tx--config_entry_options0].4
+  <SensorStateClass.MEASUREMENT: 'measurement'>
+# ---
+# name: test_sensor_sources[client_payload2-sensor.wired_client_tx-tx--config_entry_options0].5
+  <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>
+# ---
+# name: test_sensor_sources[client_payload2-sensor.wired_client_tx-tx--config_entry_options0].6
+  '5678.0'
+# ---
+# name: test_sensor_sources[client_payload2-sensor.wired_client_uptime-uptime--config_entry_options0]
+  'uptime-00:00:00:00:00:01'
+# ---
+# name: test_sensor_sources[client_payload2-sensor.wired_client_uptime-uptime--config_entry_options0].1
+  <EntityCategory.DIAGNOSTIC: 'diagnostic'>
+# ---
+# name: test_sensor_sources[client_payload2-sensor.wired_client_uptime-uptime--config_entry_options0].2
+  'timestamp'
+# ---
+# name: test_sensor_sources[client_payload2-sensor.wired_client_uptime-uptime--config_entry_options0].3
+  'Wired client Uptime'
+# ---
+# name: test_sensor_sources[client_payload2-sensor.wired_client_uptime-uptime--config_entry_options0].4
+  None
+# ---
+# name: test_sensor_sources[client_payload2-sensor.wired_client_uptime-uptime--config_entry_options0].5
+  None
+# ---
+# name: test_sensor_sources[client_payload2-sensor.wired_client_uptime-uptime--config_entry_options0].6
+  '2020-09-14T14:41:45+00:00'
+# ---
+# name: test_sensor_sources[client_payload2-sensor.wireless_client_rx-rx--config_entry_options0]
+  'rx-00:00:00:00:00:02'
+# ---
+# name: test_sensor_sources[client_payload2-sensor.wireless_client_rx-rx--config_entry_options0].1
+  <EntityCategory.DIAGNOSTIC: 'diagnostic'>
+# ---
+# name: test_sensor_sources[client_payload2-sensor.wireless_client_rx-rx--config_entry_options0].2
+  'data_rate'
+# ---
+# name: test_sensor_sources[client_payload2-sensor.wireless_client_rx-rx--config_entry_options0].3
+  'Wireless client RX'
+# ---
+# name: test_sensor_sources[client_payload2-sensor.wireless_client_rx-rx--config_entry_options0].4
+  <SensorStateClass.MEASUREMENT: 'measurement'>
+# ---
+# name: test_sensor_sources[client_payload2-sensor.wireless_client_rx-rx--config_entry_options0].5
+  <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>
+# ---
+# name: test_sensor_sources[client_payload2-sensor.wireless_client_rx-rx--config_entry_options0].6
+  '2345.0'
+# ---
+# name: test_sensor_sources[client_payload3-sensor.wireless_client_rx-rx--config_entry_options0]
+  'rx-00:00:00:00:00:01'
+# ---
+# name: test_sensor_sources[client_payload3-sensor.wireless_client_rx-rx--config_entry_options0].1
+  <EntityCategory.DIAGNOSTIC: 'diagnostic'>
+# ---
+# name: test_sensor_sources[client_payload3-sensor.wireless_client_rx-rx--config_entry_options0].2
+  'data_rate'
+# ---
+# name: test_sensor_sources[client_payload3-sensor.wireless_client_rx-rx--config_entry_options0].3
+  'Wireless client RX'
+# ---
+# name: test_sensor_sources[client_payload3-sensor.wireless_client_rx-rx--config_entry_options0].4
+  <SensorStateClass.MEASUREMENT: 'measurement'>
+# ---
+# name: test_sensor_sources[client_payload3-sensor.wireless_client_rx-rx--config_entry_options0].5
+  <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>
+# ---
+# name: test_sensor_sources[client_payload3-sensor.wireless_client_rx-rx--config_entry_options0].6
+  '2345.0'
+# ---
+# name: test_sensor_sources[client_payload3-sensor.wireless_client_tx-tx--config_entry_options0]
+  'tx-00:00:00:00:00:02'
+# ---
+# name: test_sensor_sources[client_payload3-sensor.wireless_client_tx-tx--config_entry_options0].1
+  <EntityCategory.DIAGNOSTIC: 'diagnostic'>
+# ---
+# name: test_sensor_sources[client_payload3-sensor.wireless_client_tx-tx--config_entry_options0].2
+  'data_rate'
+# ---
+# name: test_sensor_sources[client_payload3-sensor.wireless_client_tx-tx--config_entry_options0].3
+  'Wireless client TX'
+# ---
+# name: test_sensor_sources[client_payload3-sensor.wireless_client_tx-tx--config_entry_options0].4
+  <SensorStateClass.MEASUREMENT: 'measurement'>
+# ---
+# name: test_sensor_sources[client_payload3-sensor.wireless_client_tx-tx--config_entry_options0].5
+  <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>
+# ---
+# name: test_sensor_sources[client_payload3-sensor.wireless_client_tx-tx--config_entry_options0].6
+  '6789.0'
+# ---
+# name: test_sensor_sources[client_payload4-sensor.wireless_client_tx-tx--config_entry_options0]
+  'tx-00:00:00:00:00:01'
+# ---
+# name: test_sensor_sources[client_payload4-sensor.wireless_client_tx-tx--config_entry_options0].1
+  <EntityCategory.DIAGNOSTIC: 'diagnostic'>
+# ---
+# name: test_sensor_sources[client_payload4-sensor.wireless_client_tx-tx--config_entry_options0].2
+  'data_rate'
+# ---
+# name: test_sensor_sources[client_payload4-sensor.wireless_client_tx-tx--config_entry_options0].3
+  'Wireless client TX'
+# ---
+# name: test_sensor_sources[client_payload4-sensor.wireless_client_tx-tx--config_entry_options0].4
+  <SensorStateClass.MEASUREMENT: 'measurement'>
+# ---
+# name: test_sensor_sources[client_payload4-sensor.wireless_client_tx-tx--config_entry_options0].5
+  <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>
+# ---
+# name: test_sensor_sources[client_payload4-sensor.wireless_client_tx-tx--config_entry_options0].6
+  '6789.0'
+# ---
+# name: test_sensor_sources[client_payload5-sensor.wireless_client_uptime-uptime--config_entry_options0]
+  'uptime-00:00:00:00:00:01'
+# ---
+# name: test_sensor_sources[client_payload5-sensor.wireless_client_uptime-uptime--config_entry_options0].1
+  <EntityCategory.DIAGNOSTIC: 'diagnostic'>
+# ---
+# name: test_sensor_sources[client_payload5-sensor.wireless_client_uptime-uptime--config_entry_options0].2
+  'timestamp'
+# ---
+# name: test_sensor_sources[client_payload5-sensor.wireless_client_uptime-uptime--config_entry_options0].3
+  'Wireless client Uptime'
+# ---
+# name: test_sensor_sources[client_payload5-sensor.wireless_client_uptime-uptime--config_entry_options0].4
+  None
+# ---
+# name: test_sensor_sources[client_payload5-sensor.wireless_client_uptime-uptime--config_entry_options0].5
+  None
+# ---
+# name: test_sensor_sources[client_payload5-sensor.wireless_client_uptime-uptime--config_entry_options0].6
+  '2021-01-01T01:00:00+00:00'
+# ---
