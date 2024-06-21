@@ -1,7 +1,0 @@
-{
-  "sensor.iotmeter_total_power": "mdi:speedometer",
-  "sensor.iotmeter_total_consumption_energy": "mdi:home-lightning-bolt",
-  "sensor.iotmeter_total_generation_energy": "mdi:solar-power-variant",
-  "sensor.iotmeter_evse": "mdi:ev-station",
-  "sensor.iotmeter_charging_current": "mdi:ev-station"
-}

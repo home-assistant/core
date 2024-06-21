@@ -2881,6 +2881,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "iotmeter": {
+      "name": "IoTMeter",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "iperf3": {
       "name": "Iperf3",
       "integration_type": "hub",

@@ -2,13 +2,9 @@
   "domain": "iotmeter",
   "name": "IoTMeter",
   "codeowners": ["@lipic"],
-  "version": "1.0.0",
-  "documentation": "https://www.example.com",
-  "requirements": ["aiohttp"],
-  "dependencies": [],
   "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/iotmeter",
   "iot_class": "local_polling",
-  "integration_type": "device",
-  "icon": "mdi:flash",
-  "translations": ["translations"]
+  "requirements": ["aiohttp==3.9.5"]
 }

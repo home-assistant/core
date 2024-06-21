@@ -691,6 +691,7 @@ build.json @home-assistant/supervisor
 /tests/components/ios/ @robbiet480
 /homeassistant/components/iotawatt/ @gtdiehl @jyavenard
 /tests/components/iotawatt/ @gtdiehl @jyavenard
+/homeassistant/components/iotmeter/ @lipic
 /homeassistant/components/iperf3/ @rohankapoorcom
 /homeassistant/components/ipma/ @dgomes
 /tests/components/ipma/ @dgomes
