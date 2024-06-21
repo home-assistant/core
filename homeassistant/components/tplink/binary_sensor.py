@@ -2,63 +2,108 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import Final
+
 from kasa import Device, Feature
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import TPLinkConfigEntry
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import (
-    CoordinatedTPLinkEntity,
+    CoordinatedTPLinkFeatureEntity,
+    TPLinkFeatureEntityDescription,
     _description_for_feature,
     _entities_for_device_and_its_children,
 )
-from .models import TPLinkData
+
+
+@dataclass(frozen=True, kw_only=True)
+class TPLinkBinarySensorEntityDescription(
+    BinarySensorEntityDescription, TPLinkFeatureEntityDescription
+):
+    """Base class for a TPLink feature based sensor entity description."""
+
+
+BINARYSENSOR_DESCRIPTIONS: Final = [
+    TPLinkBinarySensorEntityDescription(
+        key="overheated",
+        device_class=BinarySensorDeviceClass.HEAT,
+    ),
+    TPLinkBinarySensorEntityDescription(
+        key="battery_low",
+        device_class=BinarySensorDeviceClass.BATTERY,
+    ),
+    TPLinkBinarySensorEntityDescription(
+        key="cloud_connection",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    ),
+    # To be replaced & disabled per default by the upcoming update platform.
+    TPLinkBinarySensorEntityDescription(
+        key="update_available",
+        device_class=BinarySensorDeviceClass.UPDATE,
+    ),
+    TPLinkBinarySensorEntityDescription(
+        key="temperature_warning",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    TPLinkBinarySensorEntityDescription(
+        key="humidity_warning", device_class=BinarySensorDeviceClass.PROBLEM
+    ),
+]
+
+BINARYSENSOR_DESCRIPTIONS_MAP = {desc.key: desc for desc in BINARYSENSOR_DESCRIPTIONS}
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: TPLinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors."""
-    data: TPLinkData = hass.data[DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     parent_coordinator = data.parent_coordinator
+    children_coordinators = data.children_coordinators
     device = parent_coordinator.device
 
     entities = _entities_for_device_and_its_children(
-        device,
-        feature_type=Feature.BinarySensor,
-        entity_class=BinarySensor,
+        device=device,
         coordinator=parent_coordinator,
+        feature_type=Feature.Type.BinarySensor,
+        entity_class=BinarySensor,
+        child_coordinators=children_coordinators,
     )
-
     async_add_entities(entities)
 
 
-class BinarySensor(CoordinatedTPLinkEntity, BinarySensorEntity):
+class BinarySensor(CoordinatedTPLinkFeatureEntity, BinarySensorEntity):
     """Representation of a TPLink binary sensor."""
+
+    entity_description: TPLinkBinarySensorEntityDescription
 
     def __init__(
         self,
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
+        *,
         feature: Feature,
         parent: Device | None = None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(device, coordinator, feature=feature, parent=parent)
-        self._feature: Feature
-        self.entity_description = _description_for_feature(
-            BinarySensorEntityDescription, feature
+        description = _description_for_feature(
+            TPLinkBinarySensorEntityDescription, feature, BINARYSENSOR_DESCRIPTIONS_MAP
         )
-        self._async_update_attrs()
+        super().__init__(
+            device, coordinator, description=description, feature=feature, parent=parent
+        )
+        self._async_call_update_attrs()
 
     @callback
     def _async_update_attrs(self) -> None:
