@@ -42,6 +42,11 @@
         "name": "Returning to dock"
       }
     },
+    "button": {
+      "confirm_error": {
+        "name": "Confirm error"
+      }
+    },
     "number": {
       "cutting_height": {
         "name": "Cutting height"
