@@ -294,7 +294,7 @@ aiolookin==1.0.0
 aiolyric==1.1.0
 
 # homeassistant.components.mealie
-aiomealie==0.3.1
+aiomealie==0.4.0
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -1815,7 +1815,7 @@ pyecoforest==0.4.0
 pyeconet==0.1.22
 
 # homeassistant.components.ista_ecotrend
-pyecotrend-ista==3.2.0
+pyecotrend-ista==3.3.1
 
 # homeassistant.components.edimax
 pyedimax==0.2.1
@@ -2792,7 +2792,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==1.19.2
+uiprotect==1.19.3
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
