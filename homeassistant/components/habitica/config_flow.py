@@ -33,12 +33,13 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
     """Validate the user input allows us to connect."""
 
     websession = async_get_clientsession(hass)
-    api = HabitipyAsync(
-        conf={
+    api = await hass.async_add_executor_job(
+        HabitipyAsync,
+        {
             "login": data[CONF_API_USER],
             "password": data[CONF_API_KEY],
             "url": data[CONF_URL] or DEFAULT_URL,
-        }
+        },
     )
     try:
         await api.user.get(session=websession)

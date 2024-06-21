@@ -17,8 +17,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from . import RiscoEventsDataUpdateCoordinator, is_local
+from . import is_local
 from .const import DOMAIN, EVENTS_COORDINATOR
+from .coordinator import RiscoEventsDataUpdateCoordinator
 from .entity import zone_unique_id
 
 CATEGORIES = {
@@ -114,7 +115,7 @@ class RiscoSensor(CoordinatorEntity[RiscoEventsDataUpdateCoordinator], SensorEnt
             return None
 
         if res := dt_util.parse_datetime(self._event.time):
-            return res.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
+            return res.replace(tzinfo=dt_util.get_default_time_zone())
         return None
 
     @property

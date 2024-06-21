@@ -3,9 +3,14 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from enum import StrEnum
 import logging
+from time import monotonic
+from typing import Any
 
-import requests
+from aiohttp import CookieJar
+from pyloadapi.api import PyLoadAPI
+from pyloadapi.exceptions import CannotConnect, InvalidAuth, ParserError
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -22,37 +27,44 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
-    CONTENT_TYPE_JSON,
     UnitOfDataRate,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+
+from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_HOST = "localhost"
-DEFAULT_NAME = "pyLoad"
-DEFAULT_PORT = 8000
+SCAN_INTERVAL = timedelta(seconds=15)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 
-SENSOR_TYPES = {
-    "speed": SensorEntityDescription(
-        key="speed",
+class PyLoadSensorEntity(StrEnum):
+    """pyLoad Sensor Entities."""
+
+    SPEED = "speed"
+
+
+SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=PyLoadSensorEntity.SPEED,
         name="Speed",
-        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
-    )
-}
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        suggested_display_precision=1,
+    ),
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_MONITORED_VARIABLES, default=["speed"]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+            cv.ensure_list, [vol.In(PyLoadSensorEntity)]
         ),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
@@ -63,10 +75,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the pyLoad sensors."""
@@ -76,97 +88,94 @@ def setup_platform(
     name = config[CONF_NAME]
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    monitored_types = config[CONF_MONITORED_VARIABLES]
-    url = f"{protocol}://{host}:{port}/api/"
+    url = f"{protocol}://{host}:{port}/"
 
+    session = async_create_clientsession(
+        hass,
+        verify_ssl=False,
+        cookie_jar=CookieJar(unsafe=True),
+    )
+    pyloadapi = PyLoadAPI(session, api_url=url, username=username, password=password)
     try:
-        pyloadapi = PyLoadAPI(api_url=url, username=username, password=password)
-    except (
-        requests.exceptions.ConnectionError,
-        requests.exceptions.HTTPError,
-    ) as conn_err:
-        _LOGGER.error("Error setting up pyLoad API: %s", conn_err)
-        return
+        await pyloadapi.login()
+    except CannotConnect as conn_err:
+        raise PlatformNotReady(
+            "Unable to connect and retrieve data from pyLoad API"
+        ) from conn_err
+    except ParserError as e:
+        raise PlatformNotReady("Unable to parse data from pyLoad API") from e
+    except InvalidAuth as e:
+        raise PlatformNotReady(
+            f"Authentication failed for {config[CONF_USERNAME]}, check your login credentials"
+        ) from e
 
-    devices = []
-    for ng_type in monitored_types:
-        new_sensor = PyLoadSensor(
-            api=pyloadapi, sensor_type=SENSOR_TYPES[ng_type], client_name=name
-        )
-        devices.append(new_sensor)
-
-    add_entities(devices, True)
+    async_add_entities(
+        (
+            PyLoadSensor(
+                api=pyloadapi, entity_description=description, client_name=name
+            )
+            for description in SENSOR_DESCRIPTIONS
+        ),
+        True,
+    )
 
 
 class PyLoadSensor(SensorEntity):
     """Representation of a pyLoad sensor."""
 
     def __init__(
-        self, api: PyLoadAPI, sensor_type: SensorEntityDescription, client_name
+        self, api: PyLoadAPI, entity_description: SensorEntityDescription, client_name
     ) -> None:
         """Initialize a new pyLoad sensor."""
-        self._attr_name = f"{client_name} {sensor_type.name}"
-        self.type = sensor_type.key
+        self._attr_name = f"{client_name} {entity_description.name}"
+        self.type = entity_description.key
         self.api = api
-        self.entity_description = sensor_type
+        self.entity_description = entity_description
+        self._attr_available = False
+        self.data: dict[str, Any] = {}
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Update state of sensor."""
+        start = monotonic()
         try:
-            self.api.update()
-        except requests.exceptions.ConnectionError:
-            # Error calling the API, already logged in api.update()
-            return
+            status = await self.api.get_status()
+        except InvalidAuth:
+            _LOGGER.info("Authentication failed, trying to reauthenticate")
+            try:
+                await self.api.login()
+            except InvalidAuth:
+                _LOGGER.error(
+                    "Authentication failed for %s, check your login credentials",
+                    self.api.username,
+                )
+                return
+            else:
+                _LOGGER.info(
+                    "Unable to retrieve data due to cookie expiration "
+                    "but re-authentication was successful"
+                )
+                return
+            finally:
+                self._attr_available = False
 
-        if self.api.status is None:
-            _LOGGER.debug(
-                "Update of %s requested, but no status is available", self.name
-            )
+        except CannotConnect:
+            _LOGGER.debug("Unable to connect and retrieve data from pyLoad API")
+            self._attr_available = False
             return
-
-        if (value := self.api.status.get(self.type)) is None:
-            _LOGGER.warning("Unable to locate value for %s", self.type)
+        except ParserError:
+            _LOGGER.error("Unable to parse data from pyLoad API")
+            self._attr_available = False
             return
-
-        if "speed" in self.type and value > 0:
-            # Convert download rate from Bytes/s to MBytes/s
-            self._attr_native_value = round(value / 2**20, 2)
         else:
-            self._attr_native_value = value
-
-
-class PyLoadAPI:
-    """Simple wrapper for pyLoad's API."""
-
-    def __init__(self, api_url, username=None, password=None):
-        """Initialize pyLoad API and set headers needed later."""
-        self.api_url = api_url
-        self.status = None
-        self.headers = {"Content-Type": CONTENT_TYPE_JSON}
-
-        if username is not None and password is not None:
-            self.payload = {"username": username, "password": password}
-            self.login = requests.post(f"{api_url}login", data=self.payload, timeout=5)
-        self.update()
-
-    def post(self):
-        """Send a POST request and return the response as a dict."""
-        try:
-            response = requests.post(
-                f"{self.api_url}statusServer",
-                cookies=self.login.cookies,
-                headers=self.headers,
-                timeout=5,
+            self.data = status.to_dict()
+            _LOGGER.debug(
+                "Finished fetching pyload data in %.3f seconds",
+                monotonic() - start,
             )
-            response.raise_for_status()
-            _LOGGER.debug("JSON Response: %s", response.json())
-            return response.json()
 
-        except requests.exceptions.ConnectionError as conn_exc:
-            _LOGGER.error("Failed to update pyLoad status. Error: %s", conn_exc)
-            raise
+        self._attr_available = True
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Update cached response."""
-        self.status = self.post()
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self.data.get(self.entity_description.key)

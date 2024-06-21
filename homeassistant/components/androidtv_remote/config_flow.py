@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 from androidtvremote2 import (
@@ -32,6 +33,8 @@ from homeassistant.helpers.selector import (
 
 from .const import CONF_APP_ICON, CONF_APP_NAME, CONF_APPS, CONF_ENABLE_IME, DOMAIN
 from .helpers import create_api, get_enable_ime
+
+_LOGGER = logging.getLogger(__name__)
 
 APPS_NEW_ID = "NewApp"
 CONF_APP_DELETE = "app_delete"
@@ -149,6 +152,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
+        _LOGGER.debug("Android TV device found via zeroconf: %s", discovery_info)
         self.host = discovery_info.host
         self.name = discovery_info.name.removesuffix("._androidtvremote2._tcp.local.")
         self.mac = discovery_info.properties.get("bt")
@@ -158,6 +162,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: self.host, CONF_NAME: self.name}
         )
+        _LOGGER.debug("New Android TV device found via zeroconf: %s", self.name)
         self.context.update({"title_placeholders": {CONF_NAME: self.name}})
         return await self.async_step_zeroconf_confirm()
 

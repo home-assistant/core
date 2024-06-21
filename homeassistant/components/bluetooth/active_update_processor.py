@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 import logging
-from typing import Any, TypeVar
+from typing import Any
 
 from bleak import BleakError
 from bluetooth_data_tools import monotonic_time_coarse
@@ -21,10 +21,10 @@ from .passive_update_processor import PassiveBluetoothProcessorCoordinator
 POLL_DEFAULT_COOLDOWN = 10
 POLL_DEFAULT_IMMEDIATE = True
 
-_DataT = TypeVar("_DataT")
 
-
-class ActiveBluetoothProcessorCoordinator(PassiveBluetoothProcessorCoordinator[_DataT]):
+class ActiveBluetoothProcessorCoordinator[_DataT](
+    PassiveBluetoothProcessorCoordinator[_DataT]
+):
     """A processor coordinator that parses passive data.
 
     Parses passive data from advertisements but can also poll.

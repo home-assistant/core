@@ -29,7 +29,7 @@ from .const import (
 from .models import YaleXSBLEData
 from .util import async_find_existing_service_info, bluetooth_callback_matcher
 
-YALEXSBLEConfigEntry = ConfigEntry[YaleXSBLEData]
+type YALEXSBLEConfigEntry = ConfigEntry[YaleXSBLEData]
 
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]

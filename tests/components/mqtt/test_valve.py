@@ -131,6 +131,11 @@ async def test_state_via_state_topic_no_position(
     state = hass.states.get("valve.test")
     assert state.state == asserted_state
 
+    async_fire_mqtt_message(hass, "state-topic", "None")
+
+    state = hass.states.get("valve.test")
+    assert state.state == STATE_UNKNOWN
+
 
 @pytest.mark.parametrize(
     "hass_config",
@@ -197,6 +202,7 @@ async def test_state_via_state_topic_with_template(
         ('{"position":100}', STATE_OPEN),
         ('{"position":50.0}', STATE_OPEN),
         ('{"position":0}', STATE_CLOSED),
+        ('{"position":null}', STATE_UNKNOWN),
         ('{"position":"non_numeric"}', STATE_UNKNOWN),
         ('{"ignored":12}', STATE_UNKNOWN),
     ],

@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy.orm.session import Session
 
+from homeassistant.util.collection import chunked_or_all
+
 from .db_schema import Events, States, StatesMeta
 from .models import DatabaseEngine
 from .queries import (
@@ -40,7 +42,7 @@ from .queries import (
     find_statistics_runs_to_purge,
 )
 from .repack import repack_database
-from .util import chunked_or_all, retryable_database_job, session_scope
+from .util import retryable_database_job, session_scope
 
 if TYPE_CHECKING:
     from . import Recorder
@@ -643,7 +645,7 @@ def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
         for (metadata_id, entity_id) in session.query(
             StatesMeta.metadata_id, StatesMeta.entity_id
         ).all()
-        if not entity_filter(entity_id)
+        if entity_filter and not entity_filter(entity_id)
     ]
     if excluded_metadata_ids:
         has_more_states_to_purge = _purge_filtered_states(
@@ -763,7 +765,9 @@ def _purge_filtered_events(
 
 @retryable_database_job("purge_entity_data")
 def purge_entity_data(
-    instance: Recorder, entity_filter: Callable[[str], bool], purge_before: datetime
+    instance: Recorder,
+    entity_filter: Callable[[str], bool] | None,
+    purge_before: datetime,
 ) -> bool:
     """Purge states and events of specified entities."""
     database_engine = instance.database_engine
@@ -775,7 +779,7 @@ def purge_entity_data(
             for (metadata_id, entity_id) in session.query(
                 StatesMeta.metadata_id, StatesMeta.entity_id
             ).all()
-            if entity_filter(entity_id)
+            if entity_filter and entity_filter(entity_id)
         ]
         _LOGGER.debug("Purging entity data for %s", selected_metadata_ids)
         if not selected_metadata_ids:

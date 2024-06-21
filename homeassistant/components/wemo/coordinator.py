@@ -24,11 +24,8 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import (
-    CONNECTION_UPNP,
-    DeviceInfo,
-    async_get as async_get_device_registry,
-)
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import CONNECTION_UPNP, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
@@ -37,9 +34,9 @@ from .models import async_wemo_data
 _LOGGER = logging.getLogger(__name__)
 
 # Literal values must match options.error keys from strings.json.
-ErrorStringKey = Literal["long_press_requires_subscription"]
+type ErrorStringKey = Literal["long_press_requires_subscription"]
 # Literal values must match options.step.init.data keys from strings.json.
-OptionsFieldKey = Literal["enable_subscription", "enable_long_press"]
+type OptionsFieldKey = Literal["enable_subscription", "enable_long_press"]
 
 
 class OptionsValidationError(Exception):
@@ -291,7 +288,7 @@ async def async_register_device(
     await device.async_refresh()
     if not device.last_update_success and device.last_exception:
         raise device.last_exception
-    device_registry = async_get_device_registry(hass)
+    device_registry = dr.async_get(hass)
     entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id, **_create_device_info(wemo)
     )

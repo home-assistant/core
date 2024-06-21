@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pytedee_async.bridge import TedeeBridge
 from pytedee_async.lock import TedeeLock
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.tedee.const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_WEBHOOK_ID
@@ -37,7 +37,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.tedee.async_setup_entry", return_value=True
@@ -46,7 +46,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_tedee(request) -> Generator[MagicMock, None, None]:
+def mock_tedee() -> Generator[MagicMock]:
     """Return a mocked Tedee client."""
     with (
         patch(

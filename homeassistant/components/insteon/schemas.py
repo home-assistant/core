@@ -22,6 +22,7 @@ from .const import (
     CONF_CAT,
     CONF_DIM_STEPS,
     CONF_HOUSECODE,
+    CONF_HUB_VERSION,
     CONF_SUBCAT,
     CONF_UNITCODE,
     HOUSECODES,
@@ -143,6 +144,7 @@ def build_hub_schema(
     schema = {
         vol.Required(CONF_HOST, default=host): str,
         vol.Required(CONF_PORT, default=port): int,
+        vol.Required(CONF_HUB_VERSION, default=hub_version): int,
     }
     if hub_version == 2:
         schema[vol.Required(CONF_USERNAME, default=username)] = str
