@@ -14,9 +14,11 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
+    OptionsFlow,
+    OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import CONF_URL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.selector import (
@@ -41,6 +43,13 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     _config_entry: ConfigEntry
+    _max_entries: int | None = None
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Get the options flow for this handler."""
+        return FeedReaderOptionsFlowHandler(config_entry)
 
     def show_user_form(
         self,
@@ -58,12 +67,8 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(
                         CONF_URL, default=user_input.get(CONF_URL, "")
-                    ): TextSelector(TextSelectorConfig(type=TextSelectorType.URL)),
-                    vol.Optional(
-                        CONF_MAX_ENTRIES,
-                        default=user_input.get(CONF_MAX_ENTRIES, DEFAULT_MAX_ENTRIES),
-                    ): cv.positive_int,
-                },
+                    ): TextSelector(TextSelectorConfig(type=TextSelectorType.URL))
+                }
             ),
             description_placeholders=description_placeholders,
             errors=errors,
@@ -111,13 +116,16 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
 
         feed_title = feed["feed"]["title"]
 
-        return self.async_create_entry(title=feed_title, data=user_input)
+        return self.async_create_entry(
+            title=feed_title,
+            data=user_input,
+            options={CONF_MAX_ENTRIES: self._max_entries or DEFAULT_MAX_ENTRIES},
+        )
 
-    async def async_step_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle an import flow."""
-        return await self.async_step_user(user_input)
+        self._max_entries = user_input[CONF_MAX_ENTRIES]
+        return await self.async_step_user({CONF_URL: user_input[CONF_URL]})
 
     async def async_step_reconfigure(
         self, _: dict[str, Any] | None = None
@@ -163,3 +171,25 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.hass.config_entries.async_update_entry(self._config_entry, data=user_input)
         return self.async_abort(reason="reconfigure_successful")
+
+
+class FeedReaderOptionsFlowHandler(OptionsFlowWithConfigEntry):
+    """Handle an options flow."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle options flow."""
+
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        data_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_MAX_ENTRIES,
+                    default=self.options.get(CONF_MAX_ENTRIES, DEFAULT_MAX_ENTRIES),
+                ): cv.positive_int,
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=data_schema)

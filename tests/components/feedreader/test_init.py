@@ -14,7 +14,7 @@ from homeassistant.components.feedreader.const import DOMAIN
 from homeassistant.core import Event, HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from . import async_setup_config_entry
+from . import async_setup_config_entry, create_mock_entry
 from .const import (
     URL,
     VALID_CONFIG_1,
@@ -23,7 +23,7 @@ from .const import (
     VALID_CONFIG_DEFAULT,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import async_fire_time_changed
 
 
 @pytest.mark.parametrize(
@@ -175,7 +175,7 @@ async def test_feed_updates(
         feed_two_event,
     ]
 
-    entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG_DEFAULT)
+    entry = create_mock_entry(VALID_CONFIG_DEFAULT)
     entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.feedreader.coordinator.feedparser.http.get",
@@ -280,7 +280,7 @@ async def test_feed_errors(
     feed_one_event,
 ) -> None:
     """Test feed errors."""
-    entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG_DEFAULT)
+    entry = create_mock_entry(VALID_CONFIG_DEFAULT)
     entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.feedreader.coordinator.feedparser.http.get"

@@ -85,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) -
     coordinator = FeedReaderCoordinator(
         hass,
         entry.data[CONF_URL],
-        entry.data[CONF_MAX_ENTRIES],
+        entry.options[CONF_MAX_ENTRIES],
         storage,
     )
 

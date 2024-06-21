@@ -3,23 +3,13 @@
     "step": {
       "user": {
         "data": {
-          "url": "[%key:common::config_flow::data::url%]",
-          "max_entries": "Maximum feed entries"
-        },
-        "data_description": {
-          "url": "[%key:common::config_flow::data::url%]",
-          "max_entries": "The maximum number of entries to extract from each feed."
+          "url": "[%key:common::config_flow::data::url%]"
         }
       },
       "reconfigure_confirm": {
         "description": "Update your configuration information for {name}.",
         "data": {
-          "url": "[%key:common::config_flow::data::url%]",
-          "max_entries": "[%key:component::feedreader::config::step::user::data::max_entries%]"
-        },
-        "data_description": {
-          "url": "[%key:common::config_flow::data::url%]",
-          "max_entries": "[%key:component::feedreader::config::step::user::data_description::max_entries%]"
+          "url": "[%key:common::config_flow::data::url%]"
         }
       }
     },
@@ -30,6 +20,18 @@
     "error": {
       "url_error": "The URL could not be opened.",
       "no_feed_entries": "The URL seems not to serve any feed entries."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "max_entries": "Maximum feed entries"
+        },
+        "data_description": {
+          "max_entries": "The maximum number of entries to extract from each feed."
+        }
+      }
     }
   },
   "issues": {

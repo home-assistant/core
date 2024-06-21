@@ -18,9 +18,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
+from . import create_mock_entry
 from .const import FEED_TITLE, URL, VALID_CONFIG_DEFAULT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="feedparser")
@@ -55,12 +54,12 @@ async def test_user(hass: HomeAssistant, feedparser, setup_entry) -> None:
 
     # success
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_URL: URL, CONF_MAX_ENTRIES: 5}
+        result["flow_id"], user_input={CONF_URL: URL}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == FEED_TITLE
     assert result["data"][CONF_URL] == URL
-    assert result["data"][CONF_MAX_ENTRIES] == 5
+    assert result["options"][CONF_MAX_ENTRIES] == DEFAULT_MAX_ENTRIES
 
 
 async def test_user_errors(
@@ -78,7 +77,7 @@ async def test_user_errors(
     feedparser.side_effect = urllib.error.URLError("Test")
     feedparser.return_value = None
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_URL: URL, CONF_MAX_ENTRIES: 5}
+        result["flow_id"], user_input={CONF_URL: URL}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -88,7 +87,7 @@ async def test_user_errors(
     feedparser.side_effect = None
     feedparser.return_value = None
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_URL: URL, CONF_MAX_ENTRIES: 5}
+        result["flow_id"], user_input={CONF_URL: URL}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -98,29 +97,46 @@ async def test_user_errors(
     feedparser.side_effect = None
     feedparser.return_value = feed_one_event
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_URL: URL, CONF_MAX_ENTRIES: 5}
+        result["flow_id"], user_input={CONF_URL: URL}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == FEED_TITLE
     assert result["data"][CONF_URL] == URL
-    assert result["data"][CONF_MAX_ENTRIES] == 5
+    assert result["options"][CONF_MAX_ENTRIES] == DEFAULT_MAX_ENTRIES
 
 
+@pytest.mark.parametrize(
+    ("data", "expected_data", "expected_options"),
+    [
+        ({CONF_URLS: [URL]}, {CONF_URL: URL}, {CONF_MAX_ENTRIES: DEFAULT_MAX_ENTRIES}),
+        (
+            {CONF_URLS: [URL], CONF_MAX_ENTRIES: 5},
+            {CONF_URL: URL},
+            {CONF_MAX_ENTRIES: 5},
+        ),
+    ],
+)
 async def test_import(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry, feedparser, setup_entry
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    data,
+    expected_data,
+    expected_options,
+    feedparser,
+    setup_entry,
 ) -> None:
     """Test starting an import flow."""
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert not config_entries
 
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_URLS: [URL]}})
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: data})
 
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert config_entries
     assert len(config_entries) == 1
     assert config_entries[0].title == FEED_TITLE
-    assert config_entries[0].data[CONF_URL] == URL
-    assert config_entries[0].data[CONF_MAX_ENTRIES] == DEFAULT_MAX_ENTRIES
+    assert config_entries[0].data == expected_data
+    assert config_entries[0].options == expected_options
 
     assert issue_registry.async_get_issue(HA_DOMAIN, "deprecated_yaml_feedreader")
 
@@ -163,7 +179,7 @@ async def test_import_errors(
 
 async def test_reconfigure(hass: HomeAssistant, feedparser) -> None:
     """Test starting a reconfigure flow."""
-    entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG_DEFAULT)
+    entry = create_mock_entry(VALID_CONFIG_DEFAULT)
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -188,14 +204,12 @@ async def test_reconfigure(hass: HomeAssistant, feedparser) -> None:
             result["flow_id"],
             user_input={
                 CONF_URL: "http://other.rss.local/rss_feed.xml",
-                CONF_MAX_ENTRIES: 10,
             },
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data == {
         CONF_URL: "http://other.rss.local/rss_feed.xml",
-        CONF_MAX_ENTRIES: 10,
     }
 
     await hass.async_block_till_done()
@@ -206,7 +220,7 @@ async def test_reconfigure_errors(
     hass: HomeAssistant, feedparser, setup_entry, feed_one_event
 ) -> None:
     """Test starting a reconfigure flow by user which results in an URL error."""
-    entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG_DEFAULT)
+    entry = create_mock_entry(VALID_CONFIG_DEFAULT)
     entry.add_to_hass(hass)
 
     # init user flow
@@ -228,7 +242,6 @@ async def test_reconfigure_errors(
         result["flow_id"],
         user_input={
             CONF_URL: "http://other.rss.local/rss_feed.xml",
-            CONF_MAX_ENTRIES: 10,
         },
     )
     assert result["type"] is FlowResultType.FORM
@@ -242,7 +255,6 @@ async def test_reconfigure_errors(
         result["flow_id"],
         user_input={
             CONF_URL: "http://other.rss.local/rss_feed.xml",
-            CONF_MAX_ENTRIES: 10,
         },
     )
     assert result["type"] is FlowResultType.FORM
@@ -258,12 +270,29 @@ async def test_reconfigure_errors(
         result["flow_id"],
         user_input={
             CONF_URL: "http://other.rss.local/rss_feed.xml",
-            CONF_MAX_ENTRIES: 10,
         },
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data == {
         CONF_URL: "http://other.rss.local/rss_feed.xml",
+    }
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test options flow."""
+    entry = create_mock_entry(VALID_CONFIG_DEFAULT)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_MAX_ENTRIES: 10,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
         CONF_MAX_ENTRIES: 10,
     }
