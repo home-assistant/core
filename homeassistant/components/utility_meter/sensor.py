@@ -57,7 +57,6 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
 from .const import (
-    ATTR_CRON_PATTERN,
     ATTR_NEXT_RESET,
     ATTR_VALUE,
     BIMONTHLY,
@@ -566,7 +565,7 @@ class UtilityMeterSensor(RestoreSensor):
     async def _program_reset(self):
         """Program the reset of the utility meter."""
         if self._cron_pattern is not None:
-            tz = dt_util.get_time_zone(self.hass.config.time_zone)
+            tz = dt_util.get_default_time_zone()
             self._next_reset = croniter(self._cron_pattern, dt_util.now(tz)).get_next(
                 datetime
             )  # we need timezone for DST purposes (see issue #102984)
@@ -740,15 +739,10 @@ class UtilityMeterSensor(RestoreSensor):
     def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         state_attr = {
-            ATTR_SOURCE_ID: self._sensor_source_id,
             ATTR_STATUS: PAUSED if self._collecting is None else COLLECTING,
             ATTR_LAST_PERIOD: str(self._last_period),
             ATTR_LAST_VALID_STATE: str(self._last_valid_state),
         }
-        if self._period is not None:
-            state_attr[ATTR_PERIOD] = self._period
-        if self._cron_pattern is not None:
-            state_attr[ATTR_CRON_PATTERN] = self._cron_pattern
         if self._tariff is not None:
             state_attr[ATTR_TARIFF] = self._tariff
         # last_reset in utility meter was used before last_reset was added for long term

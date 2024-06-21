@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_snapshot_number[number.test_mower_1_back_lawn_cutting_height-entry]
+# name: test_number_snapshot[number.test_mower_1_back_lawn_cutting_height-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -37,7 +37,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_snapshot_number[number.test_mower_1_back_lawn_cutting_height-state]
+# name: test_number_snapshot[number.test_mower_1_back_lawn_cutting_height-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 Back lawn cutting height',
@@ -55,7 +55,7 @@
     'state': '25',
   })
 # ---
-# name: test_snapshot_number[number.test_mower_1_cutting_height-entry]
+# name: test_number_snapshot[number.test_mower_1_cutting_height-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -93,7 +93,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_snapshot_number[number.test_mower_1_cutting_height-state]
+# name: test_number_snapshot[number.test_mower_1_cutting_height-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 Cutting height',
@@ -110,7 +110,7 @@
     'state': '4',
   })
 # ---
-# name: test_snapshot_number[number.test_mower_1_front_lawn_cutting_height-entry]
+# name: test_number_snapshot[number.test_mower_1_front_lawn_cutting_height-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -148,7 +148,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_snapshot_number[number.test_mower_1_front_lawn_cutting_height-state]
+# name: test_number_snapshot[number.test_mower_1_front_lawn_cutting_height-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 Front lawn cutting height',
@@ -166,7 +166,7 @@
     'state': '50',
   })
 # ---
-# name: test_snapshot_number[number.test_mower_1_my_lawn_cutting_height-entry]
+# name: test_number_snapshot[number.test_mower_1_my_lawn_cutting_height-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -204,7 +204,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_snapshot_number[number.test_mower_1_my_lawn_cutting_height-state]
+# name: test_number_snapshot[number.test_mower_1_my_lawn_cutting_height-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 My lawn cutting height ',

@@ -1,7 +1,9 @@
 """Tests for Kaleidescape config flow."""
 
 import dataclasses
-from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
+
+import pytest
 
 from homeassistant.components.kaleidescape.const import DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
@@ -11,12 +13,9 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_HOST, MOCK_SSDP_DISCOVERY_INFO
 
-from tests.common import MockConfigEntry
 
-
-async def test_user_config_flow_success(
-    hass: HomeAssistant, mock_device: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_device")
+async def test_user_config_flow_success(hass: HomeAssistant) -> None:
     """Test user config flow success."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -35,7 +34,7 @@ async def test_user_config_flow_success(
 
 
 async def test_user_config_flow_bad_connect_errors(
-    hass: HomeAssistant, mock_device: AsyncMock
+    hass: HomeAssistant, mock_device: MagicMock
 ) -> None:
     """Test errors when connection error occurs."""
     mock_device.connect.side_effect = ConnectionError
@@ -50,7 +49,7 @@ async def test_user_config_flow_bad_connect_errors(
 
 
 async def test_user_config_flow_unsupported_device_errors(
-    hass: HomeAssistant, mock_device: AsyncMock
+    hass: HomeAssistant, mock_device: MagicMock
 ) -> None:
     """Test errors when connecting to unsupported device."""
     mock_device.is_server_only = True
@@ -64,9 +63,8 @@ async def test_user_config_flow_unsupported_device_errors(
     assert result["errors"] == {"base": "unsupported"}
 
 
-async def test_user_config_flow_device_exists_abort(
-    hass: HomeAssistant, mock_device: AsyncMock, mock_integration: MockConfigEntry
-) -> None:
+@pytest.mark.usefixtures("mock_device", "mock_integration")
+async def test_user_config_flow_device_exists_abort(hass: HomeAssistant) -> None:
     """Test flow aborts when device already configured."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: MOCK_HOST}
@@ -75,9 +73,8 @@ async def test_user_config_flow_device_exists_abort(
     assert result["reason"] == "already_configured"
 
 
-async def test_ssdp_config_flow_success(
-    hass: HomeAssistant, mock_device: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_device")
+async def test_ssdp_config_flow_success(hass: HomeAssistant) -> None:
     """Test ssdp config flow success."""
     discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)
     result = await hass.config_entries.flow.async_init(
@@ -97,7 +94,7 @@ async def test_ssdp_config_flow_success(
 
 
 async def test_ssdp_config_flow_bad_connect_aborts(
-    hass: HomeAssistant, mock_device: AsyncMock
+    hass: HomeAssistant, mock_device: MagicMock
 ) -> None:
     """Test abort when connection error occurs."""
     mock_device.connect.side_effect = ConnectionError
@@ -112,7 +109,7 @@ async def test_ssdp_config_flow_bad_connect_aborts(
 
 
 async def test_ssdp_config_flow_unsupported_device_aborts(
-    hass: HomeAssistant, mock_device: AsyncMock
+    hass: HomeAssistant, mock_device: MagicMock
 ) -> None:
     """Test abort when connecting to unsupported device."""
     mock_device.is_server_only = True

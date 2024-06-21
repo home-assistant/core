@@ -27,6 +27,7 @@ from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
 from homeassistant.components import tag, zeroconf
+from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -77,6 +78,7 @@ from .voice_assistant import (
     VoiceAssistantAPIPipeline,
     VoiceAssistantPipeline,
     VoiceAssistantUDPPipeline,
+    handle_timer_event,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -515,6 +517,12 @@ class ESPHomeManager:
                     cli.subscribe_voice_assistant(
                         handle_start=self._handle_pipeline_start,
                         handle_stop=self._handle_pipeline_stop,
+                    )
+                )
+            if flags & VoiceAssistantFeature.TIMERS:
+                entry_data.disconnect_callbacks.add(
+                    async_register_timer_handler(
+                        hass, self.device_id, partial(handle_timer_event, cli)
                     )
                 )
 

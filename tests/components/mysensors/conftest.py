@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Callable, Generator
+from collections.abc import Callable
 from copy import deepcopy
 import json
 from typing import Any
@@ -12,6 +12,7 @@ from mysensors import BaseSyncGateway
 from mysensors.persistence import MySensorsJSONDecoder
 from mysensors.sensor import Sensor
 import pytest
+from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.components.mysensors.config_flow import DEFAULT_BAUD_RATE
@@ -36,7 +37,7 @@ def mock_mqtt_fixture(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture(name="is_serial_port")
-def is_serial_port_fixture() -> Generator[MagicMock, None, None]:
+def is_serial_port_fixture() -> Generator[MagicMock]:
     """Patch the serial port check."""
     with patch("homeassistant.components.mysensors.gateway.cv.isdevice") as is_device:
         is_device.side_effect = lambda device: device
@@ -53,7 +54,7 @@ def gateway_nodes_fixture() -> dict[int, Sensor]:
 async def serial_transport_fixture(
     gateway_nodes: dict[int, Sensor],
     is_serial_port: MagicMock,
-) -> AsyncGenerator[dict[int, Sensor], None]:
+) -> AsyncGenerator[dict[int, Sensor]]:
     """Mock a serial transport."""
     with (
         patch(
@@ -136,7 +137,7 @@ def config_entry_fixture(serial_entry: MockConfigEntry) -> MockConfigEntry:
 @pytest.fixture(name="integration")
 async def integration_fixture(
     hass: HomeAssistant, transport: MagicMock, config_entry: MockConfigEntry
-) -> AsyncGenerator[MockConfigEntry, None]:
+) -> AsyncGenerator[MockConfigEntry]:
     """Set up the mysensors integration with a config entry."""
     config: dict[str, Any] = {}
     config_entry.add_to_hass(hass)

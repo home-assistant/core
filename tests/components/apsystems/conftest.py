@@ -1,10 +1,10 @@
 """Common fixtures for the APsystems Local API tests."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from APsystemsEZ1 import ReturnDeviceInfo, ReturnOutputData
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.apsystems.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.apsystems.async_setup_entry",
