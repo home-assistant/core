@@ -53,7 +53,7 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_station"
             except MultipleWeatherStationsFound:
                 errors["base"] = "more_stations"
-            except Exception:  # pylint: disable=broad-exception-caught
+            except Exception:  # noqa: BLE001
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(
@@ -102,7 +102,7 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_station"
             except MultipleWeatherStationsFound:
                 errors["base"] = "more_stations"
-            except Exception:  # pylint: disable=broad-exception-caught
+            except Exception:  # noqa: BLE001
                 errors["base"] = "cannot_connect"
             else:
                 self.hass.config_entries.async_update_entry(

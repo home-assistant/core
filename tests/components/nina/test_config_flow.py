@@ -303,7 +303,9 @@ async def test_options_flow_unexpected_exception(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.ABORT
 
 
-async def test_options_flow_entity_removal(hass: HomeAssistant) -> None:
+async def test_options_flow_entity_removal(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test if old entities are removed."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -341,7 +343,6 @@ async def test_options_flow_entity_removal(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
-        entity_registry: er = er.async_get(hass)
         entries = er.async_entries_for_config_entry(
             entity_registry, config_entry.entry_id
         )

@@ -37,6 +37,7 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.VACUUM,
 ]
+type EcovacsConfigEntry = ConfigEntry[EcovacsController]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -50,21 +51,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EcovacsConfigEntry) -> bool:
     """Set up this integration using UI."""
     controller = EcovacsController(hass, entry.data)
     await controller.initialize()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = controller
+    async def on_unload() -> None:
+        await controller.teardown()
+
+    entry.async_on_unload(on_unload)
+    entry.runtime_data = controller
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EcovacsConfigEntry) -> bool:
     """Unload config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await hass.data[DOMAIN][entry.entry_id].teardown()
-        hass.data[DOMAIN].pop(entry.entry_id)
-    if not hass.data[DOMAIN]:
-        hass.data.pop(DOMAIN)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

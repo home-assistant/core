@@ -12,7 +12,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import CoreState, HomeAssistant, State
+from homeassistant.core import CoreState, HomeAssistant, ServiceCall, State
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, mock_component, mock_restore_cache
@@ -354,7 +354,7 @@ async def test_missing_off_does_not_create(hass: HomeAssistant) -> None:
     assert hass.states.async_all("switch") == []
 
 
-async def test_on_action(hass: HomeAssistant, calls) -> None:
+async def test_on_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test on action."""
     assert await async_setup_component(
         hass,
@@ -394,7 +394,9 @@ async def test_on_action(hass: HomeAssistant, calls) -> None:
     assert calls[-1].data["caller"] == "switch.test_template_switch"
 
 
-async def test_on_action_optimistic(hass: HomeAssistant, calls) -> None:
+async def test_on_action_optimistic(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test on action in optimistic mode."""
     assert await async_setup_component(
         hass,
@@ -435,7 +437,7 @@ async def test_on_action_optimistic(hass: HomeAssistant, calls) -> None:
     assert calls[-1].data["caller"] == "switch.test_template_switch"
 
 
-async def test_off_action(hass: HomeAssistant, calls) -> None:
+async def test_off_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test off action."""
     assert await async_setup_component(
         hass,
@@ -475,7 +477,9 @@ async def test_off_action(hass: HomeAssistant, calls) -> None:
     assert calls[-1].data["caller"] == "switch.test_template_switch"
 
 
-async def test_off_action_optimistic(hass: HomeAssistant, calls) -> None:
+async def test_off_action_optimistic(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test off action in optimistic mode."""
     assert await async_setup_component(
         hass,

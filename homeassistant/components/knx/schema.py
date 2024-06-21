@@ -37,6 +37,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PAYLOAD,
     CONF_TYPE,
+    CONF_VALUE_TEMPLATE,
     Platform,
 )
 import homeassistant.helpers.config_validation as cv
@@ -559,6 +560,7 @@ class ExposeSchema(KNXPlatformSchema):
             vol.Required(CONF_ENTITY_ID): cv.entity_id,
             vol.Optional(CONF_KNX_EXPOSE_ATTRIBUTE): cv.string,
             vol.Optional(CONF_KNX_EXPOSE_DEFAULT): cv.match_all,
+            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         }
     )
     ENTITY_SCHEMA = vol.Any(EXPOSE_SENSOR_SCHEMA, EXPOSE_TIME_SCHEMA)
@@ -750,6 +752,7 @@ class NotifySchema(KNXPlatformSchema):
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_TYPE, default="latin_1"): string_type_validator,
             vol.Required(KNX_ADDRESS): ga_validator,
+            vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
         }
     )
 

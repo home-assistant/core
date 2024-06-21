@@ -18,3 +18,5 @@ class EventType(str, Generic[_DataT]):
 
     At runtime this is a generic subclass of str.
     """
+
+    __slots__ = ()

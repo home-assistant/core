@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any, TypedDict, TypeVar
+from typing import Any, TypedDict, cast
 
 from pydeconz.interfaces.groups import GroupHandler
 from pydeconz.interfaces.lights import LightHandler
-from pydeconz.models import ResourceType
 from pydeconz.models.event import EventType
-from pydeconz.models.group import Group
+from pydeconz.models.group import Group, TypedGroupAction
 from pydeconz.models.light.light import Light, LightAlert, LightColorMode, LightEffect
 
 from homeassistant.components.light import (
@@ -29,7 +28,6 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import color_hs_to_xy
@@ -88,8 +86,6 @@ XMAS_LIGHT_EFFECTS = [
     "waves",
 ]
 
-_LightDeviceT = TypeVar("_LightDeviceT", bound=Group | Light)
-
 
 class SetStateAttributes(TypedDict, total=False):
     """Attributes available with set state call."""
@@ -105,6 +101,23 @@ class SetStateAttributes(TypedDict, total=False):
     xy: tuple[float, float]
 
 
+def update_color_state(
+    group: Group, lights: list[Light], override: bool = False
+) -> None:
+    """Sync group color state with light."""
+    data = {
+        attribute: light_attribute
+        for light in lights
+        for attribute in ("bri", "ct", "hue", "sat", "xy", "colormode", "effect")
+        if (light_attribute := light.raw["state"].get(attribute)) is not None
+    }
+
+    if override:
+        group.raw["action"] = cast(TypedGroupAction, data)
+    else:
+        group.update(cast(dict[str, dict[str, Any]], {"action": data}))
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -113,17 +126,6 @@ async def async_setup_entry(
     """Set up the deCONZ lights and groups from a config entry."""
     hub = DeconzHub.get_hub(hass, config_entry)
     hub.entities[DOMAIN] = set()
-
-    entity_registry = er.async_get(hass)
-
-    # On/Off Output should be switch not light 2022.5
-    for light in hub.api.lights.lights.values():
-        if light.type == ResourceType.ON_OFF_OUTPUT.value and (
-            entity_id := entity_registry.async_get_entity_id(
-                DOMAIN, DECONZ_DOMAIN, light.unique_id
-            )
-        ):
-            entity_registry.async_remove(entity_id)
 
     @callback
     def async_add_light(_: EventType, light_id: str) -> None:
@@ -148,11 +150,12 @@ async def async_setup_entry(
         if (group := hub.api.groups[group_id]) and not group.lights:
             return
 
-        first = True
-        for light_id in group.lights:
-            if (light := hub.api.lights.lights.get(light_id)) and light.reachable:
-                group.update_color_state(light, update_all_attributes=first)
-                first = False
+        lights = [
+            light
+            for light_id in group.lights
+            if (light := hub.api.lights.lights.get(light_id)) and light.reachable
+        ]
+        update_color_state(group, lights, True)
 
         async_add_entities([DeconzGroup(group, hub)])
 
@@ -162,7 +165,9 @@ async def async_setup_entry(
     )
 
 
-class DeconzBaseLight(DeconzDevice[_LightDeviceT], LightEntity):
+class DeconzBaseLight[_LightDeviceT: Group | Light](
+    DeconzDevice[_LightDeviceT], LightEntity
+):
     """Representation of a deCONZ light."""
 
     TYPE = DOMAIN
@@ -326,7 +331,7 @@ class DeconzLight(DeconzBaseLight[Light]):
         if self._device.reachable and "attr" not in self._device.changed_keys:
             for group in self.hub.api.groups.values():
                 if self._device.resource_id in group.lights:
-                    group.update_color_state(self._device)
+                    update_color_state(group, [self._device])
 
 
 class DeconzGroup(DeconzBaseLight[Group]):

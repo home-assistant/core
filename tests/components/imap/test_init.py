@@ -11,7 +11,7 @@ import pytest
 from homeassistant.components.imap import DOMAIN
 from homeassistant.components.imap.const import CONF_CHARSET
 from homeassistant.components.imap.errors import InvalidAuth, InvalidFolder
-from homeassistant.components.sensor.const import SensorStateClass
+from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -29,6 +29,7 @@ from .const import (
     TEST_FETCH_RESPONSE_MULTIPART,
     TEST_FETCH_RESPONSE_MULTIPART_BASE64,
     TEST_FETCH_RESPONSE_MULTIPART_BASE64_INVALID,
+    TEST_FETCH_RESPONSE_MULTIPART_EMPTY_PLAIN,
     TEST_FETCH_RESPONSE_NO_SUBJECT_TO_FROM,
     TEST_FETCH_RESPONSE_TEXT_BARE,
     TEST_FETCH_RESPONSE_TEXT_OTHER,
@@ -76,7 +77,7 @@ async def test_entry_startup_and_unload(
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert await config_entry.async_unload(hass)
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -116,6 +117,7 @@ async def test_entry_startup_fails(
         (TEST_FETCH_RESPONSE_TEXT_OTHER, True),
         (TEST_FETCH_RESPONSE_HTML, True),
         (TEST_FETCH_RESPONSE_MULTIPART, True),
+        (TEST_FETCH_RESPONSE_MULTIPART_EMPTY_PLAIN, True),
         (TEST_FETCH_RESPONSE_MULTIPART_BASE64, True),
         (TEST_FETCH_RESPONSE_BINARY, True),
     ],
@@ -129,6 +131,7 @@ async def test_entry_startup_fails(
         "other",
         "html",
         "multipart",
+        "multipart_empty_plain",
         "multipart_base64",
         "binary",
     ],
@@ -449,7 +452,7 @@ async def test_handle_cleanup_exception(
     # Fail cleaning up
     mock_imap_protocol.close.side_effect = imap_close
 
-    assert await config_entry.async_unload(hass)
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert "Error while cleaning up imap connection" in caplog.text
 
@@ -672,6 +675,41 @@ async def test_message_is_truncated(
 
     event_data = event_called[0].data
     assert len(event_data["text"]) == 3
+
+
+@pytest.mark.parametrize("imap_search", [TEST_SEARCH_RESPONSE])
+@pytest.mark.parametrize(
+    "imap_fetch", [(TEST_FETCH_RESPONSE_TEXT_PLAIN)], ids=["plain"]
+)
+@pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
+@pytest.mark.parametrize("event_message_data", [[], ["text"], ["text", "headers"]])
+async def test_message_data(
+    hass: HomeAssistant,
+    mock_imap_protocol: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    event_message_data: list,
+) -> None:
+    """Test with different message data."""
+    event_called = async_capture_events(hass, "imap_content")
+
+    config = MOCK_CONFIG.copy()
+    # Mock different message data
+    config["event_message_data"] = event_message_data
+    config_entry = MockConfigEntry(domain=DOMAIN, data=config)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    # Make sure we have had one update (when polling)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.imap_email_email_com")
+    # We should have received one message
+    assert state is not None
+    assert state.state == "1"
+    assert len(event_called) == 1
+
+    event_data = event_called[0].data
+    assert set(event_message_data).issubset(set(event_data))
 
 
 @pytest.mark.parametrize(

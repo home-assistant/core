@@ -7,7 +7,7 @@ import asyncio
 import threading
 
 from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
-from homeassistant.components.wemo import wemo_device
+from homeassistant.components.wemo.coordinator import async_get_coordinator
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -94,7 +94,7 @@ async def test_async_update_locked_callback_and_update(
     When a state update is received via a callback from the device at the same time
     as hass is calling `async_update`, verify that only one of the updates proceeds.
     """
-    coordinator = wemo_device.async_get_coordinator(hass, wemo_entity.device_id)
+    coordinator = async_get_coordinator(hass, wemo_entity.device_id)
     await async_setup_component(hass, HA_DOMAIN, {})
     callback = _perform_registry_callback(coordinator)
     update = _perform_async_update(coordinator)
@@ -105,7 +105,7 @@ async def test_async_update_locked_multiple_updates(
     hass: HomeAssistant, pywemo_device, wemo_entity
 ) -> None:
     """Test that two hass async_update state updates do not proceed at the same time."""
-    coordinator = wemo_device.async_get_coordinator(hass, wemo_entity.device_id)
+    coordinator = async_get_coordinator(hass, wemo_entity.device_id)
     await async_setup_component(hass, HA_DOMAIN, {})
     update = _perform_async_update(coordinator)
     await _async_multiple_call_helper(hass, pywemo_device, update, update)
@@ -115,7 +115,7 @@ async def test_async_update_locked_multiple_callbacks(
     hass: HomeAssistant, pywemo_device, wemo_entity
 ) -> None:
     """Test that two device callback state updates do not proceed at the same time."""
-    coordinator = wemo_device.async_get_coordinator(hass, wemo_entity.device_id)
+    coordinator = async_get_coordinator(hass, wemo_entity.device_id)
     await async_setup_component(hass, HA_DOMAIN, {})
     callback = _perform_registry_callback(coordinator)
     await _async_multiple_call_helper(hass, pywemo_device, callback, callback)

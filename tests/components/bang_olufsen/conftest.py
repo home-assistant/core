@@ -1,7 +1,7 @@
 """Test fixtures for bang_olufsen."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from mozart_api.models import BeolinkPeer
 import pytest
@@ -31,7 +31,7 @@ def mock_config_entry():
 
 
 @pytest.fixture
-def mock_mozart_client() -> Generator[AsyncMock, None, None]:
+def mock_mozart_client() -> Generator[AsyncMock]:
     """Mock MozartClient."""
 
     with (
@@ -44,10 +44,19 @@ def mock_mozart_client() -> Generator[AsyncMock, None, None]:
         ),
     ):
         client = mock_client.return_value
+
+        # REST API client methods
         client.get_beolink_self = AsyncMock()
         client.get_beolink_self.return_value = BeolinkPeer(
             friendly_name=TEST_FRIENDLY_NAME, jid=TEST_JID_1
         )
+
+        # Non-REST API client methods
+        client.check_device_connection = AsyncMock()
+        client.close_api_client = AsyncMock()
+        client.connect_notifications = AsyncMock()
+        client.disconnect_notifications = Mock()
+
         yield client
 
 

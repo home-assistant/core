@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
+    UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -31,6 +32,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import unit_conversion
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
     DurationConverter,
@@ -57,6 +59,7 @@ INVALID_SYMBOL = "bob"
 _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
     converter: sorted(converter.VALID_UNITS, key=lambda x: (x is None, x))
     for converter in (
+        ConductivityConverter,
         DataRateConverter,
         DistanceConverter,
         DurationConverter,
@@ -77,6 +80,11 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
 
 # Dict containing all converters with a corresponding unit ratio.
 _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, float]] = {
+    ConductivityConverter: (
+        UnitOfConductivity.MICROSIEMENS,
+        UnitOfConductivity.MILLISIEMENS,
+        1000,
+    ),
     DataRateConverter: (
         UnitOfDataRate.BITS_PER_SECOND,
         UnitOfDataRate.BYTES_PER_SECOND,
@@ -122,6 +130,14 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
 _CONVERTED_VALUE: dict[
     type[BaseUnitConverter], list[tuple[float, str | None, float, str | None]]
 ] = {
+    ConductivityConverter: [
+        (5, UnitOfConductivity.SIEMENS, 5e3, UnitOfConductivity.MILLISIEMENS),
+        (5, UnitOfConductivity.SIEMENS, 5e6, UnitOfConductivity.MICROSIEMENS),
+        (5, UnitOfConductivity.MILLISIEMENS, 5e3, UnitOfConductivity.MICROSIEMENS),
+        (5, UnitOfConductivity.MILLISIEMENS, 5e-3, UnitOfConductivity.SIEMENS),
+        (5e6, UnitOfConductivity.MICROSIEMENS, 5e3, UnitOfConductivity.MILLISIEMENS),
+        (5e6, UnitOfConductivity.MICROSIEMENS, 5, UnitOfConductivity.SIEMENS),
+    ],
     DataRateConverter: [
         (8e3, UnitOfDataRate.BITS_PER_SECOND, 8, UnitOfDataRate.KILOBITS_PER_SECOND),
         (8e6, UnitOfDataRate.BITS_PER_SECOND, 8, UnitOfDataRate.MEGABITS_PER_SECOND),

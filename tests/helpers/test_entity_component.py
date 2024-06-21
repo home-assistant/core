@@ -3,6 +3,7 @@
 from collections import OrderedDict
 from datetime import timedelta
 import logging
+import re
 from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun import freeze_time
@@ -51,7 +52,7 @@ async def test_setup_loads_platforms(hass: HomeAssistant) -> None:
     mock_integration(hass, MockModule("test_component", setup=component_setup))
     # mock the dependencies
     mock_integration(hass, MockModule("mod2", dependencies=["test_component"]))
-    mock_platform(hass, "mod2.test_domain", MockPlatform(platform_setup))
+    mock_platform(hass, "mod2.test_domain", MockPlatform(setup_platform=platform_setup))
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -70,8 +71,12 @@ async def test_setup_recovers_when_setup_raises(hass: HomeAssistant) -> None:
     platform1_setup = Mock(side_effect=Exception("Broken"))
     platform2_setup = Mock(return_value=None)
 
-    mock_platform(hass, "mod1.test_domain", MockPlatform(platform1_setup))
-    mock_platform(hass, "mod2.test_domain", MockPlatform(platform2_setup))
+    mock_platform(
+        hass, "mod1.test_domain", MockPlatform(setup_platform=platform1_setup)
+    )
+    mock_platform(
+        hass, "mod2.test_domain", MockPlatform(setup_platform=platform2_setup)
+    )
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -115,10 +120,7 @@ async def test_setup_does_discovery(
     assert ("platform_test", {}, {"msg": "discovery_info"}) == mock_setup.call_args[0]
 
 
-@patch("homeassistant.helpers.entity_platform.async_track_time_interval")
-async def test_set_scan_interval_via_config(
-    mock_track: Mock, hass: HomeAssistant
-) -> None:
+async def test_set_scan_interval_via_config(hass: HomeAssistant) -> None:
     """Test the setting of the scan interval via configuration."""
 
     def platform_setup(
@@ -130,17 +132,20 @@ async def test_set_scan_interval_via_config(
         """Test the platform setup."""
         add_entities([MockEntity(should_poll=True)])
 
-    mock_platform(hass, "platform.test_domain", MockPlatform(platform_setup))
+    mock_platform(
+        hass, "platform.test_domain", MockPlatform(setup_platform=platform_setup)
+    )
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    component.setup(
-        {DOMAIN: {"platform": "platform", "scan_interval": timedelta(seconds=30)}}
-    )
+    with patch.object(hass.loop, "call_later") as mock_track:
+        component.setup(
+            {DOMAIN: {"platform": "platform", "scan_interval": timedelta(seconds=30)}}
+        )
 
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
     assert mock_track.called
-    assert timedelta(seconds=30) == mock_track.call_args[0][2]
+    assert mock_track.call_args[0][0] == 30.0
 
 
 async def test_set_entity_namespace_via_config(hass: HomeAssistant) -> None:
@@ -155,7 +160,7 @@ async def test_set_entity_namespace_via_config(hass: HomeAssistant) -> None:
         """Test the platform setup."""
         add_entities([MockEntity(name="beer"), MockEntity(name=None)])
 
-    platform = MockPlatform(platform_setup)
+    platform = MockPlatform(setup_platform=platform_setup)
 
     mock_platform(hass, "platform.test_domain", platform)
 
@@ -205,7 +210,9 @@ async def test_platform_not_ready(hass: HomeAssistant) -> None:
     """Test that we retry when platform not ready."""
     platform1_setup = Mock(side_effect=[PlatformNotReady, PlatformNotReady, None])
     mock_integration(hass, MockModule("mod1"))
-    mock_platform(hass, "mod1.test_domain", MockPlatform(platform1_setup))
+    mock_platform(
+        hass, "mod1.test_domain", MockPlatform(setup_platform=platform1_setup)
+    )
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -365,7 +372,13 @@ async def test_setup_entry_fails_duplicate(hass: HomeAssistant) -> None:
 
     assert await component.async_setup_entry(entry)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            f"Config entry Mock Title ({entry.entry_id}) for "
+            "entry_domain.test_domain has already been setup!"
+        ),
+    ):
         await component.async_setup_entry(entry)
 
 
@@ -505,7 +518,7 @@ async def test_register_entity_service(hass: HomeAssistant) -> None:
             {"entity_id": entity.entity_id, "invalid": "data"},
             blocking=True,
         )
-        assert len(calls) == 0
+    assert len(calls) == 0
 
     await hass.services.async_call(
         DOMAIN, "hello", {"entity_id": entity.entity_id, "some": "data"}, blocking=True
@@ -673,7 +686,9 @@ async def test_platforms_shutdown_on_stop(hass: HomeAssistant) -> None:
     """Test that we shutdown platforms on stop."""
     platform1_setup = Mock(side_effect=[PlatformNotReady, PlatformNotReady, None])
     mock_integration(hass, MockModule("mod1"))
-    mock_platform(hass, "mod1.test_domain", MockPlatform(platform1_setup))
+    mock_platform(
+        hass, "mod1.test_domain", MockPlatform(setup_platform=platform1_setup)
+    )
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 

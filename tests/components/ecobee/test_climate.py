@@ -18,8 +18,8 @@ from homeassistant.components.ecobee.climate import (
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_OFF
 from homeassistant.core import HomeAssistant
 
-from tests.components.ecobee import GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP
-from tests.components.ecobee.common import setup_platform
+from . import GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP
+from .common import setup_platform
 
 ENTITY_ID = "climate.ecobee"
 
@@ -372,13 +372,10 @@ async def test_hold_preference(ecobee_fixture, thermostat) -> None:
     """Test hold preference."""
     ecobee_fixture["settings"]["holdAction"] = "indefinite"
     assert thermostat.hold_preference() == "indefinite"
-    for action in ["useEndTime2hour", "useEndTime4hour"]:
+    for action in ("useEndTime2hour", "useEndTime4hour"):
         ecobee_fixture["settings"]["holdAction"] = action
         assert thermostat.hold_preference() == "holdHours"
-    for action in [
-        "nextPeriod",
-        "askMe",
-    ]:
+    for action in ("nextPeriod", "askMe"):
         ecobee_fixture["settings"]["holdAction"] = action
         assert thermostat.hold_preference() == "nextTransition"
 
@@ -389,11 +386,7 @@ def test_hold_hours(ecobee_fixture, thermostat) -> None:
     assert thermostat.hold_hours() == 2
     ecobee_fixture["settings"]["holdAction"] = "useEndTime4hour"
     assert thermostat.hold_hours() == 4
-    for action in [
-        "nextPeriod",
-        "indefinite",
-        "askMe",
-    ]:
+    for action in ("nextPeriod", "indefinite", "askMe"):
         ecobee_fixture["settings"]["holdAction"] = action
         assert thermostat.hold_hours() is None
 
@@ -450,7 +443,7 @@ async def test_preset_indefinite_away(ecobee_fixture, thermostat) -> None:
     """Test indefinite away showing correctly, and not as temporary away."""
     ecobee_fixture["program"]["currentClimateRef"] = "away"
     ecobee_fixture["events"][0]["holdClimateRef"] = "away"
-    assert thermostat.preset_mode == "Away"
+    assert thermostat.preset_mode == "away"
 
     ecobee_fixture["events"][0]["endDate"] = "2999-01-01"
     assert thermostat.preset_mode == PRESET_AWAY_INDEFINITELY

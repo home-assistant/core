@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 import urllib
 import zoneinfo
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from todoist_api_python.models import Due
 
@@ -42,9 +43,9 @@ def platforms() -> list[Platform]:
 
 
 @pytest.fixture(autouse=True)
-def set_time_zone(hass: HomeAssistant):
+async def set_time_zone(hass: HomeAssistant):
     """Set the time zone for the tests."""
-    hass.config.set_time_zone(TZ_NAME)
+    await hass.config.async_set_time_zone(TZ_NAME)
 
 
 def get_events_url(entity: str, start: str, end: str) -> str:
@@ -146,6 +147,7 @@ async def test_update_entity_for_custom_project_no_due_date_on(
 )
 async def test_update_entity_for_calendar_with_due_date_in_the_future(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     api: AsyncMock,
 ) -> None:
     """Test that a task with a due date in the future has on state and correct end_time."""

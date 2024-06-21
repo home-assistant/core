@@ -228,7 +228,6 @@ async def ssdp_no_discovery():
 @pytest.fixture
 async def mock_config_entry(
     hass: HomeAssistant,
-    mock_get_source_ip,
     ssdp_instant_discovery,
     mock_igd_device: IgdDevice,
     mock_mac_address_from_host,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Generator
+from collections.abc import Awaitable, Callable, Coroutine
 from datetime import datetime, timedelta
 import logging
 from random import randint
@@ -14,7 +14,7 @@ import urllib.error
 
 import aiohttp
 import requests
-from typing_extensions import TypeVar
+from typing_extensions import Generator, TypeVar
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -33,9 +33,6 @@ REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
 _DataT = TypeVar("_DataT", default=dict[str, Any])
-_BaseDataUpdateCoordinatorT = TypeVar(
-    "_BaseDataUpdateCoordinatorT", bound="BaseDataUpdateCoordinatorProtocol"
-)
 _DataUpdateCoordinatorT = TypeVar(
     "_DataUpdateCoordinatorT",
     bound="DataUpdateCoordinator[Any]",
@@ -136,7 +133,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             await self.async_shutdown()
 
         self._unsub_shutdown = self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _on_hass_stop, run_immediately=True
+            EVENT_HOMEASSISTANT_STOP, _on_hass_stop
         )
 
     @callback
@@ -180,7 +177,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._async_unsub_refresh()
         self._debounced_refresh.async_cancel()
 
-    def async_contexts(self) -> Generator[Any, None, None]:
+    def async_contexts(self) -> Generator[Any]:
         """Return all registered contexts."""
         yield from (
             context for _, context in self._listeners.values() if context is not None
@@ -380,7 +377,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             self.last_exception = err
             raise
 
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:
             self.last_exception = err
             self.last_update_success = False
             self.logger.exception("Unexpected error fetching %s data", self.name)
@@ -401,6 +398,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             if not auth_failed and self._listeners and not self.hass.is_stopping:
                 self._schedule_refresh()
 
+        self._async_refresh_finished()
+
         if not self.last_update_success and not previous_update_success:
             return
 
@@ -410,6 +409,15 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             or previous_data != self.data
         ):
             self.async_update_listeners()
+
+    @callback
+    def _async_refresh_finished(self) -> None:
+        """Handle when a refresh has finished.
+
+        Called when refresh is finished before listeners are updated.
+
+        To be overridden by subclasses.
+        """
 
     @callback
     def async_set_update_error(self, err: Exception) -> None:
@@ -444,25 +452,16 @@ class TimestampDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
 
     last_update_success_time: datetime | None = None
 
-    async def _async_refresh(
-        self,
-        log_failures: bool = True,
-        raise_on_auth_failed: bool = False,
-        scheduled: bool = False,
-        raise_on_entry_error: bool = False,
-    ) -> None:
-        """Refresh data."""
-        await super()._async_refresh(
-            log_failures,
-            raise_on_auth_failed,
-            scheduled,
-            raise_on_entry_error,
-        )
+    @callback
+    def _async_refresh_finished(self) -> None:
+        """Handle when a refresh has finished."""
         if self.last_update_success:
             self.last_update_success_time = utcnow()
 
 
-class BaseCoordinatorEntity(entity.Entity, Generic[_BaseDataUpdateCoordinatorT]):
+class BaseCoordinatorEntity[
+    _BaseDataUpdateCoordinatorT: BaseDataUpdateCoordinatorProtocol
+](entity.Entity):
     """Base class for all Coordinator entities."""
 
     def __init__(

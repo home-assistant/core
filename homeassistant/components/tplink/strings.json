@@ -184,5 +184,16 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "device_timeout": {
+      "message": "Timeout communicating with the device {func}: {exc}"
+    },
+    "device_error": {
+      "message": "Unable to communicate with the device {func}: {exc}"
+    },
+    "device_authentication": {
+      "message": "Device authentication error {func}: {exc}"
+    }
   }
 }

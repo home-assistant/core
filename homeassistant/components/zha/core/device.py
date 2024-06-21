@@ -619,7 +619,7 @@ class ZHADevice(LogMixin):
         for endpoint in self._endpoints.values():
             try:
                 await endpoint.async_initialize(from_cache)
-            except Exception:  # pylint: disable=broad-exception-caught
+            except Exception:  # noqa: BLE001
                 self.debug("Failed to initialize endpoint", exc_info=True)
 
         self.debug("power source: %s", self.power_source)
@@ -996,7 +996,7 @@ class ZHADevice(LogMixin):
                     )
                 )
         res = await asyncio.gather(*(t[0] for t in tasks), return_exceptions=True)
-        for outcome, log_msg in zip(res, tasks):
+        for outcome, log_msg in zip(res, tasks, strict=False):
             if isinstance(outcome, Exception):
                 fmt = f"{log_msg[1]} failed: %s"
             else:
