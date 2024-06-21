@@ -76,6 +76,7 @@ class TOTPSensor(SensorEntity):
     def __init__(self, name: str, token: str) -> None:
         """Initialize the sensor."""
         self._attr_name = name
+        self._attr_unique_id = token
         self._otp = pyotp.TOTP(token)
 
     async def async_added_to_hass(self) -> None:
