@@ -37,8 +37,8 @@ env:
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 8
   HA_SHORT_VERSION: "2024.7"
-  DEFAULT_PYTHON: "3.12.3"
-  ALL_PYTHON_VERSIONS: "['3.12.3']"
+  DEFAULT_PYTHON: "3.12"
+  ALL_PYTHON_VERSIONS: "['3.12']"
   # 10.3 is the oldest supported version
   # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
   # 10.6 is the current long-term-support
@@ -619,6 +619,51 @@ jobs:
           . venv/bin/activate
           python --version
           pylint --ignore-missing-annotations=y homeassistant/components/${{ needs.info.outputs.integrations_glob }}
+
+  pylint-tests:
+    name: Check pylint on tests
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    if: |
+      (github.event.inputs.mypy-only != 'true' || github.event.inputs.pylint-only == 'true')
+      && (needs.info.outputs.tests_glob || needs.info.outputs.test_full_suite == 'true')
+    needs:
+      - info
+      - base
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v4.1.7
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        id: python
+        uses: actions/setup-python@v5.1.0
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+          check-latest: true
+      - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
+        id: cache-venv
+        uses: actions/cache/restore@v4.0.2
+        with:
+          path: venv
+          fail-on-cache-miss: true
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
+      - name: Register pylint problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/pylint.json"
+      - name: Run pylint (fully)
+        if: needs.info.outputs.test_full_suite == 'true'
+        run: |
+          . venv/bin/activate
+          python --version
+          pylint --ignore-missing-annotations=y tests
+      - name: Run pylint (partially)
+        if: needs.info.outputs.test_full_suite == 'false'
+        shell: bash
+        run: |
+          . venv/bin/activate
+          python --version
+          pylint --ignore-missing-annotations=y tests/components/${{ needs.info.outputs.tests_glob }}
 
   mypy:
     name: Check mypy
