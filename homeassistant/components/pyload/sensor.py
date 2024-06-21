@@ -136,15 +136,9 @@ class PyLoadSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Update state of sensor."""
+        start = monotonic()
         try:
-            start = monotonic()
             status = await self.api.get_status()
-            self.data = status.to_dict()
-
-            _LOGGER.debug(
-                "Finished fetching pyload data in %.3f seconds",
-                monotonic() - start,
-            )
         except InvalidAuth:
             _LOGGER.info("Authentication failed, trying to reauthenticate")
             try:
@@ -172,6 +166,12 @@ class PyLoadSensor(SensorEntity):
             _LOGGER.error("Unable to parse data from pyLoad API")
             self._attr_available = False
             return
+        else:
+            self.data = status.to_dict()
+            _LOGGER.debug(
+                "Finished fetching pyload data in %.3f seconds",
+                monotonic() - start,
+            )
 
         self._attr_available = True
 
