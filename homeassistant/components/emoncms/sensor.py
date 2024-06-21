@@ -25,6 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import template
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -87,7 +88,7 @@ async def async_setup_platform(
     if value_template is not None:
         value_template.hass = hass
 
-    emoncms_client = EmoncmsClient(url, apikey)
+    emoncms_client = EmoncmsClient(url, apikey, session=async_get_clientsession(hass))
     elems = await emoncms_client.async_list_feeds()
 
     if elems is None:
