@@ -49,8 +49,6 @@ async def async_setup_entry(
 class MatterEventEntity(MatterEntity, EventEntity):
     """Representation of a Matter Event entity."""
 
-    _attr_translation_key = "push"
-
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the entity."""
         super().__init__(*args, **kwargs)
@@ -107,7 +105,9 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.EVENT,
         entity_description=EventEntityDescription(
-            key="GenericSwitch", device_class=EventDeviceClass.BUTTON, name=None
+            key="GenericSwitch",
+            device_class=EventDeviceClass.BUTTON,
+            translation_key="push",
         ),
         entity_class=MatterEventEntity,
         required_attributes=(

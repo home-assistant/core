@@ -45,8 +45,19 @@
     }
   },
   "entity": {
+    "climate": {
+      "thermostat": {
+        "name": "Thermostat"
+      }
+    },
+    "cover": {
+      "cover": {
+        "name": "[%key:component::cover::title%]"
+      }
+    },
     "event": {
       "push": {
+        "name": "[%key:component::event::title%]",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -96,6 +107,11 @@
     "light": {
       "light": {
         "name": "[%key:component::light::title%]"
+      }
+    },
+    "lock": {
+      "lock": {
+        "name": "[%key:component::lock::title%]"
       }
     },
     "sensor": {

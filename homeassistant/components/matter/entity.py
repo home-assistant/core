@@ -44,6 +44,7 @@ class MatterEntity(Entity):
     """Entity class for Matter devices."""
 
     _attr_has_entity_name = True
+    _name_postfix: str | None = None
 
     def __init__(
         self,
@@ -75,15 +76,14 @@ class MatterEntity(Entity):
         )
         self._attr_available = self._endpoint.node.available
         # mark endpoint postfix if the device has the primary attribute on multiple endpoints
-        self._require_name_postfix = not self._endpoint.node.is_bridge_device and any(
+        if not self._endpoint.node.is_bridge_device and any(
             ep
             for ep in self._endpoint.node.endpoints.values()
             if ep != self._endpoint
             and ep.has_attribute(None, entity_info.primary_attribute)
-        )
-        if self._require_name_postfix:
-            self._attr_has_entity_name = True
-            # entity_info.entity_description.has_entity_name = True
+        ):
+            self._name_postfix = str(self._endpoint.endpoint_id)
+
         # prefer the label attribute for the entity name
         # Matter has a way for users and/or vendors to specify a name for an endpoint
         # which is always preferred over a standard HA (generated) name
@@ -98,9 +98,9 @@ class MatterEntity(Entity):
                     continue
                 # fixed or user label found: use it
                 label_value: str = label.value
-                # in the case the label is only the label id, prettify it a bit
-                if label.label == "Button" and label_value.isnumeric():
-                    self._attr_name = f"Button {label_value}"
+                # in the case the label is only the label id, use it as postfix only
+                if label_value.isnumeric():
+                    self._name_postfix = label_value
                 else:
                     self._attr_name = label_value
                 break
@@ -142,11 +142,11 @@ class MatterEntity(Entity):
     def name(self) -> str | UndefinedType | None:
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
-            # always prefer the label attribute for the entity name
+            # an explicit entity name was defined, we use that
             return self._attr_name
         name = super().name
-        if name and self._require_name_postfix:
-            name = f"{name} ({self._endpoint.endpoint_id})"
+        if name and self._name_postfix:
+            name = f"{name} ({self._name_postfix})"
         return name
 
     @callback
