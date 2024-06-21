@@ -626,6 +626,93 @@ async def test_camera_update_license_plate(
     assert state.state == "none"
 
 
+async def test_camera_update_license_plate_changes_number_during_detect(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera, fixed_now: datetime
+) -> None:
+    """Test license plate sensor that changes number during detect."""
+
+    camera.feature_flags.smart_detect_types.append(SmartDetectObjectType.LICENSE_PLATE)
+    camera.feature_flags.has_smart_detect = True
+    camera.smart_detect_settings.object_types.append(
+        SmartDetectObjectType.LICENSE_PLATE
+    )
+
+    await init_entry(hass, ufp, [camera])
+    assert_entity_counts(hass, Platform.SENSOR, 23, 13)
+
+    _, entity_id = ids_from_device_description(
+        Platform.SENSOR, camera, LICENSE_PLATE_EVENT_SENSORS[0]
+    )
+
+    event_metadata = EventMetadata(
+        license_plate=LicensePlateMetadata(name="ABCD1234", confidence_level=95)
+    )
+    event = Event(
+        model=ModelType.EVENT,
+        id="test_event_id",
+        type=EventType.SMART_DETECT,
+        start=fixed_now - timedelta(seconds=1),
+        end=None,
+        score=100,
+        smart_detect_types=[SmartDetectObjectType.LICENSE_PLATE],
+        smart_detect_event_ids=[],
+        metadata=event_metadata,
+        api=ufp.api,
+    )
+
+    new_camera = camera.copy()
+    new_camera.is_smart_detected = True
+    new_camera.last_smart_detect_event_ids[SmartDetectObjectType.LICENSE_PLATE] = (
+        event.id
+    )
+
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = new_camera
+
+    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
+    ufp.api.bootstrap.events = {event.id: event}
+
+    state_changes: list[HAEvent[EventStateChangedData]] = async_capture_events(
+        hass, EVENT_STATE_CHANGED
+    )
+    ufp.ws_msg(mock_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "ABCD1234"
+
+    assert len(state_changes) == 1
+
+    ufp.ws_msg(mock_msg)
+    await hass.async_block_till_done()
+    assert len(state_changes) == 1
+
+    # Now mutate the original event so it ends
+    # Also change the metadata to a different license plate
+    # since the model may not get the plate correct on
+    # the first update.
+    event.score = 99
+    event.end = fixed_now + timedelta(seconds=1)
+    event_metadata.license_plate.name = "DCBA4321"
+    ufp.api.bootstrap.events = {event.id: event}
+
+    ufp.ws_msg(mock_msg)
+    await hass.async_block_till_done()
+    assert len(state_changes) == 3
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "none"
+
+    assert state_changes[0].data["new_state"].state == "ABCD1234"
+    assert state_changes[1].data["new_state"].state == "DCBA4321"
+    assert state_changes[2].data["new_state"].state == "none"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "none"
+
+
 async def test_sensor_precision(
     hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor, fixed_now: datetime
 ) -> None:
