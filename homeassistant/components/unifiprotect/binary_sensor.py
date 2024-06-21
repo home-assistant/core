@@ -748,8 +748,8 @@ class ProtectSmartEventBinarySensor(EventEntityMixin, BinarySensorEntity):
 
         if not (
             event
-            and not self._event_already_ended(prev_event, prev_event_end)
             and description.has_matching_smart(event)
+            and not self._event_already_ended(prev_event, prev_event_end)
         ):
             self._set_event_done()
             return

@@ -768,10 +768,10 @@ class ProtectLicensePlateEventSensor(ProtectEventSensor):
 
         if not (
             event
-            and not self._event_already_ended(prev_event, prev_event_end)
-            and description.has_matching_smart(event)
             and (metadata := event.metadata)
             and (license_plate := metadata.license_plate)
+            and description.has_matching_smart(event)
+            and not self._event_already_ended(prev_event, prev_event_end)
         ):
             self._set_event_done()
             return
