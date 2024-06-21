@@ -88,6 +88,42 @@ async def async_setup_entry(
     )
 
 
+def _generate_entities(tado: TadoConnector) -> list:
+    """Create all water heater entities."""
+    entities = []
+
+    for zone in tado.zones:
+        if zone["type"] == TYPE_HOT_WATER:
+            entity = create_water_heater_entity(tado, zone["name"], zone["id"], zone)
+            entities.append(entity)
+
+    return entities
+
+
+def create_water_heater_entity(tado: TadoConnector, name: str, zone_id: int, zone: str):
+    """Create a Tado water heater device."""
+    capabilities = tado.get_capabilities(zone_id)
+
+    supports_temperature_control = capabilities["canSetTemperature"]
+
+    if supports_temperature_control and "temperatures" in capabilities:
+        temperatures = capabilities["temperatures"]
+        min_temp = float(temperatures["celsius"]["min"])
+        max_temp = float(temperatures["celsius"]["max"])
+    else:
+        min_temp = None
+        max_temp = None
+
+    return TadoWaterHeater(
+        tado,
+        name,
+        zone_id,
+        supports_temperature_control,
+        min_temp,
+        max_temp,
+    )
+
+
 class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
     """Representation of a Tado water heater."""
 
@@ -275,39 +311,3 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
             device_type=TYPE_HOT_WATER,
         )
         self._overlay_mode = self._current_tado_hvac_mode
-
-
-def _generate_entities(tado: TadoConnector) -> list[TadoWaterHeater]:
-    """Create all water heater entities."""
-    entities = []
-
-    for zone in tado.zones:
-        if zone["type"] == TYPE_HOT_WATER:
-            entity = create_water_heater_entity(tado, zone["name"], zone["id"], zone)
-            entities.append(entity)
-
-    return entities
-
-
-def create_water_heater_entity(tado: TadoConnector, name: str, zone_id: int, zone: str):
-    """Create a Tado water heater device."""
-    capabilities = tado.get_capabilities(zone_id)
-
-    supports_temperature_control = capabilities["canSetTemperature"]
-
-    if supports_temperature_control and "temperatures" in capabilities:
-        temperatures = capabilities["temperatures"]
-        min_temp = float(temperatures["celsius"]["min"])
-        max_temp = float(temperatures["celsius"]["max"])
-    else:
-        min_temp = None
-        max_temp = None
-
-    return TadoWaterHeater(
-        tado,
-        name,
-        zone_id,
-        supports_temperature_control,
-        min_temp,
-        max_temp,
-    )
