@@ -10,7 +10,7 @@ import pytest
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.components.http.static import CachingStaticResource, _get_file_path
 from homeassistant.core import EVENT_HOMEASSISTANT_START, HomeAssistant
-from homeassistant.helpers.http import KEY_ALLOW_CONFIGRED_CORS
+from homeassistant.helpers.http import KEY_ALLOW_CONFIGURED_CORS
 from homeassistant.setup import async_setup_component
 
 from tests.typing import ClientSessionGenerator
@@ -51,7 +51,7 @@ async def test_static_path_blocks_anchors(
     resource = CachingStaticResource(url, str(tmp_path))
     assert resource.canonical == canonical_url
     app.router.register_resource(resource)
-    app[KEY_ALLOW_CONFIGRED_CORS](resource)
+    app[KEY_ALLOW_CONFIGURED_CORS](resource)
 
     resp = await mock_http_client.get(canonical_url, allow_redirects=False)
     assert resp.status == 403

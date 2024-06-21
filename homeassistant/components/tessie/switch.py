@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from itertools import chain
 from typing import Any
 
 from tessie_api import (
@@ -42,11 +43,6 @@ class TessieSwitchEntityDescription(SwitchEntityDescription):
 
 DESCRIPTIONS: tuple[TessieSwitchEntityDescription, ...] = (
     TessieSwitchEntityDescription(
-        key="charge_state_charge_enable_request",
-        on_func=lambda: start_charging,
-        off_func=lambda: stop_charging,
-    ),
-    TessieSwitchEntityDescription(
         key="climate_state_defrost_mode",
         on_func=lambda: start_defrost,
         off_func=lambda: stop_defrost,
@@ -68,6 +64,12 @@ DESCRIPTIONS: tuple[TessieSwitchEntityDescription, ...] = (
     ),
 )
 
+CHARGE_DESCRIPTION: TessieSwitchEntityDescription = TessieSwitchEntityDescription(
+    key="charge_state_charge_enable_request",
+    on_func=lambda: start_charging,
+    off_func=lambda: stop_charging,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -75,15 +77,20 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Tessie Switch platform from a config entry."""
-    data = entry.runtime_data
 
     async_add_entities(
-        [
-            TessieSwitchEntity(vehicle, description)
-            for vehicle in data.vehicles
-            for description in DESCRIPTIONS
-            if description.key in vehicle.data
-        ]
+        chain(
+            (
+                TessieSwitchEntity(vehicle, description)
+                for vehicle in entry.runtime_data.vehicles
+                for description in DESCRIPTIONS
+                if description.key in vehicle.data
+            ),
+            (
+                TessieChargeSwitchEntity(vehicle, CHARGE_DESCRIPTION)
+                for vehicle in entry.runtime_data.vehicles
+            ),
+        )
     )
 
 
@@ -116,3 +123,15 @@ class TessieSwitchEntity(TessieEntity, SwitchEntity):
         """Turn off the Switch."""
         await self.run(self.entity_description.off_func())
         self.set((self.entity_description.key, False))
+
+
+class TessieChargeSwitchEntity(TessieSwitchEntity):
+    """Entity class for Tessie charge switch."""
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the Switch."""
+
+        if (charge := self.get("charge_state_user_charge_enable_request")) is not None:
+            return charge
+        return self._value
