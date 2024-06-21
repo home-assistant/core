@@ -78,7 +78,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.47.2
+PySwitchbot==0.48.0
 
 # homeassistant.components.syncthru
 PySyncThru==0.7.10
@@ -107,7 +107,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.30
+SQLAlchemy==2.0.31
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -359,7 +359,7 @@ aiotankerkoenig==0.4.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==77
+aiounifi==79
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.3.2
@@ -383,7 +383,7 @@ aiowithings==3.0.1
 aioymaps==1.2.2
 
 # homeassistant.components.airgradient
-airgradient==0.4.3
+airgradient==0.6.0
 
 # homeassistant.components.airly
 airly==1.1.0
@@ -873,7 +873,7 @@ hass-nabucasa==0.81.1
 hassil==1.7.1
 
 # homeassistant.components.jewish_calendar
-hdate==0.10.8
+hdate==0.10.9
 
 # homeassistant.components.here_travel_time
 here-routing==0.2.0
@@ -892,7 +892,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.50
+holidays==0.51
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240610.1
@@ -1252,7 +1252,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==0.37.3
+plugwise==0.37.4.1
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -2168,7 +2168,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==1.19.0
+uiprotect==1.19.2
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2241,7 +2241,7 @@ wallbox==0.6.0
 watchdog==2.3.1
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==0.2.20
+weatherflow4py==0.2.21
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
@@ -2295,7 +2295,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==2.4.2
 
 # homeassistant.components.august
-yalexs==6.0.0
+yalexs==6.4.0
 
 # homeassistant.components.yeelight
 yeelight==0.7.14

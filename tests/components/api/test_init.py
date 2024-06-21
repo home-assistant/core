@@ -12,9 +12,6 @@ import voluptuous as vol
 
 from homeassistant import const
 from homeassistant.auth.models import Credentials
-from homeassistant.auth.providers.legacy_api_password import (
-    LegacyApiPasswordAuthProvider,
-)
 from homeassistant.bootstrap import DATA_LOGGING
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant

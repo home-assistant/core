@@ -90,7 +90,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.47.2
+PySwitchbot==0.48.0
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -122,7 +122,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.30
+SQLAlchemy==2.0.31
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -386,7 +386,7 @@ aiotankerkoenig==0.4.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==77
+aiounifi==79
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.3.2
@@ -410,7 +410,7 @@ aiowithings==3.0.1
 aioymaps==1.2.2
 
 # homeassistant.components.airgradient
-airgradient==0.4.3
+airgradient==0.6.0
 
 # homeassistant.components.airly
 airly==1.1.0
@@ -647,9 +647,6 @@ cached_ipaddress==0.3.0
 
 # homeassistant.components.caldav
 caldav==1.3.9
-
-# homeassistant.components.circuit
-circuit-webhook==1.0.1
 
 # homeassistant.components.cisco_mobility_express
 ciscomobilityexpress==0.3.9
@@ -1062,7 +1059,7 @@ hass-splunk==0.1.1
 hassil==1.7.1
 
 # homeassistant.components.jewish_calendar
-hdate==0.10.8
+hdate==0.10.9
 
 # homeassistant.components.heatmiser
 heatmiserV3==1.1.18
@@ -1090,7 +1087,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.50
+holidays==0.51
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240610.1
@@ -1572,7 +1569,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==0.37.3
+plugwise==0.37.4.1
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1827,7 +1824,7 @@ pyefergy==22.5.0
 pyegps==0.2.5
 
 # homeassistant.components.emoncms
-pyemoncms==0.0.6
+pyemoncms==0.0.7
 
 # homeassistant.components.enphase_envoy
 pyenphase==1.20.3
@@ -2791,7 +2788,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==1.19.0
+uiprotect==1.19.2
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2879,7 +2876,7 @@ watchdog==2.3.1
 waterfurnace==1.1.0
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==0.2.20
+weatherflow4py==0.2.21
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
@@ -2939,7 +2936,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==2.4.2
 
 # homeassistant.components.august
-yalexs==6.0.0
+yalexs==6.4.0
 
 # homeassistant.components.yeelight
 yeelight==0.7.14
