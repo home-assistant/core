@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Coroutine, Mapping, Sequence
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
 from enum import Enum
@@ -17,7 +17,7 @@ import pathlib
 import threading
 import time
 from types import FrameType, ModuleType
-from typing import Any, NoReturn
+from typing import Any, Literal, NoReturn
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
@@ -693,7 +693,7 @@ def mock_device_registry(
 class MockGroup(auth_models.Group):
     """Mock a group in Home Assistant."""
 
-    def __init__(self, id=None, name="Mock Group"):
+    def __init__(self, id: str | None = None, name: str | None = "Mock Group") -> None:
         """Mock a group."""
         kwargs = {"name": name, "policy": system_policies.ADMIN_POLICY}
         if id is not None:
@@ -701,11 +701,11 @@ class MockGroup(auth_models.Group):
 
         super().__init__(**kwargs)
 
-    def add_to_hass(self, hass):
+    def add_to_hass(self, hass: HomeAssistant) -> MockGroup:
         """Test helper to add entry to hass."""
         return self.add_to_auth_manager(hass.auth)
 
-    def add_to_auth_manager(self, auth_mgr):
+    def add_to_auth_manager(self, auth_mgr: auth.AuthManager) -> MockGroup:
         """Test helper to add entry to hass."""
         ensure_auth_manager_loaded(auth_mgr)
         auth_mgr._store._groups[self.id] = self
@@ -717,13 +717,13 @@ class MockUser(auth_models.User):
 
     def __init__(
         self,
-        id=None,
-        is_owner=False,
-        is_active=True,
-        name="Mock User",
-        system_generated=False,
-        groups=None,
-    ):
+        id: str | None = None,
+        is_owner: bool = False,
+        is_active: bool = True,
+        name: str | None = "Mock User",
+        system_generated: bool = False,
+        groups: list[auth_models.Group] | None = None,
+    ) -> None:
         """Initialize mock user."""
         kwargs = {
             "is_owner": is_owner,
@@ -737,17 +737,17 @@ class MockUser(auth_models.User):
             kwargs["id"] = id
         super().__init__(**kwargs)
 
-    def add_to_hass(self, hass):
+    def add_to_hass(self, hass: HomeAssistant) -> MockUser:
         """Test helper to add entry to hass."""
         return self.add_to_auth_manager(hass.auth)
 
-    def add_to_auth_manager(self, auth_mgr):
+    def add_to_auth_manager(self, auth_mgr: auth.AuthManager) -> MockUser:
         """Test helper to add entry to hass."""
         ensure_auth_manager_loaded(auth_mgr)
         auth_mgr._store._users[self.id] = self
         return self
 
-    def mock_policy(self, policy):
+    def mock_policy(self, policy: auth_permissions.PolicyType) -> None:
         """Mock a policy for a user."""
         self.permissions = auth_permissions.PolicyPermissions(policy, self.perm_lookup)
 
@@ -771,7 +771,7 @@ async def register_auth_provider(
 
 
 @callback
-def ensure_auth_manager_loaded(auth_mgr):
+def ensure_auth_manager_loaded(auth_mgr: auth.AuthManager) -> None:
     """Ensure an auth manager is considered loaded."""
     store = auth_mgr._store
     if store._users is None:
@@ -783,21 +783,38 @@ class MockModule:
 
     def __init__(
         self,
-        domain=None,
-        dependencies=None,
-        setup=None,
-        requirements=None,
-        config_schema=None,
-        platform_schema=None,
-        platform_schema_base=None,
-        async_setup=None,
-        async_setup_entry=None,
-        async_unload_entry=None,
-        async_migrate_entry=None,
-        async_remove_entry=None,
-        partial_manifest=None,
-        async_remove_config_entry_device=None,
-    ):
+        domain: str | None = None,
+        *,
+        dependencies: list[str] | None = None,
+        setup: Callable[[HomeAssistant, ConfigType], bool] | None = None,
+        requirements: list[str] | None = None,
+        config_schema: vol.Schema | None = None,
+        platform_schema: vol.Schema | None = None,
+        platform_schema_base: vol.Schema | None = None,
+        async_setup: Callable[[HomeAssistant, ConfigType], Coroutine[Any, Any, bool]]
+        | None = None,
+        async_setup_entry: Callable[
+            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool]
+        ]
+        | None = None,
+        async_unload_entry: Callable[
+            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool]
+        ]
+        | None = None,
+        async_migrate_entry: Callable[
+            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool]
+        ]
+        | None = None,
+        async_remove_entry: Callable[
+            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, None]
+        ]
+        | None = None,
+        partial_manifest: dict[str, Any] | None = None,
+        async_remove_config_entry_device: Callable[
+            [HomeAssistant, ConfigEntry, dr.DeviceEntry], Coroutine[Any, Any, bool]
+        ]
+        | None = None,
+    ) -> None:
         """Initialize the mock module."""
         self.__name__ = f"homeassistant.components.{domain}"
         self.__file__ = f"homeassistant/components/{domain}"
@@ -858,13 +875,25 @@ class MockPlatform:
 
     def __init__(
         self,
-        setup_platform=None,
-        dependencies=None,
-        platform_schema=None,
-        async_setup_platform=None,
-        async_setup_entry=None,
-        scan_interval=None,
-    ):
+        *,
+        setup_platform: Callable[
+            [HomeAssistant, ConfigType, AddEntitiesCallback, DiscoveryInfoType | None],
+            None,
+        ]
+        | None = None,
+        dependencies: list[str] | None = None,
+        platform_schema: vol.Schema | None = None,
+        async_setup_platform: Callable[
+            [HomeAssistant, ConfigType, AddEntitiesCallback, DiscoveryInfoType | None],
+            Coroutine[Any, Any, None],
+        ]
+        | None = None,
+        async_setup_entry: Callable[
+            [HomeAssistant, ConfigEntry, AddEntitiesCallback], Coroutine[Any, Any, None]
+        ]
+        | None = None,
+        scan_interval: timedelta | None = None,
+    ) -> None:
         """Initialize the platform."""
         self.DEPENDENCIES = dependencies or []
 
@@ -930,41 +959,41 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
 class MockToggleEntity(entity.ToggleEntity):
     """Provide a mock toggle device."""
 
-    def __init__(self, name, state, unique_id=None):
+    def __init__(self, name: str | None, state: Literal["on", "off"] | None) -> None:
         """Initialize the mock entity."""
         self._name = name or DEVICE_DEFAULT_NAME
         self._state = state
-        self.calls = []
+        self.calls: list[tuple[str, dict[str, Any]]] = []
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the entity if any."""
         self.calls.append(("name", {}))
         return self._name
 
     @property
-    def state(self):
+    def state(self) -> Literal["on", "off"] | None:
         """Return the state of the entity if any."""
         self.calls.append(("state", {}))
         return self._state
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if entity is on."""
         self.calls.append(("is_on", {}))
         return self._state == STATE_ON
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         self.calls.append(("turn_on", kwargs))
         self._state = STATE_ON
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self.calls.append(("turn_off", kwargs))
         self._state = STATE_OFF
 
-    def last_call(self, method=None):
+    def last_call(self, method: str | None = None) -> tuple[str, dict[str, Any]]:
         """Return the last call."""
         if not self.calls:
             return None

@@ -226,7 +226,10 @@ MOCK_STATUS_RPC = {
     "switch:0": {"output": True},
     "input:0": {"id": 0, "state": None},
     "input:1": {"id": 1, "percent": 89, "xpercent": 8.9},
-    "input:2": {"id": 2, "counts": {"total": 56174, "xtotal": 561.74}},
+    "input:2": {
+        "id": 2,
+        "counts": {"total": 56174, "xtotal": 561.74, "freq": 208.00, "xfreq": 6.11},
+    },
     "light:0": {"output": True, "brightness": 53.0},
     "light:1": {"output": True, "brightness": 53.0},
     "light:2": {"output": True, "brightness": 53.0},
@@ -254,6 +257,7 @@ MOCK_STATUS_RPC = {
         "current_C": 12.3,
         "output": True,
     },
+    "humidity:0": {"rh": 44.4},
     "sys": {
         "available_updates": {
             "beta": {"version": "some_beta_version"},

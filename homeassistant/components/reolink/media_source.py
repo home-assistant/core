@@ -34,7 +34,15 @@ async def async_get_media_source(hass: HomeAssistant) -> ReolinkVODMediaSource:
 
 def res_name(stream: str) -> str:
     """Return the user friendly name for a stream."""
-    return "High res." if stream == "main" else "Low res."
+    match stream:
+        case "main":
+            return "High res."
+        case "autotrack_sub":
+            return "Autotrack low res."
+        case "autotrack_main":
+            return "Autotrack high res."
+        case _:
+            return "Low res."
 
 
 class ReolinkVODMediaSource(MediaSource):
@@ -214,9 +222,6 @@ class ReolinkVODMediaSource(MediaSource):
                 "playback only possible using sub stream",
                 host.api.camera_name(channel),
             )
-            return await self._async_generate_camera_days(
-                config_entry_id, channel, "sub"
-            )
 
         children = [
             BrowseMediaSource(
@@ -228,16 +233,49 @@ class ReolinkVODMediaSource(MediaSource):
                 can_play=False,
                 can_expand=True,
             ),
-            BrowseMediaSource(
-                domain=DOMAIN,
-                identifier=f"RES|{config_entry_id}|{channel}|main",
-                media_class=MediaClass.CHANNEL,
-                media_content_type=MediaType.PLAYLIST,
-                title="High resolution",
-                can_play=False,
-                can_expand=True,
-            ),
         ]
+        if main_enc != "h265":
+            children.append(
+                BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier=f"RES|{config_entry_id}|{channel}|main",
+                    media_class=MediaClass.CHANNEL,
+                    media_content_type=MediaType.PLAYLIST,
+                    title="High resolution",
+                    can_play=False,
+                    can_expand=True,
+                ),
+            )
+
+        if host.api.supported(channel, "autotrack_stream"):
+            children.append(
+                BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier=f"RES|{config_entry_id}|{channel}|autotrack_sub",
+                    media_class=MediaClass.CHANNEL,
+                    media_content_type=MediaType.PLAYLIST,
+                    title="Autotrack low resolution",
+                    can_play=False,
+                    can_expand=True,
+                ),
+            )
+            if main_enc != "h265":
+                children.append(
+                    BrowseMediaSource(
+                        domain=DOMAIN,
+                        identifier=f"RES|{config_entry_id}|{channel}|autotrack_main",
+                        media_class=MediaClass.CHANNEL,
+                        media_content_type=MediaType.PLAYLIST,
+                        title="Autotrack high resolution",
+                        can_play=False,
+                        can_expand=True,
+                    ),
+                )
+
+        if len(children) == 1:
+            return await self._async_generate_camera_days(
+                config_entry_id, channel, "sub"
+            )
 
         return BrowseMediaSource(
             domain=DOMAIN,
