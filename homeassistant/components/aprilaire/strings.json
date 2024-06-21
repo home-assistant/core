@@ -40,40 +40,40 @@
       "dehumidification_status": {
         "name": "Dehumidification status",
         "state": {
-          "idle": "Idle",
-          "on": "On",
-          "off": "Off"
+          "idle": "[%key:common::state::idle%]",
+          "on": "[%key:common::state::on%]",
+          "off": "[%key:common::state::off%]"
         }
       },
       "humidification_status": {
         "name": "Humidification status",
         "state": {
-          "idle": "Idle",
-          "on": "On",
-          "off": "Off"
+          "idle": "[%key:common::state::idle%]",
+          "on": "[%key:common::state::on%]",
+          "off": "[%key:common::state::off%]"
         }
       },
       "ventilation_status": {
         "name": "Ventilation status",
         "state": {
-          "idle": "Idle",
-          "on": "On",
-          "off": "Off"
+          "idle": "[%key:common::state::idle%]",
+          "on": "[%key:common::state::on%]",
+          "off": "[%key:common::state::off%]"
         }
       },
       "air_cleaning_status": {
         "name": "Air cleaning status",
         "state": {
-          "idle": "Idle",
-          "on": "On",
-          "off": "Off"
+          "idle": "[%key:common::state::idle%]",
+          "on": "[%key:common::state::on%]",
+          "off": "[%key:common::state::off%]"
         }
       },
       "fan_status": {
         "name": "Fan status",
         "state": {
-          "on": "On",
-          "off": "Off"
+          "on": "[%key:common::state::on%]",
+          "off": "[%key:common::state::off%]"
         }
       }
     }
