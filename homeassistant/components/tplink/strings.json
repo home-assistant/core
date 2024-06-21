@@ -68,6 +68,24 @@
       },
       "consumption_today": {
         "name": "Today's consumption"
+      },
+      "consumption_this_month": {
+        "name": "This month's consumption"
+      },
+      "on_since": {
+        "name": "On since"
+      },
+      "ssid": {
+        "name": "SSID"
+      },
+      "signal_level": {
+        "name": "Signal level"
+      },
+      "current_firmware_version": {
+        "name": "Current firmware version"
+      },
+      "available_firmware_version": {
+        "name": "Available firmware version"
       }
     },
     "switch": {
@@ -79,6 +97,9 @@
       },
       "auto_off_enabled": {
         "name": "Auto off enabled"
+      },
+      "smooth_transitions": {
+        "name": "Smooth transitions"
       }
     }
   },

@@ -292,7 +292,9 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
                 translation_key=translation_key,
                 name=entity_name,  # if undefined will use translation key
                 entity_category=category,
-                entity_registry_enabled_default=enabled_default,
+                # enabled_default can be overridden to False in the description
+                entity_registry_enabled_default=enabled_default
+                and desc.entity_registry_enabled_default,
             )
         else:
             desc = desc_cls(
