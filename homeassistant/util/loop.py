@@ -84,11 +84,13 @@ def raise_for_blocking_call(
     )
 
     _LOGGER.warning(
-        "Detected blocking call to %s inside the event loop by %sintegration '%s' "
+        "Detected blocking call to %s with args %s "
+        "inside the event loop by %sintegration '%s' "
         "at %s, line %s: %s (offender: %s, line %s: %s), please %s\n"
         "%s\n"
         "Traceback (most recent call last):\n%s",
         func.__name__,
+        mapped_args.get("args"),
         "custom " if integration_frame.custom_integration else "",
         integration_frame.integration,
         integration_frame.relative_filename,
@@ -104,7 +106,8 @@ def raise_for_blocking_call(
 
     if strict:
         raise RuntimeError(
-            "Caught blocking call to {func.__name__} inside the event loop by"
+            "Caught blocking call to {func.__name__} with args "
+            f"{mapped_args.get('args')} inside the event loop by"
             f"{'custom ' if integration_frame.custom_integration else ''}"
             "integration '{integration_frame.integration}' at "
             f"{integration_frame.relative_filename}, line {integration_frame.line_number}:"
