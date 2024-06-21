@@ -16,7 +16,7 @@ from kasa import (
     KasaException,
     Module,
 )
-from kasa.interfaces import Light, LightEffect
+from kasa.interfaces import Light, LightEffect, LightState
 from kasa.protocol import BaseProtocol
 
 from homeassistant.components.tplink import (
@@ -187,6 +187,9 @@ def _mocked_light_module() -> Light:
     light.update = AsyncMock()
     light.brightness = 50
     light.color_temp = 4000
+    light.state = LightState(
+        light_on=True, brightness=light.brightness, color_temp=light.color_temp
+    )
     light.is_color = True
     light.is_variable_color_temp = True
     light.is_dimmable = True
