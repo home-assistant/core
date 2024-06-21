@@ -99,5 +99,5 @@ async def test_adam_temperature_offset_change(
 
     assert mock_smile_adam.set_temperature_offset.call_count == 1
     mock_smile_adam.set_temperature_offset.assert_called_with(
-        "6a3bf693d05e48e0b460c815a4fdd09d", "temperature_offset", 1.0
+        "6a3bf693d05e48e0b460c815a4fdd09d", 1.0
     )
