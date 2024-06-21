@@ -25,7 +25,7 @@
     "pyserial==3.5",
     "universal-silabs-flasher==0.0.20",
     "pyserial-asyncio-fast==0.11",
-    "zha==0.0.14"
+    "zha==0.0.15"
   ],
   "usb": [
     {
