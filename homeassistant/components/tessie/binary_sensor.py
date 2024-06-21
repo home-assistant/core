@@ -170,7 +170,6 @@ async def async_setup_entry(
         TessieBinarySensorEntity(vehicle, description)
         for vehicle in data.vehicles
         for description in DESCRIPTIONS
-        if description.key in vehicle.data
     )
 
 

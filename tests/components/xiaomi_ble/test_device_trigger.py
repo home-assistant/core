@@ -35,7 +35,9 @@ def calls(hass: HomeAssistant) -> list[ServiceCall]:
     return async_mock_service(hass, "test", "automation")
 
 
-async def _async_setup_xiaomi_device(hass, mac: str, data: Any | None = None):
+async def _async_setup_xiaomi_device(
+    hass: HomeAssistant, mac: str, data: Any | None = None
+):
     config_entry = MockConfigEntry(domain=DOMAIN, unique_id=mac, data=data)
     config_entry.add_to_hass(hass)
 

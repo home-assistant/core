@@ -21,7 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.dt import as_local
 
 from . import SolarlogData
 from .const import DOMAIN
@@ -36,10 +35,9 @@ class SolarLogSensorEntityDescription(SensorEntityDescription):
 
 SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
     SolarLogSensorEntityDescription(
-        key="time",
+        key="last_updated",
         translation_key="last_update",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value=as_local,
     ),
     SolarLogSensorEntityDescription(
         key="power_ac",
@@ -231,7 +229,8 @@ class SolarlogSensor(CoordinatorEntity[SolarlogData], SensorEntity):
     @property
     def native_value(self):
         """Return the native sensor value."""
-        raw_attr = getattr(self.coordinator.data, self.entity_description.key)
+        raw_attr = self.coordinator.data.get(self.entity_description.key)
+
         if self.entity_description.value:
             return self.entity_description.value(raw_attr)
         return raw_attr

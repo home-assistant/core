@@ -21,12 +21,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import AirzoneCloudConfigEntry
 from .coordinator import AirzoneUpdateCoordinator
 from .entity import (
     AirzoneAidooEntity,
@@ -94,10 +93,12 @@ ZONE_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AirzoneCloudConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add Airzone Cloud binary sensors from a config_entry."""
-    coordinator: AirzoneUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     binary_sensors: list[AirzoneBinarySensor] = [
         AirzoneAidooBinarySensor(
