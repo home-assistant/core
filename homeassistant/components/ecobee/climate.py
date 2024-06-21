@@ -259,11 +259,8 @@ async def async_setup_entry(
     def aux_cutover_threshold_set_service(service: ServiceCall) -> None:
         """Set temperature at which the system will switch to auxilary heating."""
         entity_id = service.data.get(ATTR_ENTITY_ID)
-        aux_cutover_threshold = TemperatureConverter.convert(
-            service.data[ATTR_AUX_CUTOVER_THRESHOLD],
-            self.hass.config.units.temperature_unit,
-            UnitOfTemperature.FAHRENHEIT,
-        )
+        
+        aux_cutover_threshold = service.data[ATTR_AUX_CUTOVER_THRESHOLD]
 
         if entity_id:
             target_thermostats = [
@@ -273,7 +270,7 @@ async def async_setup_entry(
             target_thermostats = entities
 
         for thermostat in target_thermostats:
-            thermostat.set_aux_cutover_threshold(aux_cutover_threshold)
+            thermostat.set_aux_cutover_threshold(service.data[ATTR_AUX_CUTOVER_THRESHOLD])
 
             thermostat.schedule_update_ha_state(True)
 
@@ -798,7 +795,7 @@ class Thermostat(ClimateEntity):
         self.update_without_throttle = True
 
     def set_aux_cutover_threshold(self, aux_cutover_threshold):
-        """Set the minimum fan on time."""
+        """Set the threshold below which the compressor will not operate"""
         aux_cutover_threshold = TemperatureConverter.convert(
             aux_cutover_threshold,
             self.hass.config.units.temperature_unit,
