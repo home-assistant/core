@@ -1,11 +1,13 @@
 """Fixtures for pyLoad integration tests."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from pyloadapi.types import LoginResponse, StatusServerResponse
 import pytest
 
+from homeassistant.components.pyload.const import DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
@@ -15,8 +17,35 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
 from homeassistant.helpers.typing import ConfigType
+
+from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def userinput() -> dict[str, Any]:
+    """Return a userinput dict."""
+
+    return {
+        CONF_NAME: "pyLoad",
+        CONF_HOST: "pyload.local",
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
+        CONF_PORT: 8000,
+        CONF_SSL: True,
+        CONF_VERIFY_SSL: False,
+    }
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.pyload.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture
@@ -41,12 +70,15 @@ def mock_pyloadapi() -> Generator[AsyncMock, None, None]:
     """Mock PyLoadAPI."""
     with (
         patch(
-            "homeassistant.components.pyload.sensor.PyLoadAPI",
-            autospec=True,
+            "homeassistant.components.pyload.PyLoadAPI", autospec=True
         ) as mock_client,
+        patch("homeassistant.components.pyload.config_flow.PyLoadAPI", new=mock_client),
+        patch("homeassistant.components.pyload.sensor.PyLoadAPI", new=mock_client),
     ):
         client = mock_client.return_value
         client.username = "username"
+        client.api_url = "https://pyload.local:8000/"
+
         client.login.return_value = LoginResponse(
             {
                 "_permanent": True,
@@ -75,3 +107,9 @@ def mock_pyloadapi() -> Generator[AsyncMock, None, None]:
 
         client.free_space.return_value = 99999999999
         yield client
+
+
+@pytest.fixture(name="config_entry")
+def mock_config_entry(userinput) -> MockConfigEntry:
+    """Mock pyLoad configuration entry."""
+    return MockConfigEntry(domain=DOMAIN, data=userinput, entry_id="XXXXXXXXXXXXXX")
