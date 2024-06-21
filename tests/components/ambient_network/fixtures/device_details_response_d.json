@@ -1,9 +1,8 @@
 {
-  "_id": "cccccccccccccccccccccccccccccccc",
-  "macAddress": "CC:CC:CC:CC:CC:CC",
+  "_id": "dddddddddddddddddddddddddddddddd",
+  "macAddress": "DD:DD:DD:DD:DD:DD",
   "lastData": {
     "stationtype": "AMBWeatherPro_V5.0.6",
-    "dateutc": 1717687683000,
     "tempf": 82.9,
     "dewPoint": 82.0,
     "feelsLike": 85.0,
@@ -23,11 +22,9 @@
     "baromabsin": 28.869,
     "batt_co2": 1,
     "type": "weather-data",
-    "dateutc5": 1699474200000,
-    "lastRain": 1698659100000,
     "tz": "America/Chicago"
   },
   "info": {
-    "name": "Station C"
+    "name": "Station D"
   }
 }
