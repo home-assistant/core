@@ -737,14 +737,15 @@ class ProtectSmartEventBinarySensor(EventEntityMixin, BinarySensorEntity):
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         prev_event = self._event
         super()._async_update_device_from_protect(device)
-        event = self._event = self.entity_description.get_event_obj(device)
+        description = self.entity_description
+        event = self._event = description.get_event_obj(device)
         if event and event.end and prev_event and prev_event.id == event.id:
             # Event already ended
             return
 
         if not (
             event
-            and self.entity_description.has_matching_smart(event)
+            and description.has_matching_smart(event)
             and ((is_end := event.end) or self.device.is_smart_detected)
         ):
             self._set_event_done()
