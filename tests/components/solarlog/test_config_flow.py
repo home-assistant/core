@@ -12,10 +12,9 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from .const import HOST, NAME
 
-NAME = "Solarlog test 1 2 3"
-HOST = "http://1.1.1.1"
+from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -56,7 +55,7 @@ def init_config_flow(hass):
 @pytest.mark.usefixtures("test_connect")
 async def test_user(
     hass: HomeAssistant,
-    mock_solarlog: AsyncMock,
+    mock_solarlog_connector: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test user config."""
@@ -89,7 +88,7 @@ async def test_form_exceptions(
     hass: HomeAssistant,
     exception: Exception,
     error: dict[str, str],
-    mock_solarlog: AsyncMock,
+    mock_solarlog_connector: AsyncMock,
 ) -> None:
     """Test we can handle Form exceptions."""
     flow = init_config_flow(hass)
@@ -98,7 +97,7 @@ async def test_form_exceptions(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    mock_solarlog.return_value.test_connection.side_effect = exception
+    mock_solarlog_connector.test_connection.side_effect = exception
 
     # tests with connection error
     result = await flow.async_step_user(
@@ -110,7 +109,7 @@ async def test_form_exceptions(
     assert result["step_id"] == "user"
     assert result["errors"] == error
 
-    mock_solarlog.return_value.test_connection.side_effect = None
+    mock_solarlog_connector.test_connection.side_effect = None
 
     # tests with all provided
     result = await flow.async_step_user(
