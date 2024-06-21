@@ -165,6 +165,7 @@ async def test_play_media_library(
         blocking=True,
     )
     assert sock_mock.clear_queue.call_count == test_result["clear_queue"]
+    assert sock_mock.add_to_queue.call_count == 1
     assert (
         sock_mock.add_to_queue.call_args_list[0].args[0].title == test_result["title"]
     )
