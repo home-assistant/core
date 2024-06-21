@@ -55,3 +55,10 @@ class FritzboxSwitch(FritzBoxDeviceEntity, SwitchEntity):
         """Turn the switch off."""
         await self.hass.async_add_executor_job(self.data.set_switch_state_off)
         await self.coordinator.async_refresh()
+
+    @property
+    def available(self) -> bool:
+        """Disable the switch if manual switching via FRITZ!Box user interface is locked."""
+        if self.data.lock:
+            return False
+        return super().available
