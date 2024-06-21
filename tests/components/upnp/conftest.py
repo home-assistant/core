@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import copy
 from datetime import datetime
-from socket import AddressFamily
+import socket
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, create_autospec, patch
 from urllib.parse import urlparse
 
@@ -109,7 +109,7 @@ def mock_igd_device(mock_async_create_device) -> IgdDevice:
     with (
         patch(
             "homeassistant.components.upnp.device.async_get_local_ip",
-            return_value=(AddressFamily.AF_INET, "127.0.0.1"),
+            return_value=(socket.AF_INET, "127.0.0.1"),
         ),
         patch(
             "homeassistant.components.upnp.device.IgdDevice.__new__",
