@@ -1697,11 +1697,11 @@ async def test_automation_bad_config_validation(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
-    hass_admin_user,
-    broken_config,
-    problem,
-    details,
-    issue,
+    hass_admin_user: MockUser,
+    broken_config: dict[str, Any],
+    problem: str,
+    details: str,
+    issue: str,
 ) -> None:
     """Test bad automation configuration which can be detected during validation."""
     assert await async_setup_component(
