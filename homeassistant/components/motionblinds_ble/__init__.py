@@ -98,8 +98,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Apply options
-    hass.async_create_background_task(
-        name=device.ble_device.address, target=apply_options(hass, entry)
+    entry.async_create_background_task(
+        hass, apply_options(hass, entry), device.ble_device.address
     )
 
     _LOGGER.debug("(%s) Finished setting up device", entry.data[CONF_MAC_CODE])
