@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import uint
 from chip.clusters.Types import Nullable, NullValue
+from matter_server.client.models import device_types
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -76,17 +77,6 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
         entity_description=MatterBinarySensorEntityDescription(
-            key="ContactSensor",
-            device_class=BinarySensorDeviceClass.DOOR,
-            # value is inverted on matter to what we expect
-            measurement_to_ha=lambda x: not x,
-        ),
-        entity_class=MatterBinarySensor,
-        required_attributes=(clusters.BooleanState.Attributes.StateValue,),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.BINARY_SENSOR,
-        entity_description=MatterBinarySensorEntityDescription(
             key="OccupancySensor",
             device_class=BinarySensorDeviceClass.OCCUPANCY,
             # The first bit = if occupied
@@ -94,16 +84,6 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.OccupancySensing.Attributes.Occupancy,),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.BINARY_SENSOR,
-        entity_description=MatterBinarySensorEntityDescription(
-            key="WaterLeakDetector",
-            device_class=BinarySensorDeviceClass.MOISTURE,
-        ),
-        entity_class=MatterBinarySensor,
-        required_attributes=(clusters.BooleanState.Attributes.StateValue,),
-        device_type=(device_types.WaterLeakDetector,),
     ),
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
@@ -118,5 +98,54 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(clusters.PowerSource.Attributes.BatChargeLevel,),
         # only add binary battery sensor if a regular percentage based is not available
         absent_attributes=(clusters.PowerSource.Attributes.BatPercentRemaining,),
+    ),
+    # BooleanState sensors (tied to device type)
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="ContactSensor",
+            device_class=BinarySensorDeviceClass.DOOR,
+            # value is inverted on matter to what we expect
+            measurement_to_ha=lambda x: not x,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.BooleanState.Attributes.StateValue,),
+        device_type=(device_types.ContactSensor,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="WaterLeakDetector",
+            device_class=BinarySensorDeviceClass.MOISTURE,
+            # value is inverted on matter to what we expect
+            measurement_to_ha=lambda x: not x,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.BooleanState.Attributes.StateValue,),
+        device_type=(device_types.WaterLeakDetector,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="WaterFreezeDetector",
+            device_class=BinarySensorDeviceClass.COLD,
+            # value is inverted on matter to what we expect
+            measurement_to_ha=lambda x: not x,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.BooleanState.Attributes.StateValue,),
+        device_type=(device_types.WaterFreezeDetector,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="RainSensor",
+            device_class=BinarySensorDeviceClass.MOISTURE,
+            # value is inverted on matter to what we expect
+            measurement_to_ha=lambda x: not x,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.BooleanState.Attributes.StateValue,),
+        device_type=(device_types.RainSensor,),
     ),
 ]
