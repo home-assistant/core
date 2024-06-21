@@ -37,12 +37,8 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_platform,
-    entity_registry as er,
-)
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import entity_platform, entity_registry as er
+from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
@@ -130,27 +126,10 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_SOURCE_SENSOR]
     )
 
-    source_entity = registry.async_get(source_entity_id)
-    dev_reg = dr.async_get(hass)
-    # Resolve source entity device
-    if (
-        (source_entity is not None)
-        and (source_entity.device_id is not None)
-        and (
-            (
-                device := dev_reg.async_get(
-                    device_id=source_entity.device_id,
-                )
-            )
-            is not None
-        )
-    ):
-        device_info = DeviceInfo(
-            identifiers=device.identifiers,
-            connections=device.connections,
-        )
-    else:
-        device_info = None
+    device_info = async_device_info_to_link_from_entity(
+        hass,
+        source_entity_id,
+    )
 
     cron_pattern = None
     delta_values = config_entry.options[CONF_METER_DELTA_VALUES]

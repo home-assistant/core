@@ -72,14 +72,13 @@ async def test_lawn_mower_commands(
 ) -> None:
     """Test lawn_mower commands."""
     await setup_integration(hass, mock_config_entry)
-    mocked_method = AsyncMock()
-    setattr(mock_automower_client.commands, aioautomower_command, mocked_method)
     await hass.services.async_call(
         domain="lawn_mower",
         service=service,
-        target={"entity_id": "lawn_mower.test_mower_1"},
+        service_data={"entity_id": "lawn_mower.test_mower_1"},
         blocking=True,
     )
+    mocked_method = getattr(mock_automower_client.commands, aioautomower_command)
     mocked_method.assert_called_once_with(TEST_MOWER_ID)
 
     getattr(
