@@ -13,24 +13,14 @@ from homeassistant.components.media_player import MediaPlayerState, MediaType
 class BangOlufsenSource:
     """Class used for associating device source ids with friendly names. May not include all sources."""
 
-    uri_streamer = Source(name="Audio Streamer", id="uriStreamer")
-    bluetooth = Source(name="Bluetooth", id="bluetooth")
-    air_play = Source(name="AirPlay", id="airPlay")
-    chromecast = Source(name="Chromecast built-in", id="chromeCast")
-    spotify = Source(name="Spotify Connect", id="spotify")
-    generator = Source(name="Tone Generator", id="generator")
-    line_in = Source(name="Line-In", id="lineIn")
-    spdif = Source(name="Optical", id="spdif")
-    net_radio = Source(name="B&O Radio", id="netRadio")
-    local = Source(name="Local", id="local")
-    dlna = Source(name="DLNA", id="dlna")
-    qplay = Source(name="QPlay", id="qplay")
-    wpl = Source(name="Wireless Powerlink", id="wpl")
-    pl = Source(name="Powerlink", id="pl")
-    tv = Source(name="TV", id="tv")
-    deezer = Source(name="Deezer", id="deezer")
-    beolink = Source(name="Networklink", id="beolink")
-    tidal_connect = Source(name="Tidal Connect", id="tidalConnect")
+    URI_STREAMER: Final[Source] = Source(name="Audio Streamer", id="uriStreamer")
+    BLUETOOTH: Final[Source] = Source(name="Bluetooth", id="bluetooth")
+    CHROMECAST: Final[Source] = Source(name="Chromecast built-in", id="chromeCast")
+    LINE_IN: Final[Source] = Source(name="Line-In", id="lineIn")
+    SPDIF: Final[Source] = Source(name="Optical", id="spdif")
+    NET_RADIO: Final[Source] = Source(name="B&O Radio", id="netRadio")
+    DEEZER: Final[Source] = Source(name="Deezer", id="deezer")
+    TIDAL: Final[Source] = Source(name="Tidal", id="tidal")
 
 
 BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
