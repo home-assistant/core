@@ -68,6 +68,7 @@ SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
     # In the list below specify tuples of (vendorid, productid) of devices that
     # support fan-only mode.
     (0x0001, 0x0108),
+    (0x0001, 0x010A),
     (0x1209, 0x8007),
 }
 
