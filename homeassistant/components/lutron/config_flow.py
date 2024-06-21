@@ -47,7 +47,7 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
             except HTTPError:
                 _LOGGER.exception("Http error")
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unknown error")
                 errors["base"] = "unknown"
             else:
@@ -94,7 +94,7 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
         except HTTPError:
             _LOGGER.exception("Http error")
             return self.async_abort(reason="cannot_connect")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unknown error")
             return self.async_abort(reason="unknown")
 

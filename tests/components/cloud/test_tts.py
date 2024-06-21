@@ -1,6 +1,6 @@
 """Tests for cloud tts."""
 
-from collections.abc import AsyncGenerator, Callable, Coroutine
+from collections.abc import Callable, Coroutine
 from copy import deepcopy
 from http import HTTPStatus
 from typing import Any
@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from hass_nabucasa.voice import TTS_VOICES, VoiceError, VoiceTokenError
 import pytest
+from typing_extensions import AsyncGenerator
 import voluptuous as vol
 
 from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY
@@ -27,8 +28,8 @@ from homeassistant.components.tts.helper import get_engine_instance
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_registry import EntityRegistry
-from homeassistant.helpers.issue_registry import IssueRegistry, IssueSeverity
 from homeassistant.setup import async_setup_component
 
 from . import PIPELINE_DATA
@@ -39,7 +40,7 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
-async def delay_save_fixture() -> AsyncGenerator[None, None]:
+async def delay_save_fixture() -> AsyncGenerator[None]:
     """Load the homeassistant integration."""
     with patch("homeassistant.helpers.collection.SAVE_DELAY", new=0):
         yield
@@ -143,7 +144,7 @@ async def test_prefs_default_voice(
 
 async def test_deprecated_platform_config(
     hass: HomeAssistant,
-    issue_registry: IssueRegistry,
+    issue_registry: ir.IssueRegistry,
     cloud: MagicMock,
 ) -> None:
     """Test cloud provider uses the preferences."""
@@ -157,7 +158,7 @@ async def test_deprecated_platform_config(
     assert issue.breaks_in_ha_version == "2024.9.0"
     assert issue.is_fixable is False
     assert issue.is_persistent is False
-    assert issue.severity == IssueSeverity.WARNING
+    assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_key == "deprecated_tts_platform_config"
 
 
@@ -463,7 +464,7 @@ async def test_migrating_pipelines(
 )
 async def test_deprecated_voice(
     hass: HomeAssistant,
-    issue_registry: IssueRegistry,
+    issue_registry: ir.IssueRegistry,
     cloud: MagicMock,
     hass_client: ClientSessionGenerator,
     data: dict[str, Any],
@@ -555,7 +556,7 @@ async def test_deprecated_voice(
     assert issue.breaks_in_ha_version == "2024.8.0"
     assert issue.is_fixable is True
     assert issue.is_persistent is True
-    assert issue.severity == IssueSeverity.WARNING
+    assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_key == "deprecated_voice"
     assert issue.translation_placeholders == {
         "deprecated_voice": deprecated_voice,
@@ -613,7 +614,7 @@ async def test_deprecated_voice(
 )
 async def test_deprecated_gender(
     hass: HomeAssistant,
-    issue_registry: IssueRegistry,
+    issue_registry: ir.IssueRegistry,
     cloud: MagicMock,
     hass_client: ClientSessionGenerator,
     data: dict[str, Any],
@@ -700,7 +701,7 @@ async def test_deprecated_gender(
     assert issue.breaks_in_ha_version == "2024.10.0"
     assert issue.is_fixable is True
     assert issue.is_persistent is True
-    assert issue.severity == IssueSeverity.WARNING
+    assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_key == "deprecated_gender"
     assert issue.translation_placeholders == {
         "integration_name": "Home Assistant Cloud",

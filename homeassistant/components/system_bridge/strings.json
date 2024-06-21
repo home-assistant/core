@@ -95,8 +95,26 @@
     }
   },
   "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed for {title} ({host})"
+    },
+    "connection_failed": {
+      "message": "A connection error occurred for {title} ({host})"
+    },
+    "device_not_found": {
+      "message": "Could not find device {device}"
+    },
+    "no_data_received": {
+      "message": "No data received from {host}"
+    },
     "process_not_found": {
       "message": "Could not find process with id {id}."
+    },
+    "timeout": {
+      "message": "A timeout occurred for {title} ({host})"
+    },
+    "unsupported_version": {
+      "message": "You are not running a supported version of System Bridge for {title} ({host}). Please upgrade to the latest version"
     }
   },
   "issues": {

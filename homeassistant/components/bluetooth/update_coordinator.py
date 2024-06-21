@@ -83,11 +83,6 @@ class BasePassiveBluetoothCoordinator(ABC):
         # was set when the unavailable callback was called.
         return self._last_unavailable_time
 
-    @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return self._available
-
     @callback
     def _async_start(self) -> None:
         """Start the callbacks."""

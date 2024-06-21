@@ -1,12 +1,10 @@
 """Test the Teslemetry sensor platform."""
 
-from datetime import timedelta
-
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.teslemetry.coordinator import SYNC_INTERVAL
+from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -35,7 +33,7 @@ async def test_sensors(
 
     # Coordinator refresh
     mock_vehicle_data.return_value = VEHICLE_DATA_ALT
-    freezer.tick(timedelta(seconds=SYNC_INTERVAL))
+    freezer.tick(VEHICLE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

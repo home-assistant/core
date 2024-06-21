@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp.client_exceptions import ClientConnectorError
 from nettigo_air_monitor import (
@@ -50,8 +49,7 @@ async def async_get_config(hass: HomeAssistant, host: str) -> NamConfig:
     options = ConnectionOptions(host)
     nam = await NettigoAirMonitor.create(websession, options)
 
-    async with asyncio.timeout(10):
-        mac = await nam.async_get_mac_address()
+    mac = await nam.async_get_mac_address()
 
     return NamConfig(mac, nam.auth_enabled)
 
@@ -66,8 +64,7 @@ async def async_check_credentials(
 
     nam = await NettigoAirMonitor.create(websession, options)
 
-    async with asyncio.timeout(10):
-        await nam.async_check_credentials()
+    await nam.async_check_credentials()
 
 
 class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -96,7 +93,7 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except CannotGetMacError:
                 return self.async_abort(reason="device_unsupported")
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -130,7 +127,7 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except (ApiError, ClientConnectorError, TimeoutError):
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -225,5 +222,50 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             description_placeholders={"host": self.host},
             data_schema=AUTH_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, _: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+
+        if TYPE_CHECKING:
+            assert entry is not None
+
+        self.host = entry.data[CONF_HOST]
+        self.entry = entry
+
+        return await self.async_step_reconfigure_confirm()
+
+    async def async_step_reconfigure_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        errors = {}
+
+        if user_input is not None:
+            try:
+                config = await async_get_config(self.hass, user_input[CONF_HOST])
+            except (ApiError, ClientConnectorError, TimeoutError):
+                errors["base"] = "cannot_connect"
+            else:
+                if format_mac(config.mac_address) != self.entry.unique_id:
+                    return self.async_abort(reason="another_device")
+
+                data = {**self.entry.data, CONF_HOST: user_input[CONF_HOST]}
+                self.hass.config_entries.async_update_entry(self.entry, data=data)
+                await self.hass.config_entries.async_reload(self.entry.entry_id)
+                return self.async_abort(reason="reconfigure_successful")
+
+        return self.async_show_form(
+            step_id="reconfigure_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default=self.host): str,
+                }
+            ),
+            description_placeholders={"device_name": self.entry.title},
             errors=errors,
         )

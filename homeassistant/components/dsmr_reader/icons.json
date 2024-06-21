@@ -1,0 +1,249 @@
+{
+  "entity": {
+    "sensor": {
+      "low_tariff_usage": {
+        "default": "mdi:flash"
+      },
+      "low_tariff_returned": {
+        "default": "mdi:flash"
+      },
+      "high_tariff_usage": {
+        "default": "mdi:flash"
+      },
+      "high_tariff_returned": {
+        "default": "mdi:flash"
+      },
+      "current_power_usage": {
+        "default": "mdi:flash"
+      },
+      "current_power_return": {
+        "default": "mdi:flash"
+      },
+      "current_power_usage_l1": {
+        "default": "mdi:flash"
+      },
+      "current_power_usage_l2": {
+        "default": "mdi:flash"
+      },
+      "current_power_usage_l3": {
+        "default": "mdi:flash"
+      },
+      "current_power_return_l1": {
+        "default": "mdi:flash"
+      },
+      "current_power_return_l2": {
+        "default": "mdi:flash"
+      },
+      "current_power_return_l3": {
+        "default": "mdi:flash"
+      },
+      "gas_meter_usage": {
+        "default": "mdi:fire"
+      },
+      "current_voltage_l1": {
+        "default": "mdi:flash"
+      },
+      "current_voltage_l2": {
+        "default": "mdi:flash"
+      },
+      "current_voltage_l3": {
+        "default": "mdi:flash"
+      },
+      "phase_power_current_l1": {
+        "default": "mdi:flash"
+      },
+      "phase_power_current_l2": {
+        "default": "mdi:flash"
+      },
+      "phase_power_current_l3": {
+        "default": "mdi:flash"
+      },
+      "telegram_timestamp": {
+        "default": "mdi:clock"
+      },
+      "gas_usage": {
+        "default": "mdi:counter"
+      },
+      "current_gas_usage": {
+        "default": "mdi:counter"
+      },
+      "gas_meter_read": {
+        "default": "mdi:clock"
+      },
+      "daily_low_tariff_usage": {
+        "default": "mdi:flash"
+      },
+      "daily_high_tariff_usage": {
+        "default": "mdi:flash"
+      },
+      "daily_low_tariff_return": {
+        "default": "mdi:flash"
+      },
+      "daily_high_tariff_return": {
+        "default": "mdi:flash"
+      },
+      "daily_power_usage_total": {
+        "default": "mdi:flash"
+      },
+      "daily_power_return_total": {
+        "default": "mdi:flash"
+      },
+      "daily_low_tariff_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "daily_high_tariff_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "daily_power_total_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "daily_gas_usage": {
+        "default": "mdi:counter"
+      },
+      "gas_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "total_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "low_tariff_delivered_price": {
+        "default": "mdi:currency-eur"
+      },
+      "high_tariff_delivered_price": {
+        "default": "mdi:currency-eur"
+      },
+      "low_tariff_returned_price": {
+        "default": "mdi:currency-eur"
+      },
+      "high_tariff_returned_price": {
+        "default": "mdi:currency-eur"
+      },
+      "gas_price": {
+        "default": "mdi:currency-eur"
+      },
+      "current_day_fixed_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "dsmr_version": {
+        "default": "mdi:alert-circle"
+      },
+      "electricity_tariff": {
+        "default": "mdi:flash"
+      },
+      "power_failure_count": {
+        "default": "mdi:flash"
+      },
+      "long_power_failure_count": {
+        "default": "mdi:flash"
+      },
+      "voltage_sag_l1": {
+        "default": "mdi:flash"
+      },
+      "voltage_sag_l2": {
+        "default": "mdi:flash"
+      },
+      "voltage_sag_l3": {
+        "default": "mdi:flash"
+      },
+      "voltage_swell_l1": {
+        "default": "mdi:flash"
+      },
+      "voltage_swell_l2": {
+        "default": "mdi:flash"
+      },
+      "voltage_swell_l3": {
+        "default": "mdi:flash"
+      },
+      "rejected_telegrams": {
+        "default": "mdi:flash"
+      },
+      "current_month_low_tariff_usage": {
+        "default": "mdi:flash"
+      },
+      "current_month_high_tariff_usage": {
+        "default": "mdi:flash"
+      },
+      "current_month_low_tariff_returned": {
+        "default": "mdi:flash"
+      },
+      "current_month_high_tariff_returned": {
+        "default": "mdi:flash"
+      },
+      "current_month_power_usage_total": {
+        "default": "mdi:flash"
+      },
+      "current_month_power_return_total": {
+        "default": "mdi:flash"
+      },
+      "current_month_low_tariff_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "current_month_high_tariff_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "current_month_power_total_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "current_month_gas_usage": {
+        "default": "mdi:counter"
+      },
+      "current_month_gas_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "current_month_fixed_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "current_month_total_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "current_year_low_tariff_usage": {
+        "default": "mdi:flash"
+      },
+      "current_year_high_tariff_usage": {
+        "default": "mdi:flash"
+      },
+      "current_year_low_tariff_returned": {
+        "default": "mdi:flash"
+      },
+      "current_year_high_tariff_returned": {
+        "default": "mdi:flash"
+      },
+      "current_year_power_usage_total": {
+        "default": "mdi:flash"
+      },
+      "current_year_power_returned_total": {
+        "default": "mdi:flash"
+      },
+      "current_year_low_tariff_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "current_year_high_tariff_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "current_year_power_total_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "current_year_gas_usage": {
+        "default": "mdi:counter"
+      },
+      "current_year_gas_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "current_year_fixed_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "current_year_total_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "previous_quarter_hour_peak_usage": {
+        "default": "mdi:flash"
+      },
+      "quarter_hour_peak_start_time": {
+        "default": "mdi:clock"
+      },
+      "quarter_hour_peak_end_time": {
+        "default": "mdi:clock"
+      }
+    }
+  }
+}

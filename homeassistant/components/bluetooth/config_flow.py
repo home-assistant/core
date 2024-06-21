@@ -14,6 +14,7 @@ from bluetooth_adapters import (
     adapter_model,
     get_adapters,
 )
+from habluetooth import get_manager
 import voluptuous as vol
 
 from homeassistant.components import onboarding
@@ -25,7 +26,6 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from . import models
 from .const import CONF_ADAPTER, CONF_DETAILS, CONF_PASSIVE, DOMAIN
 from .util import adapter_title
 
@@ -185,4 +185,4 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
         """Return options flow support for this handler."""
-        return bool(models.MANAGER and models.MANAGER.supports_passive_scan)
+        return bool((manager := get_manager()) and manager.supports_passive_scan)

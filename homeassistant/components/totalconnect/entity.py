@@ -6,7 +6,8 @@ from total_connect_client.zone import TotalConnectZone
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN, TotalConnectDataUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import TotalConnectDataUpdateCoordinator
 
 
 class TotalConnectEntity(CoordinatorEntity[TotalConnectDataUpdateCoordinator]):

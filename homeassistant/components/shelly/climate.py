@@ -18,18 +18,13 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import (
-    RegistryEntry,
-    async_entries_for_config_entry,
-    async_get as er_async_get,
-)
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -42,7 +37,7 @@ from .const import (
     RPC_THERMOSTAT_SETTINGS,
     SHTRV_01_TEMPERATURE_SETTINGS,
 )
-from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
+from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import ShellyRpcEntity
 from .utils import (
     async_remove_shelly_entity,
@@ -54,14 +49,14 @@ from .utils import (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up climate device."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
         return async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
-    coordinator = get_entry_data(hass)[config_entry.entry_id].block
+    coordinator = config_entry.runtime_data.block
     assert coordinator
     if coordinator.device.initialized:
         async_setup_climate_entities(async_add_entities, coordinator)
@@ -99,14 +94,14 @@ def async_setup_climate_entities(
 @callback
 def async_restore_climate_entities(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
     coordinator: ShellyBlockCoordinator,
 ) -> None:
     """Restore sleeping climate devices."""
 
-    ent_reg = er_async_get(hass)
-    entries = async_entries_for_config_entry(ent_reg, config_entry.entry_id)
+    ent_reg = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(ent_reg, config_entry.entry_id)
 
     for entry in entries:
         if entry.domain != CLIMATE_DOMAIN:
@@ -121,11 +116,11 @@ def async_restore_climate_entities(
 @callback
 def async_setup_rpc_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entities for RPC device."""
-    coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
+    coordinator = config_entry.runtime_data.rpc
     assert coordinator
     climate_key_ids = get_rpc_key_ids(coordinator.device.status, "thermostat")
 
@@ -320,7 +315,7 @@ class BlockSleepingClimate(
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
                 f"Setting state for entity {self.name} failed, state: {kwargs}, error:"
-                f" {repr(err)}"
+                f" {err!r}"
             ) from err
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()
@@ -473,6 +468,10 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
             self._attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL]
         else:
             self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
+        self._humidity_key: str | None = None
+        # Check if there is a corresponding humidity key for the thermostat ID
+        if (humidity_key := f"humidity:{id_}") in self.coordinator.device.status:
+            self._humidity_key = humidity_key
 
     @property
     def target_temperature(self) -> float | None:
@@ -483,6 +482,14 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
     def current_temperature(self) -> float | None:
         """Return current temperature."""
         return cast(float, self.status["current_C"])
+
+    @property
+    def current_humidity(self) -> float | None:
+        """Return current humidity."""
+        if self._humidity_key is None:
+            return None
+
+        return cast(float, self.coordinator.device.status[self._humidity_key]["rh"])
 
     @property
     def hvac_mode(self) -> HVACMode:

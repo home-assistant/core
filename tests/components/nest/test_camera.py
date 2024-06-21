@@ -12,11 +12,12 @@ import aiohttp
 from freezegun import freeze_time
 from google_nest_sdm.event import EventMessage
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components import camera
 from homeassistant.components.camera import STATE_IDLE, STATE_STREAMING, StreamType
 from homeassistant.components.nest.const import DOMAIN
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -109,7 +110,7 @@ def make_motion_event(
     """Create an EventMessage for a motion event."""
     if not timestamp:
         timestamp = utcnow()
-    return EventMessage(
+    return EventMessage.create_event(
         {
             "eventId": "some-event-id",  # Ignored; we use the resource updated event id below
             "timestamp": timestamp.isoformat(timespec="seconds"),
@@ -149,7 +150,7 @@ def make_stream_url_response(
 
 
 @pytest.fixture
-async def mock_create_stream(hass) -> Mock:
+async def mock_create_stream(hass: HomeAssistant) -> Generator[AsyncMock]:
     """Fixture to mock out the create stream call."""
     assert await async_setup_component(hass, "stream", {})
     with patch(
@@ -203,7 +204,11 @@ async def test_ineligible_device(
 
 
 async def test_camera_device(
-    hass: HomeAssistant, setup_platform: PlatformSetup, camera_device: None
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    setup_platform: PlatformSetup,
+    camera_device: None,
 ) -> None:
     """Test a basic camera with a live stream."""
     await setup_platform()
@@ -214,12 +219,10 @@ async def test_camera_device(
     assert camera.state == STATE_STREAMING
     assert camera.attributes.get(ATTR_FRIENDLY_NAME) == "My Camera"
 
-    registry = er.async_get(hass)
-    entry = registry.async_get("camera.my_camera")
+    entry = entity_registry.async_get("camera.my_camera")
     assert entry.unique_id == f"{DEVICE_ID}-camera"
     assert entry.domain == "camera"
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
     assert device.name == "My Camera"
     assert device.model == "Camera"

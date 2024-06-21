@@ -63,7 +63,7 @@ async def test_buttons(
     assert button
     assert button.state == STATE_UNKNOWN
     with patch(
-        f"homeassistant.components.fritz.common.AvmWrapper.{wrapper_method}"
+        f"homeassistant.components.fritz.coordinator.AvmWrapper.{wrapper_method}"
     ) as mock_press_action:
         await hass.services.async_call(
             BUTTON_DOMAIN,
@@ -71,16 +71,15 @@ async def test_buttons(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_press_action.assert_called_once()
 
         button = hass.states.get(entity_id)
         assert button.state != STATE_UNKNOWN
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_wol_button(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     fc_class_mock,
     fh_class_mock,
 ) -> None:
@@ -97,7 +96,7 @@ async def test_wol_button(
     assert button
     assert button.state == STATE_UNKNOWN
     with patch(
-        "homeassistant.components.fritz.common.AvmWrapper.async_wake_on_lan"
+        "homeassistant.components.fritz.coordinator.AvmWrapper.async_wake_on_lan"
     ) as mock_press_action:
         await hass.services.async_call(
             BUTTON_DOMAIN,
@@ -105,16 +104,15 @@ async def test_wol_button(
             {ATTR_ENTITY_ID: "button.printer_wake_on_lan"},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_press_action.assert_called_once_with("AA:BB:CC:00:11:22")
 
         button = hass.states.get("button.printer_wake_on_lan")
         assert button.state != STATE_UNKNOWN
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_wol_button_new_device(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     fc_class_mock,
     fh_class_mock,
 ) -> None:
@@ -140,9 +138,9 @@ async def test_wol_button_new_device(
     assert hass.states.get("button.server_wake_on_lan")
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_wol_button_absent_for_mesh_slave(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     fc_class_mock,
     fh_class_mock,
 ) -> None:
@@ -162,9 +160,9 @@ async def test_wol_button_absent_for_mesh_slave(
     assert button is None
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_wol_button_absent_for_non_lan_device(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     fc_class_mock,
     fh_class_mock,
 ) -> None:

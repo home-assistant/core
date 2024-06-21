@@ -12,7 +12,7 @@ from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.tasmota import _LOGGER
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX, DOMAIN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.setup import async_setup_component
@@ -350,7 +350,11 @@ async def test_update_remove_triggers(
 
 
 async def test_if_fires_on_mqtt_message_btn(
-    hass: HomeAssistant, device_reg, calls, mqtt_mock: MqttMockHAClient, setup_tasmota
+    hass: HomeAssistant,
+    device_reg,
+    calls: list[ServiceCall],
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
 ) -> None:
     """Test button triggers firing."""
     # Discover a device with 2 device triggers
@@ -421,7 +425,11 @@ async def test_if_fires_on_mqtt_message_btn(
 
 
 async def test_if_fires_on_mqtt_message_swc(
-    hass: HomeAssistant, device_reg, calls, mqtt_mock: MqttMockHAClient, setup_tasmota
+    hass: HomeAssistant,
+    device_reg,
+    calls: list[ServiceCall],
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
 ) -> None:
     """Test switch triggers firing."""
     # Discover a device with 2 device triggers
@@ -515,7 +523,11 @@ async def test_if_fires_on_mqtt_message_swc(
 
 
 async def test_if_fires_on_mqtt_message_late_discover(
-    hass: HomeAssistant, device_reg, calls, mqtt_mock: MqttMockHAClient, setup_tasmota
+    hass: HomeAssistant,
+    device_reg,
+    calls: list[ServiceCall],
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
 ) -> None:
     """Test triggers firing of MQTT device triggers discovered after setup."""
     # Discover a device without device triggers
@@ -594,7 +606,11 @@ async def test_if_fires_on_mqtt_message_late_discover(
 
 
 async def test_if_fires_on_mqtt_message_after_update(
-    hass: HomeAssistant, device_reg, calls, mqtt_mock: MqttMockHAClient, setup_tasmota
+    hass: HomeAssistant,
+    device_reg,
+    calls: list[ServiceCall],
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
 ) -> None:
     """Test triggers firing after update."""
     # Discover a device with device trigger
@@ -724,7 +740,11 @@ async def test_no_resubscribe_same_topic(
 
 
 async def test_not_fires_on_mqtt_message_after_remove_by_mqtt(
-    hass: HomeAssistant, device_reg, calls, mqtt_mock: MqttMockHAClient, setup_tasmota
+    hass: HomeAssistant,
+    device_reg,
+    calls: list[ServiceCall],
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
 ) -> None:
     """Test triggers not firing after removal."""
     # Discover a device with device trigger
@@ -798,7 +818,7 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_reg,
-    calls,
+    calls: list[ServiceCall],
     mqtt_mock: MqttMockHAClient,
     setup_tasmota,
 ) -> None:
@@ -849,7 +869,7 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     assert len(calls) == 1
 
     # Remove the device
-    await remove_device(hass, await hass_ws_client(hass), device_entry.id)
+    await remove_device(hass, hass_ws_client, device_entry.id)
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(
@@ -1139,7 +1159,7 @@ async def test_attach_unknown_remove_device_from_registry(
     )
 
     # Remove the device
-    await remove_device(hass, await hass_ws_client(hass), device_entry.id)
+    await remove_device(hass, hass_ws_client, device_entry.id)
     await hass.async_block_till_done()
 
 

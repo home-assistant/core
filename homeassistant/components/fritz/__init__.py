@@ -13,7 +13,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .common import AvmWrapper, FritzData
 from .const import (
     DATA_FRITZ,
     DEFAULT_SSL,
@@ -22,6 +21,7 @@ from .const import (
     FRITZ_EXCEPTIONS,
     PLATFORMS,
 )
+from .coordinator import AvmWrapper, FritzData
 from .services import async_setup_services, async_unload_services
 
 _LOGGER = logging.getLogger(__name__)

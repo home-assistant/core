@@ -27,8 +27,9 @@ from homeassistant.const import LIGHT_LUX, PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AbodeDevice, AbodeSystem
+from . import AbodeSystem
 from .const import DOMAIN
+from .entity import AbodeDevice
 
 ABODE_TEMPERATURE_UNIT_HA_UNIT = {
     UNIT_FAHRENHEIT: UnitOfTemperature.FAHRENHEIT,
