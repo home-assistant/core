@@ -10,6 +10,7 @@ from mozart_api.models import (
     Source,
     SourceTypeEnum,
     VolumeLevel,
+    VolumeMute,
     VolumeState,
 )
 
@@ -123,4 +124,9 @@ TEST_SOURCE_CHANGE = Source(
     type=SourceTypeEnum(value="tidalConnect"),
 )
 TEST_VOLUME = VolumeState(level=VolumeLevel(level=40))
+TEST_VOLUME_HOME_ASSISTANT_FORMAT = 0.4
 TEST_PLAYBACK_STATE_TURN_OFF = RenderingState(value="stopped")
+TEST_VOLUME_MUTED = VolumeState(
+    muted=VolumeMute(muted=True), level=VolumeLevel(level=40)
+)
+TEST_VOLUME_MUTED_HOME_ASSISTANT_FORMAT = True

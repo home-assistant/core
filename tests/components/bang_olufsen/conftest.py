@@ -17,7 +17,6 @@ from mozart_api.models import (
     Source,
     SourceArray,
     SourceTypeEnum,
-    VolumeMute,
     VolumeState,
 )
 import pytest
@@ -82,7 +81,7 @@ def mock_mozart_client() -> Generator[AsyncMock]:
         )
         client.get_product_state = AsyncMock()
         client.get_product_state.return_value = ProductState(
-            volume=VolumeState(muted=VolumeMute(muted=True)),
+            volume=VolumeState(),
             playback=PlaybackState(
                 metadata=PlaybackContentMetadata(),
                 progress=PlaybackProgress(),
