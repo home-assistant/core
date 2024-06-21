@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -25,8 +24,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.dt import utcnow
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    TimestampDataUpdateCoordinator,
+)
 from homeassistant.util.unit_conversion import (
     DistanceConverter,
     PressureConverter,
@@ -34,8 +35,8 @@ from homeassistant.util.unit_conversion import (
 )
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from . import NWSData, NwsDataUpdateCoordinator, base_unique_id, device_info
-from .const import ATTRIBUTION, CONF_STATION, DOMAIN, OBSERVATION_VALID_TIME
+from . import NWSConfigEntry, NWSData, base_unique_id, device_info
+from .const import ATTRIBUTION, CONF_STATION
 
 PARALLEL_UPDATES = 0
 
@@ -140,10 +141,10 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: NWSConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the NWS weather platform."""
-    nws_data: NWSData = hass.data[DOMAIN][entry.entry_id]
+    nws_data = entry.runtime_data
     station = entry.data[CONF_STATION]
 
     async_add_entities(
@@ -158,7 +159,7 @@ async def async_setup_entry(
     )
 
 
-class NWSSensor(CoordinatorEntity[NwsDataUpdateCoordinator], SensorEntity):
+class NWSSensor(CoordinatorEntity[TimestampDataUpdateCoordinator[None]], SensorEntity):
     """An NWS Sensor Entity."""
 
     entity_description: NWSSensorEntityDescription
@@ -223,15 +224,3 @@ class NWSSensor(CoordinatorEntity[NwsDataUpdateCoordinator], SensorEntity):
         if unit_of_measurement == PERCENTAGE:
             return round(value)
         return value
-
-    @property
-    def available(self) -> bool:
-        """Return if state is available."""
-        if self.coordinator.last_update_success_time:
-            last_success_time = (
-                utcnow() - self.coordinator.last_update_success_time
-                < OBSERVATION_VALID_TIME
-            )
-        else:
-            last_success_time = False
-        return self.coordinator.last_update_success or last_success_time

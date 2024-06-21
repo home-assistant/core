@@ -14,6 +14,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from .common import MockUpdateEntity
+
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
@@ -22,7 +24,6 @@ from tests.common import (
     async_mock_service,
     setup_test_component_platform,
 )
-from tests.components.update.common import MockUpdateEntity
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -60,7 +61,7 @@ async def test_get_triggers(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
-        for trigger in ["changed_states", "turned_off", "turned_on"]
+        for trigger in ("changed_states", "turned_off", "turned_on")
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
@@ -108,7 +109,7 @@ async def test_get_triggers_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for trigger in ["changed_states", "turned_off", "turned_on"]
+        for trigger in ("changed_states", "turned_off", "turned_on")
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
@@ -214,15 +215,12 @@ async def test_if_fires_on_state_change(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "update_available {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "update_available {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -238,15 +236,12 @@ async def test_if_fires_on_state_change(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "no_update {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "no_update {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -314,15 +309,12 @@ async def test_if_fires_on_state_change_legacy(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "no_update {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "no_update {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -383,15 +375,12 @@ async def test_if_fires_on_state_change_with_for(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_off {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "turn_off {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },

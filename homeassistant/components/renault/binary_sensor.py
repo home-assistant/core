@@ -12,14 +12,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
+from . import RenaultConfigEntry
 from .entity import RenaultDataEntity, RenaultDataEntityDescription
-from .renault_hub import RenaultHub
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -35,14 +33,13 @@ class RenaultBinarySensorEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RenaultConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Renault entities from config entry."""
-    proxy: RenaultHub = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[RenaultBinarySensor] = [
         RenaultBinarySensor(vehicle, description)
-        for vehicle in proxy.vehicles.values()
+        for vehicle in config_entry.runtime_data.vehicles.values()
         for description in BINARY_SENSOR_TYPES
         if description.coordinator in vehicle.coordinators
     ]
@@ -84,7 +81,7 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
             key="hvac_status",
             coordinator="hvac_status",
             on_key="hvacStatus",
-            on_value="on",
+            on_value=2,
             translation_key="hvac_status",
         ),
         RenaultBinarySensorEntityDescription(

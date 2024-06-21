@@ -136,10 +136,11 @@ async def tuya_water_valve(
 
 
 @freeze_time("2021-11-04 17:37:00", tz_offset=-1)
-async def test_button(hass: HomeAssistant, contact_sensor) -> None:
+async def test_button(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, contact_sensor
+) -> None:
     """Test ZHA button platform."""
 
-    entity_registry = er.async_get(hass)
     zha_device, cluster = contact_sensor
     assert cluster is not None
     entity_id = find_entity_id(DOMAIN, zha_device, hass)
@@ -176,10 +177,11 @@ async def test_button(hass: HomeAssistant, contact_sensor) -> None:
     assert state.attributes[ATTR_DEVICE_CLASS] == ButtonDeviceClass.IDENTIFY
 
 
-async def test_frost_unlock(hass: HomeAssistant, tuya_water_valve) -> None:
+async def test_frost_unlock(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, tuya_water_valve
+) -> None:
     """Test custom frost unlock ZHA button."""
 
-    entity_registry = er.async_get(hass)
     zha_device, cluster = tuya_water_valve
     assert cluster is not None
     entity_id = find_entity_id(DOMAIN, zha_device, hass, qualifier="frost_lock_reset")

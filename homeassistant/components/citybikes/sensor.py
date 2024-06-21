@@ -201,9 +201,9 @@ async def async_setup_platform(
 
         if radius > dist or stations_list.intersection((station_id, station_uid)):
             if name:
-                uid = "_".join([network.network_id, name, station_id])
+                uid = f"{network.network_id}_{name}_{station_id}"
             else:
-                uid = "_".join([network.network_id, station_id])
+                uid = f"{network.network_id}_{station_id}"
             entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, uid, hass=hass)
             devices.append(CityBikesStation(network, station_id, entity_id))
 

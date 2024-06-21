@@ -8,7 +8,7 @@ from typing import Any, TypedDict
 import voluptuous as vol
 
 from homeassistant.components.script import CONF_MODE
-from homeassistant.const import CONF_TYPE, SERVICE_RELOAD
+from homeassistant.const import CONF_DESCRIPTION, CONF_TYPE, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import (
     config_validation as cv,
@@ -24,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "intent_script"
 
+CONF_PLATFORMS = "platforms"
 CONF_INTENTS = "intents"
 CONF_SPEECH = "speech"
 CONF_REPROMPT = "reprompt"
@@ -41,6 +42,8 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: {
             cv.string: {
+                vol.Optional(CONF_DESCRIPTION): cv.string,
+                vol.Optional(CONF_PLATFORMS): vol.All([cv.string], vol.Coerce(set)),
                 vol.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
                 vol.Optional(
                     CONF_ASYNC_ACTION, default=DEFAULT_CONF_ASYNC_ACTION
@@ -146,6 +149,8 @@ class ScriptIntentHandler(intent.IntentHandler):
         """Initialize the script intent handler."""
         self.intent_type = intent_type
         self.config = config
+        self.description = config.get(CONF_DESCRIPTION)
+        self.platforms = config.get(CONF_PLATFORMS)
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""

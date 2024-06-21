@@ -813,15 +813,7 @@ async def test_device_registry(
     chromecast.disconnect.assert_not_called()
 
     client = await hass_ws_client(hass)
-    await client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": cast_entry.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await client.receive_json()
+    response = await client.remove_device(device_entry.id, cast_entry.entry_id)
     assert response["success"]
 
     await hass.async_block_till_done()

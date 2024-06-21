@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 import logging
 from typing import Any, Self
 
@@ -17,7 +17,6 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.const import (
     ATTR_EDITABLE,
-    ATTR_ENTITY_ID,
     ATTR_GPS_ACCURACY,
     ATTR_ID,
     ATTR_LATITUDE,
@@ -25,7 +24,6 @@ from homeassistant.const import (
     ATTR_NAME,
     CONF_ID,
     CONF_NAME,
-    CONF_TYPE,
     EVENT_HOMEASSISTANT_START,
     SERVICE_RELOAD,
     STATE_HOME,
@@ -55,7 +53,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from . import group as group_pre_import  # noqa: F401
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,8 +64,6 @@ ATTR_DEVICE_TRACKERS = "device_trackers"
 CONF_DEVICE_TRACKERS = "device_trackers"
 CONF_USER_ID = "user_id"
 CONF_PICTURE = "picture"
-
-DOMAIN = "person"
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 2
@@ -242,20 +238,23 @@ class PersonStorageCollection(collection.DictStorageCollection):
             er.EVENT_ENTITY_REGISTRY_UPDATED,
             self._entity_registry_updated,
             event_filter=self._entity_registry_filter,
-            run_immediately=True,
         )
 
     @callback
-    def _entity_registry_filter(self, event_data: Mapping[str, Any]) -> bool:
+    def _entity_registry_filter(
+        self, event_data: er.EventEntityRegistryUpdatedData
+    ) -> bool:
         """Filter entity registry events."""
         return (
             event_data["action"] == "remove"
-            and split_entity_id(event_data[ATTR_ENTITY_ID])[0] == "device_tracker"
+            and split_entity_id(event_data["entity_id"])[0] == "device_tracker"
         )
 
-    async def _entity_registry_updated(self, event: Event) -> None:
+    async def _entity_registry_updated(
+        self, event: Event[er.EventEntityRegistryUpdatedData]
+    ) -> None:
         """Handle entity registry updated."""
-        entity_id = event.data[ATTR_ENTITY_ID]
+        entity_id = event.data["entity_id"]
         for person in list(self.data.values()):
             if entity_id not in person[CONF_DEVICE_TRACKERS]:
                 continue
@@ -304,6 +303,23 @@ class PersonStorageCollection(collection.DictStorageCollection):
         for persons in (self.data.values(), self.yaml_collection.async_items()):
             if any(person for person in persons if person.get(CONF_USER_ID) == user_id):
                 raise ValueError("User already taken")
+
+
+class PersonStorageCollectionWebsocket(collection.DictStorageCollectionWebsocket):
+    """Class to expose storage collection management over websocket."""
+
+    def ws_list_item(
+        self,
+        hass: HomeAssistant,
+        connection: websocket_api.ActiveConnection,
+        msg: dict[str, Any],
+    ) -> None:
+        """List persons."""
+        yaml, storage, _ = hass.data[DOMAIN]
+        connection.send_result(
+            msg[ATTR_ID],
+            {"storage": storage.async_items(), "config": yaml.async_items()},
+        )
 
 
 async def filter_yaml_data(hass: HomeAssistant, persons: list[dict]) -> list[dict]:
@@ -369,11 +385,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DOMAIN] = (yaml_collection, storage_collection, entity_component)
 
-    collection.DictStorageCollectionWebsocket(
+    PersonStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
-    ).async_setup(hass, create_list=False)
-
-    websocket_api.async_register_command(hass, ws_list_person)
+    ).async_setup(hass)
 
     async def _handle_user_removed(event: Event) -> None:
         """Handle a user being removed."""
@@ -567,19 +581,6 @@ class Person(
             data[ATTR_USER_ID] = user_id
 
         self._attr_extra_state_attributes = data
-
-
-@websocket_api.websocket_command({vol.Required(CONF_TYPE): "person/list"})
-def ws_list_person(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """List persons."""
-    yaml, storage, _ = hass.data[DOMAIN]
-    connection.send_result(
-        msg[ATTR_ID], {"storage": storage.async_items(), "config": yaml.async_items()}
-    )
 
 
 def _get_latest(prev: State | None, curr: State) -> State:

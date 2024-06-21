@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple, cast
 
 import voluptuous as vol
 import zigpy.backups
@@ -118,11 +118,8 @@ IEEE_SERVICE = "ieee_based_service"
 
 IEEE_SCHEMA = vol.All(cv.string, EUI64.convert)
 
-# typing typevar
-_T = TypeVar("_T")
 
-
-def _ensure_list_if_present(value: _T | None) -> list[_T] | list[Any] | None:
+def _ensure_list_if_present[_T](value: _T | None) -> list[_T] | list[Any] | None:
     """Wrap value in list if it is provided and not one."""
     if value is None:
         return None
@@ -446,7 +443,7 @@ async def websocket_get_device(
     if not (zha_device := zha_gateway.devices.get(ieee)):
         connection.send_message(
             websocket_api.error_message(
-                msg[ID], websocket_api.const.ERR_NOT_FOUND, "ZHA Device not found"
+                msg[ID], websocket_api.ERR_NOT_FOUND, "ZHA Device not found"
             )
         )
         return
@@ -473,7 +470,7 @@ async def websocket_get_group(
     if not (zha_group := zha_gateway.groups.get(group_id)):
         connection.send_message(
             websocket_api.error_message(
-                msg[ID], websocket_api.const.ERR_NOT_FOUND, "ZHA Group not found"
+                msg[ID], websocket_api.ERR_NOT_FOUND, "ZHA Group not found"
             )
         )
         return
@@ -551,7 +548,7 @@ async def websocket_add_group_members(
     if not (zha_group := zha_gateway.groups.get(group_id)):
         connection.send_message(
             websocket_api.error_message(
-                msg[ID], websocket_api.const.ERR_NOT_FOUND, "ZHA Group not found"
+                msg[ID], websocket_api.ERR_NOT_FOUND, "ZHA Group not found"
             )
         )
         return
@@ -581,7 +578,7 @@ async def websocket_remove_group_members(
     if not (zha_group := zha_gateway.groups.get(group_id)):
         connection.send_message(
             websocket_api.error_message(
-                msg[ID], websocket_api.const.ERR_NOT_FOUND, "ZHA Group not found"
+                msg[ID], websocket_api.ERR_NOT_FOUND, "ZHA Group not found"
             )
         )
         return
@@ -1034,7 +1031,7 @@ async def async_binding_operation(
             )
         )
     res = await asyncio.gather(*(t[0] for t in bind_tasks), return_exceptions=True)
-    for outcome, log_msg in zip(res, bind_tasks):
+    for outcome, log_msg in zip(res, bind_tasks, strict=False):
         if isinstance(outcome, Exception):
             fmt = f"{log_msg[1]} failed: %s"
         else:
@@ -1217,7 +1214,7 @@ async def websocket_restore_network_backup(
     try:
         await application_controller.backups.restore_backup(backup)
     except ValueError as err:
-        connection.send_error(msg[ID], websocket_api.const.ERR_INVALID_FORMAT, str(err))
+        connection.send_error(msg[ID], websocket_api.ERR_INVALID_FORMAT, str(err))
     else:
         connection.send_result(msg[ID])
 
@@ -1314,7 +1311,7 @@ def async_load_api(hass: HomeAssistant) -> None:
                 manufacturer=manufacturer,
             )
         else:
-            raise ValueError(f"Device with IEEE {str(ieee)} not found")
+            raise ValueError(f"Device with IEEE {ieee!s} not found")
 
         _LOGGER.debug(
             (
@@ -1394,7 +1391,7 @@ def async_load_api(hass: HomeAssistant) -> None:
                 manufacturer,
             )
         else:
-            raise ValueError(f"Device with IEEE {str(ieee)} not found")
+            raise ValueError(f"Device with IEEE {ieee!s} not found")
 
     async_register_admin_service(
         hass,

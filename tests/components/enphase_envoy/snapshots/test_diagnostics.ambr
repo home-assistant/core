@@ -475,7 +475,7 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'disabled_by': None,
+              'disabled_by': 'integration',
               'domain': 'sensor',
               'entity_category': None,
               'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_production_l1',
@@ -486,9 +486,6 @@
               ]),
               'name': None,
               'options': dict({
-                'sensor': dict({
-                  'suggested_display_precision': 3,
-                }),
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kW',
                 }),
@@ -503,17 +500,7 @@
               'unique_id': '<<envoyserial>>_production_l1',
               'unit_of_measurement': 'kW',
             }),
-            'state': dict({
-              'attributes': dict({
-                'device_class': 'power',
-                'friendly_name': 'Envoy <<envoyserial>> Current power production l1',
-                'icon': 'mdi:flash',
-                'state_class': 'measurement',
-                'unit_of_measurement': 'kW',
-              }),
-              'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_production_l1',
-              'state': '1.234',
-            }),
+            'state': None,
           }),
           dict({
             'entity': dict({
@@ -527,7 +514,7 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'disabled_by': None,
+              'disabled_by': 'integration',
               'domain': 'sensor',
               'entity_category': None,
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_today_l1',
@@ -538,9 +525,6 @@
               ]),
               'name': None,
               'options': dict({
-                'sensor': dict({
-                  'suggested_display_precision': 2,
-                }),
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
@@ -555,17 +539,7 @@
               'unique_id': '<<envoyserial>>_daily_production_l1',
               'unit_of_measurement': 'kWh',
             }),
-            'state': dict({
-              'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Energy production today l1',
-                'icon': 'mdi:flash',
-                'state_class': 'total_increasing',
-                'unit_of_measurement': 'kWh',
-              }),
-              'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_today_l1',
-              'state': '1.233',
-            }),
+            'state': None,
           }),
           dict({
             'entity': dict({
@@ -577,7 +551,7 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'disabled_by': None,
+              'disabled_by': 'integration',
               'domain': 'sensor',
               'entity_category': None,
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_last_seven_days_l1',
@@ -588,9 +562,6 @@
               ]),
               'name': None,
               'options': dict({
-                'sensor': dict({
-                  'suggested_display_precision': 1,
-                }),
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
@@ -605,16 +576,7 @@
               'unique_id': '<<envoyserial>>_seven_days_production_l1',
               'unit_of_measurement': 'kWh',
             }),
-            'state': dict({
-              'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Energy production last seven days l1',
-                'icon': 'mdi:flash',
-                'unit_of_measurement': 'kWh',
-              }),
-              'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_last_seven_days_l1',
-              'state': '1.231',
-            }),
+            'state': None,
           }),
           dict({
             'entity': dict({
@@ -628,7 +590,7 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'disabled_by': None,
+              'disabled_by': 'integration',
               'domain': 'sensor',
               'entity_category': None,
               'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_production_l1',
@@ -639,9 +601,6 @@
               ]),
               'name': None,
               'options': dict({
-                'sensor': dict({
-                  'suggested_display_precision': 3,
-                }),
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'MWh',
                 }),
@@ -656,17 +615,7 @@
               'unique_id': '<<envoyserial>>_lifetime_production_l1',
               'unit_of_measurement': 'MWh',
             }),
-            'state': dict({
-              'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Lifetime energy production l1',
-                'icon': 'mdi:flash',
-                'state_class': 'total_increasing',
-                'unit_of_measurement': 'MWh',
-              }),
-              'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_production_l1',
-              'state': '0.001232',
-            }),
+            'state': None,
           }),
           dict({
             'entity': dict({
@@ -680,7 +629,7 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'disabled_by': None,
+              'disabled_by': 'integration',
               'domain': 'sensor',
               'entity_category': None,
               'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_production_l2',
@@ -691,9 +640,6 @@
               ]),
               'name': None,
               'options': dict({
-                'sensor': dict({
-                  'suggested_display_precision': 3,
-                }),
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kW',
                 }),
@@ -708,17 +654,7 @@
               'unique_id': '<<envoyserial>>_production_l2',
               'unit_of_measurement': 'kW',
             }),
-            'state': dict({
-              'attributes': dict({
-                'device_class': 'power',
-                'friendly_name': 'Envoy <<envoyserial>> Current power production l2',
-                'icon': 'mdi:flash',
-                'state_class': 'measurement',
-                'unit_of_measurement': 'kW',
-              }),
-              'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_production_l2',
-              'state': '2.234',
-            }),
+            'state': None,
           }),
           dict({
             'entity': dict({
@@ -732,7 +668,7 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'disabled_by': None,
+              'disabled_by': 'integration',
               'domain': 'sensor',
               'entity_category': None,
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_today_l2',
@@ -743,9 +679,6 @@
               ]),
               'name': None,
               'options': dict({
-                'sensor': dict({
-                  'suggested_display_precision': 2,
-                }),
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
@@ -760,17 +693,7 @@
               'unique_id': '<<envoyserial>>_daily_production_l2',
               'unit_of_measurement': 'kWh',
             }),
-            'state': dict({
-              'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Energy production today l2',
-                'icon': 'mdi:flash',
-                'state_class': 'total_increasing',
-                'unit_of_measurement': 'kWh',
-              }),
-              'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_today_l2',
-              'state': '2.233',
-            }),
+            'state': None,
           }),
           dict({
             'entity': dict({
@@ -782,7 +705,7 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'disabled_by': None,
+              'disabled_by': 'integration',
               'domain': 'sensor',
               'entity_category': None,
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_last_seven_days_l2',
@@ -793,9 +716,6 @@
               ]),
               'name': None,
               'options': dict({
-                'sensor': dict({
-                  'suggested_display_precision': 1,
-                }),
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
@@ -810,16 +730,7 @@
               'unique_id': '<<envoyserial>>_seven_days_production_l2',
               'unit_of_measurement': 'kWh',
             }),
-            'state': dict({
-              'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Energy production last seven days l2',
-                'icon': 'mdi:flash',
-                'unit_of_measurement': 'kWh',
-              }),
-              'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_last_seven_days_l2',
-              'state': '2.231',
-            }),
+            'state': None,
           }),
           dict({
             'entity': dict({
@@ -833,7 +744,7 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'disabled_by': None,
+              'disabled_by': 'integration',
               'domain': 'sensor',
               'entity_category': None,
               'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_production_l2',
@@ -844,9 +755,6 @@
               ]),
               'name': None,
               'options': dict({
-                'sensor': dict({
-                  'suggested_display_precision': 3,
-                }),
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'MWh',
                 }),
@@ -861,17 +769,7 @@
               'unique_id': '<<envoyserial>>_lifetime_production_l2',
               'unit_of_measurement': 'MWh',
             }),
-            'state': dict({
-              'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Lifetime energy production l2',
-                'icon': 'mdi:flash',
-                'state_class': 'total_increasing',
-                'unit_of_measurement': 'MWh',
-              }),
-              'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_production_l2',
-              'state': '0.002232',
-            }),
+            'state': None,
           }),
           dict({
             'entity': dict({
@@ -885,7 +783,7 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'disabled_by': None,
+              'disabled_by': 'integration',
               'domain': 'sensor',
               'entity_category': None,
               'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_production_l3',
@@ -896,9 +794,6 @@
               ]),
               'name': None,
               'options': dict({
-                'sensor': dict({
-                  'suggested_display_precision': 3,
-                }),
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kW',
                 }),
@@ -913,17 +808,7 @@
               'unique_id': '<<envoyserial>>_production_l3',
               'unit_of_measurement': 'kW',
             }),
-            'state': dict({
-              'attributes': dict({
-                'device_class': 'power',
-                'friendly_name': 'Envoy <<envoyserial>> Current power production l3',
-                'icon': 'mdi:flash',
-                'state_class': 'measurement',
-                'unit_of_measurement': 'kW',
-              }),
-              'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_production_l3',
-              'state': '3.234',
-            }),
+            'state': None,
           }),
           dict({
             'entity': dict({
@@ -937,7 +822,7 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'disabled_by': None,
+              'disabled_by': 'integration',
               'domain': 'sensor',
               'entity_category': None,
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_today_l3',
@@ -948,9 +833,6 @@
               ]),
               'name': None,
               'options': dict({
-                'sensor': dict({
-                  'suggested_display_precision': 2,
-                }),
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
@@ -965,17 +847,7 @@
               'unique_id': '<<envoyserial>>_daily_production_l3',
               'unit_of_measurement': 'kWh',
             }),
-            'state': dict({
-              'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Energy production today l3',
-                'icon': 'mdi:flash',
-                'state_class': 'total_increasing',
-                'unit_of_measurement': 'kWh',
-              }),
-              'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_today_l3',
-              'state': '3.233',
-            }),
+            'state': None,
           }),
           dict({
             'entity': dict({
@@ -987,7 +859,7 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'disabled_by': None,
+              'disabled_by': 'integration',
               'domain': 'sensor',
               'entity_category': None,
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_last_seven_days_l3',
@@ -998,9 +870,6 @@
               ]),
               'name': None,
               'options': dict({
-                'sensor': dict({
-                  'suggested_display_precision': 1,
-                }),
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
@@ -1015,16 +884,7 @@
               'unique_id': '<<envoyserial>>_seven_days_production_l3',
               'unit_of_measurement': 'kWh',
             }),
-            'state': dict({
-              'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Energy production last seven days l3',
-                'icon': 'mdi:flash',
-                'unit_of_measurement': 'kWh',
-              }),
-              'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_last_seven_days_l3',
-              'state': '3.231',
-            }),
+            'state': None,
           }),
           dict({
             'entity': dict({
@@ -1038,7 +898,7 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'disabled_by': None,
+              'disabled_by': 'integration',
               'domain': 'sensor',
               'entity_category': None,
               'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_production_l3',
@@ -1049,9 +909,6 @@
               ]),
               'name': None,
               'options': dict({
-                'sensor': dict({
-                  'suggested_display_precision': 3,
-                }),
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'MWh',
                 }),
@@ -1066,17 +923,7 @@
               'unique_id': '<<envoyserial>>_lifetime_production_l3',
               'unit_of_measurement': 'MWh',
             }),
-            'state': dict({
-              'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Lifetime energy production l3',
-                'icon': 'mdi:flash',
-                'state_class': 'total_increasing',
-                'unit_of_measurement': 'MWh',
-              }),
-              'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_production_l3',
-              'state': '0.003232',
-            }),
+            'state': None,
           }),
           dict({
             'entity': dict({
@@ -1090,7 +937,7 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'disabled_by': None,
+              'disabled_by': 'integration',
               'domain': 'sensor',
               'entity_category': None,
               'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_consumption_l1',
@@ -1101,9 +948,6 @@
               ]),
               'name': None,
               'options': dict({
-                'sensor': dict({
-                  'suggested_display_precision': 3,
-                }),
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kW',
                 }),
@@ -1118,17 +962,7 @@
               'unique_id': '<<envoyserial>>_consumption_l1',
               'unit_of_measurement': 'kW',
             }),
-            'state': dict({
-              'attributes': dict({
-                'device_class': 'power',
-                'friendly_name': 'Envoy <<envoyserial>> Current power consumption l1',
-                'icon': 'mdi:flash',
-                'state_class': 'measurement',
-                'unit_of_measurement': 'kW',
-              }),
-              'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_consumption_l1',
-              'state': '1.324',
-            }),
+            'state': None,
           }),
           dict({
             'entity': dict({
@@ -1142,7 +976,7 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'disabled_by': None,
+              'disabled_by': 'integration',
               'domain': 'sensor',
               'entity_category': None,
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_consumption_today_l1',
@@ -1153,9 +987,6 @@
               ]),
               'name': None,
               'options': dict({
-                'sensor': dict({
-                  'suggested_display_precision': 2,
-                }),
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
@@ -1170,17 +1001,7 @@
               'unique_id': '<<envoyserial>>_daily_consumption_l1',
               'unit_of_measurement': 'kWh',
             }),
-            'state': dict({
-              'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Energy consumption today l1',
-                'icon': 'mdi:flash',
-                'state_class': 'total_increasing',
-                'unit_of_measurement': 'kWh',
-              }),
-              'entity_id': 'sensor.envoy_<<envoyserial>>_energy_consumption_today_l1',
-              'state': '1.323',
-            }),
+            'state': None,
           }),
           dict({
             'entity': dict({
@@ -1192,7 +1013,7 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'disabled_by': None,
+              'disabled_by': 'integration',
               'domain': 'sensor',
               'entity_category': None,
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_consumption_last_seven_days_l1',
@@ -1203,9 +1024,6 @@
               ]),
               'name': None,
               'options': dict({
-                'sensor': dict({
-                  'suggested_display_precision': 1,
-                }),
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
@@ -1220,16 +1038,7 @@
               'unique_id': '<<envoyserial>>_seven_days_consumption_l1',
               'unit_of_measurement': 'kWh',
             }),
-            'state': dict({
-              'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Energy consumption last seven days l1',
-                'icon': 'mdi:flash',
-                'unit_of_measurement': 'kWh',
-              }),
-              'entity_id': 'sensor.envoy_<<envoyserial>>_energy_consumption_last_seven_days_l1',
-              'state': '1.321',
-            }),
+            'state': None,
           }),
           dict({
             'entity': dict({
@@ -1243,7 +1052,7 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'disabled_by': None,
+              'disabled_by': 'integration',
               'domain': 'sensor',
               'entity_category': None,
               'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_consumption_l1',
@@ -1254,9 +1063,6 @@
               ]),
               'name': None,
               'options': dict({
-                'sensor': dict({
-                  'suggested_display_precision': 3,
-                }),
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'MWh',
                 }),
@@ -1271,17 +1077,7 @@
               'unique_id': '<<envoyserial>>_lifetime_consumption_l1',
               'unit_of_measurement': 'MWh',
             }),
-            'state': dict({
-              'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Lifetime energy consumption l1',
-                'icon': 'mdi:flash',
-                'state_class': 'total_increasing',
-                'unit_of_measurement': 'MWh',
-              }),
-              'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_consumption_l1',
-              'state': '0.001322',
-            }),
+            'state': None,
           }),
           dict({
             'entity': dict({
@@ -1295,7 +1091,7 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'disabled_by': None,
+              'disabled_by': 'integration',
               'domain': 'sensor',
               'entity_category': None,
               'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_consumption_l2',
@@ -1306,9 +1102,6 @@
               ]),
               'name': None,
               'options': dict({
-                'sensor': dict({
-                  'suggested_display_precision': 3,
-                }),
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kW',
                 }),
@@ -1323,17 +1116,7 @@
               'unique_id': '<<envoyserial>>_consumption_l2',
               'unit_of_measurement': 'kW',
             }),
-            'state': dict({
-              'attributes': dict({
-                'device_class': 'power',
-                'friendly_name': 'Envoy <<envoyserial>> Current power consumption l2',
-                'icon': 'mdi:flash',
-                'state_class': 'measurement',
-                'unit_of_measurement': 'kW',
-              }),
-              'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_consumption_l2',
-              'state': '2.324',
-            }),
+            'state': None,
           }),
           dict({
             'entity': dict({
@@ -1347,7 +1130,7 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'disabled_by': None,
+              'disabled_by': 'integration',
               'domain': 'sensor',
               'entity_category': None,
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_consumption_today_l2',
@@ -1358,9 +1141,6 @@
               ]),
               'name': None,
               'options': dict({
-                'sensor': dict({
-                  'suggested_display_precision': 2,
-                }),
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
@@ -1375,17 +1155,7 @@
               'unique_id': '<<envoyserial>>_daily_consumption_l2',
               'unit_of_measurement': 'kWh',
             }),
-            'state': dict({
-              'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Energy consumption today l2',
-                'icon': 'mdi:flash',
-                'state_class': 'total_increasing',
-                'unit_of_measurement': 'kWh',
-              }),
-              'entity_id': 'sensor.envoy_<<envoyserial>>_energy_consumption_today_l2',
-              'state': '2.323',
-            }),
+            'state': None,
           }),
           dict({
             'entity': dict({
@@ -1397,7 +1167,7 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'disabled_by': None,
+              'disabled_by': 'integration',
               'domain': 'sensor',
               'entity_category': None,
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_consumption_last_seven_days_l2',
@@ -1408,9 +1178,6 @@
               ]),
               'name': None,
               'options': dict({
-                'sensor': dict({
-                  'suggested_display_precision': 1,
-                }),
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
@@ -1425,16 +1192,7 @@
               'unique_id': '<<envoyserial>>_seven_days_consumption_l2',
               'unit_of_measurement': 'kWh',
             }),
-            'state': dict({
-              'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Energy consumption last seven days l2',
-                'icon': 'mdi:flash',
-                'unit_of_measurement': 'kWh',
-              }),
-              'entity_id': 'sensor.envoy_<<envoyserial>>_energy_consumption_last_seven_days_l2',
-              'state': '2.321',
-            }),
+            'state': None,
           }),
           dict({
             'entity': dict({
@@ -1448,7 +1206,7 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'disabled_by': None,
+              'disabled_by': 'integration',
               'domain': 'sensor',
               'entity_category': None,
               'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_consumption_l2',
@@ -1459,9 +1217,6 @@
               ]),
               'name': None,
               'options': dict({
-                'sensor': dict({
-                  'suggested_display_precision': 3,
-                }),
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'MWh',
                 }),
@@ -1476,17 +1231,7 @@
               'unique_id': '<<envoyserial>>_lifetime_consumption_l2',
               'unit_of_measurement': 'MWh',
             }),
-            'state': dict({
-              'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Lifetime energy consumption l2',
-                'icon': 'mdi:flash',
-                'state_class': 'total_increasing',
-                'unit_of_measurement': 'MWh',
-              }),
-              'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_consumption_l2',
-              'state': '0.002322',
-            }),
+            'state': None,
           }),
           dict({
             'entity': dict({
@@ -1500,7 +1245,7 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'disabled_by': None,
+              'disabled_by': 'integration',
               'domain': 'sensor',
               'entity_category': None,
               'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_consumption_l3',
@@ -1511,9 +1256,6 @@
               ]),
               'name': None,
               'options': dict({
-                'sensor': dict({
-                  'suggested_display_precision': 3,
-                }),
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kW',
                 }),
@@ -1528,17 +1270,7 @@
               'unique_id': '<<envoyserial>>_consumption_l3',
               'unit_of_measurement': 'kW',
             }),
-            'state': dict({
-              'attributes': dict({
-                'device_class': 'power',
-                'friendly_name': 'Envoy <<envoyserial>> Current power consumption l3',
-                'icon': 'mdi:flash',
-                'state_class': 'measurement',
-                'unit_of_measurement': 'kW',
-              }),
-              'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_consumption_l3',
-              'state': '3.324',
-            }),
+            'state': None,
           }),
           dict({
             'entity': dict({
@@ -1552,7 +1284,7 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'disabled_by': None,
+              'disabled_by': 'integration',
               'domain': 'sensor',
               'entity_category': None,
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_consumption_today_l3',
@@ -1563,9 +1295,6 @@
               ]),
               'name': None,
               'options': dict({
-                'sensor': dict({
-                  'suggested_display_precision': 2,
-                }),
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
@@ -1580,17 +1309,7 @@
               'unique_id': '<<envoyserial>>_daily_consumption_l3',
               'unit_of_measurement': 'kWh',
             }),
-            'state': dict({
-              'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Energy consumption today l3',
-                'icon': 'mdi:flash',
-                'state_class': 'total_increasing',
-                'unit_of_measurement': 'kWh',
-              }),
-              'entity_id': 'sensor.envoy_<<envoyserial>>_energy_consumption_today_l3',
-              'state': '3.323',
-            }),
+            'state': None,
           }),
           dict({
             'entity': dict({
@@ -1602,7 +1321,7 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'disabled_by': None,
+              'disabled_by': 'integration',
               'domain': 'sensor',
               'entity_category': None,
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_consumption_last_seven_days_l3',
@@ -1613,9 +1332,6 @@
               ]),
               'name': None,
               'options': dict({
-                'sensor': dict({
-                  'suggested_display_precision': 1,
-                }),
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
@@ -1630,16 +1346,7 @@
               'unique_id': '<<envoyserial>>_seven_days_consumption_l3',
               'unit_of_measurement': 'kWh',
             }),
-            'state': dict({
-              'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Energy consumption last seven days l3',
-                'icon': 'mdi:flash',
-                'unit_of_measurement': 'kWh',
-              }),
-              'entity_id': 'sensor.envoy_<<envoyserial>>_energy_consumption_last_seven_days_l3',
-              'state': '3.321',
-            }),
+            'state': None,
           }),
           dict({
             'entity': dict({
@@ -1653,7 +1360,7 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'disabled_by': None,
+              'disabled_by': 'integration',
               'domain': 'sensor',
               'entity_category': None,
               'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_consumption_l3',
@@ -1664,9 +1371,6 @@
               ]),
               'name': None,
               'options': dict({
-                'sensor': dict({
-                  'suggested_display_precision': 3,
-                }),
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'MWh',
                 }),
@@ -1681,17 +1385,7 @@
               'unique_id': '<<envoyserial>>_lifetime_consumption_l3',
               'unit_of_measurement': 'MWh',
             }),
-            'state': dict({
-              'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Lifetime energy consumption l3',
-                'icon': 'mdi:flash',
-                'state_class': 'total_increasing',
-                'unit_of_measurement': 'MWh',
-              }),
-              'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_consumption_l3',
-              'state': '0.003322',
-            }),
+            'state': None,
           }),
           dict({
             'entity': dict({

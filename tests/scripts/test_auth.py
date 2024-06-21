@@ -1,5 +1,6 @@
 """Test the auth script to manage local users."""
 
+from asyncio import AbstractEventLoop
 import logging
 from typing import Any
 from unittest.mock import Mock, patch
@@ -42,9 +43,7 @@ async def test_list_user(hass: HomeAssistant, provider, capsys) -> None:
 
     captured = capsys.readouterr()
 
-    assert captured.out == "\n".join(
-        ["test-user", "second-user", "", "Total users: 2", ""]
-    )
+    assert captured.out == "test-user\nsecond-user\n\nTotal users: 2\n"
 
 
 async def test_add_user(
@@ -127,7 +126,7 @@ async def test_change_password_invalid_user(
         data.validate_login("invalid-user", "new-pass")
 
 
-def test_parsing_args(event_loop) -> None:
+def test_parsing_args(event_loop: AbstractEventLoop) -> None:
     """Test we parse args correctly."""
     called = False
 

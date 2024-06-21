@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from functools import partial
-from itertools import chain
 import json
 import re
 from typing import Any
@@ -12,7 +11,6 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import slugify
 from script.translations import upload
 
 from .model import Config, Integration
@@ -286,6 +284,10 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 vol.Optional("condition_type"): {str: translation_value_validator},
                 vol.Optional("trigger_type"): {str: translation_value_validator},
                 vol.Optional("trigger_subtype"): {str: translation_value_validator},
+                vol.Optional("extra_fields"): {str: translation_value_validator},
+                vol.Optional("extra_fields_descriptions"): {
+                    str: translation_value_validator
+                },
             },
             vol.Optional("system_health"): {
                 vol.Optional("info"): cv.schema_with_slug_keys(
@@ -377,6 +379,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                     vol.Required("done"): translation_value_validator,
                 },
             },
+            vol.Optional("common"): vol.Schema({cv.slug: translation_value_validator}),
         }
     )
 
@@ -410,49 +413,6 @@ def gen_ha_hardware_schema(config: Config, integration: Integration):
                     require_step_title=False,
                 )
             }
-        }
-    )
-
-
-def gen_platform_strings_schema(config: Config, integration: Integration) -> vol.Schema:
-    """Generate platform strings schema like strings.sensor.json.
-
-    Example of valid data:
-    {
-        "state": {
-            "moon__phase": {
-                "full": "Full"
-            }
-        }
-    }
-    """
-
-    def device_class_validator(value: str) -> str:
-        """Key validator for platform states.
-
-        Platform states are only allowed to provide states for device classes they prefix.
-        """
-        if not value.startswith(f"{integration.domain}__"):
-            raise vol.Invalid(
-                f"Device class need to start with '{integration.domain}__'. Key {value} is invalid. See https://developers.home-assistant.io/docs/internationalization/core#stringssensorjson"
-            )
-
-        slug_friendly = value.replace("__", "_", 1)
-        slugged = slugify(slug_friendly)
-
-        if slug_friendly != slugged:
-            raise vol.Invalid(
-                f"invalid device class {value}. After domain__, needs to be all lowercase, no spaces."
-            )
-
-        return value
-
-    return vol.Schema(
-        {
-            vol.Optional("state"): cv.schema_with_slug_keys(
-                cv.schema_with_slug_keys(str, slug_validator=translation_key_validator),
-                slug_validator=device_class_validator,
-            )
         }
     )
 
@@ -524,32 +484,6 @@ def validate_translation_file(  # noqa: C901
                             "Don't specify title in translation strings if it's a brand "
                             "name or add exception to ALLOW_NAME_TRANSLATION",
                         )
-
-    platform_string_schema = gen_platform_strings_schema(config, integration)
-    platform_strings = [integration.path.glob("strings.*.json")]
-
-    if config.specific_integrations:
-        platform_strings.append(integration.path.glob("translations/*.en.json"))
-
-    for path in chain(*platform_strings):
-        name = str(path.relative_to(integration.path))
-
-        try:
-            strings = json.loads(path.read_text())
-        except ValueError as err:
-            integration.add_error("translations", f"Invalid JSON in {name}: {err}")
-            continue
-
-        try:
-            platform_string_schema(strings)
-        except vol.Invalid as err:
-            msg = f"Invalid {path.name}: {humanize_error(strings, err)}"
-            if config.specific_integrations:
-                integration.add_warning("translations", msg)
-            else:
-                integration.add_error("translations", msg)
-        else:
-            find_references(strings, path.name, references)
 
     if config.specific_integrations:
         return

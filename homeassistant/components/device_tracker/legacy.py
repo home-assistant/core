@@ -281,9 +281,7 @@ async def _async_setup_integration(
         """
         cancel_update_stale()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _on_hass_stop, run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_hass_stop)
 
 
 @attr.s
@@ -367,7 +365,7 @@ class DeviceTrackerPlatform:
 
                 hass.config.components.add(full_name)
 
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 LOGGER.exception(
                     "Error setting up platform %s %s", self.type, self.name
                 )

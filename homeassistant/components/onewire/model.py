@@ -16,4 +16,4 @@ class OWDeviceDescription:
     family: str
     id: str
     path: str
-    type: str
+    type: str | None

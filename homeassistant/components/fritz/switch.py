@@ -17,15 +17,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from .common import (
-    AvmWrapper,
-    FritzBoxBaseEntity,
-    FritzData,
-    FritzDevice,
-    FritzDeviceBase,
-    SwitchInfo,
-    device_filter_out_from_trackers,
-)
 from .const import (
     DATA_FRITZ,
     DOMAIN,
@@ -36,6 +27,14 @@ from .const import (
     WIFI_STANDARD,
     MeshRoles,
 )
+from .coordinator import (
+    AvmWrapper,
+    FritzData,
+    FritzDevice,
+    SwitchInfo,
+    device_filter_out_from_trackers,
+)
+from .entity import FritzBoxBaseEntity, FritzDeviceBase
 
 _LOGGER = logging.getLogger(__name__)
 

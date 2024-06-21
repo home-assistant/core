@@ -41,7 +41,7 @@ from .const import (
     Cause,
 )
 from .diagnostics import async_redact_auth_data
-from .entities import ENTITY_ADAPTERS, AlexaEntity, generate_alexa_id
+from .entities import ENTITY_ADAPTERS, AlexaEntity
 from .errors import AlexaInvalidEndpointError, NoTokenAvailable, RequireRelink
 
 if TYPE_CHECKING:
@@ -342,7 +342,6 @@ async def async_enable_proactive_mode(
         EVENT_STATE_CHANGED,
         _async_entity_state_listener,
         event_filter=_async_entity_state_filter,
-        run_immediately=True,
     )
 
 
@@ -416,13 +415,14 @@ async def async_send_changereport_message(
         if invalidate_access_token:
             # Invalidate the access token and try again
             config.async_invalidate_access_token()
-            return await async_send_changereport_message(
+            await async_send_changereport_message(
                 hass,
                 config,
                 alexa_entity,
                 alexa_properties,
                 invalidate_access_token=False,
             )
+            return
         await config.set_authorized(False)
 
     _LOGGER.error(
@@ -493,7 +493,7 @@ async def async_send_delete_message(
         if domain not in ENTITY_ADAPTERS:
             continue
 
-        endpoints.append({"endpointId": generate_alexa_id(entity_id)})
+        endpoints.append({"endpointId": config.generate_alexa_id(entity_id)})
 
     payload: dict[str, Any] = {
         "endpoints": endpoints,

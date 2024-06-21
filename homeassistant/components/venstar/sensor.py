@@ -23,8 +23,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import VenstarDataUpdateCoordinator, VenstarEntity
+from . import VenstarEntity
 from .const import DOMAIN
+from .coordinator import VenstarDataUpdateCoordinator
 
 RUNTIME_HEAT1 = "heat1"
 RUNTIME_HEAT2 = "heat2"
@@ -65,13 +66,15 @@ SCHEDULE_PARTS: dict[int, str] = {
     255: "inactive",
 }
 
+STAGES: dict[int, str] = {0: "idle", 1: "first_stage", 2: "second_stage"}
+
 
 @dataclass(frozen=True, kw_only=True)
 class VenstarSensorEntityDescription(SensorEntityDescription):
     """Base description of a Sensor entity."""
 
     value_fn: Callable[[VenstarDataUpdateCoordinator, str], Any]
-    name_fn: Callable[[str], str]
+    name_fn: Callable[[str], str] | None
     uom_fn: Callable[[Any], str | None]
 
 
@@ -140,7 +143,8 @@ class VenstarSensor(VenstarEntity, SensorEntity):
         super().__init__(coordinator, config)
         self.entity_description = entity_description
         self.sensor_name = sensor_name
-        self._attr_name = entity_description.name_fn(sensor_name)
+        if entity_description.name_fn:
+            self._attr_name = entity_description.name_fn(sensor_name)
         self._config = config
 
     @property
@@ -230,6 +234,17 @@ INFO_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         value_fn=lambda coordinator, sensor_name: SCHEDULE_PARTS[
             coordinator.client.get_info(sensor_name)
         ],
-        name_fn=lambda _: "Schedule Part",
+        name_fn=None,
+    ),
+    VenstarSensorEntityDescription(
+        key="activestage",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(STAGES.values()),
+        translation_key="active_stage",
+        uom_fn=lambda _: None,
+        value_fn=lambda coordinator, sensor_name: STAGES[
+            coordinator.client.get_info(sensor_name)
+        ],
+        name_fn=None,
     ),
 )

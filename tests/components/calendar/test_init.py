@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
@@ -10,6 +9,7 @@ from typing import Any
 from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
@@ -19,7 +19,7 @@ from homeassistant.components.calendar import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.issue_registry import IssueRegistry
+from homeassistant.helpers import issue_registry as ir
 import homeassistant.util.dt as dt_util
 
 from .conftest import TEST_DOMAIN, MockCalendarEntity, MockConfigEntry
@@ -37,7 +37,7 @@ def mock_frozen_time() -> None:
 
 
 @pytest.fixture(autouse=True)
-def mock_set_frozen_time(frozen_time: Any) -> Generator[None, None, None]:
+def mock_set_frozen_time(frozen_time: Any) -> Generator[None]:
     """Fixture to freeze time that also can work for other fixtures."""
     if not frozen_time:
         yield
@@ -572,7 +572,7 @@ async def test_list_events_missing_fields(hass: HomeAssistant) -> None:
 
 async def test_issue_deprecated_service_calendar_list_events(
     hass: HomeAssistant,
-    issue_registry: IssueRegistry,
+    issue_registry: ir.IssueRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the issue is raised on deprecated service weather.get_forecast."""

@@ -57,7 +57,11 @@ from .common import (
 
 
 async def test_numeric_sensor(
-    hass: HomeAssistant, multisensor_6, express_controls_ezmultipli, integration
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    multisensor_6,
+    express_controls_ezmultipli,
+    integration,
 ) -> None:
     """Test the numeric sensor."""
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
@@ -76,8 +80,7 @@ async def test_numeric_sensor(
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.BATTERY
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(BATTERY_SENSOR)
+    entity_entry = entity_registry.async_get(BATTERY_SENSOR)
     assert entity_entry
     assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
 
@@ -210,18 +213,17 @@ async def test_energy_sensors(
 
 
 async def test_disabled_notification_sensor(
-    hass: HomeAssistant, multisensor_6, integration
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, multisensor_6, integration
 ) -> None:
     """Test sensor is created from Notification CC and is disabled."""
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(NOTIFICATION_MOTION_SENSOR)
+    entity_entry = entity_registry.async_get(NOTIFICATION_MOTION_SENSOR)
 
     assert entity_entry
     assert entity_entry.disabled
     assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # Test enabling entity
-    updated_entry = ent_reg.async_update_entity(
+    updated_entry = entity_registry.async_update_entity(
         entity_entry.entity_id, disabled_by=None
     )
     assert updated_entry != entity_entry
@@ -265,20 +267,23 @@ async def test_disabled_notification_sensor(
 
 
 async def test_config_parameter_sensor(
-    hass: HomeAssistant, climate_adc_t3000, lock_id_lock_as_id150, integration
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    climate_adc_t3000,
+    lock_id_lock_as_id150,
+    integration,
 ) -> None:
     """Test config parameter sensor is created."""
     sensor_entity_id = "sensor.adc_t3000_system_configuration_cool_stages"
     sensor_with_states_entity_id = "sensor.adc_t3000_power_source"
-    ent_reg = er.async_get(hass)
     for entity_id in (sensor_entity_id, sensor_with_states_entity_id):
-        entity_entry = ent_reg.async_get(entity_id)
+        entity_entry = entity_registry.async_get(entity_id)
         assert entity_entry
         assert entity_entry.disabled
         assert entity_entry.entity_category == EntityCategory.DIAGNOSTIC
 
     for entity_id in (sensor_entity_id, sensor_with_states_entity_id):
-        updated_entry = ent_reg.async_update_entity(entity_id, disabled_by=None)
+        updated_entry = entity_registry.async_update_entity(entity_id, disabled_by=None)
         assert updated_entry != entity_entry
         assert updated_entry.disabled is False
 
@@ -294,7 +299,7 @@ async def test_config_parameter_sensor(
     assert state
     assert state.state == "C-Wire"
 
-    updated_entry = ent_reg.async_update_entity(
+    updated_entry = entity_registry.async_update_entity(
         entity_entry.entity_id, disabled_by=None
     )
     assert updated_entry != entity_entry
@@ -306,12 +311,11 @@ async def test_config_parameter_sensor(
 
 
 async def test_controller_status_sensor(
-    hass: HomeAssistant, client, integration
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, client, integration
 ) -> None:
     """Test controller status sensor is created and gets updated on controller state changes."""
     entity_id = "sensor.z_stick_gen5_usb_controller_status"
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(entity_id)
+    entity_entry = entity_registry.async_get(entity_id)
 
     assert not entity_entry.disabled
     assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
@@ -344,13 +348,16 @@ async def test_controller_status_sensor(
 
 
 async def test_node_status_sensor(
-    hass: HomeAssistant, client, lock_id_lock_as_id150, integration
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client,
+    lock_id_lock_as_id150,
+    integration,
 ) -> None:
     """Test node status sensor is created and gets updated on node state changes."""
     node_status_entity_id = "sensor.z_wave_module_for_id_lock_150_and_101_node_status"
     node = lock_id_lock_as_id150
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(node_status_entity_id)
+    entity_entry = entity_registry.async_get(node_status_entity_id)
 
     assert not entity_entry.disabled
     assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
@@ -390,7 +397,7 @@ async def test_node_status_sensor(
     node = driver.controller.nodes[1]
     assert node.is_controller_node
     assert (
-        ent_reg.async_get_entity_id(
+        entity_registry.async_get_entity_id(
             DOMAIN,
             "sensor",
             f"{get_valueless_base_unique_id(driver, node)}.node_status",
@@ -400,7 +407,7 @@ async def test_node_status_sensor(
 
     # Assert a controller status sensor entity is not created for a node
     assert (
-        ent_reg.async_get_entity_id(
+        entity_registry.async_get_entity_id(
             DOMAIN,
             "sensor",
             f"{get_valueless_base_unique_id(driver, node)}.controller_status",
@@ -411,6 +418,7 @@ async def test_node_status_sensor(
 
 async def test_node_status_sensor_not_ready(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     client,
     lock_id_lock_as_id150_not_ready,
     lock_id_lock_as_id150_state,
@@ -421,8 +429,7 @@ async def test_node_status_sensor_not_ready(
     node_status_entity_id = "sensor.z_wave_module_for_id_lock_150_and_101_node_status"
     node = lock_id_lock_as_id150_not_ready
     assert not node.ready
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(node_status_entity_id)
+    entity_entry = entity_registry.async_get(node_status_entity_id)
 
     assert not entity_entry.disabled
     assert hass.states.get(node_status_entity_id)
@@ -736,10 +743,14 @@ NODE_STATISTICS_SUFFIXES_UNKNOWN = {
 
 
 async def test_statistics_sensors_no_last_seen(
-    hass: HomeAssistant, zp3111, client, integration, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    zp3111,
+    client,
+    integration,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test all statistics sensors but last seen which is enabled by default."""
-    ent_reg = er.async_get(hass)
 
     for prefix, suffixes in (
         (CONTROLLER_STATISTICS_ENTITY_PREFIX, CONTROLLER_STATISTICS_SUFFIXES),
@@ -748,12 +759,12 @@ async def test_statistics_sensors_no_last_seen(
         (NODE_STATISTICS_ENTITY_PREFIX, NODE_STATISTICS_SUFFIXES_UNKNOWN),
     ):
         for suffix_key in suffixes:
-            entry = ent_reg.async_get(f"{prefix}{suffix_key}")
+            entry = entity_registry.async_get(f"{prefix}{suffix_key}")
             assert entry
             assert entry.disabled
             assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
-            ent_reg.async_update_entity(entry.entity_id, disabled_by=None)
+            entity_registry.async_update_entity(entry.entity_id, disabled_by=None)
 
     # reload integration and check if entity is correctly there
     await hass.config_entries.async_reload(integration.entry_id)
@@ -774,7 +785,7 @@ async def test_statistics_sensors_no_last_seen(
         ),
     ):
         for suffix_key in suffixes:
-            entry = ent_reg.async_get(f"{prefix}{suffix_key}")
+            entry = entity_registry.async_get(f"{prefix}{suffix_key}")
             assert entry
             assert not entry.disabled
             assert entry.disabled_by is None
@@ -881,13 +892,11 @@ async def test_statistics_sensors_no_last_seen(
 
 
 async def test_last_seen_statistics_sensors(
-    hass: HomeAssistant, zp3111, client, integration
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, zp3111, client, integration
 ) -> None:
     """Test last_seen statistics sensors."""
-    ent_reg = er.async_get(hass)
-
     entity_id = f"{NODE_STATISTICS_ENTITY_PREFIX}last_seen"
-    entry = ent_reg.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert not entry.disabled
 

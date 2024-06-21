@@ -16,7 +16,6 @@ from homeassistant.components.sensor import (
     SensorExtraStoredData,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
@@ -38,7 +37,7 @@ from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
 
 from .const import CONF_SLEEP_PERIOD, SHAIR_MAX_WORK_HOURS
-from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator
+from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
     RestEntityDescription,
@@ -990,12 +989,30 @@ RPC_SENSORS: Final = {
             or status[key]["counts"].get("xtotal") is None
         ),
     ),
+    "counter_frequency": RpcSensorDescription(
+        key="input",
+        sub_key="counts",
+        name="Pulse counter frequency",
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda status, _: status["freq"],
+        removal_condition=lambda config, status, key: (config[key]["enable"] is False),
+    ),
+    "counter_frequency_value": RpcSensorDescription(
+        key="input",
+        sub_key="counts",
+        name="Pulse counter frequency value",
+        value=lambda status, _: status["xfreq"],
+        removal_condition=lambda config, status, key: (
+            config[key]["enable"] is False or status[key]["counts"].get("xfreq") is None
+        ),
+    ),
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for device."""

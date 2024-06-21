@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Final
 
-from fyta_cli.fyta_connector import PLANT_STATUS
+from fyta_cli.fyta_connector import PLANT_MEASUREMENT_STATUS, PLANT_STATUS
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -34,7 +34,15 @@ class FytaSensorEntityDescription(SensorEntityDescription):
     )
 
 
-PLANT_STATUS_LIST: list[str] = ["too_low", "low", "perfect", "high", "too_high"]
+PLANT_STATUS_LIST: list[str] = ["deleted", "doing_great", "need_attention", "no_sensor"]
+PLANT_MEASUREMENT_STATUS_LIST: list[str] = [
+    "no_data",
+    "too_low",
+    "low",
+    "perfect",
+    "high",
+    "too_high",
+]
 
 SENSORS: Final[list[FytaSensorEntityDescription]] = [
     FytaSensorEntityDescription(
@@ -52,29 +60,29 @@ SENSORS: Final[list[FytaSensorEntityDescription]] = [
         key="temperature_status",
         translation_key="temperature_status",
         device_class=SensorDeviceClass.ENUM,
-        options=PLANT_STATUS_LIST,
-        value_fn=PLANT_STATUS.get,
+        options=PLANT_MEASUREMENT_STATUS_LIST,
+        value_fn=PLANT_MEASUREMENT_STATUS.get,
     ),
     FytaSensorEntityDescription(
         key="light_status",
         translation_key="light_status",
         device_class=SensorDeviceClass.ENUM,
-        options=PLANT_STATUS_LIST,
-        value_fn=PLANT_STATUS.get,
+        options=PLANT_MEASUREMENT_STATUS_LIST,
+        value_fn=PLANT_MEASUREMENT_STATUS.get,
     ),
     FytaSensorEntityDescription(
         key="moisture_status",
         translation_key="moisture_status",
         device_class=SensorDeviceClass.ENUM,
-        options=PLANT_STATUS_LIST,
-        value_fn=PLANT_STATUS.get,
+        options=PLANT_MEASUREMENT_STATUS_LIST,
+        value_fn=PLANT_MEASUREMENT_STATUS.get,
     ),
     FytaSensorEntityDescription(
         key="salinity_status",
         translation_key="salinity_status",
         device_class=SensorDeviceClass.ENUM,
-        options=PLANT_STATUS_LIST,
-        value_fn=PLANT_STATUS.get,
+        options=PLANT_MEASUREMENT_STATUS_LIST,
+        value_fn=PLANT_MEASUREMENT_STATUS.get,
     ),
     FytaSensorEntityDescription(
         key="temperature",
@@ -85,7 +93,7 @@ SENSORS: Final[list[FytaSensorEntityDescription]] = [
     FytaSensorEntityDescription(
         key="light",
         translation_key="light",
-        native_unit_of_measurement="mol/d",
+        native_unit_of_measurement="μmol/s⋅m²",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     FytaSensorEntityDescription(

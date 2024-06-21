@@ -23,9 +23,9 @@ async def setup_config_entry(
     hass: HomeAssistant,
     data: dict[str, Any],
     unique_id: str = "any",
-    device: Mock = None,
-    fritz: Mock = None,
-    template: Mock = None,
+    device: Mock | None = None,
+    fritz: Mock | None = None,
+    template: Mock | None = None,
 ) -> bool:
     """Do setup of a MockConfigEntry."""
     entry = MockConfigEntry(
