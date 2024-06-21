@@ -55,11 +55,8 @@ async def test_initialization(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Get state
+    # Check state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
-    assert states
-
-    # Check sources
     assert states.attributes[ATTR_INPUT_SOURCE_LIST] == TEST_SOURCES
 
     # Check API calls
@@ -79,11 +76,8 @@ async def test_async_update_sources_audio_only(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Get state
+    # Check state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
-    assert states
-
-    # Check sources
     assert states.attributes[ATTR_INPUT_SOURCE_LIST] == TEST_AUDIO_SOURCES
 
 
@@ -99,8 +93,6 @@ async def test_async_update_sources_outdated_api(
 
     # Get state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
-    assert states
-
     # Check sources
     assert (
         states.attributes[ATTR_INPUT_SOURCE_LIST]
@@ -119,7 +111,6 @@ async def test_async_update_playback_metadata(
 
     # Check states
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
-    assert states
 
     assert ATTR_MEDIA_DURATION not in states.attributes
     assert ATTR_MEDIA_TITLE not in states.attributes
@@ -134,9 +125,8 @@ async def test_async_update_playback_metadata(
         f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.PLAYBACK_METADATA}",
         TEST_PLAYBACK_METADATA,
     )
-    # Check new states
+    # Check new state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
-    assert states
 
     assert (
         states.attributes[ATTR_MEDIA_DURATION]
@@ -182,10 +172,8 @@ async def test_async_update_playback_progress(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Check states
+    # Check state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
-    assert states
-
     assert ATTR_MEDIA_POSITION not in states.attributes
 
     # Send the dispatch
@@ -194,10 +182,9 @@ async def test_async_update_playback_progress(
         f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.PLAYBACK_PROGRESS}",
         TEST_PLAYBACK_PROGRESS,
     )
-    # Check new states
-    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
-    assert states
 
+    # Check new state
+    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert states.attributes[ATTR_MEDIA_POSITION] == TEST_PLAYBACK_PROGRESS.progress
 
 
@@ -210,10 +197,8 @@ async def test_async_update_playback_state(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Check states
+    # Check state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
-    assert states
-
     assert states.state == MediaPlayerState.PLAYING
 
     # Send the dispatch
@@ -223,10 +208,8 @@ async def test_async_update_playback_state(
         TEST_PLAYBACK_STATE,
     )
 
-    # Check new states
+    # Check new state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
-    assert states
-
     assert states.state == TEST_PLAYBACK_STATE.value
 
 
@@ -239,10 +222,8 @@ async def test_async_update_source_change(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Check states
+    # Check state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
-    assert states
-
     assert ATTR_INPUT_SOURCE not in states.attributes
 
     # Send the dispatch
@@ -252,10 +233,8 @@ async def test_async_update_source_change(
         TEST_SOURCE_CHANGE,
     )
 
-    # Check new states
+    # Check new state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
-    assert states
-
     assert states.attributes[ATTR_INPUT_SOURCE] == TEST_SOURCE_CHANGE.name
 
 
@@ -266,10 +245,6 @@ async def test_async_turn_off(
     # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    # Check states
-    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
-    assert states
 
     # Send a service call
     await hass.services.async_call(
@@ -283,8 +258,8 @@ async def test_async_turn_off(
         TEST_PLAYBACK_STATE_TURN_OFF,
     )
 
+    # Check state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
-    assert states
     assert states.state == BANG_OLUFSEN_STATES["stopped"]
 
     # Check API call
@@ -299,10 +274,8 @@ async def test_async_set_volume_level(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Check states
+    # Check state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
-    assert states
-
     assert ATTR_MEDIA_VOLUME_LEVEL not in states.attributes
 
     # Send a service call
@@ -322,9 +295,8 @@ async def test_async_set_volume_level(
         TEST_VOLUME,
     )
 
-    # Check new states
+    # Check new state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
-    assert states
     assert states.attributes[ATTR_VOLUME_LEVEL] == TEST_VOLUME_HOME_ASSISTANT_FORMAT
 
     # Check API call
