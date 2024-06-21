@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta
 from functools import partial
@@ -78,7 +79,9 @@ class ProtectData:
         self._entry = entry
         self._hass = hass
         self._update_interval = update_interval
-        self._subscriptions: dict[str, list[Callable[[ProtectDeviceType], None]]] = {}
+        self._subscriptions: defaultdict[
+            str, set[Callable[[ProtectDeviceType], None]]
+        ] = defaultdict(set)
         self._pending_camera_ids: set[str] = set()
         self._unsub_interval: CALLBACK_TYPE | None = None
         self._unsub_websocket: CALLBACK_TYPE | None = None
@@ -302,7 +305,7 @@ class ProtectData:
         )
 
     @callback
-    def async_subscribe_device_id(
+    def async_subscribe(
         self, mac: str, update_callback: Callable[[ProtectDeviceType], None]
     ) -> CALLBACK_TYPE:
         """Add an callback subscriber."""
@@ -310,11 +313,11 @@ class ProtectData:
             self._unsub_interval = async_track_time_interval(
                 self._hass, self._async_poll, self._update_interval
             )
-        self._subscriptions.setdefault(mac, []).append(update_callback)
-        return partial(self.async_unsubscribe_device_id, mac, update_callback)
+        self._subscriptions[mac].add(update_callback)
+        return partial(self._async_unsubscribe, mac, update_callback)
 
     @callback
-    def async_unsubscribe_device_id(
+    def _async_unsubscribe(
         self, mac: str, update_callback: Callable[[ProtectDeviceType], None]
     ) -> None:
         """Remove a callback subscriber."""
@@ -328,9 +331,10 @@ class ProtectData:
     @callback
     def _async_signal_device_update(self, device: ProtectDeviceType) -> None:
         """Call the callbacks for a device_id."""
-        if not (subscriptions := self._subscriptions.get(device.mac)):
+        mac = device.mac
+        if not (subscriptions := self._subscriptions.get(mac)):
             return
-        _LOGGER.debug("Updating device: %s (%s)", device.name, device.mac)
+        _LOGGER.debug("Updating device: %s (%s)", device.name, mac)
         for update_callback in subscriptions:
             update_callback(device)
 
