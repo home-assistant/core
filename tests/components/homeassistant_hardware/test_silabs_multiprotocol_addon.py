@@ -164,7 +164,7 @@ def get_suggested(schema, key):
                 return None
             return k.description["suggested_value"]
     # Wanted key absent from schema
-    raise Exception
+    raise KeyError("Wanted key absent from schema")
 
 
 @patch(
@@ -584,7 +584,7 @@ async def test_option_flow_addon_installed_same_device_reconfigure_expected_user
     config_entry.add_to_hass(hass)
 
     mock_multiprotocol_platforms = {}
-    for domain in ["otbr", "zha"]:
+    for domain in ("otbr", "zha"):
         mock_multiprotocol_platform = MockMultiprotocolPlatform()
         mock_multiprotocol_platforms[domain] = mock_multiprotocol_platform
         mock_multiprotocol_platform.channel = configured_channel
@@ -619,7 +619,7 @@ async def test_option_flow_addon_installed_same_device_reconfigure_expected_user
     result = await hass.config_entries.options.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
-    for domain in ["otbr", "zha"]:
+    for domain in ("otbr", "zha"):
         assert mock_multiprotocol_platforms[domain].change_channel_calls == [(14, 300)]
     assert multipan_manager._channel == 14
 

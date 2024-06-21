@@ -74,9 +74,10 @@ class ReolinkHost:
         )
 
         self.last_wake: float = 0
-        self._update_cmd: defaultdict[str, defaultdict[int | None, int]] = defaultdict(
+        self.update_cmd: defaultdict[str, defaultdict[int | None, int]] = defaultdict(
             lambda: defaultdict(int)
         )
+        self.firmware_ch_list: list[int | None] = []
 
         self.webhook_id: str | None = None
         self._onvif_push_supported: bool = True
@@ -96,16 +97,16 @@ class ReolinkHost:
     @callback
     def async_register_update_cmd(self, cmd: str, channel: int | None = None) -> None:
         """Register the command to update the state."""
-        self._update_cmd[cmd][channel] += 1
+        self.update_cmd[cmd][channel] += 1
 
     @callback
     def async_unregister_update_cmd(self, cmd: str, channel: int | None = None) -> None:
         """Unregister the command to update the state."""
-        self._update_cmd[cmd][channel] -= 1
-        if not self._update_cmd[cmd][channel]:
-            del self._update_cmd[cmd][channel]
-        if not self._update_cmd[cmd]:
-            del self._update_cmd[cmd]
+        self.update_cmd[cmd][channel] -= 1
+        if not self.update_cmd[cmd][channel]:
+            del self.update_cmd[cmd][channel]
+        if not self.update_cmd[cmd]:
+            del self.update_cmd[cmd]
 
     @property
     def unique_id(self) -> str:
@@ -349,7 +350,7 @@ class ReolinkHost:
             wake = True
             self.last_wake = time()
 
-        await self._api.get_states(cmd_list=self._update_cmd, wake=wake)
+        await self._api.get_states(cmd_list=self.update_cmd, wake=wake)
 
     async def disconnect(self) -> None:
         """Disconnect from the API, so the connection will be released."""

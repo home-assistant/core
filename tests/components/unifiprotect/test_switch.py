@@ -35,20 +35,20 @@ CAMERA_SWITCHES_BASIC = [
     for d in CAMERA_SWITCHES
     if (
         not d.name.startswith("Detections:")
-        and d.name != "SSH Enabled"
-        and d.name != "Color Night Vision"
-        and d.name != "Tracking: Person"
-        and d.name != "HDR Mode"
+        and d.name != "SSH enabled"
+        and d.name != "Color night vision"
+        and d.name != "Tracking: person"
+        and d.name != "HDR mode"
     )
-    or d.name == "Detections: Motion"
-    or d.name == "Detections: Person"
-    or d.name == "Detections: Vehicle"
-    or d.name == "Detections: Animal"
+    or d.name == "Detections: motion"
+    or d.name == "Detections: person"
+    or d.name == "Detections: vehicle"
+    or d.name == "Detections: animal"
 ]
 CAMERA_SWITCHES_NO_EXTRA = [
     d
     for d in CAMERA_SWITCHES_BASIC
-    if d.name not in ("High FPS", "Privacy Mode", "HDR Mode")
+    if d.name not in ("High FPS", "Privacy mode", "HDR mode")
 ]
 
 

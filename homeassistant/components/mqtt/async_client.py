@@ -44,7 +44,7 @@ class AsyncMQTTClient(MQTTClient):
     that is not needed since we are running in an async event loop.
     """
 
-    def async_setup(self) -> None:
+    def setup(self) -> None:
         """Set up the client.
 
         All the threading locks are replaced with NullLock
