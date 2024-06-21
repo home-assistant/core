@@ -18,6 +18,7 @@ from uiprotect.data import (
     ProtectDeviceModel,
     ProtectModelWithId,
     Sensor,
+    SmartDetectObjectType,
 )
 
 from homeassistant.components.sensor import (
@@ -542,7 +543,7 @@ LICENSE_PLATE_EVENT_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
         name="License plate detected",
         icon="mdi:car",
         translation_key="license_plate",
-        ufp_value="is_license_plate_currently_detected",
+        ufp_obj_type=SmartDetectObjectType.LICENSE_PLATE,
         ufp_required_field="can_detect_license_plate",
         ufp_event_obj="last_license_plate_detect_event",
     ),
@@ -747,19 +748,34 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
 class ProtectLicensePlateEventSensor(ProtectEventSensor):
     """A UniFi Protect license plate sensor."""
 
+    device: Camera
+
+    @callback
+    def _set_event_done(self) -> None:
+        self._attr_native_value = OBJECT_TYPE_NONE
+        self._attr_extra_state_attributes = {}
+
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        prev_event = self._event
         super()._async_update_device_from_protect(device)
-        event = self._event
-        entity_description = self.entity_description
-        if (
-            event is None
-            or (event.metadata is None or event.metadata.license_plate is None)
-            or not entity_description.get_is_on(self.device, event)
+        description = self.entity_description
+        self._event = description.get_event_obj(device)
+
+        if not (
+            (event := self._event)
+            and not self._event_already_ended(prev_event)
+            and description.has_matching_smart(event)
+            and ((is_end := event.end) or self.device.is_smart_detected)
+            and (metadata := event.metadata)
+            and (license_plate := metadata.license_plate)
         ):
-            self._attr_native_value = OBJECT_TYPE_NONE
-            self._event = None
-            self._attr_extra_state_attributes = {}
+            self._set_event_done()
             return
 
-        self._attr_native_value = event.metadata.license_plate.name
+        previous_plate = self._attr_native_value
+        self._attr_native_value = license_plate.name
+        self._set_event_attrs(event)
+
+        if is_end and previous_plate != license_plate.name:
+            self._async_event_with_immediate_end()
