@@ -42,7 +42,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (binascii.Error, "invalid_code"),
+        (binascii.Error, "invalid_token"),
         (IndexError, "unknown"),
     ],
 )
