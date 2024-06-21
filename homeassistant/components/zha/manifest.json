@@ -131,6 +131,10 @@
     {
       "type": "_xzg._tcp.local.",
       "name": "xzg*"
+    },
+    {
+      "type": "_czc._tcp.local.",
+      "name": "czc*"
     }
   ]
 }
