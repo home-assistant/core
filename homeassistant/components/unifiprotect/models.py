@@ -46,7 +46,7 @@ class ProtectEntityDescription(EntityDescription, Generic[T]):
 
     # The below are set in __post_init__
     has_required: Callable[[T], bool] = bool
-    get_ufp_enabled: Callable[[T], bool] = bool
+    get_ufp_enabled: Callable[[T], bool] | None = None
 
     def get_ufp_value(self, obj: T) -> Any:
         """Return value from UniFi Protect device; overridden in __post_init__."""

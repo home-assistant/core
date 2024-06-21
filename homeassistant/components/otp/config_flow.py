@@ -41,7 +41,7 @@ class TOTPConfigFlow(ConfigFlow, domain=DOMAIN):
                     pyotp.TOTP(user_input[CONF_TOKEN]).now
                 )
             except binascii.Error:
-                errors["base"] = "invalid_code"
+                errors["base"] = "invalid_token"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
