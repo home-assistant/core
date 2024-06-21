@@ -665,7 +665,6 @@ async def test_options_default(
     hass: HomeAssistant, config_entry, setup_enphase_envoy
 ) -> None:
     """Test we can configure options."""
-    """Test config flow options."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
