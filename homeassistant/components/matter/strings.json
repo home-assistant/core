@@ -47,10 +47,10 @@
   "entity": {
     "binary_sensor": {
       "water_leak": {
-        "name": "Water Leak"
+        "name": "Water leak"
       },
       "water_freeze": {
-        "name": "Water Freeze"
+        "name": "Water freeze"
       },
       "rain": {
         "name": "Rain"
