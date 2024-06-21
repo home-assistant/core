@@ -1,4 +1,4 @@
-"""Demo platform that offers a fake button entity."""
+"""Support for TPLink button entities."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ from .entity import (
 class TPLinkButtonEntityDescription(
     ButtonEntityDescription, TPLinkFeatureEntityDescription
 ):
-    """Base class for a TPLink feature based sensor entity description."""
+    """Base class for a TPLink feature based button entity description."""
 
 
 BUTTON_DESCRIPTIONS: Final = [
@@ -45,7 +45,7 @@ async def async_setup_entry(
     config_entry: TPLinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up sensors."""
+    """Set up buttons."""
     data = config_entry.runtime_data
     parent_coordinator = data.parent_coordinator
     children_coordinators = data.children_coordinators
@@ -74,7 +74,7 @@ class Button(CoordinatedTPLinkFeatureEntity, ButtonEntity):
         feature: Feature,
         parent: Device | None = None,
     ) -> None:
-        """Initialize the sensor."""
+        """Initialize the button."""
         description = _description_for_feature(
             TPLinkButtonEntityDescription, feature, BUTTON_DESCRIPTIONS_MAP
         )
