@@ -116,6 +116,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.BINARY_SENSOR,
         entity_description=MatterBinarySensorEntityDescription(
             key="WaterLeakDetector",
+            translation_key="water_leak",
             device_class=BinarySensorDeviceClass.MOISTURE,
             # value is inverted on matter to what we expect
             measurement_to_ha=lambda x: not x,
@@ -128,6 +129,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.BINARY_SENSOR,
         entity_description=MatterBinarySensorEntityDescription(
             key="WaterFreezeDetector",
+            translation_key="water_freeze",
             device_class=BinarySensorDeviceClass.COLD,
             # value is inverted on matter to what we expect
             measurement_to_ha=lambda x: not x,
@@ -140,6 +142,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.BINARY_SENSOR,
         entity_description=MatterBinarySensorEntityDescription(
             key="RainSensor",
+            translation_key="rain",
             device_class=BinarySensorDeviceClass.MOISTURE,
             # value is inverted on matter to what we expect
             measurement_to_ha=lambda x: not x,
