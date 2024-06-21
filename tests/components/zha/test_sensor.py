@@ -83,54 +83,46 @@ async def async_test_metering(hass: HomeAssistant, cluster: Cluster, entity_id: 
     """Test Smart Energy metering sensor."""
     await send_attributes_report(hass, cluster, {1025: 1, 1024: 12345, 1026: 100})
     assert_state(hass, entity_id, "12345.0", None)
-    # TODO assert hass.states.get(entity_id).attributes["status"] == "NO_ALARMS"
-    # TODO assert hass.states.get(entity_id).attributes["device_type"] == "Electric Metering"
+    assert hass.states.get(entity_id).attributes["status"] == "NO_ALARMS"
+    assert hass.states.get(entity_id).attributes["device_type"] == "Electric Metering"
 
     await send_attributes_report(hass, cluster, {1024: 12346, "status": 64 + 8})
     assert_state(hass, entity_id, "12346.0", None)
 
-    """ TODO
     assert hass.states.get(entity_id).attributes["status"] in (
         "SERVICE_DISCONNECT|POWER_FAILURE",
         "POWER_FAILURE|SERVICE_DISCONNECT",
     )
-    """
 
     await send_attributes_report(
-        hass, cluster, {"status": 64 + 8, "metering_device_type": 1}
+        hass, cluster, {"metering_device_type": 1, "status": 64 + 8}
     )
-    """ TODO
     assert hass.states.get(entity_id).attributes["status"] in (
         "SERVICE_DISCONNECT|NOT_DEFINED",
         "NOT_DEFINED|SERVICE_DISCONNECT",
     )
-    """
 
     await send_attributes_report(
-        hass, cluster, {"status": 64 + 8, "metering_device_type": 2}
+        hass, cluster, {"metering_device_type": 2, "status": 64 + 8}
     )
-    """ TODO
     assert hass.states.get(entity_id).attributes["status"] in (
         "SERVICE_DISCONNECT|PIPE_EMPTY",
         "PIPE_EMPTY|SERVICE_DISCONNECT",
     )
-    """
 
     await send_attributes_report(
-        hass, cluster, {"status": 64 + 8, "metering_device_type": 5}
+        hass, cluster, {"metering_device_type": 5, "status": 64 + 8}
     )
-    """ TODO
     assert hass.states.get(entity_id).attributes["status"] in (
         "SERVICE_DISCONNECT|TEMPERATURE_SENSOR",
         "TEMPERATURE_SENSOR|SERVICE_DISCONNECT",
     )
-    """
 
     # Status for other meter types
     await send_attributes_report(
-        hass, cluster, {"status": 32, "metering_device_type": 4}
+        hass, cluster, {"metering_device_type": 4, "status": 32}
     )
-    # TODO assert hass.states.get(entity_id).attributes["status"] in ("<bitmap8.32: 32>", "32")
+    assert hass.states.get(entity_id).attributes["status"] in ("<bitmap8.32: 32>", "32")
 
 
 async def async_test_smart_energy_summation_delivered(
@@ -142,8 +134,8 @@ async def async_test_smart_energy_summation_delivered(
         hass, cluster, {1025: 1, "current_summ_delivered": 12321, 1026: 100}
     )
     assert_state(hass, entity_id, "12.321", UnitOfEnergy.KILO_WATT_HOUR)
-    # TODO assert hass.states.get(entity_id).attributes["status"] == "NO_ALARMS"
-    # TODO assert hass.states.get(entity_id).attributes["device_type"] == "Electric Metering"
+    assert hass.states.get(entity_id).attributes["status"] == "NO_ALARMS"
+    assert hass.states.get(entity_id).attributes["device_type"] == "Electric Metering"
     assert (
         hass.states.get(entity_id).attributes[ATTR_DEVICE_CLASS]
         == SensorDeviceClass.ENERGY
@@ -159,8 +151,8 @@ async def async_test_smart_energy_summation_received(
         hass, cluster, {1025: 1, "current_summ_received": 12321, 1026: 100}
     )
     assert_state(hass, entity_id, "12.321", UnitOfEnergy.KILO_WATT_HOUR)
-    # TODO assert hass.states.get(entity_id).attributes["status"] == "NO_ALARMS"
-    # TODO assert hass.states.get(entity_id).attributes["device_type"] == "Electric Metering"
+    assert hass.states.get(entity_id).attributes["status"] == "NO_ALARMS"
+    assert hass.states.get(entity_id).attributes["device_type"] == "Electric Metering"
     assert (
         hass.states.get(entity_id).attributes[ATTR_DEVICE_CLASS]
         == SensorDeviceClass.ENERGY
@@ -188,7 +180,7 @@ async def async_test_electrical_measurement(
 
     assert "active_power_max" not in hass.states.get(entity_id).attributes
     await send_attributes_report(hass, cluster, {0: 1, 0x050D: 88, 10: 5000})
-    # TODO assert hass.states.get(entity_id).attributes["active_power_max"] == "8.8"
+    assert hass.states.get(entity_id).attributes["active_power_max"] == 8.8
 
 
 async def async_test_em_apparent_power(
@@ -248,7 +240,7 @@ async def async_test_em_rms_current(
 
     assert "rms_current_max" not in hass.states.get(entity_id).attributes
     await send_attributes_report(hass, cluster, {0: 1, 0x050A: 88, 10: 5000})
-    # TODO assert hass.states.get(entity_id).attributes["rms_current_max"] == "8.8"
+    assert hass.states.get(entity_id).attributes["rms_current_max"] == 8.8
 
 
 async def async_test_em_rms_voltage(
@@ -268,7 +260,7 @@ async def async_test_em_rms_voltage(
 
     assert "rms_voltage_max" not in hass.states.get(entity_id).attributes
     await send_attributes_report(hass, cluster, {0: 1, 0x0507: 888, 10: 5000})
-    # TODO assert hass.states.get(entity_id).attributes["rms_voltage_max"] == "8.9"
+    assert hass.states.get(entity_id).attributes["rms_voltage_max"] == 8.9
 
 
 async def async_test_powerconfiguration(
@@ -277,13 +269,11 @@ async def async_test_powerconfiguration(
     """Test powerconfiguration/battery sensor."""
     await send_attributes_report(hass, cluster, {33: 98})
     assert_state(hass, entity_id, "49", "%")
-    """TODO
     assert hass.states.get(entity_id).attributes["battery_voltage"] == 2.9
     assert hass.states.get(entity_id).attributes["battery_quantity"] == 3
     assert hass.states.get(entity_id).attributes["battery_size"] == "AAA"
     await send_attributes_report(hass, cluster, {32: 20})
     assert hass.states.get(entity_id).attributes["battery_voltage"] == 2.0
-    """
 
 
 async def async_test_powerconfiguration2(
