@@ -1,5 +1,13 @@
 {
   "entity": {
+    "button": {
+      "test_alarm": {
+        "default": "mdi:bell-alert"
+      },
+      "stop_alarm": {
+        "default": "mdi:bell-cancel"
+      }
+    },
     "switch": {
       "led": {
         "default": "mdi:led-off",
