@@ -1,5 +1,6 @@
 """Test Enphase Envoy diagnostics."""
 
+from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
@@ -21,8 +22,9 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from . import setup_with_selected_platforms
+
 from tests.common import MockConfigEntry
-from tests.components.enphase_envoy import setup_with_selected_platforms
 
 SELECT_STORAGE_FIXTURES = (
     [
@@ -48,7 +50,7 @@ async def test_select(
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     mock_envoy: AsyncMock,
-    entity_registry: AsyncMock,
+    entity_registry: er.EntityRegistry,
     entity_count: int,
 ) -> None:
     """Test enphase_envoy select entities."""
@@ -88,7 +90,7 @@ async def test_select_relay_actions(
 
     for contact_id, dry_contact in mock_envoy.data.dry_contact_settings.items():
         name = dry_contact.load_name.lower().replace(" ", "_")
-        targets = []
+        targets: list[Any] = []
         targets.extend(
             (
                 ("generator_action", dry_contact.generator_action),
@@ -98,9 +100,8 @@ async def test_select_relay_actions(
         )
         for target in targets:
             test_entity = f"{entity_base}{name}_{target[0]}"
-            assert RELAY_ACTION_MAP[target[1]] == (
-                current_state := hass.states.get(test_entity).state
-            )
+            assert (entity_state := hass.states.get(test_entity))
+            assert RELAY_ACTION_MAP[target[1]] == (current_state := entity_state.state)
             for mode in [mode for mode in ACTION_OPTIONS if not current_state]:
                 await hass.services.async_call(
                     Platform.SELECT,
@@ -137,9 +138,8 @@ async def test_select_relay_modes(
     for contact_id, dry_contact in mock_envoy.data.dry_contact_settings.items():
         name = dry_contact.load_name.lower().replace(" ", "_")
         test_entity = f"{entity_base}{name}_mode"
-        assert RELAY_MODE_MAP[dry_contact.mode] == (
-            current_state := hass.states.get(test_entity).state
-        )
+        assert (entity_state := hass.states.get(test_entity))
+        assert RELAY_MODE_MAP[dry_contact.mode] == (current_state := entity_state.state)
         for mode in [mode for mode in MODE_OPTIONS if not current_state]:
             await hass.services.async_call(
                 Platform.SELECT,
@@ -175,8 +175,9 @@ async def test_select_storage_modes(
 
     sn = mock_envoy.data.enpower.serial_number
     test_entity = f"{entity_base}{sn}_storage_mode"
+    assert (entity_state := hass.states.get(test_entity))
     assert STORAGE_MODE_MAP[mock_envoy.data.tariff.storage_settings.mode] == (
-        current_state := hass.states.get(test_entity).state
+        current_state := entity_state.state
     )
 
     for mode in [mode for mode in STORAGE_MODE_OPTIONS if not current_state]:

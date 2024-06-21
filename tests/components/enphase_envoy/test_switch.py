@@ -18,8 +18,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from . import setup_with_selected_platforms
+
 from tests.common import MockConfigEntry
-from tests.components.enphase_envoy import setup_with_selected_platforms
 
 SWITCH_FIXTURES = (
     [
@@ -36,7 +37,7 @@ async def test_switch(
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     mock_envoy: AsyncMock,
-    entity_registry: AsyncMock,
+    entity_registry: er.EntityRegistry,
     entity_count: int,
 ) -> None:
     """Test enphase_envoy switch entities."""

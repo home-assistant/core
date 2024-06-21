@@ -11,8 +11,9 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from . import setup_with_selected_platforms
+
 from tests.common import MockConfigEntry
-from tests.components.enphase_envoy import setup_with_selected_platforms
 
 NUMBER_FIXTURES = (
     [
@@ -29,7 +30,7 @@ async def test_number(
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     mock_envoy: AsyncMock,
-    entity_registry: AsyncMock,
+    entity_registry: er.EntityRegistry,
     entity_count: int,
 ) -> None:
     """Test enphase_envoy number entities."""
@@ -69,10 +70,11 @@ async def test_number_operation(
 
     sn = mock_envoy.data.enpower.serial_number
     test_entity = f"{entity_base}{sn}_reserve_battery_level"
+    assert (entity_state := hass.states.get(test_entity))
     assert mock_envoy.data.tariff.storage_settings.reserved_soc == float(
-        hass.states.get(test_entity).state
+        entity_state.state
     )
-    test_value = 2 * float(hass.states.get(test_entity).state)
+    test_value = 2 * float(entity_state.state)
     await hass.services.async_call(
         Platform.NUMBER,
         SERVICE_SET_VALUE,

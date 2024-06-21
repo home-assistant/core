@@ -71,7 +71,7 @@ async def mock_envoy_fixture(
     mock_enable_charge_from_grid,
     mock_set_reserve_soc,
     mock_set_storage_mode,
-    request,
+    request: pytest.FixtureRequest,
 ) -> Generator[AsyncMock, None, None]:
     """Define a mocked Envoy fixture."""
     mock_envoy = Mock(spec=Envoy)
@@ -227,7 +227,7 @@ def _load_json_2_raw_data(mocked_data: EnvoyData, json_fixture) -> None:
 
 
 @pytest.fixture(name="setup_enphase_envoy")
-async def setup_enphase_envoy_fixture(hass, config, mock_envoy):
+async def setup_enphase_envoy_fixture(hass: HomeAssistant, config, mock_envoy):
     """Define a fixture to set up Enphase Envoy."""
     assert await async_setup_component(hass, DOMAIN, config)
 

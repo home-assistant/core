@@ -3,14 +3,15 @@
 from unittest.mock import AsyncMock
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.enphase_envoy.const import PLATFORMS as ENVOY_PLATFORMS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
+from . import setup_with_selected_platforms
+
 from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.components.enphase_envoy import setup_with_selected_platforms
 from tests.typing import ClientSessionGenerator
 
 # Fields to exclude from snapshot as they change each run
@@ -72,6 +73,7 @@ async def test_entry_diagnostics(
         name="envoy_model_data", exclude=limit_diagnostic_attrs
     )
 
+    assert diagnostics["envoy_entities_by_device"]
     for devices in diagnostics["envoy_entities_by_device"]:
         for entity in devices["entities"]:
             assert entity["entity"] == snapshot(

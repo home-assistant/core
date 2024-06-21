@@ -10,8 +10,9 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from . import setup_with_selected_platforms
+
 from tests.common import MockConfigEntry
-from tests.components.enphase_envoy import setup_with_selected_platforms
 
 BINARY_FIXTURES = (
     [
@@ -76,13 +77,15 @@ async def test_binary_sensor_data(
     entity_base = f"{Platform.BINARY_SENSOR}.enpower_"
 
     sn = mock_envoy.data.enpower.serial_number
+    assert (entity_state := hass.states.get(f"{entity_base}{sn}_communicating"))
     assert (
-        hass.states.get(f"{entity_base}{sn}_communicating").state == STATE_ON
+        entity_state.state == STATE_ON
         if mock_envoy.data.enpower.communicating
         else STATE_OFF
     )
+    assert (entity_state := hass.states.get(f"{entity_base}{sn}_grid_status"))
     assert (
-        hass.states.get(f"{entity_base}{sn}_grid_status").state == STATE_ON
+        entity_state.state == STATE_ON
         if mock_envoy.data.enpower.mains_oper_state == "closed"
         else STATE_OFF
     )
@@ -91,13 +94,15 @@ async def test_binary_sensor_data(
 
     # these should be defined and have value from data
     for sn, encharge_inventory in mock_envoy.data.encharge_inventory.items():
+        assert (entity_state := hass.states.get(f"{entity_base}{sn}_communicating"))
         assert (
-            hass.states.get(f"{entity_base}{sn}_communicating").state == STATE_ON
+            entity_state.state == STATE_ON
             if encharge_inventory.communicating
             else STATE_OFF
         )
+        assert (entity_state := hass.states.get(f"{entity_base}{sn}_dc_switch"))
         assert (
-            hass.states.get(f"{entity_base}{sn}_dc_switch").state == STATE_ON
+            entity_state.state == STATE_ON
             if encharge_inventory.dc_switch_off
             else STATE_OFF
         )
