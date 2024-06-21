@@ -231,6 +231,12 @@ def mock_mozart_client() -> Generator[AsyncMock]:
         client.post_playback_command = AsyncMock()
         client.seek_to_position = AsyncMock()
         client.post_clear_queue = AsyncMock()
+        client.post_overlay_play = AsyncMock()
+        client.post_uri_source = AsyncMock()
+        client.run_provided_scene = AsyncMock()
+        client.activate_preset = AsyncMock()
+        client.start_deezer_flow = AsyncMock()
+        client.add_to_queue = AsyncMock()
 
         yield client
 

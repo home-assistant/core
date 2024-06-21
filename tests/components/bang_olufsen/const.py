@@ -2,13 +2,21 @@
 
 from ipaddress import IPv4Address, IPv6Address
 
+from mozart_api.exceptions import ApiException
 from mozart_api.models import (
+    Action,
+    OverlayPlayRequest,
+    OverlayPlayRequestTextToSpeechTextToSpeech,
     PlaybackContentMetadata,
     PlaybackError,
     PlaybackProgress,
+    PlayQueueItem,
+    PlayQueueItemType,
     RenderingState,
+    SceneProperties,
     Source,
     SourceTypeEnum,
+    UserFlow,
     VolumeLevel,
     VolumeMute,
     VolumeState,
@@ -115,13 +123,21 @@ TEST_PLAYBACK_METADATA = PlaybackContentMetadata(
 )
 TEST_PLAYBACK_ERROR = PlaybackError(error="Test error")
 TEST_PLAYBACK_PROGRESS = PlaybackProgress(progress=123)
-TEST_PLAYBACK_STATE = RenderingState(value="paused")
+TEST_PLAYBACK_STATE_PAUSED = RenderingState(value="paused")
+TEST_PLAYBACK_STATE_PLAYING = RenderingState(value="started")
 TEST_SOURCE_CHANGE = Source(
     id="tidalConnect",
     is_enabled=True,
     is_playable=True,
     name="Tidal Connect",
     type=SourceTypeEnum(value="tidalConnect"),
+)
+TEST_SOURCE_CHANGE_DEEZER = Source(
+    id="deezer",
+    is_enabled=True,
+    is_playable=True,
+    name="Deezer",
+    type=SourceTypeEnum(value="deezer"),
 )
 TEST_VOLUME = VolumeState(level=VolumeLevel(level=40))
 TEST_VOLUME_HOME_ASSISTANT_FORMAT = 0.4
@@ -130,3 +146,38 @@ TEST_VOLUME_MUTED = VolumeState(
     muted=VolumeMute(muted=True), level=VolumeLevel(level=40)
 )
 TEST_VOLUME_MUTED_HOME_ASSISTANT_FORMAT = True
+TEST_SEEK_POSITION_HOME_ASSISTANT_FORMAT = 10.0
+TEST_SEEK_POSITION = 10000
+TEST_OVERLAY_INVALID_OFFSET_VOLUME_TTS = OverlayPlayRequest(
+    text_to_speech=OverlayPlayRequestTextToSpeechTextToSpeech(
+        lang="da-dk", text="Dette er en test"
+    )
+)
+TEST_OVERLAY_OFFSET_VOLUME_TTS = OverlayPlayRequest(
+    text_to_speech=OverlayPlayRequestTextToSpeechTextToSpeech(
+        lang="en-us", text="This is a test"
+    ),
+    volume_absolute=60,
+)
+TEST_RADIO_STATION = SceneProperties(
+    action_list=[
+        Action(
+            type="radio",
+            radio_station_id="1234567890123456",
+        )
+    ]
+)
+TEST_DEEZER_FLOW = UserFlow(user_id="123")
+TEST_DEEZER_PLAYLIST = PlayQueueItem(
+    provider=PlayQueueItemType(value="deezer"),
+    start_now_from_position=123,
+    type="playlist",
+    uri="playlist:1234567890",
+)
+TEST_DEEZER_TRACK = PlayQueueItem(
+    provider=PlayQueueItemType(value="deezer"),
+    start_now_from_position=0,
+    type="track",
+    uri="1234567890",
+)
+TEST_DEEZER_INVALID_FLOW = ApiException(status=400, reason="Bad Request")
