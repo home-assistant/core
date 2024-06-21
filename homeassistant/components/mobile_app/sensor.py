@@ -82,6 +82,7 @@ class MobileAppSensor(MobileAppEntity, RestoreSensor):
     async def async_restore_last_state(self, last_state: State) -> None:
         """Restore previous state."""
         await super().async_restore_last_state(last_state)
+        config = self._config
         config[ATTR_SENSOR_STATE] = last_sensor_data.native_value
 -       config[ATTR_SENSOR_UOM] = last_sensor_data.native_unit_of_measurement
         self._async_update_attr_from_config()
