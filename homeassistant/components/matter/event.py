@@ -72,21 +72,6 @@ class MatterEventEntity(MatterEntity, EventEntity):
             event_types.append("multi_press_ongoing")
             event_types.append("multi_press_complete")
         self._attr_event_types = event_types
-        # the optional label attribute could be used to identify multiple buttons
-        # e.g. in case of a dimmer switch with 4 buttons, each button
-        # will have its own name, prefixed by the device name.
-        if labels := self.get_matter_attribute_value(
-            clusters.FixedLabel.Attributes.LabelList
-        ):
-            for label in labels:
-                if label.label in ["Label", "Button"]:
-                    label_value: str = label.value
-                    # in the case the label is only the label id, prettify it a bit
-                    if label_value.isnumeric():
-                        self._attr_name = f"Button {label_value}"
-                    else:
-                        self._attr_name = label_value
-                    break
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""

@@ -64,6 +64,7 @@
     },
     "fan": {
       "fan": {
+        "name": "[%key:component::fan::title%]",
         "state_attributes": {
           "preset_mode": {
             "state": {
@@ -92,6 +93,11 @@
         "name": "On/Off transition time"
       }
     },
+    "light": {
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
     "sensor": {
       "activated_carbon_filter_condition": {
         "name": "Activated carbon filter condition"
@@ -113,6 +119,14 @@
       },
       "hepa_filter_condition": {
         "name": "Hepa filter condition"
+      }
+    },
+    "switch": {
+      "switch": {
+        "name": "[%key:component::switch::title%]"
+      },
+      "power": {
+        "name": "Power"
       }
     }
   },

@@ -421,7 +421,9 @@ class MatterLight(MatterEntity, LightEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
-        entity_description=LightEntityDescription(key="MatterLight", name=None),
+        entity_description=LightEntityDescription(
+            key="MatterLight", translation_key="light"
+        ),
         entity_class=MatterLight,
         required_attributes=(clusters.OnOff.Attributes.OnOff,),
         optional_attributes=(
@@ -445,7 +447,7 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
         entity_description=LightEntityDescription(
-            key="MatterHSColorLightFallback", name=None
+            key="MatterHSColorLightFallback", translation_key="light"
         ),
         entity_class=MatterLight,
         required_attributes=(
@@ -465,7 +467,7 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
         entity_description=LightEntityDescription(
-            key="MatterXYColorLightFallback", name=None
+            key="MatterXYColorLightFallback", translation_key="light"
         ),
         entity_class=MatterLight,
         required_attributes=(
@@ -485,7 +487,7 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
         entity_description=LightEntityDescription(
-            key="MatterColorTemperatureLightFallback", name=None
+            key="MatterColorTemperatureLightFallback", translation_key="light"
         ),
         entity_class=MatterLight,
         required_attributes=(

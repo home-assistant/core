@@ -9,6 +9,7 @@ from functools import cached_property
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
+from chip.clusters import Objects as clusters
 from chip.clusters.Objects import ClusterAttributeDescriptor, NullValue
 from matter_server.common.helpers.util import create_attribute_path
 from matter_server.common.models import EventType, ServerInfoMessage
@@ -80,6 +81,29 @@ class MatterEntity(Entity):
             if ep != self._endpoint
             and ep.has_attribute(None, entity_info.primary_attribute)
         )
+        if self._require_name_postfix:
+            self._attr_has_entity_name = True
+            # entity_info.entity_description.has_entity_name = True
+        # prefer the label attribute for the entity name
+        # Matter has a way for users and/or vendors to specify a name for an endpoint
+        # which is always preferred over a standard HA (generated) name
+        for attr in (
+            clusters.FixedLabel.Attributes.LabelList,
+            clusters.UserLabel.Attributes.LabelList,
+        ):
+            if not (labels := self.get_matter_attribute_value(attr)):
+                continue
+            for label in labels:
+                if label.label not in ["Label", "Button"]:
+                    continue
+                # fixed or user label found: use it
+                label_value: str = label.value
+                # in the case the label is only the label id, prettify it a bit
+                if label.label == "Button" and label_value.isnumeric():
+                    self._attr_name = f"Button {label_value}"
+                else:
+                    self._attr_name = label_value
+                break
 
         # make sure to update the attributes once
         self._update_from_device()
@@ -117,6 +141,9 @@ class MatterEntity(Entity):
     @cached_property
     def name(self) -> str | UndefinedType | None:
         """Return the name of the entity."""
+        if hasattr(self, "_attr_name"):
+            # always prefer the label attribute for the entity name
+            return self._attr_name
         name = super().name
         if name and self._require_name_postfix:
             name = f"{name} ({self._endpoint.endpoint_id})"
