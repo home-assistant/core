@@ -239,7 +239,6 @@ build.json @home-assistant/supervisor
 /tests/components/ccm15/ @ocalvo
 /homeassistant/components/cert_expiry/ @jjlawren
 /tests/components/cert_expiry/ @jjlawren
-/homeassistant/components/circuit/ @braam
 /homeassistant/components/cisco_ios/ @fbradyirl
 /homeassistant/components/cisco_mobility_express/ @fbradyirl
 /homeassistant/components/cisco_webex_teams/ @fbradyirl
@@ -738,6 +737,8 @@ build.json @home-assistant/supervisor
 /tests/components/kitchen_sink/ @home-assistant/core
 /homeassistant/components/kmtronic/ @dgomes
 /tests/components/kmtronic/ @dgomes
+/homeassistant/components/knocki/ @joostlek @jgatto1
+/tests/components/knocki/ @joostlek @jgatto1
 /homeassistant/components/knx/ @Julius2342 @farmio @marvin-w
 /tests/components/knx/ @Julius2342 @farmio @marvin-w
 /homeassistant/components/kodi/ @OnFreund
@@ -827,6 +828,8 @@ build.json @home-assistant/supervisor
 /tests/components/matrix/ @PaarthShah
 /homeassistant/components/matter/ @home-assistant/matter
 /tests/components/matter/ @home-assistant/matter
+/homeassistant/components/mealie/ @joostlek
+/tests/components/mealie/ @joostlek
 /homeassistant/components/meater/ @Sotolotl @emontnemery
 /tests/components/meater/ @Sotolotl @emontnemery
 /homeassistant/components/medcom_ble/ @elafargue

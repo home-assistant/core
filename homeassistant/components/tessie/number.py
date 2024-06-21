@@ -91,7 +91,6 @@ async def async_setup_entry(
         TessieNumberEntity(vehicle, description)
         for vehicle in data.vehicles
         for description in DESCRIPTIONS
-        if description.key in vehicle.data
     )
 
 
