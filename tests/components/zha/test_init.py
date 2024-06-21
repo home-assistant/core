@@ -236,8 +236,6 @@ async def test_zha_retry_unique_ids(
 ) -> None:
     """Test that ZHA retrying creates unique entity IDs."""
 
-    # TODO we have a lingering thread here...
-
     config_entry.add_to_hass(hass)
 
     # Ensure we have some device to try to load
