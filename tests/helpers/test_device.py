@@ -6,6 +6,7 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device import (
+    async_device_info_to_link_from_device_id,
     async_device_info_to_link_from_entity,
     async_entity_id_to_device_id,
     async_remove_stale_devices_links_keep_current_device,
@@ -90,10 +91,24 @@ async def test_device_info_to_link(
         "connections": {("mac", "30:31:32:33:34:00")},
     }
 
+    result = async_device_info_to_link_from_device_id(hass, device_id=device.id)
+    assert result == {
+        "identifiers": {("test", "my_device")},
+        "connections": {("mac", "30:31:32:33:34:00")},
+    }
+
     # With a non-existent entity id
     result = async_device_info_to_link_from_entity(
         hass, entity_id_or_uuid="sensor.invalid"
     )
+    assert result is None
+
+    # With a non-existent device id
+    result = async_device_info_to_link_from_device_id(hass, device_id="abcdefghi")
+    assert result is None
+
+    # With a None device id
+    result = async_device_info_to_link_from_device_id(hass, device_id=None)
     assert result is None
 
 

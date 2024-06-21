@@ -41,13 +41,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    selector,
-    template,
-)
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import config_validation as cv, selector, template
+from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.trigger_template_entity import TEMPLATE_SENSOR_BASE_SCHEMA
@@ -268,17 +263,13 @@ class SensorTemplate(TemplateEntity, SensorEntity):
         self._attr_last_reset_template: template.Template | None = config.get(
             ATTR_LAST_RESET
         )
+        self._attr_device_info = async_device_info_to_link_from_device_id(
+            hass,
+            config.get(CONF_DEVICE_ID),
+        )
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, object_id, hass=hass
-            )
-        dev_reg = dr.async_get(hass)
-        if (device_id := config.get(CONF_DEVICE_ID)) is not None and (
-            device := dev_reg.async_get(device_id)
-        ) is not None:
-            self._attr_device_info = DeviceInfo(
-                connections=device.connections,
-                identifiers=device.identifiers,
             )
 
     @callback

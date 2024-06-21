@@ -11,7 +11,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_UNIQUE_ID, SERVICE_RELOAD
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, discovery
+from homeassistant.helpers import discovery
+from homeassistant.helpers.device import (
+    async_remove_stale_devices_links_keep_current_device,
+)
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
@@ -69,8 +72,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
 
-    entry.runtime_data = TemplateData(
-        device=entry.options.get(CONF_DEVICE_ID, None),
+    async_remove_stale_devices_links_keep_current_device(
+        hass,
+        entry.entry_id,
+        entry.options.get(CONF_DEVICE_ID),
     )
 
     await hass.config_entries.async_forward_entry_setups(
@@ -82,18 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update listener, called when the config entry options are changed."""
-
-    # Device id before reload
-    old_device = entry.runtime_data.device
-
     await hass.config_entries.async_reload(entry.entry_id)
-
-    # If the old device is different from the current device it is removed from the config entry
-    if old_device != entry.options.get(CONF_DEVICE_ID, None) and old_device is not None:
-        device_registry = dr.async_get(hass)
-        device_registry.async_update_device(
-            old_device, remove_config_entry_id=entry.entry_id
-        )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
