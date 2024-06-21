@@ -341,7 +341,7 @@ class OnkyoDevice(MediaPlayerEntity):
             del self._attr_extra_state_attributes[ATTR_PRESET]
 
         self._attr_is_volume_muted = bool(mute_raw[1] == "on")
-        #       AMP_VOL/MAX_RECEIVER_VOL*(MAX_VOL/100)
+        # AMP_VOL / (MAX_RECEIVER_VOL * (MAX_VOL / 100))
         self._attr_volume_level = volume_raw[1] / (
             self._receiver_max_volume * self._max_volume / 100
         )
@@ -511,9 +511,9 @@ class OnkyoDeviceZone(OnkyoDevice):
         elif ATTR_PRESET in self._attr_extra_state_attributes:
             del self._attr_extra_state_attributes[ATTR_PRESET]
         if self._supports_volume:
-            # AMP_VOL/MAX_RECEIVER_VOL*(MAX_VOL/100)
-            self._attr_volume_level = (
-                volume_raw[1] / self._receiver_max_volume * (self._max_volume / 100)
+            # AMP_VOL / (MAX_RECEIVER_VOL * (MAX_VOL / 100))
+            self._attr_volume_level = volume_raw[1] / (
+                self._receiver_max_volume * self._max_volume / 100
             )
 
     @property

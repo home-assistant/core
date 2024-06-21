@@ -26,12 +26,11 @@ from .const import (
     ATTR_FPS,
     ATTR_HEIGHT,
     ATTR_WIDTH,
-    DISPATCH_CHANNELS,
     DOMAIN,
 )
 from .data import ProtectData, UFPConfigEntry
 from .entity import ProtectDeviceEntity
-from .utils import async_dispatch_id as _ufpd, get_camera_base_name
+from .utils import get_camera_base_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -153,7 +152,7 @@ async def async_setup_entry(
 
     data.async_subscribe_adopt(_add_new_device)
     entry.async_on_unload(
-        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_CHANNELS), _add_new_device)
+        async_dispatcher_connect(hass, data.channels_signal, _add_new_device)
     )
     async_add_entities(_async_camera_entities(hass, entry, data))
 
@@ -191,10 +190,10 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         camera_name = get_camera_base_name(channel)
         if self._secure:
             self._attr_unique_id = f"{device.mac}_{channel.id}"
-            self._attr_name = f"{device.display_name} {camera_name}"
+            self._attr_name = camera_name
         else:
             self._attr_unique_id = f"{device.mac}_{channel.id}_insecure"
-            self._attr_name = f"{device.display_name} {camera_name} (Insecure)"
+            self._attr_name = f"{camera_name} (insecure)"
         # only the default (first) channel is enabled by default
         self._attr_entity_registry_enabled_default = is_default and secure
 

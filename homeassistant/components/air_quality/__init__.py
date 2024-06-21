@@ -17,7 +17,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
 
-from . import group as group_pre_import  # noqa: F401
 from .const import DOMAIN
 
 _LOGGER: Final = logging.getLogger(__name__)

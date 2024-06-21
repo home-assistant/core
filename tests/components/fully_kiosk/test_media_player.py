@@ -113,6 +113,8 @@ async def test_browse_media(
         {
             "id": 1,
             "type": "media_player/browse_media",
+            "media_content_id": "media-source://media_source",
+            "media_content_type": "library",
             "entity_id": "media_player.amazon_fire",
         }
     )

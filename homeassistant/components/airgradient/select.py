@@ -4,7 +4,12 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from airgradient import AirGradientClient, Config
-from airgradient.models import ConfigurationControl, TemperatureUnit
+from airgradient.models import (
+    ConfigurationControl,
+    LedBarMode,
+    PmStandard,
+    TemperatureUnit,
+)
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -17,6 +22,12 @@ from .const import DOMAIN
 from .coordinator import AirGradientConfigCoordinator
 from .entity import AirGradientEntity
 
+PM_STANDARD = {
+    PmStandard.UGM3: "ugm3",
+    PmStandard.USAQI: "us_aqi",
+}
+PM_STANDARD_REVERSE = {v: k for k, v in PM_STANDARD.items()}
+
 
 @dataclass(frozen=True, kw_only=True)
 class AirGradientSelectEntityDescription(SelectEntityDescription):
@@ -25,6 +36,7 @@ class AirGradientSelectEntityDescription(SelectEntityDescription):
     value_fn: Callable[[Config], str | None]
     set_value_fn: Callable[[AirGradientClient, str], Awaitable[None]]
     requires_display: bool = False
+    requires_led_bar: bool = False
 
 
 CONFIG_CONTROL_ENTITY = AirGradientSelectEntityDescription(
@@ -32,9 +44,11 @@ CONFIG_CONTROL_ENTITY = AirGradientSelectEntityDescription(
     translation_key="configuration_control",
     options=[ConfigurationControl.CLOUD.value, ConfigurationControl.LOCAL.value],
     entity_category=EntityCategory.CONFIG,
-    value_fn=lambda config: config.configuration_control
-    if config.configuration_control is not ConfigurationControl.NOT_INITIALIZED
-    else None,
+    value_fn=lambda config: (
+        config.configuration_control
+        if config.configuration_control is not ConfigurationControl.NOT_INITIALIZED
+        else None
+    ),
     set_value_fn=lambda client, value: client.set_configuration_control(
         ConfigurationControl(value)
     ),
@@ -51,6 +65,26 @@ PROTECTED_SELECT_TYPES: tuple[AirGradientSelectEntityDescription, ...] = (
             TemperatureUnit(value)
         ),
         requires_display=True,
+    ),
+    AirGradientSelectEntityDescription(
+        key="display_pm_standard",
+        translation_key="display_pm_standard",
+        options=list(PM_STANDARD_REVERSE),
+        entity_category=EntityCategory.CONFIG,
+        value_fn=lambda config: PM_STANDARD.get(config.pm_standard),
+        set_value_fn=lambda client, value: client.set_pm_standard(
+            PM_STANDARD_REVERSE[value]
+        ),
+        requires_display=True,
+    ),
+    AirGradientSelectEntityDescription(
+        key="led_bar_mode",
+        translation_key="led_bar_mode",
+        options=[x.value for x in LedBarMode],
+        entity_category=EntityCategory.CONFIG,
+        value_fn=lambda config: config.led_bar_mode,
+        set_value_fn=lambda client, value: client.set_led_bar_mode(LedBarMode(value)),
+        requires_led_bar=True,
     ),
 )
 
@@ -74,6 +108,7 @@ async def async_setup_entry(
             description.requires_display
             and measurement_coordinator.data.model.startswith("I")
         )
+        or (description.requires_led_bar and "L" in measurement_coordinator.data.model)
     )
 
     async_add_entities(entities)
