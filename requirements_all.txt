@@ -261,7 +261,7 @@ aiohomekit==3.1.5
 aiohue==4.7.1
 
 # homeassistant.components.imap
-aioimaplib==1.0.1
+aioimaplib==1.1.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
