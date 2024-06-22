@@ -5,7 +5,8 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxDeviceEntity
@@ -48,17 +49,20 @@ class FritzboxSwitch(FritzBoxDeviceEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
+        self.async_check_lock_state()
         await self.hass.async_add_executor_job(self.data.set_switch_state_on)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
+        self.async_check_lock_state()
         await self.hass.async_add_executor_job(self.data.set_switch_state_off)
         await self.coordinator.async_refresh()
 
-    @property
-    def available(self) -> bool:
-        """Disable the switch if manual switching via FRITZ!Box user interface is locked."""
+    def async_check_lock_state(self) -> None:
+        """Raise an Error if manual switching via FRITZ!Box user interface is disabled."""
         if self.data.lock:
-            return False
-        return super().available
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="manual_switching_disabled",
+            )

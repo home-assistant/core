@@ -64,5 +64,10 @@
       "nextchange_time": { "name": "Next scheduled change time" },
       "scheduled_preset": { "name": "Current scheduled preset" }
     }
+  },
+  "exceptions": {
+    "manual_switching_disabled": {
+      "message": "Can't change switch while anual switching via FRITZ!Box user interface, FRITZ!Fon, App or button is disabled"
+    }
   }
 }
