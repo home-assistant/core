@@ -147,6 +147,7 @@ class ProtectData:
     def _async_websocket_state_changed(self, state: WebsocketState) -> None:
         """Handle a change in the websocket state."""
         # manually trigger update to mark entities (un)available
+        self.last_update_success = state is WebsocketState.CONNECTED
         self._async_process_updates(self.api.bootstrap)
 
     async def async_stop(self, *args: Any) -> None:
