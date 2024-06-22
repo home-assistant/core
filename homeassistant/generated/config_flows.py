@@ -263,6 +263,7 @@ FLOWS = {
         "intellifire",
         "ios",
         "iotawatt",
+        "iotmeter",
         "ipma",
         "ipp",
         "iqvia",

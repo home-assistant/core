@@ -1,39 +1,44 @@
+"""Module for IoTMeter sensor entities in Home Assistant."""
+
 import logging
+
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
 from .const import DOMAIN
-import os
-import json
 
 _LOGGER = logging.getLogger(__name__)
 
-ICONS_PATH = os.path.join(os.path.dirname(__file__), 'icons.json')
-with open(ICONS_PATH, 'r') as f:
-    ICONS = json.load(f)
 
-
-async def async_setup_entry(hass, config_entry, async_add_sensor_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_sensor_entities: AddEntitiesCallback,
+) -> None:
     """Set up the IoTMeter sensors from a config entry."""
     coordinator = hass.data[DOMAIN]["coordinator"]
-    coordinator.async_add_sensor_entities = async_add_sensor_entities  # Store the function in the coordinator
+    coordinator.async_add_sensor_entities = (
+        async_add_sensor_entities  # Store the function in the coordinator
+    )
     hass.data[DOMAIN]["platform"] = async_add_sensor_entities
     _LOGGER.debug("async_add_sensor_entities set in coordinator")
-
     await coordinator.async_request_refresh()
 
 
 class TranslatableSensorEntity(CoordinatorEntity, SensorEntity):
     """A sensor entity that can be localized."""
 
-    def __init__(self, coordinator, sensor_type, translations, unit_of_measurement):
+    def __init__(
+        self, coordinator, sensor_type, translations, unit_of_measurement
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._sensor_type = sensor_type.replace(' ', '_').lower()
+        self._sensor_type = sensor_type.replace(" ", "_").lower()
         self._translations = translations
         self._attr_name = self.get_localized_name()
-        self._attr_unique_id = f"iotmeter_{self._sensor_type}"
-        self._attr_device_class = "measurement"
-        self._attr_state_class = "measurement"
         self._attr_native_unit_of_measurement = unit_of_measurement
 
     def get_localized_name(self):
@@ -44,10 +49,12 @@ class TranslatableSensorEntity(CoordinatorEntity, SensorEntity):
 
 
 class TotalPowerSensor(TranslatableSensorEntity):
-    """Representation of the total current sensor."""
+    """Representation of the total power sensor."""
 
     def __init__(self, coordinator, sensor_type, translations, unit_of_measurement):
+        """Initialize the total power sensor."""
         super().__init__(coordinator, sensor_type, translations, unit_of_measurement)
+        self.total_power: float = 0
 
     @property
     def state(self):
@@ -56,29 +63,32 @@ class TotalPowerSensor(TranslatableSensorEntity):
         p2 = self.coordinator.data.get("P2")
         p3 = self.coordinator.data.get("P3")
         if p1 is not None and p2 is not None and p3 is not None:
-            total_power = (float(p1) + float(p2) + float(p3)) / 1000
-            return round(total_power, 2)
+            self.total_power = (float(p1) + float(p2) + float(p3)) / 1000
+            return round(self.total_power, 2)
         return None
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {
-            "P1": round(self.coordinator.data.get('P1') / 1000, 2),
-            "P2": round(self.coordinator.data.get('P2') / 1000, 2),
-            "P3": round(self.coordinator.data.get('P3') / 1000, 2),
+            "P1": round(self.coordinator.data.get("P1") / 1000, 2),
+            "P2": round(self.coordinator.data.get("P2") / 1000, 2),
+            "P3": round(self.coordinator.data.get("P3") / 1000, 2),
         }
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon of the sensor."""
-        return ICONS.get(f"sensor.{self._attr_unique_id}")
+        return "mdi:home-lightning-bolt"
 
 
 class ConsumptionEnergySensor(TranslatableSensorEntity):
+    """Representation of the consumption energy sensor."""
 
     def __init__(self, coordinator, sensor_type, translations, unit_of_measurement):
+        """Initialize the consumption energy sensor."""
         super().__init__(coordinator, sensor_type, translations, unit_of_measurement)
+        self.total_energy: float = 0
 
     @property
     def state(self):
@@ -87,23 +97,29 @@ class ConsumptionEnergySensor(TranslatableSensorEntity):
         e2 = self.coordinator.data.get("E2tP")
         e3 = self.coordinator.data.get("E3tP")
         if e1 is not None and e2 is not None and e3 is not None:
-            total_energy = (float(e1) + float(e2) + float(e3)) / 1000
-            return round(total_energy)
+            self.total_energy = (float(e1) + float(e2) + float(e3)) / 1000
+            return round(self.total_energy)
         return None
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon of the sensor."""
-        return ICONS.get(f"sensor.{self._attr_unique_id}")
+        return "mdi:transmission-tower"
 
 
 class GenerationEnergySensor(TranslatableSensorEntity):
+    """Representation of the generation energy sensor."""
 
     def __init__(self, coordinator, sensor_type, translations, unit_of_measurement):
-        super().__init__(coordinator, sensor_type, translations, unit_of_measurement)
+        """Initialize the generation energy sensor."""
+        super().__init__(coordinator)
+        self._sensor_type = sensor_type.replace(" ", "_").lower()
+        self._translations = translations
+        self._attr_native_unit_of_measurement = unit_of_measurement
 
     @property
     def state(self):
+        """Return the state of the sensor."""
         e1 = self.coordinator.data.get("E1tN")
         e2 = self.coordinator.data.get("E2tN")
         e3 = self.coordinator.data.get("E3tN")
@@ -113,42 +129,40 @@ class GenerationEnergySensor(TranslatableSensorEntity):
         return None
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon of the sensor."""
-        return ICONS.get(f"sensor.{self._attr_unique_id}")
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        if func := self.entity_description.value:
-            return func(self._sensor_data.getValue())
-
-        return self._sensor_data.getValue()
+        return "mdi:solar-power-variant"
 
 
 class EvseSensor(TranslatableSensorEntity):
+    """Representation of the EVSE sensor."""
 
-    def __init__(self, coordinator, sensor_type, translations, unit_of_measurement, smartmodule: bool = False):
+    def __init__(
+        self,
+        coordinator,
+        sensor_type,
+        translations,
+        unit_of_measurement,
+        smartmodule: bool = False,
+    ) -> None:
+        """Initialize the EVSE sensor."""
         super().__init__(coordinator, sensor_type, translations, unit_of_measurement)
         self._is_smartmodule: bool = smartmodule
 
     @property
     def state(self):
+        """Return the state of the sensor."""
         evse_state = self.coordinator.data.get("EV_STATE")
         if evse_state is not None:
             if not self._is_smartmodule:
                 evse_state = evse_state[0]
             if 0 <= evse_state <= 3:
                 key = f"component.iotmeter.entity.sensor.evse_status.{evse_state}"
-                status = self._translations.get(key)
-                return status
-            else:
-                'N/A'
+                return self._translations.get(key)
+            return "N/A"
         return None
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon of the sensor."""
-        return ICONS.get(f"sensor.{self._attr_unique_id}")
-
-
+        return "mdi:ev-station"
