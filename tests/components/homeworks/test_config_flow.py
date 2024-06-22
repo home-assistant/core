@@ -9,21 +9,17 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.homeworks.const import (
     CONF_ADDR,
-    CONF_DIMMERS,
     CONF_INDEX,
-    CONF_KEYPADS,
     CONF_LED,
     CONF_NUMBER,
     CONF_RATE,
     CONF_RELEASE_DELAY,
     DOMAIN,
 )
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from tests.common import MockConfigEntry
 
@@ -127,114 +123,6 @@ async def test_user_flow_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
     assert result["step_id"] == "user"
-
-
-async def test_import_flow(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    issue_registry: ir.IssueRegistry,
-    mock_homeworks: MagicMock,
-    mock_setup_entry,
-) -> None:
-    """Test importing yaml config."""
-    entry = entity_registry.async_get_or_create(
-        LIGHT_DOMAIN, DOMAIN, "homeworks.[02:08:01:01]"
-    )
-
-    mock_controller = MagicMock()
-    mock_homeworks.return_value = mock_controller
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_HOST: "192.168.0.1",
-            CONF_PORT: 1234,
-            CONF_DIMMERS: [
-                {
-                    CONF_ADDR: "[02:08:01:01]",
-                    CONF_NAME: "Foyer Sconces",
-                    CONF_RATE: 1.0,
-                }
-            ],
-            CONF_KEYPADS: [
-                {
-                    CONF_ADDR: "[02:08:02:01]",
-                    CONF_NAME: "Foyer Keypad",
-                }
-            ],
-        },
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "import_controller_name"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_NAME: "Main controller"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "import_finish"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Main controller"
-    assert result["data"] == {}
-    assert result["options"] == {
-        "controller_id": "main_controller",
-        "dimmers": [{"addr": "[02:08:01:01]", "name": "Foyer Sconces", "rate": 1.0}],
-        "host": "192.168.0.1",
-        "keypads": [
-            {
-                "addr": "[02:08:02:01]",
-                "buttons": [],
-                "name": "Foyer Keypad",
-            }
-        ],
-        "port": 1234,
-    }
-    assert len(issue_registry.issues) == 0
-
-    # Check unique ID is updated in entity registry
-    entry = entity_registry.async_get(entry.id)
-    assert entry.unique_id == "homeworks.main_controller.[02:08:01:01].0"
-
-
-async def test_import_flow_already_exists(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    mock_empty_config_entry: MockConfigEntry,
-) -> None:
-    """Test importing yaml config where entry already exists."""
-    mock_empty_config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={"host": "192.168.0.1", "port": 1234, CONF_DIMMERS: [], CONF_KEYPADS: []},
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert len(issue_registry.issues) == 1
-
-
-async def test_import_flow_controller_id_exists(
-    hass: HomeAssistant, mock_empty_config_entry: MockConfigEntry
-) -> None:
-    """Test importing yaml config where entry already exists."""
-    mock_empty_config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={"host": "192.168.0.2", "port": 1234, CONF_DIMMERS: [], CONF_KEYPADS: []},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "import_controller_name"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_NAME: "Main controller"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "import_controller_name"
-    assert result["errors"] == {"base": "duplicated_controller_id"}
 
 
 async def test_reconfigure_flow(
