@@ -6,6 +6,7 @@ from datetime import timedelta
 import logging
 
 from aiohttp.client_exceptions import ServerDisconnectedError
+from uiprotect.api import DEVICE_UPDATE_INTERVAL
 from uiprotect.data import Bootstrap
 from uiprotect.data.types import FirmwareReleaseChannel
 from uiprotect.exceptions import ClientError, NotAuthorized
@@ -29,7 +30,6 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     AUTH_RETRIES,
     CONF_ALLOW_EA,
-    DEFAULT_SCAN_INTERVAL,
     DEVICES_THAT_ADOPT,
     DOMAIN,
     MIN_REQUIRED_PROTECT_V,
@@ -49,7 +49,7 @@ from .views import ThumbnailProxyView, VideoProxyView
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+SCAN_INTERVAL = timedelta(seconds=DEVICE_UPDATE_INTERVAL)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 

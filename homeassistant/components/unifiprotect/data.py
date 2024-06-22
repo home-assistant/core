@@ -148,15 +148,10 @@ class ProtectData:
             self._unsub_interval = None
         await self.api.async_disconnect_ws()
 
-    async def async_refresh(self, *_: Any, force: bool = False) -> None:
+    async def async_refresh(self) -> None:
         """Update the data."""
-
-        # if last update was failure, force until success
-        if not self.last_update_success:
-            force = True
-
         try:
-            updates = await self.api.update(force=force)
+            updates = await self.api.update()
         except NotAuthorized:
             if self._auth_failures < AUTH_RETRIES:
                 _LOGGER.exception("Auth error while updating")
