@@ -144,8 +144,7 @@ class ProtectData:
     @callback
     def _async_websocket_state_changed(self, state: WebsocketState) -> None:
         """Handle a change in the websocket state."""
-        success = state is WebsocketState.CONNECTED
-        self._async_update_change(success)
+        self._async_update_change(state is WebsocketState.CONNECTED)
 
     def _async_update_change(
         self,
