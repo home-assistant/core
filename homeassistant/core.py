@@ -610,9 +610,8 @@ class HomeAssistant:
     @callback
     def async_add_job[_R, *_Ts](
         self,
-        target: (
-            Callable[[*_Ts], Coroutine[Any, Any, _R] | _R] | Coroutine[Any, Any, _R]
-        ),
+        target: Callable[[*_Ts], Coroutine[Any, Any, _R] | _R]
+        | Coroutine[Any, Any, _R],
         *args: *_Ts,
         eager_start: bool = False,
     ) -> asyncio.Future[_R] | None:
@@ -945,9 +944,8 @@ class HomeAssistant:
     @callback
     def async_run_job[_R, *_Ts](
         self,
-        target: (
-            Callable[[*_Ts], Coroutine[Any, Any, _R] | _R] | Coroutine[Any, Any, _R]
-        ),
+        target: Callable[[*_Ts], Coroutine[Any, Any, _R] | _R]
+        | Coroutine[Any, Any, _R],
         *args: *_Ts,
     ) -> asyncio.Future[_R] | None:
         """Run a job from within the event loop.
