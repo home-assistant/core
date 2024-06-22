@@ -101,7 +101,7 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             self.voices, self.models = await get_voices_models(user_input[CONF_API_KEY])
         except ApiError:
-            errors[CONF_API_KEY] = "ElevenLabs API responded with an Error!"
+            errors["base"] = "invalid_api_key"
         if errors:
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA_NO_AUTH, errors=errors
