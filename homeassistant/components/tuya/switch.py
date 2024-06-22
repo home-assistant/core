@@ -678,7 +678,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.SWITCH,
             translation_key="switch",
         ),
-    ),  
+    ),
 }
 
 # Socket (duplicate of `pc`)
