@@ -129,19 +129,19 @@ def test_send_message_styled_with_bad_data_throws_vol_error(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test sending a styled message with bad data throws an error."""
-    signal_requests_mock = signal_requests_mock_factory()
-    with caplog.at_level(
-        logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
+    with (
+        caplog.at_level(
+            logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
+        ),
+        pytest.raises(vol.Invalid) as exc,
     ):
         signal_notification_service.send_message(MESSAGE, data={"text_mode": "test"})
-    post_data = json.loads(signal_requests_mock.request_history[-1].text)
 
     assert "Sending signal message" in caplog.text
-    assert "'text_mode' is invalid: found 'test', defaulting to normal" in caplog.text
-    assert signal_requests_mock.called
-    assert signal_requests_mock.call_count == 2
-    assert post_data["text_mode"] == "normal"
-    assert_sending_requests(signal_requests_mock)
+    assert (
+        "value must be one of ['normal', 'styled'] for dictionary value @ data['text_mode']"
+        in str(exc.value)
+    )
 
 
 def test_send_message_with_attachment(
