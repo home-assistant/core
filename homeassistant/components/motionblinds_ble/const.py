@@ -19,3 +19,6 @@ ERROR_NO_DEVICES_FOUND = "no_devices_found"
 ICON_VERTICAL_BLIND = "mdi:blinds-vertical-closed"
 
 MANUFACTURER = "Motionblinds"
+
+OPTION_DISCONNECT_TIME = "disconnect_time"
+OPTION_PERMANENT_CONNECTION = "permanent_connection"
