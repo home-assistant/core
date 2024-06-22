@@ -24,11 +24,6 @@
         "name": "Thermostat"
       }
     },
-    "number": {
-      "dehumidification_setpoint": {
-        "name": "Dehumidification setpoint"
-      }
-    },
     "select": {
       "air_cleaning_event": {
         "name": "Air cleaning event",
