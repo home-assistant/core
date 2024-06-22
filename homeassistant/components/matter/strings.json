@@ -45,6 +45,17 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "water_leak": {
+        "name": "Water leak"
+      },
+      "water_freeze": {
+        "name": "Water freeze"
+      },
+      "rain": {
+        "name": "Rain"
+      }
+    },
     "climate": {
       "thermostat": {
         "name": "Thermostat"
