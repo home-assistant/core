@@ -275,8 +275,6 @@ async def async_setup_entry(
         """Set temperature at which the system will switch to auxilary heating."""
         entity_id = service.data.get(ATTR_ENTITY_ID)
         
-        aux_cutover_threshold = service.data[ATTR_AUX_CUTOVER_THRESHOLD]
-
         if entity_id:
             target_thermostats = [
                 entity for entity in entities if entity.entity_id in entity_id
@@ -286,7 +284,6 @@ async def async_setup_entry(
 
         for thermostat in target_thermostats:
             thermostat.set_aux_cutover_threshold(service.data[ATTR_AUX_CUTOVER_THRESHOLD])
-
             thermostat.schedule_update_ha_state(True)
 
     def resume_program_set_service(service: ServiceCall) -> None:
