@@ -168,12 +168,14 @@ def _mocked_feature(
     type_=Feature.Type.Sensor,
     category=Feature.Category.Debug,
     precision_hint=None,
+    choices=None,
     unit=None,
 ) -> Feature:
     feature = MagicMock(spec=Feature, name="Mocked feature")
     feature.id = id
     feature.name = name or id
     feature.value = value
+    feature.choices = choices
     feature.type = type_
     feature.category = category
     feature.precision_hint = precision_hint
