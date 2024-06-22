@@ -1543,7 +1543,7 @@ panasonic-viera==0.3.6
 pdunehd==1.3.2
 
 # homeassistant.components.peco
-peco==0.0.29
+peco==0.0.30
 
 # homeassistant.components.pencom
 pencompy==0.0.3
@@ -2126,7 +2126,7 @@ pyrecswitch==1.0.2
 pyrepetierng==0.1.0
 
 # homeassistant.components.risco
-pyrisco==0.6.2
+pyrisco==0.6.4
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6

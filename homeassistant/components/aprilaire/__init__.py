@@ -15,7 +15,7 @@ from homeassistant.helpers.device_registry import format_mac
 from .const import DOMAIN
 from .coordinator import AprilaireCoordinator
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE]
+PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
