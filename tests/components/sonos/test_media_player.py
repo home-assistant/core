@@ -311,7 +311,7 @@ async def test_play_media_share_link_add(
     async_autosetup_sonos,
     soco_sharelink,
 ) -> None:
-    """Tests playing a shared link."""
+    """Tests playing a shared link with enqueue option add."""
     await hass.services.async_call(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
@@ -339,7 +339,7 @@ async def test_play_media_share_link_next(
     async_autosetup_sonos,
     soco_sharelink,
 ) -> None:
-    """Tests playing a shared link."""
+    """Tests playing a shared link with enqueue option next."""
     await hass.services.async_call(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
@@ -370,7 +370,7 @@ async def test_play_media_share_link_play(
     async_autosetup_sonos,
     soco_sharelink,
 ) -> None:
-    """Tests playing a shared link."""
+    """Tests playing a shared link with enqueue option play."""
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     await hass.services.async_call(
         MP_DOMAIN,
@@ -404,7 +404,7 @@ async def test_play_media_share_link_replace(
     async_autosetup_sonos,
     soco_sharelink,
 ) -> None:
-    """Tests playing a shared link."""
+    """Tests playing a shared link with enqueue option replace."""
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     await hass.services.async_call(
         MP_DOMAIN,
