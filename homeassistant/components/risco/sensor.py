@@ -115,7 +115,7 @@ class RiscoSensor(CoordinatorEntity[RiscoEventsDataUpdateCoordinator], SensorEnt
             return None
 
         if res := dt_util.parse_datetime(self._event.time):
-            return res.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
+            return res.replace(tzinfo=dt_util.get_default_time_zone())
         return None
 
     @property

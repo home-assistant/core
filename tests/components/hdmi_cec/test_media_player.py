@@ -1,5 +1,7 @@
 """Tests for the HDMI-CEC media player platform."""
 
+from collections.abc import Callable
+
 from pycec.const import (
     DEVICE_TYPE_NAMES,
     KEY_BACKWARD,
@@ -54,6 +56,8 @@ from homeassistant.core import HomeAssistant
 
 from . import MockHDMIDevice, assert_key_press_release
 
+type AssertState = Callable[[str, str], None]
+
 
 @pytest.fixture(
     name="assert_state",
@@ -70,20 +74,20 @@ from . import MockHDMIDevice, assert_key_press_release
     ],
     ids=["skip_assert_state", "run_assert_state"],
 )
-def assert_state_fixture(hass, request):
+def assert_state_fixture(request: pytest.FixtureRequest) -> AssertState:
     """Allow for skipping the assert state changes.
 
     This is broken in this entity, but we still want to test that
     the rest of the code works as expected.
     """
 
-    def test_state(state, expected):
+    def _test_state(state: str, expected: str) -> None:
         if request.param:
             assert state == expected
         else:
             assert True
 
-    return test_state
+    return _test_state
 
 
 async def test_load_platform(
@@ -128,7 +132,10 @@ async def test_load_types(
 
 
 async def test_service_on(
-    hass: HomeAssistant, create_hdmi_network, create_cec_entity, assert_state
+    hass: HomeAssistant,
+    create_hdmi_network,
+    create_cec_entity,
+    assert_state: AssertState,
 ) -> None:
     """Test that media_player triggers on `on` service."""
     hdmi_network = await create_hdmi_network({"platform": "media_player"})
@@ -152,7 +159,10 @@ async def test_service_on(
 
 
 async def test_service_off(
-    hass: HomeAssistant, create_hdmi_network, create_cec_entity, assert_state
+    hass: HomeAssistant,
+    create_hdmi_network,
+    create_cec_entity,
+    assert_state: AssertState,
 ) -> None:
     """Test that media_player triggers on `off` service."""
     hdmi_network = await create_hdmi_network({"platform": "media_player"})
@@ -352,10 +362,10 @@ async def test_playback_services(
     hass: HomeAssistant,
     create_hdmi_network,
     create_cec_entity,
-    assert_state,
-    service,
-    key,
-    expected_state,
+    assert_state: AssertState,
+    service: str,
+    key: int,
+    expected_state: str,
 ) -> None:
     """Test playback related commands."""
     hdmi_network = await create_hdmi_network({"platform": "media_player"})
@@ -382,7 +392,7 @@ async def test_play_pause_service(
     hass: HomeAssistant,
     create_hdmi_network,
     create_cec_entity,
-    assert_state,
+    assert_state: AssertState,
 ) -> None:
     """Test play pause service."""
     hdmi_network = await create_hdmi_network({"platform": "media_player"})

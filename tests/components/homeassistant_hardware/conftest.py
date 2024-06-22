@@ -1,14 +1,14 @@
 """Test fixtures for the Home Assistant Hardware integration."""
 
-from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 
 @pytest.fixture(autouse=True)
-def mock_zha_config_flow_setup() -> Generator[None, None, None]:
+def mock_zha_config_flow_setup() -> Generator[None]:
     """Mock the radio connection and probing of the ZHA config flow."""
 
     def mock_probe(config: dict[str, Any]) -> None:
@@ -39,7 +39,7 @@ def mock_zha_config_flow_setup() -> Generator[None, None, None]:
 
 
 @pytest.fixture(autouse=True)
-def mock_zha_get_last_network_settings() -> Generator[None, None, None]:
+def mock_zha_get_last_network_settings() -> Generator[None]:
     """Mock zha.api.async_get_last_network_settings."""
 
     with patch(

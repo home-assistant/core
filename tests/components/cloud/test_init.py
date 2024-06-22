@@ -3,7 +3,6 @@
 from collections.abc import Callable, Coroutine
 from typing import Any
 from unittest.mock import MagicMock, patch
-from urllib.parse import quote_plus
 
 from hass_nabucasa import Cloud
 import pytest
@@ -14,16 +13,11 @@ from homeassistant.components.cloud import (
     CloudNotConnected,
     async_get_or_create_cloudhook,
 )
-from homeassistant.components.cloud.const import (
-    DOMAIN,
-    PREF_CLOUDHOOKS,
-    PREF_STRICT_CONNECTION,
-)
+from homeassistant.components.cloud.const import DOMAIN, PREF_CLOUDHOOKS
 from homeassistant.components.cloud.prefs import STORAGE_KEY
-from homeassistant.components.http.const import StrictConnectionMode
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import ServiceValidationError, Unauthorized
+from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockUser
@@ -301,77 +295,3 @@ async def test_cloud_logout(
     await hass.async_block_till_done()
 
     assert cloud.is_logged_in is False
-
-
-async def test_service_create_temporary_strict_connection_url_strict_connection_disabled(
-    hass: HomeAssistant,
-) -> None:
-    """Test service create_temporary_strict_connection_url with strict_connection not enabled."""
-    mock_config_entry = MockConfigEntry(domain=DOMAIN)
-    mock_config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
-    await hass.async_block_till_done()
-    with pytest.raises(
-        ServiceValidationError,
-        match="Strict connection is not enabled for cloud requests",
-    ):
-        await hass.services.async_call(
-            cloud.DOMAIN,
-            "create_temporary_strict_connection_url",
-            blocking=True,
-            return_response=True,
-        )
-
-
-@pytest.mark.parametrize(
-    ("mode"),
-    [
-        StrictConnectionMode.DROP_CONNECTION,
-        StrictConnectionMode.GUARD_PAGE,
-    ],
-)
-async def test_service_create_temporary_strict_connection(
-    hass: HomeAssistant,
-    set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
-    mode: StrictConnectionMode,
-) -> None:
-    """Test service create_temporary_strict_connection_url."""
-    mock_config_entry = MockConfigEntry(domain=DOMAIN)
-    mock_config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
-    await hass.async_block_till_done()
-
-    await set_cloud_prefs(
-        {
-            PREF_STRICT_CONNECTION: mode,
-        }
-    )
-
-    # No cloud url set
-    with pytest.raises(ServiceValidationError, match="No cloud URL available"):
-        await hass.services.async_call(
-            cloud.DOMAIN,
-            "create_temporary_strict_connection_url",
-            blocking=True,
-            return_response=True,
-        )
-
-    # Patch cloud url
-    url = "https://example.com"
-    with patch(
-        "homeassistant.helpers.network._get_cloud_url",
-        return_value=url,
-    ):
-        response = await hass.services.async_call(
-            cloud.DOMAIN,
-            "create_temporary_strict_connection_url",
-            blocking=True,
-            return_response=True,
-        )
-    assert isinstance(response, dict)
-    direct_url_prefix = f"{url}/auth/strict_connection/temp_token?authSig="
-    assert response.pop("direct_url").startswith(direct_url_prefix)
-    assert response.pop("url").startswith(
-        f"https://login.home-assistant.io?u={quote_plus(direct_url_prefix)}"
-    )
-    assert response == {}  # No more keys in response

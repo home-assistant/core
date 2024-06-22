@@ -61,7 +61,7 @@ ADB_PYTHON_EXCEPTIONS: tuple = (
 )
 ADB_TCP_EXCEPTIONS: tuple = (ConnectionResetError, RuntimeError)
 
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 RELOAD_OPTIONS = [CONF_STATE_DETECTION_RULES]
 
 _INVALID_MACS = {"ff:ff:ff:ff:ff:ff"}

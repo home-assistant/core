@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from pizone import Controller, Zone
 import voluptuous as vol
@@ -48,11 +48,7 @@ from .const import (
     IZONE,
 )
 
-_DeviceT = TypeVar("_DeviceT", bound="ControllerDevice | ZoneDevice")
-_T = TypeVar("_T")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
-_FuncType = Callable[Concatenate[_T, _P], _R]
+type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], _R]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -119,7 +115,7 @@ async def async_setup_entry(
     )
 
 
-def _return_on_connection_error(
+def _return_on_connection_error[_DeviceT: ControllerDevice | ZoneDevice, **_P, _R, _T](
     ret: _T = None,  # type: ignore[assignment]
 ) -> Callable[[_FuncType[_DeviceT, _P, _R]], _FuncType[_DeviceT, _P, _R | _T]]:
     def wrap(func: _FuncType[_DeviceT, _P, _R]) -> _FuncType[_DeviceT, _P, _R | _T]:

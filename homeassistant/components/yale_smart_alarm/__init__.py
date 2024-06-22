@@ -12,7 +12,7 @@ from homeassistant.helpers import entity_registry as er
 from .const import LOGGER, PLATFORMS
 from .coordinator import YaleDataUpdateCoordinator
 
-YaleConfigEntry = ConfigEntry["YaleDataUpdateCoordinator"]
+type YaleConfigEntry = ConfigEntry[YaleDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool:

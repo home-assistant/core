@@ -111,7 +111,7 @@ class SwitcherBaseSwitchEntity(
         _LOGGER.debug(
             "Calling api for %s, api: '%s', args: %s", self.coordinator.name, api, args
         )
-        response: SwitcherBaseResponse = None
+        response: SwitcherBaseResponse | None = None
         error = None
 
         try:

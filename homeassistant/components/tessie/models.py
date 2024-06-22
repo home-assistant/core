@@ -8,7 +8,7 @@ from .coordinator import TessieStateUpdateCoordinator
 
 
 @dataclass
-class TessieVehicle:
+class TessieData:
     """Data for the Tessie integration."""
 
-    state_coordinator: TessieStateUpdateCoordinator
+    vehicles: list[TessieStateUpdateCoordinator]

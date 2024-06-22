@@ -49,7 +49,7 @@ async def test_disabled_after_import(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-):
+) -> None:
     """Test if binary sensor is disabled after import."""
     config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
@@ -69,7 +69,7 @@ async def test_disabled_after_import(
 async def test_import_issue_creation(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-):
+) -> None:
     """Test if import issue is raised."""
 
     await async_setup_component(

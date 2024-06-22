@@ -61,12 +61,12 @@ async def test_block_number_update(
 async def test_block_restored_number(
     hass: HomeAssistant,
     mock_block_device: Mock,
-    device_reg: DeviceRegistry,
+    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block restored number."""
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_reg, entry)
+    register_device(device_registry, entry)
     capabilities = {
         "min": 0,
         "max": 100,
@@ -107,12 +107,12 @@ async def test_block_restored_number(
 async def test_block_restored_number_no_last_state(
     hass: HomeAssistant,
     mock_block_device: Mock,
-    device_reg: DeviceRegistry,
+    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block restored number missing last state."""
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_reg, entry)
+    register_device(device_registry, entry)
     capabilities = {
         "min": 0,
         "max": 100,
@@ -188,7 +188,7 @@ async def test_block_set_value_connection_error(
 
     # Make device online
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -227,7 +227,6 @@ async def test_block_set_value_auth_error(
         {ATTR_ENTITY_ID: "number.test_name_valve_position", ATTR_VALUE: 30},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
 

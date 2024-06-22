@@ -125,13 +125,9 @@ class DevoloHomeControlFlowHandler(ConfigFlow, domain=DOMAIN):
             # The old user and the new user are not the same. This could mess-up everything as all unique IDs might change.
             raise UuidChanged
 
-        self.hass.config_entries.async_update_entry(
+        return self.async_update_reload_and_abort(
             self._reauth_entry, data=user_input, unique_id=uuid
         )
-        self.hass.async_create_task(
-            self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-        )
-        return self.async_abort(reason="reauth_successful")
 
     @callback
     def _show_form(

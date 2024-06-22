@@ -117,12 +117,6 @@
     'name': 'Home Assistant',
   })
 # ---
-# name: test_get_agent_info.3
-  dict({
-    'id': 'mock-entry',
-    'name': 'test',
-  })
-# ---
 # name: test_get_agent_list
   dict({
     'agents': list([
@@ -569,7 +563,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Sorry, I am not aware of any device called kitchen light',
+          'speech': 'Sorry, I am not aware of any device called kitchen',
         }),
       }),
     }),
@@ -709,7 +703,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Sorry, I am not aware of any device called late added light',
+          'speech': 'Sorry, I am not aware of any device called late added',
         }),
       }),
     }),
@@ -789,7 +783,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Sorry, I am not aware of any device called kitchen light',
+          'speech': 'Sorry, I am not aware of any device called kitchen',
         }),
       }),
     }),
@@ -809,7 +803,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Sorry, I am not aware of any device called my cool light',
+          'speech': 'Sorry, I am not aware of any device called my cool',
         }),
       }),
     }),
@@ -949,7 +943,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Sorry, I am not aware of any device called kitchen light',
+          'speech': 'Sorry, I am not aware of any device called kitchen',
         }),
       }),
     }),
@@ -999,7 +993,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Sorry, I am not aware of any device called renamed light',
+          'speech': 'Sorry, I am not aware of any device called renamed',
         }),
       }),
     }),
@@ -1515,30 +1509,6 @@
     }),
   })
 # ---
-# name: test_ws_get_agent_info
-  dict({
-    'attribution': None,
-  })
-# ---
-# name: test_ws_get_agent_info.1
-  dict({
-    'attribution': None,
-  })
-# ---
-# name: test_ws_get_agent_info.2
-  dict({
-    'attribution': dict({
-      'name': 'Mock assistant',
-      'url': 'https://assist.me',
-    }),
-  })
-# ---
-# name: test_ws_get_agent_info.3
-  dict({
-    'code': 'invalid_format',
-    'message': "invalid agent ID for dictionary value @ data['agent_id']. Got 'not_exist'",
-  })
-# ---
 # name: test_ws_hass_agent_debug
   dict({
     'results': list([
@@ -1662,15 +1632,6 @@
       }),
       None,
     ]),
-  })
-# ---
-# name: test_ws_hass_agent_debug.1
-  dict({
-    'name': dict({
-      'name': 'name',
-      'text': 'my cool light',
-      'value': 'my cool light',
-    }),
   })
 # ---
 # name: test_ws_hass_agent_debug_custom_sentence

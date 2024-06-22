@@ -148,6 +148,12 @@ async def test_controlling_non_default_state_via_topic(
     state = hass.states.get("lock.test")
     assert state.state is lock_state
 
+    # Empty state is ignored
+    async_fire_mqtt_message(hass, "state-topic", "")
+
+    state = hass.states.get("lock.test")
+    assert state.state is lock_state
+
 
 @pytest.mark.parametrize(
     ("hass_config", "payload", "lock_state"),

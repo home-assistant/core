@@ -131,10 +131,10 @@ async def test_error_sensor(
     )
     await setup_integration(hass, mock_config_entry)
 
-    for state, expected_state in [
+    for state, expected_state in (
         (None, "no_error"),
         ("can_error", "can_error"),
-    ]:
+    ):
         values[TEST_MOWER_ID].mower.error_key = state
         mock_automower_client.get_status.return_value = values
         freezer.tick(SCAN_INTERVAL)
@@ -144,14 +144,14 @@ async def test_error_sensor(
         assert state.state == expected_state
 
 
-async def test_sensor(
+async def test_sensor_snapshot(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test states of the sensors."""
+    """Snapshot test of the sensors."""
     with patch(
         "homeassistant.components.husqvarna_automower.PLATFORMS",
         [Platform.SENSOR],
