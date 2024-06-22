@@ -2133,12 +2133,6 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "generic_thermostat": {
-      "name": "Generic Thermostat",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "geniushub": {
       "name": "Genius Hub",
       "integration_type": "hub",
@@ -7166,6 +7160,11 @@
       "config_flow": true,
       "iot_class": "calculated"
     },
+    "generic_thermostat": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "group": {
       "integration_type": "helper",
       "config_flow": true,
@@ -7266,6 +7265,7 @@
     "filesize",
     "garages_amsterdam",
     "generic",
+    "generic_thermostat",
     "google_travel_time",
     "group",
     "growatt_server",
