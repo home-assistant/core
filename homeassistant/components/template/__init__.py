@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import dataclasses
 import logging
 
 from homeassistant import config as conf_util
@@ -24,16 +23,6 @@ from .const import CONF_TRIGGER, DOMAIN, PLATFORMS
 from .coordinator import TriggerUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclasses.dataclass
-class TemplateData:
-    """Runtime configuration data."""
-
-    device: str | None = None
-
-
-TemplateConfigEntry = ConfigEntry[TemplateData]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
