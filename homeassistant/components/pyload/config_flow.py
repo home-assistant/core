@@ -68,7 +68,6 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     # store values from yaml import so we can use them as
     # suggested values when the configuration step is resumed
-    yaml_config: dict[str, Any] | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -97,8 +96,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA,
-                user_input or self.yaml_config,
+                STEP_USER_DATA_SCHEMA, user_input
             ),
             errors=errors,
         )
@@ -106,7 +104,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
         """Import config from yaml."""
 
-        self.yaml_config = {
+        config = {
             CONF_NAME: import_info.get(CONF_NAME),
             CONF_HOST: import_info.get(CONF_HOST, DEFAULT_HOST),
             CONF_PASSWORD: import_info.get(CONF_PASSWORD, ""),
@@ -116,4 +114,8 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_VERIFY_SSL: False,
         }
 
-        return await self.async_step_user(self.yaml_config)
+        result = await self.async_step_user(config)
+
+        if result.get("errors"):
+            return self.async_abort(reason="yaml_import_failed")
+        return result
