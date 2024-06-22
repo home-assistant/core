@@ -169,6 +169,11 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         # it needs to implement this.
         raise NotImplementedError
 
+    async def async_added_to_hass(self) -> None:
+        """Handle being added to hass."""
+        self._async_call_update_attrs()
+        return await super().async_added_to_hass()
+
     @abstractmethod
     @callback
     def _async_update_attrs(self) -> None:
