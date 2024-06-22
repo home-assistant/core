@@ -7,22 +7,19 @@
           'id': 'test tag id',
           'migrated': True,
           'name': 'test tag name',
-          'tag_id': 'test tag id',
         }),
         dict({
           'device_id': 'some_scanner',
           'id': 'new tag',
           'last_scanned': '2024-02-29T13:00:00+00:00',
-          'tag_id': 'new tag',
         }),
         dict({
           'id': '1234567890',
-          'tag_id': '1234567890',
         }),
       ]),
     }),
     'key': 'tag',
-    'minor_version': 2,
+    'minor_version': 3,
     'version': 1,
   })
 # ---

@@ -128,6 +128,7 @@ async def test_climate_on_off(
         blocking=True,
     )
     await knx.assert_write(on_off_ga, 0)
+    assert hass.states.get("climate.test").state == "off"
 
     # set hvac mode to heat
     await hass.services.async_call(
@@ -137,10 +138,11 @@ async def test_climate_on_off(
         blocking=True,
     )
     if heat_cool_ga:
-        # only set new hvac_mode without changing on/off - actuator shall handle that
         await knx.assert_write(heat_cool_ga, 1)
+        await knx.assert_write(on_off_ga, 1)
     else:
         await knx.assert_write(on_off_ga, 1)
+    assert hass.states.get("climate.test").state == "heat"
 
 
 @pytest.mark.parametrize("on_off_ga", [None, "4/4/4"])
@@ -190,6 +192,9 @@ async def test_climate_hvac_mode(
         blocking=True,
     )
     await knx.assert_write(controller_mode_ga, (0x06,))
+    if on_off_ga:
+        await knx.assert_write(on_off_ga, 0)
+    assert hass.states.get("climate.test").state == "off"
 
     # set hvac to non default mode
     await hass.services.async_call(
@@ -199,6 +204,9 @@ async def test_climate_hvac_mode(
         blocking=True,
     )
     await knx.assert_write(controller_mode_ga, (0x03,))
+    if on_off_ga:
+        await knx.assert_write(on_off_ga, 1)
+    assert hass.states.get("climate.test").state == "cool"
 
     # turn off
     await hass.services.async_call(

@@ -18,7 +18,6 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components import group
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_ON,
@@ -1643,6 +1642,18 @@ def test_base64_decode(hass: HomeAssistant) -> None:
         ).async_render()
         == "homeassistant"
     )
+    assert (
+        template.Template(
+            '{{ "aG9tZWFzc2lzdGFudA==" | base64_decode(None) }}', hass
+        ).async_render()
+        == b"homeassistant"
+    )
+    assert (
+        template.Template(
+            '{{ "aG9tZWFzc2lzdGFudA==" | base64_decode("ascii") }}', hass
+        ).async_render()
+        == "homeassistant"
+    )
 
 
 def test_slugify(hass: HomeAssistant) -> None:
@@ -2055,7 +2066,7 @@ def test_states_function(hass: HomeAssistant) -> None:
 
 async def test_state_translated(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
-):
+) -> None:
     """Test state_translated method."""
     assert await async_setup_component(
         hass,
@@ -2800,7 +2811,7 @@ def test_version(hass: HomeAssistant) -> None:
         "{{ version('2099.9.9') < '2099.9.10' }}",
         hass,
     ).async_render()
-    assert filter_result == function_result is True
+    assert filter_result is function_result is True
 
     filter_result = template.Template(
         "{{ '2099.9.9' | version == '2099.9.9' }}",
@@ -2810,7 +2821,7 @@ def test_version(hass: HomeAssistant) -> None:
         "{{ version('2099.9.9') == '2099.9.9' }}",
         hass,
     ).async_render()
-    assert filter_result == function_result is True
+    assert filter_result is function_result is True
 
     with pytest.raises(TemplateError):
         template.Template(
@@ -3867,8 +3878,8 @@ async def test_device_attr(
     assert_result_info(info, None)
     assert info.rate_limit is None
 
+    info = render_to_info(hass, "{{ device_attr(56, 'id') }}")
     with pytest.raises(TemplateError):
-        info = render_to_info(hass, "{{ device_attr(56, 'id') }}")
         assert_result_info(info, None)
 
     # Test non existing device ids (is_device_attr)
@@ -3876,8 +3887,8 @@ async def test_device_attr(
     assert_result_info(info, False)
     assert info.rate_limit is None
 
+    info = render_to_info(hass, "{{ is_device_attr(56, 'id', 'test') }}")
     with pytest.raises(TemplateError):
-        info = render_to_info(hass, "{{ is_device_attr(56, 'id', 'test') }}")
         assert_result_info(info, False)
 
     # Test non existing entity id (device_attr)
@@ -5388,22 +5399,6 @@ async def test_unavailable_states(hass: HomeAssistant) -> None:
         hass,
     )
     assert tpl.async_render() == "light.none, light.unavailable, light.unknown"
-
-
-async def test_legacy_templates(hass: HomeAssistant) -> None:
-    """Test if old template behavior works when legacy templates are enabled."""
-    hass.states.async_set("sensor.temperature", "12")
-
-    assert (
-        template.Template("{{ states.sensor.temperature.state }}", hass).async_render()
-        == 12
-    )
-
-    await async_process_ha_core_config(hass, {"legacy_templates": True})
-    assert (
-        template.Template("{{ states.sensor.temperature.state }}", hass).async_render()
-        == "12"
-    )
 
 
 async def test_no_result_parsing(hass: HomeAssistant) -> None:

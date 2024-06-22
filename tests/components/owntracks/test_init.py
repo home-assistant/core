@@ -4,6 +4,7 @@ from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components import owntracks
+from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -37,7 +38,7 @@ LOCATION_MESSAGE = {
 
 
 @pytest.fixture(autouse=True)
-def mock_dev_track(mock_device_tracker_conf):
+def mock_dev_track(mock_device_tracker_conf: list[Device]) -> None:
     """Mock device tracker config loading."""
 
 

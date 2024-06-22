@@ -138,7 +138,7 @@ async def async_recorder_block_till_done(hass: HomeAssistant) -> None:
 
 def corrupt_db_file(test_db_file):
     """Corrupt an sqlite3 database file."""
-    with open(test_db_file, "w+") as fhandle:
+    with open(test_db_file, "w+", encoding="utf8") as fhandle:
         fhandle.seek(200)
         fhandle.write("I am a corrupt db" * 100)
 

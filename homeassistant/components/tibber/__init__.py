@@ -21,6 +21,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .const import DATA_HASS_CONFIG, DOMAIN
+from .services import async_setup_services
 
 PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
 
@@ -33,6 +34,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Tibber component."""
 
     hass.data[DATA_HASS_CONFIG] = config
+
+    async_setup_services(hass)
+
     return True
 
 

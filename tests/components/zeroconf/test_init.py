@@ -194,8 +194,9 @@ async def test_setup(hass: HomeAssistant, mock_async_zeroconf: MagicMock) -> Non
     assert await zeroconf.async_get_async_instance(hass) is mock_async_zeroconf
 
 
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_setup_with_overly_long_url_and_name(
-    hass: HomeAssistant, mock_async_zeroconf: None, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we still setup with long urls and names."""
     with (
@@ -237,8 +238,9 @@ async def test_setup_with_overly_long_url_and_name(
     assert "German Umlaut" in caplog.text
 
 
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_setup_with_defaults(
-    hass: HomeAssistant, mock_zeroconf: MagicMock, mock_async_zeroconf: None
+    hass: HomeAssistant, mock_zeroconf: MagicMock
 ) -> None:
     """Test default interface config."""
     with (
@@ -258,9 +260,8 @@ async def test_setup_with_defaults(
     )
 
 
-async def test_zeroconf_match_macaddress(
-    hass: HomeAssistant, mock_async_zeroconf: None
-) -> None:
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_zeroconf_match_macaddress(hass: HomeAssistant) -> None:
     """Test configured options for a device are loaded via config entry."""
 
     def http_only_service_update_mock(zeroconf, services, handlers):
@@ -305,9 +306,8 @@ async def test_zeroconf_match_macaddress(
     assert mock_config_flow.mock_calls[0][2]["context"] == {"source": "zeroconf"}
 
 
-async def test_zeroconf_match_manufacturer(
-    hass: HomeAssistant, mock_async_zeroconf: None
-) -> None:
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_zeroconf_match_manufacturer(hass: HomeAssistant) -> None:
     """Test configured options for a device are loaded via config entry."""
 
     def http_only_service_update_mock(zeroconf, services, handlers):
@@ -347,9 +347,8 @@ async def test_zeroconf_match_manufacturer(
     assert mock_config_flow.mock_calls[0][1][0] == "samsungtv"
 
 
-async def test_zeroconf_match_model(
-    hass: HomeAssistant, mock_async_zeroconf: None
-) -> None:
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_zeroconf_match_model(hass: HomeAssistant) -> None:
     """Test matching a specific model in zeroconf."""
 
     def http_only_service_update_mock(zeroconf, services, handlers):
@@ -389,9 +388,8 @@ async def test_zeroconf_match_model(
     assert mock_config_flow.mock_calls[0][1][0] == "appletv"
 
 
-async def test_zeroconf_match_manufacturer_not_present(
-    hass: HomeAssistant, mock_async_zeroconf: None
-) -> None:
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_zeroconf_match_manufacturer_not_present(hass: HomeAssistant) -> None:
     """Test matchers reject when a property is missing."""
 
     def http_only_service_update_mock(zeroconf, services, handlers):
@@ -430,9 +428,8 @@ async def test_zeroconf_match_manufacturer_not_present(
     assert len(mock_config_flow.mock_calls) == 0
 
 
-async def test_zeroconf_no_match(
-    hass: HomeAssistant, mock_async_zeroconf: None
-) -> None:
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_zeroconf_no_match(hass: HomeAssistant) -> None:
     """Test configured options for a device are loaded via config entry."""
 
     def http_only_service_update_mock(zeroconf, services, handlers):
@@ -467,9 +464,8 @@ async def test_zeroconf_no_match(
     assert len(mock_config_flow.mock_calls) == 0
 
 
-async def test_zeroconf_no_match_manufacturer(
-    hass: HomeAssistant, mock_async_zeroconf: None
-) -> None:
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_zeroconf_no_match_manufacturer(hass: HomeAssistant) -> None:
     """Test configured options for a device are loaded via config entry."""
 
     def http_only_service_update_mock(zeroconf, services, handlers):
@@ -508,9 +504,8 @@ async def test_zeroconf_no_match_manufacturer(
     assert len(mock_config_flow.mock_calls) == 0
 
 
-async def test_homekit_match_partial_space(
-    hass: HomeAssistant, mock_async_zeroconf: None
-) -> None:
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_homekit_match_partial_space(hass: HomeAssistant) -> None:
     """Test configured options for a device are loaded via config entry."""
     with (
         patch.dict(
@@ -550,8 +545,9 @@ async def test_homekit_match_partial_space(
     }
 
 
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_device_with_invalid_name(
-    hass: HomeAssistant, mock_async_zeroconf: None, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we ignore devices with an invalid name."""
     with (
@@ -587,9 +583,8 @@ async def test_device_with_invalid_name(
     assert "Bad name in zeroconf record" in caplog.text
 
 
-async def test_homekit_match_partial_dash(
-    hass: HomeAssistant, mock_async_zeroconf: None
-) -> None:
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_homekit_match_partial_dash(hass: HomeAssistant) -> None:
     """Test configured options for a device are loaded via config entry."""
     with (
         patch.dict(
@@ -626,9 +621,8 @@ async def test_homekit_match_partial_dash(
     assert mock_config_flow.mock_calls[0][1][0] == "lutron_caseta"
 
 
-async def test_homekit_match_partial_fnmatch(
-    hass: HomeAssistant, mock_async_zeroconf: None
-) -> None:
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_homekit_match_partial_fnmatch(hass: HomeAssistant) -> None:
     """Test matching homekit devices with fnmatch."""
     with (
         patch.dict(
@@ -663,9 +657,8 @@ async def test_homekit_match_partial_fnmatch(
     assert mock_config_flow.mock_calls[0][1][0] == "yeelight"
 
 
-async def test_homekit_match_full(
-    hass: HomeAssistant, mock_async_zeroconf: None
-) -> None:
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_homekit_match_full(hass: HomeAssistant) -> None:
     """Test configured options for a device are loaded via config entry."""
     with (
         patch.dict(
@@ -700,9 +693,8 @@ async def test_homekit_match_full(
     assert mock_config_flow.mock_calls[0][1][0] == "hue"
 
 
-async def test_homekit_already_paired(
-    hass: HomeAssistant, mock_async_zeroconf: None
-) -> None:
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_homekit_already_paired(hass: HomeAssistant) -> None:
     """Test that an already paired device is sent to homekit_controller."""
     with (
         patch.dict(
@@ -741,9 +733,8 @@ async def test_homekit_already_paired(
     assert mock_config_flow.mock_calls[1][1][0] == "homekit_controller"
 
 
-async def test_homekit_invalid_paring_status(
-    hass: HomeAssistant, mock_async_zeroconf: None
-) -> None:
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_homekit_invalid_paring_status(hass: HomeAssistant) -> None:
     """Test that missing paring data is not sent to homekit_controller."""
     with (
         patch.dict(
@@ -778,9 +769,8 @@ async def test_homekit_invalid_paring_status(
     assert mock_config_flow.mock_calls[0][1][0] == "lutron_caseta"
 
 
-async def test_homekit_not_paired(
-    hass: HomeAssistant, mock_async_zeroconf: None
-) -> None:
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_homekit_not_paired(hass: HomeAssistant) -> None:
     """Test that an not paired device is sent to homekit_controller."""
     with (
         patch.dict(
@@ -808,8 +798,9 @@ async def test_homekit_not_paired(
     assert mock_config_flow.mock_calls[0][1][0] == "homekit_controller"
 
 
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_homekit_controller_still_discovered_unpaired_for_cloud(
-    hass: HomeAssistant, mock_async_zeroconf: None
+    hass: HomeAssistant,
 ) -> None:
     """Test discovery is still passed to homekit controller when unpaired.
 
@@ -852,8 +843,9 @@ async def test_homekit_controller_still_discovered_unpaired_for_cloud(
     assert mock_config_flow.mock_calls[1][1][0] == "homekit_controller"
 
 
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_homekit_controller_still_discovered_unpaired_for_polling(
-    hass: HomeAssistant, mock_async_zeroconf: None
+    hass: HomeAssistant,
 ) -> None:
     """Test discovery is still passed to homekit controller when unpaired.
 
@@ -1010,7 +1002,8 @@ async def test_get_instance(
     assert len(mock_async_zeroconf.ha_async_close.mock_calls) == 1
 
 
-async def test_removed_ignored(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_removed_ignored(hass: HomeAssistant) -> None:
     """Test we remove it when a zeroconf entry is removed."""
 
     def service_update_mock(zeroconf, services, handlers):
@@ -1062,8 +1055,9 @@ _ADAPTER_WITH_DEFAULT_ENABLED = [
 ]
 
 
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_async_detect_interfaces_setting_non_loopback_route(
-    hass: HomeAssistant, mock_async_zeroconf: None
+    hass: HomeAssistant,
 ) -> None:
     """Test without default interface and the route returns a non-loopback address."""
     with (
@@ -1148,8 +1142,9 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
 ]
 
 
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_async_detect_interfaces_setting_empty_route_linux(
-    hass: HomeAssistant, mock_async_zeroconf: None
+    hass: HomeAssistant,
 ) -> None:
     """Test without default interface config and the route returns nothing on linux."""
     with (
@@ -1181,8 +1176,9 @@ async def test_async_detect_interfaces_setting_empty_route_linux(
     )
 
 
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_async_detect_interfaces_setting_empty_route_freebsd(
-    hass: HomeAssistant, mock_async_zeroconf: None
+    hass: HomeAssistant,
 ) -> None:
     """Test without default interface and the route returns nothing on freebsd."""
     with (
@@ -1231,8 +1227,9 @@ _ADAPTER_WITH_DEFAULT_ENABLED_AND_IPV6 = [
 ]
 
 
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_async_detect_interfaces_explicitly_set_ipv6_linux(
-    hass: HomeAssistant, mock_async_zeroconf: None
+    hass: HomeAssistant,
 ) -> None:
     """Test interfaces are explicitly set when IPv6 is present on linux."""
     with (
@@ -1259,8 +1256,9 @@ async def test_async_detect_interfaces_explicitly_set_ipv6_linux(
     )
 
 
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_async_detect_interfaces_explicitly_set_ipv6_freebsd(
-    hass: HomeAssistant, mock_async_zeroconf: None
+    hass: HomeAssistant,
 ) -> None:
     """Test interfaces are explicitly set when IPv6 is present on freebsd."""
     with (
@@ -1336,7 +1334,8 @@ async def test_start_with_frontend(
     mock_async_zeroconf.async_register_service.assert_called_once()
 
 
-async def test_zeroconf_removed(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_zeroconf_removed(hass: HomeAssistant) -> None:
     """Test we dismiss flows when a PTR record is removed."""
 
     def _device_removed_mock(zeroconf, services, handlers):

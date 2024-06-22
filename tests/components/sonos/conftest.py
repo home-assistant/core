@@ -205,6 +205,7 @@ class SoCoMockFactory:
         my_speaker_info["uid"] = mock_soco.uid
         mock_soco.get_speaker_info = Mock(return_value=my_speaker_info)
         mock_soco.add_to_queue = Mock(return_value=10)
+        mock_soco.add_uri_to_queue = Mock(return_value=10)
 
         mock_soco.avTransport = SonosMockService("AVTransport", ip_address)
         mock_soco.renderingControl = SonosMockService("RenderingControl", ip_address)
@@ -323,7 +324,7 @@ class MockMusicServiceItem:
         parent_id: str,
         item_class: str,
         album_art_uri: None | str = None,
-    ):
+    ) -> None:
         """Initialize the mock item."""
         self.title = title
         self.item_id = item_id
@@ -467,6 +468,7 @@ def music_library_fixture(
 def alarm_clock_fixture():
     """Create alarmClock fixture."""
     alarm_clock = SonosMockService("AlarmClock")
+    # pylint: disable-next=attribute-defined-outside-init
     alarm_clock.ListAlarms = Mock()
     alarm_clock.ListAlarms.return_value = {
         "CurrentAlarmListVersion": "RINCON_test:14",
@@ -484,6 +486,7 @@ def alarm_clock_fixture():
 def alarm_clock_fixture_extended():
     """Create alarmClock fixture."""
     alarm_clock = SonosMockService("AlarmClock")
+    # pylint: disable-next=attribute-defined-outside-init
     alarm_clock.ListAlarms = Mock()
     alarm_clock.ListAlarms.return_value = {
         "CurrentAlarmListVersion": "RINCON_test:15",

@@ -11,14 +11,14 @@ from aioautomower.model import MowerAttributes, WorkArea
 from aioautomower.session import AutomowerSession
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, EXECUTION_TIME_DELAY
+from . import AutomowerConfigEntry
+from .const import EXECUTION_TIME_DELAY
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerControlEntity
 
@@ -111,10 +111,12 @@ WORK_AREA_NUMBER_TYPES: tuple[AutomowerWorkAreaNumberEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AutomowerConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up number platform."""
-    coordinator: AutomowerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     entities: list[NumberEntity] = []
 
     for mower_id in coordinator.data:
@@ -129,12 +131,11 @@ async def async_setup_entry(
                     for work_area_id in _work_areas
                 )
             async_remove_entities(hass, coordinator, entry, mower_id)
-    entities.extend(
-        AutomowerNumberEntity(mower_id, coordinator, description)
-        for mower_id in coordinator.data
-        for description in NUMBER_TYPES
-        if description.exists_fn(coordinator.data[mower_id])
-    )
+        entities.extend(
+            AutomowerNumberEntity(mower_id, coordinator, description)
+            for description in NUMBER_TYPES
+            if description.exists_fn(coordinator.data[mower_id])
+        )
     async_add_entities(entities)
 
 
@@ -185,7 +186,6 @@ class AutomowerWorkAreaNumberEntity(AutomowerControlEntity, NumberEntity):
     ) -> None:
         """Set up AutomowerNumberEntity."""
         super().__init__(mower_id, coordinator)
-        self.coordinator = coordinator
         self.entity_description = description
         self.work_area_id = work_area_id
         self._attr_unique_id = f"{mower_id}_{work_area_id}_{description.key}"
@@ -229,7 +229,7 @@ class AutomowerWorkAreaNumberEntity(AutomowerControlEntity, NumberEntity):
 def async_remove_entities(
     hass: HomeAssistant,
     coordinator: AutomowerDataUpdateCoordinator,
-    config_entry: ConfigEntry,
+    entry: AutomowerConfigEntry,
     mower_id: str,
 ) -> None:
     """Remove deleted work areas from Home Assistant."""
@@ -240,9 +240,7 @@ def async_remove_entities(
         for work_area_id in _work_areas:
             uid = f"{mower_id}_{work_area_id}_cutting_height_work_area"
             active_work_areas.add(uid)
-    for entity_entry in er.async_entries_for_config_entry(
-        entity_reg, config_entry.entry_id
-    ):
+    for entity_entry in er.async_entries_for_config_entry(entity_reg, entry.entry_id):
         if (
             entity_entry.domain == Platform.NUMBER
             and (split := entity_entry.unique_id.split("_"))[0] == mower_id
