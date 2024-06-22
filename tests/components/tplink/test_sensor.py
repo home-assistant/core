@@ -155,6 +155,37 @@ async def test_sensor_unique_id(
         assert entity_registry.async_get(sensor_entity_id).unique_id == value
 
 
+async def test_undefined_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a message is logged when discovering a feature without a description."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    new_feature = _mocked_feature(
+        5.2,
+        "consumption_this_fortnight",
+        name="Consumption for fortnight",
+        type_=Feature.Type.Sensor,
+        category=Feature.Category.Primary,
+        unit="A",
+        precision_hint=2,
+    )
+    plug = _mocked_device(alias="my_plug", features=[new_feature])
+    with _patch_discovery(device=plug), _patch_connect(device=plug):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    msg = (
+        "Device feature: Consumption for fortnight (consumption_this_fortnight) "
+        "needs an entity description defined in HA"
+    )
+    assert msg in caplog.text
+
+
 async def test_sensor_children(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
