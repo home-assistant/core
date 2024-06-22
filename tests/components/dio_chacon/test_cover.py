@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from dio_chacon_wifi_api import DIOChaconAPIClient
 from dio_chacon_wifi_api.const import DeviceTypeEnum
+import pytest
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -143,7 +144,7 @@ async def test_cover(hass: HomeAssistant, entity_registry: er.EntityRegistry) ->
         assert state.state == STATE_OPENING
 
     # Server side callback tests
-    client: DIOChaconAPIClient = hass.data[DOMAIN][entry.entry_id]
+    client: DIOChaconAPIClient = entry.runtime_data
     client._callback_device_state(
         {
             "id": "L4HActuator_idmock1",
@@ -186,25 +187,13 @@ async def test_cover(hass: HomeAssistant, entity_registry: er.EntityRegistry) ->
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 60
     assert state.state == STATE_CLOSING
 
-    # reload state service test :
+    # Tests coverage for unload actions.
     with patch(
-        "dio_chacon_wifi_api.DIOChaconAPIClient.get_status_details",
-        return_value={
-            "L4HActuator_idmock1": {
-                "connected": True,
-                "openlevel": 10,
-                "movement": "stop",
-            }
-        },
+        "dio_chacon_wifi_api.DIOChaconAPIClient.disconnect",
     ):
-        await hass.services.async_call(
-            DOMAIN, "reload_state", {ATTR_ENTITY_ID: entity.entity_id}, blocking=True
-        )
-        await hass.async_block_till_done()
-        state = hass.states.get("cover.shutter_mock_1")
-        assert state.state == STATE_OPEN
+        await hass.config_entries.async_unload(entry.entry_id)
 
-    # pytest.fail("Fails to display logs of tests")
+    pytest.fail("Fails to display logs of tests")
 
 
 async def test_no_cover_found(

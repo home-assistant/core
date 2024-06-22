@@ -3,6 +3,7 @@
 import logging
 from typing import Any
 
+from dio_chacon_wifi_api import DIOChaconAPIClient
 from dio_chacon_wifi_api.const import DeviceTypeEnum, ShutterMoveEnum
 
 from homeassistant.components.cover import (
@@ -17,12 +18,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import (
-    DOMAIN,
-    EVENT_DIO_CHACON_DEVICE_STATE_CHANGED,
-    EVENT_DIO_CHACON_DEVICE_STATE_RELOAD,
-    MANUFACTURER,
-)
+from .const import DOMAIN, EVENT_DIO_CHACON_DEVICE_STATE_CHANGED, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,8 +30,7 @@ async def async_setup_entry(
 ) -> None:
     """Discover and configure covers."""
 
-    data = hass.data[DOMAIN][config_entry.entry_id]
-    dio_chacon_client = data
+    dio_chacon_client = config_entry.runtime_data
 
     list_devices = await dio_chacon_client.search_all_devices(
         device_type_to_search=[DeviceTypeEnum.SHUTTER], with_state=True
@@ -86,13 +81,13 @@ class DioChaconShade(RestoreEntity, CoverEntity):
 
     def __init__(
         self,
-        dio_chacon_client,
-        target_id,
-        name,
-        openlevel,
-        movement,
-        connected,
-        model,
+        dio_chacon_client: DIOChaconAPIClient,
+        target_id: str,
+        name: str,
+        openlevel: int,
+        movement: str,
+        connected: bool,
+        model: str,
         device_class=CoverDeviceClass.SHUTTER,
     ) -> None:
         """Initialize the cover."""
@@ -196,49 +191,24 @@ class DioChaconShade(RestoreEntity, CoverEntity):
         # Remove listener on entity destruction
         self.async_on_remove(listener_callback_event)
 
-        # Add Listener for reload service
-        listener_callback_event = self.hass.bus.async_listen(
-            EVENT_DIO_CHACON_DEVICE_STATE_RELOAD, self._on_device_state_reload
-        )
-        # Remove listener on entity destruction
-        self.async_on_remove(listener_callback_event)
-
     @callback
     def _on_device_state_changed(self, event):
         # On server side event of state change
         if event.data.get("id") == self._target_id:
             _LOGGER.debug("Event state changed received : %s", event)
-            self._effectively_update_entity_state(event.data)
-
-    def _on_device_state_reload(self, event):
-        # Simply launches a forced update calling async_update
-        _LOGGER.debug("On _on_device_state_reload")
-        self.schedule_update_ha_state(True)
-
-    def _effectively_update_entity_state(self, data: dict[str, Any]) -> None:
-        self._attr_available = data["connected"]
-        openlevel = data["openlevel"]
-        self._attr_current_cover_position = openlevel
-        self._attr_is_closed = openlevel == 0
-        movement = data["movement"]
-        if movement == ShutterMoveEnum.DOWN.value:
-            self._attr_is_opening = False
-            self._attr_is_closing = True
-        elif movement == ShutterMoveEnum.UP.value:
-            self._attr_is_closing = False
-            self._attr_is_opening = True
-        elif movement == ShutterMoveEnum.STOP.value:
-            self._attr_is_closing = False
-            self._attr_is_opening = False
-        self.async_write_ha_state()
-
-    async def async_update(self) -> None:
-        """Get the latest data from the Dio Chacon API and update the states."""
-        _LOGGER.debug(
-            "Launching reload of cover device state for id %s, and name %s",
-            self._target_id,
-            self._attr_name,
-        )
-        data = await self.dio_chacon_client.get_status_details([self._target_id])
-        details = data[self._target_id]
-        self._effectively_update_entity_state(details)
+            data = event.data
+            self._attr_available = data["connected"]
+            openlevel = data["openlevel"]
+            self._attr_current_cover_position = openlevel
+            self._attr_is_closed = openlevel == 0
+            movement = data["movement"]
+            if movement == ShutterMoveEnum.DOWN.value:
+                self._attr_is_opening = False
+                self._attr_is_closing = True
+            elif movement == ShutterMoveEnum.UP.value:
+                self._attr_is_closing = False
+                self._attr_is_opening = True
+            elif movement == ShutterMoveEnum.STOP.value:
+                self._attr_is_closing = False
+                self._attr_is_opening = False
+            self.async_write_ha_state()

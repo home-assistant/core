@@ -29,40 +29,44 @@ class DioChaconConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        if user_input is None:
-            return self._show_setup_form()
+        if user_input is not None:
+            self._username = user_input[CONF_USERNAME]
+            self._password = user_input[CONF_PASSWORD]
 
-        self._username = user_input[CONF_USERNAME]
-        self._password = user_input[CONF_PASSWORD]
+            errors: dict[str, str] = {}
+            try:
+                # Validate the user name and password and retrieve the technical user id.
+                client = DIOChaconAPIClient(self._username, self._password)
+                self._user_id = await client.get_user_id()
+                await client.disconnect()
+            except DIOChaconAPIError:
+                errors["base"] = "cannot_connect"
+            except DIOChaconInvalidAuthError:
+                errors["base"] = "invalid_auth"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
 
-        errors: dict[str, str] = {}
-        try:
-            self._user_id = await self._authenticate_and_search_user_id()
-        except DIOChaconAPIError:
-            errors["base"] = "cannot_connect"
-        except DIOChaconInvalidAuthError:
-            errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
+            if errors:
+                return self._show_setup_form(errors)
 
-        if errors:
-            return self._show_setup_form(errors)
+            entry_id: str = "dio_chacon_" + self._user_id
 
-        entry_id: str = "dio_chacon_" + self._user_id
+            # Check if already configured
+            await self.async_set_unique_id(entry_id)
+            self._abort_if_unique_id_configured()
 
-        # Check if already configured
-        await self.async_set_unique_id(entry_id)
-        self._abort_if_unique_id_configured()
+            return self.async_create_entry(
+                title="Dio Chacon " + self._username,
+                data={
+                    CONF_USERNAME: self._username,
+                    CONF_PASSWORD: self._password,
+                    CONF_UNIQUE_ID: self._user_id,
+                },
+            )
 
-        return self.async_create_entry(
-            title="Dio Chacon " + self._username,
-            data={
-                CONF_USERNAME: self._username,
-                CONF_PASSWORD: self._password,
-                CONF_UNIQUE_ID: self._user_id,
-            },
-        )
+        # User input is None, show the form.
+        return self._show_setup_form()
 
     def _show_setup_form(self, errors=None):
         """Show the setup form to the user."""
@@ -73,14 +77,3 @@ class DioChaconConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def _authenticate_and_search_user_id(self) -> str:
-        """Validate the user name and password and retrieve the technical user id."""
-
-        client = DIOChaconAPIClient(self._username, self._password)
-
-        user_id: str = await client.get_user_id()
-
-        await client.disconnect()
-
-        return user_id
