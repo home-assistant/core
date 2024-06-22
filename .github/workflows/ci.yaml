@@ -625,8 +625,8 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 20
     if: |
-      github.event.inputs.mypy-only != 'true'
-      || github.event.inputs.pylint-only == 'true'
+      (github.event.inputs.mypy-only != 'true' || github.event.inputs.pylint-only == 'true')
+      && (needs.info.outputs.tests_glob || needs.info.outputs.test_full_suite == 'true')
     needs:
       - info
       - base
@@ -663,7 +663,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          pylint --ignore-missing-annotations=y tests/components/${{ needs.info.outputs.integrations_glob }}
+          pylint --ignore-missing-annotations=y tests/components/${{ needs.info.outputs.tests_glob }}
 
   mypy:
     name: Check mypy
@@ -1159,6 +1159,7 @@ jobs:
           fail_ci_if_error: true
           flags: full-suite
           token: ${{ secrets.CODECOV_TOKEN }}
+          version: v0.6.0
 
   pytest-partial:
     runs-on: ubuntu-22.04
@@ -1293,3 +1294,4 @@ jobs:
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
+          version: v0.6.0

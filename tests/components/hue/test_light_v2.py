@@ -412,6 +412,11 @@ async def test_grouped_lights(
         "Hue light with color and color temperature gradient",
         "Hue light with color and color temperature 2",
     }
+    assert test_entity.attributes["entity_id"] == {
+        "light.hue_light_with_color_and_color_temperature_gradient",
+        "light.hue_light_with_color_and_color_temperature_2",
+        "light.hue_light_with_color_and_color_temperature_1",
+    }
 
     # test light created for hue room
     test_entity = hass.states.get("light.test_room")
@@ -430,6 +435,10 @@ async def test_grouped_lights(
     assert test_entity.attributes["lights"] == {
         "Hue on/off light",
         "Hue light with color temperature only",
+    }
+    assert test_entity.attributes["entity_id"] == {
+        "light.hue_light_with_color_temperature_only",
+        "light.hue_on_off_light",
     }
 
     # Test calling the turn on service on a grouped light

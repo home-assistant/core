@@ -536,7 +536,6 @@ omit =
     homeassistant/components/hko/weather.py
     homeassistant/components/hlk_sw16/__init__.py
     homeassistant/components/hlk_sw16/switch.py
-    homeassistant/components/home_connect/binary_sensor.py
     homeassistant/components/home_connect/entity.py
     homeassistant/components/home_connect/light.py
     homeassistant/components/home_connect/switch.py
@@ -1259,9 +1258,6 @@ omit =
     homeassistant/components/solaredge/__init__.py
     homeassistant/components/solaredge/coordinator.py
     homeassistant/components/solaredge_local/sensor.py
-    homeassistant/components/solarlog/__init__.py
-    homeassistant/components/solarlog/coordinator.py
-    homeassistant/components/solarlog/sensor.py
     homeassistant/components/solax/__init__.py
     homeassistant/components/solax/sensor.py
     homeassistant/components/soma/__init__.py

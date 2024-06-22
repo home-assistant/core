@@ -61,9 +61,7 @@ async def test_protect_loop_sleep() -> None:
         ]
     )
     with (
-        pytest.raises(
-            RuntimeError, match="Detected blocking call to sleep inside the event loop"
-        ),
+        pytest.raises(RuntimeError, match="Caught blocking call to sleep with args"),
         patch(
             "homeassistant.block_async_io.get_current_frame",
             return_value=frames,
@@ -89,9 +87,7 @@ async def test_protect_loop_sleep_get_current_frame_raises() -> None:
         ]
     )
     with (
-        pytest.raises(
-            RuntimeError, match="Detected blocking call to sleep inside the event loop"
-        ),
+        pytest.raises(RuntimeError, match="Caught blocking call to sleep with args"),
         patch(
             "homeassistant.block_async_io.get_current_frame",
             side_effect=ValueError,
@@ -204,7 +200,8 @@ async def test_protect_loop_importlib_import_module_in_integration(
             importlib.import_module("not_loaded_module")
 
     assert (
-        "Detected blocking call to import_module inside the event loop by "
+        "Detected blocking call to import_module with args ('not_loaded_module',) "
+        "inside the event loop by "
         "integration 'hue' at homeassistant/components/hue/light.py, line 23"
     ) in caplog.text
 
