@@ -23,6 +23,7 @@ from uiprotect.data import (
 )
 from uiprotect.exceptions import ClientError, NotAuthorized
 from uiprotect.utils import log_event
+from uiprotect.websocket import WebsocketState
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -83,8 +84,7 @@ class ProtectData:
             str, set[Callable[[ProtectDeviceType], None]]
         ] = defaultdict(set)
         self._pending_camera_ids: set[str] = set()
-        self._unsub_interval: CALLBACK_TYPE | None = None
-        self._unsub_websocket: CALLBACK_TYPE | None = None
+        self._unsubs: list[CALLBACK_TYPE] = []
         self._auth_failures = 0
         self.last_update_success = False
         self.api = protect
@@ -134,18 +134,26 @@ class ProtectData:
     def async_setup(self, bootstrap: Bootstrap) -> None:
         """Subscribe and do the refresh."""
         self._process_updates_success(bootstrap)
-        self._unsub_websocket = self.api.subscribe_websocket(
-            self._async_process_ws_message
-        )
+        api = self.api
+        self._unsubs = [
+            api.subscribe_websocket_state(self._async_websocket_state_changed),
+            api.subscribe_websocket(self._async_process_ws_message),
+            async_track_time_interval(
+                self._hass, self._async_poll, self._update_interval
+            ),
+        ]
+
+    @callback
+    def _async_websocket_state_changed(self, state: WebsocketState) -> None:
+        """Handle a change in the websocket state."""
+        # manually trigger update to mark entities (un)available
+        self._async_process_updates(self.api.bootstrap)
 
     async def async_stop(self, *args: Any) -> None:
         """Stop processing data."""
-        if self._unsub_websocket:
-            self._unsub_websocket()
-            self._unsub_websocket = None
-        if self._unsub_interval:
-            self._unsub_interval()
-            self._unsub_interval = None
+        for unsub in self._unsubs:
+            unsub()
+        self._unsubs.clear()
         await self.api.async_disconnect_ws()
 
     async def async_refresh(self) -> None:
@@ -309,10 +317,6 @@ class ProtectData:
         self, mac: str, update_callback: Callable[[ProtectDeviceType], None]
     ) -> CALLBACK_TYPE:
         """Add an callback subscriber."""
-        if not self._subscriptions:
-            self._unsub_interval = async_track_time_interval(
-                self._hass, self._async_poll, self._update_interval
-            )
         self._subscriptions[mac].add(update_callback)
         return partial(self._async_unsubscribe, mac, update_callback)
 
@@ -324,9 +328,6 @@ class ProtectData:
         self._subscriptions[mac].remove(update_callback)
         if not self._subscriptions[mac]:
             del self._subscriptions[mac]
-        if not self._subscriptions and self._unsub_interval:
-            self._unsub_interval()
-            self._unsub_interval = None
 
     @callback
     def _async_signal_device_update(self, device: ProtectDeviceType) -> None:
