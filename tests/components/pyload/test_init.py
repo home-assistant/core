@@ -32,7 +32,7 @@ async def test_entry_setup_unload(
 
 @pytest.mark.parametrize(
     ("side_effect"),
-    [CannotConnect, ParserError, InvalidAuth],
+    [CannotConnect, ParserError],
 )
 async def test_config_entry_setup_errors(
     hass: HomeAssistant,
@@ -47,3 +47,17 @@ async def test_config_entry_setup_errors(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_config_entry_setup_invalid_auth(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_pyloadapi: MagicMock,
+) -> None:
+    """Test config entry not ready."""
+    mock_pyloadapi.login.side_effect = InvalidAuth
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
