@@ -39,12 +39,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-STEP_USER_SUGGESTED_VALUES = {
-    CONF_HOST: "homeassistant.local",
-    CONF_USERNAME: "pyload",
-    CONF_PASSWORD: "pyload",
-}
-
 
 async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]) -> None:
     """Validate the user input and try to connect to PyLoad."""
@@ -104,7 +98,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
                 STEP_USER_DATA_SCHEMA,
-                user_input or self.yaml_config or STEP_USER_SUGGESTED_VALUES,
+                user_input or self.yaml_config,
             ),
             errors=errors,
         )
