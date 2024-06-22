@@ -51,7 +51,7 @@ def _read_gpio_pins[_PinsT: int](pins: Sequence[_PinsT]) -> dict[_PinsT, bool]:
     import gpiod
 
     chip = gpiod.chip("/dev/gpiochip0", gpiod.chip.OPEN_BY_PATH)
-    lines = chip.get_lines(pins)
+    lines = chip.get_lines(list(pins))
 
     config = gpiod.line_request()
     config.consumer = "core-yellow"
