@@ -170,6 +170,8 @@ def _mocked_feature(
     precision_hint=None,
     choices=None,
     unit=None,
+    minimum_value=0,
+    maximum_value=2**16,  # Arbitrary max
 ) -> Feature:
     feature = MagicMock(spec=Feature, name="Mocked feature")
     feature.id = id
@@ -181,6 +183,8 @@ def _mocked_feature(
     feature.precision_hint = precision_hint
     feature.unit = unit
     feature.set_value = AsyncMock()
+    feature.minimum_value = minimum_value
+    feature.maximum_value = maximum_value
     return feature
 
 
