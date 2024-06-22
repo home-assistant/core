@@ -19,11 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TPLinkConfigEntry
 from .coordinator import TPLinkDataUpdateCoordinator
-from .entity import (
-    CoordinatedTPLinkFeatureEntity,
-    TPLinkFeatureEntityDescription,
-    entities_for_device_and_its_children,
-)
+from .entity import CoordinatedTPLinkFeatureEntity, TPLinkFeatureEntityDescription
 
 UNIT_MAPPING = {
     "celsius": UnitOfTemperature.CELSIUS,
@@ -153,11 +149,12 @@ async def async_setup_entry(
     children_coordinators = data.children_coordinators
     device = parent_coordinator.device
 
-    entities = entities_for_device_and_its_children(
+    entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
         device=device,
         coordinator=parent_coordinator,
         feature_type=Feature.Type.Sensor,
         entity_class=Sensor,
+        descriptions=SENSOR_DESCRIPTIONS_MAP,
         child_coordinators=children_coordinators,
     )
     async_add_entities(entities)
@@ -174,12 +171,10 @@ class Sensor(CoordinatedTPLinkFeatureEntity, SensorEntity):
         coordinator: TPLinkDataUpdateCoordinator,
         *,
         feature: Feature,
+        description: TPLinkSensorEntityDescription,
         parent: Device | None = None,
     ) -> None:
         """Initialize the sensor."""
-        description = self._description_for_feature(
-            TPLinkSensorEntityDescription, feature, SENSOR_DESCRIPTIONS_MAP
-        )
         super().__init__(
             device, coordinator, description=description, feature=feature, parent=parent
         )
