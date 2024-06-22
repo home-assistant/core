@@ -339,7 +339,9 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
                 data[ATTR_FORECAST_DETAILED_DESCRIPTION] = forecast_entry.get(
                     "detailedForecast"
                 )
-            data[ATTR_FORECAST_DEWPOINT] = forecast_entry.get("dewpoint")
+
+            elif mode == HOURLY:
+                data[ATTR_FORECAST_DEWPOINT] = forecast_entry.get("dewpoint")
             forecast.append(data)
         return forecast
 
