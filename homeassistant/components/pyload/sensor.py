@@ -35,13 +35,14 @@ from homeassistant.const import (
     UnitOfDataRate,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import PyLoadConfigEntry
-from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN, ISSUE_PLACEHOLDER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,24 +89,40 @@ async def async_setup_platform(
 ) -> None:
     """Import config from yaml."""
 
-    async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        breaks_in_ha_version="2025.2.0",
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "pyLoad",
-        },
-    )
-
-    await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=config
     )
+    _LOGGER.debug(result)
+    if (
+        result.get("type") == FlowResultType.CREATE_ENTRY
+        or result.get("reason") == "already_configured"
+    ):
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            breaks_in_ha_version="2025.1.0",
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "pyLoad",
+            },
+        )
+    elif error := result.get("reason"):
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{error}",
+            breaks_in_ha_version="2025.1.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{error}",
+            translation_placeholders=ISSUE_PLACEHOLDER,
+        )
 
 
 async def async_setup_entry(

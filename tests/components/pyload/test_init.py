@@ -11,10 +11,10 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("mock_pyloadapi")
 async def test_entry_setup_unload(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    mock_pyloadapi: MagicMock,
 ) -> None:
     """Test integration setup and unload."""
 
@@ -54,7 +54,7 @@ async def test_config_entry_setup_invalid_auth(
     config_entry: MockConfigEntry,
     mock_pyloadapi: MagicMock,
 ) -> None:
-    """Test config entry not ready."""
+    """Test config entry authentication."""
     mock_pyloadapi.login.side_effect = InvalidAuth
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)

@@ -116,6 +116,6 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
 
         result = await self.async_step_user(config)
 
-        if result.get("errors"):
-            return self.async_abort(reason="yaml_import_failed")
+        if errors := result.get("errors"):
+            return self.async_abort(reason=errors["base"])
         return result
