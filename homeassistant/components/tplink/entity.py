@@ -226,6 +226,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
         """Initialize the entity."""
         self.entity_description = description
         super().__init__(device, coordinator, parent=parent, feature=feature)
+        self._async_call_update_attrs()
 
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""

@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final
 
-from kasa import Device, Feature
+from kasa import Feature
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -16,12 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TPLinkConfigEntry
-from .coordinator import TPLinkDataUpdateCoordinator
-from .entity import (
-    CoordinatedTPLinkFeatureEntity,
-    TPLinkFeatureEntityDescription,
-    entities_for_device_and_its_children,
-)
+from .entity import CoordinatedTPLinkFeatureEntity, TPLinkFeatureEntityDescription
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -71,11 +66,12 @@ async def async_setup_entry(
     children_coordinators = data.children_coordinators
     device = parent_coordinator.device
 
-    entities = entities_for_device_and_its_children(
+    entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
         device=device,
         coordinator=parent_coordinator,
         feature_type=Feature.Type.BinarySensor,
         entity_class=BinarySensor,
+        descriptions=BINARYSENSOR_DESCRIPTIONS_MAP,
         child_coordinators=children_coordinators,
     )
     async_add_entities(entities)
@@ -85,23 +81,6 @@ class BinarySensor(CoordinatedTPLinkFeatureEntity, BinarySensorEntity):
     """Representation of a TPLink binary sensor."""
 
     entity_description: TPLinkBinarySensorEntityDescription
-
-    def __init__(
-        self,
-        device: Device,
-        coordinator: TPLinkDataUpdateCoordinator,
-        *,
-        feature: Feature,
-        parent: Device | None = None,
-    ) -> None:
-        """Initialize the sensor."""
-        description = self._description_for_feature(
-            TPLinkBinarySensorEntityDescription, feature, BINARYSENSOR_DESCRIPTIONS_MAP
-        )
-        super().__init__(
-            device, coordinator, description=description, feature=feature, parent=parent
-        )
-        self._async_call_update_attrs()
 
     @callback
     def _async_update_attrs(self) -> None:
