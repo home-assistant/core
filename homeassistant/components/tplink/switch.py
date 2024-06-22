@@ -6,13 +6,14 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from kasa import Feature
+from kasa import Device, Feature
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TPLinkConfigEntry
+from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import (
     CoordinatedTPLinkFeatureEntity,
     TPLinkFeatureEntityDescription,
@@ -78,6 +79,22 @@ class TPLinkSwitch(CoordinatedTPLinkFeatureEntity, SwitchEntity):
     """Representation of a feature-based TPLink switch."""
 
     entity_description: TPLinkSwitchEntityDescription
+
+    def __init__(
+        self,
+        device: Device,
+        coordinator: TPLinkDataUpdateCoordinator,
+        *,
+        feature: Feature,
+        description: TPLinkSwitchEntityDescription,
+        parent: Device | None = None,
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(
+            device, coordinator, description=description, feature=feature, parent=parent
+        )
+
+        self._async_call_update_attrs()
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
