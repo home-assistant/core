@@ -138,9 +138,6 @@
       },
       "temperature_offset": {
         "name": "Temperature offset"
-      },
-      "target_temperature": {
-        "name": "Target temperature"
       }
     }
   },

@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Final
 
-from kasa import Feature
+from kasa import Device, Feature
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -18,6 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import TPLinkConfigEntry
 from .entity import (
     CoordinatedTPLinkFeatureEntity,
+    TPLinkDataUpdateCoordinator,
     TPLinkFeatureEntityDescription,
     async_refresh_after,
 )
@@ -84,6 +85,22 @@ class Number(CoordinatedTPLinkFeatureEntity, NumberEntity):
 
     entity_description: TPLinkNumberEntityDescription
 
+    def __init__(
+        self,
+        device: Device,
+        coordinator: TPLinkDataUpdateCoordinator,
+        *,
+        feature: Feature,
+        description: TPLinkFeatureEntityDescription,
+        parent: Device | None = None,
+    ) -> None:
+        """Initialize the a switch."""
+        super().__init__(
+            device, coordinator, feature=feature, description=description, parent=parent
+        )
+        self._attr_native_min_value = self._feature.minimum_value
+        self._attr_native_max_value = self._feature.maximum_value
+
     @async_refresh_after
     async def async_set_native_value(self, value: float) -> None:
         """Set feature value."""
@@ -93,5 +110,3 @@ class Number(CoordinatedTPLinkFeatureEntity, NumberEntity):
     def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
         self._attr_native_value = self._feature.value
-        self._attr_native_min_value = self._feature.minimum_value
-        self._attr_native_max_value = self._feature.maximum_value
