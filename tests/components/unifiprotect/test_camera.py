@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock
 
+from uiprotect.api import DEVICE_UPDATE_INTERVAL
 from uiprotect.data import Camera as ProtectCamera, CameraChannel, StateType
 from uiprotect.exceptions import NvrError
 
@@ -19,7 +20,6 @@ from homeassistant.components.unifiprotect.const import (
     ATTR_HEIGHT,
     ATTR_WIDTH,
     DEFAULT_ATTRIBUTION,
-    DEFAULT_SCAN_INTERVAL,
 )
 from homeassistant.components.unifiprotect.utils import get_camera_base_name
 from homeassistant.const import (
@@ -377,7 +377,7 @@ async def test_camera_interval_update(
 
     ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
     ufp.api.update = AsyncMock(return_value=ufp.api.bootstrap)
-    await time_changed(hass, DEFAULT_SCAN_INTERVAL)
+    await time_changed(hass, DEVICE_UPDATE_INTERVAL)
 
     state = hass.states.get(entity_id)
     assert state and state.state == "recording"
@@ -397,14 +397,14 @@ async def test_camera_bad_interval_update(
 
     # update fails
     ufp.api.update = AsyncMock(side_effect=NvrError)
-    await time_changed(hass, DEFAULT_SCAN_INTERVAL)
+    await time_changed(hass, DEVICE_UPDATE_INTERVAL)
 
     state = hass.states.get(entity_id)
     assert state and state.state == "unavailable"
 
     # next update succeeds
     ufp.api.update = AsyncMock(return_value=ufp.api.bootstrap)
-    await time_changed(hass, DEFAULT_SCAN_INTERVAL)
+    await time_changed(hass, DEVICE_UPDATE_INTERVAL)
 
     state = hass.states.get(entity_id)
     assert state and state.state == "idle"
