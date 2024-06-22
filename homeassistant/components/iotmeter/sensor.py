@@ -112,10 +112,8 @@ class GenerationEnergySensor(TranslatableSensorEntity):
 
     def __init__(self, coordinator, sensor_type, translations, unit_of_measurement):
         """Initialize the generation energy sensor."""
-        super().__init__(coordinator)
-        self._sensor_type = sensor_type.replace(" ", "_").lower()
-        self._translations = translations
-        self._attr_native_unit_of_measurement = unit_of_measurement
+        super().__init__(coordinator, sensor_type, translations, unit_of_measurement)
+        self.total_energy: float = 0
 
     @property
     def state(self):
@@ -124,8 +122,8 @@ class GenerationEnergySensor(TranslatableSensorEntity):
         e2 = self.coordinator.data.get("E2tN")
         e3 = self.coordinator.data.get("E3tN")
         if e1 is not None and e2 is not None and e3 is not None:
-            total_energy = (float(e1) + float(e2) + float(e3)) / 1000
-            return round(total_energy)
+            self.total_energy = (float(e1) + float(e2) + float(e3)) / 1000
+            return round(self.total_energy)
         return None
 
     @property

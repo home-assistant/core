@@ -10,7 +10,7 @@ from .const import DOMAIN
 from .coordinator import IotMeterDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-_LOGGER.setLevel(logging.INFO)
+_LOGGER.setLevel(logging.DEBUG)
 
 PLATFORMS = [Platform.NUMBER, Platform.SENSOR]
 
@@ -33,10 +33,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "port": port,
     }
 
-    _LOGGER.debug("Forwarding entry setup for platforms")
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(lambda: update_listener(hass, entry))
-
+    entry.async_on_unload(entry.add_update_listener(update_listener))
     return True
 
 
