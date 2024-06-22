@@ -53,10 +53,12 @@ async def test_reload_config_entry(
     assert config_entry.data == {**config_entry.data, "max_samples": 4.0}
 
 
-async def test_device_cleaning(hass: HomeAssistant) -> None:
+async def test_device_cleaning(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test for source entity device for Trend."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
 
     # Source entity device config entry
     source_config_entry = MockConfigEntry()
