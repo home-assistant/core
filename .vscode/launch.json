@@ -38,7 +38,6 @@
       "request": "attach",
       "port": 5678,
       "host": "localhost",
-      "justMyCode": false,
       "pathMappings": [
         {
           "localRoot": "${workspaceFolder}",
@@ -54,22 +53,12 @@
       "request": "attach",
       "port": 5678,
       "host": "homeassistant.local",
-      "justMyCode": false,
       "pathMappings": [
         {
           "localRoot": "${workspaceFolder}",
           "remoteRoot": "/usr/src/homeassistant"
         }
       ]
-    },
-    {
-      "name": "Python: Debug Tests",
-      "type": "python",
-      "request": "launch",
-      "program": "${file}",
-      "purpose": ["debug-test"],
-      "console": "integratedTerminal",
-      "justMyCode": false
-    }    
+    }
   ]
 }
