@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.button import ButtonDeviceClass
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASS_STATE_CLASSES,
@@ -35,7 +36,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 
 from .binary_sensor import async_create_preview_binary_sensor
-from .const import DOMAIN
+from .const import CONF_PRESS, DOMAIN
 from .sensor import async_create_preview_sensor
 from .template_entity import TemplateEntity
 
@@ -44,20 +45,43 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
     """Generate schema."""
     schema: dict[vol.Marker, Any] = {}
 
-    if domain == Platform.BINARY_SENSOR and flow_type == "config":
-        schema = {
-            vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[cls.value for cls in BinarySensorDeviceClass],
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                    translation_key="binary_sensor_device_class",
-                    sort=True,
+    SCHEMA_STATE = {
+        vol.Required(CONF_STATE): selector.TemplateSelector(),
+    }
+
+    if domain == Platform.BINARY_SENSOR:
+        schema = SCHEMA_STATE
+        if flow_type == "config":
+            schema = schema | {
+                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[cls.value for cls in BinarySensorDeviceClass],
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                        translation_key="binary_sensor_device_class",
+                        sort=True,
+                    ),
                 ),
-            )
+            }
+
+    if domain == Platform.BUTTON:
+        schema = {
+            vol.Optional(CONF_PRESS): selector.ActionSelector(),
         }
+        if flow_type == "config":
+            schema = schema | {
+                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[cls.value for cls in ButtonDeviceClass],
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                        translation_key="button_device_class",
+                        sort=True,
+                    ),
+                )
+            }
 
     if domain == Platform.SENSOR:
         schema = {
+            **SCHEMA_STATE,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=list(
@@ -104,8 +128,7 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
 def options_schema(domain: str) -> vol.Schema:
     """Generate options schema."""
     return vol.Schema(
-        {vol.Required(CONF_STATE): selector.TemplateSelector()}
-        | generate_schema(domain, "option"),
+        generate_schema(domain, "option"),
     )
 
 
@@ -114,7 +137,6 @@ def config_schema(domain: str) -> vol.Schema:
     return vol.Schema(
         {
             vol.Required(CONF_NAME): selector.TextSelector(),
-            vol.Required(CONF_STATE): selector.TemplateSelector(),
         }
         | generate_schema(domain, "config"),
     )
@@ -199,6 +221,7 @@ def validate_user_input(
 
 TEMPLATE_TYPES = [
     "binary_sensor",
+    "button",
     "sensor",
 ]
 
@@ -208,6 +231,10 @@ CONFIG_FLOW = {
         config_schema(Platform.BINARY_SENSOR),
         preview="template",
         validate_user_input=validate_user_input(Platform.BINARY_SENSOR),
+    ),
+    Platform.BUTTON: SchemaFlowFormStep(
+        config_schema(Platform.BUTTON),
+        validate_user_input=validate_user_input(Platform.BUTTON),
     ),
     Platform.SENSOR: SchemaFlowFormStep(
         config_schema(Platform.SENSOR),
@@ -223,6 +250,10 @@ OPTIONS_FLOW = {
         options_schema(Platform.BINARY_SENSOR),
         preview="template",
         validate_user_input=validate_user_input(Platform.BINARY_SENSOR),
+    ),
+    Platform.BUTTON: SchemaFlowFormStep(
+        options_schema(Platform.BUTTON),
+        validate_user_input=validate_user_input(Platform.BUTTON),
     ),
     Platform.SENSOR: SchemaFlowFormStep(
         options_schema(Platform.SENSOR),
