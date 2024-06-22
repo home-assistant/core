@@ -427,3 +427,45 @@ async def test_select_source_error(
         )
     assert "invalid_source" in str(sve.value)
     assert "Could not find a Sonos favorite" in str(sve.value)
+
+
+async def test_play_media_favorite_item_id(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+) -> None:
+    """Test playing media with a favorite item id."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            "entity_id": "media_player.zone_a",
+            "media_content_type": "favorite_item_id",
+            "media_content_id": "FV:2/4",
+        },
+        blocking=True,
+    )
+    assert soco_mock.play_uri.call_count == 1
+    assert (
+        soco_mock.play_uri.call_args_list[0].args[0]
+        == "x-sonosapi-hls:Api%3atune%3aliveAudio%3ajazzcafe%3aetc"
+    )
+    assert (
+        soco_mock.play_uri.call_args_list[0].kwargs["timeout"] == LONG_SERVICE_TIMEOUT
+    )
+    assert soco_mock.play_uri.call_args_list[0].kwargs["title"] == "66 - Watercolors"
+
+    # Test exception handling with an invalid id.
+    with pytest.raises(ValueError) as sve:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                "entity_id": "media_player.zone_a",
+                "media_content_type": "favorite_item_id",
+                "media_content_id": "UNKNOWN_ID",
+            },
+            blocking=True,
+        )
+    assert "UNKNOWN_ID" in str(sve.value)
