@@ -1543,7 +1543,7 @@ panasonic-viera==0.3.6
 pdunehd==1.3.2
 
 # homeassistant.components.peco
-peco==0.0.29
+peco==0.0.30
 
 # homeassistant.components.pencom
 pencompy==0.0.3
@@ -2034,7 +2034,7 @@ pynobo==1.8.1
 pynuki==1.6.3
 
 # homeassistant.components.nws
-pynws[retry]==1.8.1
+pynws[retry]==1.8.2
 
 # homeassistant.components.nx584
 pynx584==0.5
@@ -2126,7 +2126,7 @@ pyrecswitch==1.0.2
 pyrepetierng==0.1.0
 
 # homeassistant.components.risco
-pyrisco==0.6.2
+pyrisco==0.6.4
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6
@@ -2167,7 +2167,7 @@ pysesame2==1.0.1
 pysiaalarm==3.1.1
 
 # homeassistant.components.signal_messenger
-pysignalclirestapi==0.3.23
+pysignalclirestapi==0.3.24
 
 # homeassistant.components.sky_hub
 pyskyqhub==0.1.4
@@ -2327,7 +2327,7 @@ python-smarttub==0.0.36
 python-songpal==0.16.2
 
 # homeassistant.components.tado
-python-tado==0.17.4
+python-tado==0.17.6
 
 # homeassistant.components.technove
 python-technove==1.2.2

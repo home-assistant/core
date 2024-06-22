@@ -2,6 +2,7 @@
 
 from datetime import datetime as dt, timedelta
 
+from hdate import htables
 import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as SENSOR_DOMAIN
@@ -40,7 +41,17 @@ async def test_jewish_calendar_hebrew(hass: HomeAssistant) -> None:
 
 
 TEST_PARAMS = [
-    (dt(2018, 9, 3), "UTC", 31.778, 35.235, "english", "date", False, "23 Elul 5778"),
+    (
+        dt(2018, 9, 3),
+        "UTC",
+        31.778,
+        35.235,
+        "english",
+        "date",
+        False,
+        "23 Elul 5778",
+        None,
+    ),
     (
         dt(2018, 9, 3),
         "UTC",
@@ -50,8 +61,19 @@ TEST_PARAMS = [
         "date",
         False,
         'כ"ג אלול ה\' תשע"ח',
+        None,
     ),
-    (dt(2018, 9, 10), "UTC", 31.778, 35.235, "hebrew", "holiday", False, "א' ראש השנה"),
+    (
+        dt(2018, 9, 10),
+        "UTC",
+        31.778,
+        35.235,
+        "hebrew",
+        "holiday",
+        False,
+        "א' ראש השנה",
+        None,
+    ),
     (
         dt(2018, 9, 10),
         "UTC",
@@ -61,6 +83,15 @@ TEST_PARAMS = [
         "holiday",
         False,
         "Rosh Hashana I",
+        {
+            "device_class": "enum",
+            "friendly_name": "Jewish Calendar Holiday",
+            "icon": "mdi:calendar-star",
+            "id": "rosh_hashana_i",
+            "type": "YOM_TOV",
+            "type_id": 1,
+            "options": [h.description.english for h in htables.HOLIDAYS],
+        },
     ),
     (
         dt(2018, 9, 8),
@@ -71,6 +102,12 @@ TEST_PARAMS = [
         "parshat_hashavua",
         False,
         "נצבים",
+        {
+            "device_class": "enum",
+            "friendly_name": "Jewish Calendar Parshat Hashavua",
+            "icon": "mdi:book-open-variant",
+            "options": [p.hebrew for p in htables.PARASHAOT],
+        },
     ),
     (
         dt(2018, 9, 8),
@@ -81,6 +118,7 @@ TEST_PARAMS = [
         "t_set_hakochavim",
         True,
         dt(2018, 9, 8, 19, 45),
+        None,
     ),
     (
         dt(2018, 9, 8),
@@ -91,6 +129,7 @@ TEST_PARAMS = [
         "t_set_hakochavim",
         False,
         dt(2018, 9, 8, 19, 19),
+        None,
     ),
     (
         dt(2018, 10, 14),
@@ -101,6 +140,7 @@ TEST_PARAMS = [
         "parshat_hashavua",
         False,
         "לך לך",
+        None,
     ),
     (
         dt(2018, 10, 14, 17, 0, 0),
@@ -111,6 +151,7 @@ TEST_PARAMS = [
         "date",
         False,
         "ה' מרחשוון ה' תשע\"ט",
+        None,
     ),
     (
         dt(2018, 10, 14, 19, 0, 0),
@@ -121,6 +162,13 @@ TEST_PARAMS = [
         "date",
         False,
         "ו' מרחשוון ה' תשע\"ט",
+        {
+            "hebrew_year": 5779,
+            "hebrew_month_name": "מרחשוון",
+            "hebrew_day": 6,
+            "icon": "mdi:star-david",
+            "friendly_name": "Jewish Calendar Date",
+        },
     ),
 ]
 
@@ -148,6 +196,7 @@ TEST_IDS = [
         "sensor",
         "diaspora",
         "result",
+        "attrs",
     ),
     TEST_PARAMS,
     ids=TEST_IDS,
@@ -162,6 +211,7 @@ async def test_jewish_calendar_sensor(
     sensor,
     diaspora,
     result,
+    attrs,
 ) -> None:
     """Test Jewish calendar sensor output."""
     time_zone = dt_util.get_time_zone(tzname)
@@ -196,10 +246,8 @@ async def test_jewish_calendar_sensor(
     sensor_object = hass.states.get(f"sensor.jewish_calendar_{sensor}")
     assert sensor_object.state == result
 
-    if sensor == "holiday":
-        assert sensor_object.attributes.get("id") == "rosh_hashana_i"
-        assert sensor_object.attributes.get("type") == "YOM_TOV"
-        assert sensor_object.attributes.get("type_id") == 1
+    if attrs:
+        assert sensor_object.attributes == attrs
 
 
 SHABBAT_PARAMS = [

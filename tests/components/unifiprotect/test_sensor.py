@@ -839,6 +839,104 @@ async def test_camera_update_license_plate_multiple_updates(
     assert state.state == "none"
 
 
+async def test_camera_update_license_no_dupes(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera, fixed_now: datetime
+) -> None:
+    """Test license plate sensor does not generate duplicate reads."""
+
+    camera.feature_flags.smart_detect_types.append(SmartDetectObjectType.LICENSE_PLATE)
+    camera.feature_flags.has_smart_detect = True
+    camera.smart_detect_settings.object_types.append(
+        SmartDetectObjectType.LICENSE_PLATE
+    )
+
+    await init_entry(hass, ufp, [camera])
+    assert_entity_counts(hass, Platform.SENSOR, 23, 13)
+
+    _, entity_id = ids_from_device_description(
+        Platform.SENSOR, camera, LICENSE_PLATE_EVENT_SENSORS[0]
+    )
+
+    event_metadata = EventMetadata(
+        license_plate=LicensePlateMetadata(name="FPR2238", confidence_level=91)
+    )
+    event = Event(
+        model=ModelType.EVENT,
+        id="6675e36400de8c03e40bd5e3",
+        type=EventType.SMART_DETECT,
+        start=fixed_now - timedelta(seconds=1),
+        end=None,
+        score=83,
+        smart_detect_types=[SmartDetectObjectType.LICENSE_PLATE],
+        smart_detect_event_ids=[],
+        metadata=event_metadata,
+        api=ufp.api,
+    )
+
+    new_camera = camera.copy()
+    new_camera.is_smart_detected = True
+    new_camera.last_smart_detect_event_ids[SmartDetectObjectType.LICENSE_PLATE] = (
+        event.id
+    )
+
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = new_camera
+
+    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
+    ufp.api.bootstrap.events = {event.id: event}
+
+    state_changes: list[HAEvent[EventStateChangedData]] = async_capture_events(
+        hass, EVENT_STATE_CHANGED
+    )
+    ufp.ws_msg(mock_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "FPR2238"
+    assert state.attributes[ATTR_EVENT_SCORE] == 83
+
+    assert len(state_changes) == 1
+
+    # Now send it again
+    ufp.api.bootstrap.events = {event.id: event}
+    ufp.ws_msg(mock_msg)
+    await hass.async_block_till_done()
+    assert len(state_changes) == 1
+
+    # Again send it again
+    ufp.api.bootstrap.events = {event.id: event}
+    ufp.ws_msg(mock_msg)
+    await hass.async_block_till_done()
+    assert len(state_changes) == 1
+
+    # Now add the end time and change the confidence level
+    event.end = fixed_now + timedelta(seconds=1)
+    event.metadata.license_plate.confidence_level = 96
+    ufp.api.bootstrap.events = {event.id: event}
+    ufp.ws_msg(mock_msg)
+    await hass.async_block_till_done()
+    assert len(state_changes) == 2
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "none"
+
+    # Now send it 3 more times
+    for _ in range(3):
+        ufp.api.bootstrap.events = {event.id: event}
+        ufp.ws_msg(mock_msg)
+        await hass.async_block_till_done()
+        assert len(state_changes) == 2
+
+    # Now clear the event
+    ufp.api.bootstrap.events = {}
+    ufp.ws_msg(mock_msg)
+    await hass.async_block_till_done()
+    assert len(state_changes) == 2
+
+
 async def test_sensor_precision(
     hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor, fixed_now: datetime
 ) -> None:

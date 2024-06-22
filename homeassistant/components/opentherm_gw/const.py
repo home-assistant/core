@@ -19,6 +19,8 @@ ATTR_GW_ID = "gateway_id"
 ATTR_LEVEL = "level"
 ATTR_DHW_OVRD = "dhw_override"
 ATTR_CH_OVRD = "ch_override"
+ATTR_TRANSP_CMD = "transp_cmd"
+ATTR_TRANSP_ARG = "transp_arg"
 
 CONF_CLIMATE = "climate"
 CONF_FLOOR_TEMP = "floor_temperature"
@@ -45,6 +47,7 @@ SERVICE_SET_LED_MODE = "set_led_mode"
 SERVICE_SET_MAX_MOD = "set_max_modulation"
 SERVICE_SET_OAT = "set_outside_temperature"
 SERVICE_SET_SB_TEMP = "set_setback_temperature"
+SERVICE_SEND_TRANSP_CMD = "send_transparent_command"
 
 TRANSLATE_SOURCE = {
     gw_vars.BOILER: "Boiler",
