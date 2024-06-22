@@ -647,7 +647,9 @@ async def test_stage_shutdown_timeouts(hass: HomeAssistant) -> None:
     assert hass.state is CoreState.stopped
 
 
-async def test_stage_shutdown_generic_error(hass: HomeAssistant, caplog) -> None:
+async def test_stage_shutdown_generic_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Simulate a shutdown, test that a generic error at the final stage doesn't prevent it."""
 
     task = asyncio.Future()
@@ -1934,6 +1936,7 @@ async def test_config_defaults() -> None:
     assert config.currency == "EUR"
     assert config.country is None
     assert config.language == "en"
+    assert config.radius == 100
 
 
 async def test_config_path_with_file() -> None:
@@ -1981,6 +1984,7 @@ async def test_config_as_dict() -> None:
         "language": "en",
         "safe_mode": False,
         "debug": False,
+        "radius": 100,
     }
 
     assert expected == config.as_dict()
@@ -3090,14 +3094,14 @@ async def test_get_release_channel(
         assert get_release_channel() == release_channel
 
 
-def test_is_callback_check_partial():
+def test_is_callback_check_partial() -> None:
     """Test is_callback_check_partial matches HassJob."""
 
     @ha.callback
-    def callback_func():
+    def callback_func() -> None:
         pass
 
-    def not_callback_func():
+    def not_callback_func() -> None:
         pass
 
     assert ha.is_callback(callback_func)
@@ -3126,14 +3130,14 @@ def test_is_callback_check_partial():
     )
 
 
-def test_hassjob_passing_job_type():
+def test_hassjob_passing_job_type() -> None:
     """Test passing the job type to HassJob when we already know it."""
 
     @ha.callback
-    def callback_func():
+    def callback_func() -> None:
         pass
 
-    def not_callback_func():
+    def not_callback_func() -> None:
         pass
 
     assert (
@@ -3233,7 +3237,7 @@ async def test_async_run_job_deprecated(
 ) -> None:
     """Test async_run_job warns about its deprecation."""
 
-    async def _test():
+    async def _test() -> None:
         pass
 
     hass.async_run_job(_test)
@@ -3250,7 +3254,7 @@ async def test_async_add_job_deprecated(
 ) -> None:
     """Test async_add_job warns about its deprecation."""
 
-    async def _test():
+    async def _test() -> None:
         pass
 
     hass.async_add_job(_test)
@@ -3267,7 +3271,7 @@ async def test_async_add_hass_job_deprecated(
 ) -> None:
     """Test async_add_hass_job warns about its deprecation."""
 
-    async def _test():
+    async def _test() -> None:
         pass
 
     hass.async_add_hass_job(HassJob(_test))

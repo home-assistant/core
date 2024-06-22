@@ -66,7 +66,7 @@ async def async_validate_input(
     }
 
 
-@dataclass
+@dataclass(slots=True)
 class ValidateResult:
     """Result from validation."""
 

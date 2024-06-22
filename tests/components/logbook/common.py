@@ -27,7 +27,7 @@ class MockRow:
         event_type: str,
         data: dict[str, Any] | None = None,
         context: Context | None = None,
-    ):
+    ) -> None:
         """Init the fake row."""
         self.event_type = event_type
         self.event_data = json.dumps(data, cls=JSONEncoder)

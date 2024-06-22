@@ -61,6 +61,14 @@
         "name": "Screenshot"
       }
     },
+    "notify": {
+      "overlay_message": {
+        "name": "Overlay message"
+      },
+      "tts": {
+        "name": "Text to speech"
+      }
+    },
     "number": {
       "screensaver_time": {
         "name": "Screensaver timer"
