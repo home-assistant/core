@@ -211,6 +211,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload ZHA config entry."""
     ha_zha_data = get_zha_data(hass)
+    ha_zha_data.config_entry = None
 
     if ha_zha_data.gateway_proxy is not None:
         await ha_zha_data.gateway_proxy.shutdown()
