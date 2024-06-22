@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import dataclasses
 from datetime import datetime, timedelta
 import logging
 from typing import Any, cast
 
 from gcal_sync.api import Range, SyncEventsRequest
 from gcal_sync.exceptions import ApiException
-from gcal_sync.model import AccessRole, DateOrDatetime, Event, Attendee, ResponseStatus
+from gcal_sync.model import AccessRole, Attendee, DateOrDatetime, Event
 from gcal_sync.store import ScopedCalendarStore
 from gcal_sync.sync import CalendarEventSyncManager
 
@@ -233,7 +232,6 @@ async def async_setup_entry(
         )
 
 
-@dataclasses.dataclass
 class GoogleCalendarEvent(CalendarEvent):
     """A Google Calendar event."""
 
@@ -296,16 +294,19 @@ class GoogleCalendarEntity(
         """Return True if the event is accepted by self."""
         if not event.attendees:
             return False
-        for attendee in event.attendees:
-            if attendee.self:
-                return attendee.response_status == ResponseStatus.ACCEPTED
-        return False
+        # for attendee in event.attendees:
+        #     # TODO: figure out where to get self email
+        #     if attendee.email == self.coordinator.sync.api.email:
+        #         return attendee.response_status == ResponseStatus.ACCEPTED
+        return True
+        # return False
 
     def _event_filter(self, event: Event) -> bool:
+        # print(event)
         """Return True if the event is visible and accepted."""
         if self._ignore_availability:
-            return not self.event_declined(event)
-        return event.transparency == OPAQUE and not self.event_declined(event)
+            return self.event_accepted(event)
+        return event.transparency == OPAQUE and self.event_accepted(event)
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
