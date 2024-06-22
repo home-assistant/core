@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import Mock
 
+import pytest
 from requests.exceptions import HTTPError
 
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
@@ -29,6 +30,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
@@ -130,6 +132,7 @@ async def test_turn_on(hass: HomeAssistant, fritz: Mock) -> None:
 async def test_turn_off(hass: HomeAssistant, fritz: Mock) -> None:
     """Test turn device off."""
     device = FritzDeviceSwitchMock()
+
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
@@ -137,6 +140,47 @@ async def test_turn_off(hass: HomeAssistant, fritz: Mock) -> None:
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
+
+    assert device.set_switch_state_off.call_count == 1
+
+
+async def test_turn_off_lock(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test if device locked."""
+    device = FritzDeviceSwitchMock()
+    device.lock = True
+
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Can't change switch while manual switching via FRITZ!Box user interface, FRITZ!Fon, App or button is disabled",
+    ):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+
+    assert device.set_switch_state_off.call_count == 1
+
+
+async def test_turn_on_lock(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test if device locked."""
+    device = FritzDeviceSwitchMock()
+    device.lock = True
+
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Can't change switch while manual switching via FRITZ!Box user interface, FRITZ!Fon, App or button is disabled",
+    ):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+
     assert device.set_switch_state_off.call_count == 1
 
 

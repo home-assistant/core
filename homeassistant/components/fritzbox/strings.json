@@ -82,7 +82,7 @@
   },
   "exceptions": {
     "manual_switching_disabled": {
-      "message": "Can't change switch while anual switching via FRITZ!Box user interface, FRITZ!Fon, App or button is disabled"
+      "message": "Can't change switch while manual switching via FRITZ!Box user interface, FRITZ!Fon, App or button is disabled"
     },
     "change_preset_while_active_mode": {
       "message": "Can't change preset while holiday or summer mode is active on the device."
