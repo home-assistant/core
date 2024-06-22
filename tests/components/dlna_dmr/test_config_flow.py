@@ -598,12 +598,12 @@ async def test_ssdp_ignore_device(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "alternative_integration"
 
-    for manufacturer, model in [
+    for manufacturer, model in (
         ("XBMC Foundation", "Kodi"),
         ("Samsung", "Smart TV"),
         ("LG Electronics.", "LG TV"),
         ("Royal Philips Electronics", "Philips TV DMR"),
-    ]:
+    ):
         discovery = dataclasses.replace(MOCK_DISCOVERY)
         discovery.upnp = dict(discovery.upnp)
         discovery.upnp[ssdp.ATTR_UPNP_MANUFACTURER] = manufacturer

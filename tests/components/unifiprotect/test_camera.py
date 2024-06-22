@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock
 
-from pyunifiprotect.data import Camera as ProtectCamera, CameraChannel, StateType
-from pyunifiprotect.exceptions import NvrError
+from uiprotect.data import Camera as ProtectCamera, CameraChannel, StateType
+from uiprotect.exceptions import NvrError
 
 from homeassistant.components.camera import (
     CameraEntityFeature,

@@ -11,7 +11,6 @@ from opendata_transport.exceptions import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -68,34 +67,4 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=DATA_SCHEMA,
             errors=errors,
             description_placeholders=PLACEHOLDERS,
-        )
-
-    async def async_step_import(self, import_input: dict[str, Any]) -> ConfigFlowResult:
-        """Async import step to set up the connection."""
-        await self.async_set_unique_id(
-            f"{import_input[CONF_START]} {import_input[CONF_DESTINATION]}"
-        )
-        self._abort_if_unique_id_configured()
-
-        session = async_get_clientsession(self.hass)
-        opendata = OpendataTransport(
-            import_input[CONF_START], import_input[CONF_DESTINATION], session
-        )
-        try:
-            await opendata.async_get_data()
-        except OpendataTransportConnectionError:
-            return self.async_abort(reason="cannot_connect")
-        except OpendataTransportError:
-            return self.async_abort(reason="bad_config")
-        except Exception:  # noqa: BLE001
-            _LOGGER.error(
-                "Unknown error raised by python-opendata-transport for '%s %s', check at http://transport.opendata.ch/examples/stationboard.html if your station names and your parameters are valid",
-                import_input[CONF_START],
-                import_input[CONF_DESTINATION],
-            )
-            return self.async_abort(reason="unknown")
-
-        return self.async_create_entry(
-            title=import_input[CONF_NAME],
-            data=import_input,
         )

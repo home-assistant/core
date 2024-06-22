@@ -83,7 +83,7 @@ async def test_turn_off_image(hass: HomeAssistant) -> None:
 
     with pytest.raises(HomeAssistantError) as error:
         await async_get_image(hass, ENTITY_CAMERA)
-        assert error.args[0] == "Camera is off"
+    assert error.value.args[0] == "Camera is off"
 
 
 async def test_turn_off_invalid_camera(hass: HomeAssistant) -> None:

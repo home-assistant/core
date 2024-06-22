@@ -46,19 +46,5 @@
         "name": "Delay"
       }
     }
-  },
-  "issues": {
-    "deprecated_yaml_import_issue_cannot_connect": {
-      "title": "The swiss public transport YAML configuration import cannot connect to server",
-      "description": "Configuring swiss public transport using YAML is being removed but there was a connection error importing your YAML configuration.\n\nMake sure your Home Assistant can reach the [opendata server]({opendata_url}). In case the server is down, try again later."
-    },
-    "deprecated_yaml_import_issue_bad_config": {
-      "title": "The swiss public transport YAML configuration import request failed due to bad config",
-      "description": "Configuring swiss public transport using YAML is being removed but there was bad config imported in your YAML configuration.\n\nCheck the [stationboard]({stationboard_url}) for valid stations."
-    },
-    "deprecated_yaml_import_issue_unknown": {
-      "title": "The swiss public transport YAML configuration import failed with unknown error raised by python-opendata-transport",
-      "description": "Configuring swiss public transport using YAML is being removed but there was an unknown error importing your YAML configuration.\n\nCheck your configuration or have a look at the documentation of the integration."
-    }
   }
 }

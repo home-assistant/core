@@ -33,7 +33,11 @@ from zigpy.zcl.clusters import general, security
 from zigpy.zcl.clusters.general import Groups
 import zigpy.zdo.types as zdo_types
 
-from homeassistant.components.websocket_api import const
+from homeassistant.components.websocket_api import (
+    ERR_INVALID_FORMAT,
+    ERR_NOT_FOUND,
+    TYPE_RESULT,
+)
 from homeassistant.components.zha import DOMAIN
 from homeassistant.components.zha.const import EZSP_OVERWRITE_EUI64
 from homeassistant.components.zha.helpers import (
@@ -334,9 +338,9 @@ async def test_device_not_found(zha_client) -> None:
     )
     msg = await zha_client.receive_json()
     assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert not msg["success"]
-    assert msg["error"]["code"] == const.ERR_NOT_FOUND
+    assert msg["error"]["code"] == ERR_NOT_FOUND
 
 
 async def test_list_groups(zha_client) -> None:
@@ -345,7 +349,7 @@ async def test_list_groups(zha_client) -> None:
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 7
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     groups = msg["result"]
     assert len(groups) == 1
@@ -362,7 +366,7 @@ async def test_get_group(zha_client) -> None:
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 8
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     group = msg["result"]
     assert group is not None
@@ -378,9 +382,9 @@ async def test_get_group_not_found(zha_client) -> None:
     msg = await zha_client.receive_json()
 
     assert msg["id"] == 9
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert not msg["success"]
-    assert msg["error"]["code"] == const.ERR_NOT_FOUND
+    assert msg["error"]["code"] == ERR_NOT_FOUND
 
 
 async def test_list_groupable_devices(
@@ -396,7 +400,7 @@ async def test_list_groupable_devices(
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 10
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     device_endpoints = msg["result"]
     assert len(device_endpoints) == 1
@@ -429,7 +433,7 @@ async def test_list_groupable_devices(
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 11
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     device_endpoints = msg["result"]
     assert len(device_endpoints) == 0
@@ -441,7 +445,7 @@ async def test_add_group(zha_client) -> None:
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 12
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     added_group = msg["result"]
 
@@ -452,7 +456,7 @@ async def test_add_group(zha_client) -> None:
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 13
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     groups = msg["result"]
     assert len(groups) == 2
@@ -468,7 +472,7 @@ async def test_remove_group(zha_client) -> None:
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 14
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     groups = msg["result"]
     assert len(groups) == 1
@@ -479,7 +483,7 @@ async def test_remove_group(zha_client) -> None:
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 15
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     groups_remaining = msg["result"]
     assert len(groups_remaining) == 0
@@ -488,7 +492,7 @@ async def test_remove_group(zha_client) -> None:
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 16
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     groups = msg["result"]
     assert len(groups) == 0
@@ -712,14 +716,14 @@ async def test_ws_permit_with_qr_code(
     )
 
     msg_type = None
-    while msg_type != const.TYPE_RESULT:
+    while msg_type != TYPE_RESULT:
         # There will be logging events coming over the websocket
         # as well so we want to ignore those
         msg = await zha_client.receive_json()
         msg_type = msg["type"]
 
     assert msg["id"] == 14
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
     assert app_controller.permit.await_count == 0
@@ -741,7 +745,7 @@ async def test_ws_permit_with_install_code_fail(
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 14
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"] is False
 
     assert app_controller.permit.await_count == 0
@@ -775,14 +779,14 @@ async def test_ws_permit_ha12(
     )
 
     msg_type = None
-    while msg_type != const.TYPE_RESULT:
+    while msg_type != TYPE_RESULT:
         # There will be logging events coming over the websocket
         # as well so we want to ignore those
         msg = await zha_client.receive_json()
         msg_type = msg["type"]
 
     assert msg["id"] == 14
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
     assert app_controller.permit.await_count == 1
@@ -802,7 +806,7 @@ async def test_get_network_settings(
     msg = await zha_client.receive_json()
 
     assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert "radio_type" in msg["result"]
     assert "network_info" in msg["result"]["settings"]
@@ -820,7 +824,7 @@ async def test_list_network_backups(
     msg = await zha_client.receive_json()
 
     assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert "network_info" in msg["result"][0]
 
@@ -836,7 +840,7 @@ async def test_create_network_backup(
     assert len(app_controller.backups.backups) == 1
 
     assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert "backup" in msg["result"] and "is_complete" in msg["result"]
 
@@ -862,7 +866,7 @@ async def test_restore_network_backup_success(
     assert "ezsp" not in backup.network_info.stack_specific
 
     assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
 
@@ -894,7 +898,7 @@ async def test_restore_network_backup_force_write_eui64(
     )
 
     assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
 
@@ -917,9 +921,9 @@ async def test_restore_network_backup_failure(
     p.assert_called_once_with("a backup")
 
     assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert not msg["success"]
-    assert msg["error"]["code"] == const.ERR_INVALID_FORMAT
+    assert msg["error"]["code"] == ERR_INVALID_FORMAT
 
 
 @pytest.mark.parametrize("new_channel", ["auto", 15])
@@ -942,7 +946,7 @@ async def test_websocket_change_channel(
         msg = await zha_client.receive_json()
 
     assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
     change_channel_mock.assert_has_calls([call(ANY, new_channel)])
@@ -975,7 +979,7 @@ async def test_websocket_bind_unbind_devices(
         msg = await zha_client.receive_json()
 
     assert msg["id"] == 27
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert binding_operation_mock.mock_calls == [
         call(
@@ -1029,7 +1033,7 @@ async def test_websocket_bind_unbind_group(
         msg = await zha_client.receive_json()
 
     assert msg["id"] == 27
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     if command_type == "bind":
         assert bind_mock.mock_calls == [call(test_group_id, ANY)]

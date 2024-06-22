@@ -16,7 +16,7 @@ from homeassistant.components.zha.helpers import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import device_registry as dr
 
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
@@ -110,6 +110,7 @@ async def test_diagnostics_for_config_entry(
 async def test_diagnostics_for_device(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
     setup_zha,
     zigpy_device_mock,
@@ -153,8 +154,7 @@ async def test_diagnostics_for_device(
         }
     )
 
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_device(
+    device = device_registry.async_get_device(
         identifiers={("zha", str(zha_device_proxy.device.ieee))}
     )
     assert device
