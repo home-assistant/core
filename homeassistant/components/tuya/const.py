@@ -166,6 +166,7 @@ class DPCode(StrEnum):
     CRY_DETECTION_SWITCH = "cry_detection_switch"
     CUP_NUMBER = "cup_number"  # NUmber of cups
     CUR_CURRENT = "cur_current"  # Actual current
+    CUR_NEUTRAL = "cur_neutral"  # Total reverse energy
     CUR_POWER = "cur_power"  # Actual power
     CUR_VOLTAGE = "cur_voltage"  # Actual voltage
     DECIBEL_SENSITIVITY = "decibel_sensitivity"
@@ -344,6 +345,7 @@ class DPCode(StrEnum):
     TOTAL_FORWARD_ENERGY = "total_forward_energy"
     TOTAL_TIME = "total_time"
     TOTAL_PM = "total_pm"
+    TOTAL_POWER = "total_power"
     TVOC = "tvoc"
     UPPER_TEMP = "upper_temp"
     UPPER_TEMP_F = "upper_temp_f"
@@ -444,7 +446,7 @@ UNITS = (
     ),
     UnitOfMeasurement(
         unit=UnitOfEnergy.KILO_WATT_HOUR,
-        aliases={"kwh", "kilowatt-hour", "kW·h"},
+        aliases={"kwh", "kilowatt-hour", "kW·h", "kW.h"},
         device_classes={SensorDeviceClass.ENERGY},
     ),
     UnitOfMeasurement(
