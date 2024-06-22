@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Sequence
 import enum
 
 import usb
@@ -44,7 +45,7 @@ YELLOW_USB_HUB_VENDOR = 0x1A40
 YELLOW_USB_HUB_PRODUCT = 0x0101
 
 
-def _read_gpio_pins[_PinsT: int](pins: list[_PinsT]) -> dict[_PinsT, bool]:
+def _read_gpio_pins[_PinsT: int](pins: Sequence[_PinsT]) -> dict[_PinsT, bool]:
     """Read the state of the given GPIO pins."""
     # pylint: disable-next=import-outside-toplevel
     import gpiod
