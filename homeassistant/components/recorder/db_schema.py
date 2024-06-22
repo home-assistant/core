@@ -35,7 +35,11 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import DeclarativeBase, Mapped, aliased, mapped_column, relationship
 from sqlalchemy.types import TypeDecorator
 
+from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
+    ATTR_UNIT_OF_MEASUREMENT,
     MATCH_ALL,
     MAX_LENGTH_EVENT_EVENT_TYPE,
     MAX_LENGTH_STATE_ENTITY_ID,
@@ -591,7 +595,20 @@ class StateAttributes(Base):
                 *unrecorded_attributes,
             }
             if MATCH_ALL in unrecorded_attributes:
-                exclude_attrs.update(state.attributes)
+                # Don't exclude device class, state class, unit of measurement
+                # or friendly name when using the MATCH_ALL exclude constant
+                _exclude_attributes = {
+                    k: v
+                    for k, v in state.attributes.items()
+                    if k
+                    not in (
+                        ATTR_DEVICE_CLASS,
+                        ATTR_STATE_CLASS,
+                        ATTR_UNIT_OF_MEASUREMENT,
+                        ATTR_FRIENDLY_NAME,
+                    )
+                }
+                exclude_attrs.update(_exclude_attributes)
 
         else:
             exclude_attrs = ALL_DOMAIN_EXCLUDE_ATTRS

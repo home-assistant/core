@@ -2427,7 +2427,15 @@ async def test_excluding_all_attributes_by_integration(
 ) -> None:
     """Test that an entity can exclude all attributes from being recorded using MATCH_ALL."""
     state = "restoring_from_db"
-    attributes = {"test_attr": 5, "excluded_component": 10, "excluded_integration": 20}
+    attributes = {
+        "test_attr": 5,
+        "excluded_component": 10,
+        "excluded_integration": 20,
+        "device_class": "test",
+        "state_class": "test",
+        "friendly_name": "Test entity",
+        "unit_of_measurement": "mm",
+    }
     mock_platform(
         hass,
         "fake_integration.recorder",
@@ -2468,7 +2476,12 @@ async def test_excluding_all_attributes_by_integration(
         assert db_states[0].event_id is None
 
     expected = _state_with_context(hass, entity_id)
-    expected.attributes = {}
+    expected.attributes = {
+        "device_class": "test",
+        "state_class": "test",
+        "friendly_name": "Test entity",
+        "unit_of_measurement": "mm",
+    }
     assert state.as_dict() == expected.as_dict()
 
 
