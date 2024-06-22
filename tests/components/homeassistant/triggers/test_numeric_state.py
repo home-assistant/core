@@ -18,7 +18,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -32,7 +32,7 @@ from tests.common import (
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -63,7 +63,7 @@ async def setup_comp(hass):
     "below", [10, "input_number.value_10", "number.value_10", "sensor.value_10"]
 )
 async def test_if_not_fires_on_entity_removal(
-    hass: HomeAssistant, calls, below
+    hass: HomeAssistant, calls: list[ServiceCall], below: int | str
 ) -> None:
     """Test the firing with removed entity."""
     hass.states.async_set("test.entity", 11)
@@ -93,7 +93,7 @@ async def test_if_not_fires_on_entity_removal(
     "below", [10, "input_number.value_10", "number.value_10", "sensor.value_10"]
 )
 async def test_if_fires_on_entity_change_below(
-    hass: HomeAssistant, calls, below
+    hass: HomeAssistant, calls: list[ServiceCall], below: int | str
 ) -> None:
     """Test the firing with changed entity."""
     hass.states.async_set("test.entity", 11)
@@ -142,7 +142,10 @@ async def test_if_fires_on_entity_change_below(
     "below", [10, "input_number.value_10", "number.value_10", "sensor.value_10"]
 )
 async def test_if_fires_on_entity_change_below_uuid(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls, below
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    calls: list[ServiceCall],
+    below: int | str,
 ) -> None:
     """Test the firing with changed entity specified by registry entry id."""
     entry = entity_registry.async_get_or_create(
@@ -196,7 +199,7 @@ async def test_if_fires_on_entity_change_below_uuid(
     "below", [10, "input_number.value_10", "number.value_10", "sensor.value_10"]
 )
 async def test_if_fires_on_entity_change_over_to_below(
-    hass: HomeAssistant, calls, below
+    hass: HomeAssistant, calls: list[ServiceCall], below: int | str
 ) -> None:
     """Test the firing with changed entity."""
     hass.states.async_set("test.entity", 11)
@@ -227,7 +230,7 @@ async def test_if_fires_on_entity_change_over_to_below(
     "below", [10, "input_number.value_10", "number.value_10", "sensor.value_10"]
 )
 async def test_if_fires_on_entities_change_over_to_below(
-    hass: HomeAssistant, calls, below
+    hass: HomeAssistant, calls: list[ServiceCall], below: int | str
 ) -> None:
     """Test the firing with changed entities."""
     hass.states.async_set("test.entity_1", 11)
@@ -262,7 +265,7 @@ async def test_if_fires_on_entities_change_over_to_below(
     "below", [10, "input_number.value_10", "number.value_10", "sensor.value_10"]
 )
 async def test_if_not_fires_on_entity_change_below_to_below(
-    hass: HomeAssistant, calls, below
+    hass: HomeAssistant, calls: list[ServiceCall], below: int | str
 ) -> None:
     """Test the firing with changed entity."""
     context = Context()
@@ -305,7 +308,7 @@ async def test_if_not_fires_on_entity_change_below_to_below(
     "below", [10, "input_number.value_10", "number.value_10", "sensor.value_10"]
 )
 async def test_if_not_below_fires_on_entity_change_to_equal(
-    hass: HomeAssistant, calls, below
+    hass: HomeAssistant, calls: list[ServiceCall], below: int | str
 ) -> None:
     """Test the firing with changed entity."""
     hass.states.async_set("test.entity", 11)
@@ -336,7 +339,7 @@ async def test_if_not_below_fires_on_entity_change_to_equal(
     "below", [10, "input_number.value_10", "number.value_10", "sensor.value_10"]
 )
 async def test_if_not_fires_on_initial_entity_below(
-    hass: HomeAssistant, calls, below
+    hass: HomeAssistant, calls: list[ServiceCall], below: int | str
 ) -> None:
     """Test the firing when starting with a match."""
     hass.states.async_set("test.entity", 9)
@@ -367,7 +370,7 @@ async def test_if_not_fires_on_initial_entity_below(
     "above", [10, "input_number.value_10", "number.value_10", "sensor.value_10"]
 )
 async def test_if_not_fires_on_initial_entity_above(
-    hass: HomeAssistant, calls, above
+    hass: HomeAssistant, calls: list[ServiceCall], above: int | str
 ) -> None:
     """Test the firing when starting with a match."""
     hass.states.async_set("test.entity", 11)
@@ -398,7 +401,7 @@ async def test_if_not_fires_on_initial_entity_above(
     "above", [10, "input_number.value_10", "number.value_10", "sensor.value_10"]
 )
 async def test_if_fires_on_entity_change_above(
-    hass: HomeAssistant, calls, above
+    hass: HomeAssistant, calls: list[ServiceCall], above: int | str
 ) -> None:
     """Test the firing with changed entity."""
     hass.states.async_set("test.entity", 9)
@@ -425,7 +428,7 @@ async def test_if_fires_on_entity_change_above(
 
 
 async def test_if_fires_on_entity_unavailable_at_startup(
-    hass: HomeAssistant, calls
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test the firing with changed entity at startup."""
     assert await async_setup_component(
@@ -450,7 +453,7 @@ async def test_if_fires_on_entity_unavailable_at_startup(
 
 @pytest.mark.parametrize("above", [10, "input_number.value_10"])
 async def test_if_fires_on_entity_change_below_to_above(
-    hass: HomeAssistant, calls, above
+    hass: HomeAssistant, calls: list[ServiceCall], above: int | str
 ) -> None:
     """Test the firing with changed entity."""
     # set initial state
@@ -480,7 +483,7 @@ async def test_if_fires_on_entity_change_below_to_above(
 
 @pytest.mark.parametrize("above", [10, "input_number.value_10"])
 async def test_if_not_fires_on_entity_change_above_to_above(
-    hass: HomeAssistant, calls, above
+    hass: HomeAssistant, calls: list[ServiceCall], above: int | str
 ) -> None:
     """Test the firing with changed entity."""
     # set initial state
@@ -515,7 +518,7 @@ async def test_if_not_fires_on_entity_change_above_to_above(
 
 @pytest.mark.parametrize("above", [10, "input_number.value_10"])
 async def test_if_not_above_fires_on_entity_change_to_equal(
-    hass: HomeAssistant, calls, above
+    hass: HomeAssistant, calls: list[ServiceCall], above: int | str
 ) -> None:
     """Test the firing with changed entity."""
     # set initial state
@@ -553,7 +556,7 @@ async def test_if_not_above_fires_on_entity_change_to_equal(
     ],
 )
 async def test_if_fires_on_entity_change_below_range(
-    hass: HomeAssistant, calls, above, below
+    hass: HomeAssistant, calls: list[ServiceCall], above: int | str, below: int | str
 ) -> None:
     """Test the firing with changed entity."""
     hass.states.async_set("test.entity", 11)
@@ -590,7 +593,7 @@ async def test_if_fires_on_entity_change_below_range(
     ],
 )
 async def test_if_fires_on_entity_change_below_above_range(
-    hass: HomeAssistant, calls, above, below
+    hass: HomeAssistant, calls: list[ServiceCall], above: int | str, below: int | str
 ) -> None:
     """Test the firing with changed entity."""
     assert await async_setup_component(
@@ -624,7 +627,7 @@ async def test_if_fires_on_entity_change_below_above_range(
     ],
 )
 async def test_if_fires_on_entity_change_over_to_below_range(
-    hass: HomeAssistant, calls, above, below
+    hass: HomeAssistant, calls: list[ServiceCall], above: int | str, below: int | str
 ) -> None:
     """Test the firing with changed entity."""
     hass.states.async_set("test.entity", 11)
@@ -662,7 +665,7 @@ async def test_if_fires_on_entity_change_over_to_below_range(
     ],
 )
 async def test_if_fires_on_entity_change_over_to_below_above_range(
-    hass: HomeAssistant, calls, above, below
+    hass: HomeAssistant, calls: list[ServiceCall], above: int | str, below: int | str
 ) -> None:
     """Test the firing with changed entity."""
     hass.states.async_set("test.entity", 11)
@@ -692,7 +695,7 @@ async def test_if_fires_on_entity_change_over_to_below_above_range(
 
 @pytest.mark.parametrize("below", [100, "input_number.value_100"])
 async def test_if_not_fires_if_entity_not_match(
-    hass: HomeAssistant, calls, below
+    hass: HomeAssistant, calls: list[ServiceCall], below: int | str
 ) -> None:
     """Test if not fired with non matching entity."""
     assert await async_setup_component(
@@ -716,7 +719,7 @@ async def test_if_not_fires_if_entity_not_match(
 
 
 async def test_if_not_fires_and_warns_if_below_entity_unknown(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, calls
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, calls: list[ServiceCall]
 ) -> None:
     """Test if warns with unknown below entity."""
     assert await async_setup_component(
@@ -747,7 +750,7 @@ async def test_if_not_fires_and_warns_if_below_entity_unknown(
 
 @pytest.mark.parametrize("below", [10, "input_number.value_10"])
 async def test_if_fires_on_entity_change_below_with_attribute(
-    hass: HomeAssistant, calls, below
+    hass: HomeAssistant, calls: list[ServiceCall], below: int | str
 ) -> None:
     """Test attributes change."""
     hass.states.async_set("test.entity", 11, {"test_attribute": 11})
@@ -775,7 +778,7 @@ async def test_if_fires_on_entity_change_below_with_attribute(
 
 @pytest.mark.parametrize("below", [10, "input_number.value_10"])
 async def test_if_not_fires_on_entity_change_not_below_with_attribute(
-    hass: HomeAssistant, calls, below
+    hass: HomeAssistant, calls: list[ServiceCall], below: int | str
 ) -> None:
     """Test attributes."""
     assert await async_setup_component(
@@ -800,7 +803,7 @@ async def test_if_not_fires_on_entity_change_not_below_with_attribute(
 
 @pytest.mark.parametrize("below", [10, "input_number.value_10"])
 async def test_if_fires_on_attribute_change_with_attribute_below(
-    hass: HomeAssistant, calls, below
+    hass: HomeAssistant, calls: list[ServiceCall], below: int | str
 ) -> None:
     """Test attributes change."""
     hass.states.async_set("test.entity", "entity", {"test_attribute": 11})
@@ -829,7 +832,7 @@ async def test_if_fires_on_attribute_change_with_attribute_below(
 
 @pytest.mark.parametrize("below", [10, "input_number.value_10"])
 async def test_if_not_fires_on_attribute_change_with_attribute_not_below(
-    hass: HomeAssistant, calls, below
+    hass: HomeAssistant, calls: list[ServiceCall], below: int | str
 ) -> None:
     """Test attributes change."""
     assert await async_setup_component(
@@ -855,7 +858,7 @@ async def test_if_not_fires_on_attribute_change_with_attribute_not_below(
 
 @pytest.mark.parametrize("below", [10, "input_number.value_10"])
 async def test_if_not_fires_on_entity_change_with_attribute_below(
-    hass: HomeAssistant, calls, below
+    hass: HomeAssistant, calls: list[ServiceCall], below: int | str
 ) -> None:
     """Test attributes change."""
     assert await async_setup_component(
@@ -881,7 +884,7 @@ async def test_if_not_fires_on_entity_change_with_attribute_below(
 
 @pytest.mark.parametrize("below", [10, "input_number.value_10"])
 async def test_if_not_fires_on_entity_change_with_not_attribute_below(
-    hass: HomeAssistant, calls, below
+    hass: HomeAssistant, calls: list[ServiceCall], below: int | str
 ) -> None:
     """Test attributes change."""
     assert await async_setup_component(
@@ -907,7 +910,7 @@ async def test_if_not_fires_on_entity_change_with_not_attribute_below(
 
 @pytest.mark.parametrize("below", [10, "input_number.value_10"])
 async def test_fires_on_attr_change_with_attribute_below_and_multiple_attr(
-    hass: HomeAssistant, calls, below
+    hass: HomeAssistant, calls: list[ServiceCall], below: int | str
 ) -> None:
     """Test attributes change."""
     hass.states.async_set(
@@ -938,7 +941,9 @@ async def test_fires_on_attr_change_with_attribute_below_and_multiple_attr(
 
 
 @pytest.mark.parametrize("below", [10, "input_number.value_10"])
-async def test_template_list(hass: HomeAssistant, calls, below) -> None:
+async def test_template_list(
+    hass: HomeAssistant, calls: list[ServiceCall], below: int | str
+) -> None:
     """Test template list."""
     hass.states.async_set("test.entity", "entity", {"test_attribute": [11, 15, 11]})
     await hass.async_block_till_done()
@@ -964,7 +969,9 @@ async def test_template_list(hass: HomeAssistant, calls, below) -> None:
 
 
 @pytest.mark.parametrize("below", [10.0, "input_number.value_10"])
-async def test_template_string(hass: HomeAssistant, calls, below) -> None:
+async def test_template_string(
+    hass: HomeAssistant, calls: list[ServiceCall], below: float | str
+) -> None:
     """Test template string."""
     assert await async_setup_component(
         hass,
@@ -1005,7 +1012,7 @@ async def test_template_string(hass: HomeAssistant, calls, below) -> None:
 
 
 async def test_not_fires_on_attr_change_with_attr_not_below_multiple_attr(
-    hass: HomeAssistant, calls
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test if not fired changed attributes."""
     assert await async_setup_component(
@@ -1040,7 +1047,9 @@ async def test_not_fires_on_attr_change_with_attr_not_below_multiple_attr(
         ("input_number.value_8", "input_number.value_12"),
     ],
 )
-async def test_if_action(hass: HomeAssistant, calls, above, below) -> None:
+async def test_if_action(
+    hass: HomeAssistant, calls: list[ServiceCall], above: int | str, below: int | str
+) -> None:
     """Test if action."""
     entity_id = "domain.test_entity"
     assert await async_setup_component(
@@ -1088,7 +1097,9 @@ async def test_if_action(hass: HomeAssistant, calls, above, below) -> None:
         ("input_number.value_8", "input_number.value_12"),
     ],
 )
-async def test_if_fails_setup_bad_for(hass: HomeAssistant, calls, above, below) -> None:
+async def test_if_fails_setup_bad_for(
+    hass: HomeAssistant, calls: list[ServiceCall], above: int | str, below: int | str
+) -> None:
     """Test for setup failure for bad for."""
     hass.states.async_set("test.entity", 5)
     await hass.async_block_till_done()
@@ -1114,7 +1125,7 @@ async def test_if_fails_setup_bad_for(hass: HomeAssistant, calls, above, below) 
 
 
 async def test_if_fails_setup_for_without_above_below(
-    hass: HomeAssistant, calls
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test for setup failures for missing above or below."""
     with assert_setup_component(1, automation.DOMAIN):
@@ -1145,7 +1156,11 @@ async def test_if_fails_setup_for_without_above_below(
     ],
 )
 async def test_if_not_fires_on_entity_change_with_for(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls, above, below
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    calls: list[ServiceCall],
+    above: int | str,
+    below: int | str,
 ) -> None:
     """Test for not firing on entity change with for."""
     assert await async_setup_component(
@@ -1185,7 +1200,7 @@ async def test_if_not_fires_on_entity_change_with_for(
     ],
 )
 async def test_if_not_fires_on_entities_change_with_for_after_stop(
-    hass: HomeAssistant, calls, above, below
+    hass: HomeAssistant, calls: list[ServiceCall], above: int | str, below: int | str
 ) -> None:
     """Test for not firing on entities change with for after stop."""
     hass.states.async_set("test.entity_1", 0)
@@ -1246,7 +1261,11 @@ async def test_if_not_fires_on_entities_change_with_for_after_stop(
     ],
 )
 async def test_if_fires_on_entity_change_with_for_attribute_change(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls, above, below
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    calls: list[ServiceCall],
+    above: int | str,
+    below: int | str,
 ) -> None:
     """Test for firing on entity change with for and attribute change."""
     hass.states.async_set("test.entity", 0)
@@ -1292,7 +1311,7 @@ async def test_if_fires_on_entity_change_with_for_attribute_change(
     ],
 )
 async def test_if_fires_on_entity_change_with_for(
-    hass: HomeAssistant, calls, above, below
+    hass: HomeAssistant, calls: list[ServiceCall], above: int | str, below: int | str
 ) -> None:
     """Test for firing on entity change with for."""
     hass.states.async_set("test.entity", 0)
@@ -1323,7 +1342,9 @@ async def test_if_fires_on_entity_change_with_for(
 
 
 @pytest.mark.parametrize("above", [10, "input_number.value_10"])
-async def test_wait_template_with_trigger(hass: HomeAssistant, calls, above) -> None:
+async def test_wait_template_with_trigger(
+    hass: HomeAssistant, calls: list[ServiceCall], above: int | str
+) -> None:
     """Test using wait template with 'trigger.entity_id'."""
     hass.states.async_set("test.entity", "0")
     await hass.async_block_till_done()
@@ -1374,7 +1395,11 @@ async def test_wait_template_with_trigger(hass: HomeAssistant, calls, above) -> 
     ],
 )
 async def test_if_fires_on_entities_change_no_overlap(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls, above, below
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    calls: list[ServiceCall],
+    above: int | str,
+    below: int | str,
 ) -> None:
     """Test for firing on entities change with no overlap."""
     hass.states.async_set("test.entity_1", 0)
@@ -1429,7 +1454,11 @@ async def test_if_fires_on_entities_change_no_overlap(
     ],
 )
 async def test_if_fires_on_entities_change_overlap(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls, above, below
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    calls: list[ServiceCall],
+    above: int | str,
+    below: int | str,
 ) -> None:
     """Test for firing on entities change with overlap."""
     hass.states.async_set("test.entity_1", 0)
@@ -1495,7 +1524,7 @@ async def test_if_fires_on_entities_change_overlap(
     ],
 )
 async def test_if_fires_on_change_with_for_template_1(
-    hass: HomeAssistant, calls, above, below
+    hass: HomeAssistant, calls: list[ServiceCall], above: int | str, below: int | str
 ) -> None:
     """Test for firing on  change with for template."""
     hass.states.async_set("test.entity", 0)
@@ -1536,7 +1565,7 @@ async def test_if_fires_on_change_with_for_template_1(
     ],
 )
 async def test_if_fires_on_change_with_for_template_2(
-    hass: HomeAssistant, calls, above, below
+    hass: HomeAssistant, calls: list[ServiceCall], above: int | str, below: int | str
 ) -> None:
     """Test for firing on  change with for template."""
     hass.states.async_set("test.entity", 0)
@@ -1577,7 +1606,7 @@ async def test_if_fires_on_change_with_for_template_2(
     ],
 )
 async def test_if_fires_on_change_with_for_template_3(
-    hass: HomeAssistant, calls, above, below
+    hass: HomeAssistant, calls: list[ServiceCall], above: int | str, below: int | str
 ) -> None:
     """Test for firing on  change with for template."""
     hass.states.async_set("test.entity", 0)
@@ -1609,7 +1638,7 @@ async def test_if_fires_on_change_with_for_template_3(
 
 
 async def test_if_not_fires_on_error_with_for_template(
-    hass: HomeAssistant, calls
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test for not firing on error with for template."""
     hass.states.async_set("test.entity", 0)
@@ -1655,7 +1684,9 @@ async def test_if_not_fires_on_error_with_for_template(
         ("input_number.value_8", "input_number.value_12"),
     ],
 )
-async def test_invalid_for_template(hass: HomeAssistant, calls, above, below) -> None:
+async def test_invalid_for_template(
+    hass: HomeAssistant, calls: list[ServiceCall], above: int | str, below: int | str
+) -> None:
     """Test for invalid for template."""
     hass.states.async_set("test.entity", 0)
     await hass.async_block_till_done()
@@ -1693,7 +1724,11 @@ async def test_invalid_for_template(hass: HomeAssistant, calls, above, below) ->
     ],
 )
 async def test_if_fires_on_entities_change_overlap_for_template(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls, above, below
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    calls: list[ServiceCall],
+    above: int | str,
+    below: int | str,
 ) -> None:
     """Test for firing on entities change with overlap and for template."""
     hass.states.async_set("test.entity_1", 0)
@@ -1788,7 +1823,7 @@ async def test_schema_unacceptable_entities(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize("above", [3, "input_number.value_3"])
 async def test_attribute_if_fires_on_entity_change_with_both_filters(
-    hass: HomeAssistant, calls, above
+    hass: HomeAssistant, calls: list[ServiceCall], above: int | str
 ) -> None:
     """Test for firing if both filters are match attribute."""
     hass.states.async_set("test.entity", "bla", {"test-measurement": 1})
@@ -1817,7 +1852,7 @@ async def test_attribute_if_fires_on_entity_change_with_both_filters(
 
 @pytest.mark.parametrize("above", [3, "input_number.value_3"])
 async def test_attribute_if_not_fires_on_entities_change_with_for_after_stop(
-    hass: HomeAssistant, calls, above
+    hass: HomeAssistant, calls: list[ServiceCall], above: int | str
 ) -> None:
     """Test for not firing on entity change with for after stop trigger."""
     hass.states.async_set("test.entity", "bla", {"test-measurement": 1})
@@ -1856,7 +1891,11 @@ async def test_attribute_if_not_fires_on_entities_change_with_for_after_stop(
     [(8, 12)],
 )
 async def test_variables_priority(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls, above, below
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    calls: list[ServiceCall],
+    above: int,
+    below: int,
 ) -> None:
     """Test an externally defined trigger variable is overridden."""
     hass.states.async_set("test.entity_1", 0)
@@ -1911,7 +1950,9 @@ async def test_variables_priority(
 
 
 @pytest.mark.parametrize("multiplier", [1, 5])
-async def test_template_variable(hass: HomeAssistant, calls, multiplier) -> None:
+async def test_template_variable(
+    hass: HomeAssistant, calls: list[ServiceCall], multiplier: int
+) -> None:
     """Test template variable."""
     hass.states.async_set("test.entity", "entity", {"test_attribute": [11, 15, 11]})
     await hass.async_block_till_done()

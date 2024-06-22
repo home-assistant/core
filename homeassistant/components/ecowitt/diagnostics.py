@@ -26,7 +26,7 @@ async def async_get_device_diagnostics(
         "device": {
             "name": station.station,
             "model": station.model,
-            "frequency": station.frequence,
+            "frequency": station.frequence,  # codespell:ignore frequence
             "version": station.version,
         },
         "raw": ecowitt.last_values[station_id],

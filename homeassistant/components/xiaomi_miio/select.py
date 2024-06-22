@@ -54,6 +54,7 @@ from .const import (
     MODEL_AIRPURIFIER_M2,
     MODEL_AIRPURIFIER_MA2,
     MODEL_AIRPURIFIER_PROH,
+    MODEL_AIRPURIFIER_PROH_EU,
     MODEL_AIRPURIFIER_ZA1,
     MODEL_FAN_SA1,
     MODEL_FAN_V2,
@@ -135,6 +136,9 @@ MODEL_TO_ATTR_MAP: dict[str, list] = {
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierLedBrightness)
     ],
     MODEL_AIRPURIFIER_PROH: [
+        AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
+    ],
+    MODEL_AIRPURIFIER_PROH_EU: [
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
     ],
     MODEL_FAN_SA1: [AttributeEnumMapping(ATTR_LED_BRIGHTNESS, FanLedBrightness)],
@@ -256,10 +260,10 @@ class XiaomiGenericSelector(XiaomiSelector):
 
         if description.options_map:
             self._options_map = {}
-            for key, val in enum_class._member_map_.items():
+            for key, val in enum_class._member_map_.items():  # noqa: SLF001
                 self._options_map[description.options_map[key]] = val
         else:
-            self._options_map = enum_class._member_map_
+            self._options_map = enum_class._member_map_  # noqa: SLF001
         self._reverse_map = {val: key for key, val in self._options_map.items()}
         self._enum_class = enum_class
 

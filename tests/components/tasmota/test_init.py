@@ -49,7 +49,7 @@ async def test_device_remove(
     )
     assert device_entry is not None
 
-    await remove_device(hass, await hass_ws_client(hass), device_entry.id)
+    await remove_device(hass, hass_ws_client, device_entry.id)
     await hass.async_block_till_done()
 
     # Verify device entry is removed
@@ -98,9 +98,7 @@ async def test_device_remove_non_tasmota_device(
     )
     assert device_entry is not None
 
-    await remove_device(
-        hass, await hass_ws_client(hass), device_entry.id, config_entry.entry_id
-    )
+    await remove_device(hass, hass_ws_client, device_entry.id, config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Verify device entry is removed
@@ -131,7 +129,7 @@ async def test_device_remove_stale_tasmota_device(
     )
     assert device_entry is not None
 
-    await remove_device(hass, await hass_ws_client(hass), device_entry.id)
+    await remove_device(hass, hass_ws_client, device_entry.id)
     await hass.async_block_till_done()
 
     # Verify device entry is removed
@@ -166,18 +164,10 @@ async def test_tasmota_ws_remove_discovered_device(
     )
     assert device_entry is not None
 
-    client = await hass_ws_client(hass)
     tasmota_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    await client.send_json(
-        {
-            "id": 5,
-            "config_entry_id": tasmota_config_entry.entry_id,
-            "type": "config/device_registry/remove_config_entry",
-            "device_id": device_entry.id,
-        }
+    await remove_device(
+        hass, hass_ws_client, device_entry.id, tasmota_config_entry.entry_id
     )
-    response = await client.receive_json()
-    assert response["success"]
 
     # Verify device entry is cleared
     device_entry = device_reg.async_get_device(

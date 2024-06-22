@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/smart_meter_texas",
   "iot_class": "cloud_polling",
   "loggers": ["smart_meter_texas"],
-  "requirements": ["smart-meter-texas==0.4.7"]
+  "requirements": ["smart-meter-texas==0.5.5"]
 }

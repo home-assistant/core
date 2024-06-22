@@ -103,14 +103,14 @@ async def validate_add_controller(
     user_input[CONF_CONTROLLER_ID] = slugify(user_input[CONF_NAME])
     user_input[CONF_PORT] = int(user_input[CONF_PORT])
     try:
-        handler._async_abort_entries_match(  # pylint: disable=protected-access
+        handler._async_abort_entries_match(  # noqa: SLF001
             {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
         )
     except AbortFlow as err:
         raise SchemaFlowError("duplicated_host_port") from err
 
     try:
-        handler._async_abort_entries_match(  # pylint: disable=protected-access
+        handler._async_abort_entries_match(  # noqa: SLF001
             {CONF_CONTROLLER_ID: user_input[CONF_CONTROLLER_ID]}
         )
     except AbortFlow as err:

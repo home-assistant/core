@@ -12,6 +12,7 @@ from homeassistant.components.notify import (
     SERVICE_SEND_MESSAGE,
     NotifyEntity,
     NotifyEntityDescription,
+    NotifyEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
@@ -27,7 +28,8 @@ from tests.common import (
     setup_test_component_platform,
 )
 
-TEST_KWARGS = {"message": "Test message"}
+TEST_KWARGS = {notify.ATTR_MESSAGE: "Test message"}
+TEST_KWARGS_TITLE = {notify.ATTR_MESSAGE: "Test message", notify.ATTR_TITLE: "My title"}
 
 
 class MockNotifyEntity(MockEntity, NotifyEntity):
@@ -35,9 +37,9 @@ class MockNotifyEntity(MockEntity, NotifyEntity):
 
     send_message_mock_calls = MagicMock()
 
-    async def async_send_message(self, message: str) -> None:
+    async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a notification message."""
-        self.send_message_mock_calls(message=message)
+        self.send_message_mock_calls(message, title=title)
 
 
 class MockNotifyEntityNonAsync(MockEntity, NotifyEntity):
@@ -45,16 +47,16 @@ class MockNotifyEntityNonAsync(MockEntity, NotifyEntity):
 
     send_message_mock_calls = MagicMock()
 
-    def send_message(self, message: str) -> None:
+    def send_message(self, message: str, title: str | None = None) -> None:
         """Send a notification message."""
-        self.send_message_mock_calls(message=message)
+        self.send_message_mock_calls(message, title=title)
 
 
 async def help_async_setup_entry_init(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> bool:
     """Set up test config entry."""
-    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+    await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
     return True
 
 
@@ -133,6 +135,58 @@ async def test_send_message_service(
 
 
 @pytest.mark.parametrize(
+    "entity",
+    [
+        MockNotifyEntityNonAsync(
+            name="test",
+            entity_id="notify.test",
+            supported_features=NotifyEntityFeature.TITLE,
+        ),
+        MockNotifyEntity(
+            name="test",
+            entity_id="notify.test",
+            supported_features=NotifyEntityFeature.TITLE,
+        ),
+    ],
+    ids=["non_async", "async"],
+)
+async def test_send_message_service_with_title(
+    hass: HomeAssistant, config_flow_fixture: None, entity: NotifyEntity
+) -> None:
+    """Test send_message service."""
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    state = hass.states.get("notify.test")
+    assert state.state is STATE_UNKNOWN
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        copy.deepcopy(TEST_KWARGS_TITLE) | {"entity_id": "notify.test"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    entity.send_message_mock_calls.assert_called_once_with(
+        TEST_KWARGS_TITLE[notify.ATTR_MESSAGE],
+        title=TEST_KWARGS_TITLE[notify.ATTR_TITLE],
+    )
+
+
+@pytest.mark.parametrize(
     ("state", "init_state"),
     [
         ("2021-01-01T23:59:59+00:00", "2021-01-01T23:59:59+00:00"),
@@ -202,12 +256,12 @@ async def test_name(hass: HomeAssistant, config_flow_fixture: None) -> None:
 
     state = hass.states.get(entity1.entity_id)
     assert state
-    assert state.attributes == {}
+    assert state.attributes == {"supported_features": NotifyEntityFeature(0)}
 
     state = hass.states.get(entity2.entity_id)
     assert state
-    assert state.attributes == {}
+    assert state.attributes == {"supported_features": NotifyEntityFeature(0)}
 
     state = hass.states.get(entity3.entity_id)
     assert state
-    assert state.attributes == {}
+    assert state.attributes == {"supported_features": NotifyEntityFeature(0)}

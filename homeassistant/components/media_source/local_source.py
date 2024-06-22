@@ -257,7 +257,7 @@ class UploadMediaView(http.HomeAssistantView):
     async def post(self, request: web.Request) -> web.Response:
         """Handle upload."""
         # Increase max payload
-        request._client_max_size = MAX_UPLOAD_SIZE  # pylint: disable=protected-access
+        request._client_max_size = MAX_UPLOAD_SIZE  # noqa: SLF001
 
         try:
             data = self.schema(dict(await request.post()))

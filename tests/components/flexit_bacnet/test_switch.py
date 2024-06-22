@@ -16,8 +16,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
-from tests.components.flexit_bacnet import setup_with_selected_platforms
+from . import setup_with_selected_platforms
+
+from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "switch.device_name_electric_heater"
 
@@ -32,15 +33,8 @@ async def test_switches(
     """Test switch states are correctly collected from library."""
 
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SWITCH])
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
 
-    assert entity_entries
-    for entity_entry in entity_entries:
-        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
-        assert (state := hass.states.get(entity_entry.entity_id))
-        assert state == snapshot(name=f"{entity_entry.entity_id}-state")
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_switches_implementation(

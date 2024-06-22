@@ -740,7 +740,7 @@ class HomeKit:
             if acc is not None:
                 self.bridge.add_accessory(acc)
                 return acc
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Failed to create a HomeKit accessory for %s", state.entity_id
             )

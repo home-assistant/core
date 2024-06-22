@@ -5,7 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
-from reolink_aio.exceptions import ReolinkError
+from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
 
 from homeassistant.components.reolink import FIRMWARE_UPDATE_INTERVAL, const
 from homeassistant.config import async_process_ha_core_config
@@ -20,7 +20,14 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from .conftest import TEST_CAM_MODEL, TEST_HOST_MODEL, TEST_MAC, TEST_NVR_NAME
+from .conftest import (
+    TEST_CAM_MODEL,
+    TEST_HOST_MODEL,
+    TEST_MAC,
+    TEST_NVR_NAME,
+    TEST_UID,
+    TEST_UID_CAM,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -49,6 +56,11 @@ pytestmark = pytest.mark.usefixtures("reolink_connect", "reolink_platforms")
             "get_states",
             AsyncMock(side_effect=ReolinkError("Test error")),
             ConfigEntryState.SETUP_RETRY,
+        ),
+        (
+            "get_states",
+            AsyncMock(side_effect=CredentialsInvalidError("Test error")),
+            ConfigEntryState.SETUP_ERROR,
         ),
         (
             "supported",
@@ -173,44 +185,149 @@ async def test_cleanup_disconnected_cams(
     assert sorted(device_models) == sorted(expected_models)
 
 
-async def test_cleanup_deprecated_entities(
+@pytest.mark.parametrize(
+    (
+        "original_id",
+        "new_id",
+        "original_dev_id",
+        "new_dev_id",
+        "domain",
+        "support_uid",
+        "support_ch_uid",
+    ),
+    [
+        (
+            TEST_MAC,
+            f"{TEST_MAC}_firmware",
+            f"{TEST_MAC}",
+            f"{TEST_MAC}",
+            Platform.UPDATE,
+            False,
+            False,
+        ),
+        (
+            TEST_MAC,
+            f"{TEST_UID}_firmware",
+            f"{TEST_MAC}",
+            f"{TEST_UID}",
+            Platform.UPDATE,
+            True,
+            False,
+        ),
+        (
+            f"{TEST_MAC}_0_record_audio",
+            f"{TEST_UID}_0_record_audio",
+            f"{TEST_MAC}_ch0",
+            f"{TEST_UID}_ch0",
+            Platform.SWITCH,
+            True,
+            False,
+        ),
+        (
+            f"{TEST_MAC}_0_record_audio",
+            f"{TEST_MAC}_{TEST_UID_CAM}_record_audio",
+            f"{TEST_MAC}_ch0",
+            f"{TEST_MAC}_{TEST_UID_CAM}",
+            Platform.SWITCH,
+            False,
+            True,
+        ),
+        (
+            f"{TEST_MAC}_0_record_audio",
+            f"{TEST_UID}_{TEST_UID_CAM}_record_audio",
+            f"{TEST_MAC}_ch0",
+            f"{TEST_UID}_{TEST_UID_CAM}",
+            Platform.SWITCH,
+            True,
+            True,
+        ),
+        (
+            f"{TEST_UID}_0_record_audio",
+            f"{TEST_UID}_{TEST_UID_CAM}_record_audio",
+            f"{TEST_UID}_ch0",
+            f"{TEST_UID}_{TEST_UID_CAM}",
+            Platform.SWITCH,
+            True,
+            True,
+        ),
+    ],
+)
+async def test_migrate_entity_ids(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     reolink_connect: MagicMock,
     entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    original_id: str,
+    new_id: str,
+    original_dev_id: str,
+    new_dev_id: str,
+    domain: Platform,
+    support_uid: bool,
+    support_ch_uid: bool,
 ) -> None:
-    """Test deprecated ir_lights light entity is cleaned."""
-    reolink_connect.channels = [0]
-    ir_id = f"{TEST_MAC}_0_ir_lights"
+    """Test entity ids that need to be migrated."""
 
-    entity_registry.async_get_or_create(
-        domain=Platform.LIGHT,
-        platform=const.DOMAIN,
-        unique_id=ir_id,
-        config_entry=config_entry,
-        suggested_object_id=ir_id,
+    def mock_supported(ch, capability):
+        if capability == "UID" and ch is None:
+            return support_uid
+        if capability == "UID":
+            return support_ch_uid
+        return True
+
+    reolink_connect.channels = [0]
+    reolink_connect.supported = mock_supported
+
+    dev_entry = device_registry.async_get_or_create(
+        identifiers={(const.DOMAIN, original_dev_id)},
+        config_entry_id=config_entry.entry_id,
         disabled_by=None,
     )
 
-    assert entity_registry.async_get_entity_id(Platform.LIGHT, const.DOMAIN, ir_id)
-    assert (
-        entity_registry.async_get_entity_id(Platform.SWITCH, const.DOMAIN, ir_id)
-        is None
+    entity_registry.async_get_or_create(
+        domain=domain,
+        platform=const.DOMAIN,
+        unique_id=original_id,
+        config_entry=config_entry,
+        suggested_object_id=original_id,
+        disabled_by=None,
+        device_id=dev_entry.id,
     )
 
-    # setup CH 0 and NVR switch entities/device
-    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
+    assert entity_registry.async_get_entity_id(domain, const.DOMAIN, original_id)
+    assert entity_registry.async_get_entity_id(domain, const.DOMAIN, new_id) is None
+
+    assert device_registry.async_get_device(
+        identifiers={(const.DOMAIN, original_dev_id)}
+    )
+    if new_dev_id != original_dev_id:
+        assert (
+            device_registry.async_get_device(identifiers={(const.DOMAIN, new_dev_id)})
+            is None
+        )
+
+    # setup CH 0 and host entities/device
+    with patch("homeassistant.components.reolink.PLATFORMS", [domain]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert (
-        entity_registry.async_get_entity_id(Platform.LIGHT, const.DOMAIN, ir_id) is None
+        entity_registry.async_get_entity_id(domain, const.DOMAIN, original_id) is None
     )
-    assert entity_registry.async_get_entity_id(Platform.SWITCH, const.DOMAIN, ir_id)
+    assert entity_registry.async_get_entity_id(domain, const.DOMAIN, new_id)
+
+    if new_dev_id != original_dev_id:
+        assert (
+            device_registry.async_get_device(
+                identifiers={(const.DOMAIN, original_dev_id)}
+            )
+            is None
+        )
+    assert device_registry.async_get_device(identifiers={(const.DOMAIN, new_dev_id)})
 
 
 async def test_no_repair_issue(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test no repairs issue is raised when http local url is used."""
     await async_process_ha_core_config(
@@ -220,7 +337,6 @@ async def test_no_repair_issue(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    issue_registry = ir.async_get(hass)
     assert (const.DOMAIN, "https_webhook") not in issue_registry.issues
     assert (const.DOMAIN, "webhook_url") not in issue_registry.issues
     assert (const.DOMAIN, "enable_port") not in issue_registry.issues
@@ -229,7 +345,7 @@ async def test_no_repair_issue(
 
 
 async def test_https_repair_issue(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test repairs issue is raised when https local url is used."""
     await async_process_ha_core_config(
@@ -248,12 +364,11 @@ async def test_https_repair_issue(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    issue_registry = ir.async_get(hass)
     assert (const.DOMAIN, "https_webhook") in issue_registry.issues
 
 
 async def test_ssl_repair_issue(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test repairs issue is raised when global ssl certificate is used."""
     assert await async_setup_component(hass, "webhook", {})
@@ -275,7 +390,6 @@ async def test_ssl_repair_issue(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    issue_registry = ir.async_get(hass)
     assert (const.DOMAIN, "ssl") in issue_registry.issues
 
 
@@ -285,6 +399,7 @@ async def test_port_repair_issue(
     config_entry: MockConfigEntry,
     reolink_connect: MagicMock,
     protocol: str,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test repairs issue is raised when auto enable of ports fails."""
     reolink_connect.set_net_port = AsyncMock(side_effect=ReolinkError("Test error"))
@@ -295,12 +410,11 @@ async def test_port_repair_issue(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    issue_registry = ir.async_get(hass)
     assert (const.DOMAIN, "enable_port") in issue_registry.issues
 
 
 async def test_webhook_repair_issue(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test repairs issue is raised when the webhook url is unreachable."""
     with (
@@ -315,7 +429,6 @@ async def test_webhook_repair_issue(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    issue_registry = ir.async_get(hass)
     assert (const.DOMAIN, "webhook_url") in issue_registry.issues
 
 
@@ -323,11 +436,11 @@ async def test_firmware_repair_issue(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     reolink_connect: MagicMock,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test firmware issue is raised when too old firmware is used."""
     reolink_connect.sw_version_update_required = True
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    issue_registry = ir.async_get(hass)
-    assert (const.DOMAIN, "firmware_update") in issue_registry.issues
+    assert (const.DOMAIN, "firmware_update_host") in issue_registry.issues

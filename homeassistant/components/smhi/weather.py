@@ -13,6 +13,7 @@ from smhi import Smhi
 from smhi.smhi_lib import SmhiForecast, SmhiForecastException
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
     ATTR_CONDITION_EXCEPTIONAL,
     ATTR_CONDITION_FOG,
@@ -55,11 +56,11 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import aiohttp_client, sun
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
-from homeassistant.util import Throttle, slugify
+from homeassistant.util import Throttle, dt as dt_util, slugify
 
 from .const import ATTR_SMHI_THUNDER_PROBABILITY, DOMAIN, ENTITY_ID_SENSOR_FORMAT
 
@@ -189,6 +190,10 @@ class SmhiWeather(WeatherEntity):
             self._attr_native_wind_gust_speed = self._forecast_daily[0].wind_gust
             self._attr_cloud_coverage = self._forecast_daily[0].cloudiness
             self._attr_condition = CONDITION_MAP.get(self._forecast_daily[0].symbol)
+            if self._attr_condition == ATTR_CONDITION_SUNNY and not sun.is_up(
+                self.hass
+            ):
+                self._attr_condition = ATTR_CONDITION_CLEAR_NIGHT
         await self.async_update_listeners(("daily", "hourly"))
 
     async def retry_update(self, _: datetime) -> None:
@@ -206,6 +211,10 @@ class SmhiWeather(WeatherEntity):
 
         for forecast in forecast_data[1:]:
             condition = CONDITION_MAP.get(forecast.symbol)
+            if condition == ATTR_CONDITION_SUNNY and not sun.is_up(
+                self.hass, forecast.valid_time.replace(tzinfo=dt_util.UTC)
+            ):
+                condition = ATTR_CONDITION_CLEAR_NIGHT
 
             data.append(
                 {
