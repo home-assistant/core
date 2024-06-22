@@ -71,4 +71,5 @@ def mock_pyloadapi() -> Generator[AsyncMock, None, None]:
                 "captcha": False,
             }
         )
+        client.free_space.return_value = 99999999999
         yield client

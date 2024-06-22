@@ -7,7 +7,7 @@ import math
 import os
 from pathlib import Path
 import time
-from typing import NamedTuple
+from typing import Any, NamedTuple
 from unittest.mock import Mock, patch
 
 import pytest
@@ -325,10 +325,10 @@ def test_find_unserializable_data() -> None:
     ) == {"$[0](Event: bad_event).data.bad_attribute": bad_data}
 
     class BadData:
-        def __init__(self):
+        def __init__(self) -> None:
             self.bla = bad_data
 
-        def as_dict(self):
+        def as_dict(self) -> dict[str, Any]:
             return {"bla": self.bla}
 
     assert find_paths_unserializable_data(

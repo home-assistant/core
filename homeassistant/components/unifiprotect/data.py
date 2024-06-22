@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta
 from functools import partial
@@ -43,7 +44,7 @@ from .const import (
     DISPATCH_CHANNELS,
     DOMAIN,
 )
-from .utils import async_dispatch_id as _ufpd, async_get_devices_by_type
+from .utils import async_get_devices_by_type
 
 _LOGGER = logging.getLogger(__name__)
 type ProtectDeviceType = ProtectAdoptableDeviceModel | NVR
@@ -58,6 +59,12 @@ def async_last_update_was_successful(
     return hasattr(entry, "runtime_data") and entry.runtime_data.last_update_success
 
 
+@callback
+def _async_dispatch_id(entry: UFPConfigEntry, dispatch: str) -> str:
+    """Generate entry specific dispatch ID."""
+    return f"{DOMAIN}.{entry.entry_id}.{dispatch}"
+
+
 class ProtectData:
     """Coordinate updates."""
 
@@ -69,21 +76,21 @@ class ProtectData:
         entry: UFPConfigEntry,
     ) -> None:
         """Initialize an subscriber."""
-        super().__init__()
-
-        self._hass = hass
         self._entry = entry
         self._hass = hass
         self._update_interval = update_interval
-        self._subscriptions: dict[str, list[Callable[[ProtectDeviceType], None]]] = {}
+        self._subscriptions: defaultdict[
+            str, set[Callable[[ProtectDeviceType], None]]
+        ] = defaultdict(set)
         self._pending_camera_ids: set[str] = set()
         self._unsub_interval: CALLBACK_TYPE | None = None
         self._unsub_websocket: CALLBACK_TYPE | None = None
         self._auth_failures = 0
-
         self.last_update_success = False
         self.api = protect
-        self._adopt_signal = _ufpd(self._entry, DISPATCH_ADOPT)
+        self.adopt_signal = _async_dispatch_id(entry, DISPATCH_ADOPT)
+        self.add_signal = _async_dispatch_id(entry, DISPATCH_ADD)
+        self.channels_signal = _async_dispatch_id(entry, DISPATCH_CHANNELS)
 
     @property
     def disable_stream(self) -> bool:
@@ -101,7 +108,7 @@ class ProtectData:
     ) -> None:
         """Add an callback for on device adopt."""
         self._entry.async_on_unload(
-            async_dispatcher_connect(self._hass, self._adopt_signal, add_callback)
+            async_dispatcher_connect(self._hass, self.adopt_signal, add_callback)
         )
 
     def get_by_types(
@@ -184,12 +191,10 @@ class ProtectData:
     def _async_add_device(self, device: ProtectAdoptableDeviceModel) -> None:
         if device.is_adopted_by_us:
             _LOGGER.debug("Device adopted: %s", device.id)
-            async_dispatcher_send(
-                self._hass, _ufpd(self._entry, DISPATCH_ADOPT), device
-            )
+            async_dispatcher_send(self._hass, self.adopt_signal, device)
         else:
             _LOGGER.debug("New device detected: %s", device.id)
-            async_dispatcher_send(self._hass, _ufpd(self._entry, DISPATCH_ADD), device)
+            async_dispatcher_send(self._hass, self.add_signal, device)
 
     @callback
     def _async_remove_device(self, device: ProtectAdoptableDeviceModel) -> None:
@@ -214,9 +219,7 @@ class ProtectData:
             and "channels" in changed_data
         ):
             self._pending_camera_ids.remove(device.id)
-            async_dispatcher_send(
-                self._hass, _ufpd(self._entry, DISPATCH_CHANNELS), device
-            )
+            async_dispatcher_send(self._hass, self.channels_signal, device)
 
         # trigger update for all Cameras with LCD screens when NVR Doorbell settings updates
         if "doorbell_settings" in changed_data:
@@ -302,7 +305,7 @@ class ProtectData:
         )
 
     @callback
-    def async_subscribe_device_id(
+    def async_subscribe(
         self, mac: str, update_callback: Callable[[ProtectDeviceType], None]
     ) -> CALLBACK_TYPE:
         """Add an callback subscriber."""
@@ -310,11 +313,11 @@ class ProtectData:
             self._unsub_interval = async_track_time_interval(
                 self._hass, self._async_poll, self._update_interval
             )
-        self._subscriptions.setdefault(mac, []).append(update_callback)
-        return partial(self.async_unsubscribe_device_id, mac, update_callback)
+        self._subscriptions[mac].add(update_callback)
+        return partial(self._async_unsubscribe, mac, update_callback)
 
     @callback
-    def async_unsubscribe_device_id(
+    def _async_unsubscribe(
         self, mac: str, update_callback: Callable[[ProtectDeviceType], None]
     ) -> None:
         """Remove a callback subscriber."""
@@ -328,16 +331,17 @@ class ProtectData:
     @callback
     def _async_signal_device_update(self, device: ProtectDeviceType) -> None:
         """Call the callbacks for a device_id."""
-        if not (subscriptions := self._subscriptions.get(device.mac)):
+        mac = device.mac
+        if not (subscriptions := self._subscriptions.get(mac)):
             return
-        _LOGGER.debug("Updating device: %s (%s)", device.name, device.mac)
+        _LOGGER.debug("Updating device: %s (%s)", device.name, mac)
         for update_callback in subscriptions:
             update_callback(device)
 
 
 @callback
 def async_ufp_instance_for_config_entry_ids(
-    hass: HomeAssistant, config_entry_ids: set[str]
+    hass: HomeAssistant, config_entry_ids: list[str]
 ) -> ProtectApiClient | None:
     """Find the UFP instance for the config entry ids."""
     return next(
@@ -345,6 +349,7 @@ def async_ufp_instance_for_config_entry_ids(
             entry.runtime_data.api
             for entry_id in config_entry_ids
             if (entry := hass.config_entries.async_get_entry(entry_id))
+            and hasattr(entry, "runtime_data")
         ),
         None,
     )
