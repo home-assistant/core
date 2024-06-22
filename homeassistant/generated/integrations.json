@@ -3381,7 +3381,7 @@
           "integration_type": "hub",
           "config_flow": true,
           "iot_class": "local_polling",
-          "name": "Squeezebox (Logitech Media Server)"
+          "name": "Squeezebox (Lyrion Music Server)"
         }
       }
     },
