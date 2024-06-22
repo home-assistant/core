@@ -123,10 +123,12 @@ async def test_entry_changed(hass: HomeAssistant, platform) -> None:
     assert config_entry.entry_id in _get_device_config_entries(valid_entry)
 
 
-async def test_device_cleaning(hass: HomeAssistant) -> None:
+async def test_device_cleaning(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test for source entity device for Integration."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
 
     # Source entity device config entry
     source_config_entry = MockConfigEntry()
