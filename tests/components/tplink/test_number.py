@@ -97,7 +97,7 @@ async def test_number_children(
         assert child_device.via_device_id == device.id
 
 
-async def test_number_limits_and_set(
+async def test_number_set(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test a number entity limits and setting values."""
