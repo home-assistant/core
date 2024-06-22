@@ -244,7 +244,7 @@ async def async_setup_platform(
     sources = config[CONF_SOURCES]
 
     @callback
-    def async_onkyo_update_callback(message: tuple[str, str, Any], origin: str):
+    def async_onkyo_update_callback(message: tuple[str, str, Any], origin: str) -> None:
         """Process new message from receiver."""
         receiver = receivers[origin]
         _LOGGER.debug("Received update callback from %s: %s", receiver.name, message)
@@ -265,7 +265,7 @@ async def async_setup_platform(
             async_add_entities([zone_entity])
 
     @callback
-    def async_onkyo_connect_callback(origin: str):
+    def async_onkyo_connect_callback(origin: str) -> None:
         """Receiver (re)connected."""
         receiver = receivers[origin]
         _LOGGER.debug("Receiver (re)connected: %s", receiver.name)
@@ -273,7 +273,7 @@ async def async_setup_platform(
         for entity in entities[origin].values():
             entity.backfill_state()
 
-    def setup_receiver(receiver: pyeiscp.Connection):
+    def setup_receiver(receiver: pyeiscp.Connection) -> None:
         KNOWN_HOSTS.append(receiver.host)
 
         # Store the receiver object and create a dictionary to store its entities.
@@ -344,7 +344,6 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         receiver_max_volume: int,
     ) -> None:
         """Initialize the Onkyo Receiver."""
-        super().__init__()
         self._receiver = receiver
         name = receiver.name
         self._attr_name = f"{name}{' ' + ZONES[zone] if zone != 'main' else ''}"
@@ -396,12 +395,12 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         return SUPPORT_ONKYO_WO_VOLUME
 
     @callback
-    def _update_receiver(self, propname, value):
+    def _update_receiver(self, propname: str, value: Any) -> None:
         """Update a property in the receiver."""
         self._receiver.update_property(self._zone, propname, value)
 
     @callback
-    def _query_receiver(self, propname):
+    def _query_receiver(self, propname: str) -> None:
         """Cause the receiver to send an update about a property."""
         self._receiver.query_property(self._zone, propname)
 
@@ -470,7 +469,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                 self._update_receiver("preset", media_id)
 
     @callback
-    def backfill_state(self):
+    def backfill_state(self) -> None:
         """Get the receiver to send all the info we care about.
 
         Usually run only on connect, as we can otherwise rely on the
@@ -491,7 +490,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             self._query_receiver("selector")
 
     @callback
-    def process_update(self, update: tuple[str, str, Any]):
+    def process_update(self, update: tuple[str, str, Any]) -> None:
         """Store relevant updates so they can be queried later."""
         zone, command, value = update
         if zone != self._zone:
