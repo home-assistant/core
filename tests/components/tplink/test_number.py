@@ -35,8 +35,8 @@ async def test_number(hass: HomeAssistant, entity_registry: er.EntityRegistry) -
     already_migrated_config_entry.add_to_hass(hass)
     new_feature = _mocked_feature(
         10,
-        "some_number",
-        name="Some number",
+        "temperature_offset",
+        name="Temperature offset",
         type_=Feature.Type.Number,
         category=Feature.Category.Config,
         minimum_value=1,
@@ -47,10 +47,10 @@ async def test_number(hass: HomeAssistant, entity_registry: er.EntityRegistry) -
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "number.my_plug_some_number"
+    entity_id = "number.my_plug_temperature_offset"
     entity = entity_registry.async_get(entity_id)
     assert entity
-    assert entity.unique_id == f"{DEVICE_ID}_some_number"
+    assert entity.unique_id == f"{DEVICE_ID}_temperature_offset"
 
 
 async def test_number_children(
@@ -65,7 +65,7 @@ async def test_number_children(
     already_migrated_config_entry.add_to_hass(hass)
     new_feature = _mocked_feature(
         10,
-        "some_number",
+        "temperature_offset",
         name="Some number",
         type_=Feature.Type.Number,
         category=Feature.Category.Config,
@@ -81,16 +81,16 @@ async def test_number_children(
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "number.my_plug_some_number"
+    entity_id = "number.my_plug_temperature_offset"
     entity = entity_registry.async_get(entity_id)
     assert entity
     device = device_registry.async_get(entity.device_id)
 
     for plug_id in range(2):
-        child_entity_id = f"number.my_plug_plug{plug_id}_some_number"
+        child_entity_id = f"number.my_plug_plug{plug_id}_temperature_offset"
         child_entity = entity_registry.async_get(child_entity_id)
         assert child_entity
-        assert child_entity.unique_id == f"PLUG{plug_id}DEVICEID_some_number"
+        assert child_entity.unique_id == f"PLUG{plug_id}DEVICEID_temperature_offset"
         assert child_entity.device_id != entity.device_id
         child_device = device_registry.async_get(child_entity.device_id)
         assert child_device
@@ -107,7 +107,7 @@ async def test_number_set(
     already_migrated_config_entry.add_to_hass(hass)
     new_feature = _mocked_feature(
         10,
-        "some_number",
+        "temperature_offset",
         name="Some number",
         type_=Feature.Type.Number,
         category=Feature.Category.Config,
@@ -119,10 +119,10 @@ async def test_number_set(
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "number.my_plug_some_number"
+    entity_id = "number.my_plug_temperature_offset"
     entity = entity_registry.async_get(entity_id)
     assert entity
-    assert entity.unique_id == f"{DEVICE_ID}_some_number"
+    assert entity.unique_id == f"{DEVICE_ID}_temperature_offset"
 
     state = hass.states.get(entity_id)
     assert state is not None
