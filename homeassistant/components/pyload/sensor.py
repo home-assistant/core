@@ -34,9 +34,10 @@ from homeassistant.const import (
     CONF_USERNAME,
     UnitOfDataRate,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import PyLoadConfigEntry
@@ -87,6 +88,21 @@ async def async_setup_platform(
 ) -> None:
     """Import config from yaml."""
 
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        breaks_in_ha_version="2025.2.0",
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "pyLoad",
+        },
+    )
+
     await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=config
     )
@@ -106,7 +122,7 @@ async def async_setup_entry(
             PyLoadSensor(
                 api=pyloadapi,
                 entity_description=description,
-                client_name=entry.data[CONF_NAME],
+                client_name=entry.title,
                 entry_id=entry.entry_id,
             )
             for description in SENSOR_DESCRIPTIONS

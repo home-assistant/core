@@ -20,22 +20,17 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN, ISSUE_PLACEHOLDER
+from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME, description={"suggested_value": DEFAULT_NAME}): str,
-        vol.Required(
-            CONF_HOST, description={"suggested_value": "homeassistant.local"}
-        ): str,
+        vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Required(CONF_SSL, default=False): cv.boolean,
         vol.Required(CONF_VERIFY_SSL, default=True): bool,
@@ -44,13 +39,19 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
+STEP_USER_SUGGESTED_VALUES = {
+    CONF_HOST: "homeassistant.local",
+    CONF_USERNAME: "pyload",
+    CONF_PASSWORD: "pyload",
+}
+
 
 async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]) -> None:
     """Validate the user input and try to connect to PyLoad."""
 
     session = async_create_clientsession(
         hass,
-        user_input.get(CONF_VERIFY_SSL, True),
+        user_input[CONF_VERIFY_SSL],
         cookie_jar=CookieJar(unsafe=True),
     )
     host = user_input[CONF_HOST]
@@ -71,6 +72,9 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for pyLoad."""
 
     VERSION = 1
+    # store values from yaml import so we can use them as
+    # suggested values when the configuration step is resumed
+    yaml_config: dict[str, Any] | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -78,6 +82,9 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
             try:
                 await validate_input(self.hass, user_input)
             except (CannotConnect, ParserError):
@@ -88,26 +95,25 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                self._async_abort_entries_match(
-                    {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
-                )
+                title = user_input.pop(CONF_NAME, None)
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
+                    title=title or DEFAULT_NAME, data=user_input
                 )
 
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, user_input
+                STEP_USER_DATA_SCHEMA,
+                user_input or self.yaml_config or STEP_USER_SUGGESTED_VALUES,
             ),
             errors=errors,
         )
 
     async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
         """Import config from yaml."""
-        # in config yaml all variables are optional, but some have a default value
-        config = {
-            CONF_NAME: import_info.get(CONF_NAME, DEFAULT_NAME),
+
+        self.yaml_config = {
+            CONF_NAME: import_info.get(CONF_NAME),
             CONF_HOST: import_info.get(CONF_HOST, DEFAULT_HOST),
             CONF_PASSWORD: import_info.get(CONF_PASSWORD, ""),
             CONF_PORT: import_info.get(CONF_PORT, DEFAULT_PORT),
@@ -116,39 +122,4 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_VERIFY_SSL: False,
         }
 
-        result = await self.async_step_user(config)
-        # Raise an issue that this is deprecated and has been imported
-        if (
-            result.get("type") == FlowResultType.CREATE_ENTRY
-            or result.get("reason") == "already_configured"
-        ):
-            async_create_issue(
-                self.hass,
-                HOMEASSISTANT_DOMAIN,
-                f"deprecated_yaml_{DOMAIN}",
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                breaks_in_ha_version="2025.2.0",
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_yaml",
-                translation_placeholders={
-                    "domain": DOMAIN,
-                    "integration_title": "pyLoad",
-                },
-            )
-        elif errors := result.get("errors"):
-            error = errors["base"]
-
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                f"deprecated_yaml_import_issue_{error}",
-                breaks_in_ha_version="2025.2.0",
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                severity=IssueSeverity.WARNING,
-                translation_key=f"deprecated_yaml_import_issue_{error}",
-                translation_placeholders=ISSUE_PLACEHOLDER,
-            )
-
-        return result
+        return await self.async_step_user(self.yaml_config)

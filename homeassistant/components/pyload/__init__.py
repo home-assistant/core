@@ -13,10 +13,11 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -34,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PyLoadConfigEntry) -> bo
 
     session = async_create_clientsession(
         hass,
-        verify_ssl=False,
+        verify_ssl=entry.data[CONF_VERIFY_SSL],
         cookie_jar=CookieJar(unsafe=True),
     )
     pyloadapi = PyLoadAPI(
@@ -47,13 +48,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: PyLoadConfigEntry) -> bo
     try:
         await pyloadapi.login()
     except CannotConnect as e:
-        raise PlatformNotReady(
+        raise ConfigEntryNotReady(
             "Unable to connect and retrieve data from pyLoad API"
         ) from e
     except ParserError as e:
-        raise PlatformNotReady("Unable to parse data from pyLoad API") from e
+        raise ConfigEntryNotReady("Unable to parse data from pyLoad API") from e
     except InvalidAuth as e:
-        raise PlatformNotReady(
+        raise ConfigEntryNotReady(
             f"Authentication failed for {entry.data[CONF_USERNAME]}, check your login credentials"
         ) from e
 

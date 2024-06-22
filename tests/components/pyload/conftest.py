@@ -1,13 +1,12 @@
 """Fixtures for pyLoad integration tests."""
 
 from collections.abc import Generator
-from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from pyloadapi.types import LoginResponse, StatusServerResponse
 import pytest
 
-from homeassistant.components.pyload.const import DOMAIN
+from homeassistant.components.pyload.const import DEFAULT_NAME, DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
@@ -23,20 +22,25 @@ from homeassistant.helpers.typing import ConfigType
 
 from tests.common import MockConfigEntry
 
+USER_INPUT = {
+    CONF_HOST: "pyload.local",
+    CONF_PASSWORD: "test-password",
+    CONF_PORT: 8000,
+    CONF_SSL: True,
+    CONF_USERNAME: "test-username",
+    CONF_VERIFY_SSL: False,
+}
 
-@pytest.fixture
-def userinput() -> dict[str, Any]:
-    """Return a userinput dict."""
-
-    return {
-        CONF_NAME: "pyLoad",
-        CONF_HOST: "pyload.local",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-        CONF_PORT: 8000,
-        CONF_SSL: True,
-        CONF_VERIFY_SSL: False,
-    }
+YAML_INPUT = {
+    CONF_HOST: "pyload.local",
+    CONF_MONITORED_VARIABLES: ["speed"],
+    CONF_NAME: "test-name",
+    CONF_PASSWORD: "test-password",
+    CONF_PLATFORM: "pyload",
+    CONF_PORT: 8000,
+    CONF_SSL: True,
+    CONF_USERNAME: "test-username",
+}
 
 
 @pytest.fixture
@@ -51,18 +55,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def pyload_config() -> ConfigType:
     """Mock pyload configuration entry."""
-    return {
-        "sensor": {
-            CONF_PLATFORM: "pyload",
-            CONF_HOST: "localhost",
-            CONF_PORT: 8000,
-            CONF_USERNAME: "username",
-            CONF_PASSWORD: "password",
-            CONF_SSL: True,
-            CONF_MONITORED_VARIABLES: ["speed"],
-            CONF_NAME: "pyload",
-        }
-    }
+    return {"sensor": YAML_INPUT}
 
 
 @pytest.fixture
@@ -110,6 +103,8 @@ def mock_pyloadapi() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture(name="config_entry")
-def mock_config_entry(userinput) -> MockConfigEntry:
+def mock_config_entry() -> MockConfigEntry:
     """Mock pyLoad configuration entry."""
-    return MockConfigEntry(domain=DOMAIN, data=userinput, entry_id="XXXXXXXXXXXXXX")
+    return MockConfigEntry(
+        domain=DOMAIN, title=DEFAULT_NAME, data=USER_INPUT, entry_id="XXXXXXXXXXXXXX"
+    )

@@ -1,43 +1,41 @@
 """Test the pyLoad config flow."""
 
-from typing import Any
 from unittest.mock import AsyncMock
 
 from pyloadapi.exceptions import CannotConnect, InvalidAuth, ParserError
 import pytest
 
-from homeassistant.components.pyload.const import DOMAIN
+from homeassistant.components.pyload.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_NAME
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-import homeassistant.helpers.issue_registry as ir
+
+from .conftest import USER_INPUT, YAML_INPUT
 
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("mock_pyloadapi")
 async def test_form(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    userinput: dict[str, Any],
+    mock_pyloadapi: AsyncMock,
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        userinput,
+        USER_INPUT,
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == userinput[CONF_NAME]
-    assert result["data"] == userinput
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
+    assert result["data"] == USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -53,7 +51,6 @@ async def test_form(
 async def test_form_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    userinput: dict[str, Any],
     mock_pyloadapi: AsyncMock,
     exception: Exception,
     expected_error: str,
@@ -66,30 +63,27 @@ async def test_form_errors(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        userinput,
+        USER_INPUT,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
 
     mock_pyloadapi.login.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        userinput,
+        USER_INPUT,
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == userinput[CONF_NAME]
-    assert result["data"] == userinput
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
+    assert result["data"] == USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mock_pyloadapi")
 async def test_flow_user_init_data_already_configured(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    userinput: dict[str, Any],
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_pyloadapi: AsyncMock
 ) -> None:
     """Test we abort user data set when entry is already configured."""
 
@@ -101,67 +95,26 @@ async def test_flow_user_init_data_already_configured(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input=userinput,
+        user_input=USER_INPUT,
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_pyloadapi")
 async def test_flow_import(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry, userinput: dict[str, Any]
+    hass: HomeAssistant,
+    mock_pyloadapi: AsyncMock,
 ) -> None:
     """Test that we can import a YAML config."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
-        data=userinput,
+        data=YAML_INPUT,
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == userinput[CONF_NAME]
-    assert result["data"] == userinput
-
-    assert issue_registry.async_get_issue(
-        domain=HOMEASSISTANT_DOMAIN,
-        issue_id=f"deprecated_yaml_{DOMAIN}",
-    )
-
-
-@pytest.mark.parametrize(
-    ("raise_error", "text_error"),
-    [
-        (CannotConnect(), "cannot_connect"),
-        (InvalidAuth(), "invalid_auth"),
-        (ParserError(), "cannot_connect"),
-        (IndexError(), "unknown"),
-    ],
-)
-async def test_flow_import_error(
-    hass: HomeAssistant,
-    mock_pyloadapi: AsyncMock,
-    raise_error,
-    text_error,
-    userinput: dict[str, Any],
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test that we can import a YAML config."""
-
-    mock_pyloadapi.login.side_effect = raise_error
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=userinput,
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": text_error}
-
-    assert issue_registry.async_get_issue(
-        domain=DOMAIN,
-        issue_id=f"deprecated_yaml_import_issue_{text_error}",
-    )
+    assert result["title"] == "test-name"
+    assert result["data"] == USER_INPUT
