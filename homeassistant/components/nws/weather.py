@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from functools import partial
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Required, TypedDict, cast, overload
+from typing import TYPE_CHECKING, Any, Literal, Required, TypedDict, cast, overload
 
 import voluptuous as vol
 
