@@ -170,7 +170,7 @@ async def _async_setup_entry(
     bootstrap: Bootstrap,
 ) -> None:
     await async_migrate_data(hass, entry, data_service.api, bootstrap)
-    data_service.async_setup(bootstrap)
+    data_service.async_setup()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     hass.http.register_view(ThumbnailProxyView(hass))
     hass.http.register_view(VideoProxyView(hass))

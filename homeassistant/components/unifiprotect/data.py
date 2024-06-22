@@ -13,7 +13,6 @@ from typing_extensions import Generator
 from uiprotect import ProtectApiClient
 from uiprotect.data import (
     NVR,
-    Bootstrap,
     Camera,
     Event,
     EventType,
@@ -131,7 +130,7 @@ class ProtectData:
         )
 
     @callback
-    def async_setup(self, bootstrap: Bootstrap) -> None:
+    def async_setup(self) -> None:
         """Subscribe and do the refresh."""
         self.last_update_success = True
         self._async_update_change(True, force_update=True)
