@@ -13,5 +13,15 @@
         }
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "voice": "Voice",
+          "model": "Model"
+        }
+      }
+    }
   }
 }

@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_MODEL, CONF_VOICE
+from .const import CONF_MODEL, CONF_VOICE, DEFAULT_MODEL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,15 +28,16 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up ElevenLabs tts platform via config entry."""
-    model_id = config_entry.options.get(CONF_MODEL, config_entry.data[CONF_MODEL])
+    model_id = config_entry.options.get(CONF_MODEL, config_entry.data.get(CONF_MODEL))
     default_voice_id = config_entry.options.get(
-        CONF_VOICE, config_entry.data[CONF_VOICE]
+        CONF_VOICE, config_entry.data.get(CONF_VOICE)
     )
     client = AsyncElevenLabs(api_key=config_entry.data[CONF_API_KEY])
 
     # Load model and voices here in async context
     model: Model | None = None
     models = await client.models.get_all()
+    model_id = model_id if model_id is not None else DEFAULT_MODEL
     for maybe_model in models:
         if maybe_model.model_id == model_id:
             model = maybe_model
@@ -61,7 +62,7 @@ class ElevenLabsTTSEntity(tts.TextToSpeechEntity):
         client: AsyncElevenLabs,
         model: Model,
         voices: list[Voice],
-        default_voice_id: str,
+        default_voice_id: str | None,
     ) -> None:
         """Init ElevenLabs TTS service."""
         self._client = client
@@ -105,10 +106,13 @@ class ElevenLabsTTSEntity(tts.TextToSpeechEntity):
     ) -> tts.TtsAudioType:
         """Load tts audio file from the engine."""
         _LOGGER.debug("Getting TTS audio for %s", message)
+        voice_id = options.get(tts.ATTR_VOICE, self._default_voice_id)
+        if voice_id is None:
+            voice_id = self._voices[0].voice_id
         try:
             audio = await self._client.generate(
                 text=message,
-                voice=options.get(tts.ATTR_VOICE, self._default_voice_id),
+                voice=voice_id,
                 model=self._model.model_id,
             )
             bytes_combined = b"".join([byte_seg async for byte_seg in audio])

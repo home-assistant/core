@@ -106,24 +106,11 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA_NO_AUTH, errors=errors
             )
-
+        # Set model id
+        user_input.setdefault(CONF_MODEL, DEFAULT_MODEL)
         self.user_info = user_input
-        return await self.async_step_voice()
-
-    async def async_step_voice(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the voice selection step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="voice", data_schema=self._get_user_schema_authenticated()
-            )
-        # Add api_key to user input
-        assert self.user_info is not None
-        user_input[CONF_API_KEY] = self.user_info[CONF_API_KEY]
-
         return self.async_create_entry(
-            title=self.models[user_input[CONF_MODEL]], data=user_input
+            title=f"ElevenLabs {self.models[user_input[CONF_MODEL]]}", data=user_input
         )
 
     @staticmethod
@@ -145,29 +132,28 @@ class ElevenLabsOptionsFlow(OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
         self.api_key: str = self.config_entry.data[CONF_API_KEY]
-        self.voices_models_loaded = False
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
-        if not self.voices_models_loaded:
+        if not self.voices or not self.models:
             self.voices, self.models = await get_voices_models(self.api_key)
-            self.voices_models_loaded = True
 
         assert self.models and self.voices
 
         if user_input is not None:
             return self.async_create_entry(
-                title=self.models[user_input[CONF_MODEL]], data=user_input
+                title=f"ElevenLabs {self.models[user_input[CONF_MODEL]]}",
+                data=user_input,
             )
 
         options: dict[str, str] = {
             CONF_MODEL: self.config_entry.options.get(
-                CONF_MODEL, self.config_entry.data[CONF_MODEL]
+                CONF_MODEL, self.config_entry.data.get(CONF_MODEL)
             ),
             CONF_VOICE: self.config_entry.options.get(
-                CONF_VOICE, self.config_entry.data[CONF_VOICE]
+                CONF_VOICE, self.config_entry.data.get(CONF_VOICE)
             ),
         }
 

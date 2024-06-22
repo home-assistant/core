@@ -7,6 +7,10 @@ from elevenlabs.core import ApiError
 from elevenlabs.types import GetVoicesResponse, LanguageResponse, Model, Voice
 import pytest
 
+from homeassistant.components.elevenlabs.const import DEFAULT_MODEL
+
+from tests.common import MockConfigEntry
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
@@ -33,8 +37,7 @@ def mock_async_client() -> Generator[AsyncMock, None, None]:
             ),
         ]
     )
-
-    client_mock.models.get_all.return_value = [
+    models = [
         Model(
             model_id=f"model{i+1}",
             name=f"Model {i+1}",
@@ -48,7 +51,20 @@ def mock_async_client() -> Generator[AsyncMock, None, None]:
         )
         for i in range(2)
     ]
-
+    models.append(
+        Model(
+            model_id=DEFAULT_MODEL,
+            name=DEFAULT_MODEL,
+            can_do_text_to_speech=True,
+            languages=[
+                LanguageResponse(language_id="en", name="English"),
+                LanguageResponse(language_id="de", name="German"),
+                LanguageResponse(language_id="es", name="Spanish"),
+                LanguageResponse(language_id="ja", name="Japanese"),
+            ],
+        )
+    )
+    client_mock.models.get_all.return_value = models
     with patch(
         "elevenlabs.client.AsyncElevenLabs", return_value=client_mock
     ) as mock_async_client:
@@ -67,10 +83,12 @@ def mock_async_client_fail() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_async_generate() -> Generator[AsyncMock, None, None]:
-    """Override async ElevenLabs generate."""
-    with patch(
-        "elevenlabs.client.AsyncElevenLabs.generate",
-        return_value=AsyncMock(),
-    ) as mock_generate:
-        yield mock_generate
+def mock_entry() -> MockConfigEntry:
+    """Mock a config entry."""
+    return MockConfigEntry(
+        domain="elevenlabs",
+        data={
+            "api_key": "api_key",
+            "model": "model1",
+        },
+    )
