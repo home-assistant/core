@@ -77,5 +77,85 @@
         }
       }
     }
+  },
+  "services": {
+    "set_dehumidity": {
+      "name": "Set target dehumidity",
+      "description": "Set target dehumidity of climate device.",
+      "fields": {
+        "dehumidity": {
+          "name": "Dehumidity",
+          "description": "New target dehumidity for climate device."
+        }
+      }
+    },
+    "trigger_air_cleaning_event": {
+      "name": "Trigger air cleaning event",
+      "description": "Trigger air cleaning event of climate device.",
+      "fields": {
+        "event": {
+          "name": "Event",
+          "description": "New air cleaning event for climate device."
+        }
+      }
+    },
+    "cancel_air_cleaning_event": {
+      "name": "Cancel air cleaning event",
+      "description": "Cancel air cleaning event of climate device."
+    },
+    "set_air_cleaning_mode": {
+      "name": "Set air cleaning mode",
+      "description": "Set the air cleaning mode of climate device.",
+      "fields": {
+        "mode": {
+          "name": "Mode",
+          "description": "New air cleaning mode."
+        }
+      }
+    },
+    "toggle_air_cleaning_mode": {
+      "name": "Toggle air cleaning mode",
+      "description": "Toggle the air cleaning mode of climate device.",
+      "fields": {
+        "mode": {
+          "name": "Mode",
+          "description": "New air cleaning mode."
+        }
+      }
+    },
+    "trigger_fresh_air_event": {
+      "name": "Trigger fresh air event",
+      "description": "Trigger fresh air event of climate device.",
+      "fields": {
+        "event": {
+          "name": "Event",
+          "description": "New fresh air event for climate device."
+        }
+      }
+    },
+    "cancel_fresh_air_event": {
+      "name": "Cancel fresh air event",
+      "description": "Cancel fresh air event of climate device."
+    },
+    "set_fresh_air_mode": {
+      "name": "Set fresh air mode",
+      "description": "Set the fresh air mode of climate device.",
+      "fields": {
+        "mode": {
+          "name": "Mode",
+          "description": "New fresh air mode."
+        }
+      }
+    },
+    "toggle_fresh_air_mode": {
+      "name": "Toggle fresh air mode",
+      "description": "Toggle the fresh air mode of climate device.",
+      "fields": {
+        "mode": {
+          "name": "Mode",
+          "description": "New fresh air mode."
+        }
+      }
+    }
   }
 }
