@@ -2174,7 +2174,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==1.20.0
+uiprotect==3.1.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
