@@ -3,18 +3,12 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import logging
 from typing import Any
 
 from pyemoncms import EmoncmsClient
 import voluptuous as vol
 
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
-    SensorDeviceClass,
-    SensorEntity,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_ID,
@@ -33,17 +27,17 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import (
+    ATTR_FEEDID,
+    ATTR_FEEDNAME,
+    ATTR_LASTUPDATETIME,
+    ATTR_LASTUPDATETIMESTR,
+    ATTR_SIZE,
+    ATTR_TAG,
+    ATTR_USERID,
+    SENSORS,
+)
 from .coordinator import EmoncmsCoordinator
-
-_LOGGER = logging.getLogger(__name__)
-
-ATTR_FEEDID = "FeedId"
-ATTR_FEEDNAME = "FeedName"
-ATTR_LASTUPDATETIME = "LastUpdated"
-ATTR_LASTUPDATETIMESTR = "LastUpdatedStr"
-ATTR_SIZE = "Size"
-ATTR_TAG = "Tag"
-ATTR_USERID = "UserId"
 
 CONF_EXCLUDE_FEEDID = "exclude_feed_id"
 CONF_ONLY_INCLUDE_FEEDID = "include_only_feed_id"
@@ -164,30 +158,11 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._sensorid = sensorid
 
-        if unit_of_measurement in ("kWh", "Wh"):
-            self._attr_device_class = SensorDeviceClass.ENERGY
-            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        elif unit_of_measurement == "W":
-            self._attr_device_class = SensorDeviceClass.POWER
-            self._attr_state_class = SensorStateClass.MEASUREMENT
-        elif unit_of_measurement == "V":
-            self._attr_device_class = SensorDeviceClass.VOLTAGE
-            self._attr_state_class = SensorStateClass.MEASUREMENT
-        elif unit_of_measurement == "A":
-            self._attr_device_class = SensorDeviceClass.CURRENT
-            self._attr_state_class = SensorStateClass.MEASUREMENT
-        elif unit_of_measurement == "VA":
-            self._attr_device_class = SensorDeviceClass.APPARENT_POWER
-            self._attr_state_class = SensorStateClass.MEASUREMENT
-        elif unit_of_measurement in ("°C", "°F", "K"):
-            self._attr_device_class = SensorDeviceClass.TEMPERATURE
-            self._attr_state_class = SensorStateClass.MEASUREMENT
-        elif unit_of_measurement == "Hz":
-            self._attr_device_class = SensorDeviceClass.FREQUENCY
-            self._attr_state_class = SensorStateClass.MEASUREMENT
-        elif unit_of_measurement == "hPa":
-            self._attr_device_class = SensorDeviceClass.PRESSURE
-            self._attr_state_class = SensorStateClass.MEASUREMENT
+        params = SENSORS.get(unit_of_measurement)
+        if params is not None:
+            self._attr_device_class = params.device_class
+            self._attr_state_class = params.state_class
+
         self._update_attributes(elem)
 
     def _update_attributes(self, elem: dict[str, Any]) -> None:
