@@ -155,34 +155,6 @@ async def test_sensor_unique_id(
         assert entity_registry.async_get(sensor_entity_id).unique_id == value
 
 
-async def test_new_sensor(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test a sensor unique ids."""
-    already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
-    )
-    already_migrated_config_entry.add_to_hass(hass)
-    new_feature = _mocked_feature(
-        5.2,
-        "consumption_this_fortnight",
-        name="Consumption for fortnight",
-        type_=Feature.Type.Sensor,
-        category=Feature.Category.Primary,
-        unit="A",
-        precision_hint=2,
-    )
-    plug = _mocked_device(alias="my_plug", features=[new_feature])
-    with _patch_discovery(device=plug), _patch_connect(device=plug):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
-        await hass.async_block_till_done()
-
-    entity_id = "sensor.my_plug_consumption_for_fortnight"
-    entity = entity_registry.async_get(entity_id)
-    assert entity
-    assert entity.unique_id == f"{DEVICE_ID}_consumption_this_fortnight"
-
-
 async def test_sensor_children(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -193,10 +165,12 @@ async def test_sensor_children(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    new_feature = _mocked_feature(
+    feature = _mocked_feature(
         5.2,
-        "consumption_this_fortnight",
-        name="Consumption for fortnight",
+        "consumption_this_month",
+        # integration should ignore name and use the value from strings.json:
+        # This month's consumption
+        name="Consumption for month",
         type_=Feature.Type.Sensor,
         category=Feature.Category.Primary,
         unit="A",
@@ -204,26 +178,23 @@ async def test_sensor_children(
     )
     plug = _mocked_device(
         alias="my_plug",
-        features=[new_feature],
-        children=_mocked_strip_children(features=[new_feature]),
+        features=[feature],
+        children=_mocked_strip_children(features=[feature]),
     )
     with _patch_discovery(device=plug), _patch_connect(device=plug):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "sensor.my_plug_consumption_for_fortnight"
+    entity_id = "sensor.my_plug_this_month_s_consumption"
     entity = entity_registry.async_get(entity_id)
     assert entity
     device = device_registry.async_get(entity.device_id)
 
     for plug_id in range(2):
-        child_entity_id = f"sensor.my_plug_plug{plug_id}_consumption_for_fortnight"
+        child_entity_id = f"sensor.my_plug_plug{plug_id}_this_month_s_consumption"
         child_entity = entity_registry.async_get(child_entity_id)
         assert child_entity
-        assert (
-            child_entity.unique_id
-            == f"PLUG{plug_id}DEVICEID_consumption_this_fortnight"
-        )
+        assert child_entity.unique_id == f"PLUG{plug_id}DEVICEID_consumption_this_month"
         assert child_entity.device_id != entity.device_id
         child_device = device_registry.async_get(child_entity.device_id)
         assert child_device

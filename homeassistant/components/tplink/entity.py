@@ -260,20 +260,17 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
     @classmethod
     def _description_for_feature[_D: EntityDescription](
         cls,
-        desc_cls: type[_D],
         feature: Feature,
         descriptions: Mapping[str, _D],
         *,
         child_alias: str | None = None,
-    ) -> _D:
+    ) -> _D | None:
         """Return description object for the given feature.
 
         This is responsible for setting the common parameters & deciding based on feature id
         which additional parameters are passed.
         """
 
-        is_debug_feature = feature.category is Feature.Category.Debug
-        category = cls._category_for_feature(feature)
         if descriptions and (desc := descriptions.get(feature.id)):
             translation_key: str | None = feature.id
             # HA logic is to name entities based on the following logic:
@@ -287,101 +284,112 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
                 translation_key = None
                 entity_name = child_alias  # if None will use device name
 
-            desc = replace(
+            return replace(
                 desc,
                 translation_key=translation_key,
                 name=entity_name,  # if undefined will use translation key
-                entity_category=category,
+                entity_category=cls._category_for_feature(feature),
                 # enabled_default can be overridden to False in the description
-                entity_registry_enabled_default=(not is_debug_feature)
+                entity_registry_enabled_default=feature.category
+                is not Feature.Category.Debug
                 and desc.entity_registry_enabled_default,
             )
-        else:
-            desc = desc_cls(
-                key=feature.id,
-                name=feature.name,
-                icon=feature.icon,
-                entity_category=category,
-                entity_registry_enabled_default=not is_debug_feature,
+
+        _LOGGER.info(
+            "Device feature: %s (%s) needs an entity description defined in HA",
+            feature.name,
+            feature.id,
+        )
+        return None
+
+    @classmethod
+    def _entities_for_device[
+        _E: CoordinatedTPLinkFeatureEntity,
+        _D: TPLinkFeatureEntityDescription,
+    ](
+        cls,
+        device: Device,
+        coordinator: TPLinkDataUpdateCoordinator,
+        *,
+        feature_type: Feature.Type,
+        entity_class: type[_E],
+        descriptions: Mapping[str, _D],
+        parent: Device | None = None,
+    ) -> list[_E]:
+        """Return a list of entities to add.
+
+        This filters out unwanted features to avoid creating unnecessary entities
+        for device features that are implemented by specialized platforms like light.
+        """
+        entities: list[_E] = [
+            entity_class(
+                device,
+                coordinator,
+                feature=feat,
+                description=desc,
+                parent=parent,
             )
-            _LOGGER.warning(
-                "Device feature: %s (%s) needs an entity description defined, "
-                "it has been added to hass but may not be presented properly",
-                feature.name,
-                feature.id,
+            for feat in device.features.values()
+            if feat.type == feature_type
+            and (
+                feat.category != Feature.Category.Primary
+                or device.device_type not in DEVICETYPES_WITH_SPECIALIZED_PLATFORMS
             )
-        return desc
-
-
-def _entities_for_device[_E: CoordinatedTPLinkEntity](
-    device: Device,
-    coordinator: TPLinkDataUpdateCoordinator,
-    *,
-    feature_type: Feature.Type,
-    entity_class: type[_E],
-    parent: Device | None = None,
-) -> list[_E]:
-    """Return a list of entities to add.
-
-    This filters out unwanted features to avoid creating unnecessary entities
-    for device features that are implemented by specialized platforms like light.
-    """
-    entities: list[_E] = [
-        entity_class(
-            device,
-            coordinator,
-            feature=feat,
-            parent=parent,
-        )
-        for feat in device.features.values()
-        if feat.type == feature_type
-        and (
-            feat.category != Feature.Category.Primary
-            or device.device_type not in DEVICETYPES_WITH_SPECIALIZED_PLATFORMS
-        )
-    ]
-    return entities
-
-
-def entities_for_device_and_its_children[_E: CoordinatedTPLinkEntity](
-    device: Device,
-    coordinator: TPLinkDataUpdateCoordinator,
-    *,
-    feature_type: Feature.Type,
-    entity_class: type[_E],
-    child_coordinators: list[TPLinkDataUpdateCoordinator] | None = None,
-) -> list[_E]:
-    """Create entities for device and its children.
-
-    This is a helper that calls *_entities_for_device* for the device and its children.
-    """
-    entities: list[_E] = []
-    # Add parent entities before children so via_device id works.
-    entities.extend(
-        _entities_for_device(
-            device,
-            coordinator=coordinator,
-            feature_type=feature_type,
-            entity_class=entity_class,
-        )
-    )
-    if device.children:
-        _LOGGER.debug("Initializing device with %s children", len(device.children))
-        for idx, child in enumerate(device.children):
-            # HS300 does not like too many concurrent requests and its emeter data requires
-            # a request for each socket, so we receive separate coordinators.
-            if child_coordinators:
-                child_coordinator = child_coordinators[idx]
-            else:
-                child_coordinator = coordinator
-            entities.extend(
-                _entities_for_device(
-                    child,
-                    coordinator=child_coordinator,
-                    feature_type=feature_type,
-                    entity_class=entity_class,
-                    parent=device,
+            and (
+                desc := cls._description_for_feature(
+                    feat, descriptions, child_alias=device.alias if parent else None
                 )
             )
+        ]
+        return entities
 
-    return entities
+    @classmethod
+    def entities_for_device_and_its_children[
+        _E: CoordinatedTPLinkFeatureEntity,
+        _D: TPLinkFeatureEntityDescription,
+    ](
+        cls,
+        device: Device,
+        coordinator: TPLinkDataUpdateCoordinator,
+        *,
+        feature_type: Feature.Type,
+        entity_class: type[_E],
+        descriptions: Mapping[str, _D],
+        child_coordinators: list[TPLinkDataUpdateCoordinator] | None = None,
+    ) -> list[_E]:
+        """Create entities for device and its children.
+
+        This is a helper that calls *_entities_for_device* for the device and its children.
+        """
+        entities: list[_E] = []
+        # Add parent entities before children so via_device id works.
+        entities.extend(
+            cls._entities_for_device(
+                device,
+                coordinator=coordinator,
+                feature_type=feature_type,
+                entity_class=entity_class,
+                descriptions=descriptions,
+            )
+        )
+        if device.children:
+            _LOGGER.debug("Initializing device with %s children", len(device.children))
+            for idx, child in enumerate(device.children):
+                # HS300 does not like too many concurrent requests and its emeter data requires
+                # a request for each socket, so we receive separate coordinators.
+                if child_coordinators:
+                    child_coordinator = child_coordinators[idx]
+                else:
+                    child_coordinator = coordinator
+                entities.extend(
+                    cls._entities_for_device(
+                        child,
+                        coordinator=child_coordinator,
+                        feature_type=feature_type,
+                        entity_class=entity_class,
+                        descriptions=descriptions,
+                        parent=device,
+                    )
+                )
+
+        return entities

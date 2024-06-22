@@ -18,7 +18,6 @@ from .entity import (
     CoordinatedTPLinkFeatureEntity,
     TPLinkFeatureEntityDescription,
     async_refresh_after,
-    entities_for_device_and_its_children,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,11 +64,12 @@ async def async_setup_entry(
     parent_coordinator = data.parent_coordinator
     device = parent_coordinator.device
 
-    entities = entities_for_device_and_its_children(
+    entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
         device,
         coordinator=parent_coordinator,
         feature_type=Feature.Switch,
         entity_class=TPLinkSwitch,
+        descriptions=SWITCH_DESCRIPTIONS_MAP,
     )
 
     async_add_entities(entities)
@@ -86,15 +86,10 @@ class TPLinkSwitch(CoordinatedTPLinkFeatureEntity, SwitchEntity):
         coordinator: TPLinkDataUpdateCoordinator,
         *,
         feature: Feature,
+        description: TPLinkSwitchEntityDescription,
         parent: Device | None = None,
     ) -> None:
         """Initialize the switch."""
-        description = self._description_for_feature(
-            TPLinkSwitchEntityDescription,
-            feature,
-            SWITCH_DESCRIPTIONS_MAP,
-            child_alias=device.alias if parent else None,
-        )
         super().__init__(
             device, coordinator, description=description, feature=feature, parent=parent
         )
