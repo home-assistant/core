@@ -15,7 +15,6 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -57,10 +56,9 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            HabiticaTodosListEntity(coordinator, config_entry),
-            HabiticaDailiesListEntity(coordinator, config_entry),
+            HabiticaTodosListEntity(coordinator),
+            HabiticaDailiesListEntity(coordinator),
         ],
-        True,
     )
 
 
@@ -75,12 +73,13 @@ class BaseHabiticaListEntity(
         self,
         coordinator: HabiticaDataUpdateCoordinator,
         key: HabiticaTodoList,
-        entry: ConfigEntry,
     ) -> None:
         """Initialize HabiticaTodoListEntity."""
+        entry = coordinator.config_entry
         if TYPE_CHECKING:
             assert entry.unique_id
         super().__init__(coordinator)
+
         self._attr_unique_id = f"{entry.unique_id}_{key}"
         self._attr_translation_key = key
         self.idx = key
@@ -143,15 +142,18 @@ class BaseHabiticaListEntity(
         if TYPE_CHECKING:
             assert item.uid
             assert current_item
+            assert item.due
+
+        if self.idx is HabiticaTodoList.TODOS:  # Only todos support a due date.
+            date = item.due.isoformat()
+        else:
+            date = None
 
         try:
             await self.coordinator.api.tasks[item.uid].put(
                 text=item.summary,
                 notes=item.description or "",
-                date=item.due.isoformat()
-                if item.due
-                and self.idx == HabiticaTodoList.TODOS  # Only todos support a due date.
-                else None,
+                date=date,
             )
         except ClientResponseError as e:
             raise HomeAssistantError(
@@ -163,15 +165,15 @@ class BaseHabiticaListEntity(
         try:
             # Score up or down if item status changed
             if (
-                current_item.status == TodoItemStatus.NEEDS_ACTION
-                and item.status == TodoItemStatus.COMPLETED
+                current_item.status is TodoItemStatus.NEEDS_ACTION
+                and item.status is TodoItemStatus.COMPLETED
             ):
                 score_result = (
                     await self.coordinator.api.tasks[item.uid].score["up"].post()
                 )
             elif (
-                current_item.status == TodoItemStatus.COMPLETED
-                and item.status == TodoItemStatus.NEEDS_ACTION
+                current_item.status is TodoItemStatus.COMPLETED
+                and item.status is TodoItemStatus.NEEDS_ACTION
             ):
                 score_result = (
                     await self.coordinator.api.tasks[item.uid].score["down"].post()
@@ -210,11 +212,9 @@ class HabiticaTodosListEntity(BaseHabiticaListEntity):
         | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
     )
 
-    def __init__(
-        self, coordinator: HabiticaDataUpdateCoordinator, entry: ConfigEntry
-    ) -> None:
+    def __init__(self, coordinator: HabiticaDataUpdateCoordinator) -> None:
         """Initialize HabiticaTodosListEntity."""
-        super().__init__(coordinator, HabiticaTodoList.TODOS, entry)
+        super().__init__(coordinator, HabiticaTodoList.TODOS)
 
     @property
     def todo_items(self) -> list[TodoItem]:
@@ -238,7 +238,7 @@ class HabiticaTodosListEntity(BaseHabiticaListEntity):
                     else TodoItemStatus.COMPLETED,
                 )
                 for task in self.coordinator.data.tasks
-                if task["type"] == HabiticaTaskType.TODO
+                if task["type"] is HabiticaTaskType.TODO
             ),
         ]
 
@@ -272,11 +272,9 @@ class HabiticaDailiesListEntity(BaseHabiticaListEntity):
         | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
     )
 
-    def __init__(
-        self, coordinator: HabiticaDataUpdateCoordinator, entry: ConfigEntry
-    ) -> None:
+    def __init__(self, coordinator: HabiticaDataUpdateCoordinator) -> None:
         """Initialize HabiticaDailiesListEntity."""
-        super().__init__(coordinator, HabiticaTodoList.DAILIES, entry)
+        super().__init__(coordinator, HabiticaTodoList.DAILIES)
 
     @property
     def todo_items(self) -> list[TodoItem]:
