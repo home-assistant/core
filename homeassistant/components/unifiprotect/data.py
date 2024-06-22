@@ -306,12 +306,7 @@ class ProtectData:
 
     @callback
     def _async_poll(self, now: datetime) -> None:
-        """Poll the Protect API.
-
-        If the websocket is connected, most of the time
-        this will be a no-op. If the websocket is disconnected,
-        this will trigger a reconnect and refresh.
-        """
+        """Poll the Protect API."""
         self._entry.async_create_background_task(
             self._hass,
             self.async_refresh(),
