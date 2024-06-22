@@ -114,11 +114,9 @@ class ProtectData:
         self, device_types: Iterable[ModelType], ignore_unadopted: bool = True
     ) -> Generator[ProtectAdoptableDeviceModel]:
         """Get all devices matching types."""
+        bootstrap = self.api.bootstrap
         for device_type in device_types:
-            devices = async_get_devices_by_type(
-                self.api.bootstrap, device_type
-            ).values()
-            for device in devices:
+            for device in async_get_devices_by_type(bootstrap, device_type).values():
                 if ignore_unadopted and not device.is_adopted_by_us:
                     continue
                 yield device
