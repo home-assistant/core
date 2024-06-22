@@ -12,12 +12,11 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import PlugwiseConfigEntry
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 from .util import plugwise_command
@@ -57,20 +56,34 @@ SWITCHES: tuple[PlugwiseSwitchEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: PlugwiseConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Smile switches from a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    entities: list[PlugwiseSwitchEntity] = []
-    for device_id, device in coordinator.data.devices.items():
-        if not (switches := device.get("switches")):
-            continue
-        for description in SWITCHES:
-            if description.key not in switches:
+    coordinator = entry.runtime_data
+
+    @callback
+    def _add_entities() -> None:
+        """Add Entities."""
+        if not coordinator.new_devices:
+            return
+
+        entities: list[PlugwiseSwitchEntity] = []
+        for device_id, device in coordinator.data.devices.items():
+            if not (switches := device.get("switches")):
                 continue
-            entities.append(PlugwiseSwitchEntity(coordinator, device_id, description))
-    async_add_entities(entities)
+            for description in SWITCHES:
+                if description.key not in switches:
+                    continue
+                entities.append(
+                    PlugwiseSwitchEntity(coordinator, device_id, description)
+                )
+
+        async_add_entities(entities)
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
+
+    _add_entities()
 
 
 class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):

@@ -13,7 +13,7 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN as WEMO_DOMAIN, WEMO_SUBSCRIPTION_EVENT
-from .wemo_device import async_get_coordinator
+from .coordinator import async_get_coordinator
 
 TRIGGER_TYPES = {EVENT_TYPE_LONG_PRESS}
 

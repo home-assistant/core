@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
 
 from pyfronius import BadStatusError, FroniusError
 
@@ -31,8 +31,6 @@ from .sensor import (
 if TYPE_CHECKING:
     from . import FroniusSolarNet
     from .sensor import _FroniusSensorEntity
-
-    _FroniusEntityT = TypeVar("_FroniusEntityT", bound=_FroniusSensorEntity)
 
 
 class FroniusCoordinatorBase(
@@ -84,7 +82,7 @@ class FroniusCoordinatorBase(
             return data
 
     @callback
-    def add_entities_for_seen_keys(
+    def add_entities_for_seen_keys[_FroniusEntityT: _FroniusSensorEntity](
         self,
         async_add_entities: AddEntitiesCallback,
         entity_constructor: type[_FroniusEntityT],

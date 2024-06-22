@@ -129,7 +129,7 @@ regex==2021.8.28
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.3.0
+anyio==4.4.0
 h11==0.14.0
 httpcore==1.0.5
 
@@ -155,7 +155,7 @@ backoff>=2.0
 
 # Required to avoid breaking (#101042).
 # v2 has breaking changes (#99218).
-pydantic==1.10.15
+pydantic==1.10.17
 
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130
@@ -223,6 +223,9 @@ tuf>=4.0.0
 # pyserial-asyncio does blocking I/O in asyncio loop, use pyserial-asyncio-fast
 # instead as pyserial-asyncio is not maintained
 pyserial-asyncio==1000000000.0.0
+
+# https://github.com/jd/tenacity/issues/471
+tenacity<8.4.0
 """
 
 GENERATED_MESSAGE = (

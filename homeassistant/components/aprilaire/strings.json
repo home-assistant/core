@@ -23,6 +23,59 @@
       "thermostat": {
         "name": "Thermostat"
       }
+    },
+    "sensor": {
+      "indoor_humidity_controlling_sensor": {
+        "name": "Indoor humidity controlling sensor"
+      },
+      "outdoor_humidity_controlling_sensor": {
+        "name": "Outdoor humidity controlling sensor"
+      },
+      "indoor_temperature_controlling_sensor": {
+        "name": "Indoor temperature controlling sensor"
+      },
+      "outdoor_temperature_controlling_sensor": {
+        "name": "Outdoor temperature controlling sensor"
+      },
+      "dehumidification_status": {
+        "name": "Dehumidification status",
+        "state": {
+          "idle": "[%key:common::state::idle%]",
+          "on": "[%key:common::state::on%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "humidification_status": {
+        "name": "Humidification status",
+        "state": {
+          "idle": "[%key:common::state::idle%]",
+          "on": "[%key:common::state::on%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "ventilation_status": {
+        "name": "Ventilation status",
+        "state": {
+          "idle": "[%key:common::state::idle%]",
+          "on": "[%key:common::state::on%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "air_cleaning_status": {
+        "name": "Air cleaning status",
+        "state": {
+          "idle": "[%key:common::state::idle%]",
+          "on": "[%key:common::state::on%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "fan_status": {
+        "name": "Fan status",
+        "state": {
+          "on": "[%key:common::state::on%]",
+          "off": "[%key:common::state::off%]"
+        }
+      }
     }
   }
 }

@@ -1,6 +1,7 @@
 """Define test fixtures for RainMachine."""
 
 import json
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -32,7 +33,12 @@ def config_fixture(hass):
 @pytest.fixture(name="config_entry")
 def config_entry_fixture(hass, config, controller_mac):
     """Define a config entry fixture."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=controller_mac, data=config)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=controller_mac,
+        data=config,
+        entry_id="81bd010ed0a63b705f6da8407cb26d4b",
+    )
     entry.add_to_hass(hass)
     return entry
 
@@ -100,7 +106,9 @@ def data_machine_firmare_update_status_fixture():
 @pytest.fixture(name="data_programs", scope="package")
 def data_programs_fixture():
     """Define program data."""
-    return json.loads(load_fixture("programs_data.json", "rainmachine"))
+    raw_data = json.loads(load_fixture("programs_data.json", "rainmachine"))
+    # This replicate the process from `regenmaschine` to convert list to dict
+    return {program["uid"]: program for program in raw_data}
 
 
 @pytest.fixture(name="data_provision_settings", scope="package")
@@ -124,7 +132,16 @@ def data_restrictions_universal_fixture():
 @pytest.fixture(name="data_zones", scope="package")
 def data_zones_fixture():
     """Define zone data."""
-    return json.loads(load_fixture("zones_data.json", "rainmachine"))
+    raw_data = json.loads(load_fixture("zones_data.json", "rainmachine"))
+    # This replicate the process from `regenmaschine` to convert list to dict
+    zone_details = json.loads(load_fixture("zones_details.json", "rainmachine"))
+
+    zones: dict[int, dict[str, Any]] = {}
+    for zone in raw_data:
+        [extra] = [z for z in zone_details if z["uid"] == zone["uid"]]
+        zones[zone["uid"]] = {**zone, **extra}
+
+    return zones
 
 
 @pytest.fixture(name="setup_rainmachine")

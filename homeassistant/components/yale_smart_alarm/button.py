@@ -6,9 +6,11 @@ from typing import TYPE_CHECKING
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import YaleConfigEntry
+from .const import DOMAIN, YALE_ALL_ERRORS
 from .coordinator import YaleDataUpdateCoordinator
 from .entity import YaleAlarmEntity
 
@@ -54,6 +56,16 @@ class YalePanicButton(YaleAlarmEntity, ButtonEntity):
         if TYPE_CHECKING:
             assert self.coordinator.yale, "Connection to API is missing"
 
-        await self.hass.async_add_executor_job(
-            self.coordinator.yale.trigger_panic_button
-        )
+        try:
+            await self.hass.async_add_executor_job(
+                self.coordinator.yale.trigger_panic_button
+            )
+        except YALE_ALL_ERRORS as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="could_not_trigger_panic",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "error": str(error),
+                },
+            ) from error

@@ -1,12 +1,12 @@
-"""Platform to retrieve Jewish calendar information for Home Assistant."""
+"""Support for Jewish calendar sensors."""
 
 from __future__ import annotations
 
 from datetime import date as Date
 import logging
-from typing import Any
+from typing import Any, cast
 
-from hdate import HDate
+from hdate import HDate, HebrewDate, htables
 from hdate.zmanim import Zmanim
 
 from homeassistant.components.sensor import (
@@ -14,32 +14,41 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import SUN_EVENT_SUNSET
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_LANGUAGE, CONF_LOCATION, SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import get_astral_event_date
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from . import DOMAIN
+from .const import (
+    CONF_CANDLE_LIGHT_MINUTES,
+    CONF_DIASPORA,
+    CONF_HAVDALAH_OFFSET_MINUTES,
+    DEFAULT_NAME,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-INFO_SENSORS = (
+INFO_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="date",
         name="Date",
         icon="mdi:star-david",
+        translation_key="hebrew_date",
     ),
     SensorEntityDescription(
         key="weekly_portion",
         name="Parshat Hashavua",
         icon="mdi:book-open-variant",
+        device_class=SensorDeviceClass.ENUM,
     ),
     SensorEntityDescription(
         key="holiday",
         name="Holiday",
         icon="mdi:calendar-star",
+        device_class=SensorDeviceClass.ENUM,
     ),
     SensorEntityDescription(
         key="omer_count",
@@ -53,10 +62,10 @@ INFO_SENSORS = (
     ),
 )
 
-TIME_SENSORS = (
+TIME_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="first_light",
-        name="Alot Hashachar",
+        name="Alot Hashachar",  # codespell:ignore alot
         icon="mdi:weather-sunset-up",
     ),
     SensorEntityDescription(
@@ -120,6 +129,11 @@ TIME_SENSORS = (
         icon="mdi:weather-night",
     ),
     SensorEntityDescription(
+        key="three_stars",
+        name="T'set Hakochavim, 3 stars",
+        icon="mdi:weather-night",
+    ),
+    SensorEntityDescription(
         key="upcoming_shabbat_candle_lighting",
         name="Upcoming Shabbat Candle Lighting",
         icon="mdi:candle",
@@ -142,22 +156,19 @@ TIME_SENSORS = (
 )
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Jewish calendar sensor platform."""
-    if discovery_info is None:
-        return
-
+    """Set up the Jewish calendar sensors ."""
+    entry = hass.data[DOMAIN][config_entry.entry_id]
     sensors = [
-        JewishCalendarSensor(hass.data[DOMAIN], description)
+        JewishCalendarSensor(config_entry.entry_id, entry, description)
         for description in INFO_SENSORS
     ]
     sensors.extend(
-        JewishCalendarTimeSensor(hass.data[DOMAIN], description)
+        JewishCalendarTimeSensor(config_entry.entry_id, entry, description)
         for description in TIME_SENSORS
     )
 
@@ -169,19 +180,20 @@ class JewishCalendarSensor(SensorEntity):
 
     def __init__(
         self,
-        data: dict[str, str | bool | int | float],
+        entry_id: str,
+        data: dict[str, Any],
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the Jewish calendar sensor."""
         self.entity_description = description
-        self._attr_name = f"{data['name']} {description.name}"
-        self._attr_unique_id = f"{data['prefix']}_{description.key}"
-        self._location = data["location"]
-        self._hebrew = data["language"] == "hebrew"
-        self._candle_lighting_offset = data["candle_lighting_offset"]
-        self._havdalah_offset = data["havdalah_offset"]
-        self._diaspora = data["diaspora"]
-        self._holiday_attrs: dict[str, str] = {}
+        self._attr_name = f"{DEFAULT_NAME} {description.name}"
+        self._attr_unique_id = f"{entry_id}-{description.key}"
+        self._location = data[CONF_LOCATION]
+        self._hebrew = data[CONF_LANGUAGE] == "hebrew"
+        self._candle_lighting_offset = data[CONF_CANDLE_LIGHT_MINUTES]
+        self._havdalah_offset = data[CONF_HAVDALAH_OFFSET_MINUTES]
+        self._diaspora = data[CONF_DIASPORA]
+        self._attrs: dict[str, str] = {}
 
     async def async_update(self) -> None:
         """Update the state of the sensor."""
@@ -202,8 +214,9 @@ class JewishCalendarSensor(SensorEntity):
         daytime_date = HDate(today, diaspora=self._diaspora, hebrew=self._hebrew)
 
         # The Jewish day starts after darkness (called "tzais") and finishes at
-        # sunset ("shkia"). The time in between is a gray area (aka "Bein
-        # Hashmashot" - literally: "in between the sun and the moon").
+        # sunset ("shkia"). The time in between is a gray area
+        # (aka "Bein Hashmashot"  # codespell:ignore
+        # - literally: "in between the sun and the moon").
 
         # For some sensors, it is more interesting to consider the date to be
         # tomorrow based on sunset ("shkia"), for others based on "tzais".
@@ -237,9 +250,7 @@ class JewishCalendarSensor(SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
-        if self.entity_description.key != "holiday":
-            return {}
-        return self._holiday_attrs
+        return self._attrs
 
     def get_state(
         self, daytime_date: HDate, after_shkia_date: HDate, after_tzais_date: HDate
@@ -248,16 +259,31 @@ class JewishCalendarSensor(SensorEntity):
         # Terminology note: by convention in py-libhdate library, "upcoming"
         # refers to "current" or "upcoming" dates.
         if self.entity_description.key == "date":
+            hdate = cast(HebrewDate, after_shkia_date.hdate)
+            month = htables.MONTHS[hdate.month.value - 1]
+            self._attrs = {
+                "hebrew_year": hdate.year,
+                "hebrew_month_name": month.hebrew if self._hebrew else month.english,
+                "hebrew_day": hdate.day,
+            }
             return after_shkia_date.hebrew_date
         if self.entity_description.key == "weekly_portion":
+            self._attr_options = [
+                (p.hebrew if self._hebrew else p.english) for p in htables.PARASHAOT
+            ]
             # Compute the weekly portion based on the upcoming shabbat.
             return after_tzais_date.upcoming_shabbat.parasha
         if self.entity_description.key == "holiday":
-            self._holiday_attrs = {
+            self._attrs = {
                 "id": after_shkia_date.holiday_name,
                 "type": after_shkia_date.holiday_type.name,
                 "type_id": after_shkia_date.holiday_type.value,
             }
+            self._attr_options = [
+                h.description.hebrew.long if self._hebrew else h.description.english
+                for h in htables.HOLIDAYS
+            ]
+
             return after_shkia_date.holiday_description
         if self.entity_description.key == "omer_count":
             return after_shkia_date.omer_day

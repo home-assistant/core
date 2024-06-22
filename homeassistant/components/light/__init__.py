@@ -368,7 +368,7 @@ def filter_turn_on_params(light: LightEntity, params: dict[str, Any]) -> dict[st
         params.pop(ATTR_TRANSITION, None)
 
     supported_color_modes = (
-        light._light_internal_supported_color_modes  # pylint:disable=protected-access
+        light._light_internal_supported_color_modes  # noqa: SLF001
     )
     if not brightness_supported(supported_color_modes):
         params.pop(ATTR_BRIGHTNESS, None)
@@ -445,8 +445,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         ):
             profiles.apply_default(light.entity_id, light.is_on, params)
 
-        # pylint: disable-next=protected-access
-        legacy_supported_color_modes = light._light_internal_supported_color_modes
+        legacy_supported_color_modes = light._light_internal_supported_color_modes  # noqa: SLF001
         supported_color_modes = light.supported_color_modes
 
         # If a color temperature is specified, emulate it if not supported by the light

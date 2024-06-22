@@ -98,7 +98,7 @@ def mock_bypass_throttle():
     """Fixture to bypass the throttle decorator in __init__."""
     with patch(
         "homeassistant.components.home_connect.update_all_devices",
-        side_effect=lambda x, y: bypass_throttle(x, y),
+        side_effect=bypass_throttle,
     ):
         yield
 
@@ -131,7 +131,7 @@ def mock_get_appliances() -> Generator[None, Any, None]:
 
 
 @pytest.fixture(name="appliance")
-def mock_appliance(request) -> Mock:
+def mock_appliance(request: pytest.FixtureRequest) -> MagicMock:
     """Fixture to mock Appliance."""
     app = "Washer"
     if hasattr(request, "param") and request.param:

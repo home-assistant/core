@@ -1,10 +1,10 @@
 """Tests for the Velbus config flow."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import serial.tools.list_ports
+from typing_extensions import Generator
 from velbusaio.exceptions import VelbusConnectionFailed
 
 from homeassistant.components import usb
@@ -39,7 +39,7 @@ def com_port():
 
 
 @pytest.fixture(name="controller")
-def mock_controller() -> Generator[MagicMock, None, None]:
+def mock_controller() -> Generator[MagicMock]:
     """Mock a successful velbus controller."""
     with patch(
         "homeassistant.components.velbus.config_flow.velbusaio.controller.Velbus",
@@ -49,7 +49,7 @@ def mock_controller() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture(autouse=True)
-def override_async_setup_entry() -> Generator[AsyncMock, None, None]:
+def override_async_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.velbus.async_setup_entry", return_value=True

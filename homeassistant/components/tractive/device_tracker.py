@@ -5,17 +5,13 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.device_tracker import SourceType, TrackerEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import Trackables, TractiveClient
+from . import Trackables, TractiveClient, TractiveConfigEntry
 from .const import (
-    CLIENT,
-    DOMAIN,
     SERVER_UNAVAILABLE,
-    TRACKABLES,
     TRACKER_HARDWARE_STATUS_UPDATED,
     TRACKER_POSITION_UPDATED,
 )
@@ -23,11 +19,13 @@ from .entity import TractiveEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TractiveConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Tractive device trackers."""
-    client = hass.data[DOMAIN][entry.entry_id][CLIENT]
-    trackables = hass.data[DOMAIN][entry.entry_id][TRACKABLES]
+    client = entry.runtime_data.client
+    trackables = entry.runtime_data.trackables
 
     entities = [TractiveDeviceTracker(client, item) for item in trackables]
 

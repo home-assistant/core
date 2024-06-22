@@ -42,11 +42,6 @@ def mock_effect_conductor():
 
 
 @pytest.fixture(autouse=True)
-def lifx_mock_get_source_ip(mock_get_source_ip):
-    """Mock network util's async_get_source_ip."""
-
-
-@pytest.fixture(autouse=True)
 def lifx_no_wait_for_timeouts():
     """Avoid waiting for timeouts in tests."""
     with (

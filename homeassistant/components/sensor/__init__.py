@@ -68,7 +68,6 @@ from homeassistant.helpers.typing import UNDEFINED, ConfigType, StateType, Undef
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
-from . import group as group_pre_import  # noqa: F401
 from .const import (  # noqa: F401
     _DEPRECATED_STATE_CLASS_MEASUREMENT,
     _DEPRECATED_STATE_CLASS_TOTAL,
@@ -384,15 +383,9 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         ):
             if not self._invalid_suggested_unit_of_measurement_reported:
                 self._invalid_suggested_unit_of_measurement_reported = True
-                report_issue = self._suggest_report_issue()
-                # This should raise in Home Assistant Core 2024.5
-                _LOGGER.warning(
-                    (
-                        "%s sets an invalid suggested_unit_of_measurement. Please %s. "
-                        "This warning will become an error in Home Assistant Core 2024.5"
-                    ),
-                    type(self),
-                    report_issue,
+                raise ValueError(
+                    f"Entity {type(self)} suggest an incorrect "
+                    f"unit of measurement: {suggested_unit_of_measurement}."
                 )
             return False
 
@@ -787,10 +780,10 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             display_precision = max(0, display_precision + ratio_log)
 
         sensor_options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
-        if (
-            "suggested_display_precision" in sensor_options
-            and sensor_options["suggested_display_precision"] == display_precision
-        ):
+        if "suggested_display_precision" not in sensor_options:
+            if display_precision is None:
+                return
+        elif sensor_options["suggested_display_precision"] == display_precision:
             return
 
         registry = er.async_get(self.hass)

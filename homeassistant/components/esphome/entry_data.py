@@ -38,6 +38,7 @@ from aioesphomeapi import (
     TextInfo,
     TextSensorInfo,
     TimeInfo,
+    UpdateInfo,
     UserService,
     ValveInfo,
     build_unique_id,
@@ -82,6 +83,7 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     TextInfo: Platform.TEXT,
     TextSensorInfo: Platform.SENSOR,
     TimeInfo: Platform.TIME,
+    UpdateInfo: Platform.UPDATE,
     ValveInfo: Platform.VALVE,
 }
 
@@ -244,7 +246,10 @@ class RuntimeEntryData:
                 callback_(static_info)
 
     async def _ensure_platforms_loaded(
-        self, hass: HomeAssistant, entry: ConfigEntry, platforms: set[Platform]
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        platforms: set[Platform],
     ) -> None:
         async with self.platform_load_lock:
             if needed := platforms - self.loaded_platforms:
@@ -252,7 +257,11 @@ class RuntimeEntryData:
             self.loaded_platforms |= needed
 
     async def async_update_static_infos(
-        self, hass: HomeAssistant, entry: ConfigEntry, infos: list[EntityInfo], mac: str
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        infos: list[EntityInfo],
+        mac: str,
     ) -> None:
         """Distribute an update of static infos to all platforms."""
         # First, load all platforms
@@ -374,7 +383,7 @@ class RuntimeEntryData:
         if subscription := self.state_subscriptions.get(subscription_key):
             try:
                 subscription()
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 # If we allow this exception to raise it will
                 # make it all the way to data_received in aioesphomeapi
                 # which will cause the connection to be closed.

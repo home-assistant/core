@@ -1,6 +1,6 @@
 {
   "domain": "squeezebox",
-  "name": "Squeezebox (Logitech Media Server)",
+  "name": "Squeezebox (Lyrion Music Server)",
   "codeowners": ["@rajlaud"],
   "config_flow": true,
   "dhcp": [

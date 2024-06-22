@@ -356,7 +356,7 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
             stream_source = await camera.async_get_stream_source(
                 self.hass, self.entity_id
             )
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Failed to get stream source - this could be a transient error or your"
                 " camera might not be compatible with HomeKit yet"
@@ -503,7 +503,7 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
             _LOGGER.info("[%s] %s stream", session_id, shutdown_method)
             try:
                 await getattr(stream, shutdown_method)()
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception(
                     "[%s] Failed to %s stream", session_id, shutdown_method
                 )
