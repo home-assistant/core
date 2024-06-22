@@ -29,7 +29,7 @@ class TPLinkBinarySensorEntityDescription(
 BINARYSENSOR_DESCRIPTIONS: Final = (
     TPLinkBinarySensorEntityDescription(
         key="overheated",
-        device_class=BinarySensorDeviceClass.HEAT,
+        device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     TPLinkBinarySensorEntityDescription(
         key="battery_low",

@@ -65,6 +65,9 @@
       },
       "temperature_warning": {
         "name": "Temperature warning"
+      },
+      "overheated": {
+        "name": "Overheated"
       }
     },
     "button": {
