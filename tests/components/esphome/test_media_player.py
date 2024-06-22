@@ -13,6 +13,7 @@ import pytest
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_VOLUME_LEVEL,
@@ -247,7 +248,7 @@ async def test_media_player_entity_with_source(
         )
 
     mock_client.media_player_command.assert_has_calls(
-        [call(1, media_url="http://www.example.com/xy.mp3")]
+        [call(1, media_url="http://www.example.com/xy.mp3", announcement=None)]
     )
 
     client = await hass_ws_client()
@@ -268,10 +269,11 @@ async def test_media_player_entity_with_source(
             ATTR_ENTITY_ID: "media_player.test_mymedia_player",
             ATTR_MEDIA_CONTENT_TYPE: MediaType.URL,
             ATTR_MEDIA_CONTENT_ID: "media-source://tts?message=hello",
+            ATTR_MEDIA_ANNOUNCE: True,
         },
         blocking=True,
     )
 
     mock_client.media_player_command.assert_has_calls(
-        [call(1, media_url="media-source://tts?message=hello")]
+        [call(1, media_url="media-source://tts?message=hello", announcement=True)]
     )

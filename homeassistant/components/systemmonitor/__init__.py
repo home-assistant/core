@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
-SystemMonitorConfigEntry = ConfigEntry["SystemMonitorData"]
+type SystemMonitorConfigEntry = ConfigEntry[SystemMonitorData]
 
 
 @dataclass

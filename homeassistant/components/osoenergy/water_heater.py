@@ -18,8 +18,8 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import OSOEnergyEntity
 from .const import DOMAIN
+from .entity import OSOEnergyEntity
 
 CURRENT_OPERATION_MAP: dict[str, Any] = {
     "default": {

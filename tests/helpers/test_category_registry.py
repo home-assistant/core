@@ -340,7 +340,7 @@ async def test_load_categories(
 
 @pytest.mark.parametrize("load_registries", [False])
 async def test_loading_categories_from_storage(
-    hass: HomeAssistant, hass_storage: Any
+    hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test loading stored categories on start."""
     hass_storage[cr.STORAGE_KEY] = {
@@ -403,7 +403,7 @@ async def test_async_create_thread_safety(
     """Test async_create raises when called from wrong thread."""
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls async_create from a thread. Please report this issue.",
+        match="Detected code that calls category_registry.async_create from a thread.",
     ):
         await hass.async_add_executor_job(
             partial(category_registry.async_create, name="any", scope="any")
@@ -418,7 +418,7 @@ async def test_async_delete_thread_safety(
 
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls async_delete from a thread. Please report this issue.",
+        match="Detected code that calls category_registry.async_delete from a thread.",
     ):
         await hass.async_add_executor_job(
             partial(
@@ -437,7 +437,7 @@ async def test_async_update_thread_safety(
 
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls async_update from a thread. Please report this issue.",
+        match="Detected code that calls category_registry.async_update from a thread.",
     ):
         await hass.async_add_executor_job(
             partial(

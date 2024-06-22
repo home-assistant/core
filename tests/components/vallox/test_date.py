@@ -4,7 +4,7 @@ from datetime import date
 
 from vallox_websocket_api import MetricData
 
-from homeassistant.components.date.const import DOMAIN as DATE_DOMAIN, SERVICE_SET_VALUE
+from homeassistant.components.date import DOMAIN as DATE_DOMAIN, SERVICE_SET_VALUE
 from homeassistant.const import ATTR_DATE, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
