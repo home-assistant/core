@@ -8,6 +8,8 @@ from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, cast
 
+from homeassistant.components.automation import automations_with_entity
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -184,6 +186,16 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
+def entity_used_in(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Get list of related automations and scripts.
+
+    This code snippet is borrowed from the proximity integration.
+    """
+    used_in = automations_with_entity(hass, entity_id)
+    used_in += scripts_with_entity(hass, entity_id)
+    return used_in
+
+
 class HabitipySensor(CoordinatorEntity[HabiticaDataUpdateCoordinator], SensorEntity):
     """A generic Habitica sensor."""
 
@@ -287,18 +299,23 @@ class HabitipyTaskSensor(
 
     async def async_added_to_hass(self) -> None:
         """Raise issue when entity is registered and was not disabled."""
-        if self.enabled and self._task_name in ("todos", "dailys"):
+        entity_id = f"sensor.habitica_{self._name}_{self._task_name}"
+        if (
+            self.enabled
+            and self._task_name in ("todos", "dailys")
+            and entity_used_in(self.hass, entity_id)
+        ):
             async_create_issue(
                 self.hass,
                 DOMAIN,
                 f"deprecated_task_entity_{self._task_name}",
-                breaks_in_ha_version="2024.12.0",
+                breaks_in_ha_version="2025.2.0",
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_task_entity",
                 translation_placeholders={
                     "task_name": self._task_name,
-                    "entity": f"sensor.habitica_{self._name}_{self._task_name}",
+                    "entity": entity_id,
                 },
             )
         else:
