@@ -140,7 +140,7 @@
       "fields": {
         "entity_id": {
           "name": "Entity",
-          "description": "[%key:component::ecobee::services::set_aux_cutover_threshold::fields::entity_id::description%]"
+          "description": "Ecobee thermostat on which to set the aux cutover threshold."
         },
         "aux_cutover_threshold": {
           "name": "Heat Pump Lockout Threshold",
