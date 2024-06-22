@@ -5,17 +5,15 @@ from unittest.mock import patch
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
-from homeassistant.components.climate import PRESET_AWAY, HVACMode
+from homeassistant.components.climate import PRESET_AWAY
 from homeassistant.components.generic_thermostat.climate import (
     CONF_AC_MODE,
     CONF_COLD_TOLERANCE,
     CONF_HEATER,
     CONF_HOT_TOLERANCE,
-    CONF_INITIAL_HVAC_MODE,
     CONF_NAME,
     CONF_PRESETS,
     CONF_SENSOR,
-    CONF_TARGET_TEMP,
     DOMAIN,
 )
 from homeassistant.components.sensor import SensorDeviceClass
@@ -53,7 +51,6 @@ async def test_config_flow(hass: HomeAssistant, snapshot: SnapshotAssertion) -> 
                 CONF_AC_MODE: False,
                 CONF_COLD_TOLERANCE: 0.3,
                 CONF_HOT_TOLERANCE: 0.3,
-                CONF_INITIAL_HVAC_MODE: HVACMode.HEAT,
             },
         )
         assert result == snapshot(name="presets", include=SNAPSHOT_FLOW_PROPS)
@@ -88,8 +85,6 @@ async def test_options(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None
             CONF_AC_MODE: False,
             CONF_COLD_TOLERANCE: 0.3,
             CONF_HOT_TOLERANCE: 0.3,
-            CONF_INITIAL_HVAC_MODE: HVACMode.HEAT,
-            CONF_TARGET_TEMP: 15,
             CONF_PRESETS[PRESET_AWAY]: 20,
         },
         title="My dehumidifier",
@@ -124,8 +119,6 @@ async def test_options(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None
             CONF_AC_MODE: False,
             CONF_COLD_TOLERANCE: 0.3,
             CONF_HOT_TOLERANCE: 0.3,
-            CONF_INITIAL_HVAC_MODE: HVACMode.HEAT,
-            CONF_TARGET_TEMP: 15,
         },
     )
     assert result == snapshot(name="presets", include=SNAPSHOT_FLOW_PROPS)

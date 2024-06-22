@@ -39,7 +39,7 @@
     'attributes': ReadOnlyDict({
       'current_temperature': 15.0,
       'friendly_name': 'My thermostat',
-      'hvac_action': <HVACAction.IDLE: 'idle'>,
+      'hvac_action': <HVACAction.OFF: 'off'>,
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
@@ -53,14 +53,14 @@
       ]),
       'supported_features': <ClimateEntityFeature: 401>,
       'target_temp_step': 0.1,
-      'temperature': 15.0,
+      'temperature': 7,
     }),
     'context': <ANY>,
     'entity_id': 'climate.my_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'heat',
+    'state': 'off',
   })
 # ---
 # name: test_options[without_away]
@@ -68,7 +68,7 @@
     'attributes': ReadOnlyDict({
       'current_temperature': 15.0,
       'friendly_name': 'My thermostat',
-      'hvac_action': <HVACAction.IDLE: 'idle'>,
+      'hvac_action': <HVACAction.OFF: 'off'>,
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
@@ -77,13 +77,13 @@
       'min_temp': 7,
       'supported_features': <ClimateEntityFeature: 385>,
       'target_temp_step': 0.1,
-      'temperature': 15.0,
+      'temperature': 7.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.my_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'heat',
+    'state': 'off',
   })
 # ---
