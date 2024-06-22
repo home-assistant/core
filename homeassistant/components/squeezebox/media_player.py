@@ -1,4 +1,4 @@
-"""Support for interfacing to the Logitech SqueezeBox API."""
+"""Support for interfacing to the SqueezeBox API."""
 
 from __future__ import annotations
 
