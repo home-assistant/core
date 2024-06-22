@@ -23,7 +23,7 @@ class HydrawiseData:
     controllers: dict[int, Controller]
     zones: dict[int, Zone]
     sensors: dict[int, Sensor]
-    daily_water_use: dict[int, ControllerWaterUseSummary]
+    daily_water_summary: dict[int, ControllerWaterUseSummary]
 
 
 class HydrawiseDataUpdateCoordinator(DataUpdateCoordinator[HydrawiseData]):
@@ -44,14 +44,14 @@ class HydrawiseDataUpdateCoordinator(DataUpdateCoordinator[HydrawiseData]):
         controllers = {}
         zones = {}
         sensors = {}
-        daily_water_use: dict[int, ControllerWaterUseSummary] = {}
+        daily_water_summary: dict[int, ControllerWaterUseSummary] = {}
         for controller in user.controllers:
             controllers[controller.id] = controller
             for zone in controller.zones:
                 zones[zone.id] = zone
             for sensor in controller.sensors:
                 sensors[sensor.id] = sensor
-            daily_water_use[controller.id] = await self.api.get_water_use_summary(
+            daily_water_summary[controller.id] = await self.api.get_water_use_summary(
                 controller,
                 now().replace(hour=0, minute=0, second=0, microsecond=0),
                 now(),
@@ -62,5 +62,5 @@ class HydrawiseDataUpdateCoordinator(DataUpdateCoordinator[HydrawiseData]):
             controllers=controllers,
             zones=zones,
             sensors=sensors,
-            daily_water_use=daily_water_use,
+            daily_water_summary=daily_water_summary,
         )

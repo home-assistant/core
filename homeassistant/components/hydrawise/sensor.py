@@ -44,13 +44,17 @@ def _get_zone_next_cycle(sensor: HydrawiseSensor) -> datetime | None:
 
 def _get_zone_daily_active_water_use(sensor: HydrawiseSensor) -> float:
     """Get active water use for the zone."""
-    daily_water_summary = sensor.coordinator.data.daily_water_use[sensor.controller.id]
+    daily_water_summary = sensor.coordinator.data.daily_water_summary[
+        sensor.controller.id
+    ]
     return float(daily_water_summary.active_use_by_zone_id.get(sensor.zone.id, 0.0))
 
 
 def _get_zone_daily_active_water_time(sensor: HydrawiseSensor) -> float | None:
     """Get active water time for the zone."""
-    daily_water_summary = sensor.coordinator.data.daily_water_use[sensor.controller.id]
+    daily_water_summary = sensor.coordinator.data.daily_water_summary[
+        sensor.controller.id
+    ]
     return daily_water_summary.active_time_by_zone_id.get(
         sensor.zone.id, timedelta()
     ).total_seconds()
@@ -58,25 +62,33 @@ def _get_zone_daily_active_water_time(sensor: HydrawiseSensor) -> float | None:
 
 def _get_controller_daily_active_water_use(sensor: HydrawiseSensor) -> float | None:
     """Get active water use for the controller."""
-    daily_water_summary = sensor.coordinator.data.daily_water_use[sensor.controller.id]
+    daily_water_summary = sensor.coordinator.data.daily_water_summary[
+        sensor.controller.id
+    ]
     return daily_water_summary.total_active_use
 
 
 def _get_controller_daily_inactive_water_use(sensor: HydrawiseSensor) -> float | None:
     """Get inactive water use for the controller."""
-    daily_water_summary = sensor.coordinator.data.daily_water_use[sensor.controller.id]
+    daily_water_summary = sensor.coordinator.data.daily_water_summary[
+        sensor.controller.id
+    ]
     return daily_water_summary.total_inactive_use
 
 
 def _get_controller_daily_active_water_time(sensor: HydrawiseSensor) -> float:
     """Get active water time for the controller."""
-    daily_water_summary = sensor.coordinator.data.daily_water_use[sensor.controller.id]
+    daily_water_summary = sensor.coordinator.data.daily_water_summary[
+        sensor.controller.id
+    ]
     return daily_water_summary.total_active_time.total_seconds()
 
 
 def _get_controller_daily_total_water_use(sensor: HydrawiseSensor) -> float | None:
     """Get inactive water use for the controller."""
-    daily_water_summary = sensor.coordinator.data.daily_water_use[sensor.controller.id]
+    daily_water_summary = sensor.coordinator.data.daily_water_summary[
+        sensor.controller.id
+    ]
     return daily_water_summary.total_use
 
 
@@ -168,7 +180,7 @@ async def async_setup_entry(
         entities.extend(
             HydrawiseSensor(coordinator, description, controller)
             for description in FLOW_CONTROLLER_SENSORS
-            if coordinator.data.daily_water_use[controller.id].total_use is not None
+            if coordinator.data.daily_water_summary[controller.id].total_use is not None
         )
         entities.extend(
             HydrawiseSensor(coordinator, description, controller, zone_id=zone.id)
@@ -184,7 +196,7 @@ async def async_setup_entry(
             )
             for zone in controller.zones
             for description in FLOW_ZONE_SENSORS
-            if coordinator.data.daily_water_use[controller.id].total_use is not None
+            if coordinator.data.daily_water_summary[controller.id].total_use is not None
         )
     async_add_entities(entities)
 
