@@ -187,7 +187,7 @@ async def test_import_not_online(hass: HomeAssistant) -> None:
         assert result["reason"] == "cannot_connect"
 
 
-async def test_import_duplicate_error(hass):
+async def test_import_duplicate_error(hass: HomeAssistant) -> None:
     """Test that errors are shown when duplicates are added during import."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -217,7 +217,7 @@ async def test_import_duplicate_error(hass):
         assert result["reason"] == "already_configured"
 
 
-async def test_display_access_token_aborted(hass: HomeAssistant):
+async def test_display_access_token_aborted(hass: HomeAssistant) -> None:
     """Test Access token display is cancelled."""
 
     def _async_track_time_interval(

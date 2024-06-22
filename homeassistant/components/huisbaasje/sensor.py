@@ -54,7 +54,6 @@ class HuisbaasjeSensorEntityDescription(SensorEntityDescription):
     """Class describing Airly sensor entities."""
 
     sensor_type: str = SENSOR_TYPE_RATE
-    precision: int = 0
 
 
 SENSORS_INFO = [
@@ -105,7 +104,7 @@ SENSORS_INFO = [
         key=SOURCE_TYPE_ELECTRICITY_IN,
         sensor_type=SENSOR_TYPE_THIS_DAY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        precision=3,
+        suggested_display_precision=3,
     ),
     HuisbaasjeSensorEntityDescription(
         translation_key="energy_consumption_off_peak_today",
@@ -114,7 +113,7 @@ SENSORS_INFO = [
         key=SOURCE_TYPE_ELECTRICITY_IN_LOW,
         sensor_type=SENSOR_TYPE_THIS_DAY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        precision=3,
+        suggested_display_precision=3,
     ),
     HuisbaasjeSensorEntityDescription(
         translation_key="energy_production_peak_today",
@@ -123,7 +122,7 @@ SENSORS_INFO = [
         key=SOURCE_TYPE_ELECTRICITY_OUT,
         sensor_type=SENSOR_TYPE_THIS_DAY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        precision=3,
+        suggested_display_precision=3,
     ),
     HuisbaasjeSensorEntityDescription(
         translation_key="energy_production_off_peak_today",
@@ -132,7 +131,7 @@ SENSORS_INFO = [
         key=SOURCE_TYPE_ELECTRICITY_OUT_LOW,
         sensor_type=SENSOR_TYPE_THIS_DAY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        precision=3,
+        suggested_display_precision=3,
     ),
     HuisbaasjeSensorEntityDescription(
         translation_key="energy_today",
@@ -141,7 +140,7 @@ SENSORS_INFO = [
         state_class=SensorStateClass.TOTAL,
         key=SOURCE_TYPE_ELECTRICITY,
         sensor_type=SENSOR_TYPE_THIS_DAY,
-        precision=1,
+        suggested_display_precision=1,
     ),
     HuisbaasjeSensorEntityDescription(
         translation_key="energy_week",
@@ -150,7 +149,7 @@ SENSORS_INFO = [
         state_class=SensorStateClass.TOTAL,
         key=SOURCE_TYPE_ELECTRICITY,
         sensor_type=SENSOR_TYPE_THIS_WEEK,
-        precision=1,
+        suggested_display_precision=1,
     ),
     HuisbaasjeSensorEntityDescription(
         translation_key="energy_month",
@@ -159,7 +158,7 @@ SENSORS_INFO = [
         state_class=SensorStateClass.TOTAL,
         key=SOURCE_TYPE_ELECTRICITY,
         sensor_type=SENSOR_TYPE_THIS_MONTH,
-        precision=1,
+        suggested_display_precision=1,
     ),
     HuisbaasjeSensorEntityDescription(
         translation_key="energy_year",
@@ -168,7 +167,7 @@ SENSORS_INFO = [
         state_class=SensorStateClass.TOTAL,
         key=SOURCE_TYPE_ELECTRICITY,
         sensor_type=SENSOR_TYPE_THIS_YEAR,
-        precision=1,
+        suggested_display_precision=1,
     ),
     HuisbaasjeSensorEntityDescription(
         translation_key="current_gas",
@@ -176,7 +175,7 @@ SENSORS_INFO = [
         sensor_type=SENSOR_TYPE_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         key=SOURCE_TYPE_GAS,
-        precision=1,
+        suggested_display_precision=2,
     ),
     HuisbaasjeSensorEntityDescription(
         translation_key="gas_today",
@@ -185,7 +184,7 @@ SENSORS_INFO = [
         key=SOURCE_TYPE_GAS,
         sensor_type=SENSOR_TYPE_THIS_DAY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        precision=1,
+        suggested_display_precision=2,
     ),
     HuisbaasjeSensorEntityDescription(
         translation_key="gas_week",
@@ -194,7 +193,7 @@ SENSORS_INFO = [
         key=SOURCE_TYPE_GAS,
         sensor_type=SENSOR_TYPE_THIS_WEEK,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        precision=1,
+        suggested_display_precision=2,
     ),
     HuisbaasjeSensorEntityDescription(
         translation_key="gas_month",
@@ -203,7 +202,7 @@ SENSORS_INFO = [
         key=SOURCE_TYPE_GAS,
         sensor_type=SENSOR_TYPE_THIS_MONTH,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        precision=1,
+        suggested_display_precision=2,
     ),
     HuisbaasjeSensorEntityDescription(
         translation_key="gas_year",
@@ -212,7 +211,7 @@ SENSORS_INFO = [
         key=SOURCE_TYPE_GAS,
         sensor_type=SENSOR_TYPE_THIS_YEAR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        precision=1,
+        suggested_display_precision=2,
     ),
 ]
 
@@ -253,7 +252,6 @@ class HuisbaasjeSensor(
         self.entity_description = description
         self._source_type = description.key
         self._sensor_type = description.sensor_type
-        self._precision = description.precision
         self._attr_unique_id = (
             f"{DOMAIN}_{user_id}_{description.key}_{description.sensor_type}"
         )
@@ -266,7 +264,7 @@ class HuisbaasjeSensor(
                 self.entity_description.sensor_type
             ]
         ) is not None:
-            return round(data, self._precision)
+            return data
         return None
 
     @property

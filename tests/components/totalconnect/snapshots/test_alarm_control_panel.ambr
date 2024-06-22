@@ -37,7 +37,7 @@
     'attributes': ReadOnlyDict({
       'ac_loss': False,
       'changed_by': None,
-      'code_arm_required': True,
+      'code_arm_required': False,
       'code_format': None,
       'cover_tampered': False,
       'friendly_name': 'test',
@@ -95,7 +95,7 @@
     'attributes': ReadOnlyDict({
       'ac_loss': False,
       'changed_by': None,
-      'code_arm_required': True,
+      'code_arm_required': False,
       'code_format': None,
       'cover_tampered': False,
       'friendly_name': 'test Partition 2',

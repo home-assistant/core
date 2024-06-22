@@ -4,29 +4,30 @@ from __future__ import annotations
 
 from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
+from . import TessieConfigEntry
 from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TessieConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Tessie device tracker platform from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     async_add_entities(
-        klass(vehicle.state_coordinator)
+        klass(vehicle)
         for klass in (
             TessieDeviceTrackerLocationEntity,
             TessieDeviceTrackerRouteEntity,
         )
-        for vehicle in data
+        for vehicle in data.vehicles
     )
 
 

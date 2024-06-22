@@ -69,7 +69,7 @@ from .discovery import (
 )
 from .models import ELKM1Data
 
-ElkM1ConfigEntry = ConfigEntry[ELKM1Data]
+type ElkM1ConfigEntry = ConfigEntry[ELKM1Data]
 
 SYNC_TIMEOUT = 120
 

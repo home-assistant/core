@@ -41,7 +41,7 @@ from .integration_platform import async_process_integration_platforms
 
 PLATFORM = "significant_change"
 DATA_FUNCTIONS: HassKey[dict[str, CheckTypeFunc]] = HassKey("significant_change")
-CheckTypeFunc = Callable[
+type CheckTypeFunc = Callable[
     [
         HomeAssistant,
         str,
@@ -52,7 +52,7 @@ CheckTypeFunc = Callable[
     bool | None,
 ]
 
-ExtraCheckTypeFunc = Callable[
+type ExtraCheckTypeFunc = Callable[
     [
         HomeAssistant,
         str,

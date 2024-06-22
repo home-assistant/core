@@ -200,6 +200,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 ) from err
 
             except aiohttp.ClientError as err:
+                _LOGGER.error("Error fetching data: %s", err)
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="client_error",

@@ -745,7 +745,7 @@ async def test_apps_update(
 ) -> None:
     """Test device setup with apps where no app is running."""
     with patch(
-        "homeassistant.components.vizio.gen_apps_list_from_url",
+        "homeassistant.components.vizio.coordinator.gen_apps_list_from_url",
         return_value=None,
     ):
         async with _cm_for_test_setup_tv_with_apps(
@@ -758,7 +758,7 @@ async def test_apps_update(
             assert len(apps) == len(APPS)
 
             with patch(
-                "homeassistant.components.vizio.gen_apps_list_from_url",
+                "homeassistant.components.vizio.coordinator.gen_apps_list_from_url",
                 return_value=APP_LIST,
             ):
                 async_fire_time_changed(hass, dt_util.now() + timedelta(days=2))

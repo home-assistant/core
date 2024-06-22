@@ -142,7 +142,7 @@ async def test_forced_text_length(
     state = hass.states.get("text.test")
     assert state.state == "12345"
     assert (
-        "ValueError: Entity text.test provides state 123456 "
+        "Entity text.test provides state 123456 "
         "which is too long (maximum length 5)" in caplog.text
     )
 
@@ -152,7 +152,7 @@ async def test_forced_text_length(
     state = hass.states.get("text.test")
     assert state.state == "12345"
     assert (
-        "ValueError: Entity text.test provides state 1 "
+        "Entity text.test provides state 1 "
         "which is too short (minimum length 5)" in caplog.text
     )
     # Valid update
@@ -200,7 +200,7 @@ async def test_controlling_validation_state_via_topic(
     async_fire_mqtt_message(hass, "state-topic", "other")
     await hass.async_block_till_done()
     assert (
-        "ValueError: Entity text.test provides state other which does not match expected pattern (y|n)"
+        "Entity text.test provides state other which does not match expected pattern (y|n)"
         in caplog.text
     )
     state = hass.states.get("text.test")
@@ -211,7 +211,7 @@ async def test_controlling_validation_state_via_topic(
     async_fire_mqtt_message(hass, "state-topic", "yesyesyesyes")
     await hass.async_block_till_done()
     assert (
-        "ValueError: Entity text.test provides state yesyesyesyes which is too long (maximum length 10)"
+        "Entity text.test provides state yesyesyesyes which is too long (maximum length 10)"
         in caplog.text
     )
     state = hass.states.get("text.test")
@@ -222,7 +222,7 @@ async def test_controlling_validation_state_via_topic(
     async_fire_mqtt_message(hass, "state-topic", "y")
     await hass.async_block_till_done()
     assert (
-        "ValueError: Entity text.test provides state y which is too short (minimum length 2)"
+        "Entity text.test provides state y which is too short (minimum length 2)"
         in caplog.text
     )
     state = hass.states.get("text.test")
@@ -283,6 +283,36 @@ async def test_attribute_validation_max_not_greater_then_max_state_length(
     """Test the max value of of max configuration attribute."""
     assert await mqtt_mock_entry()
     assert "max text length must be <= 255" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                text.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "command-topic",
+                    "state_topic": "state-topic",
+                }
+            }
+        }
+    ],
+)
+async def test_validation_payload_greater_then_max_state_length(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the max value of of max configuration attribute."""
+    assert await mqtt_mock_entry()
+
+    state = hass.states.get("text.test")
+    assert state.state == STATE_UNKNOWN
+
+    async_fire_mqtt_message(hass, "state-topic", "".join("x" for _ in range(310)))
+
+    assert "Cannot update state for entity text.test" in caplog.text
 
 
 @pytest.mark.parametrize(

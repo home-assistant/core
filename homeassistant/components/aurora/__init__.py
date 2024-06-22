@@ -8,7 +8,7 @@ from .coordinator import AuroraDataUpdateCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
-AuroraConfigEntry = ConfigEntry[AuroraDataUpdateCoordinator]
+type AuroraConfigEntry = ConfigEntry[AuroraDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AuroraConfigEntry) -> bool:

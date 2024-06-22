@@ -116,7 +116,6 @@ async def async_setup_entry(
 class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
     """An implementation of a Reolink IP camera."""
 
-    _attr_supported_features: CameraEntityFeature = CameraEntityFeature.STREAM
     entity_description: ReolinkCameraEntityDescription
 
     def __init__(
@@ -129,6 +128,9 @@ class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
         self.entity_description = entity_description
         ReolinkChannelCoordinatorEntity.__init__(self, reolink_data, channel)
         Camera.__init__(self)
+
+        if "snapshots" not in entity_description.stream:
+            self._attr_supported_features = CameraEntityFeature.STREAM
 
         if self._host.api.model in DUAL_LENS_MODELS:
             self._attr_translation_key = (
