@@ -204,7 +204,6 @@ class ProtectData:
         initialized yet. Will cause Websocket code to check for channels to be
         initialized for the camera and issue a dispatch once they do.
         """
-
         self._pending_camera_ids.add(camera_id)
 
     @callback
