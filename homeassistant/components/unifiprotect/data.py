@@ -162,13 +162,15 @@ class ProtectData:
 
         if not success:
             level = logging.ERROR if was_success else logging.DEBUG
-            _LOGGER.log(level, "Connection lost", exc_info=exception)
+            _LOGGER.log(
+                level, "%s: Connection lost", self._entry.title, exc_info=exception
+            )
             self._async_process_updates(self.api.bootstrap)
             return
 
         self._auth_failures = 0
         if not was_success:
-            _LOGGER.info("Connection restored")
+            _LOGGER.info("%s: Connection restored", self._entry.title)
             self._async_process_updates(updates or self.api.bootstrap)
         elif updates:
             self._async_process_updates(updates)
