@@ -244,7 +244,7 @@ async def async_setup_platform(
     sources = config[CONF_SOURCES]
 
     @callback
-    def async_onkyo_update_callback(message, origin):
+    def async_onkyo_update_callback(message: tuple[str, str, Any], origin: str):
         """Process new message from receiver."""
         receiver = receivers[origin]
         _LOGGER.debug("Received update callback from %s: %s", receiver.name, message)
@@ -265,7 +265,7 @@ async def async_setup_platform(
             async_add_entities([zone_entity])
 
     @callback
-    def async_onkyo_connect_callback(origin):
+    def async_onkyo_connect_callback(origin: str):
         """Receiver (re)connected."""
         receiver = receivers[origin]
         _LOGGER.debug("Receiver (re)connected: %s", receiver.name)
@@ -273,7 +273,7 @@ async def async_setup_platform(
         for entity in entities[origin].values():
             entity.backfill_state()
 
-    def setup_receiver(receiver):
+    def setup_receiver(receiver: pyeiscp.Connection):
         KNOWN_HOSTS.append(receiver.host)
 
         # Store the receiver object and create a dictionary to store its entities.
@@ -308,7 +308,7 @@ async def async_setup_platform(
     else:
 
         @callback
-        async def async_onkyo_discovery_callback(receiver):
+        async def async_onkyo_discovery_callback(receiver: pyeiscp.Connection):
             """Receiver discovered, connection not yet active."""
             _LOGGER.debug("Receiver discovered: %s (%s)", receiver.name, receiver.host)
             if receiver.host not in KNOWN_HOSTS:
@@ -336,7 +336,12 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     _attr_sound_mode_list = list(SOUND_MODE_MAPPING)
 
     def __init__(
-        self, receiver, sources, zone, max_volume, receiver_max_volume
+        self,
+        receiver: pyeiscp.Connection,
+        sources: dict[str, str],
+        zone: str,
+        max_volume: int,
+        receiver_max_volume: int,
     ) -> None:
         """Initialize the Onkyo Receiver."""
         super().__init__()
@@ -459,9 +464,10 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play radio station by preset number."""
-        source = self._reverse_mapping[self.source]
-        if media_type.lower() == "radio" and source in DEFAULT_PLAYABLE_SOURCES:
-            self._update_receiver("preset", media_id)
+        if self.source is not None:
+            source = self._reverse_mapping[self.source]
+            if media_type.lower() == "radio" and source in DEFAULT_PLAYABLE_SOURCES:
+                self._update_receiver("preset", media_id)
 
     @callback
     def backfill_state(self):
@@ -485,7 +491,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             self._query_receiver("selector")
 
     @callback
-    def process_update(self, update):
+    def process_update(self, update: tuple[str, str, Any]):
         """Store relevant updates so they can be queried later."""
         zone, command, value = update
         if zone != self._zone:
