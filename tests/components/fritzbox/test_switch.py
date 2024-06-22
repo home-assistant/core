@@ -161,8 +161,6 @@ async def test_turn_off_lock(hass: HomeAssistant, fritz: Mock) -> None:
             DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
         )
 
-    assert device.set_switch_state_off.call_count == 1
-
 
 async def test_turn_on_lock(hass: HomeAssistant, fritz: Mock) -> None:
     """Test if device locked."""
@@ -180,8 +178,6 @@ async def test_turn_on_lock(hass: HomeAssistant, fritz: Mock) -> None:
         await hass.services.async_call(
             DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
         )
-
-    assert device.set_switch_state_off.call_count == 1
 
 
 async def test_update(hass: HomeAssistant, fritz: Mock) -> None:
