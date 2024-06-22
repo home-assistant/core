@@ -3,21 +3,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, cast
 
-from kasa import Device, Feature
+from kasa import Feature
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TPLinkConfigEntry
-from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import (
     CoordinatedTPLinkFeatureEntity,
     TPLinkFeatureEntityDescription,
-    _description_for_feature,
-    _entities_for_device_and_its_children,
     async_refresh_after,
 )
 
@@ -49,11 +46,12 @@ async def async_setup_entry(
     children_coordinators = data.children_coordinators
     device = parent_coordinator.device
 
-    entities = _entities_for_device_and_its_children(
+    entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
         device=device,
         coordinator=parent_coordinator,
         feature_type=Feature.Type.Choice,
         entity_class=Select,
+        descriptions=SELECT_DESCRIPTIONS_MAP,
         child_coordinators=children_coordinators,
     )
     async_add_entities(entities)
@@ -64,26 +62,6 @@ class Select(CoordinatedTPLinkFeatureEntity, SelectEntity):
 
     entity_description: TPLinkSelectEntityDescription
 
-    def __init__(
-        self,
-        device: Device,
-        coordinator: TPLinkDataUpdateCoordinator,
-        *,
-        feature: Feature,
-        parent: Device | None = None,
-    ) -> None:
-        """Initialize the sensor."""
-        description = _description_for_feature(
-            TPLinkSelectEntityDescription,
-            feature,
-            SELECT_DESCRIPTIONS_MAP,
-            options=feature.choices,
-        )
-        super().__init__(
-            device, coordinator, description=description, feature=feature, parent=parent
-        )
-        self._async_call_update_attrs()
-
     @async_refresh_after
     async def async_select_option(self, option: str) -> None:
         """Update the current selected option."""
@@ -93,3 +71,4 @@ class Select(CoordinatedTPLinkFeatureEntity, SelectEntity):
     def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
         self._attr_current_option = self._feature.value
+        self._attr_options = cast(list, self._feature.choices)
