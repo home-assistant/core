@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -335,6 +336,12 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     _attr_should_poll = False
     _attr_sound_mode_list = list(SOUND_MODE_MAPPING)
 
+    _supports_volume: bool = False
+    _supports_sound_mode: bool = False
+    _supports_audio_info: bool = False
+    _supports_video_info: bool = False
+    _query_timer: asyncio.TimerHandle | None = None
+
     def __init__(
         self,
         receiver: pyeiscp.Connection,
@@ -361,19 +368,8 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         self._max_volume = max_volume
         self._receiver_max_volume = receiver_max_volume
 
-        self._attr_state = None
-        self._attr_is_volume_muted = False
-        self._attr_volume_level = 0
-        self._attr_source = None
         self._attr_source_list = list(sources.values())
-        self._attr_sound_mode = None
         self._attr_extra_state_attributes = {}
-
-        self._supports_volume = False
-        self._supports_sound_mode = False
-        self._supports_audio_info = False
-        self._supports_video_info = False
-        self._query_timer = None
 
     async def async_added_to_hass(self) -> None:
         """Entity has been added to hass."""
@@ -382,7 +378,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Cancel the query timer when the entity is removed."""
         if self._query_timer:
-            self._query_timer()
+            self._query_timer.cancel()
             self._query_timer = None
 
     @property
