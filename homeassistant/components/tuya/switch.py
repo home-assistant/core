@@ -407,6 +407,18 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             translation_key="switch",
         ),
     ),
+    # Irrigator
+    # https://developer.tuya.com/en/docs/iot/categoryggq?id=Kaiuz1qib7z0k
+    "ggq": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            translation_key="switch_1",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_2,
+            translation_key="switch_2",
+        ),
+    ),
     # Siren Alarm
     # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
     "sgbj": (
@@ -658,6 +670,13 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.STERILIZATION,
             translation_key="sterilization",
             entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Pool HeatPump
+    "znrb": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            translation_key="switch",
         ),
     ),
 }

@@ -7,10 +7,13 @@ import logging
 
 from homeassistant import config as conf_util
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_UNIQUE_ID, SERVICE_RELOAD
+from homeassistant.const import CONF_DEVICE_ID, CONF_UNIQUE_ID, SERVICE_RELOAD
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
+from homeassistant.helpers.device import (
+    async_remove_stale_devices_links_keep_current_device,
+)
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
@@ -57,6 +60,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
+
+    async_remove_stale_devices_links_keep_current_device(
+        hass,
+        entry.entry_id,
+        entry.options.get(CONF_DEVICE_ID),
+    )
+
     await hass.config_entries.async_forward_entry_setups(
         entry, (entry.options["template_type"],)
     )

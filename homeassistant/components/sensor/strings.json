@@ -8,6 +8,7 @@
       "is_battery_level": "Current {entity_name} battery level",
       "is_carbon_monoxide": "Current {entity_name} carbon monoxide concentration level",
       "is_carbon_dioxide": "Current {entity_name} carbon dioxide concentration level",
+      "is_conductivity": "Current {entity_name} conductivity",
       "is_current": "Current {entity_name} current",
       "is_data_rate": "Current {entity_name} data rate",
       "is_data_size": "Current {entity_name} data size",
@@ -57,6 +58,7 @@
       "battery_level": "{entity_name} battery level changes",
       "carbon_monoxide": "{entity_name} carbon monoxide concentration changes",
       "carbon_dioxide": "{entity_name} carbon dioxide concentration changes",
+      "conductivity": "{entity_name} conductivity changes",
       "current": "{entity_name} current changes",
       "data_rate": "{entity_name} data rate changes",
       "data_size": "{entity_name} data size changes",
@@ -152,6 +154,9 @@
     },
     "carbon_dioxide": {
       "name": "Carbon dioxide"
+    },
+    "conductivity": {
+      "name": "Conductivity"
     },
     "current": {
       "name": "Current"
