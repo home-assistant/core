@@ -24,6 +24,11 @@ PLATFORMS = [
 
 _LOGGER = logging.getLogger(__name__)
 
+# Attribute on events that indicates what action was taken with the button.
+ATTR_ACTION = "action"
+ATTR_FULL_ID = "full_id"
+ATTR_UUID = "uuid"
+
 
 @dataclass(slots=True, kw_only=True)
 class LutronData:
