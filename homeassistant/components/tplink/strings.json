@@ -78,6 +78,11 @@
         "name": "Stop alarm"
       }
     },
+    "select": {
+      "light_preset": {
+        "name": "Light preset"
+      }
+    },
     "sensor": {
       "current_consumption": {
         "name": "Current consumption"

@@ -22,6 +22,11 @@
         "default": "mdi:bell-cancel"
       }
     },
+    "select": {
+      "light_preset": {
+        "default": "mdi:sign-direction"
+      }
+    },
     "switch": {
       "led": {
         "default": "mdi:led-off",

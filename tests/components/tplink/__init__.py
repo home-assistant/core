@@ -168,6 +168,7 @@ def _mocked_feature(
     type_=Feature.Type.Sensor,
     category=Feature.Category.Debug,
     precision_hint=None,
+    choices=None,
     unit=None,
     minimum_value=0,
     maximum_value=2**16,  # Arbitrary max
@@ -176,6 +177,7 @@ def _mocked_feature(
     feature.id = id
     feature.name = name or id
     feature.value = value
+    feature.choices = choices
     feature.type = type_
     feature.category = category
     feature.precision_hint = precision_hint
