@@ -33,11 +33,9 @@ class GardenaBluetoothValve(GardenaBluetoothEntity, ValveEntity):
     """Representation of a valve switch."""
 
     _attr_name = None
-    _attr_is_closed = None
+    _attr_is_closed: bool | None = None
     _attr_reports_position = False
-    _attr_supported_features = (
-        ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
-    )
+    _attr_supported_features = ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
 
     characteristics = {
         Valve.state.uuid,
