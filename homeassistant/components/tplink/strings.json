@@ -59,6 +59,14 @@
     }
   },
   "entity": {
+    "button": {
+      "test_alarm": {
+        "name": "Test alarm"
+      },
+      "stop_alarm": {
+        "name": "Stop alarm"
+      }
+    },
     "sensor": {
       "current_consumption": {
         "name": "Current consumption"
