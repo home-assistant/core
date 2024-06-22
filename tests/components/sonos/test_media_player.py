@@ -192,6 +192,116 @@ async def test_play_media_library(
         )
 
 
+_track_url = "S://192.168.42.100/music/iTunes/The%20Beatles/A%20Hard%20Day%2fs%I%20Should%20Have%20Known%20Better.mp3"
+
+
+async def test_play_media_lib_track_play(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+) -> None:
+    """Tests playing media track with enqueue mode play."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            "entity_id": "media_player.zone_a",
+            "media_content_type": "track",
+            "media_content_id": _track_url,
+            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.PLAY,
+        },
+        blocking=True,
+    )
+    assert soco_mock.add_uri_to_queue.call_count == 1
+    assert soco_mock.add_uri_to_queue.call_args_list[0].args[0] == _track_url
+    assert soco_mock.add_uri_to_queue.call_args_list[0].kwargs["position"] == 1
+    assert (
+        soco_mock.add_uri_to_queue.call_args_list[0].kwargs["timeout"]
+        == LONG_SERVICE_TIMEOUT
+    )
+    assert soco_mock.play_from_queue.call_count == 1
+    assert soco_mock.play_from_queue.call_args_list[0].args[0] == 9
+
+
+async def test_play_media_lib_track_next(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+) -> None:
+    """Tests playing media track with enqueue mode next."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            "entity_id": "media_player.zone_a",
+            "media_content_type": "track",
+            "media_content_id": _track_url,
+            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.NEXT,
+        },
+        blocking=True,
+    )
+    assert soco_mock.add_uri_to_queue.call_count == 1
+    assert soco_mock.add_uri_to_queue.call_args_list[0].args[0] == _track_url
+    assert soco_mock.add_uri_to_queue.call_args_list[0].kwargs["position"] == 1
+    assert (
+        soco_mock.add_uri_to_queue.call_args_list[0].kwargs["timeout"]
+        == LONG_SERVICE_TIMEOUT
+    )
+    assert soco_mock.play_from_queue.call_count == 0
+
+
+async def test_play_media_lib_track_replace(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+) -> None:
+    """Tests playing media track with enqueue mode replace."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            "entity_id": "media_player.zone_a",
+            "media_content_type": "track",
+            "media_content_id": _track_url,
+            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.REPLACE,
+        },
+        blocking=True,
+    )
+    assert soco_mock.play_uri.call_count == 1
+    assert soco_mock.play_uri.call_args_list[0].args[0] == _track_url
+    assert soco_mock.play_uri.call_args_list[0].kwargs["force_radio"] is False
+
+
+async def test_play_media_lib_track_add(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+) -> None:
+    """Tests playing media track with enqueue mode add."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            "entity_id": "media_player.zone_a",
+            "media_content_type": "track",
+            "media_content_id": _track_url,
+            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.ADD,
+        },
+        blocking=True,
+    )
+    assert soco_mock.add_uri_to_queue.call_count == 1
+    assert soco_mock.add_uri_to_queue.call_args_list[0].args[0] == _track_url
+    assert (
+        soco_mock.add_uri_to_queue.call_args_list[0].kwargs["timeout"]
+        == LONG_SERVICE_TIMEOUT
+    )
+    assert soco_mock.play_from_queue.call_count == 0
+
+
 _mock_playlists = [
     MockMusicServiceItem(
         "playlist1",
