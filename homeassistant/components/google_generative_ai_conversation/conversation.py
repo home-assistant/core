@@ -167,6 +167,7 @@ class GoogleGenerativeAIConversationEntity(
             if user_input.conversation_id in self.history
             else ulid.ulid_now(),
         )
+        assert result.conversation_id
 
         llm_context = llm.LLMContext(
             platform=DOMAIN,
