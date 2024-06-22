@@ -11,13 +11,14 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 
 from .util import MockConnection
 
 from tests.common import MockConfigEntry
 
 
-async def init_integration(hass) -> MockConfigEntry:
+async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the Kodi integration in Home Assistant."""
     entry_data = {
         CONF_NAME: "name",
