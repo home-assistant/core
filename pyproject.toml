@@ -585,6 +585,7 @@ filterwarnings = [
     # -- Python 3.13
     # HomeAssistant
     "ignore:'audioop' is deprecated and slated for removal in Python 3.13:DeprecationWarning:homeassistant.components.assist_pipeline.websocket_api",
+    "ignore:'telnetlib' is deprecated and slated for removal in Python 3.13:DeprecationWarning:homeassistant.components.hddtemp.sensor",
     # https://pypi.org/project/nextcord/ - v2.6.0 - 2023-09-23
     # https://github.com/nextcord/nextcord/issues/1174
     # https://github.com/nextcord/nextcord/blob/v2.6.1/nextcord/player.py#L5
