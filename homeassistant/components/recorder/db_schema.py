@@ -585,13 +585,13 @@ class StateAttributes(Base):
         if (state := event.data["new_state"]) is None:
             return b"{}"
         if state_info := state.state_info:
+            unrecorded_attributes = state_info["unrecorded_attributes"]
             exclude_attrs = {
                 *ALL_DOMAIN_EXCLUDE_ATTRS,
-                *state_info["unrecorded_attributes"],
+                *unrecorded_attributes,
             }
-            if MATCH_ALL in state_info["unrecorded_attributes"]:
-                for attribute in state.attributes:
-                    exclude_attrs.add(attribute)
+            if MATCH_ALL in unrecorded_attributes:
+                exclude_attrs.update(state.attributes)
 
         else:
             exclude_attrs = ALL_DOMAIN_EXCLUDE_ATTRS
