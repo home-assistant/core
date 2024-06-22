@@ -147,7 +147,7 @@ ZONE_SENSORS: tuple[HydrawiseSensorEntityDescription, ...] = (
     HydrawiseSensorEntityDescription(
         key="watering_time",
         translation_key="watering_time",
-        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         value_fn=_get_zone_watering_time,
     ),
     HydrawiseSensorEntityDescription(

@@ -395,7 +395,7 @@
     'supported_features': 0,
     'translation_key': 'watering_time',
     'unique_id': '5965394_watering_time',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
 # name: test_all_sensors[sensor.zone_one_remaining_watering_time-state]
@@ -403,7 +403,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by hydrawise.com',
       'friendly_name': 'Zone One Remaining watering time',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.zone_one_remaining_watering_time',
@@ -596,7 +596,7 @@
     'supported_features': 0,
     'translation_key': 'watering_time',
     'unique_id': '5965395_watering_time',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
 # name: test_all_sensors[sensor.zone_two_remaining_watering_time-state]
@@ -604,7 +604,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by hydrawise.com',
       'friendly_name': 'Zone Two Remaining watering time',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.zone_two_remaining_watering_time',
