@@ -133,7 +133,7 @@ class ProtectData:
     @callback
     def async_setup(self, bootstrap: Bootstrap) -> None:
         """Subscribe and do the refresh."""
-        self._process_updates_success(bootstrap)
+        self._process_update(bootstrap)
         api = self.api
         self._unsubs = [
             api.subscribe_websocket_state(self._async_websocket_state_changed),
@@ -176,15 +176,16 @@ class ProtectData:
                 _LOGGER.exception("Reauthentication required")
                 self._entry.async_start_reauth(self._hass)
             self.last_update_success = False
-        except ClientError:
+        except ClientError as ex:
             if self.last_update_success:
                 _LOGGER.exception("Error while updating")
             else:
+                _LOGGER.debug("Error while updating: %s", ex)
                 self._async_process_update_success_change(False)
         else:
-            self._process_updates_success(updates)
+            self._process_update(updates)
 
-    def _process_updates_success(self, updates: Bootstrap | None) -> None:
+    def _process_update(self, updates: Bootstrap | None) -> None:
         """Process a successful bootstrap."""
         self.last_update_success = True
         self._auth_failures = 0
