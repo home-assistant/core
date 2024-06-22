@@ -132,6 +132,8 @@ class TOTPConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="confirm",
             data_schema=data_schema,
             description_placeholders={
+                "auth_app1": "[Google Authenticator](https://support.google.com/accounts/answer/1066447)",
+                "auth_app2": "[Authy](https://authy.com/)",
                 "code": self.user_input[CONF_TOKEN],
             },
             errors=errors,
