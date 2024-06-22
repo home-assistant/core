@@ -1405,10 +1405,12 @@ async def test_trigger_entity_restore_state_auto_off_expired(
     assert state.state == OFF
 
 
-async def test_device_id(hass: HomeAssistant) -> None:
+async def test_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test for device for Template."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
 
     device_config_entry = MockConfigEntry()
     device_config_entry.add_to_hass(hass)

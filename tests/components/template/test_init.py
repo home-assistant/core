@@ -271,10 +271,11 @@ async def async_yaml_patch_helper(hass, filename):
         await hass.async_block_till_done()
 
 
-async def test_change_device(hass: HomeAssistant) -> None:
+async def test_change_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test remove the device registry configuration entry when the device changes."""
-
-    device_registry = dr.async_get(hass)
 
     # Configure a device registry
     entry_device1 = MockConfigEntry()
