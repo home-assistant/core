@@ -45,13 +45,12 @@ SUPPORT_ONKYO_WO_VOLUME = (
     | MediaPlayerEntityFeature.SELECT_SOURCE
     | MediaPlayerEntityFeature.PLAY_MEDIA
 )
-SUPPORT_ONKYO_WO_SOUND_MODE = (
+SUPPORT_ONKYO = (
     SUPPORT_ONKYO_WO_VOLUME
     | MediaPlayerEntityFeature.VOLUME_SET
     | MediaPlayerEntityFeature.VOLUME_MUTE
     | MediaPlayerEntityFeature.VOLUME_STEP
 )
-SUPPORT_ONKYO = SUPPORT_ONKYO_WO_SOUND_MODE | MediaPlayerEntityFeature.SELECT_SOUND_MODE
 
 KNOWN_HOSTS: list[str] = []
 
@@ -70,75 +69,6 @@ DEFAULT_SOURCES = {
     "fm": "Radio",
 }
 DEFAULT_PLAYABLE_SOURCES = ("fm", "am", "tuner")
-
-SOUND_MODE_MAPPING = {
-    "Auto": ["auto"],
-    "Direct": ["direct"],
-    "Pure Direct": ["pure-audio"],
-    "Stereo": ["stereo"],
-    "Extended Stereo": ["all-ch-stereo"],
-    "Surround": ["surr"],
-    "Auto Surround": ["auto-surround"],
-    "Multichannel PCM": ["straight-decode"],
-    "Dolby Digital": [
-        "dolby-atmos",
-        "dolby-surround",
-        "dolby-virtual",
-        "dolby-ex",
-        "dolby-surround-thx-cinema",
-        "pliix-thx-cinema",
-        "pliix-movie",
-        "dolby-surround-thx-music",
-        "pliix-thx-music",
-        "pliix-music",
-        "dolby-surround-thx-games",
-        "pliix-thx-games",
-        "pliix-game",
-        "pliiz-height-thx-cinema",
-        "pliiz-height-thx-games",
-        "plii",
-        "pliiz-height-thx-music",
-        "pliiz-height-thx-u2",
-        "pliiz-height",
-    ],
-    "DTS Surround": [
-        "dts-x",
-        "neural-x",
-        "dts-surround-sensation",
-        "neo-6-cinema-dts-surround-sensation",
-        "dts-neural-x-thx-cinema",
-        "neo-6-music-dts-surround-sensation",
-        "dts-neural-x-thx-music",
-        "dts-neural-x-thx-games",
-    ],
-    "THX": [
-        "thx",
-        "thx-surround-ex",
-        "thx-cinema",
-        "thx-music",
-        "thx-musicmode",
-        "thx-games",
-        "thx-u2",
-        "neural-thx",
-        "neural-thx-cinema",
-        "neural-thx-music",
-        "neural-thx-games",
-    ],
-    "Mono": ["mono"],
-    "Extended Mono": ["full-mono"],
-    "Action": ["action", "game-action"],
-    "Drama": ["tv-logic"],
-    "Entertainment Show": ["studio-mix"],
-    "Advanced Game": ["film", "game-rpg"],
-    "Sports": ["enhanced-7", "enhance", "game-sports"],
-    "Classical": ["orchestra"],
-    "Rock/Pop": ["musical", "game-rock"],
-    "Unplugged": ["unplugged"],
-    "Front Stage Surround": ["theater-dimensional"],
-}
-SOUND_MODE_REVERSE_MAPPING = {
-    subval: key for key, values in SOUND_MODE_MAPPING.items() for subval in values
-}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -334,10 +264,8 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     """Representation of an Onkyo Receiver Media Player (one per each zone)."""
 
     _attr_should_poll = False
-    _attr_sound_mode_list = list(SOUND_MODE_MAPPING)
 
     _supports_volume: bool = False
-    _supports_sound_mode: bool = False
     _supports_audio_info: bool = False
     _supports_video_info: bool = False
     _query_timer: asyncio.TimerHandle | None = None
@@ -384,10 +312,8 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Return media player features that are supported."""
-        if self._supports_sound_mode:
-            return SUPPORT_ONKYO
         if self._supports_volume:
-            return SUPPORT_ONKYO_WO_SOUND_MODE
+            return SUPPORT_ONKYO
         return SUPPORT_ONKYO_WO_VOLUME
 
     @callback
@@ -448,12 +374,6 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     async def async_select_output(self, hdmi_output: str) -> None:
         """Set hdmi-out."""
         self._update_receiver("hdmi-output-selector", hdmi_output)
-
-    async def async_select_sound_mode(self, sound_mode: str) -> None:
-        """Select sound mode."""
-        if sound_mode in list(SOUND_MODE_MAPPING):
-            sound_mode = SOUND_MODE_MAPPING[sound_mode][0]
-        self._update_receiver("listening-mode", sound_mode)
 
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
@@ -519,9 +439,6 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                 self._attr_extra_state_attributes[ATTR_PRESET] = value
             elif ATTR_PRESET in self._attr_extra_state_attributes:
                 del self._attr_extra_state_attributes[ATTR_PRESET]
-        elif command == "listening-mode":
-            self._supports_sound_mode = True
-            self._parse_sound_mode(value)
         elif command == "audio-information":
             self._supports_audio_info = True
             self._parse_audio_information(value)
@@ -544,21 +461,6 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                 self._attr_source = self._source_mapping[value]
                 break
             self._attr_source = "_".join(source)
-
-    @callback
-    def _parse_sound_mode(self, sound_mode):
-        # If the selected sound mode is not available, N/A is returned
-        # so only update the sound mode when it is not N/A.
-        # Also sound_mode is either a tuple of values or a single value,
-        # so we convert to a tuple when it is a single value.
-        if sound_mode != "N/A":
-            if not isinstance(sound_mode, tuple):
-                sound_mode = (sound_mode,)
-            for value in sound_mode:
-                if value in SOUND_MODE_REVERSE_MAPPING:
-                    self._attr_sound_mode = SOUND_MODE_REVERSE_MAPPING[value]
-                    break
-                self._attr_sound_mode = "_".join(sound_mode)
 
     @callback
     def _parse_audio_information(self, audio_information):
