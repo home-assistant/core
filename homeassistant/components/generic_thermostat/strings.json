@@ -6,35 +6,21 @@
         "title": "Add generic hygrostat sensor",
         "description": "Create a entity that control the humidity via a switch and sensor.",
         "data": {
-          "heater": "Heater or A/C",
-          "target_sensor": "Temperature sensor",
           "ac_mode": "Cooling mode",
-          "max_temp": "Maximum set point",
+          "heater": "Actuator switch",
+          "target_sensor": "Temperature sensor",
           "min_cycle_duration": "Minimum cycle duration",
-          "min_temp": "Minimum set point",
           "name": "[%key:common::config_flow::data::name%]",
           "cold_tolerance": "Cold tolerance",
-          "hot_tolerance": "Hot tolerance",
-          "target_temp": "Initial target temperature",
-          "keep_alive": "Keep alive",
-          "initial_hvac_mode": "Initial mode",
-          "precision": "Precision",
-          "target_temp_step": "Temperature step"
+          "hot_tolerance": "Hot tolerance"
         },
         "data_description": {
+          "ac_mode": "Set the actuator specified to be treated as a cooling device instead of a heating device.",
           "heater": "Switch entity used to cool or heat depending on A/C mode.",
           "target_sensor": "Temperature sensor that reflect the current temperature.",
-          "ac_mode": "Set the switch specified to be treated as a cooling device instead of a heating device.",
-          "min_temp": "Minimum set point available.",
           "min_cycle_duration": "Set a minimum amount of time that the switch specified must be in its current state prior to being switched either off or on. This option will be ignored if the keep alive option is set.",
-          "max_temp": "Maximum set point available.",
           "cold_tolerance": "Minimum amount of difference between the temperature read by the temperature sensor the target temperature that must change prior to being switched on. For example, if the target temperature is 25 and the tolerance is 0.5 the heater will start when the sensor equals or goes below 24.5.",
-          "hot_tolerance": "Minimum amount of difference between the temperature read by the temperature sensor the target temperature that must change prior to being switched off. For example, if the target temperature is 25 and the tolerance is 0.5 the heater will stop when the sensor equals or goes above 25.5.",
-          "target_temp": "Initial target temperature to use if none is known.",
-          "keep_alive": "If set, the switch specified will be triggered every time the interval elapses. Use with devices that shut off if they don't receive a signal from their remote for a while. Use also with switches that might lose state.",
-          "initial_hvac_mode": "Set the initial HVAC mode. If this parameter is not set, it is preferable to set a keep_alive value. This is helpful to align any discrepancies between generic_thermostat and heater state.",
-          "precision": "The desired precision for this device. Can be used to match your actual thermostat's precision. Supported values are 0.1, 0.5 and 1.0. This value is also used as the step size for setting the target temperature.",
-          "target_temp_step": "The desired step size for setting the target temperature. Supported values are 0.1, 0.5 and 1.0."
+          "hot_tolerance": "Minimum amount of difference between the temperature read by the temperature sensor the target temperature that must change prior to being switched off. For example, if the target temperature is 25 and the tolerance is 0.5 the heater will stop when the sensor equals or goes above 25.5."
         }
       },
       "presets": {
@@ -54,34 +40,20 @@
     "step": {
       "init": {
         "data": {
+          "ac_mode": "[%key:component::generic_thermostat::config::step::user::data::ac_mode%]",
           "heater": "[%key:component::generic_thermostat::config::step::user::data::heater%]",
           "target_sensor": "[%key:component::generic_thermostat::config::step::user::data::target_sensor%]",
-          "ac_mode": "[%key:component::generic_thermostat::config::step::user::data::ac_mode%]",
-          "max_temp": "[%key:component::generic_thermostat::config::step::user::data::max_temp%]",
           "min_cycle_duration": "[%key:component::generic_thermostat::config::step::user::data::min_cycle_duration%]",
-          "min_temp": "[%key:component::generic_thermostat::config::step::user::data::min_temp%]",
           "cold_tolerance": "[%key:component::generic_thermostat::config::step::user::data::cold_tolerance%]",
-          "hot_tolerance": "[%key:component::generic_thermostat::config::step::user::data::hot_tolerance%]",
-          "target_temp": "[%key:component::generic_thermostat::config::step::user::data::target_temp%]",
-          "keep_alive": "[%key:component::generic_thermostat::config::step::user::data::keep_alive%]",
-          "initial_hvac_mode": "[%key:component::generic_thermostat::config::step::user::data::initial_hvac_mode%]",
-          "precision": "[%key:component::generic_thermostat::config::step::user::data::precision%]",
-          "target_temp_step": "[%key:component::generic_thermostat::config::step::user::data::target_temp_step%]"
+          "hot_tolerance": "[%key:component::generic_thermostat::config::step::user::data::hot_tolerance%]"
         },
         "data_description": {
           "heater": "[%key:component::generic_thermostat::config::step::user::data_description::heater%]",
           "target_sensor": "[%key:component::generic_thermostat::config::step::user::data_description::target_sensor%]",
           "ac_mode": "[%key:component::generic_thermostat::config::step::user::data_description::ac_mode%]",
-          "min_temp": "[%key:component::generic_thermostat::config::step::user::data_description::min_temp%]",
           "min_cycle_duration": "[%key:component::generic_thermostat::config::step::user::data_description::min_cycle_duration%]",
-          "max_temp": "[%key:component::generic_thermostat::config::step::user::data_description::max_temp%]",
           "cold_tolerance": "[%key:component::generic_thermostat::config::step::user::data_description::cold_tolerance%]",
-          "hot_tolerance": "[%key:component::generic_thermostat::config::step::user::data_description::hot_tolerance%]",
-          "target_temp": "[%key:component::generic_thermostat::config::step::user::data_description::target_temp%]",
-          "keep_alive": "[%key:component::generic_thermostat::config::step::user::data_description::keep_alive%]",
-          "initial_hvac_mode": "[%key:component::generic_thermostat::config::step::user::data_description::initial_hvac_mode%]",
-          "precision": "[%key:component::generic_thermostat::config::step::user::data_description::precision%]",
-          "target_temp_step": "[%key:component::generic_thermostat::config::step::user::data_description::target_temp_step%]"
+          "hot_tolerance": "[%key:component::generic_thermostat::config::step::user::data_description::hot_tolerance%]"
         }
       },
       "presets": {
@@ -94,15 +66,6 @@
           "sleep_temp": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::sleep%]",
           "activity_temp": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::activity%]"
         }
-      }
-    }
-  },
-  "selector": {
-    "initial_hvac_mode": {
-      "options": {
-        "cool": "[%key:component::climate::entity_component::_::state::cool%]",
-        "heat": "[%key:component::climate::entity_component::_::state::heat%]",
-        "off": "[%key:common::state::off%]"
       }
     }
   },

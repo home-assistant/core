@@ -7,16 +7,9 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.components.climate import HVACMode
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    CONF_NAME,
-    DEGREE,
-    PRECISION_HALVES,
-    PRECISION_TENTHS,
-    PRECISION_WHOLE,
-)
+from homeassistant.const import CONF_NAME, DEGREE
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
@@ -28,27 +21,17 @@ from .climate import (
     CONF_COLD_TOLERANCE,
     CONF_HEATER,
     CONF_HOT_TOLERANCE,
-    CONF_INITIAL_HVAC_MODE,
-    CONF_KEEP_ALIVE,
-    CONF_MAX_TEMP,
     CONF_MIN_DUR,
-    CONF_MIN_TEMP,
-    CONF_PRECISION,
     CONF_PRESETS,
     CONF_SENSOR,
-    CONF_TARGET_TEMP,
-    CONF_TEMP_STEP,
     DEFAULT_TOLERANCE,
     DOMAIN,
 )
 
-PRECISION_STRINGS = [
-    str(PRECISION_TENTHS),
-    str(PRECISION_HALVES),
-    str(PRECISION_WHOLE),
-]
-
 OPTIONS_SCHEMA = {
+    vol.Required(CONF_AC_MODE): selector.BooleanSelector(
+        selector.BooleanSelectorConfig(),
+    ),
     vol.Required(CONF_SENSOR): selector.EntitySelector(
         selector.EntitySelectorConfig(
             domain=SENSOR_DOMAIN, device_class=SensorDeviceClass.TEMPERATURE
@@ -57,62 +40,22 @@ OPTIONS_SCHEMA = {
     vol.Required(CONF_HEATER): selector.EntitySelector(
         selector.EntitySelectorConfig(domain=SWITCH_DOMAIN)
     ),
-    vol.Required(CONF_AC_MODE): selector.BooleanSelector(
-        selector.BooleanSelectorConfig(),
-    ),
     vol.Required(
         CONF_COLD_TOLERANCE, default=DEFAULT_TOLERANCE
     ): selector.NumberSelector(
         selector.NumberSelectorConfig(
-            mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE
+            mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE, step=0.1
         )
     ),
     vol.Required(
         CONF_HOT_TOLERANCE, default=DEFAULT_TOLERANCE
     ): selector.NumberSelector(
         selector.NumberSelectorConfig(
-            mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE
-        )
-    ),
-    vol.Optional(CONF_TARGET_TEMP): selector.NumberSelector(
-        selector.NumberSelectorConfig(
-            mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE
+            mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE, step=0.1
         )
     ),
     vol.Optional(CONF_MIN_DUR): selector.DurationSelector(
         selector.DurationSelectorConfig(allow_negative=False)
-    ),
-    vol.Optional(CONF_MIN_TEMP): selector.NumberSelector(
-        selector.NumberSelectorConfig(
-            mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE
-        )
-    ),
-    vol.Optional(CONF_MAX_TEMP): selector.NumberSelector(
-        selector.NumberSelectorConfig(
-            mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE
-        )
-    ),
-    vol.Optional(CONF_INITIAL_HVAC_MODE): selector.SelectSelector(
-        selector.SelectSelectorConfig(
-            options=[HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF],
-            translation_key=CONF_INITIAL_HVAC_MODE,
-            mode=selector.SelectSelectorMode.DROPDOWN,
-        )
-    ),
-    vol.Optional(CONF_PRECISION): selector.SelectSelector(
-        selector.SelectSelectorConfig(
-            options=PRECISION_STRINGS,
-            mode=selector.SelectSelectorMode.DROPDOWN,
-        )
-    ),
-    vol.Optional(CONF_KEEP_ALIVE): selector.DurationSelector(
-        selector.DurationSelectorConfig(allow_negative=False, enable_day=False)
-    ),
-    vol.Optional(CONF_TEMP_STEP): selector.SelectSelector(
-        selector.SelectSelectorConfig(
-            options=PRECISION_STRINGS,
-            mode=selector.SelectSelectorMode.DROPDOWN,
-        )
     ),
 }
 
