@@ -21,7 +21,7 @@ from homeassistant.components.media_source import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import DOMAIN, SHARED_SUFFIX
 from .models import SynologyDSMData
 
 
@@ -45,6 +45,7 @@ class SynologyPhotosMediaSourceIdentifier:
         self.album_id = None
         self.cache_key = None
         self.file_name = None
+        self.is_shared = False
 
         if parts:
             self.unique_id = parts[0]
@@ -54,6 +55,9 @@ class SynologyPhotosMediaSourceIdentifier:
                 self.cache_key = parts[2]
             if len(parts) > 3:
                 self.file_name = parts[3]
+                if self.file_name.endswith(SHARED_SUFFIX):
+                    self.is_shared = True
+                    self.file_name = self.file_name.removesuffix(SHARED_SUFFIX)
 
 
 class SynologyPhotosMediaSource(MediaSource):
@@ -160,10 +164,13 @@ class SynologyPhotosMediaSource(MediaSource):
             if isinstance(mime_type, str) and mime_type.startswith("image/"):
                 # Force small small thumbnails
                 album_item.thumbnail_size = "sm"
+                suffix = ""
+                if album_item.is_shared:
+                    suffix = SHARED_SUFFIX
                 ret.append(
                     BrowseMediaSource(
                         domain=DOMAIN,
-                        identifier=f"{identifier.unique_id}/{identifier.album_id}/{album_item.thumbnail_cache_key}/{album_item.file_name}",
+                        identifier=f"{identifier.unique_id}/{identifier.album_id}/{album_item.thumbnail_cache_key}/{album_item.file_name}{suffix}",
                         media_class=MediaClass.IMAGE,
                         media_content_type=mime_type,
                         title=album_item.file_name,
@@ -186,8 +193,11 @@ class SynologyPhotosMediaSource(MediaSource):
         mime_type, _ = mimetypes.guess_type(identifier.file_name)
         if not isinstance(mime_type, str):
             raise Unresolvable("No file extension")
+        suffix = ""
+        if identifier.is_shared:
+            suffix = SHARED_SUFFIX
         return PlayMedia(
-            f"/synology_dsm/{identifier.unique_id}/{identifier.cache_key}/{identifier.file_name}",
+            f"/synology_dsm/{identifier.unique_id}/{identifier.cache_key}/{identifier.file_name}{suffix}",
             mime_type,
         )
 
@@ -223,13 +233,14 @@ class SynologyDsmMediaView(http.HomeAssistantView):
         # location: {cache_key}/{filename}
         cache_key, file_name = location.split("/")
         image_id = int(cache_key.split("_")[0])
+        if shared := file_name.endswith(SHARED_SUFFIX):
+            file_name = file_name.removesuffix(SHARED_SUFFIX)
         mime_type, _ = mimetypes.guess_type(file_name)
         if not isinstance(mime_type, str):
             raise web.HTTPNotFound
         diskstation: SynologyDSMData = self.hass.data[DOMAIN][source_dir_id]
-
         assert diskstation.api.photos is not None
-        item = SynoPhotosItem(image_id, "", "", "", cache_key, "", False)
+        item = SynoPhotosItem(image_id, "", "", "", cache_key, "", shared)
         try:
             image = await diskstation.api.photos.download_item(item)
         except SynologyDSMException as exc:

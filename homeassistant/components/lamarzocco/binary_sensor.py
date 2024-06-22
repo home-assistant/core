@@ -10,12 +10,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import LaMarzoccoConfigEntry
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
 
@@ -46,16 +45,23 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
         available_fn=lambda device: device.websocket_connected,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    LaMarzoccoBinarySensorEntityDescription(
+        key="backflush_enabled",
+        translation_key="backflush_enabled",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        is_on_fn=lambda config: config.backflush_enabled,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: LaMarzoccoConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up binary sensor entities."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         LaMarzoccoBinarySensorEntity(coordinator, description)

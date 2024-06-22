@@ -12,6 +12,7 @@ from tests.common import MockConfigEntry
 
 MOCK_HOST_ZEVERSOLAR = "zeversolar-fake-host"
 MOCK_PORT_ZEVERSOLAR = 10200
+MOCK_SERIAL_NUMBER = "123456778"
 
 
 async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
@@ -19,16 +20,16 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
 
     zeverData = ZeverSolarData(
         wifi_enabled=False,
-        serial_or_registry_id="1223",
-        registry_key="A-2",
+        serial_or_registry_id="EAB9615C0001",
+        registry_key="WSMQKHTQ3JVYQWA9",
         hardware_version="M10",
-        software_version="123-23",
-        reported_datetime="19900101 23:00",
+        software_version="19703-826R+17511-707R",
+        reported_datetime="19900101 23:01:45",
         communication_status=StatusEnum.OK,
         num_inverters=1,
-        serial_number="123456778",
+        serial_number=MOCK_SERIAL_NUMBER,
         pac=1234,
-        energy_today=123,
+        energy_today=123.4,
         status=StatusEnum.OK,
         meter_status=StatusEnum.OK,
     )
