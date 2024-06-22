@@ -34,7 +34,12 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.COVER, Platform.SELECT]
+PLATFORMS: list[Platform] = [
+    Platform.BUTTON,
+    Platform.COVER,
+    Platform.SELECT,
+    Platform.SENSOR,
+]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 

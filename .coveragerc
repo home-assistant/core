@@ -816,6 +816,7 @@ omit =
     homeassistant/components/motionblinds_ble/cover.py
     homeassistant/components/motionblinds_ble/entity.py
     homeassistant/components/motionblinds_ble/select.py
+    homeassistant/components/motionblinds_ble/sensor.py
     homeassistant/components/motionmount/__init__.py
     homeassistant/components/motionmount/binary_sensor.py
     homeassistant/components/motionmount/entity.py
