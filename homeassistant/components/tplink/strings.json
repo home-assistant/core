@@ -59,6 +59,17 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "humidity_warning": {
+        "name": "Humidity warning"
+      },
+      "temperature_warning": {
+        "name": "Temperature warning"
+      },
+      "overheated": {
+        "name": "Overheated"
+      }
+    },
     "button": {
       "test_alarm": {
         "name": "Test alarm"

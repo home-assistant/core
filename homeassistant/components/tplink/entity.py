@@ -170,10 +170,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         raise NotImplementedError
 
     async def async_added_to_hass(self) -> None:
-        """Handle being added to hass.
-
-        Platforms can override this to initialize their internals.
-        """
+        """Handle being added to hass."""
         self._async_call_update_attrs()
         return await super().async_added_to_hass()
 
