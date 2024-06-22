@@ -32,6 +32,13 @@ async def async_setup_entry(
 class GardenaBluetoothValve(GardenaBluetoothEntity, ValveEntity):
     """Representation of a valve switch."""
 
+    _attr_name = None
+    _attr_is_closed = None
+    _attr_reports_position = False
+    _attr_supported_features = (
+        ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
+    )
+
     characteristics = {
         Valve.state.uuid,
         Valve.manual_watering_time.uuid,
@@ -47,12 +54,6 @@ class GardenaBluetoothValve(GardenaBluetoothEntity, ValveEntity):
             coordinator, {Valve.state.uuid, Valve.manual_watering_time.uuid}
         )
         self._attr_unique_id = f"{coordinator.address}-{Valve.state.uuid}"
-        self._attr_name = None
-        self._attr_is_closed = None
-        self._attr_reports_position = False
-        self._attr_supported_features = (
-            ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
-        )
 
     def _handle_coordinator_update(self) -> None:
         self._attr_is_closed = not self.coordinator.get_cached(Valve.state)
