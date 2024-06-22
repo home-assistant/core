@@ -6,7 +6,7 @@ from typing import Any
 
 from gardena_bluetooth.const import Valve
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.valve import ValveEntity, ValveEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -22,15 +22,13 @@ async def async_setup_entry(
     """Set up switch based on a config entry."""
     coordinator: Coordinator = hass.data[DOMAIN][entry.entry_id]
     entities = []
-    if GardenaBluetoothValveSwitch.characteristics.issubset(
-        coordinator.characteristics
-    ):
-        entities.append(GardenaBluetoothValveSwitch(coordinator))
+    if GardenaBluetoothValve.characteristics.issubset(coordinator.characteristics):
+        entities.append(GardenaBluetoothValve(coordinator))
 
     async_add_entities(entities)
 
 
-class GardenaBluetoothValveSwitch(GardenaBluetoothEntity, SwitchEntity):
+class GardenaBluetoothValve(GardenaBluetoothEntity, ValveEntity):
     """Representation of a valve switch."""
 
     characteristics = {
@@ -48,26 +46,32 @@ class GardenaBluetoothValveSwitch(GardenaBluetoothEntity, SwitchEntity):
             coordinator, {Valve.state.uuid, Valve.manual_watering_time.uuid}
         )
         self._attr_unique_id = f"{coordinator.address}-{Valve.state.uuid}"
-        self._attr_translation_key = "state"
-        self._attr_is_on = None
-        self._attr_entity_registry_enabled_default = False
+        self._attr_name = None
+        self._attr_is_closed = None
+        self._attr_reports_position = False
+        self._attr_supported_features = (
+            ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
+        )
 
     def _handle_coordinator_update(self) -> None:
-        self._attr_is_on = self.coordinator.get_cached(Valve.state)
+        is_open = self.coordinator.get_cached(Valve.state)
+        if is_open is None:
+            self._attr_is_closed = None
+        else:
+            self._attr_is_closed = not is_open
         super()._handle_coordinator_update()
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
+    async def async_open_valve(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        if not (data := self.coordinator.data.get(Valve.manual_watering_time.uuid)):
+        if (value := self.coordinator.get_cached(Valve.manual_watering_time)) is None:
             raise HomeAssistantError("Unable to get manual activation time.")
 
-        value = Valve.manual_watering_time.decode(data)
         await self.coordinator.write(Valve.remaining_open_time, value)
-        self._attr_is_on = True
+        self._attr_is_closed = False
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs: Any) -> None:
+    async def async_close_valve(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.coordinator.write(Valve.remaining_open_time, 0)
-        self._attr_is_on = False
+        self._attr_is_closed = True
         self.async_write_ha_state()
