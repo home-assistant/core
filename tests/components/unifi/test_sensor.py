@@ -11,6 +11,7 @@ from aiounifi.models.device import DeviceState
 from aiounifi.models.message import MessageKey
 from freezegun.api import FrozenDateTimeFactory, freeze_time
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -29,7 +30,13 @@ from homeassistant.components.unifi.const import (
     DEVICE_STATES,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY, ConfigEntry
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, EntityCategory
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
@@ -1332,3 +1339,69 @@ async def test_device_client_sensors(
 
     assert hass.states.get("sensor.wired_device_clients").state == "2"
     assert hass.states.get("sensor.wireless_device_clients").state == "0"
+
+
+WIRED_CLIENT = {
+    "hostname": "Wired client",
+    "is_wired": True,
+    "mac": "00:00:00:00:00:01",
+    "oui": "Producer",
+    "wired-rx_bytes-r": 1234000000,
+    "wired-tx_bytes-r": 5678000000,
+    "uptime": 1600094505,
+}
+WIRELESS_CLIENT = {
+    "is_wired": False,
+    "mac": "00:00:00:00:00:01",
+    "name": "Wireless client",
+    "oui": "Producer",
+    "rx_bytes-r": 2345000000.0,
+    "tx_bytes-r": 6789000000.0,
+    "uptime": 60,
+}
+
+
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [
+        {
+            CONF_ALLOW_BANDWIDTH_SENSORS: True,
+            CONF_ALLOW_UPTIME_SENSORS: True,
+            CONF_TRACK_CLIENTS: False,
+            CONF_TRACK_DEVICES: False,
+        }
+    ],
+)
+@pytest.mark.parametrize(
+    ("client_payload", "entity_id", "unique_id_prefix"),
+    [
+        ([WIRED_CLIENT], "sensor.wired_client_rx", "rx-"),
+        ([WIRED_CLIENT], "sensor.wired_client_tx", "tx-"),
+        ([WIRED_CLIENT], "sensor.wired_client_uptime", "uptime-"),
+        ([WIRELESS_CLIENT], "sensor.wireless_client_rx", "rx-"),
+        ([WIRELESS_CLIENT], "sensor.wireless_client_tx", "tx-"),
+        ([WIRELESS_CLIENT], "sensor.wireless_client_uptime", "uptime-"),
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.freeze_time("2021-01-01 01:01:00")
+async def test_sensor_sources(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    entity_id: str,
+    unique_id_prefix: str,
+) -> None:
+    """Test sensor sources and the entity description."""
+    ent_reg_entry = entity_registry.async_get(entity_id)
+    assert ent_reg_entry.unique_id.startswith(unique_id_prefix)
+    assert ent_reg_entry.unique_id == snapshot
+    assert ent_reg_entry.entity_category == snapshot
+
+    state = hass.states.get(entity_id)
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == snapshot
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == snapshot
+    assert state.attributes.get(ATTR_STATE_CLASS) == snapshot
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == snapshot
+    assert state.state == snapshot

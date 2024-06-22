@@ -50,10 +50,10 @@ SENSORS: dict[str, tuple[RefossSensorEntityDescription, ...]] = {
             translation_key="power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfPower.KILO_WATT,
-            suggested_unit_of_measurement=UnitOfPower.WATT,
+            native_unit_of_measurement=UnitOfPower.WATT,
             suggested_display_precision=2,
             subkey="power",
+            fn=lambda x: x / 1000.0,
         ),
         RefossSensorEntityDescription(
             key="voltage",
