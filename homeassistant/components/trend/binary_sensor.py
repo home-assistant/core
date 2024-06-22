@@ -32,8 +32,9 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -134,33 +135,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up trend sensor from config entry."""
 
-    registry = er.async_get(hass)
-    # Validate + resolve entity registry id to entity_id
-    source_entity_id = er.async_validate_entity_id(
-        registry, entry.options[CONF_ENTITY_ID]
+    device_info = async_device_info_to_link_from_entity(
+        hass,
+        entry.options[CONF_ENTITY_ID],
     )
-
-    source_entity = registry.async_get(source_entity_id)
-    dev_reg = dr.async_get(hass)
-    # Resolve source entity device
-    if (
-        (source_entity is not None)
-        and (source_entity.device_id is not None)
-        and (
-            (
-                device := dev_reg.async_get(
-                    device_id=source_entity.device_id,
-                )
-            )
-            is not None
-        )
-    ):
-        device_info = dr.DeviceInfo(
-            identifiers=device.identifiers,
-            connections=device.connections,
-        )
-    else:
-        device_info = None
 
     async_add_entities(
         [
