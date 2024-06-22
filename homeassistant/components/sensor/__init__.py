@@ -383,15 +383,9 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         ):
             if not self._invalid_suggested_unit_of_measurement_reported:
                 self._invalid_suggested_unit_of_measurement_reported = True
-                report_issue = self._suggest_report_issue()
-                # This should raise in Home Assistant Core 2024.5
-                _LOGGER.warning(
-                    (
-                        "%s sets an invalid suggested_unit_of_measurement. Please %s. "
-                        "This warning will become an error in Home Assistant Core 2024.5"
-                    ),
-                    type(self),
-                    report_issue,
+                raise ValueError(
+                    f"Entity {type(self)} suggest an incorrect "
+                    f"unit of measurement: {suggested_unit_of_measurement}."
                 )
             return False
 
