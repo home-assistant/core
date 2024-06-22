@@ -1132,7 +1132,6 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             suggested_unit_of_measurement=UnitOfPower.WATT,
         ),
     ),
-    # Poolsana Pool HeatPump
     # Pool HeatPump
     "znrb": (
         TuyaSensorEntityDescription(
