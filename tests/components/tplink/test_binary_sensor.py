@@ -53,7 +53,7 @@ async def test_binary_sensor(
         await hass.async_block_till_done()
 
     # The entity_id is based on standard name from core.
-    entity_id = "binary_sensor.my_plug_heat"
+    entity_id = "binary_sensor.my_plug_overheated"
     entity = entity_registry.async_get(entity_id)
     assert entity
     assert entity.unique_id == f"{DEVICE_ID}_{mocked_feature.id}"
@@ -80,13 +80,13 @@ async def test_binary_sensor_children(
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "binary_sensor.my_plug_heat"
+    entity_id = "binary_sensor.my_plug_overheated"
     entity = entity_registry.async_get(entity_id)
     assert entity
     device = device_registry.async_get(entity.device_id)
 
     for plug_id in range(2):
-        child_entity_id = f"binary_sensor.my_plug_plug{plug_id}_heat"
+        child_entity_id = f"binary_sensor.my_plug_plug{plug_id}_overheated"
         child_entity = entity_registry.async_get(child_entity_id)
         assert child_entity
         assert child_entity.unique_id == f"PLUG{plug_id}DEVICEID_{mocked_feature.id}"
