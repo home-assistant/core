@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, cast
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -18,6 +19,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import (
@@ -299,29 +301,33 @@ class HabitipyTaskSensor(
 
     async def async_added_to_hass(self) -> None:
         """Raise issue when entity is registered and was not disabled."""
-        entity_id = f"sensor.habitica_{self._name}_{self._task_name}"
-        if (
-            self.enabled
-            and self._task_name in ("todos", "dailys")
-            and entity_used_in(self.hass, entity_id)
+        if TYPE_CHECKING:
+            assert self.unique_id
+        if entity_id := er.async_get(self.hass).async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, self.unique_id
         ):
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                f"deprecated_task_entity_{self._task_name}",
-                breaks_in_ha_version="2025.2.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_task_entity",
-                translation_placeholders={
-                    "task_name": self._task_name,
-                    "entity": entity_id,
-                },
-            )
-        else:
-            async_delete_issue(
-                self.hass,
-                DOMAIN,
-                f"deprecated_task_entity_{self._task_name}",
-            )
+            if (
+                self.enabled
+                and self._task_name in ("todos", "dailys")
+                and entity_used_in(self.hass, entity_id)
+            ):
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"deprecated_task_entity_{self._task_name}",
+                    breaks_in_ha_version="2025.2.0",
+                    is_fixable=False,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="deprecated_task_entity",
+                    translation_placeholders={
+                        "task_name": self._task_name,
+                        "entity": entity_id,
+                    },
+                )
+            else:
+                async_delete_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"deprecated_task_entity_{self._task_name}",
+                )
         await super().async_added_to_hass()
