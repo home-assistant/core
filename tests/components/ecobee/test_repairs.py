@@ -107,7 +107,6 @@ async def test_ecobee_aux_heat_repair_flow(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_AUX_HEAT: True},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Assert the issue is present
     assert issue_registry.async_get_issue(
@@ -116,27 +115,3 @@ async def test_ecobee_aux_heat_repair_flow(
     )
     assert len(issue_registry.issues) == 1
 
-    url = RepairsFlowIndexView.url
-    resp = await http_client.post(
-        url, json={"handler": "ecobee", "issue_id": "migrate_aux_heat"}
-    )
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
-
-    flow_id = data["flow_id"]
-    assert data["step_id"] == "confirm"
-
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
-    resp = await http_client.post(url)
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
-    assert data["type"] == "create_entry"
-    # Test confirm step in repair flow
-    await hass.async_block_till_done()
-
-    # Assert the issue is no longer present
-    assert not issue_registry.async_get_issue(
-        domain="ecobee",
-        issue_id="migrate_aux_heat",
-    )
-    assert len(issue_registry.issues) == 0

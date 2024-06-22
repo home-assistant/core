@@ -119,13 +119,11 @@ class EcobeeSwitchAuxHeatOnly(EcobeeBaseEntity, SwitchEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Set the hvacMode to auxHeatOnly."""
-        _LOGGER.debug("Setting HVAC mode to auxHeatOnly to turn on aux heat")
         self._last_hvac_mode_before_aux_heat = self.thermostat["settings"]["hvacMode"]
         self.data.ecobee.set_hvac_mode(self.thermostat_index, ECOBEE_AUX_HEAT_ONLY)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Set the hvacMode back to the prior setting."""
-        _LOGGER.debug("Setting HVAC mode to last mode to disable aux heat")
         self.data.ecobee.set_hvac_mode(
             self.thermostat_index, self._last_hvac_mode_before_aux_heat
         )

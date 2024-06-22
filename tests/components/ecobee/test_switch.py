@@ -129,7 +129,6 @@ async def test_aux_heat_only_turn_on(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: DEVICE_ID},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_turn_on.assert_called_once_with(1, "auxHeatOnly")
 
 
@@ -144,5 +143,4 @@ async def test_aux_heat_only_turn_off(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: DEVICE_ID},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_turn_off.assert_called_once_with(1, "auto")
