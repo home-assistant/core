@@ -124,7 +124,7 @@ async def test_entry_changed(hass: HomeAssistant, platform) -> None:
 
 
 async def test_device_cleaning(hass: HomeAssistant) -> None:
-    """Test for source entity device for Trend."""
+    """Test for source entity device for Integration."""
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
 
@@ -150,7 +150,7 @@ async def test_device_cleaning(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert entity_registry.async_get("sensor.test_source") is not None
 
-    # Configure the configuration entry for Trend
+    # Configure the configuration entry for Integration
     integration_config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
@@ -169,12 +169,12 @@ async def test_device_cleaning(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(integration_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Confirm the link between the source entity device and the trend sensor
+    # Confirm the link between the source entity device and the integration sensor
     integration_entity = entity_registry.async_get("sensor.integration")
     assert integration_entity is not None
     assert integration_entity.device_id == source_entity.device_id
 
-    # Device entry incorrectly linked to Trend config entry
+    # Device entry incorrectly linked to Integration config entry
     device_registry.async_get_or_create(
         config_entry_id=integration_config_entry.entry_id,
         identifiers={("sensor", "identifier_test2")},
@@ -197,7 +197,7 @@ async def test_device_cleaning(hass: HomeAssistant) -> None:
     await hass.config_entries.async_reload(integration_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Confirm the link between the source entity device and the trend sensor after reload
+    # Confirm the link between the source entity device and the integration sensor after reload
     integration_entity = entity_registry.async_get("sensor.integration")
     assert integration_entity is not None
     assert integration_entity.device_id == source_entity.device_id
