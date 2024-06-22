@@ -102,7 +102,7 @@ class EcobeeSwitchAuxHeatOnly(EcobeeBaseEntity, SwitchEntity):
     """Representation of a aux_heat_only ecobee switch."""
 
     _attr_has_entity_name = True
-    _attr_name = "Aux Heat Only"
+    _attr_translation_key = "aux_heat_only"
 
     def __init__(
         self,

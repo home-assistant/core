@@ -95,8 +95,6 @@ async def test_ecobee_aux_heat_repair_flow(
     await setup_platform(hass, CLIMATE_DOMAIN)
     await async_process_repairs_platforms(hass)
 
-    http_client = await hass_client()
-
     ENTITY_ID = "climate.ecobee2"
 
     # Simulate legacy service being used
@@ -114,4 +112,3 @@ async def test_ecobee_aux_heat_repair_flow(
         issue_id="migrate_aux_heat",
     )
     assert len(issue_registry.issues) == 1
-

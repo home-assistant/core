@@ -38,6 +38,11 @@
       "ventilator_min_type_away": {
         "name": "Ventilator min time away"
       }
+    },
+    "switch": {
+      "aux_heat_only": {
+        "name": "Aux heat only"
+      }
     }
   },
   "services": {
