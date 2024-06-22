@@ -148,9 +148,13 @@ class ProtectData:
         """Handle a change in the websocket state."""
         new_last_update_success = state is WebsocketState.CONNECTED
         if new_last_update_success != self.last_update_success:
-            self.last_update_success = new_last_update_success
-            self._async_process_updates(self.api.bootstrap)
+            self._async_process_update_success_change(new_last_update_success)
 
+    def _async_process_update_success_change(self, success: bool) -> None:
+        """Process a change in update success."""
+        # manually trigger update to mark entities available/unavailable
+        self.last_update_success = success
+        self._async_process_updates(self.api.bootstrap)
 
     async def async_stop(self, *args: Any) -> None:
         """Stop processing data."""
@@ -175,9 +179,8 @@ class ProtectData:
         except ClientError:
             if self.last_update_success:
                 _LOGGER.exception("Error while updating")
-            self.last_update_success = False
-            # manually trigger update to mark entities unavailable
-            self._async_process_updates(self.api.bootstrap)
+            else:
+                self._async_process_update_success_change(False)
         else:
             self._process_updates_success(updates)
 
