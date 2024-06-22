@@ -714,7 +714,7 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
         description = self.entity_description
-        event = self._event = self.entity_description.get_event_obj(device)
+        event = self.entity_description.get_event_obj(device)
         if is_on := bool(description.get_ufp_value(device)):
             if event:
                 self._set_event_attrs(event)
@@ -737,25 +737,26 @@ class ProtectSmartEventBinarySensor(EventEntityMixin, BinarySensorEntity):
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        prev_event = self._event
-        super()._async_update_device_from_protect(device)
         description = self.entity_description
-        self._event = description.get_event_obj(device)
+
+        prev_event = self._event
+        prev_event_end = self._event_end
+        super()._async_update_device_from_protect(device)
+        if event := description.get_event_obj(device):
+            self._event = event
+            self._event_end = event.end if event else None
 
         if not (
-            (event := self._event)
-            and not self._event_already_ended(prev_event)
+            event
             and description.has_matching_smart(event)
-            and ((is_end := event.end) or self.device.is_smart_detected)
+            and not self._event_already_ended(prev_event, prev_event_end)
         ):
             self._set_event_done()
             return
 
-        was_on = self._attr_is_on
         self._attr_is_on = True
         self._set_event_attrs(event)
-
-        if is_end and not was_on:
+        if event.end:
             self._async_event_with_immediate_end()
 
 
