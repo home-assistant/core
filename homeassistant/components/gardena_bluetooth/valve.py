@@ -9,11 +9,12 @@ from gardena_bluetooth.const import Valve
 from homeassistant.components.valve import ValveEntity, ValveEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import Coordinator, GardenaBluetoothEntity
+
+FALLBACK_WATERING_TIME_IN_SECONDS = 60 * 60
 
 
 async def async_setup_entry(
@@ -54,18 +55,15 @@ class GardenaBluetoothValve(GardenaBluetoothEntity, ValveEntity):
         )
 
     def _handle_coordinator_update(self) -> None:
-        is_open = self.coordinator.get_cached(Valve.state)
-        if is_open is None:
-            self._attr_is_closed = None
-        else:
-            self._attr_is_closed = not is_open
+        self._attr_is_closed = not self.coordinator.get_cached(Valve.state)
         super()._handle_coordinator_update()
 
     async def async_open_valve(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        if (value := self.coordinator.get_cached(Valve.manual_watering_time)) is None:
-            raise HomeAssistantError("Unable to get manual activation time.")
-
+        value = (
+            self.coordinator.get_cached(Valve.manual_watering_time)
+            or FALLBACK_WATERING_TIME_IN_SECONDS
+        )
         await self.coordinator.write(Valve.remaining_open_time, value)
         self._attr_is_closed = False
         self.async_write_ha_state()
