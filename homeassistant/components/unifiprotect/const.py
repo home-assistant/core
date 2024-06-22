@@ -5,9 +5,9 @@ from uiprotect.data import ModelType, Version
 from homeassistant.const import Platform
 
 DOMAIN = "unifiprotect"
-# some UniFi OS consoles have an unknown rate limit on auth
-# if rate limit is triggered a 401 is returned
-AUTH_RETRIES = 11  # ~12 hours of retries with the last waiting ~6 hours
+# If rate limit for 4.x or later a 429 is returned
+# so we can use a lower value
+AUTH_RETRIES = 2
 
 ATTR_EVENT_SCORE = "event_score"
 ATTR_EVENT_ID = "event_id"

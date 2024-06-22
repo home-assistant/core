@@ -130,12 +130,13 @@ class ProtectData:
             Generator[Camera], self.get_by_types({ModelType.CAMERA}, ignore_unadopted)
         )
 
-    async def async_setup(self) -> None:
+    @callback
+    def async_setup(self, bootstrap: Bootstrap) -> None:
         """Subscribe and do the refresh."""
+        self._process_updates_success(bootstrap)
         self._unsub_websocket = self.api.subscribe_websocket(
             self._async_process_ws_message
         )
-        await self.async_refresh()
 
     async def async_stop(self, *args: Any) -> None:
         """Stop processing data."""
@@ -172,9 +173,13 @@ class ProtectData:
             # manually trigger update to mark entities unavailable
             self._async_process_updates(self.api.bootstrap)
         else:
-            self.last_update_success = True
-            self._auth_failures = 0
-            self._async_process_updates(updates)
+            self._process_updates_success(updates)
+
+    def _process_updates_success(self, updates: Bootstrap | None) -> None:
+        """Process a successful bootstrap."""
+        self.last_update_success = True
+        self._auth_failures = 0
+        self._async_process_updates(updates)
 
     @callback
     def async_add_pending_camera_id(self, camera_id: str) -> None:
