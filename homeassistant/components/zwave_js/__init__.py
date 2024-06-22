@@ -8,6 +8,7 @@ from contextlib import suppress
 import logging
 from typing import Any
 
+from awesomeversion import AwesomeVersion
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass, RemoveNodeReason
 from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
@@ -78,6 +79,8 @@ from .const import (
     ATTR_VALUE,
     ATTR_VALUE_RAW,
     CONF_ADDON_DEVICE,
+    CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY,
+    CONF_ADDON_LR_S2_AUTHENTICATED_KEY,
     CONF_ADDON_NETWORK_KEY,
     CONF_ADDON_S0_LEGACY_KEY,
     CONF_ADDON_S2_ACCESS_CONTROL_KEY,
@@ -85,6 +88,8 @@ from .const import (
     CONF_ADDON_S2_UNAUTHENTICATED_KEY,
     CONF_DATA_COLLECTION_OPTED_IN,
     CONF_INTEGRATION_CREATED_ADDON,
+    CONF_LR_S2_ACCESS_CONTROL_KEY,
+    CONF_LR_S2_AUTHENTICATED_KEY,
     CONF_NETWORK_KEY,
     CONF_S0_LEGACY_KEY,
     CONF_S2_ACCESS_CONTROL_KEY,
@@ -97,6 +102,7 @@ from .const import (
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     LIB_LOGGER,
     LOGGER,
+    LR_ADDON_VERSION,
     USER_AGENT,
     ZWAVE_JS_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
@@ -136,6 +142,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass.config_entries.async_update_entry(
                 entry, unique_id=str(entry.unique_id)
             )
+
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    services = ZWaveServices(hass, ent_reg, dev_reg)
+    services.async_register()
+
     return True
 
 
@@ -173,11 +185,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async_delete_issue(hass, DOMAIN, "invalid_server_version")
     LOGGER.info("Connected to Zwave JS Server")
-
-    dev_reg = dr.async_get(hass)
-    ent_reg = er.async_get(hass)
-    services = ZWaveServices(hass, ent_reg, dev_reg)
-    services.async_register()
 
     # Set up websocket API
     async_register_api(hass)
@@ -324,7 +331,7 @@ class DriverEvents:
         """Set up platform if needed."""
         if platform not in self.platform_setup_tasks:
             self.platform_setup_tasks[platform] = self.hass.async_create_task(
-                self.hass.config_entries.async_late_forward_entry_setups(
+                self.hass.config_entries.async_forward_entry_setups(
                     self.config_entry, [platform]
                 )
             )
@@ -1051,8 +1058,9 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
     s2_access_control_key: str = entry.data.get(CONF_S2_ACCESS_CONTROL_KEY, "")
     s2_authenticated_key: str = entry.data.get(CONF_S2_AUTHENTICATED_KEY, "")
     s2_unauthenticated_key: str = entry.data.get(CONF_S2_UNAUTHENTICATED_KEY, "")
+    lr_s2_access_control_key: str = entry.data.get(CONF_LR_S2_ACCESS_CONTROL_KEY, "")
+    lr_s2_authenticated_key: str = entry.data.get(CONF_LR_S2_AUTHENTICATED_KEY, "")
     addon_state = addon_info.state
-
     addon_config = {
         CONF_ADDON_DEVICE: usb_path,
         CONF_ADDON_S0_LEGACY_KEY: s0_legacy_key,
@@ -1060,6 +1068,9 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
         CONF_ADDON_S2_AUTHENTICATED_KEY: s2_authenticated_key,
         CONF_ADDON_S2_UNAUTHENTICATED_KEY: s2_unauthenticated_key,
     }
+    if addon_info.version and AwesomeVersion(addon_info.version) >= LR_ADDON_VERSION:
+        addon_config[CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY] = lr_s2_access_control_key
+        addon_config[CONF_ADDON_LR_S2_AUTHENTICATED_KEY] = lr_s2_authenticated_key
 
     if addon_state == AddonState.NOT_INSTALLED:
         addon_manager.async_schedule_install_setup_addon(
@@ -1099,6 +1110,21 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
         updates[CONF_S2_AUTHENTICATED_KEY] = addon_s2_authenticated_key
     if s2_unauthenticated_key != addon_s2_unauthenticated_key:
         updates[CONF_S2_UNAUTHENTICATED_KEY] = addon_s2_unauthenticated_key
+
+    if addon_info.version and AwesomeVersion(addon_info.version) >= AwesomeVersion(
+        LR_ADDON_VERSION
+    ):
+        addon_lr_s2_access_control_key = addon_options.get(
+            CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY, ""
+        )
+        addon_lr_s2_authenticated_key = addon_options.get(
+            CONF_ADDON_LR_S2_AUTHENTICATED_KEY, ""
+        )
+        if lr_s2_access_control_key != addon_lr_s2_access_control_key:
+            updates[CONF_LR_S2_ACCESS_CONTROL_KEY] = addon_lr_s2_access_control_key
+        if lr_s2_authenticated_key != addon_lr_s2_authenticated_key:
+            updates[CONF_LR_S2_AUTHENTICATED_KEY] = addon_lr_s2_authenticated_key
+
     if updates:
         hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})
 

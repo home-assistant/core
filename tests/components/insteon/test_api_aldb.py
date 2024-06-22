@@ -303,7 +303,7 @@ async def test_bad_address(
     record = _aldb_dict(0)
 
     ws_id = 0
-    for call in ["get", "write", "load", "reset", "add_default_links", "notify"]:
+    for call in ("get", "write", "load", "reset", "add_default_links", "notify"):
         ws_id += 1
         await ws_client.send_json(
             {
@@ -316,7 +316,7 @@ async def test_bad_address(
         assert not msg["success"]
         assert msg["error"]["message"] == INSTEON_DEVICE_NOT_FOUND
 
-    for call in ["change", "create"]:
+    for call in ("change", "create"):
         ws_id += 1
         await ws_client.send_json(
             {

@@ -13,6 +13,7 @@ from .services import async_setup_services
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CAMERA,
     Platform.MEDIA_PLAYER,
     Platform.NUMBER,
     Platform.SENSOR,

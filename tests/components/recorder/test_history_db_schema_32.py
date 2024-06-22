@@ -568,7 +568,9 @@ async def test_get_significant_states_only(
         )
 
 
-def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
+def record_states(
+    hass: HomeAssistant,
+) -> tuple[datetime, datetime, dict[str, list[State]]]:
     """Record some test states.
 
     We inject a bunch of state updates from media player, zone and

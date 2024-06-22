@@ -1,7 +1,7 @@
 """HomeKit controller session fixtures."""
 
 import datetime
-import unittest.mock
+from unittest.mock import MagicMock, patch
 
 from aiohomekit.testing import FakeController
 from freezegun import freeze_time
@@ -26,10 +26,10 @@ def freeze_time_in_future() -> Generator[FrozenDateTimeFactory]:
 
 
 @pytest.fixture
-def controller(hass):
+def controller() -> Generator[FakeController]:
     """Replace aiohomekit.Controller with an instance of aiohomekit.testing.FakeController."""
     instance = FakeController()
-    with unittest.mock.patch(
+    with patch(
         "homeassistant.components.homekit_controller.utils.Controller",
         return_value=instance,
     ):
@@ -37,10 +37,10 @@ def controller(hass):
 
 
 @pytest.fixture(autouse=True)
-def hk_mock_async_zeroconf(mock_async_zeroconf):
+def hk_mock_async_zeroconf(mock_async_zeroconf: MagicMock) -> None:
     """Auto mock zeroconf."""
 
 
 @pytest.fixture(autouse=True)
-def auto_mock_bluetooth(mock_bluetooth):
+def auto_mock_bluetooth(mock_bluetooth: None) -> None:
     """Auto mock bluetooth."""
