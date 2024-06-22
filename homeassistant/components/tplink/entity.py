@@ -332,7 +332,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
             for feat in device.features.values()
             if feat.type == feature_type
             and (
-                feat.category != Feature.Category.Primary
+                feat.category is not Feature.Category.Primary
                 or device.device_type not in DEVICETYPES_WITH_SPECIALIZED_PLATFORMS
             )
             and (
