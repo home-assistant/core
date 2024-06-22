@@ -134,7 +134,7 @@ class ProtectData:
     def async_setup(self, bootstrap: Bootstrap) -> None:
         """Subscribe and do the refresh."""
         self.last_update_success = True
-        self._async_process_update_success_change(True, updates=bootstrap)
+        self._async_update_change(True, force_update=True)
         api = self.api
         self._unsubs = [
             api.subscribe_websocket_state(self._async_websocket_state_changed),
@@ -148,12 +148,12 @@ class ProtectData:
     def _async_websocket_state_changed(self, state: WebsocketState) -> None:
         """Handle a change in the websocket state."""
         success = state is WebsocketState.CONNECTED
-        self._async_process_update_success_change(success)
+        self._async_update_change(success)
 
-    def _async_process_update_success_change(
+    def _async_update_change(
         self,
         success: bool,
-        updates: Bootstrap | None = None,
+        force_update: bool = False,
         exception: Exception | None = None,
     ) -> None:
         """Process a change in update success."""
@@ -162,18 +162,17 @@ class ProtectData:
 
         if not success:
             level = logging.ERROR if was_success else logging.DEBUG
-            _LOGGER.log(
-                level, "%s: Connection lost", self._entry.title, exc_info=exception
-            )
-            self._async_process_updates(self.api.bootstrap)
+            title = self._entry.title
+            _LOGGER.log(level, "%s: Connection lost", title, exc_info=exception)
+            self._async_process_updates()
             return
 
         self._auth_failures = 0
         if not was_success:
             _LOGGER.info("%s: Connection restored", self._entry.title)
-            self._async_process_updates(updates or self.api.bootstrap)
-        elif updates:
-            self._async_process_updates(updates)
+            self._async_process_updates()
+        elif force_update:
+            self._async_process_updates()
 
     async def async_stop(self, *args: Any) -> None:
         """Stop processing data."""
@@ -185,7 +184,7 @@ class ProtectData:
     async def async_refresh(self) -> None:
         """Update the data."""
         try:
-            updates = await self.api.update()
+            await self.api.update()
         except NotAuthorized as ex:
             if self._auth_failures < AUTH_RETRIES:
                 _LOGGER.exception("Auth error while updating")
@@ -194,11 +193,11 @@ class ProtectData:
                 await self.async_stop()
                 _LOGGER.exception("Reauthentication required")
                 self._entry.async_start_reauth(self._hass)
-            self._async_process_update_success_change(False, exception=ex)
+            self._async_update_change(False, exception=ex)
         except ClientError as ex:
-            self._async_process_update_success_change(False, exception=ex)
+            self._async_update_change(False, exception=ex)
         else:
-            self._async_process_update_success_change(True, updates=updates)
+            self._async_update_change(True, force_update=True)
 
     @callback
     def async_add_pending_camera_id(self, camera_id: str) -> None:
@@ -302,13 +301,8 @@ class ProtectData:
             self._async_update_device(new_obj, message.changed_data)
 
     @callback
-    def _async_process_updates(self, updates: Bootstrap | None) -> None:
+    def _async_process_updates(self) -> None:
         """Process update from the protect data."""
-
-        # Websocket connected, use data from it
-        if updates is None:
-            return
-
         self._async_signal_device_update(self.api.bootstrap.nvr)
         for device in self.get_by_types(DEVICES_THAT_ADOPT):
             self._async_signal_device_update(device)
