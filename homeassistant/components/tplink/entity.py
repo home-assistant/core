@@ -169,6 +169,14 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         # it needs to implement this.
         raise NotImplementedError
 
+    async def async_added_to_hass(self) -> None:
+        """Handle being added to hass.
+
+        Platforms can override this to initialize their internals.
+        """
+        self._async_call_update_attrs()
+        return await super().async_added_to_hass()
+
     @abstractmethod
     @callback
     def _async_update_attrs(self) -> None:
@@ -226,7 +234,6 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
         """Initialize the entity."""
         self.entity_description = description
         super().__init__(device, coordinator, parent=parent, feature=feature)
-        self._async_call_update_attrs()
 
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""
