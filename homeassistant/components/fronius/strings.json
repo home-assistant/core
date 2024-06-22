@@ -234,11 +234,29 @@
       "power_battery": {
         "name": "Power battery"
       },
+      "power_battery_discharge": {
+        "name": "Power battery discharge"
+      },
+      "power_battery_charge": {
+        "name": "Power battery charge"
+      },
       "power_grid": {
         "name": "Power grid"
       },
+      "power_grid_import": {
+        "name": "Power grid import"
+      },
+      "power_grid_export": {
+        "name": "Power grid export"
+      },
       "power_load": {
         "name": "Power load"
+      },
+      "power_load_generated": {
+        "name": "Power load generated"
+      },
+      "power_load_consumed": {
+        "name": "Power load consumed"
       },
       "power_photovoltaics": {
         "name": "Power photovoltaics"
