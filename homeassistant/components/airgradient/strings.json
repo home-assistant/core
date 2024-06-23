@@ -32,6 +32,14 @@
         "name": "Test LED bar"
       }
     },
+    "number": {
+      "led_bar_brightness": {
+        "name": "LED bar brightness"
+      },
+      "display_brightness": {
+        "name": "Display brightness"
+      }
+    },
     "select": {
       "configuration_control": {
         "name": "Configuration source",
