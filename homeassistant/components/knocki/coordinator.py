@@ -13,7 +13,6 @@ class KnockiCoordinator(DataUpdateCoordinator[dict[str, Trigger]]):
 
     def __init__(self, hass: HomeAssistant, client: KnockiClient) -> None:
         """Initialize the coordinator."""
-        self.client = client
         super().__init__(
             hass,
             logger=LOGGER,
