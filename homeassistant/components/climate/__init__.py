@@ -45,7 +45,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_issue_tracker, async_suggest_report_issue
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from . import group as group_pre_import  # noqa: F401
 from .const import (  # noqa: F401
     _DEPRECATED_HVAC_MODE_AUTO,
     _DEPRECATED_HVAC_MODE_COOL,

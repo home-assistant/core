@@ -72,6 +72,7 @@ from .utils import (
 class ShellyEntryData:
     """Class for sharing data within a given config entry."""
 
+    platforms: list[Platform]
     block: ShellyBlockCoordinator | None = None
     rest: ShellyRestCoordinator | None = None
     rpc: ShellyRpcCoordinator | None = None
@@ -403,9 +404,10 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
                         "ip_address": self.device.ip_address,
                     },
                 )
-        LOGGER.debug(
-            "Push update failures for %s: %s", self.name, self._push_update_failures
-        )
+        if self._push_update_failures:
+            LOGGER.debug(
+                "Push update failures for %s: %s", self.name, self._push_update_failures
+            )
         self.async_set_updated_data(None)
 
     def async_setup(self, pending_platforms: list[Platform] | None = None) -> None:

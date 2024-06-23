@@ -6,6 +6,7 @@ from datetime import tzinfo
 import logging
 from typing import Any
 
+from homeassistant.components.climate import HVACMode
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -13,7 +14,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import EcobeeData
-from .const import DOMAIN
+from .climate import HASS_TO_ECOBEE_HVAC
+from .const import DOMAIN, ECOBEE_AUX_HEAT_ONLY
 from .entity import EcobeeBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,6 +43,12 @@ async def async_setup_entry(
             if thermostat["settings"]["ventilatorType"] != "none"
         ],
         update_before_add=True,
+    )
+
+    async_add_entities(
+        EcobeeSwitchAuxHeatOnly(data, index)
+        for index, thermostat in enumerate(data.ecobee.thermostats)
+        if thermostat["settings"]["hasHeatPump"]
     )
 
 
@@ -93,3 +101,39 @@ class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):
             self.data.ecobee.set_ventilator_timer, self.thermostat_index, False
         )
         self.update_without_throttle = True
+
+
+class EcobeeSwitchAuxHeatOnly(EcobeeBaseEntity, SwitchEntity):
+    """Representation of a aux_heat_only ecobee switch."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "aux_heat_only"
+
+    def __init__(
+        self,
+        data: EcobeeData,
+        thermostat_index: int,
+    ) -> None:
+        """Initialize ecobee ventilator platform."""
+        super().__init__(data, thermostat_index)
+        self._attr_unique_id = f"{self.base_unique_id}_aux_heat_only"
+
+        self._last_hvac_mode_before_aux_heat = HASS_TO_ECOBEE_HVAC.get(
+            HVACMode.HEAT_COOL
+        )
+
+    def turn_on(self, **kwargs: Any) -> None:
+        """Set the hvacMode to auxHeatOnly."""
+        self._last_hvac_mode_before_aux_heat = self.thermostat["settings"]["hvacMode"]
+        self.data.ecobee.set_hvac_mode(self.thermostat_index, ECOBEE_AUX_HEAT_ONLY)
+
+    def turn_off(self, **kwargs: Any) -> None:
+        """Set the hvacMode back to the prior setting."""
+        self.data.ecobee.set_hvac_mode(
+            self.thermostat_index, self._last_hvac_mode_before_aux_heat
+        )
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if auxHeatOnly mode is active."""
+        return self.thermostat["settings"]["hvacMode"] == ECOBEE_AUX_HEAT_ONLY

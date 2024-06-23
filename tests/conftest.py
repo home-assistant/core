@@ -43,7 +43,7 @@ from . import patch_time  # noqa: F401, isort:skip
 from homeassistant import core as ha, loader, runner
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
-from homeassistant.auth.providers import homeassistant, legacy_api_password
+from homeassistant.auth.providers import homeassistant
 from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
@@ -752,20 +752,6 @@ async def hass_supervisor_access_token(
 
 
 @pytest.fixture
-def legacy_auth(
-    hass: HomeAssistant,
-) -> legacy_api_password.LegacyApiPasswordAuthProvider:
-    """Load legacy API password provider."""
-    prv = legacy_api_password.LegacyApiPasswordAuthProvider(
-        hass,
-        hass.auth._store,
-        {"type": "legacy_api_password", "api_password": "test-password"},
-    )
-    hass.auth._providers[(prv.type, prv.id)] = prv
-    return prv
-
-
-@pytest.fixture
 async def local_auth(hass: HomeAssistant) -> homeassistant.HassAuthProvider:
     """Load local auth provider."""
     prv = homeassistant.HassAuthProvider(
@@ -974,6 +960,7 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient]:
         mock_client.subscribe.side_effect = _subscribe
         mock_client.unsubscribe.side_effect = _unsubscribe
         mock_client.publish.side_effect = _async_fire_mqtt_message
+        mock_client.loop_read.return_value = 0
         yield mock_client
 
 

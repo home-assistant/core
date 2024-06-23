@@ -28,10 +28,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .data import ProtectData, UFPConfigEntry
+from .data import UFPConfigEntry
 from .entity import ProtectDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+_SPEAKER_DESCRIPTION = MediaPlayerEntityDescription(
+    key="speaker", name="Speaker", device_class=MediaPlayerDeviceClass.SPEAKER
+)
 
 
 async def async_setup_entry(
@@ -51,7 +55,7 @@ async def async_setup_entry(
 
     data.async_subscribe_adopt(_add_new_device)
     async_add_entities(
-        ProtectMediaPlayer(data, device)
+        ProtectMediaPlayer(data, device, _SPEAKER_DESCRIPTION)
         for device in data.get_cameras()
         if device.has_speaker or device.has_removable_speaker
     )
@@ -69,24 +73,8 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
+    _attr_media_content_type = MediaType.MUSIC
     _state_attrs = ("_attr_available", "_attr_state", "_attr_volume_level")
-
-    def __init__(
-        self,
-        data: ProtectData,
-        camera: Camera,
-    ) -> None:
-        """Initialize an UniFi speaker."""
-        super().__init__(
-            data,
-            camera,
-            MediaPlayerEntityDescription(
-                key="speaker", device_class=MediaPlayerDeviceClass.SPEAKER
-            ),
-        )
-
-        self._attr_name = f"{self.device.display_name} Speaker"
-        self._attr_media_content_type = MediaType.MUSIC
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:

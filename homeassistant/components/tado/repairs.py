@@ -13,20 +13,19 @@ from .const import (
 
 def manage_water_heater_fallback_issue(
     hass: HomeAssistant,
-    water_heater_entities: list,
+    water_heater_names: list[str],
     integration_overlay_fallback: str | None,
 ) -> None:
     """Notify users about water heater respecting fallback setting."""
-    if (
-        integration_overlay_fallback
-        in [CONST_OVERLAY_TADO_DEFAULT, CONST_OVERLAY_MANUAL]
-        and len(water_heater_entities) > 0
+    if integration_overlay_fallback in (
+        CONST_OVERLAY_TADO_DEFAULT,
+        CONST_OVERLAY_MANUAL,
     ):
-        for water_heater_entity in water_heater_entities:
+        for water_heater_name in water_heater_names:
             ir.async_create_issue(
                 hass=hass,
                 domain=DOMAIN,
-                issue_id=f"{WATER_HEATER_FALLBACK_REPAIR}_{water_heater_entity.zone_name}",
+                issue_id=f"{WATER_HEATER_FALLBACK_REPAIR}_{water_heater_name}",
                 is_fixable=False,
                 is_persistent=False,
                 severity=ir.IssueSeverity.WARNING,
