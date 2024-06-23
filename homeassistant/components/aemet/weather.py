@@ -83,7 +83,6 @@ class AemetWeather(
             model="Forecast",
         )
 
-
     @property
     def condition(self):
         """Return the current condition."""
