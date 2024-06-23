@@ -400,7 +400,7 @@ class AemetSensor(AemetEntity, SensorEntity):
         self._attr_device_info = DeviceInfo(
             name="Forecast",
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(name, config_entry.unique_id)},
+            identifiers={(name, config_entry.entry_id)},
             manufacturer="AEMET",
             model="Forecast",
         )
