@@ -20,9 +20,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
+from .coordinator import PyLoadCoordinator
+
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-type PyLoadConfigEntry = ConfigEntry[PyLoadAPI]
+type PyLoadConfigEntry = ConfigEntry[PyLoadCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PyLoadConfigEntry) -> bool:
@@ -57,9 +59,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: PyLoadConfigEntry) -> bo
         raise ConfigEntryError(
             f"Authentication failed for {entry.data[CONF_USERNAME]}, check your login credentials"
         ) from e
+    coordinator = PyLoadCoordinator(hass, pyloadapi)
 
-    entry.runtime_data = pyloadapi
+    await coordinator.async_config_entry_first_refresh()
 
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

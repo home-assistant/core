@@ -66,7 +66,6 @@ def mock_pyloadapi() -> Generator[AsyncMock, None, None]:
             "homeassistant.components.pyload.PyLoadAPI", autospec=True
         ) as mock_client,
         patch("homeassistant.components.pyload.config_flow.PyLoadAPI", new=mock_client),
-        patch("homeassistant.components.pyload.sensor.PyLoadAPI", new=mock_client),
     ):
         client = mock_client.return_value
         client.username = "username"
