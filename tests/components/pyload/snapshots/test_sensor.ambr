@@ -33,7 +33,7 @@
     'platform': 'pyload',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': <PyLoadSensorEntity.SPEED: 'speed'>,
     'unique_id': 'XXXXXXXXXXXXXX_speed',
     'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
   })
@@ -87,7 +87,7 @@
     'platform': 'pyload',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': <PyLoadSensorEntity.SPEED: 'speed'>,
     'unique_id': 'XXXXXXXXXXXXXX_speed',
     'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
   })
@@ -141,7 +141,7 @@
     'platform': 'pyload',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': <PyLoadSensorEntity.SPEED: 'speed'>,
     'unique_id': 'XXXXXXXXXXXXXX_speed',
     'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
   })
@@ -372,7 +372,7 @@
     'platform': 'pyload',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': <PyLoadSensorEntity.SPEED: 'speed'>,
     'unique_id': 'XXXXXXXXXXXXXX_speed',
     'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
   })
