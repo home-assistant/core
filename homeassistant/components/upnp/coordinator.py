@@ -1,5 +1,7 @@
 """UPnP/IGD coordinator."""
 
+from collections import defaultdict
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
@@ -31,7 +33,7 @@ class UpnpDataUpdateCoordinator(
         """Initialize."""
         self.device = device
         self.device_entry = device_entry
-        self._entities: list[UpnpEntity] = []
+        self._features_by_entity_id: defaultdict[str, set[str]] = defaultdict(set)
 
         super().__init__(
             hass,
@@ -40,23 +42,30 @@ class UpnpDataUpdateCoordinator(
             update_interval=update_interval,
         )
 
-    def register_entity(self, entity) -> None:
+    def register_entity(self, entity: "UpnpEntity") -> Callable[[], None]:
         """Register an entity."""
-        self._entities.append(entity)
+        # self._entities.append(entity)
+        key = entity.entity_description.key
+        entity_id = entity.entity_id
+        self._features_by_entity_id[key].add(entity_id)
 
-    @property
-    def _enabled_entities(self) -> list["UpnpEntity"]:
-        """Return a list of enabled sensors."""
-        return [entity for entity in self._entities if entity.enabled]
+        def unregister_entity() -> None:
+            """Unregister entity."""
+            self._features_by_entity_id[key].remove(entity_id)
+
+            if not self._features_by_entity_id[key]:
+                del self._features_by_entity_id[key]
+
+        return unregister_entity
 
     @property
     def _entity_description_keys(self) -> list[str] | None:
         """Return a list of entity description keys for which data is required."""
-        if not self._enabled_entities:
+        if not self._features_by_entity_id:
             # Must be the first update, no entities attached/enabled yet.
             return None
 
-        return [entity.entity_description.key for entity in self._enabled_entities]
+        return list(self._features_by_entity_id.keys())
 
     async def _async_update_data(
         self,
