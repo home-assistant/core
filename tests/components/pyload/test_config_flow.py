@@ -150,7 +150,7 @@ async def test_flow_import_errors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_pyloadapi: AsyncMock,
-    exception,
+    exception: Exception,
     reason: str,
 ) -> None:
     """Test we abort import data set when entry is already configured."""

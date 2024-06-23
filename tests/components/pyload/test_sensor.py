@@ -117,7 +117,7 @@ async def test_deprecated_yaml_import_issue(
     issue_registry: ir.IssueRegistry,
     pyload_config: ConfigType,
     mock_pyloadapi: AsyncMock,
-    exception,
+    exception: Exception,
     reason: str,
 ) -> None:
     """Test an issue is created when attempting setup from yaml config and an error happens."""
