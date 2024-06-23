@@ -392,10 +392,12 @@ class AemetSensor(AemetEntity, SensorEntity):
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, name, config_entry.unique_id)
+        assert config_entry.unique_id is not None
+        unique_id = config_entry.unique_id
+        super().__init__(coordinator, name, unique_id)
         self.entity_description = description
         self._attr_name = f"{name} {description.name}"
-        self._attr_unique_id = f"{config_entry.unique_id}-{description.key}"
+        self._attr_unique_id = f"{unique_id}-{description.key}"
 
     @property
     def native_value(self):
