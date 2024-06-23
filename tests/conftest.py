@@ -43,7 +43,7 @@ from . import patch_time  # noqa: F401, isort:skip
 from homeassistant import core as ha, loader, runner
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
-from homeassistant.auth.providers import homeassistant, legacy_api_password
+from homeassistant.auth.providers import homeassistant
 from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
@@ -749,20 +749,6 @@ async def hass_supervisor_access_token(
     """Return a Home Assistant Supervisor access token."""
     refresh_token = await hass.auth.async_create_refresh_token(hass_supervisor_user)
     return hass.auth.async_create_access_token(refresh_token)
-
-
-@pytest.fixture
-def legacy_auth(
-    hass: HomeAssistant,
-) -> legacy_api_password.LegacyApiPasswordAuthProvider:
-    """Load legacy API password provider."""
-    prv = legacy_api_password.LegacyApiPasswordAuthProvider(
-        hass,
-        hass.auth._store,
-        {"type": "legacy_api_password", "api_password": "test-password"},
-    )
-    hass.auth._providers[(prv.type, prv.id)] = prv
-    return prv
 
 
 @pytest.fixture

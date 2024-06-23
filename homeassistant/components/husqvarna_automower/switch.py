@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING, Any
 from aioautomower.exceptions import ApiException
 from aioautomower.model import (
     MowerActivities,
+    MowerModes,
     MowerStates,
-    RestrictedReasons,
     StayOutZones,
     Zone,
 )
@@ -86,11 +86,7 @@ class AutomowerScheduleSwitchEntity(AutomowerControlEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the switch."""
-        attributes = self.mower_attributes
-        return not (
-            attributes.mower.state == MowerStates.RESTRICTED
-            and attributes.planner.restricted_reason == RestrictedReasons.NOT_APPLICABLE
-        )
+        return self.mower_attributes.mower.mode != MowerModes.HOME
 
     @property
     def available(self) -> bool:
