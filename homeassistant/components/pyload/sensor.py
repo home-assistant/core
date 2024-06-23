@@ -161,7 +161,6 @@ class PyLoadSensor(SensorEntity):
         entry_id: str,
     ) -> None:
         """Initialize a new pyLoad sensor."""
-        self._attr_name = f"{entity_description.name}"
         self.type = entity_description.key
         self.api = api
         self._attr_unique_id = f"{entry_id}_{entity_description.key}"
