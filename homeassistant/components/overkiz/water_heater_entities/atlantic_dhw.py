@@ -79,9 +79,9 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
     @property
     def is_boost_mode_on(self) -> bool:
         """Return true if boost mode is on."""
-        return (
-            self.executor.select_state(OverkizState.MODBUSLINK_DHW_BOOST_MODE)
-            == OverkizCommandParam.ON
+        return self.executor.select_state(OverkizState.MODBUSLINK_DHW_BOOST_MODE) in (
+            OverkizCommandParam.ON,
+            OverkizCommandParam.PROG,
         )
 
     @property
