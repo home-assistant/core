@@ -7,7 +7,6 @@ from enum import StrEnum
 import logging
 from time import monotonic
 
-from aiohttp import CookieJar
 from pyloadapi import (
     CannotConnect,
     InvalidAuth,
