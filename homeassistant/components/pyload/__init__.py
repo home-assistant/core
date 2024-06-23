@@ -28,10 +28,10 @@ type PyLoadConfigEntry = ConfigEntry[PyLoadAPI]  # noqa: F821
 async def async_setup_entry(hass: HomeAssistant, entry: PyLoadConfigEntry) -> bool:
     """Set up pyLoad from a config entry."""
 
-    host = entry.data[CONF_HOST]
-    port = entry.data[CONF_PORT]
-    protocol = "https" if entry.data[CONF_SSL] else "http"
-    url = f"{protocol}://{host}:{port}/"
+    url = (
+        f"{"https" if entry.data[CONF_SSL] else "http"}://"
+        f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}/"
+    )
 
     session = async_create_clientsession(
         hass,

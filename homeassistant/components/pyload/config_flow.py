@@ -48,10 +48,11 @@ async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]) -> Non
         user_input[CONF_VERIFY_SSL],
         cookie_jar=CookieJar(unsafe=True),
     )
-    host = user_input[CONF_HOST]
-    port = user_input[CONF_PORT]
-    protocol = "https" if user_input[CONF_SSL] else "http"
-    url = f"{protocol}://{host}:{port}/"
+
+    url = (
+        f"{"https" if user_input[CONF_SSL] else "http"}://"
+        f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}/"
+    )
     pyload = PyLoadAPI(
         session,
         api_url=url,

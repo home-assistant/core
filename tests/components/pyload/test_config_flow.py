@@ -93,6 +93,9 @@ async def test_flow_user_init_data_already_configured(
         DOMAIN, context={"source": "user"}
     )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=USER_INPUT,
