@@ -57,7 +57,7 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
 
 
 class AutomowerAvailableEntity(AutomowerBaseEntity):
-    """AutomowerControlEntity, for dynamic availability."""
+    """Replies available when the mower is connected."""
 
     @property
     def available(self) -> bool:
@@ -66,7 +66,7 @@ class AutomowerAvailableEntity(AutomowerBaseEntity):
 
 
 class AutomowerControlEntity(AutomowerAvailableEntity):
-    """AutomowerControlEntity, for dynamic availability."""
+    """Replies available when the mower is connected and not in error state."""
 
     @property
     def available(self) -> bool:
