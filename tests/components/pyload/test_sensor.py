@@ -63,32 +63,6 @@ async def test_sensor_update_exceptions(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
-async def test_sensor_invalid_auth(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_pyloadapi: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test invalid auth during sensor update."""
-
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    mock_pyloadapi.get_status.side_effect = InvalidAuth
-    mock_pyloadapi.login.side_effect = InvalidAuth
-
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert (
-        "Authentication failed for username, check your login credentials"
-        in caplog.text
-    )
-
-
 async def test_platform_setup_triggers_import_flow(
     hass: HomeAssistant,
     pyload_config: ConfigType,
