@@ -132,7 +132,6 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "hass_ws_client": "WebSocketGenerator",
     "init_tts_cache_dir_side_effect": "Any",
     "issue_registry": "IssueRegistry",
-    "legacy_auth": "LegacyApiPasswordAuthProvider",
     "local_auth": "HassAuthProvider",
     "mock_async_zeroconf": "MagicMock",
     "mock_bleak_scanner_start": "MagicMock",
