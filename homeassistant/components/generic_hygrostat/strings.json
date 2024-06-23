@@ -6,7 +6,7 @@
         "title": "Add generic hygrostat",
         "description": "Create a entity that control the humidity via a switch and sensor.",
         "data": {
-          "device_class": "Type of device",
+          "device_class": "Device class",
           "dry_tolerance": "Dry tolerance",
           "humidifier": "Switch",
           "min_cycle_duration": "Minimum cycle duration",
