@@ -864,7 +864,6 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
             "external_url": "https://www.example.com",
             "internal_url": "http://example.local",
             "media_dirs": {"mymedia": "/usr"},
-            "legacy_templates": True,
             "debug": True,
             "currency": "EUR",
             "country": "SE",
@@ -886,7 +885,6 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
     assert "/usr" in hass.config.allowlist_external_dirs
     assert hass.config.media_dirs == {"mymedia": "/usr"}
     assert hass.config.config_source is ConfigSource.YAML
-    assert hass.config.legacy_templates is True
     assert hass.config.debug is True
     assert hass.config.currency == "EUR"
     assert hass.config.country == "SE"
@@ -2044,32 +2042,6 @@ async def test_core_config_schema_no_country(
     assert issue
 
 
-@pytest.mark.parametrize(
-    ("config", "expected_issue"),
-    [
-        ({}, None),
-        ({"legacy_templates": True}, "legacy_templates_true"),
-        ({"legacy_templates": False}, "legacy_templates_false"),
-    ],
-)
-async def test_core_config_schema_legacy_template(
-    hass: HomeAssistant,
-    config: dict[str, Any],
-    expected_issue: str | None,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test legacy_template core config schema."""
-    await config_util.async_process_ha_core_config(hass, config)
-
-    for issue_id in ("legacy_templates_true", "legacy_templates_false"):
-        issue = issue_registry.async_get_issue("homeassistant", issue_id)
-        assert issue if issue_id == expected_issue else not issue
-
-    await config_util.async_process_ha_core_config(hass, {})
-    for issue_id in ("legacy_templates_true", "legacy_templates_false"):
-        assert not issue_registry.async_get_issue("homeassistant", issue_id)
-
-
 async def test_core_store_no_country(
     hass: HomeAssistant, hass_storage: dict[str, Any], issue_registry: ir.IssueRegistry
 ) -> None:
@@ -2511,3 +2483,30 @@ async def test_loading_platforms_gathers(hass: HomeAssistant) -> None:
         ("platform_int", "sensor"),
         ("platform_int2", "sensor"),
     ]
+
+
+async def test_configuration_legacy_template_is_removed(hass: HomeAssistant) -> None:
+    """Test loading core config onto hass object."""
+    await config_util.async_process_ha_core_config(
+        hass,
+        {
+            "latitude": 60,
+            "longitude": 50,
+            "elevation": 25,
+            "name": "Huis",
+            "unit_system": "imperial",
+            "time_zone": "America/New_York",
+            "allowlist_external_dirs": "/etc",
+            "external_url": "https://www.example.com",
+            "internal_url": "http://example.local",
+            "media_dirs": {"mymedia": "/usr"},
+            "legacy_templates": True,
+            "debug": True,
+            "currency": "EUR",
+            "country": "SE",
+            "language": "sv",
+            "radius": 150,
+        },
+    )
+
+    assert not getattr(hass.config, "legacy_templates")

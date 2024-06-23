@@ -4,7 +4,7 @@
 -r requirements.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.5.1
+AEMET-OpenData==0.5.2
 
 # homeassistant.components.honeywell
 AIOSomecomfort==0.0.25
@@ -60,7 +60,7 @@ PyFlume==0.6.5
 PyFronius==0.7.3
 
 # homeassistant.components.pyload
-PyLoadAPI==1.1.0
+PyLoadAPI==1.2.0
 
 # homeassistant.components.mvglive
 PyMVGLive==1.1.4
@@ -182,10 +182,10 @@ aio-georss-gdacs==0.9
 aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.5.2
+aioairzone-cloud==0.5.3
 
 # homeassistant.components.airzone
-aioairzone==0.7.6
+aioairzone==0.7.7
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -293,6 +293,9 @@ aiolookin==1.0.0
 # homeassistant.components.lyric
 aiolyric==1.1.0
 
+# homeassistant.components.mealie
+aiomealie==0.4.0
+
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
 
@@ -341,7 +344,7 @@ aiopyarr==23.4.0
 aioqsw==0.3.5
 
 # homeassistant.components.rainforest_raven
-aioraven==0.5.3
+aioraven==0.6.0
 
 # homeassistant.components.recollect_waste
 aiorecollect==2023.09.0
@@ -575,7 +578,7 @@ bleak==0.22.1
 blebox-uniapi==2.4.2
 
 # homeassistant.components.blink
-blinkpy==0.22.6
+blinkpy==0.23.0
 
 # homeassistant.components.bitcoin
 blockchain==1.4.4
@@ -813,7 +816,7 @@ enocean==0.50
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env-canada==0.6.2
+env-canada==0.6.3
 
 # homeassistant.components.season
 ephem==4.1.5
@@ -1093,7 +1096,7 @@ holidays==0.51
 home-assistant-frontend==20240610.1
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.6.5
+home-assistant-intents==2024.6.21
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1204,6 +1207,9 @@ kegtron-ble==0.4.0
 
 # homeassistant.components.kiwi
 kiwiki-client==0.1.1
+
+# homeassistant.components.knocki
+knocki==0.1.5
 
 # homeassistant.components.knx
 knx-frontend==2024.1.20.105944
@@ -1350,7 +1356,7 @@ mopeka-iot-ble==0.7.0
 motionblinds==0.6.23
 
 # homeassistant.components.motionblinds_ble
-motionblindsble==0.0.9
+motionblindsble==0.1.0
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.14
@@ -1537,7 +1543,7 @@ panasonic-viera==0.3.6
 pdunehd==1.3.2
 
 # homeassistant.components.peco
-peco==0.0.29
+peco==0.0.30
 
 # homeassistant.components.pencom
 pencompy==0.0.3
@@ -1569,7 +1575,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==0.37.4.1
+plugwise==0.38.3
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1812,7 +1818,7 @@ pyecoforest==0.4.0
 pyeconet==0.1.22
 
 # homeassistant.components.ista_ecotrend
-pyecotrend-ista==3.2.0
+pyecotrend-ista==3.3.1
 
 # homeassistant.components.edimax
 pyedimax==0.2.1
@@ -2028,7 +2034,7 @@ pynobo==1.8.1
 pynuki==1.6.3
 
 # homeassistant.components.nws
-pynws[retry]==1.8.1
+pynws[retry]==1.8.2
 
 # homeassistant.components.nx584
 pynx584==0.5
@@ -2120,7 +2126,7 @@ pyrecswitch==1.0.2
 pyrepetierng==0.1.0
 
 # homeassistant.components.risco
-pyrisco==0.6.2
+pyrisco==0.6.4
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6
@@ -2161,7 +2167,7 @@ pysesame2==1.0.1
 pysiaalarm==3.1.1
 
 # homeassistant.components.signal_messenger
-pysignalclirestapi==0.3.23
+pysignalclirestapi==0.3.24
 
 # homeassistant.components.sky_hub
 pyskyqhub==0.1.4
@@ -2321,7 +2327,7 @@ python-smarttub==0.0.36
 python-songpal==0.16.2
 
 # homeassistant.components.tado
-python-tado==0.17.4
+python-tado==0.17.6
 
 # homeassistant.components.technove
 python-technove==1.2.2
@@ -2788,7 +2794,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==1.19.2
+uiprotect==3.1.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2996,7 +3002,7 @@ zigpy==0.64.1
 zm-py==0.5.4
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.56.0
+zwave-js-server-python==0.57.0
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3

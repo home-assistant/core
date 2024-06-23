@@ -29,6 +29,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_TOTP_SECRET, CONF_UTILITY, DOMAIN
 
@@ -113,13 +114,17 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             )
             if not last_stat:
                 _LOGGER.debug("Updating statistic for the first time")
-                cost_reads = await self._async_get_all_cost_reads(account)
+                cost_reads = await self._async_get_cost_reads(
+                    account, self.api.utility.timezone()
+                )
                 cost_sum = 0.0
                 consumption_sum = 0.0
                 last_stats_time = None
             else:
-                cost_reads = await self._async_get_recent_cost_reads(
-                    account, last_stat[cost_statistic_id][0]["start"]
+                cost_reads = await self._async_get_cost_reads(
+                    account,
+                    self.api.utility.timezone(),
+                    last_stat[cost_statistic_id][0]["start"],
                 )
                 if not cost_reads:
                     _LOGGER.debug("No recent usage/cost data. Skipping update")
@@ -187,59 +192,68 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 self.hass, consumption_metadata, consumption_statistics
             )
 
-    async def _async_get_all_cost_reads(self, account: Account) -> list[CostRead]:
-        """Get all cost reads since account activation but at different resolutions depending on age.
+    async def _async_get_cost_reads(
+        self, account: Account, time_zone_str: str, start_time: float | None = None
+    ) -> list[CostRead]:
+        """Get cost reads.
 
+        If start_time is None, get cost reads since account activation,
+        otherwise since start_time - 30 days to allow corrections in data from utilities
+
+        We read at different resolutions depending on age:
         - month resolution for all years (since account activation)
         - day resolution for past 3 years (if account's read resolution supports it)
         - hour resolution for past 2 months (if account's read resolution supports it)
         """
-        cost_reads = []
 
-        start = None
-        end = datetime.now()
-        if account.read_resolution != ReadResolution.BILLING:
-            end -= timedelta(days=3 * 365)
-        cost_reads += await self.api.async_get_cost_reads(
+        def _update_with_finer_cost_reads(
+            cost_reads: list[CostRead], finer_cost_reads: list[CostRead]
+        ) -> None:
+            for i, cost_read in enumerate(cost_reads):
+                for j, finer_cost_read in enumerate(finer_cost_reads):
+                    if cost_read.start_time == finer_cost_read.start_time:
+                        cost_reads[i:] = finer_cost_reads[j:]
+                        return
+                    if cost_read.end_time == finer_cost_read.start_time:
+                        cost_reads[i + 1 :] = finer_cost_reads[j:]
+                        return
+                    if cost_read.end_time < finer_cost_read.start_time:
+                        break
+            cost_reads += finer_cost_reads
+
+        tz = await dt_util.async_get_time_zone(time_zone_str)
+        if start_time is None:
+            start = None
+        else:
+            start = datetime.fromtimestamp(start_time, tz=tz) - timedelta(days=30)
+        end = dt_util.now(tz)
+        cost_reads = await self.api.async_get_cost_reads(
             account, AggregateType.BILL, start, end
         )
         if account.read_resolution == ReadResolution.BILLING:
             return cost_reads
 
-        start = end if not cost_reads else cost_reads[-1].end_time
-        end = datetime.now()
-        if account.read_resolution != ReadResolution.DAY:
-            end -= timedelta(days=2 * 30)
-        cost_reads += await self.api.async_get_cost_reads(
+        if start_time is None:
+            start = end - timedelta(days=3 * 365)
+        else:
+            if cost_reads:
+                start = cost_reads[0].start_time
+            assert start
+            start = max(start, end - timedelta(days=3 * 365))
+        daily_cost_reads = await self.api.async_get_cost_reads(
             account, AggregateType.DAY, start, end
         )
+        _update_with_finer_cost_reads(cost_reads, daily_cost_reads)
         if account.read_resolution == ReadResolution.DAY:
             return cost_reads
 
-        start = end if not cost_reads else cost_reads[-1].end_time
-        end = datetime.now()
-        cost_reads += await self.api.async_get_cost_reads(
+        if start_time is None:
+            start = end - timedelta(days=2 * 30)
+        else:
+            assert start
+            start = max(start, end - timedelta(days=2 * 30))
+        hourly_cost_reads = await self.api.async_get_cost_reads(
             account, AggregateType.HOUR, start, end
         )
+        _update_with_finer_cost_reads(cost_reads, hourly_cost_reads)
         return cost_reads
-
-    async def _async_get_recent_cost_reads(
-        self, account: Account, last_stat_time: float
-    ) -> list[CostRead]:
-        """Get cost reads within the past 30 days to allow corrections in data from utilities."""
-        if account.read_resolution in [
-            ReadResolution.HOUR,
-            ReadResolution.HALF_HOUR,
-            ReadResolution.QUARTER_HOUR,
-        ]:
-            aggregate_type = AggregateType.HOUR
-        elif account.read_resolution == ReadResolution.DAY:
-            aggregate_type = AggregateType.DAY
-        else:
-            aggregate_type = AggregateType.BILL
-        return await self.api.async_get_cost_reads(
-            account,
-            aggregate_type,
-            datetime.fromtimestamp(last_stat_time) - timedelta(days=30),
-            datetime.now(),
-        )
