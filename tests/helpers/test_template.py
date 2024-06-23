@@ -3792,6 +3792,57 @@ async def test_integration_entities(
     assert info.rate_limit is None
 
 
+async def test_integration_devices(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test integration_devices function."""
+    # test devices for untitled config entry
+    config_entry = MockConfigEntry(domain="mock", title="")
+    config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:00")},
+    )
+    info = render_to_info(hass, "{{ integration_devices('') }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    # test devices for given config entry title
+    config_entry = MockConfigEntry(domain="mock", title="Mock bridge 2")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:01")},
+    )
+    info = render_to_info(hass, "{{ integration_devices('Mock bridge 2') }}")
+    assert_result_info(info, [device_entry.id])
+    assert info.rate_limit is None
+
+    # test devices for given non unique config entry title
+    config_entry = MockConfigEntry(domain="mock", title="Not unique")
+    config_entry.add_to_hass(hass)
+    device_entry_not_unique_1 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:02")},
+    )
+    config_entry = MockConfigEntry(domain="mock", title="Not unique")
+    config_entry.add_to_hass(hass)
+    device_entry_not_unique_2 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:03")},
+    )
+    info = render_to_info(hass, "{{ integration_devices('Not unique') }}")
+    assert_result_info(
+        info, [device_entry_not_unique_1.id, device_entry_not_unique_2.id]
+    )
+    assert info.rate_limit is None
+
+    # Test non existing integration/entry title
+    info = render_to_info(hass, "{{ integration_devices('abc123') }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+
 async def test_config_entry_id(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:

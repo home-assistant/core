@@ -1336,6 +1336,44 @@ def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
     ]
 
 
+def integration_devices(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
+    """Get device ids for device tied to an integration/domain.
+
+    Provide entry_name as domain to get all device id's for a integration/domain
+    or provide a config entry title for filtering between instances of the same
+    integration.
+    """
+
+    # Don't allow searching for config entries without title
+    if not entry_name:
+        return []
+
+    # first try if there are any config entries with a matching title
+    devices: list[str] = []
+    dev_reg = device_registry.async_get(hass)
+    for entry in hass.config_entries.async_entries():
+        if entry.title != entry_name:
+            continue
+        entries = device_registry.async_entries_for_config_entry(
+            dev_reg, entry.entry_id
+        )
+        devices.extend(entry.id for entry in entries)
+    if devices:
+        return devices
+
+    # fallback to just returning all devices for a domain
+    return [
+        dev.id
+        for dev in dev_reg.devices.values()
+        if entry_name
+        in (
+            confg_entry.domain
+            for config_entry_id in dev.config_entries
+            if (confg_entry := hass.config_entries.async_get_entry(config_entry_id))
+        )
+    ]
+
+
 def config_entry_id(hass: HomeAssistant, entity_id: str) -> str | None:
     """Get an config entry ID from an entity ID."""
     entity_reg = entity_registry.async_get(hass)
@@ -2931,6 +2969,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.globals["integration_entities"] = hassfunction(integration_entities)
         self.filters["integration_entities"] = self.globals["integration_entities"]
+
+        self.globals["integration_devices"] = hassfunction(integration_devices)
+        self.filters["integration_devices"] = self.globals["integration_devices"]
 
         self.globals["labels"] = hassfunction(labels)
         self.filters["labels"] = self.globals["labels"]
