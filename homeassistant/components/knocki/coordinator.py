@@ -1,14 +1,17 @@
 """Update coordinator for Knocki integration."""
-from knocki import Trigger, KnockiConnectionError
 
-from homeassistant.components.knocki.const import LOGGER, DOMAIN
+from knocki import Event, KnockiClient, KnockiConnectionError, Trigger
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import DOMAIN, LOGGER
+
 
 class KnockiCoordinator(DataUpdateCoordinator[dict[str, Trigger]]):
+    """The Knocki coordinator."""
 
-    def __init__(self, hass: HomeAssistant, client: KnockiClient):
+    def __init__(self, hass: HomeAssistant, client: KnockiClient) -> None:
         """Initialize the coordinator."""
         self.client = client
         super().__init__(
@@ -16,10 +19,17 @@ class KnockiCoordinator(DataUpdateCoordinator[dict[str, Trigger]]):
             logger=LOGGER,
             name=DOMAIN,
         )
+        self.client = client
 
     async def _async_update_data(self) -> dict[str, Trigger]:
-        """Fetch data from API endpoint."""
         try:
-            return await self.client.get_triggers()
+            triggers = await self.client.get_triggers()
         except KnockiConnectionError as exc:
             raise UpdateFailed from exc
+        return {trigger.details.trigger_id: trigger for trigger in triggers}
+
+    def add_trigger(self, event: Event) -> None:
+        """Add a trigger to the coordinator."""
+        self.async_set_updated_data(
+            {**self.data, event.payload.details.trigger_id: event.payload}
+        )
