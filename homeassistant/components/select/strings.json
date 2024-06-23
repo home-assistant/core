@@ -28,6 +28,9 @@
       "state_attributes": {
         "options": {
           "name": "Options"
+        },
+        "option": {
+          "name": "Option"
         }
       }
     }

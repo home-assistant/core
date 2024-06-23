@@ -30,6 +30,12 @@
         "min_temp": {
           "name": "Min target temperature"
         },
+        "operation_mode": {
+          "name": "Operation mode"
+        },
+        "operation_list": {
+          "name": "Operation modes"
+        },
         "target_temp_high": {
           "name": "Upper target temperature"
         },

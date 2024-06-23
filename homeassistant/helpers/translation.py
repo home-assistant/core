@@ -460,21 +460,19 @@ def async_get_exception_message(
 
 
 @callback
-def async_translate_state(
+def _async_translate_entity_string(
     hass: HomeAssistant,
-    state: str,
     domain: str,
     platform: str | None,
     translation_key: str | None,
     device_class: str | None,
-) -> str:
-    """Translate provided state using cached translations for currently selected language."""
-    if state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
-        return state
-    language = hass.config.language
+    language: str,
+    suffix: str,
+) -> str | None:
+    """Translate provided suffix using cached translations for given language."""
     if platform is not None and translation_key is not None:
         localize_key = (
-            f"component.{platform}.entity.{domain}.{translation_key}.state.{state}"
+            f"component.{platform}.entity.{domain}.{translation_key}.{suffix}"
         )
         translations = async_get_cached_translations(hass, language, "entity")
         if localize_key in translations:
@@ -482,13 +480,117 @@ def async_translate_state(
 
     translations = async_get_cached_translations(hass, language, "entity_component")
     if device_class is not None:
-        localize_key = (
-            f"component.{domain}.entity_component.{device_class}.state.{state}"
-        )
+        localize_key = f"component.{domain}.entity_component.{device_class}.{suffix}"
         if localize_key in translations:
             return translations[localize_key]
-    localize_key = f"component.{domain}.entity_component._.state.{state}"
+    localize_key = f"component.{domain}.entity_component._.{suffix}"
     if localize_key in translations:
         return translations[localize_key]
 
+    return None
+
+
+@callback
+def async_translate_state(
+    hass: HomeAssistant,
+    state: str,
+    domain: str,
+    platform: str | None,
+    translation_key: str | None,
+    device_class: str | None,
+    language: str | None = None,
+) -> str:
+    """Translate provided state using cached translations for currently selected language."""
+    if state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
+        return state
+    if language is None:
+        language = hass.config.language
+    if translation := _async_translate_entity_string(
+        hass,
+        domain,
+        platform,
+        translation_key,
+        device_class,
+        language,
+        f"state.{state}",
+    ):
+        return translation
     return state
+
+
+@callback
+def async_translate_state_name(
+    hass: HomeAssistant,
+    domain: str,
+    platform: str | None,
+    translation_key: str | None,
+    device_class: str | None,
+    language: str | None = None,
+) -> str:
+    """Translate provided state using cached translations for currently selected language."""
+    if language is None:
+        language = hass.config.language
+    if translation := _async_translate_entity_string(
+        hass,
+        domain,
+        platform,
+        translation_key,
+        device_class,
+        language,
+        "name",
+    ):
+        return translation
+    return domain
+
+
+@callback
+def async_translate_state_attribute_name(
+    hass: HomeAssistant,
+    attribute: str,
+    domain: str,
+    platform: str | None,
+    translation_key: str | None,
+    device_class: str | None,
+    language: str | None = None,
+) -> str:
+    """Translate provided state using cached translations for currently selected language."""
+    if language is None:
+        language = hass.config.language
+    if translation := _async_translate_entity_string(
+        hass,
+        domain,
+        platform,
+        translation_key,
+        device_class,
+        language,
+        f"state_attributes.{attribute}.name",
+    ):
+        return translation
+    return attribute
+
+
+@callback
+def async_translate_state_attribute_value(
+    hass: HomeAssistant,
+    attribute: str,
+    value: str,
+    domain: str,
+    platform: str | None,
+    translation_key: str | None,
+    device_class: str | None,
+    language: str | None = None,
+) -> str:
+    """Translate provided state using cached translations for currently selected language."""
+    if language is None:
+        language = hass.config.language
+    if translation := _async_translate_entity_string(
+        hass,
+        domain,
+        platform,
+        translation_key,
+        device_class,
+        language,
+        f"state_attributes.{attribute}.state.{value}",
+    ):
+        return translation
+    return value

@@ -13,6 +13,9 @@
         },
         "options": {
           "name": "[%key:component::select::entity_component::_::state_attributes::options::name%]"
+        },
+        "option": {
+          "name": "[%key:component::select::entity_component::_::state_attributes::option::name%]"
         }
       }
     }

@@ -170,6 +170,11 @@ class CloudGoogleConfig(AbstractConfig):
         """Return if states should be proactively reported."""
         return self.enabled and self._prefs.google_report_state
 
+    @property
+    def languages(self) -> list[str]:
+        """Return the languages to sync."""
+        return ["en"]
+
     def get_local_webhook_id(self, agent_user_id: Any) -> str:
         """Return the webhook ID to be used for actions for a given agent user id via the local SDK."""
         return self._prefs.google_local_webhook_id

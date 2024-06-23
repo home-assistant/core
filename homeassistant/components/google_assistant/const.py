@@ -37,6 +37,7 @@ CONF_ENTITY_CONFIG = "entity_config"
 CONF_EXPOSE = "expose"
 CONF_EXPOSE_BY_DEFAULT = "expose_by_default"
 CONF_EXPOSED_DOMAINS = "exposed_domains"
+CONF_LANGUAGES = "languages"
 CONF_PRIVATE_KEY = "private_key"
 CONF_PROJECT_ID = "project_id"
 CONF_REPORT_STATE = "report_state"
@@ -70,6 +71,7 @@ DEFAULT_EXPOSED_DOMAINS = [
     "valve",
     "water_heater",
 ]
+DEFAULT_LANGUAGES = ["en"]
 
 # https://developers.google.com/assistant/smarthome/guides
 PREFIX_TYPES = "action.devices.types."

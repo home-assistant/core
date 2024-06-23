@@ -138,6 +138,11 @@ class AbstractConfig(ABC):
         """Return entity config."""
 
     @property
+    @abstractmethod
+    def languages(self) -> list[str]:
+        """Return the languages to sync."""
+
+    @property
     def is_reporting_state(self):
         """Return if we're actively reporting states."""
         return self._unsub_report_state is not None

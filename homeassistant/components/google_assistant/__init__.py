@@ -19,6 +19,7 @@ from .const import (  # noqa: F401
     CONF_EXPOSE,
     CONF_EXPOSE_BY_DEFAULT,
     CONF_EXPOSED_DOMAINS,
+    CONF_LANGUAGES,
     CONF_PRIVATE_KEY,
     CONF_PROJECT_ID,
     CONF_REPORT_STATE,
@@ -28,6 +29,7 @@ from .const import (  # noqa: F401
     DATA_CONFIG,
     DEFAULT_EXPOSE_BY_DEFAULT,
     DEFAULT_EXPOSED_DOMAINS,
+    DEFAULT_LANGUAGES,
     DOMAIN,
     EVENT_QUERY_RECEIVED,
     SERVICE_REQUEST_SYNC,
@@ -85,6 +87,9 @@ GOOGLE_ASSISTANT_SCHEMA = vol.All(
             # deprecated configuration options
             vol.Remove(CONF_ALLOW_UNLOCK): cv.boolean,
             vol.Remove(CONF_API_KEY): cv.string,
+            vol.Required(CONF_LANGUAGES, default=DEFAULT_LANGUAGES): vol.All(
+                cv.ensure_list, [str]
+            ),
         },
         extra=vol.PREVENT_EXTRA,
     ),

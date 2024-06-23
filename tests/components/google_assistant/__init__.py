@@ -73,6 +73,11 @@ class MockConfig(http.GoogleConfig):
         """Expose it all."""
         return self._should_2fa is None or self._should_2fa(state)
 
+    @property
+    def languages(self) -> list[str]:
+        """Return the languages to sync."""
+        return ["en"]
+
 
 BASIC_CONFIG = MockConfig()
 
