@@ -46,7 +46,9 @@ SWITCH_DESCRIPTIONS: tuple[TPLinkSwitchEntityDescription, ...] = (
     TPLinkSwitchEntityDescription(
         key="smooth_transitions",
     ),
+    # To be included as part of new climate platform
     TPLinkSwitchEntityDescription(
+        exclude=True,
         key="frost_protection_enabled",
     ),
 )

@@ -1,5 +1,7 @@
 """Tests for light platform."""
 
+import logging
+
 from kasa import Feature, Module
 import pytest
 
@@ -157,7 +159,6 @@ async def test_sensor_unique_id(
 
 async def test_undefined_sensor(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a message is logged when discovering a feature without a description."""
@@ -182,6 +183,35 @@ async def test_undefined_sensor(
     msg = (
         "Device feature: Consumption for fortnight (consumption_this_fortnight) "
         "needs an entity description defined in HA"
+    )
+    assert msg in caplog.text
+
+
+async def test_excluded_sensor(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a message is logged when discovering a feature without a description."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    new_feature = _mocked_feature(
+        5.2,
+        "current_firmware_version",
+        name="Current firmware version",
+        type_=Feature.Type.Sensor,
+        category=Feature.Category.Primary,
+    )
+    caplog.set_level(logging.DEBUG)
+    plug = _mocked_device(alias="my_plug", features=[new_feature])
+    with _patch_discovery(device=plug), _patch_connect(device=plug):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    msg = (
+        "Device feature: Current firmware version (current_firmware_version) "
+        "excluded by description"
     )
     assert msg in caplog.text
 

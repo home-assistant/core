@@ -66,6 +66,8 @@ LEGACY_KEY_MAPPING = {
 class TPLinkFeatureEntityDescription(EntityDescription):
     """Base class for a TPLink feature based entity description."""
 
+    exclude: bool = False
+
 
 def async_refresh_after[_T: CoordinatedTPLinkEntity, **_P](
     func: Callable[Concatenate[_T, _P], Awaitable[None]],
@@ -263,7 +265,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
         return entity_category
 
     @classmethod
-    def _description_for_feature[_D: EntityDescription](
+    def _description_for_feature[_D: TPLinkFeatureEntityDescription](
         cls,
         feature: Feature,
         descriptions: Mapping[str, _D],
@@ -277,6 +279,13 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
         """
 
         if descriptions and (desc := descriptions.get(feature.id)):
+            if desc.exclude:
+                _LOGGER.debug(
+                    "Device feature: %s (%s) excluded by description",
+                    feature.name,
+                    feature.id,
+                )
+                return None
             translation_key: str | None = feature.id
             # HA logic is to name entities based on the following logic:
             # _attr_name > translation.name > description.name
