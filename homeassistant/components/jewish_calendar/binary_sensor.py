@@ -85,8 +85,6 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
 
     _attr_should_poll = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_has_entity_name = True
-
     entity_description: JewishCalendarBinarySensorEntityDescription
 
     def __init__(
