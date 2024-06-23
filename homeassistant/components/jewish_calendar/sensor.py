@@ -209,7 +209,6 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
     ) -> None:
         """Initialize the Jewish calendar sensor."""
         super().__init__(entry_id, description)
-        self.entity_description = description
         self._location = data[CONF_LOCATION]
         self._hebrew = data[CONF_LANGUAGE] == "hebrew"
         self._candle_lighting_offset = data[CONF_CANDLE_LIGHT_MINUTES]
