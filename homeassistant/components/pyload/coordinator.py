@@ -66,10 +66,10 @@ class PyLoadCoordinator(DataUpdateCoordinator[pyLoadData]):
                 raise ConfigEntryError(
                     f"Authentication failed for {self.pyload.username}, check your login credentials",
                 ) from exc
-            else:
-                raise UpdateFailed(
-                    "Unable to retrieve data due to cookie expiration but re-authentication was successful."
-                ) from e
+
+            raise UpdateFailed(
+                "Unable to retrieve data due to cookie expiration but re-authentication was successful."
+            ) from e
         except CannotConnect as e:
             raise UpdateFailed(
                 "Unable to connect and retrieve data from pyLoad API"
