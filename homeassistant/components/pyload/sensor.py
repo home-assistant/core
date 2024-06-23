@@ -36,7 +36,7 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
@@ -168,11 +168,11 @@ class PyLoadSensor(SensorEntity):
         self._attr_available = False
         self.data: StatusServerResponse
         self.device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
             manufacturer="PyLoad Team",
             model="pyLoad",
             configuration_url=api.api_url,
             identifiers={(DOMAIN, entry_id)},
-            name=client_name,
         )
 
     async def async_update(self) -> None:
