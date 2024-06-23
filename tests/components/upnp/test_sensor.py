@@ -43,6 +43,7 @@ async def test_upnp_sensors(
         kibibytes_per_sec_sent=20.0,
         packets_per_sec_received=30.0,
         packets_per_sec_sent=40.0,
+        port_mapping_number_of_entries=0,
     )
 
     now = dt_util.utcnow()

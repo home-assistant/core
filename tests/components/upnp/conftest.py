@@ -95,6 +95,7 @@ def mock_igd_device(mock_async_create_device) -> IgdDevice:
         kibibytes_per_sec_sent=None,
         packets_per_sec_received=None,
         packets_per_sec_sent=None,
+        port_mapping_number_of_entries=0,
     )
 
     with patch(

@@ -35,6 +35,7 @@ async def test_upnp_binary_sensors(
         kibibytes_per_sec_sent=None,
         packets_per_sec_received=None,
         packets_per_sec_sent=None,
+        port_mapping_number_of_entries=0,
     )
 
     async_fire_time_changed(
