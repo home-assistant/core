@@ -33,6 +33,7 @@ class OpenweathermapData:
     """Runtime data definition."""
 
     name: str
+    mode: str
     coordinator: WeatherUpdateCoordinator
 
 
@@ -61,7 +62,7 @@ async def async_setup_entry(
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
-    entry.runtime_data = OpenweathermapData(name, weather_coordinator)
+    entry.runtime_data = OpenweathermapData(name, mode, weather_coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

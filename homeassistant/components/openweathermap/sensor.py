@@ -47,6 +47,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     MANUFACTURER,
+    OWM_MODE_FREE_FORECAST,
 )
 from .coordinator import WeatherUpdateCoordinator
 
@@ -160,6 +161,9 @@ async def async_setup_entry(
     domain_data = config_entry.runtime_data
     name = domain_data.name
     weather_coordinator = domain_data.coordinator
+
+    if domain_data.mode == OWM_MODE_FREE_FORECAST:
+        return
 
     entities: list[AbstractOpenWeatherMapSensor] = [
         OpenWeatherMapSensor(
