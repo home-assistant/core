@@ -27,3 +27,28 @@ set_profile_fan_speed_boost:
           min: 0
           max: 100
           unit_of_measurement: "%"
+
+set_profile:
+  fields:
+    profile:
+      required: true
+      selector:
+        select:
+          options:
+            - label: "Home"
+              value: "1"
+            - label: "Away"
+              value: "2"
+            - label: "Boost"
+              value: "3"
+            - label: "Fireplace"
+              value: "4"
+            - label: "Extra"
+              value: "5"
+    duration:
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 65535
+          unit_of_measurement: "min"

@@ -72,6 +72,7 @@ class ServiceMethodDetails(NamedTuple):
 SERVICE_SET_PROFILE_FAN_SPEED_HOME = "set_profile_fan_speed_home"
 SERVICE_SET_PROFILE_FAN_SPEED_AWAY = "set_profile_fan_speed_away"
 SERVICE_SET_PROFILE_FAN_SPEED_BOOST = "set_profile_fan_speed_boost"
+SERVICE_SET_PROFILE = "set_profile"
 
 SERVICE_TO_METHOD = {
     SERVICE_SET_PROFILE_FAN_SPEED_HOME: ServiceMethodDetails(
@@ -85,6 +86,19 @@ SERVICE_TO_METHOD = {
     SERVICE_SET_PROFILE_FAN_SPEED_BOOST: ServiceMethodDetails(
         method="async_set_profile_fan_speed_boost",
         schema=SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
+    ),
+    SERVICE_SET_PROFILE: ServiceMethodDetails(
+        method="async_set_profile",
+        schema=vol.Schema(
+            {
+                vol.Required("profile"): vol.All(
+                    vol.Coerce(int), vol.Clamp(min=1, max=5)
+                ),
+                vol.Optional("duration"): vol.All(
+                    vol.Coerce(int), vol.Clamp(min=1, max=65535)
+                ),
+            }
+        ),
     ),
 }
 
@@ -180,6 +194,20 @@ class ValloxServiceHandler:
             await self._client.set_fan_speed(Profile.BOOST, fan_speed)
         except ValloxApiException as err:
             _LOGGER.error("Error setting fan speed for Boost profile: %s", err)
+            return False
+        return True
+
+    async def async_set_profile(
+        self, profile: int, duration: int | None = None
+    ) -> bool:
+        """Activate profile for given duration."""
+        _LOGGER.debug("Activating profile %s for %d min", profile, duration)
+        try:
+            await self._client.set_profile(Profile(profile), duration)
+        except ValloxApiException as err:
+            _LOGGER.error(
+                "Error setting profile %d for duration %d: %s", profile, duration, err
+            )
             return False
         return True
 
