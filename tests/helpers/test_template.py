@@ -6527,11 +6527,6 @@ async def test_merge_response(
     tpl = template.Template(_template, hass)
     assert tpl.async_render() == expected
 
-    _template2 = "{{ merge_response(" + str(service_response) + ") }}"
-
-    tpl = template.Template(_template, hass)
-    assert tpl.async_render() == expected
-
 
 async def test_merge_response_parameters(hass: HomeAssistant) -> None:
     """Test the merge_response function/filter with sorting and single_key."""
