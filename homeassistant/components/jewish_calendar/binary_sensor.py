@@ -6,7 +6,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import datetime as dt
 from datetime import datetime
-from typing import Any
 
 import hdate
 from hdate.zmanim import Zmanim
@@ -81,18 +80,9 @@ class JewishCalendarBinarySensor(JewishCalendarEntity, BinarySensorEntity):
 
     _attr_should_poll = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _update_unsub: CALLBACK_TYPE | None = None
 
     entity_description: JewishCalendarBinarySensorEntityDescription
-
-    def __init__(
-        self,
-        config_entry: ConfigEntry,
-        data: dict[str, Any],
-        description: JewishCalendarBinarySensorEntityDescription,
-    ) -> None:
-        """Initialize the binary sensor."""
-        super().__init__(config_entry, data, description)
-        self._update_unsub: CALLBACK_TYPE | None = None
 
     @property
     def is_on(self) -> bool:
