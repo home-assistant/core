@@ -1,6 +1,6 @@
 """Tests for the Knocki event platform."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 from unittest.mock import AsyncMock
 
 from knocki import Event, EventType, Trigger, TriggerDetails
@@ -88,7 +88,7 @@ async def test_adding_runtime_entities(
 
     assert not hass.states.get("event.knc1_w_00000214_aaaa")
 
-    add_trigger_function: Callable[[Event], Awaitable[None]] = (
+    add_trigger_function: Callable[[Event], None] = (
         mock_knocki_client.register_listener.call_args[0][1]
     )
     trigger = Trigger.from_dict(load_json_array_fixture("triggers.json", DOMAIN)[0])

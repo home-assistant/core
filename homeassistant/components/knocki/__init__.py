@@ -26,7 +26,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: KnockiConfigEntry) -> bo
 
     await coordinator.async_config_entry_first_refresh()
 
-    client.register_listener(EventType.CREATED, coordinator.add_trigger)
+    entry.async_on_unload(
+        client.register_listener(EventType.CREATED, coordinator.add_trigger)
+    )
 
     entry.runtime_data = coordinator
 
