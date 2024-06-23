@@ -7,7 +7,6 @@ from enum import StrEnum
 import logging
 from time import monotonic
 
-from aiohttp import CookieJar
 from pyloadapi import (
     CannotConnect,
     InvalidAuth,
@@ -23,6 +22,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
@@ -33,14 +33,15 @@ from homeassistant.const import (
     CONF_USERNAME,
     UnitOfDataRate,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
-from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT
+from . import PyLoadConfigEntry
+from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN, ISSUE_PLACEHOLDER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,41 +83,63 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
+    add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the pyLoad sensors."""
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
-    protocol = "https" if config[CONF_SSL] else "http"
-    name = config[CONF_NAME]
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    url = f"{protocol}://{host}:{port}/"
+    """Import config from yaml."""
 
-    session = async_create_clientsession(
-        hass,
-        verify_ssl=False,
-        cookie_jar=CookieJar(unsafe=True),
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
     )
-    pyloadapi = PyLoadAPI(session, api_url=url, username=username, password=password)
-    try:
-        await pyloadapi.login()
-    except CannotConnect as conn_err:
-        raise PlatformNotReady(
-            "Unable to connect and retrieve data from pyLoad API"
-        ) from conn_err
-    except ParserError as e:
-        raise PlatformNotReady("Unable to parse data from pyLoad API") from e
-    except InvalidAuth as e:
-        raise PlatformNotReady(
-            f"Authentication failed for {config[CONF_USERNAME]}, check your login credentials"
-        ) from e
+    _LOGGER.debug(result)
+    if (
+        result.get("type") == FlowResultType.CREATE_ENTRY
+        or result.get("reason") == "already_configured"
+    ):
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            breaks_in_ha_version="2025.2.0",
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "pyLoad",
+            },
+        )
+    elif error := result.get("reason"):
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{error}",
+            breaks_in_ha_version="2025.2.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{error}",
+            translation_placeholders=ISSUE_PLACEHOLDER,
+        )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: PyLoadConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the pyLoad sensors."""
+
+    pyloadapi = entry.runtime_data
 
     async_add_entities(
         (
             PyLoadSensor(
-                api=pyloadapi, entity_description=description, client_name=name
+                api=pyloadapi,
+                entity_description=description,
+                client_name=entry.title,
+                entry_id=entry.entry_id,
             )
             for description in SENSOR_DESCRIPTIONS
         ),
@@ -128,12 +151,17 @@ class PyLoadSensor(SensorEntity):
     """Representation of a pyLoad sensor."""
 
     def __init__(
-        self, api: PyLoadAPI, entity_description: SensorEntityDescription, client_name
+        self,
+        api: PyLoadAPI,
+        entity_description: SensorEntityDescription,
+        client_name: str,
+        entry_id: str,
     ) -> None:
         """Initialize a new pyLoad sensor."""
         self._attr_name = f"{client_name} {entity_description.name}"
         self.type = entity_description.key
         self.api = api
+        self._attr_unique_id = f"{entry_id}_{entity_description.key}"
         self.entity_description = entity_description
         self._attr_available = False
         self.data: StatusServerResponse
