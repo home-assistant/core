@@ -15,16 +15,19 @@ from .coordinator import WeatherUpdateCoordinator
 
 class AemetEntity(CoordinatorEntity[WeatherUpdateCoordinator]):
     """Define an AEMET entity."""
-
+    
     def __init__(
         self,
         coordinator: WeatherUpdateCoordinator,
+        name: str,
+        unique_id,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
+            name=name,
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(self.name, coordinator.config_entry.entry_id)},
+            identifiers={(name, unique_id)},
             manufacturer="AEMET",
             model="Forecast",
         )
