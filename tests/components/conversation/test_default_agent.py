@@ -16,7 +16,12 @@ from homeassistant.components.intent import (
     TimerInfo,
     async_register_timer_handler,
 )
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, STATE_CLOSED
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
+    STATE_CLOSED,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import DOMAIN as HASS_DOMAIN, Context, HomeAssistant, callback
 from homeassistant.helpers import (
     area_registry as ar,
@@ -171,6 +176,14 @@ async def test_conversation_agent(
         return_value=["dwarvish", "elvish", "entish"],
     ):
         assert agent.supported_languages == ["dwarvish", "elvish", "entish"]
+
+    state = hass.states.get(agent.entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert (
+        state.attributes["supported_features"]
+        == conversation.ConversationEntityFeature.CONTROL
+    )
 
 
 async def test_expose_flag_automatically_set(
