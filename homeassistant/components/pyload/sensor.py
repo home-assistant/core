@@ -170,7 +170,7 @@ class PyLoadSensor(SensorEntity):
         self.device_info = DeviceInfo(
             manufacturer="PyLoad Team",
             model="pyLoad",
-            configuration_url=self.api.api_url,
+            configuration_url=api.api_url,
             identifiers={(DOMAIN, entry_id)},
             name=client_name,
         )
