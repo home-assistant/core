@@ -1140,7 +1140,7 @@ ical==8.0.1
 icmplib==3.0
 
 # homeassistant.components.idasen_desk
-idasen-ha==2.5.3
+idasen-ha==2.6.1
 
 # homeassistant.components.network
 ifaddr==0.2.0
