@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
@@ -13,6 +12,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.const import (
@@ -22,8 +22,17 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
     CONF_VALUE_TEMPLATE,
+    PERCENTAGE,
     STATE_UNKNOWN,
+    UnitOfApparentPower,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfFrequency,
     UnitOfPower,
+    UnitOfPressure,
+    UnitOfSoundPressure,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import template
@@ -73,61 +82,83 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-@dataclass
-class SensorEmoncmsDescription:
-    """Description of an emoncms sensor."""
-
-    device_class: SensorDeviceClass
-    state_class: SensorStateClass
-
-
-SENSORS: dict[str | None, SensorEmoncmsDescription] = {
-    "kWh": SensorEmoncmsDescription(
+SENSORS: dict[str | None, SensorEntityDescription] = {
+    "kWh": SensorEntityDescription(
+        key="energy|kWh",
         device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-    "Wh": SensorEmoncmsDescription(
+    "Wh": SensorEntityDescription(
+        key="energy|Wh",
         device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-    "W": SensorEmoncmsDescription(
+    "W": SensorEntityDescription(
+        key="power",
         device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "V": SensorEmoncmsDescription(
+    "%": SensorEntityDescription(
+        key="humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "V": SensorEntityDescription(
+        key="voltage",
         device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "A": SensorEmoncmsDescription(
+    "A": SensorEntityDescription(
+        key="current",
         device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "VA": SensorEmoncmsDescription(
+    "VA": SensorEntityDescription(
+        key="apparentPower",
         device_class=SensorDeviceClass.APPARENT_POWER,
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "°C": SensorEmoncmsDescription(
+    "°C": SensorEntityDescription(
+        key="temperature|celsius",
         device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "°F": SensorEmoncmsDescription(
+    "°F": SensorEntityDescription(
+        key="temperature|fahrenheit",
         device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "K": SensorEmoncmsDescription(
+    "K": SensorEntityDescription(
+        key="temperature|kelvin",
         device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.KELVIN,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "Hz": SensorEmoncmsDescription(
+    "Hz": SensorEntityDescription(
+        key="frequency",
         device_class=SensorDeviceClass.FREQUENCY,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "hPa": SensorEmoncmsDescription(
+    "hPa": SensorEntityDescription(
+        key="pressure",
         device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "dB": SensorEmoncmsDescription(
+    "dB": SensorEntityDescription(
+        key="decibel",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
@@ -220,13 +251,15 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
         else:
             self._attr_name = name
         self._value_template = value_template
-        self._attr_native_unit_of_measurement = unit_of_measurement
         self._sensorid = sensorid
 
         params = SENSORS.get(unit_of_measurement)
         if params is not None:
             self._attr_device_class = params.device_class
+            self._attr_native_unit_of_measurement = params.native_unit_of_measurement
             self._attr_state_class = params.state_class
+        else:
+            self._attr_native_unit_of_measurement = unit_of_measurement
 
         self._update_attributes(elem)
 
