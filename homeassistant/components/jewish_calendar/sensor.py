@@ -15,24 +15,14 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_LANGUAGE,
-    CONF_LOCATION,
-    SUN_EVENT_SUNSET,
-    EntityCategory,
-)
+from homeassistant.const import SUN_EVENT_SUNSET, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
-from .const import (
-    CONF_CANDLE_LIGHT_MINUTES,
-    CONF_DIASPORA,
-    CONF_HAVDALAH_OFFSET_MINUTES,
-    DEFAULT_NAME,
-    DOMAIN,
-)
+from .const import DOMAIN
+from .entity import JewishCalendarEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -185,37 +175,30 @@ async def async_setup_entry(
     """Set up the Jewish calendar sensors ."""
     entry = hass.data[DOMAIN][config_entry.entry_id]
     sensors = [
-        JewishCalendarSensor(config_entry.entry_id, entry, description)
+        JewishCalendarSensor(config_entry, entry, description)
         for description in INFO_SENSORS
     ]
     sensors.extend(
-        JewishCalendarTimeSensor(config_entry.entry_id, entry, description)
+        JewishCalendarTimeSensor(config_entry, entry, description)
         for description in TIME_SENSORS
     )
 
     async_add_entities(sensors)
 
 
-class JewishCalendarSensor(SensorEntity):
+class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
     """Representation of an Jewish calendar sensor."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
         self,
-        entry_id: str,
+        config_entry: ConfigEntry,
         data: dict[str, Any],
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the Jewish calendar sensor."""
-        self.entity_description = description
-        self._attr_name = f"{DEFAULT_NAME} {description.name}"
-        self._attr_unique_id = f"{entry_id}-{description.key}"
-        self._location = data[CONF_LOCATION]
-        self._hebrew = data[CONF_LANGUAGE] == "hebrew"
-        self._candle_lighting_offset = data[CONF_CANDLE_LIGHT_MINUTES]
-        self._havdalah_offset = data[CONF_HAVDALAH_OFFSET_MINUTES]
-        self._diaspora = data[CONF_DIASPORA]
+        super().__init__(config_entry, data, description)
         self._attrs: dict[str, str] = {}
 
     async def async_update(self) -> None:
