@@ -51,6 +51,12 @@
         "state": {
           "on": "mdi:transition"
         }
+      },
+      "fan_sleep_mode": {
+        "default": "mdi:sleep-off",
+        "state": {
+          "on": "mdi:sleep"
+        }
       }
     },
     "sensor": {
