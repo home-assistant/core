@@ -175,11 +175,11 @@ async def async_setup_entry(
     """Set up the Jewish calendar sensors ."""
     entry = hass.data[DOMAIN][config_entry.entry_id]
     sensors = [
-        JewishCalendarSensor(config_entry.entry_id, entry, description)
+        JewishCalendarSensor(config_entry, entry, description)
         for description in INFO_SENSORS
     ]
     sensors.extend(
-        JewishCalendarTimeSensor(config_entry.entry_id, entry, description)
+        JewishCalendarTimeSensor(config_entry, entry, description)
         for description in TIME_SENSORS
     )
 
@@ -193,12 +193,12 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
 
     def __init__(
         self,
-        entry_id: str,
+        config_entry: ConfigEntry,
         data: dict[str, Any],
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the Jewish calendar sensor."""
-        super().__init__(entry_id, data, description)
+        super().__init__(config_entry, data, description)
         self._attrs: dict[str, str] = {}
 
     async def async_update(self) -> None:

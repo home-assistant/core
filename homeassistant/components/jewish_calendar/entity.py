@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LANGUAGE, CONF_LOCATION
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -10,7 +11,6 @@ from .const import (
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
     CONF_HAVDALAH_OFFSET_MINUTES,
-    DEFAULT_NAME,
     DOMAIN,
 )
 
@@ -22,17 +22,17 @@ class JewishCalendarEntity(Entity):
 
     def __init__(
         self,
-        entry_id: str,
+        config_entry: ConfigEntry,
         data: dict[str, Any],
         description: EntityDescription,
     ) -> None:
         """Initialize a Jewish Calendar entity."""
         self.entity_description = description
-        self._attr_unique_id = f"{entry_id}_{description.key}"
+        self._attr_unique_id = f"{config_entry.entry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, entry_id)},
-            name=DEFAULT_NAME,
+            identifiers={(DOMAIN, config_entry.entry_id)},
+            name=config_entry.title,
         )
         self._location = data[CONF_LOCATION]
         self._hebrew = data[CONF_LANGUAGE] == "hebrew"

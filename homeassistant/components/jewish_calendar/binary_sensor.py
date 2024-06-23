@@ -71,7 +71,7 @@ async def async_setup_entry(
     entry = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        JewishCalendarBinarySensor(config_entry.entry_id, entry, description)
+        JewishCalendarBinarySensor(config_entry, entry, description)
         for description in BINARY_SENSORS
     )
 
@@ -86,12 +86,12 @@ class JewishCalendarBinarySensor(JewishCalendarEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        entry_id: str,
+        config_entry: ConfigEntry,
         data: dict[str, Any],
         description: JewishCalendarBinarySensorEntityDescription,
     ) -> None:
         """Initialize the binary sensor."""
-        super().__init__(entry_id, data, description)
+        super().__init__(config_entry, data, description)
         self._update_unsub: CALLBACK_TYPE | None = None
 
     @property

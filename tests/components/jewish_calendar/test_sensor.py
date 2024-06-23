@@ -10,6 +10,7 @@ from homeassistant.components.jewish_calendar.const import (
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
     CONF_HAVDALAH_OFFSET_MINUTES,
+    DEFAULT_NAME,
     DOMAIN,
 )
 from homeassistant.const import CONF_LANGUAGE, CONF_PLATFORM
@@ -24,7 +25,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def test_jewish_calendar_min_config(hass: HomeAssistant) -> None:
     """Test minimum jewish calendar configuration."""
-    entry = MockConfigEntry(domain=DOMAIN, data={})
+    entry = MockConfigEntry(title=DEFAULT_NAME, domain=DOMAIN, data={})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -33,7 +34,9 @@ async def test_jewish_calendar_min_config(hass: HomeAssistant) -> None:
 
 async def test_jewish_calendar_hebrew(hass: HomeAssistant) -> None:
     """Test jewish calendar sensor with language set to hebrew."""
-    entry = MockConfigEntry(domain=DOMAIN, data={"language": "hebrew"})
+    entry = MockConfigEntry(
+        title=DEFAULT_NAME, domain=DOMAIN, data={"language": "hebrew"}
+    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -224,6 +227,7 @@ async def test_jewish_calendar_sensor(
 
     with alter_time(test_time):
         entry = MockConfigEntry(
+            title=DEFAULT_NAME,
             domain=DOMAIN,
             data={
                 CONF_LANGUAGE: language,
@@ -565,6 +569,7 @@ async def test_shabbat_times_sensor(
 
     with alter_time(test_time):
         entry = MockConfigEntry(
+            title=DEFAULT_NAME,
             domain=DOMAIN,
             data={
                 CONF_LANGUAGE: language,
@@ -625,7 +630,7 @@ async def test_omer_sensor(hass: HomeAssistant, test_time, result) -> None:
     test_time = test_time.replace(tzinfo=dt_util.get_time_zone(hass.config.time_zone))
 
     with alter_time(test_time):
-        entry = MockConfigEntry(domain=DOMAIN)
+        entry = MockConfigEntry(title=DEFAULT_NAME, domain=DOMAIN)
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -660,7 +665,7 @@ async def test_dafyomi_sensor(hass: HomeAssistant, test_time, result) -> None:
     test_time = test_time.replace(tzinfo=dt_util.get_time_zone(hass.config.time_zone))
 
     with alter_time(test_time):
-        entry = MockConfigEntry(domain=DOMAIN)
+        entry = MockConfigEntry(title=DEFAULT_NAME, domain=DOMAIN)
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
