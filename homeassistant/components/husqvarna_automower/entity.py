@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def handle_sending_exception(
-    poll_after_sending: bool,
+    poll_after_sending: bool = False,
 ) -> Callable[
     [Callable[..., Awaitable[Any]]], Callable[..., Coroutine[Any, Any, None]]
 ]:

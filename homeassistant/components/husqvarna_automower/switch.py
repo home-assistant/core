@@ -97,7 +97,7 @@ class AutomowerScheduleSwitchEntity(AutomowerControlEntity, SwitchEntity):
         """Turn the entity off."""
         await self.coordinator.api.commands.park_until_further_notice(self.mower_id)
 
-    @handle_sending_exception(poll_after_sending=False)
+    @handle_sending_exception()
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.coordinator.api.commands.resume_schedule(self.mower_id)
