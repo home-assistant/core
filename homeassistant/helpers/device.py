@@ -28,11 +28,22 @@ def async_device_info_to_link_from_entity(
 ) -> dr.DeviceInfo | None:
     """DeviceInfo with information to link a device to a configuration entry in the link category from a entity id or entity uuid."""
 
+    return async_device_info_to_link_from_device_id(
+        hass,
+        async_entity_id_to_device_id(hass, entity_id_or_uuid),
+    )
+
+
+@callback
+def async_device_info_to_link_from_device_id(
+    hass: HomeAssistant,
+    device_id: str | None,
+) -> dr.DeviceInfo | None:
+    """DeviceInfo with information to link a device to a configuration entry in the link category from a device id."""
+
     dev_reg = dr.async_get(hass)
 
-    if (device_id := async_entity_id_to_device_id(hass, entity_id_or_uuid)) is None or (
-        device := dev_reg.async_get(device_id=device_id)
-    ) is None:
+    if device_id is None or (device := dev_reg.async_get(device_id=device_id)) is None:
         return None
 
     return dr.DeviceInfo(
