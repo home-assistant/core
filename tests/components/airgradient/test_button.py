@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, patch
 
 from airgradient import Config, Measures
 from freezegun.api import FrozenDateTimeFactory
-import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.airgradient import DOMAIN
@@ -24,7 +23,6 @@ from tests.common import (
 )
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -39,7 +37,6 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities_outdoor(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,

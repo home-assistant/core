@@ -10,6 +10,7 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -29,11 +30,13 @@ class AirGradientButtonEntityDescription(ButtonEntityDescription):
 CO2_CALIBRATION = AirGradientButtonEntityDescription(
     key="co2_calibration",
     translation_key="co2_calibration",
+    entity_category=EntityCategory.CONFIG,
     press_fn=lambda client: client.request_co2_calibration(),
 )
 LED_BAR_TEST = AirGradientButtonEntityDescription(
     key="led_bar_test",
     translation_key="led_bar_test",
+    entity_category=EntityCategory.CONFIG,
     press_fn=lambda client: client.request_led_bar_test(),
 )
 
