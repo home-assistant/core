@@ -36,6 +36,14 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
 )
+from homeassistant.components.fan import (
+    ATTR_DIRECTION,
+    ATTR_OSCILLATING,
+    ATTR_PERCENTAGE,
+    ATTR_PRESET_MODE,
+    ATTR_PRESET_MODES,
+    DIRECTION_REVERSE,
+)
 from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
@@ -574,6 +582,31 @@ async def test_fan(
         'fan_state{domain="fan",'
         'entity="fan.fan_1",'
         'friendly_name="Fan 1"} 1.0' in body
+    )
+
+    assert (
+        'fan_speed_percent{domain="fan",'
+        'entity="fan.fan_1",'
+        'friendly_name="Fan 1"} 33.0' in body
+    )
+
+    assert (
+        'fan_is_oscillating{domain="fan",'
+        'entity="fan.fan_1",'
+        'friendly_name="Fan 1"} 1.0' in body
+    )
+
+    assert (
+        'fan_direction{domain="fan",'
+        'entity="fan.fan_1",'
+        'friendly_name="Fan 1"} 1.0' in body
+    )
+
+    assert (
+        'fan_preset_mode{domain="fan",'
+        'entity="fan.fan_1",'
+        'friendly_name="Fan 1",'
+        'mode="LO"} 1.0' in body
     )
 
 
@@ -1816,8 +1849,16 @@ async def fan_fixture(
         suggested_object_id="fan_1",
         original_name="Fan 1",
     )
-    set_state_with_entry(hass, fan_1, STATE_LOCKED)
+    fan_1_attributes = {
+        ATTR_DIRECTION: DIRECTION_REVERSE,
+        ATTR_OSCILLATING: True,
+        ATTR_PERCENTAGE: 33,
+        ATTR_PRESET_MODE: "LO",
+        ATTR_PRESET_MODES: ["LO", "OFF", "HI"],
+    }
+    set_state_with_entry(hass, fan_1, STATE_ON, fan_1_attributes)
     data["fan_1"] = fan_1
+    data["fan_1_attributes"] = fan_1_attributes
 
     await hass.async_block_till_done()
     return data
