@@ -45,7 +45,7 @@ async def async_setup_entry(
             if coordinator.data.devices[device_id]["dev_class"] in MASTER_THERMOSTATS
         )
 
-    _add_entities(PlugwiseClimateEntity)
+    _add_entities()
     entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 
 
