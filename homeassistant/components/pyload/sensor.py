@@ -163,4 +163,4 @@ class PyLoadSensor(CoordinatorEntity[PyLoadCoordinator], SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.coordinator.data[self.entity_description.key]
+        return getattr(self.coordinator.data, self.entity_description.key)
