@@ -5,7 +5,6 @@ from unittest.mock import patch
 
 from dio_chacon_wifi_api import DIOChaconAPIClient
 from dio_chacon_wifi_api.const import DeviceTypeEnum
-import pytest
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -193,7 +192,7 @@ async def test_cover(hass: HomeAssistant, entity_registry: er.EntityRegistry) ->
     ):
         await hass.config_entries.async_unload(entry.entry_id)
 
-    pytest.fail("Fails to display logs of tests")
+    # pytest.fail("Fails to display logs of tests")
 
 
 async def test_no_cover_found(
