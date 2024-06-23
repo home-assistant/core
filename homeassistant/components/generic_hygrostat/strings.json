@@ -1,0 +1,56 @@
+{
+  "title": "Generic hygrostat",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add generic hygrostat",
+        "description": "Create a entity that control the humidity via a switch and sensor.",
+        "data": {
+          "device_class": "Device class",
+          "dry_tolerance": "Dry tolerance",
+          "humidifier": "Switch",
+          "min_cycle_duration": "Minimum cycle duration",
+          "name": "[%key:common::config_flow::data::name%]",
+          "target_sensor": "Humidity sensor",
+          "wet_tolerance": "Wet tolerance"
+        },
+        "data_description": {
+          "dry_tolerance": "The minimum amount of difference between the humidity read by the sensor specified in the target sensor option and the target humidity that must change prior to being switched on.",
+          "humidifier": "Humidifier or dehumidifier switch; must be a toggle device.",
+          "min_cycle_duration": "Set a minimum amount of time that the switch specified in the humidifier option must be in its current state prior to being switched either off or on.",
+          "target_sensor": "Sensor with current humidity.",
+          "wet_tolerance": "The minimum amount of difference between the humidity read by the sensor specified in the target sensor option and the target humidity that must change prior to being switched off."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "device_class": "[%key:component::generic_hygrostat::config::step::user::data::device_class%]",
+          "dry_tolerance": "[%key:component::generic_hygrostat::config::step::user::data::dry_tolerance%]",
+          "humidifier": "[%key:component::generic_hygrostat::config::step::user::data::humidifier%]",
+          "min_cycle_duration": "[%key:component::generic_hygrostat::config::step::user::data::min_cycle_duration%]",
+          "target_sensor": "[%key:component::generic_hygrostat::config::step::user::data::target_sensor%]",
+          "wet_tolerance": "[%key:component::generic_hygrostat::config::step::user::data::wet_tolerance%]"
+        },
+        "data_description": {
+          "dry_tolerance": "[%key:component::generic_hygrostat::config::step::user::data_description::dry_tolerance%]",
+          "humidifier": "[%key:component::generic_hygrostat::config::step::user::data_description::humidifier%]",
+          "min_cycle_duration": "[%key:component::generic_hygrostat::config::step::user::data_description::min_cycle_duration%]",
+          "target_sensor": "[%key:component::generic_hygrostat::config::step::user::data_description::target_sensor%]",
+          "wet_tolerance": "[%key:component::generic_hygrostat::config::step::user::data_description::wet_tolerance%]"
+        }
+      }
+    }
+  },
+  "selector": {
+    "device_class": {
+      "options": {
+        "humidifier": "Humidifier",
+        "dehumidifier": "Dehumidifier"
+      }
+    }
+  }
+}
