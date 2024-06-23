@@ -51,10 +51,10 @@
   },
   "exceptions": {
     "invalid_data": {
-      "message": "Setup failed for entry {config_title} with invalid data, check at http://transport.opendata.ch/examples/stationboard.html if your station names are valid.\n{error}"
+      "message": "Setup failed for entry {config_title} with invalid data, check at the [stationboard]({stationboard_url}) if your station names are valid.\n{error}"
     },
     "request_timeout": {
-      "message": "Timeout while connecting for entry {config_title}d.\n{error}"
+      "message": "Timeout while connecting for entry {config_title}.\n{error}"
     }
   }
 }

@@ -14,7 +14,7 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_DESTINATION, CONF_START, CONF_VIA, DOMAIN
+from .const import CONF_DESTINATION, CONF_START, CONF_VIA, DOMAIN, PLACEHOLDERS
 from .coordinator import SwissPublicTransportDataUpdateCoordinator
 from .helper import unique_id_from_config
 
@@ -52,6 +52,7 @@ async def async_setup_entry(
             translation_domain=DOMAIN,
             translation_key="invalid_data",
             translation_placeholders={
+                **PLACEHOLDERS,
                 "config_title": entry.title,
                 "error": e,
             },
