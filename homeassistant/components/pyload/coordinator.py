@@ -59,18 +59,17 @@ class PyLoadCoordinator(DataUpdateCoordinator[pyLoadData]):
                 free_space=await self.pyload.free_space(),
             )
 
-        except InvalidAuth:
-            _LOGGER.debug("Authentication failed, trying to reauthenticate")
+        except InvalidAuth as e:
             try:
                 await self.pyload.login()
-            except InvalidAuth as e:
+            except InvalidAuth as exc:
                 raise ConfigEntryError(
                     f"Authentication failed for {self.pyload.username}, check your login credentials",
-                ) from e
+                ) from exc
             else:
                 raise UpdateFailed(
                     "Unable to retrieve data due to cookie expiration but re-authentication was successful."
-                )
+                ) from e
         except CannotConnect as e:
             raise UpdateFailed(
                 "Unable to connect and retrieve data from pyLoad API"
