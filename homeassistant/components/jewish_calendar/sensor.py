@@ -15,7 +15,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LANGUAGE, CONF_LOCATION, SUN_EVENT_SUNSET
+from homeassistant.const import (
+    CONF_LANGUAGE,
+    CONF_LOCATION,
+    SUN_EVENT_SUNSET,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import get_astral_event_date
@@ -193,6 +198,8 @@ async def async_setup_entry(
 
 class JewishCalendarSensor(SensorEntity):
     """Representation of an Jewish calendar sensor."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
         self,

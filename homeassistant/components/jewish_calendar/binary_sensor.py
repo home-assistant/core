@@ -16,7 +16,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LANGUAGE, CONF_LOCATION
+from homeassistant.const import CONF_LANGUAGE, CONF_LOCATION, EntityCategory
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import event
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -84,6 +84,7 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
     """Representation of an Jewish Calendar binary sensor."""
 
     _attr_should_poll = False
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     entity_description: JewishCalendarBinarySensorEntityDescription
 
     def __init__(
