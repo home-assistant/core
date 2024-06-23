@@ -15,7 +15,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LANGUAGE, CONF_LOCATION, SUN_EVENT_SUNSET
+from homeassistant.const import (
+    CONF_LANGUAGE,
+    CONF_LOCATION,
+    SUN_EVENT_SUNSET,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import get_astral_event_date
@@ -54,11 +59,13 @@ INFO_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="omer_count",
         name="Day of the Omer",
         icon="mdi:counter",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="daf_yomi",
         name="Daf Yomi",
         icon="mdi:book-open-variant",
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -67,11 +74,13 @@ TIME_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="first_light",
         name="Alot Hashachar",  # codespell:ignore alot
         icon="mdi:weather-sunset-up",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="talit",
         name="Talit and Tefillin",
         icon="mdi:calendar-clock",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="sunrise",
@@ -82,41 +91,49 @@ TIME_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="gra_end_shma",
         name='Latest time for Shma Gr"a',
         icon="mdi:calendar-clock",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="mga_end_shma",
         name='Latest time for Shma MG"A',
         icon="mdi:calendar-clock",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="gra_end_tfila",
         name='Latest time for Tefilla Gr"a',
         icon="mdi:calendar-clock",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="mga_end_tfila",
         name='Latest time for Tefilla MG"A',
         icon="mdi:calendar-clock",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="midday",
         name="Chatzot Hayom",
         icon="mdi:calendar-clock",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="big_mincha",
         name="Mincha Gedola",
         icon="mdi:calendar-clock",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="small_mincha",
         name="Mincha Ketana",
         icon="mdi:calendar-clock",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="plag_mincha",
         name="Plag Hamincha",
         icon="mdi:weather-sunset-down",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="sunset",
@@ -127,21 +144,25 @@ TIME_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="first_stars",
         name="T'set Hakochavim",
         icon="mdi:weather-night",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="three_stars",
         name="T'set Hakochavim, 3 stars",
         icon="mdi:weather-night",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="upcoming_shabbat_candle_lighting",
         name="Upcoming Shabbat Candle Lighting",
         icon="mdi:candle",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="upcoming_shabbat_havdalah",
         name="Upcoming Shabbat Havdalah",
         icon="mdi:weather-night",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="upcoming_candle_lighting",
@@ -177,6 +198,8 @@ async def async_setup_entry(
 
 class JewishCalendarSensor(SensorEntity):
     """Representation of an Jewish calendar sensor."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
         self,

@@ -691,6 +691,7 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
         super()._async_update_device_from_protect(device)
         slot = self._disk.slot
         self._attr_available = False
+        available = self.data.last_update_success
 
         # should not be possible since it would require user to
         # _downgrade_ to make ustorage disppear
@@ -698,7 +699,7 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
         for disk in self.device.system_info.ustorage.disks:
             if disk.slot == slot:
                 self._disk = disk
-                self._attr_available = True
+                self._attr_available = available
                 break
 
         self._attr_is_on = not self._disk.is_healthy
