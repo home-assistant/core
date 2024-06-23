@@ -960,6 +960,7 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient]:
         mock_client.subscribe.side_effect = _subscribe
         mock_client.unsubscribe.side_effect = _unsubscribe
         mock_client.publish.side_effect = _async_fire_mqtt_message
+        mock_client.loop_read.return_value = 0
         yield mock_client
 
 
