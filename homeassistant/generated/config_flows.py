@@ -7,6 +7,7 @@ FLOWS = {
     "helper": [
         "derivative",
         "generic_hygrostat",
+        "generic_thermostat",
         "group",
         "integration",
         "min_max",
@@ -167,6 +168,7 @@ FLOWS = {
         "ezviz",
         "faa_delays",
         "fastdotcom",
+        "feedreader",
         "fibaro",
         "file",
         "filesize",
@@ -282,6 +284,7 @@ FLOWS = {
         "kegtron",
         "keymitt_ble",
         "kmtronic",
+        "knocki",
         "knx",
         "kodi",
         "konnected",

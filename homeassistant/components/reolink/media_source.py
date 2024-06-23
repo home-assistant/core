@@ -164,10 +164,14 @@ class ReolinkVODMediaSource(MediaSource):
                     continue
 
                 device = device_reg.async_get(entity.device_id)
-                ch = entity.unique_id.split("_")[1]
-                if ch in channels or device is None:
+                ch_id = entity.unique_id.split("_")[1]
+                if ch_id in channels or device is None:
                     continue
-                channels.append(ch)
+                channels.append(ch_id)
+
+                ch: int | str = ch_id
+                if len(ch_id) > 3:
+                    ch = host.api.channel_for_uid(ch_id)
 
                 if (
                     host.api.api_version("recReplay", int(ch)) < 1
