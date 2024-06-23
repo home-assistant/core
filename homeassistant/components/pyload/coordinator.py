@@ -1,5 +1,6 @@
 """Update coordinator for pyLoad Integration."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -23,9 +24,11 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=20)
 
 
-class pyLoadData(StatusServerResponse):
+@dataclass(kw_only=True)
+class pyLoadData:
     """Data from pyLoad."""
 
+    status: StatusServerResponse
     free_space: int
     version: str
 
@@ -44,13 +47,18 @@ class PyLoadCoordinator(DataUpdateCoordinator[pyLoadData]):
             update_interval=SCAN_INTERVAL,
         )
         self.pyload = pyload
+        self.version: str
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> pyLoadData:
         """Fetch data from API endpoint."""
         try:
-            free_space = await self.pyload.free_space()
-            status = await self.pyload.get_status()
-            version = await self.pyload.version()
+            if not self.version:
+                self.version = await self.pyload.version()
+            return pyLoadData(
+                free_space=await self.pyload.free_space(),
+                status=await self.pyload.get_status(),
+                version=self.version,
+            )
         except InvalidAuth:
             _LOGGER.debug("Authentication failed, trying to reauthenticate")
             try:
@@ -69,5 +77,3 @@ class PyLoadCoordinator(DataUpdateCoordinator[pyLoadData]):
             ) from e
         except ParserError as e:
             raise UpdateFailed("Unable to parse data from pyLoad API") from e
-        else:
-            return pyLoadData({**status, "free_space": free_space, "version": version})

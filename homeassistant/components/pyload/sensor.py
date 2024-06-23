@@ -161,10 +161,10 @@ class PyLoadSensor(CoordinatorEntity[PyLoadCoordinator], SensorEntity):
             model="pyLoad",
             configuration_url=coordinator.pyload.api_url,
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            sw_version=coordinator.data["version"],
+            sw_version=coordinator.data.version,
         )
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.coordinator.data.get(self.entity_description.key)
+        return getattr(self.coordinator.data, self.entity_description.key)
