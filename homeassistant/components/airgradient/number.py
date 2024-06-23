@@ -6,13 +6,16 @@ from dataclasses import dataclass
 from airgradient import AirGradientClient, Config
 from airgradient.models import ConfigurationControl
 
-from homeassistant.components.select import SelectEntity
-from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.components.number import (
+    DOMAIN as NUMBER_DOMAIN,
+    NumberEntity,
+    NumberEntityDescription,
+)
+from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from ..number import NumberEntityDescription
 from . import AirGradientConfigEntry
 from .const import DOMAIN
 from .coordinator import AirGradientConfigCoordinator
@@ -27,14 +30,28 @@ class AirGradientNumberEntityDescription(NumberEntityDescription):
     set_value_fn: Callable[[AirGradientClient, int], Awaitable[None]]
 
 
-CONFIG_CONTROL_ENTITY = AirGradientNumberEntityDescription(
+DISPLAY_BRIGHTNESS = AirGradientNumberEntityDescription(
     key="display_brightness",
     translation_key="display_brightness",
     entity_category=EntityCategory.CONFIG,
+    native_min_value=0,
+    native_max_value=100,
+    native_step=1,
+    native_unit_of_measurement=PERCENTAGE,
     value_fn=lambda config: config.display_brightness,
-    set_value_fn=lambda client, value: client.set_configuration_control(
-        ConfigurationControl(value)
-    ),
+    set_value_fn=lambda client, value: client.set_display_brightness(value),
+)
+
+LED_BAR_BRIGHTNESS = AirGradientNumberEntityDescription(
+    key="led_bar_brightness",
+    translation_key="led_bar_brightness",
+    entity_category=EntityCategory.CONFIG,
+    native_min_value=0,
+    native_max_value=100,
+    native_step=1,
+    native_unit_of_measurement=PERCENTAGE,
+    value_fn=lambda config: config.led_bar_brightness,
+    set_value_fn=lambda client, value: client.set_led_bar_brightness(value),
 )
 
 
@@ -43,64 +60,71 @@ async def async_setup_entry(
     entry: AirGradientConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up AirGradient select entities based on a config entry."""
+    """Set up AirGradient number entities based on a config entry."""
 
-    config_coordinator = entry.runtime_data.config
-    measurement_coordinator = entry.runtime_data.measurement
+    model = entry.runtime_data.measurement.data.model
+    coordinator = entry.runtime_data.config
 
-    entities = [AirGradientSelect(config_coordinator, CONFIG_CONTROL_ENTITY)]
+    added_entities = False
 
-    entities.extend(
-        AirGradientProtectedSelect(config_coordinator, description)
-        for description in PROTECTED_SELECT_TYPES
+    @callback
+    def _check_entities() -> None:
+        nonlocal added_entities
+
         if (
-            description.requires_display
-            and measurement_coordinator.data.model.startswith("I")
-        )
-        or (description.requires_led_bar and "L" in measurement_coordinator.data.model)
-    )
+            coordinator.data.configuration_control is ConfigurationControl.LOCAL
+            and not added_entities
+        ):
+            entities = []
+            if "I" in model:
+                entities.append(AirGradientNumber(coordinator, DISPLAY_BRIGHTNESS))
+            if "L" in model:
+                entities.append(AirGradientNumber(coordinator, LED_BAR_BRIGHTNESS))
 
-    async_add_entities(entities)
+            async_add_entities(entities)
+            added_entities = True
+        elif (
+            coordinator.data.configuration_control is not ConfigurationControl.LOCAL
+            and added_entities
+        ):
+            entity_registry = er.async_get(hass)
+            unique_ids = [
+                f"{coordinator.serial_number}-{entity_description.key}"
+                for entity_description in (DISPLAY_BRIGHTNESS, LED_BAR_BRIGHTNESS)
+            ]
+            for unique_id in unique_ids:
+                if entity_id := entity_registry.async_get_entity_id(
+                    NUMBER_DOMAIN, DOMAIN, unique_id
+                ):
+                    entity_registry.async_remove(entity_id)
+            added_entities = False
+
+    coordinator.async_add_listener(_check_entities)
+    _check_entities()
 
 
-class AirGradientSelect(AirGradientEntity, SelectEntity):
-    """Defines an AirGradient select entity."""
+class AirGradientNumber(AirGradientEntity, NumberEntity):
+    """Defines an AirGradient number entity."""
 
-    entity_description: AirGradientSelectEntityDescription
+    entity_description: AirGradientNumberEntityDescription
     coordinator: AirGradientConfigCoordinator
 
     def __init__(
         self,
         coordinator: AirGradientConfigCoordinator,
-        description: AirGradientSelectEntityDescription,
+        description: AirGradientNumberEntityDescription,
     ) -> None:
-        """Initialize AirGradient select."""
+        """Initialize AirGradient number."""
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.serial_number}-{description.key}"
 
     @property
-    def current_option(self) -> str | None:
-        """Return the state of the select."""
+    def native_value(self) -> int | None:
+        """Return the state of the number."""
         return self.entity_description.value_fn(self.coordinator.data)
 
-    async def async_select_option(self, option: str) -> None:
-        """Change the selected option."""
-        await self.entity_description.set_value_fn(self.coordinator.client, option)
+    async def async_set_native_value(self, value: float) -> None:
+        """Set the selected value."""
+        await self.entity_description.set_value_fn(self.coordinator.client, int(value))
         await self.coordinator.async_request_refresh()
-
-
-class AirGradientProtectedSelect(AirGradientSelect):
-    """Defines a protected AirGradient select entity."""
-
-    async def async_select_option(self, option: str) -> None:
-        """Change the selected option."""
-        if (
-            self.coordinator.data.configuration_control
-            is not ConfigurationControl.LOCAL
-        ):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="no_local_configuration",
-            )
-        await super().async_select_option(option)
