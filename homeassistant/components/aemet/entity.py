@@ -7,6 +7,7 @@ from typing import Any
 from aemet_opendata.helpers import dict_nested_value
 
 from homeassistant.components.weather import Forecast
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import WeatherUpdateCoordinator
@@ -14,6 +15,19 @@ from .coordinator import WeatherUpdateCoordinator
 
 class AemetEntity(CoordinatorEntity[WeatherUpdateCoordinator]):
     """Define an AEMET entity."""
+    
+    def __init__(
+        self,
+        coordinator: WeatherUpdateCoordinator,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(self.name, coordinator.config_entry.entry_id)},
+            manufacturer="AEMET",
+            model="Forecast",
+        )
 
     def get_aemet_forecast(self, forecast_mode: str) -> list[Forecast]:
         """Return AEMET entity forecast by mode."""
