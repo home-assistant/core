@@ -1240,7 +1240,7 @@ def test_enum() -> None:
         schema("value3")
 
 
-def test_socket_timeout():
+def test_socket_timeout() -> None:
     """Test socket timeout validator."""
     schema = vol.Schema(cv.socket_timeout)
 
@@ -1679,7 +1679,7 @@ def test_color_hex() -> None:
         cv.color_hex(123456)
 
 
-def test_determine_script_action_ambiguous():
+def test_determine_script_action_ambiguous() -> None:
     """Test determine script action with ambiguous actions."""
     assert (
         cv.determine_script_action(
@@ -1696,6 +1696,6 @@ def test_determine_script_action_ambiguous():
     )
 
 
-def test_determine_script_action_non_ambiguous():
+def test_determine_script_action_non_ambiguous() -> None:
     """Test determine script action with a non ambiguous action."""
     assert cv.determine_script_action({"delay": "00:00:05"}) == "delay"
