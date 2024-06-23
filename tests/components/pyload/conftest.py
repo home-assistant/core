@@ -47,7 +47,7 @@ def mock_pyloadapi() -> Generator[AsyncMock, None, None]:
     ):
         client = mock_client.return_value
         client.username = "username"
-        client.login.return_value = LoginResponse.from_dict(
+        client.login.return_value = LoginResponse(
             {
                 "_permanent": True,
                 "authenticated": True,
@@ -59,7 +59,8 @@ def mock_pyloadapi() -> Generator[AsyncMock, None, None]:
                 "_flashes": [["message", "Logged in successfully"]],
             }
         )
-        client.get_status.return_value = StatusServerResponse.from_dict(
+
+        client.get_status.return_value = StatusServerResponse(
             {
                 "pause": False,
                 "active": 1,
@@ -71,5 +72,6 @@ def mock_pyloadapi() -> Generator[AsyncMock, None, None]:
                 "captcha": False,
             }
         )
+
         client.free_space.return_value = 99999999999
         yield client
