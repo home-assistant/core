@@ -437,10 +437,10 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
         range_min = self.config.get("min")
         range_max = self.config.get("max")
 
-        if not range_min:
+        if range_min is None:
             range_min = self.config.get("min_mireds")
 
-        if not range_max:
+        if range_max is None:
             range_max = self.config.get("max_mireds")
 
         value: int = vol.All(

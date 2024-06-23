@@ -503,14 +503,14 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
 
     if isinstance(schema, (selector.NumberSelector, selector.ColorTempSelector)):
         result: dict[str, Any] = {"type": "number"}
-        if "min" in schema.config or "min_mireds" in schema.config:
-            result["minimum"] = schema.config.get("min") or schema.config.get(
-                "min_mireds"
-            )
-        if "max" in schema.config or "max_mireds" in schema.config:
-            result["maximum"] = schema.config.get("max") or schema.config.get(
-                "max_mireds"
-            )
+        if "min" in schema.config:
+            result["minimum"] = schema.config["min"]
+        elif "min_mireds" in schema.config:
+            result["minimum"] = schema.config["min_mireds"]
+        if "max" in schema.config:
+            result["maximum"] = schema.config["max"]
+        elif "max_mireds" in schema.config:
+            result["maximum"] = schema.config["max_mireds"]
         return result
 
     if isinstance(schema, selector.CountrySelector):
