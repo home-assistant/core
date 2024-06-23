@@ -38,7 +38,7 @@
         "state": {
           "off": "[%key:common::state::off%]",
           "constant_clean": "Constant clean",
-          "automatic": "[%key:components::aprilaire::entity::select::fresh_air_mode::state::automatic%]"
+          "automatic": "Automatic"
         }
       },
       "fresh_air_event": {
@@ -53,7 +53,7 @@
         "name": "Fresh air mode",
         "state": {
           "off": "[%key:common::state::off%]",
-          "automatic": "Automatic"
+          "automatic": "[%key:component::aprilaire::entity::select::air_cleaning_mode::state::automatic%]"
         }
       }
     },
