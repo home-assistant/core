@@ -293,8 +293,8 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
                 )
 
             self._no_motion_since = 0
-            if self._state:
-                return False
+#            if self._state:
+#                return False
             self._state = True
             return True
 
