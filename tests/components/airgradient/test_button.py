@@ -1,8 +1,10 @@
 """Tests for the AirGradient button platform."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from airgradient import Measures
+from airgradient import Config, Measures
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -10,12 +12,16 @@ from homeassistant.components.airgradient import DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, load_fixture, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_fixture,
+    snapshot_platform,
+)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -80,32 +86,34 @@ async def test_pressing_button(
     mock_airgradient_client.request_led_bar_test.assert_called_once()
 
 
-async def test_pressing_button_cloud(
+async def test_cloud_creates_no_button(
     hass: HomeAssistant,
     mock_cloud_airgradient_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test pressing button on cloud configured device."""
-    await setup_integration(hass, mock_config_entry)
+    """Test cloud configuration control."""
+    with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.BUTTON]):
+        await setup_integration(hass, mock_config_entry)
 
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {
-                ATTR_ENTITY_ID: "button.airgradient_calibrate_co2_sensor",
-            },
-            blocking=True,
-        )
-    mock_cloud_airgradient_client.request_co2_calibration.assert_not_called()
+    assert len(hass.states.async_all()) == 0
 
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {
-                ATTR_ENTITY_ID: "button.airgradient_test_led_bar",
-            },
-            blocking=True,
-        )
-    mock_cloud_airgradient_client.request_led_bar_test.assert_not_called()
+    mock_cloud_airgradient_client.get_config.return_value = Config.from_json(
+        load_fixture("get_config_local.json", DOMAIN)
+    )
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 2
+
+    mock_cloud_airgradient_client.get_config.return_value = Config.from_json(
+        load_fixture("get_config_cloud.json", DOMAIN)
+    )
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0

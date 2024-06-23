@@ -5,9 +5,13 @@ from dataclasses import dataclass
 
 from airgradient import AirGradientClient, ConfigurationControl
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.components.button import (
+    DOMAIN as BUTTON_DOMAIN,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, AirGradientConfigEntry
@@ -43,11 +47,40 @@ async def async_setup_entry(
     model = entry.runtime_data.measurement.data.model
     coordinator = entry.runtime_data.config
 
-    entities = [AirGradientButton(coordinator, CO2_CALIBRATION)]
-    if "L" in model:
-        entities.append(AirGradientButton(coordinator, LED_BAR_TEST))
+    added_entities = False
 
-    async_add_entities(entities)
+    @callback
+    def _check_entities() -> None:
+        nonlocal added_entities
+
+        if (
+            coordinator.data.configuration_control is ConfigurationControl.LOCAL
+            and not added_entities
+        ):
+            entities = [AirGradientButton(coordinator, CO2_CALIBRATION)]
+            if "L" in model:
+                entities.append(AirGradientButton(coordinator, LED_BAR_TEST))
+
+            async_add_entities(entities)
+            added_entities = True
+        elif (
+            coordinator.data.configuration_control is not ConfigurationControl.LOCAL
+            and added_entities
+        ):
+            entity_registry = er.async_get(hass)
+            unique_ids = [
+                f"{coordinator.serial_number}-{entity_description.key}"
+                for entity_description in (CO2_CALIBRATION, LED_BAR_TEST)
+            ]
+            for unique_id in unique_ids:
+                if entity_id := entity_registry.async_get_entity_id(
+                    BUTTON_DOMAIN, DOMAIN, unique_id
+                ):
+                    entity_registry.async_remove(entity_id)
+            added_entities = False
+
+    coordinator.async_add_listener(_check_entities)
+    _check_entities()
 
 
 class AirGradientButton(AirGradientEntity, ButtonEntity):
@@ -68,12 +101,4 @@ class AirGradientButton(AirGradientEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        if (
-            self.coordinator.data.configuration_control
-            is not ConfigurationControl.LOCAL
-        ):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="no_local_configuration",
-            )
         await self.entity_description.press_fn(self.coordinator.client)
