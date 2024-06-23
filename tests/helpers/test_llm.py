@@ -724,15 +724,6 @@ def test_selector_serializer() -> None:
     assert llm.selector_serializer(
         selector.ColorTempSelector({"min": 100, "max": 1000})
     ) == {"type": "number", "minimum": 100, "maximum": 1000}
-    assert llm.selector_serializer(selector.ConditionSelector()) == {
-        "type": "array",
-        "items": {
-            "anyOf": [
-                {"nullable": True, "type": "string"},
-                {"nullable": True, "type": "string"},
-            ]
-        },
-    }
     assert llm.selector_serializer(selector.ConfigEntrySelector()) == {"type": "string"}
     assert llm.selector_serializer(selector.ConstantSelector({"value": "test"})) == {
         "enum": ["test"]

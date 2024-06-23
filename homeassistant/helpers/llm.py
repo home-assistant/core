@@ -501,7 +501,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
     if isinstance(schema, selector.ConstantSelector):
         return {"enum": [schema.config["value"]]}
 
-    if isinstance(schema, (selector.NumberSelector, selector.ColorTempSelector)):
+    if isinstance(schema, selector.ColorTempSelector):
         result: dict[str, Any] = {"type": "number"}
         if "min" in schema.config:
             result["minimum"] = schema.config["min"]
@@ -540,6 +540,14 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
 
     if isinstance(schema, (selector.LocationSelector, selector.MediaSelector)):
         return convert(schema.DATA_SCHEMA)
+
+    if isinstance(schema, selector.NumberSelector):
+        result: dict[str, Any] = {"type": "number"}
+        if "min" in schema.config:
+            result["minimum"] = schema.config["min"]
+        if "max" in schema.config:
+            result["maximum"] = schema.config["max"]
+        return result
 
     if isinstance(schema, selector.ObjectSelector):
         return {"type": "object"}
