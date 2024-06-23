@@ -6,11 +6,15 @@ from datetime import timedelta
 from enum import StrEnum
 import logging
 from time import monotonic
-from typing import Any
 
 from aiohttp import CookieJar
-from pyloadapi.api import PyLoadAPI
-from pyloadapi.exceptions import CannotConnect, InvalidAuth, ParserError
+from pyloadapi import (
+    CannotConnect,
+    InvalidAuth,
+    ParserError,
+    PyLoadAPI,
+    StatusServerResponse,
+)
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -132,7 +136,7 @@ class PyLoadSensor(SensorEntity):
         self.api = api
         self.entity_description = entity_description
         self._attr_available = False
-        self.data: dict[str, Any] = {}
+        self.data: StatusServerResponse
 
     async def async_update(self) -> None:
         """Update state of sensor."""
@@ -167,7 +171,7 @@ class PyLoadSensor(SensorEntity):
             self._attr_available = False
             return
         else:
-            self.data = status.to_dict()
+            self.data = status
             _LOGGER.debug(
                 "Finished fetching pyload data in %.3f seconds",
                 monotonic() - start,
