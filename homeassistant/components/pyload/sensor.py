@@ -132,7 +132,6 @@ async def async_setup_entry(
             )
             for description in SENSOR_DESCRIPTIONS
         ),
-        True,
     )
 
 
