@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[button.airgradient_calibrate_co2_sensor-entry]
+# name: test_all_entities[indoor][button.airgradient_calibrate_co2_sensor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -32,7 +32,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[button.airgradient_calibrate_co2_sensor-state]
+# name: test_all_entities[indoor][button.airgradient_calibrate_co2_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Airgradient Calibrate CO2 sensor',
@@ -45,7 +45,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[button.airgradient_test_led_bar-entry]
+# name: test_all_entities[indoor][button.airgradient_test_led_bar-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -78,7 +78,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[button.airgradient_test_led_bar-state]
+# name: test_all_entities[indoor][button.airgradient_test_led_bar-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Airgradient Test LED bar',
@@ -91,7 +91,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities_outdoor[button.airgradient_calibrate_co2_sensor-entry]
+# name: test_all_entities[outdoor][button.airgradient_calibrate_co2_sensor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -124,7 +124,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities_outdoor[button.airgradient_calibrate_co2_sensor-state]
+# name: test_all_entities[outdoor][button.airgradient_calibrate_co2_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Airgradient Calibrate CO2 sensor',

@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from airgradient import Config, Measures
+from airgradient import Config
 from freezegun.api import FrozenDateTimeFactory
 from syrupy import SnapshotAssertion
 
@@ -26,28 +26,11 @@ from tests.common import (
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    mock_airgradient_client: AsyncMock,
+    airgradient_devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
-    with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.BUTTON]):
-        await setup_integration(hass, mock_config_entry)
-
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-async def test_all_entities_outdoor(
-    hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-    mock_airgradient_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test all entities."""
-    mock_airgradient_client.get_current_measures.return_value = Measures.from_json(
-        load_fixture("current_measures_outdoor.json", DOMAIN)
-    )
     with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.BUTTON]):
         await setup_integration(hass, mock_config_entry)
 
