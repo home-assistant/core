@@ -914,8 +914,12 @@ async def async_service_temperature_set(
     """Handle set temperature service."""
     hass = entity.hass
     kwargs = {}
-    min_temp = entity.min_temp
-    max_temp = entity.max_temp
+    min_temp = TemperatureConverter.convert(
+        entity.min_temp, hass.config.units.temperature_unit, entity.temperature_unit
+    )
+    max_temp = TemperatureConverter.convert(
+        entity.max_temp, hass.config.units.temperature_unit, entity.temperature_unit
+    )
 
     for value, temp in service_call.data.items():
         if value in CONVERTIBLE_ATTRIBUTE:
