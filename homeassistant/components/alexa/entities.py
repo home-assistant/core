@@ -504,6 +504,7 @@ class ClimateCapabilities(AlexaEntity):
             yield AlexaModeController(
                 self.entity,
                 instance=f"{water_heater.DOMAIN}.{water_heater.ATTR_OPERATION_MODE}",
+                config=self.config,
             )
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.entity)
@@ -553,7 +554,9 @@ class CoverCapabilities(AlexaEntity):
             cover.CoverEntityFeature.CLOSE | cover.CoverEntityFeature.OPEN
         ):
             yield AlexaModeController(
-                self.entity, instance=f"{cover.DOMAIN}.{cover.ATTR_POSITION}"
+                self.entity,
+                instance=f"{cover.DOMAIN}.{cover.ATTR_POSITION}",
+                config=self.config,
             )
         if supported & cover.CoverEntityFeature.SET_TILT_POSITION:
             yield AlexaRangeController(self.entity, instance=f"{cover.DOMAIN}.tilt")
@@ -625,12 +628,16 @@ class FanCapabilities(AlexaEntity):
             force_range_controller = False
         if supported & fan.FanEntityFeature.PRESET_MODE:
             yield AlexaModeController(
-                self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}"
+                self.entity,
+                instance=f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}",
+                config=self.config,
             )
             force_range_controller = False
         if supported & fan.FanEntityFeature.DIRECTION:
             yield AlexaModeController(
-                self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}"
+                self.entity,
+                instance=f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}",
+                config=self.config,
             )
             force_range_controller = False
 
@@ -660,7 +667,9 @@ class RemoteCapabilities(AlexaEntity):
         """Yield the supported interfaces."""
         yield AlexaPowerController(self.entity)
         yield AlexaModeController(
-            self.entity, instance=f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}"
+            self.entity,
+            instance=f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}",
+            config=self.config,
         )
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.entity)
@@ -680,7 +689,9 @@ class HumidifierCapabilities(AlexaEntity):
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & humidifier.HumidifierEntityFeature.MODES:
             yield AlexaModeController(
-                self.entity, instance=f"{humidifier.DOMAIN}.{humidifier.ATTR_MODE}"
+                self.entity,
+                instance=f"{humidifier.DOMAIN}.{humidifier.ATTR_MODE}",
+                config=self.config,
             )
         yield AlexaRangeController(
             self.entity, instance=f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}"
@@ -1012,7 +1023,9 @@ class ValveCapabilities(AlexaEntity):
         elif supported & (
             valve.ValveEntityFeature.CLOSE | valve.ValveEntityFeature.OPEN
         ):
-            yield AlexaModeController(self.entity, instance=f"{valve.DOMAIN}.state")
+            yield AlexaModeController(
+                self.entity, instance=f"{valve.DOMAIN}.state", config=self.config
+            )
         if supported & valve.ValveEntityFeature.STOP:
             yield AlexaToggleController(self.entity, instance=f"{valve.DOMAIN}.stop")
         yield AlexaEndpointHealth(self.hass, self.entity)

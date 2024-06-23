@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from typing_extensions import Generator
 
@@ -59,6 +59,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 import homeassistant.util.color as color_util
 import homeassistant.util.dt as dt_util
+
+if TYPE_CHECKING:
+    from .config import AbstractConfig
 
 from .const import (
     API_TEMP_UNITS,
@@ -126,11 +129,13 @@ class AlexaCapability:
         self,
         entity: State,
         instance: str | None = None,
+        config: AbstractConfig | None = None,
         non_controllable_properties: bool | None = None,
     ) -> None:
         """Initialize an Alexa capability."""
         self.entity = entity
         self.instance = instance
+        self.config = config
         self._non_controllable_properties = non_controllable_properties
 
     def name(self) -> str:
@@ -1390,10 +1395,14 @@ class AlexaModeController(AlexaCapability):
     }
 
     def __init__(
-        self, entity: State, instance: str, non_controllable: bool = False
+        self,
+        entity: State,
+        instance: str,
+        config: AbstractConfig,
+        non_controllable: bool = False,
     ) -> None:
         """Initialize the entity."""
-        AlexaCapability.__init__(self, entity, instance, non_controllable)
+        AlexaCapability.__init__(self, entity, instance, config, non_controllable)
         self._resource = None
         self._semantics = None
 
@@ -1562,10 +1571,13 @@ class AlexaModeController(AlexaCapability):
         # Remote Resource
         if self.instance == f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}":
             self._resource = AlexaModeResource([AlexaGlobalCatalog.SETTING_MODE], False)
-            activities = self.entity.attributes.get(remote.ATTR_ACTIVITY_LIST) or []
+            activities: list[str] = (
+                self.entity.attributes.get(remote.ATTR_ACTIVITY_LIST) or []
+            )
+            locale = self.config.locale if self.config else ""
             for activity in activities:
-                self._resource.add_mode(
-                    f"{remote.ATTR_ACTIVITY}.{activity}", [activity]
+                self._resource.add_mode_with_locale(
+                    f"{remote.ATTR_ACTIVITY}.{activity}", {activity: locale or ""}
                 )
             # Remotes with a single preset_mode completely break Alexa discovery, add a
             # fake preset (see issue #53832).
@@ -1729,7 +1741,7 @@ class AlexaRangeController(AlexaCapability):
         self, entity: State, instance: str | None, non_controllable: bool = False
     ) -> None:
         """Initialize the entity."""
-        AlexaCapability.__init__(self, entity, instance, non_controllable)
+        AlexaCapability.__init__(self, entity, instance, None, non_controllable)
         self._resource = None
         self._semantics = None
 
@@ -2072,7 +2084,7 @@ class AlexaToggleController(AlexaCapability):
         self, entity: State, instance: str, non_controllable: bool = False
     ) -> None:
         """Initialize the entity."""
-        AlexaCapability.__init__(self, entity, instance, non_controllable)
+        AlexaCapability.__init__(self, entity, instance, None, non_controllable)
         self._resource = None
         self._semantics = None
 
