@@ -7,7 +7,6 @@ from dataclasses import dataclass
 import glob
 from http.client import HTTPConnection
 import importlib
-import logging
 import os
 import sys
 import threading
@@ -19,7 +18,6 @@ from .util.loop import protect_loop
 
 _IN_TESTS = "unittest" in sys.modules
 
-_LOGGER = logging.getLogger(__name__)
 ALLOWED_FILE_PREFIXES = ("/proc",)
 
 
