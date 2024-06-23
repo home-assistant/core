@@ -30,9 +30,9 @@ from .const import (
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
     CONF_HAVDALAH_OFFSET_MINUTES,
-    DEFAULT_NAME,
     DOMAIN,
 )
+from .entity import JewishCalendarEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -196,11 +196,10 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class JewishCalendarSensor(SensorEntity):
+class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
     """Representation of an Jewish calendar sensor."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -209,9 +208,8 @@ class JewishCalendarSensor(SensorEntity):
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the Jewish calendar sensor."""
+        super().__init__(entry_id, description)
         self.entity_description = description
-        self._attr_name = f"{DEFAULT_NAME} {description.name}"
-        self._attr_unique_id = f"{entry_id}-{description.key}"
         self._location = data[CONF_LOCATION]
         self._hebrew = data[CONF_LANGUAGE] == "hebrew"
         self._candle_lighting_offset = data[CONF_CANDLE_LIGHT_MINUTES]
