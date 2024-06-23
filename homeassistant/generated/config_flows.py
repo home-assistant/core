@@ -6,6 +6,7 @@ To update, run python3 -m script.hassfest
 FLOWS = {
     "helper": [
         "derivative",
+        "generic_thermostat",
         "group",
         "integration",
         "min_max",
