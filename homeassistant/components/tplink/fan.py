@@ -32,7 +32,7 @@ async def async_setup_entry(
     data = config_entry.runtime_data
     parent_coordinator = data.parent_coordinator
     device = parent_coordinator.device
-    entities: list = []
+    entities: list[CoordinatedTPLinkEntity] = []
     if Module.Fan in device.modules:
         entities.append(
             TPLinkFan(device, parent_coordinator, device.modules[Module.Fan])
