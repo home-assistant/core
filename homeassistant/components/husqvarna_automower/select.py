@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import AutomowerControlEntity, handle_sending_exception1
+from .entity import AutomowerControlEntity, handle_sending_exception
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ class AutomowerSelectEntity(AutomowerControlEntity, SelectEntity):
             HeadlightModes, self.mower_attributes.settings.headlight.mode
         ).lower()
 
-    @handle_sending_exception1
+    @handle_sending_exception(poll_after_sending=False)
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.coordinator.api.commands.set_headlight_mode(

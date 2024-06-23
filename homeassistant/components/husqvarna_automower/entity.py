@@ -19,47 +19,36 @@ from .const import DOMAIN, EXECUTION_TIME_DELAY
 _LOGGER = logging.getLogger(__name__)
 
 
-def handle_sending_exception1(
-    func: Callable[..., Awaitable[Any]],
-) -> Callable[..., Coroutine[Any, Any, None]]:
-    """Handle exceptions while sending a command."""
+def handle_sending_exception(
+    poll_after_sending: bool,
+) -> Callable[
+    [Callable[..., Awaitable[Any]]], Callable[..., Coroutine[Any, Any, None]]
+]:
+    """Handle exceptions while sending a command and optionally refresh coordinator."""
 
-    @functools.wraps(func)
-    async def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
-        try:
-            await func(self, *args, **kwargs)
-        except ApiException as exception:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="command_send_failed",
-                translation_placeholders={"exception": str(exception)},
-            ) from exception
+    def decorator(
+        func: Callable[..., Awaitable[Any]],
+    ) -> Callable[..., Coroutine[Any, Any, None]]:
+        @functools.wraps(func)
+        async def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
+            try:
+                await func(self, *args, **kwargs)
+            except ApiException as exception:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="command_send_failed",
+                    translation_placeholders={"exception": str(exception)},
+                ) from exception
+            else:
+                if poll_after_sending:
+                    # As there are no updates from the websocket regarding stay out zone changes,
+                    # we need to wait until the command is executed and then poll the API.
+                    await asyncio.sleep(EXECUTION_TIME_DELAY)
+                    await self.coordinator.async_request_refresh()
 
-    return wrapper
+        return wrapper
 
-
-def handle_sending_exception2(
-    func: Callable[..., Awaitable[Any]],
-) -> Callable[..., Coroutine[Any, Any, None]]:
-    """Handle exceptions while sending a command."""
-
-    @functools.wraps(func)
-    async def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
-        try:
-            await func(self, *args, **kwargs)
-        except ApiException as exception:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="command_send_failed",
-                translation_placeholders={"exception": str(exception)},
-            ) from exception
-        else:
-            # As there are no updates from the websocket regarding stay out zone changes,
-            # we need to wait until the command is executed and then poll the API.
-            await asyncio.sleep(EXECUTION_TIME_DELAY)
-            await self.coordinator.async_request_refresh()
-
-    return wrapper
+    return decorator
 
 
 class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):

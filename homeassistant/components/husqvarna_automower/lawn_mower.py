@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import AutomowerControlEntity, handle_sending_exception1
+from .entity import AutomowerControlEntity, handle_sending_exception
 
 DOCKED_ACTIVITIES = (MowerActivities.PARKED_IN_CS, MowerActivities.CHARGING)
 MOWING_ACTIVITIES = (
@@ -98,22 +98,22 @@ class AutomowerLawnMowerEntity(AutomowerControlEntity, LawnMowerEntity):
             return LawnMowerActivity.DOCKED
         return LawnMowerActivity.ERROR
 
-    @handle_sending_exception1
+    @handle_sending_exception(poll_after_sending=False)
     async def async_start_mowing(self) -> None:
         """Resume schedule."""
         await self.coordinator.api.commands.resume_schedule(self.mower_id)
 
-    @handle_sending_exception1
+    @handle_sending_exception(poll_after_sending=False)
     async def async_pause(self) -> None:
         """Pauses the mower."""
         await self.coordinator.api.commands.pause_mowing(self.mower_id)
 
-    @handle_sending_exception1
+    @handle_sending_exception(poll_after_sending=False)
     async def async_dock(self) -> None:
         """Parks the mower until next schedule."""
         await self.coordinator.api.commands.park_until_next_schedule(self.mower_id)
 
-    @handle_sending_exception1
+    @handle_sending_exception(poll_after_sending=False)
     async def async_override_schedule(
         self, override_mode: str, duration: timedelta
     ) -> None:

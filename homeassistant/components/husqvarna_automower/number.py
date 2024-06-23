@@ -16,11 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import (
-    AutomowerControlEntity,
-    handle_sending_exception1,
-    handle_sending_exception2,
-)
+from .entity import AutomowerControlEntity, handle_sending_exception
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -160,7 +156,7 @@ class AutomowerNumberEntity(AutomowerControlEntity, NumberEntity):
         """Return the state of the number."""
         return self.entity_description.value_fn(self.mower_attributes)
 
-    @handle_sending_exception1
+    @handle_sending_exception(poll_after_sending=False)
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
         await self.entity_description.set_value_fn(
@@ -204,7 +200,7 @@ class AutomowerWorkAreaNumberEntity(AutomowerControlEntity, NumberEntity):
         """Return the state of the number."""
         return self.entity_description.value_fn(self.work_area)
 
-    @handle_sending_exception2
+    @handle_sending_exception(poll_after_sending=True)
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
         await self.entity_description.set_value_fn(

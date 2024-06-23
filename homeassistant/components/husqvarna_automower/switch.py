@@ -19,11 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import (
-    AutomowerControlEntity,
-    handle_sending_exception1,
-    handle_sending_exception2,
-)
+from .entity import AutomowerControlEntity, handle_sending_exception
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,12 +92,12 @@ class AutomowerScheduleSwitchEntity(AutomowerControlEntity, SwitchEntity):
             or self.mower_attributes.mower.activity not in ERROR_ACTIVITIES
         )
 
-    @handle_sending_exception1
+    @handle_sending_exception(poll_after_sending=False)
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.coordinator.api.commands.park_until_further_notice(self.mower_id)
 
-    @handle_sending_exception1
+    @handle_sending_exception(poll_after_sending=False)
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.coordinator.api.commands.resume_schedule(self.mower_id)
@@ -149,14 +145,14 @@ class AutomowerStayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
         """Return True if the device is available and the zones are not `dirty`."""
         return super().available and not self.stay_out_zones.dirty
 
-    @handle_sending_exception2
+    @handle_sending_exception(poll_after_sending=True)
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.coordinator.api.commands.switch_stay_out_zone(
             self.mower_id, self.stay_out_zone_uid, False
         )
 
-    @handle_sending_exception2
+    @handle_sending_exception(poll_after_sending=True)
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.coordinator.api.commands.switch_stay_out_zone(
