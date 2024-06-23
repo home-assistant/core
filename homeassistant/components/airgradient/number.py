@@ -68,7 +68,7 @@ async def async_setup_entry(
     added_entities = False
 
     @callback
-    def _check_entities() -> None:
+    def _async_check_entities() -> None:
         nonlocal added_entities
 
         if (
@@ -99,8 +99,8 @@ async def async_setup_entry(
                     entity_registry.async_remove(entity_id)
             added_entities = False
 
-    coordinator.async_add_listener(_check_entities)
-    _check_entities()
+    coordinator.async_add_listener(_async_check_entities)
+    _async_check_entities()
 
 
 class AirGradientNumber(AirGradientEntity, NumberEntity):
