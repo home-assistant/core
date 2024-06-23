@@ -16,13 +16,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LANGUAGE, CONF_LOCATION, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import event
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import CONF_CANDLE_LIGHT_MINUTES, CONF_HAVDALAH_OFFSET_MINUTES, DOMAIN
+from .const import DOMAIN
 from .entity import JewishCalendarEntity
 
 
@@ -91,11 +91,7 @@ class JewishCalendarBinarySensor(JewishCalendarEntity, BinarySensorEntity):
         description: JewishCalendarBinarySensorEntityDescription,
     ) -> None:
         """Initialize the binary sensor."""
-        super().__init__(entry_id, description)
-        self._location = data[CONF_LOCATION]
-        self._hebrew = data[CONF_LANGUAGE] == "hebrew"
-        self._candle_lighting_offset = data[CONF_CANDLE_LIGHT_MINUTES]
-        self._havdalah_offset = data[CONF_HAVDALAH_OFFSET_MINUTES]
+        super().__init__(entry_id, data, description)
         self._update_unsub: CALLBACK_TYPE | None = None
 
     @property

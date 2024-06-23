@@ -15,23 +15,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_LANGUAGE,
-    CONF_LOCATION,
-    SUN_EVENT_SUNSET,
-    EntityCategory,
-)
+from homeassistant.const import SUN_EVENT_SUNSET, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
-from .const import (
-    CONF_CANDLE_LIGHT_MINUTES,
-    CONF_DIASPORA,
-    CONF_HAVDALAH_OFFSET_MINUTES,
-    DOMAIN,
-)
+from .const import DOMAIN
 from .entity import JewishCalendarEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -208,12 +198,7 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the Jewish calendar sensor."""
-        super().__init__(entry_id, description)
-        self._location = data[CONF_LOCATION]
-        self._hebrew = data[CONF_LANGUAGE] == "hebrew"
-        self._candle_lighting_offset = data[CONF_CANDLE_LIGHT_MINUTES]
-        self._havdalah_offset = data[CONF_HAVDALAH_OFFSET_MINUTES]
-        self._diaspora = data[CONF_DIASPORA]
+        super().__init__(entry_id, data, description)
         self._attrs: dict[str, str] = {}
 
     async def async_update(self) -> None:
