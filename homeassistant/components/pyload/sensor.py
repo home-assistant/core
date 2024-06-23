@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from enum import StrEnum
-import logging
 
 import voluptuous as vol
 
@@ -36,8 +35,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import PyLoadConfigEntry
 from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN, ISSUE_PLACEHOLDER
 from .coordinator import PyLoadCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class PyLoadSensorEntity(StrEnum):
@@ -83,7 +80,6 @@ async def async_setup_platform(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=config
     )
-    _LOGGER.debug(result)
     if (
         result.get("type") == FlowResultType.CREATE_ENTRY
         or result.get("reason") == "already_configured"
