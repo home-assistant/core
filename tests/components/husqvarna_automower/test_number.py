@@ -41,7 +41,7 @@ async def test_number_commands(
     mocked_method.side_effect = ApiException("Test error")
     with pytest.raises(
         HomeAssistantError,
-        match="Command couldn't be sent to the command queue: Test error",
+        match="Failed to send command: Test error",
     ):
         await hass.services.async_call(
             domain="number",
@@ -85,7 +85,7 @@ async def test_number_workarea_commands(
     mocked_method.side_effect = ApiException("Test error")
     with pytest.raises(
         HomeAssistantError,
-        match="Command couldn't be sent to the command queue: Test error",
+        match="Failed to send command: Test error",
     ):
         await hass.services.async_call(
             domain="number",
