@@ -21,7 +21,7 @@ class AemetEntity(CoordinatorEntity[WeatherUpdateCoordinator]):
         self,
         coordinator: WeatherUpdateCoordinator,
         name: str,
-        unique_id: str | None,
+        unique_id: str,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
