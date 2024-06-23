@@ -691,6 +691,7 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
         super()._async_update_device_from_protect(device)
         slot = self._disk.slot
         self._attr_available = False
+        available = self.data.last_update_success
 
         # should not be possible since it would require user to
         # _downgrade_ to make ustorage disppear
@@ -698,7 +699,7 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
         for disk in self.device.system_info.ustorage.disks:
             if disk.slot == slot:
                 self._disk = disk
-                self._attr_available = True
+                self._attr_available = available
                 break
 
         self._attr_is_on = not self._disk.is_healthy
@@ -742,21 +743,21 @@ class ProtectSmartEventBinarySensor(EventEntityMixin, BinarySensorEntity):
         prev_event = self._event
         prev_event_end = self._event_end
         super()._async_update_device_from_protect(device)
-        event = self._event = description.get_event_obj(device)
-        self._event_end = event.end if event else None
+        if event := description.get_event_obj(device):
+            self._event = event
+            self._event_end = event.end if event else None
 
         if not (
             event
-            and not self._event_already_ended(prev_event, prev_event_end)
             and description.has_matching_smart(event)
-            and ((is_end := event.end) or self.device.is_smart_detected)
+            and not self._event_already_ended(prev_event, prev_event_end)
         ):
             self._set_event_done()
             return
 
         self._attr_is_on = True
         self._set_event_attrs(event)
-        if is_end:
+        if event.end:
             self._async_event_with_immediate_end()
 
 

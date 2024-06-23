@@ -23,6 +23,8 @@ from .models import TeslemetryVehicleData
 OPEN = 1
 CLOSED = 0
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

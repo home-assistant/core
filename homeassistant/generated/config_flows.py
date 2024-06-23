@@ -6,6 +6,8 @@ To update, run python3 -m script.hassfest
 FLOWS = {
     "helper": [
         "derivative",
+        "generic_hygrostat",
+        "generic_thermostat",
         "group",
         "integration",
         "min_max",
@@ -434,6 +436,7 @@ FLOWS = {
         "pushover",
         "pvoutput",
         "pvpc_hourly_pricing",
+        "pyload",
         "qbittorrent",
         "qingping",
         "qnap",
