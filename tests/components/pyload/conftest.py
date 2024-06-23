@@ -109,6 +109,5 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title=DEFAULT_NAME,
         data=USER_INPUT,
-        unique_id="01J1306EB6MBEW6MK6S28W9WER",
-        entry_id="01J1306EB6MBEW6MK6S28W9WER",
+        entry_id="ENTRY_ID",
     )

@@ -34,7 +34,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.SPEED: 'speed'>,
-    'unique_id': '01J1306EB6MBEW6MK6S28W9WER_speed',
+    'unique_id': 'ENTRY_ID_speed',
     'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
   })
 # ---
@@ -88,7 +88,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.SPEED: 'speed'>,
-    'unique_id': '01J1306EB6MBEW6MK6S28W9WER_speed',
+    'unique_id': 'ENTRY_ID_speed',
     'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
   })
 # ---
@@ -142,7 +142,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.SPEED: 'speed'>,
-    'unique_id': '01J1306EB6MBEW6MK6S28W9WER_speed',
+    'unique_id': 'ENTRY_ID_speed',
     'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
   })
 # ---
@@ -196,7 +196,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.SPEED: 'speed'>,
-    'unique_id': '01J1306EB6MBEW6MK6S28W9WER_speed',
+    'unique_id': 'ENTRY_ID_speed',
     'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
   })
 # ---
