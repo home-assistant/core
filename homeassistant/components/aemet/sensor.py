@@ -53,7 +53,6 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -397,13 +396,6 @@ class AemetSensor(AemetEntity, SensorEntity):
         self.entity_description = description
         self._attr_name = f"{name} {description.name}"
         self._attr_unique_id = f"{config_entry.unique_id}-{description.key}"
-        self._attr_device_info = DeviceInfo(
-            name="Forecast",
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(name, config_entry.entry_id)},
-            manufacturer="AEMET",
-            model="Forecast",
-        )
 
     @property
     def native_value(self):
