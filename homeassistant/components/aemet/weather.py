@@ -25,6 +25,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AemetConfigEntry
@@ -74,6 +75,14 @@ class AemetWeather(
         super().__init__(coordinator)
         self._attr_name = name
         self._attr_unique_id = unique_id
+        self._attr_device_info = DeviceInfo(
+            name="Forecast",
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(name, unique_id)},
+            manufacturer="AEMET",
+            model="Forecast",
+        )
+
 
     @property
     def condition(self):
