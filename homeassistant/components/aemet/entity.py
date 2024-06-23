@@ -10,6 +10,7 @@ from homeassistant.components.weather import Forecast
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
 from .coordinator import WeatherUpdateCoordinator
 
 
@@ -27,7 +28,7 @@ class AemetEntity(CoordinatorEntity[WeatherUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(
             name=name,
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(name, unique_id)},
+            identifiers={(DOMAIN, unique_id)},
             manufacturer="AEMET",
             model="Forecast",
         )
