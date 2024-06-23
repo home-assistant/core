@@ -54,19 +54,7 @@ def _check_stat_call_allowed(mapped_args: dict[str, Any]) -> bool:
     # If the file is in /proc we can ignore it.
     args = mapped_args["args"]
     path = args[0] if type(args[0]) is str else str(args[0])  # noqa: E721
-    _LOGGER.warning("Checking if %s is allowed", path)
     return path.startswith(ALLOWED_FILE_PREFIXES)
-
-
-#    frame = get_current_frame(0)
-#    while frame.f_back:
-#        print(['frame', frame])
-#        frame = frame.f_back
-#
-#    return False
-#    with suppress((ValueError,AttributeError)):
-#        return get_current_frame(1).f_code.co_code.co_name == "raise_for_blocking_call"
-#   return False
 
 
 @dataclass(slots=True, frozen=True)
