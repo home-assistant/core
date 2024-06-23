@@ -8,6 +8,7 @@ from homeassistant.components.weather import (
     WeatherEntityFeature,
 )
 from homeassistant.const import (
+    UnitOfLength,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
@@ -29,6 +30,7 @@ from .const import (
     ATTR_API_HUMIDITY,
     ATTR_API_PRESSURE,
     ATTR_API_TEMPERATURE,
+    ATTR_API_VISIBILITY_DISTANCE,
     ATTR_API_WIND_BEARING,
     ATTR_API_WIND_GUST,
     ATTR_API_WIND_SPEED,
@@ -66,6 +68,7 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordina
     _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
+    _attr_native_visibility_unit = UnitOfLength.KILOMETERS
 
     def __init__(
         self,
@@ -136,6 +139,11 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordina
     def wind_bearing(self) -> float | str | None:
         """Return the wind bearing."""
         return self.coordinator.data[ATTR_API_CURRENT][ATTR_API_WIND_BEARING]
+
+    @property
+    def visibility(self) -> float | str | None:
+        """Return visibility."""
+        return self.coordinator.data[ATTR_API_CURRENT][ATTR_API_VISIBILITY_DISTANCE]
 
     @callback
     def _async_forecast_daily(self) -> list[Forecast] | None:
