@@ -22,7 +22,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-type PyLoadConfigEntry = ConfigEntry[PyLoadAPI]  # noqa: F821
+type PyLoadConfigEntry = ConfigEntry[PyLoadAPI]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PyLoadConfigEntry) -> bool:

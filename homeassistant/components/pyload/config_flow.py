@@ -89,10 +89,8 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                title = user_input.pop(CONF_NAME, None)
-                return self.async_create_entry(
-                    title=title or DEFAULT_NAME, data=user_input
-                )
+                title = user_input.pop(CONF_NAME, DEFAULT_NAME)
+                return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
             step_id="user",

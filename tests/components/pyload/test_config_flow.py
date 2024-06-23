@@ -31,7 +31,6 @@ async def test_form(
         result["flow_id"],
         USER_INPUT,
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
@@ -74,7 +73,6 @@ async def test_form_errors(
         result["flow_id"],
         USER_INPUT,
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
@@ -82,7 +80,7 @@ async def test_form_errors(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_flow_user_init_data_already_configured(
+async def test_flow_user_already_configured(
     hass: HomeAssistant, config_entry: MockConfigEntry, mock_pyloadapi: AsyncMock
 ) -> None:
     """Test we abort user data set when entry is already configured."""
@@ -90,7 +88,7 @@ async def test_flow_user_init_data_already_configured(
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -116,8 +114,53 @@ async def test_flow_import(
         context={"source": SOURCE_IMPORT},
         data=YAML_INPUT,
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-name"
     assert result["data"] == USER_INPUT
+
+
+async def test_flow_import_already_configured(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_pyloadapi: AsyncMock
+) -> None:
+    """Test we abort import data set when entry is already configured."""
+
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=YAML_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("exception", "reason"),
+    [
+        (InvalidAuth, "invalid_auth"),
+        (CannotConnect, "cannot_connect"),
+        (ParserError, "cannot_connect"),
+        (ValueError, "unknown"),
+    ],
+)
+async def test_flow_import_errors(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_pyloadapi: AsyncMock,
+    exception,
+    reason: str,
+) -> None:
+    """Test we abort import data set when entry is already configured."""
+
+    mock_pyloadapi.login.side_effect = exception
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=YAML_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
