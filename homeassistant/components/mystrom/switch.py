@@ -44,6 +44,7 @@ class MyStromSwitch(SwitchEntity):
             manufacturer=MANUFACTURER,
             sw_version=self.plug.firmware,
             connections={("mac", format_mac(self.plug.mac))},
+            configuration_url=self.plug.uri,
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
