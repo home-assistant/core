@@ -71,6 +71,12 @@
     },
     "request_timeout": {
       "message": "Timeout while connecting for entry {config_title}.\n{error}"
+    },
+    "cannot_connect": {
+      "message": "Cannot connect to server.\n{error}"
+    },
+    "bad_config": {
+      "message": "Request failed due to bad config: Check at the [stationboard]({stationboard_url}) if your station names are valid.\n{error}"
     }
   }
 }

@@ -8,7 +8,10 @@ from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING
 
-from opendata_transport.exceptions import OpendataTransportError
+from opendata_transport.exceptions import (
+    OpendataTransportConnectionError,
+    OpendataTransportError,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries, core
@@ -36,6 +39,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     ATTR_LIMIT,
     DOMAIN,
+    PLACEHOLDERS,
     SENSOR_CONNECTIONS_COUNT,
     SENSOR_CONNECTIONS_MAX,
     SERVICE_FETCH_CONNECTIONS,
@@ -171,8 +175,21 @@ class SwissPublicTransportSensor(
         """Fetch a set of connections."""
         try:
             connections = await self.coordinator.fetch_connections(limit=int(limit))
+        except OpendataTransportConnectionError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={
+                    "error": e,
+                },
+            ) from e
         except OpendataTransportError as e:
             raise HomeAssistantError(
-                "Unable to fetch connections for swiss public trainsport"
+                translation_domain=DOMAIN,
+                translation_key="bad_config",
+                translation_placeholders={
+                    **PLACEHOLDERS,
+                    "error": e,
+                },
             ) from e
         return {"connections": connections}
