@@ -5,7 +5,6 @@ from __future__ import annotations
 from enum import StrEnum
 import logging
 
-from pyloadapi import StatusServerResponse
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -14,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
@@ -34,8 +33,8 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import PyLoadConfigEntry, PyLoadCoordinator
 from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN, ISSUE_PLACEHOLDER
+from .coordinator import PyLoadCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,7 +117,7 @@ async def async_setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: PyLoadConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the pyLoad sensors."""
@@ -149,12 +148,10 @@ class PyLoadSensor(CoordinatorEntity[PyLoadCoordinator], SensorEntity):
     ) -> None:
         """Initialize a new pyLoad sensor."""
         super().__init__(coordinator)
-        self.type = entity_description.key
         self._attr_unique_id = (
             f"{coordinator.config_entry.entry_id}_{entity_description.key}"
         )
         self.entity_description = entity_description
-        self.data: StatusServerResponse
         self.device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="PyLoad Team",
