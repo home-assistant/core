@@ -8,8 +8,10 @@ from typing import Any, Final
 from aioairzone_cloud.const import (
     AZD_ACTIVE,
     AZD_AIDOOS,
+    AZD_AIR_DEMAND,
     AZD_AQ_ACTIVE,
     AZD_ERRORS,
+    AZD_FLOOR_DEMAND,
     AZD_PROBLEMS,
     AZD_SYSTEMS,
     AZD_WARNINGS,
@@ -78,8 +80,18 @@ ZONE_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]
         key=AZD_ACTIVE,
     ),
     AirzoneBinarySensorEntityDescription(
+        device_class=BinarySensorDeviceClass.RUNNING,
+        key=AZD_AIR_DEMAND,
+        translation_key="air_demand",
+    ),
+    AirzoneBinarySensorEntityDescription(
         key=AZD_AQ_ACTIVE,
         translation_key="air_quality_active",
+    ),
+    AirzoneBinarySensorEntityDescription(
+        device_class=BinarySensorDeviceClass.RUNNING,
+        key=AZD_FLOOR_DEMAND,
+        translation_key="floor_demand",
     ),
     AirzoneBinarySensorEntityDescription(
         attributes={

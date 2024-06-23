@@ -438,6 +438,7 @@
         'zone1': dict({
           'action': 1,
           'active': True,
+          'air-demand': True,
           'aq-active': False,
           'aq-index': 1,
           'aq-mode-conf': 'auto',
@@ -453,6 +454,7 @@
           'aq-status': 'good',
           'available': True,
           'double-set-point': False,
+          'floor-demand': False,
           'humidity': 30,
           'id': 'zone1',
           'installation': 'installation1',
@@ -499,6 +501,7 @@
         'zone2': dict({
           'action': 6,
           'active': False,
+          'air-demand': False,
           'aq-active': False,
           'aq-index': 1,
           'aq-mode-conf': 'auto',
@@ -514,6 +517,7 @@
           'aq-status': 'good',
           'available': True,
           'double-set-point': False,
+          'floor-demand': False,
           'humidity': 24,
           'id': 'zone2',
           'installation': 'installation1',

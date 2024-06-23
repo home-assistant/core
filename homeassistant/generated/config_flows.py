@@ -6,6 +6,8 @@ To update, run python3 -m script.hassfest
 FLOWS = {
     "helper": [
         "derivative",
+        "generic_hygrostat",
+        "generic_thermostat",
         "group",
         "integration",
         "min_max",
@@ -166,6 +168,7 @@ FLOWS = {
         "ezviz",
         "faa_delays",
         "fastdotcom",
+        "feedreader",
         "fibaro",
         "file",
         "filesize",
@@ -281,6 +284,7 @@ FLOWS = {
         "kegtron",
         "keymitt_ble",
         "kmtronic",
+        "knocki",
         "knx",
         "kodi",
         "konnected",
@@ -432,6 +436,7 @@ FLOWS = {
         "pushover",
         "pvoutput",
         "pvpc_hourly_pricing",
+        "pyload",
         "qbittorrent",
         "qingping",
         "qnap",
