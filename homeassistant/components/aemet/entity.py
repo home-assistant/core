@@ -15,7 +15,7 @@ from .coordinator import WeatherUpdateCoordinator
 
 class AemetEntity(CoordinatorEntity[WeatherUpdateCoordinator]):
     """Define an AEMET entity."""
-    
+
     def __init__(
         self,
         coordinator: WeatherUpdateCoordinator,
