@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from decimal import Decimal
 from enum import Enum
 from functools import cache, partial
 from typing import Any
@@ -461,7 +462,9 @@ def _get_exposed_entities(
             info["areas"] = ", ".join(area_names)
 
         if attributes := {
-            attr_name: str(attr_value) if isinstance(attr_value, Enum) else attr_value
+            attr_name: str(attr_value)
+            if isinstance(attr_value, (Enum, Decimal))
+            else attr_value
             for attr_name, attr_value in state.attributes.items()
             if attr_name in interesting_attributes
         }:
