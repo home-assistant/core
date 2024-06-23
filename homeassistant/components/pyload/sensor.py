@@ -36,6 +36,7 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
@@ -150,6 +151,8 @@ async def async_setup_entry(
 class PyLoadSensor(SensorEntity):
     """Representation of a pyLoad sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         api: PyLoadAPI,
@@ -158,13 +161,20 @@ class PyLoadSensor(SensorEntity):
         entry_id: str,
     ) -> None:
         """Initialize a new pyLoad sensor."""
-        self._attr_name = f"{client_name} {entity_description.name}"
+        self._attr_name = f"{entity_description.name}"
         self.type = entity_description.key
         self.api = api
         self._attr_unique_id = f"{entry_id}_{entity_description.key}"
         self.entity_description = entity_description
         self._attr_available = False
         self.data: StatusServerResponse
+        self.device_info = DeviceInfo(
+            manufacturer="PyLoad Team",
+            model="pyLoad",
+            configuration_url=self.api.api_url,
+            identifiers={(DOMAIN, entry_id)},
+            name=client_name,
+        )
 
     async def async_update(self) -> None:
         """Update state of sensor."""
