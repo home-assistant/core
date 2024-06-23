@@ -27,6 +27,13 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "entity": {
+    "sensor": {
+      "speed": {
+        "name": "Speed"
+      }
+    }
+  },
   "issues": {
     "deprecated_yaml_import_issue_cannot_connect": {
       "title": "The pyLoad YAML configuration import failed",
