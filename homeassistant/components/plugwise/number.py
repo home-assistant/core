@@ -14,7 +14,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.const import EntityCategory, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import PlugwiseConfigEntry
@@ -35,8 +35,8 @@ NUMBER_TYPES = (
     PlugwiseNumberEntityDescription(
         key="maximum_boiler_temperature",
         translation_key="maximum_boiler_temperature",
-        command=lambda api, number, dev_id, value: api.set_number_setpoint(
-            number, dev_id, value
+        command=lambda api, dev_id, number, value: api.set_number(
+            dev_id, number, value
         ),
         device_class=NumberDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.CONFIG,
@@ -45,8 +45,8 @@ NUMBER_TYPES = (
     PlugwiseNumberEntityDescription(
         key="max_dhw_temperature",
         translation_key="max_dhw_temperature",
-        command=lambda api, number, dev_id, value: api.set_number_setpoint(
-            number, dev_id, value
+        command=lambda api, dev_id, number, value: api.set_number(
+            dev_id, number, value
         ),
         device_class=NumberDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.CONFIG,
@@ -55,8 +55,8 @@ NUMBER_TYPES = (
     PlugwiseNumberEntityDescription(
         key="temperature_offset",
         translation_key="temperature_offset",
-        command=lambda api, number, dev_id, value: api.set_temperature_offset(
-            number, dev_id, value
+        command=lambda api, dev_id, number, value: api.set_temperature_offset(
+            dev_id, value
         ),
         device_class=NumberDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.CONFIG,
@@ -71,15 +71,24 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Plugwise number platform."""
-
     coordinator = entry.runtime_data
 
-    async_add_entities(
-        PlugwiseNumberEntity(coordinator, device_id, description)
-        for device_id, device in coordinator.data.devices.items()
-        for description in NUMBER_TYPES
-        if description.key in device
-    )
+    @callback
+    def _add_entities() -> None:
+        """Add Entities."""
+        if not coordinator.new_devices:
+            return
+
+        async_add_entities(
+            PlugwiseNumberEntity(coordinator, device_id, description)
+            for device_id, device in coordinator.data.devices.items()
+            for description in NUMBER_TYPES
+            if description.key in device
+        )
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
+
+    _add_entities()
 
 
 class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
@@ -115,6 +124,6 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Change to the new setpoint value."""
         await self.entity_description.command(
-            self.coordinator.api, self.entity_description.key, self.device_id, value
+            self.coordinator.api, self.device_id, self.entity_description.key, value
         )
         await self.coordinator.async_request_refresh()

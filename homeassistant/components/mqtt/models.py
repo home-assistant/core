@@ -5,7 +5,7 @@ from __future__ import annotations
 from ast import literal_eval
 import asyncio
 from collections import deque
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum
 import logging
@@ -20,6 +20,7 @@ from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, TemplateVarsType
+from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
     from paho.mqtt.client import MQTTMessage
@@ -57,7 +58,10 @@ class PublishMessage:
     retain: bool
 
 
-@dataclass(slots=True, frozen=True)
+# eq=False so we use the id() of the object for comparison
+# since client will only generate one instance of this object
+# per messages/subscribed_topic.
+@dataclass(slots=True, frozen=True, eq=False)
 class ReceiveMessage:
     """MQTT Message received."""
 
@@ -69,7 +73,6 @@ class ReceiveMessage:
     timestamp: float
 
 
-type AsyncMessageCallbackType = Callable[[ReceiveMessage], Coroutine[Any, Any, None]]
 type MessageCallbackType = Callable[[ReceiveMessage], None]
 
 
@@ -372,14 +375,14 @@ class EntityTopicState:
     def process_write_state_requests(self, msg: MQTTMessage) -> None:
         """Process the write state requests."""
         while self.subscribe_calls:
-            _, entity = self.subscribe_calls.popitem()
+            entity_id, entity = self.subscribe_calls.popitem()
             try:
                 entity.async_write_ha_state()
             except Exception:
                 _LOGGER.exception(
-                    "Exception raised when updating state of %s, topic: "
+                    "Exception raised while updating state of %s, topic: "
                     "'%s' with payload: %s",
-                    entity.entity_id,
+                    entity_id,
                     msg.topic,
                     msg.payload,
                 )
@@ -419,3 +422,7 @@ class MqttData:
     state_write_requests: EntityTopicState = field(default_factory=EntityTopicState)
     subscriptions_to_restore: list[Subscription] = field(default_factory=list)
     tags: dict[str, dict[str, MQTTTagScanner]] = field(default_factory=dict)
+
+
+DATA_MQTT: HassKey[MqttData] = HassKey("mqtt")
+DATA_MQTT_AVAILABLE: HassKey[asyncio.Future[bool]] = HassKey("mqtt_client_available")

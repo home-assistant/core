@@ -72,6 +72,7 @@ def domain_data_mock(hass: HomeAssistant) -> Iterable[Mock]:
             service_id="urn:upnp-org:serviceId:RenderingControl",
         ),
     }
+    upnp_device.all_services = list(upnp_device.services.values())
     seal(upnp_device)
     domain_data.upnp_factory.async_create_device.return_value = upnp_device
 
@@ -158,8 +159,3 @@ def async_get_local_ip_mock() -> Iterable[Mock]:
     ) as func:
         func.return_value = AddressFamily.AF_INET, LOCAL_IP
         yield func
-
-
-@pytest.fixture(autouse=True)
-def dlna_dmr_mock_get_source_ip(mock_get_source_ip):
-    """Mock network util's async_get_source_ip."""

@@ -1,9 +1,10 @@
 """Fixtures for tests."""
 
-from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from requests_mock import Mocker
+from typing_extensions import Generator
 
 from homeassistant.components.ecobee import ECOBEE_API_KEY, ECOBEE_REFRESH_TOKEN
 
@@ -11,7 +12,7 @@ from tests.common import load_fixture, load_json_object_fixture
 
 
 @pytest.fixture(autouse=True)
-def requests_mock_fixture(requests_mock):
+def requests_mock_fixture(requests_mock: Mocker) -> None:
     """Fixture to provide a requests mocker."""
     requests_mock.get(
         "https://api.ecobee.com/1/thermostat",
@@ -24,7 +25,7 @@ def requests_mock_fixture(requests_mock):
 
 
 @pytest.fixture
-def mock_ecobee() -> Generator[None, MagicMock]:
+def mock_ecobee() -> Generator[MagicMock]:
     """Mock an Ecobee object."""
     ecobee = MagicMock()
     ecobee.request_pin.return_value = True

@@ -13,7 +13,7 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import PlugwiseConfigEntry
@@ -62,15 +62,28 @@ async def async_setup_entry(
     """Set up the Smile switches from a config entry."""
     coordinator = entry.runtime_data
 
-    entities: list[PlugwiseSwitchEntity] = []
-    for device_id, device in coordinator.data.devices.items():
-        if not (switches := device.get("switches")):
-            continue
-        for description in SWITCHES:
-            if description.key not in switches:
+    @callback
+    def _add_entities() -> None:
+        """Add Entities."""
+        if not coordinator.new_devices:
+            return
+
+        entities: list[PlugwiseSwitchEntity] = []
+        for device_id, device in coordinator.data.devices.items():
+            if not (switches := device.get("switches")):
                 continue
-            entities.append(PlugwiseSwitchEntity(coordinator, device_id, description))
-    async_add_entities(entities)
+            for description in SWITCHES:
+                if description.key not in switches:
+                    continue
+                entities.append(
+                    PlugwiseSwitchEntity(coordinator, device_id, description)
+                )
+
+        async_add_entities(entities)
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
+
+    _add_entities()
 
 
 class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):

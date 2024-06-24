@@ -693,7 +693,7 @@ async def help_test_entity_id_update_subscriptions(
     assert state is not None
     assert mqtt_mock.async_subscribe.call_count == len(topics)
     for topic in topics:
-        mqtt_mock.async_subscribe.assert_any_call(topic, ANY, ANY, ANY)
+        mqtt_mock.async_subscribe.assert_any_call(topic, ANY, ANY, ANY, ANY)
     mqtt_mock.async_subscribe.reset_mock()
 
     entity_reg.async_update_entity(
@@ -707,7 +707,7 @@ async def help_test_entity_id_update_subscriptions(
     state = hass.states.get(f"{domain}.milk")
     assert state is not None
     for topic in topics:
-        mqtt_mock.async_subscribe.assert_any_call(topic, ANY, ANY, ANY)
+        mqtt_mock.async_subscribe.assert_any_call(topic, ANY, ANY, ANY, ANY)
 
 
 async def help_test_entity_id_update_discovery_update(

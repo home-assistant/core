@@ -109,7 +109,7 @@ class ValloxFilterRemainingSensor(ValloxSensorEntity):
 
         return datetime.combine(
             next_filter_change_date,
-            time(hour=13, minute=0, second=0, tzinfo=dt_util.DEFAULT_TIME_ZONE),
+            time(hour=13, minute=0, second=0, tzinfo=dt_util.get_default_time_zone()),
         )
 
 

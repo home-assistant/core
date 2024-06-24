@@ -25,6 +25,9 @@
     },
     {
       "local_name": "AP-*"
+    },
+    {
+      "local_name": "MELK-*"
     }
   ],
   "codeowners": ["@bdraco"],

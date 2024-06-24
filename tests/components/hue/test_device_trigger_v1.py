@@ -5,8 +5,8 @@ from pytest_unordered import unordered
 from homeassistant.components import automation, hue
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.hue.v1 import device_trigger
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import setup_platform
@@ -18,7 +18,10 @@ REMOTES_RESPONSE = {"7": HUE_TAP_REMOTE_1, "8": HUE_DIMMER_REMOTE_1}
 
 
 async def test_get_triggers(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_bridge_v1, device_reg
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_bridge_v1,
+    device_reg: dr.DeviceRegistry,
 ) -> None:
     """Test we get the expected triggers from a hue remote."""
     mock_bridge_v1.mock_sensor_responses.append(REMOTES_RESPONSE)
@@ -86,7 +89,10 @@ async def test_get_triggers(
 
 
 async def test_if_fires_on_state_change(
-    hass: HomeAssistant, mock_bridge_v1, device_reg, calls
+    hass: HomeAssistant,
+    mock_bridge_v1,
+    device_reg: dr.DeviceRegistry,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for button press trigger firing."""
     mock_bridge_v1.mock_sensor_responses.append(REMOTES_RESPONSE)

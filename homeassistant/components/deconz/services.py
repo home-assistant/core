@@ -10,10 +10,6 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity_registry import (
-    async_entries_for_config_entry,
-    async_entries_for_device,
-)
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .config_flow import get_master_hub
@@ -146,7 +142,7 @@ async def async_remove_orphaned_entries_service(hub: DeconzHub) -> None:
     device_registry = dr.async_get(hub.hass)
     entity_registry = er.async_get(hub.hass)
 
-    entity_entries = async_entries_for_config_entry(
+    entity_entries = er.async_entries_for_config_entry(
         entity_registry, hub.config_entry.entry_id
     )
 
@@ -196,7 +192,7 @@ async def async_remove_orphaned_entries_service(hub: DeconzHub) -> None:
     for device_id in devices_to_be_removed:
         if (
             len(
-                async_entries_for_device(
+                er.async_entries_for_device(
                     entity_registry, device_id, include_disabled_entities=True
                 )
             )

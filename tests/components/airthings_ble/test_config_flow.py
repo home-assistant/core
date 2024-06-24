@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from airthings_ble import AirthingsDevice, AirthingsDeviceType
 from bleak import BleakError
+import pytest
 
 from homeassistant.components.airthings_ble.const import DOMAIN
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
@@ -71,24 +72,25 @@ async def test_bluetooth_discovery_no_BLEDevice(hass: HomeAssistant) -> None:
     assert result["reason"] == "cannot_connect"
 
 
+@pytest.mark.parametrize(
+    ("exc", "reason"), [(Exception(), "unknown"), (BleakError(), "cannot_connect")]
+)
 async def test_bluetooth_discovery_airthings_ble_update_failed(
-    hass: HomeAssistant,
+    hass: HomeAssistant, exc: Exception, reason: str
 ) -> None:
     """Test discovery via bluetooth but there's an exception from airthings-ble."""
-    for loop in [(Exception(), "unknown"), (BleakError(), "cannot_connect")]:
-        exc, reason = loop
-        with (
-            patch_async_ble_device_from_address(WAVE_SERVICE_INFO),
-            patch_airthings_ble(side_effect=exc),
-        ):
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_BLUETOOTH},
-                data=WAVE_SERVICE_INFO,
-            )
+    with (
+        patch_async_ble_device_from_address(WAVE_SERVICE_INFO),
+        patch_airthings_ble(side_effect=exc),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_BLUETOOTH},
+            data=WAVE_SERVICE_INFO,
+        )
 
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == reason
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
 
 
 async def test_bluetooth_discovery_already_setup(hass: HomeAssistant) -> None:

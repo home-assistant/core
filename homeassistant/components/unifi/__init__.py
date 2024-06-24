@@ -39,8 +39,6 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: UnifiConfigEntry
 ) -> bool:
     """Set up the UniFi Network integration."""
-    hass.data.setdefault(UNIFI_DOMAIN, {})
-
     try:
         api = await get_unifi_api(hass, config_entry.data)
 
@@ -62,7 +60,6 @@ async def async_setup_entry(
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, hub.shutdown)
     )
-
     return True
 
 
