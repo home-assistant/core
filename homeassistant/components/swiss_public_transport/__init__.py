@@ -14,9 +14,21 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_DESTINATION, CONF_START, CONF_VIA, DOMAIN, PLACEHOLDERS
+from .const import (
+    CONF_DESTINATION,
+    CONF_START,
+    CONF_TIME,
+    CONF_TIME_OFFSET,
+    CONF_VIA,
+    DOMAIN,
+    PLACEHOLDERS,
+)
 from .coordinator import SwissPublicTransportDataUpdateCoordinator
-from .helper import unique_id_from_config
+from .helper import (
+    dict_duration_to_str_duration,
+    offset_opendata,
+    unique_id_from_config,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,8 +45,23 @@ async def async_setup_entry(
     start = config[CONF_START]
     destination = config[CONF_DESTINATION]
 
+    time_offset_dict: dict[str, int] | None = config.get(CONF_TIME_OFFSET)
+    time_offset = (
+        dict_duration_to_str_duration(time_offset_dict)
+        if CONF_TIME_OFFSET in config and time_offset_dict is not None
+        else None
+    )
+
     session = async_get_clientsession(hass)
-    opendata = OpendataTransport(start, destination, session, via=config.get(CONF_VIA))
+    opendata = OpendataTransport(
+        start,
+        destination,
+        session,
+        via=config.get(CONF_VIA),
+        time=config.get(CONF_TIME),
+    )
+    if time_offset:
+        offset_opendata(opendata, time_offset)
 
     try:
         await opendata.async_get_data()
@@ -58,7 +85,7 @@ async def async_setup_entry(
             },
         ) from e
 
-    coordinator = SwissPublicTransportDataUpdateCoordinator(hass, opendata)
+    coordinator = SwissPublicTransportDataUpdateCoordinator(hass, opendata, time_offset)
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
@@ -82,7 +109,7 @@ async def async_migrate_entry(
     """Migrate config entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
-    if config_entry.version > 2:
+    if config_entry.version > 3:
         # This means the user has downgraded from a future version
         return False
 
@@ -117,9 +144,9 @@ async def async_migrate_entry(
             config_entry, unique_id=new_unique_id, minor_version=2
         )
 
-    if config_entry.version < 2:
-        # Via stations now available, which are not backwards compatible if used, changes unique id
-        hass.config_entries.async_update_entry(config_entry, version=2, minor_version=1)
+    if config_entry.version < 3:
+        # Via stations and time/offset settings now available, which are not backwards compatible if used, changes unique id
+        hass.config_entries.async_update_entry(config_entry, version=3, minor_version=1)
 
     _LOGGER.debug(
         "Migration to version %s.%s successful",

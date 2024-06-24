@@ -4,6 +4,7 @@
       "cannot_connect": "Cannot connect to server",
       "bad_config": "Request failed due to bad config: Check at [stationboard]({stationboard_url}) if your station names are valid",
       "too_many_via_stations": "Too many via stations, only up to 5 via stations are allowed per connection.",
+      "mutex_time_offset": "Setting a time and offset for a connection are mutually exclusive, please choose only one.",
       "unknown": "An unknown error was raised by python-opendata-transport"
     },
     "abort": {
@@ -17,9 +18,12 @@
         "data": {
           "from": "Start station",
           "to": "End station",
-          "via": "List of up to 5 via stations"
+          "via": "List of up to 5 via stations",
+          "time": "Select a fixed time of day",
+          "time_offset": "Select a moving time offset",
+          "is_arrival": "Use arrival instead of departure for time and offset configuration"
         },
-        "description": "Provide start and end station for your connection,\nand optionally up to 5 via stations.\n\nCheck the [stationboard]({stationboard_url}) for valid stations.",
+        "description": "Provide start and end station for your connection,\nand optionally up to 5 via stations.\nOptionally, you can also configure connections at a specific time or moving offset for departure or arrival.\n\nCheck the [stationboard]({stationboard_url}) for valid stations.",
         "title": "Swiss Public Transport"
       }
     }

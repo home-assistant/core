@@ -15,6 +15,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, SENSOR_CONNECTIONS_COUNT
+from .helper import offset_opendata
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +49,9 @@ class SwissPublicTransportDataUpdateCoordinator(
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, opendata: OpendataTransport) -> None:
+    def __init__(
+        self, hass: HomeAssistant, opendata: OpendataTransport, time_offset: str | None
+    ) -> None:
         """Initialize the SwissPublicTransport data coordinator."""
         super().__init__(
             hass,
@@ -57,6 +60,7 @@ class SwissPublicTransportDataUpdateCoordinator(
             update_interval=timedelta(seconds=90),
         )
         self._opendata = opendata
+        self._time_offset = time_offset
 
     def remaining_time(self, departure) -> timedelta | None:
         """Calculate the remaining time for the departure."""
@@ -74,6 +78,9 @@ class SwissPublicTransportDataUpdateCoordinator(
         return None
 
     async def _async_update_data(self) -> list[DataConnection]:
+        if self._time_offset:
+            offset_opendata(self._opendata, self._time_offset)
+
         try:
             await self._opendata.async_get_data()
         except OpendataTransportError as e:
