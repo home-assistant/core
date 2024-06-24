@@ -60,7 +60,7 @@ async def setup_with_birth_msg_client_mock(
     with (
         patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0),
         patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0),
-        patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.1),
+        patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0),
     ):
         entry = MockConfigEntry(
             domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"}
