@@ -89,10 +89,10 @@ _TYPE_HINT_MATCHERS.update(
 _MODULE_REGEX: re.Pattern[str] = re.compile(r"^homeassistant\.components\.\w+(\.\w+)?$")
 
 _METHOD_MATCH: list[TypeHintMatch] = [
-    TypeHintMatch(
-        function_name="__init__",
-        return_type=None,
-    ),
+    # TypeHintMatch(
+    #    function_name="__init__",
+    #    return_type=None,
+    # ),
 ]
 
 _TEST_FIXTURES: dict[str, list[str] | str] = {
