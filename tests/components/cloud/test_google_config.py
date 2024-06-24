@@ -18,7 +18,6 @@ from homeassistant.components.cloud.prefs import CloudPreferences
 from homeassistant.components.google_assistant import helpers as ga_helpers
 from homeassistant.components.homeassistant.exposed_entities import (
     DATA_EXPOSED_ENTITIES,
-    ExposedEntities,
     async_expose_entity,
     async_get_entity_settings,
 )
@@ -47,13 +46,13 @@ def mock_conf(hass, cloud_prefs):
     )
 
 
-def expose_new(hass, expose_new):
+def expose_new(hass: HomeAssistant, expose_new: bool) -> None:
     """Enable exposing new entities to Google."""
-    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
     exposed_entities.async_set_expose_new_entities("cloud.google_assistant", expose_new)
 
 
-def expose_entity(hass, entity_id, should_expose):
+def expose_entity(hass: HomeAssistant, entity_id: str, should_expose: bool) -> None:
     """Expose an entity to Google."""
     async_expose_entity(hass, "cloud.google_assistant", entity_id, should_expose)
 
