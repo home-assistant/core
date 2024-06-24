@@ -1111,9 +1111,7 @@ async def test_subscribe_and_resubscribe(
     record_calls: MessageCallbackType,
 ) -> None:
     """Test resubscribing within the debounce time."""
-    mqtt_mock = await mqtt_mock_entry()
-    # Fake that the client is connected
-    mqtt_mock().connected = True
+    await mqtt_mock_entry()
 
     unsub = await mqtt.async_subscribe(hass, "test-topic", record_calls)
     # This unsub will be un-done with the following subscribe
@@ -1452,10 +1450,7 @@ async def test_subscribe_same_topic(
     When subscribing to the same topic again, SUBSCRIBE must be sent to the broker again
     for it to resend any retained messages.
     """
-    mqtt_mock = await mqtt_mock_entry()
-
-    # Fake that the client is connected
-    mqtt_mock().connected = True
+    await mqtt_mock_entry()
 
     calls_a: list[ReceiveMessage] = []
     calls_b: list[ReceiveMessage] = []
@@ -1506,10 +1501,7 @@ async def test_replaying_payload_same_topic(
     Retained messages must only be replayed for new subscriptions, except
     when the MQTT client is reconnecting.
     """
-    mqtt_mock = await mqtt_mock_entry()
-
-    # Fake that the client is connected
-    mqtt_mock().connected = True
+    await mqtt_mock_entry()
 
     calls_a: list[ReceiveMessage] = []
     calls_b: list[ReceiveMessage] = []
@@ -1613,10 +1605,7 @@ async def test_replaying_payload_after_resubscribing(
     Retained messages must only be replayed for new subscriptions, except
     when the MQTT client is reconnection.
     """
-    mqtt_mock = await mqtt_mock_entry()
-
-    # Fake that the client is connected
-    mqtt_mock().connected = True
+    await mqtt_mock_entry()
 
     calls_a: list[ReceiveMessage] = []
 
@@ -1677,10 +1666,7 @@ async def test_replaying_payload_wildcard_topic(
     Retained messages should only be replayed for new subscriptions, except
     when the MQTT client is reconnection.
     """
-    mqtt_mock = await mqtt_mock_entry()
-
-    # Fake that the client is connected
-    mqtt_mock().connected = True
+    await mqtt_mock_entry()
 
     calls_a: list[ReceiveMessage] = []
     calls_b: list[ReceiveMessage] = []
@@ -1759,10 +1745,7 @@ async def test_not_calling_unsubscribe_with_active_subscribers(
     record_calls: MessageCallbackType,
 ) -> None:
     """Test not calling unsubscribe() when other subscribers are active."""
-    mqtt_mock = await mqtt_mock_entry()
-    # Fake that the client is connected
-    mqtt_mock().connected = True
-
+    await mqtt_mock_entry()
     unsub = await mqtt.async_subscribe(hass, "test/state", record_calls, 2)
     await mqtt.async_subscribe(hass, "test/state", record_calls, 1)
     await hass.async_block_till_done()
@@ -1787,10 +1770,8 @@ async def test_not_calling_subscribe_when_unsubscribed_within_cooldown(
     Make sure subscriptions are cleared if unsubscribed before
     the subscribe cool down period has ended.
     """
-    mqtt_mock = await mqtt_mock_entry()
+    await mqtt_mock_entry()
     mqtt_client_mock.subscribe.reset_mock()
-    # Fake that the client is connected
-    mqtt_mock().connected = True
 
     unsub = await mqtt.async_subscribe(hass, "test/state", record_calls)
     unsub()
@@ -1808,9 +1789,7 @@ async def test_unsubscribe_race(
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test not calling unsubscribe() when other subscribers are active."""
-    mqtt_mock = await mqtt_mock_entry()
-    # Fake that the client is connected
-    mqtt_mock().connected = True
+    await mqtt_mock_entry()
     await hass.async_block_till_done()
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
     await hass.async_block_till_done()
@@ -1871,9 +1850,7 @@ async def test_restore_subscriptions_on_reconnect(
     record_calls: MessageCallbackType,
 ) -> None:
     """Test subscriptions are restored on reconnect."""
-    mqtt_mock = await mqtt_mock_entry()
-    # Fake that the client is connected
-    mqtt_mock().connected = True
+    await mqtt_mock_entry()
     await hass.async_block_till_done()
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
     await hass.async_block_till_done()
@@ -1909,9 +1886,7 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test active subscriptions are restored correctly on reconnect."""
-    mqtt_mock = await mqtt_mock_entry()
-    # Fake that the client is connected
-    mqtt_mock().connected = True
+    await mqtt_mock_entry()
 
     unsub = await mqtt.async_subscribe(hass, "test/state", record_calls, qos=2)
     await mqtt.async_subscribe(hass, "test/state", record_calls, qos=1)
@@ -1964,9 +1939,7 @@ async def test_subscribed_at_highest_qos(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the highest qos as assigned when subscribing to the same topic."""
-    mqtt_mock = await mqtt_mock_entry()
-    # Fake that the client is connected
-    mqtt_mock().connected = True
+    await mqtt_mock_entry()
 
     await mqtt.async_subscribe(hass, "test/state", record_calls, qos=0)
     await hass.async_block_till_done()
@@ -2064,11 +2037,8 @@ async def test_canceling_debouncer_on_shutdown(
 ) -> None:
     """Test canceling the debouncer when HA shuts down."""
 
-    mqtt_mock = await mqtt_mock_entry()
+    await mqtt_mock_entry()
     mqtt_client_mock.subscribe.reset_mock()
-
-    # Fake that the client is connected
-    mqtt_mock().connected = True
 
     await mqtt.async_subscribe(hass, "test/state1", record_calls)
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=0.2))
@@ -2879,9 +2849,7 @@ async def test_mqtt_subscribes_in_single_call(
     record_calls: MessageCallbackType,
 ) -> None:
     """Test bundled client subscription to topic."""
-    mqtt_mock = await mqtt_mock_entry()
-    # Fake that the client is connected
-    mqtt_mock().connected = True
+    await mqtt_mock_entry()
 
     mqtt_client_mock.subscribe.reset_mock()
     await mqtt.async_subscribe(hass, "topic/test", record_calls)
@@ -2919,9 +2887,7 @@ async def test_mqtt_subscribes_and_unsubscribes_in_chunks(
     record_calls: MessageCallbackType,
 ) -> None:
     """Test chunked client subscriptions."""
-    mqtt_mock = await mqtt_mock_entry()
-    # Fake that the client is connected
-    mqtt_mock().connected = True
+    await mqtt_mock_entry()
 
     mqtt_client_mock.subscribe.reset_mock()
     unsub_tasks: list[CALLBACK_TYPE] = []
@@ -4177,9 +4143,6 @@ async def test_reload_config_entry(
         assert await hass.config_entries.async_reload(entry.entry_id)
         assert entry.state is ConfigEntryState.LOADED
         await hass.async_block_till_done()
-    # Assert the MQTT client was connected gracefully
-    with caplog.at_level(logging.INFO):
-        assert "Disconnected from MQTT server mock-broker:1883" in caplog.text
 
     assert (state := hass.states.get("sensor.test_manual1")) is not None
     assert state.attributes["friendly_name"] == "test_manual1_updated"
@@ -4609,8 +4572,6 @@ async def test_client_sock_failure_after_connect(
 ) -> None:
     """Test handling the socket connected and disconnected."""
     mqtt_mock = await mqtt_mock_entry()
-    # Fake that the client is connected
-    mqtt_mock().connected = True
     await hass.async_block_till_done()
     assert mqtt_mock.connected is True
 

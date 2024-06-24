@@ -36,6 +36,7 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
@@ -57,10 +58,10 @@ class PyLoadSensorEntity(StrEnum):
 SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=PyLoadSensorEntity.SPEED,
-        name="Speed",
+        translation_key=PyLoadSensorEntity.SPEED,
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
-        suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         suggested_display_precision=1,
     ),
 )
@@ -150,6 +151,8 @@ async def async_setup_entry(
 class PyLoadSensor(SensorEntity):
     """Representation of a pyLoad sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         api: PyLoadAPI,
@@ -158,13 +161,19 @@ class PyLoadSensor(SensorEntity):
         entry_id: str,
     ) -> None:
         """Initialize a new pyLoad sensor."""
-        self._attr_name = f"{client_name} {entity_description.name}"
         self.type = entity_description.key
         self.api = api
         self._attr_unique_id = f"{entry_id}_{entity_description.key}"
         self.entity_description = entity_description
         self._attr_available = False
         self.data: StatusServerResponse
+        self.device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer="PyLoad Team",
+            model="pyLoad",
+            configuration_url=api.api_url,
+            identifiers={(DOMAIN, entry_id)},
+        )
 
     async def async_update(self) -> None:
         """Update state of sensor."""

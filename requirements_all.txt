@@ -243,7 +243,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==24.6.0
+aioesphomeapi==24.6.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -490,7 +490,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.38.3
+async-upnp-client==0.39.0
 
 # homeassistant.components.arve
 asyncarve==0.0.9
@@ -1140,7 +1140,7 @@ ical==8.0.1
 icmplib==3.0
 
 # homeassistant.components.idasen_desk
-idasen-ha==2.5.3
+idasen-ha==2.6.1
 
 # homeassistant.components.network
 ifaddr==0.2.0
@@ -2794,7 +2794,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==3.1.1
+uiprotect==3.1.8
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2942,7 +2942,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==2.4.2
 
 # homeassistant.components.august
-yalexs==6.4.0
+yalexs==6.4.1
 
 # homeassistant.components.yeelight
 yeelight==0.7.14
