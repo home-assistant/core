@@ -15,21 +15,20 @@ If the integration implements a platform that presents single functions or data 
 If it's implementing a platform with more complex functionality like `light`, `fan` or `climate` it will
 use modules.
 
-## Dynamic feature creation
+## Adding new entities
 
-Entity attributes are dynamically set by inspecting various properties of a feature such
-as `type`, `unit` or `precision`.
-If more data is needed than the feature provides,
-i.e. to set HA `device_class` or `state_class` on a sensor entity, then add it to the static
-`PLATFORM_DESCRIPTIONS` entry in the appropriate platform.
-All feature ids should be described in the static entity descriptions but if a new feature
-is not yet added it will be created manually and a warning will be logged.
+All feature-based entities are created based on the information from the upstream library.
+If you want to add new feature, it needs to be implemented at first in there.
+After the feature is exposed by the upstream library,
+it needs to be added to the `<PLATFORM>_DESCRIPTIONS` list of the corresponding platform.
+The integration logs missing descriptions on features supported by the device to help spotting them.
 
-### Translation keys and icons
+In many cases it is enough to define the `key` (corresponding to upstream `feature.id`),
+but you can pass more information for nicer user experience:
+* `device_class` and `state_class` should be set accordingly for binary_sensor and sensor
+* If no matching classes are available, you need to update `strings.json` and `icons.json`
+When doing so, do not forget to run `script/setup` to generate the translations.
 
-For features to use translation keys they should be added to `strings.json` and `icons.json`
-with the feature.id as key.
-
-**All described features must have corresponding entries in `strings.json` and `icons.json`
-unless the base platform provides it's own via the device_class**
+Other information like the category and whether to enable per default are read from the feature,
+as are information about units and display precision hints.
 
