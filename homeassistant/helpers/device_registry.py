@@ -145,7 +145,8 @@ DEVICE_INFO_TYPES = {
 
 DEVICE_INFO_KEYS = set.union(*(itm for itm in DEVICE_INFO_TYPES.values()))
 
-LOW_PRIO_CONFIG_ENTRY_DOMAINS = {"matter", "mqtt"}
+# Integrations which may share a device with a native integration
+LOW_PRIO_CONFIG_ENTRY_DOMAINS = {"homekit_controller", "matter", "mqtt", "upnp"}
 
 
 class _EventDeviceRegistryUpdatedData_CreateRemove(TypedDict):
