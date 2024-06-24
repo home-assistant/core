@@ -572,9 +572,10 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
             media_id = async_process_play_media_url(self.hass, sourced_media.url)
 
-            # Remove playlist extension as it is unsupported.
+            # Exit if the source uses unsupported file.
             if media_id.endswith(".m3u"):
-                media_id = media_id.replace(".m3u", "")
+                _LOGGER.error("Media sources with the .m3u extension are not supported")
+                return
 
         if announce:
             extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
