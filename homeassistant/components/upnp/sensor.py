@@ -180,5 +180,7 @@ class UpnpSensor(UpnpEntity, SensorEntity):
         await super().async_added_to_hass()
 
         # Register self at coordinator.
-        unregister = self.coordinator.register_entity(self)
+        key = self.entity_description.key
+        entity_id = self.entity_id
+        unregister = self.coordinator.register_entity(key, entity_id)
         self.async_on_remove(unregister)

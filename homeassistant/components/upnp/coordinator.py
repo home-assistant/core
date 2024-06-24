@@ -3,7 +3,6 @@
 from collections import defaultdict
 from collections.abc import Callable
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING
 
 from async_upnp_client.exceptions import UpnpCommunicationError
 
@@ -13,9 +12,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import LOGGER
 from .device import Device
-
-if TYPE_CHECKING:
-    from .entity import UpnpEntity
 
 
 class UpnpDataUpdateCoordinator(
@@ -42,11 +38,9 @@ class UpnpDataUpdateCoordinator(
             update_interval=update_interval,
         )
 
-    def register_entity(self, entity: "UpnpEntity") -> Callable[[], None]:
+    def register_entity(self, key: str, entity_id: str) -> Callable[[], None]:
         """Register an entity."""
         # self._entities.append(entity)
-        key = entity.entity_description.key
-        entity_id = entity.entity_id
         self._features_by_entity_id[key].add(entity_id)
 
         def unregister_entity() -> None:
