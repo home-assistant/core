@@ -67,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise ConfigEntryNotReady(
             f"Error while trying to setup {host.api.host}:{host.api.port}: {err!s}"
         ) from err
-    except Exception:
+    except BaseException:
         await host.stop()
         raise
 
@@ -116,6 +116,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                     "if the camera is blocked from accessing the internet, "
                     "disable the update entity"
                 ) from err
+            finally:
+                starting = False
 
     device_coordinator = DataUpdateCoordinator(
         hass,
@@ -131,17 +133,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         update_method=async_check_firmware_update,
         update_interval=FIRMWARE_UPDATE_INTERVAL,
     )
+
+    # If camera WAN blocked, firmware check fails and takes long, do not prevent setup
+    config_entry.async_create_task(firmware_coordinator.async_refresh())
     # Fetch initial data so we have data when entities subscribe
-    results = await asyncio.gather(
-        device_coordinator.async_config_entry_first_refresh(),
-        firmware_coordinator.async_config_entry_first_refresh(),
-        return_exceptions=True,
-    )
-    # If camera WAN blocked, firmware check fails, do not prevent setup
-    # so don't check firmware_coordinator exceptions
-    if isinstance(results[0], BaseException):
+    try:
+        await device_coordinator.async_config_entry_first_refresh()
+    except BaseException:
         await host.stop()
-        raise results[0]
+        raise
 
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = ReolinkData(
         host=host,
@@ -159,7 +159,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         config_entry.add_update_listener(entry_update_listener)
     )
 
-    starting = False
     return True
 
 
