@@ -6,6 +6,12 @@
         "data": {
           "api_token": "Claim Token or Access URL"
         }
+      },
+      "reauth_confirm": {
+        "description": "Please enter either a Claim Token or an Access URL.",
+        "data": {
+          "api_token": "Claim Token or Access URL"
+        }
       }
     },
     "error": {
@@ -14,6 +20,10 @@
       "invalid_claim_token": "The claim token is invalid and could not be decoded",
       "payment_required": "You presented a valid access url, however payment is required before you can obtain data",
       "url_error": "There was an issue parsing the Account URL"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "entity": {
