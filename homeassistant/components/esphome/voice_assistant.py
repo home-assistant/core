@@ -457,6 +457,10 @@ def handle_timer_event(
     api_client: APIClient, event_type: TimerEventType, timer_info: TimerInfo
 ) -> None:
     """Handle timer events."""
+    if timer_info.conversation_command:
+        # Don't send events for delayed commands
+        return
+
     try:
         native_event_type = _TIMER_EVENT_TYPES.from_hass(event_type)
     except KeyError:
