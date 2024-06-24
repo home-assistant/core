@@ -338,14 +338,19 @@ class HassAuthProvider(AuthProvider):
         )
         await self.data.async_save()
 
-    async def async_change_username(self, username: str, new_username: str) -> None:
-        """Call change_username on data."""
+    async def async_change_username(
+        self, credential: Credentials, new_username: str
+    ) -> None:
+        """Validate new username and change it including updating credentials object."""
         if self.data is None:
             await self.async_initialize()
             assert self.data is not None
 
         await self.hass.async_add_executor_job(
-            self.data.change_username, username, new_username
+            self.data.change_username, credential.data["username"], new_username
+        )
+        self.hass.auth.async_update_user_credentials_data(
+            credential, {**credential.data, "username": new_username}
         )
         await self.data.async_save()
 

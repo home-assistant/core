@@ -500,6 +500,12 @@ async def test_admin_change_username_success(
     assert result["success"], result
     _assert_username(local_auth, current_username, should_exist=False)
     _assert_username(local_auth, new_username, should_exist=True)
+    assert hass_admin_user.credentials[0].data["username"] == new_username
+    # Validate new login works
+    await local_auth.async_validate_login(new_username, "test-pass")
+    with pytest.raises(prov_ha.InvalidAuth):
+        # Verify old login does not work
+        await local_auth.async_validate_login(current_username, "test-pass")
 
 
 @pytest.mark.parametrize("new_username", [" bla", "bla ", "BlA"])
@@ -532,6 +538,9 @@ async def test_admin_change_username_error_not_normalized(
     }
     _assert_username(local_auth, current_username, should_exist=True)
     _assert_username(local_auth, new_username, should_exist=False)
+    assert hass_admin_user.credentials[0].data["username"] == current_username
+    # Validate old login still works
+    await local_auth.async_validate_login(current_username, "test-pass")
 
 
 async def test_admin_change_username_not_owner(

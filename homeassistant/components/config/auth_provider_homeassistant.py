@@ -222,17 +222,17 @@ async def websocket_admin_change_username(
         return
 
     provider = auth_ha.async_get_provider(hass)
-    username = None
+    found_credential = None
     for credential in user.credentials:
         if credential.auth_provider_type == provider.type:
-            username = credential.data["username"]
+            found_credential = credential
             break
 
-    if username is None:
+    if found_credential is None:
         connection.send_error(
             msg["id"], "credentials_not_found", "Credentials not found"
         )
         return
 
-    await provider.async_change_username(username, msg["username"])
+    await provider.async_change_username(found_credential, msg["username"])
     connection.send_result(msg["id"])
