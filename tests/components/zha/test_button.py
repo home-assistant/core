@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-# TODO from freezegun import freeze_time
+from freezegun import freeze_time
 import pytest
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 from zigpy.profiles import zha
@@ -39,16 +39,23 @@ def button_platform_only():
         yield
 
 
-# TODO @freeze_time("2021-11-04 17:37:00", tz_offset=-1)
+@pytest.fixture
+async def setup_zha_integration(hass: HomeAssistant, setup_zha):
+    """Set up ZHA component."""
+
+    # if we call this in the test itself the test hangs forever
+    await setup_zha()
+
+
+@freeze_time("2021-11-04 17:37:00", tz_offset=-1)
 async def test_button(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    setup_zha,
+    setup_zha_integration,  # pylint: disable=unused-argument
     zigpy_device_mock,
 ) -> None:
     """Test ZHA button platform."""
 
-    await setup_zha()
     gateway = get_zha_gateway(hass)
     gateway_proxy: ZHAGatewayProxy = get_zha_gateway_proxy(hass)
 
@@ -103,5 +110,5 @@ async def test_button(
 
     state = hass.states.get(entity_id)
     assert state
-    # TODO assert state.state == "2021-11-04T16:37:00+00:00"
+    assert state.state == "2021-11-04T16:37:00+00:00"
     assert state.attributes[ATTR_DEVICE_CLASS] == ButtonDeviceClass.IDENTIFY
