@@ -28,6 +28,20 @@
     }
   },
   "entity": {
+    "button": {
+      "abort_downloads": {
+        "name": "Abort all running downloads"
+      },
+      "restart_failed": {
+        "name": "Restart all failed files"
+      },
+      "delete_finished": {
+        "name": "Delete finished files/packages"
+      },
+      "restart": {
+        "name": "Restart pyload core"
+      }
+    },
     "sensor": {
       "speed": {
         "name": "Speed"
