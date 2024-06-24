@@ -2,6 +2,7 @@
 
 from collections import namedtuple
 from datetime import UTC, datetime, timedelta
+import logging
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -30,6 +31,8 @@ from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
 
 ColorTempRange = namedtuple("ColorTempRange", ["min", "max"])
 
@@ -113,7 +116,7 @@ def _mocked_device(
     device_type=DeviceType.Unknown,
     spec: type = Device,
 ) -> Device:
-    device = MagicMock(spec=spec, name="Mocked device")
+    device = MagicMock(spec=spec, name=f"Mocked device {alias} ({device_type})")
     device.update = AsyncMock()
     device.turn_off = AsyncMock()
     device.turn_on = AsyncMock()
@@ -157,6 +160,13 @@ def _mocked_device(
     device.protocol = _mock_protocol()
     device.config = device_config
     device.credentials_hash = credentials_hash
+    _LOGGER.info(
+        "Initialized %s (%s) with children=%s features=%s",
+        alias,
+        device.device_type,
+        device.children,
+        device.features,
+    )
     return device
 
 
@@ -173,7 +183,7 @@ def _mocked_feature(
     minimum_value=0,
     maximum_value=2**16,  # Arbitrary max
 ) -> Feature:
-    feature = MagicMock(spec=Feature, name="Mocked feature")
+    feature = MagicMock(spec=Feature, name=f"Mocked feature {id} ({name}, {type_})")
     feature.id = id
     feature.name = name or id
     feature.value = value

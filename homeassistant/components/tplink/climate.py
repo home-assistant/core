@@ -40,7 +40,7 @@ async def async_setup_entry(
     entities: list[Climate] = []
     # As there are no standalone thermostats, we just iterate over the children.
     entities.extend(
-        Climate(child, parent_coordinator)
+        Climate(child, parent_coordinator, parent=device)
         for child in device.children
         if child.device_type == DeviceType.Thermostat
     )
@@ -67,14 +67,19 @@ class Climate(CoordinatedTPLinkEntity, ClimateEntity):
         self,
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
+        *,
+        parent: Device,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(device, coordinator)
+        super().__init__(device, coordinator, parent=parent)
+        self._state_feature = self._device.features["state"]
+        self._mode_feature = self._device.features["thermostat_mode"]
         self._temp_feature = self._device.features["temperature"]
         self._target_feature = self._device.features["target_temperature"]
-        self._state_feature = self._device.features["state"]
-        self._mode_feature = self._device.features["mode"]
-        self._async_call_update_attrs()
+
+        self._attr_min_temp = self._target_feature.minimum_value
+        self._attr_max_temp = self._target_feature.maximum_value
+        self._attr_temperature_unit = UNIT_MAPPING[cast(str, self._temp_feature.unit)]
 
     @async_refresh_after
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -106,12 +111,9 @@ class Climate(CoordinatedTPLinkEntity, ClimateEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
-        self._attr_min_temp = self._target_feature.minimum_value
-        self._attr_max_temp = self._target_feature.maximum_value
+        self._attr_current_temperature = self._temp_feature.value
         self._attr_target_temperature = self._target_feature.value
 
-        self._attr_current_temperature = self._temp_feature.value
-        self._attr_temperature_unit = UNIT_MAPPING[cast(str, self._temp_feature.unit)]
         self._attr_hvac_mode = (
             HVACMode.HEAT if self._state_feature.value else HVACMode.OFF
         )
