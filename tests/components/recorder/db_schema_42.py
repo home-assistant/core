@@ -54,7 +54,12 @@ from homeassistant.components.recorder.models import (
     ulid_to_bytes_or_none,
     uuid_hex_to_bytes_or_none,
 )
+from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
+    ATTR_UNIT_OF_MEASUREMENT,
+    MATCH_ALL,
     MAX_LENGTH_EVENT_EVENT_TYPE,
     MAX_LENGTH_STATE_ENTITY_ID,
     MAX_LENGTH_STATE_STATE,
@@ -577,10 +582,27 @@ class StateAttributes(Base):
         if state is None:
             return b"{}"
         if state_info := state.state_info:
+            unrecorded_attributes = state_info["unrecorded_attributes"]
             exclude_attrs = {
                 *ALL_DOMAIN_EXCLUDE_ATTRS,
-                *state_info["unrecorded_attributes"],
+                *unrecorded_attributes,
             }
+            if MATCH_ALL in unrecorded_attributes:
+                # Don't exclude device class, state class, unit of measurement
+                # or friendly name when using the MATCH_ALL exclude constant
+                _exclude_attributes = {
+                    k: v
+                    for k, v in state.attributes.items()
+                    if k
+                    not in (
+                        ATTR_DEVICE_CLASS,
+                        ATTR_STATE_CLASS,
+                        ATTR_UNIT_OF_MEASUREMENT,
+                        ATTR_FRIENDLY_NAME,
+                    )
+                }
+                exclude_attrs.update(_exclude_attributes)
+
         else:
             exclude_attrs = ALL_DOMAIN_EXCLUDE_ATTRS
         encoder = json_bytes_strip_null if dialect == PSQL_DIALECT else json_bytes

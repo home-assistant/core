@@ -18,6 +18,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
+    CONF_DEVICE_ID,
     CONF_NAME,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
@@ -94,6 +95,8 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
                 ),
             ),
         }
+
+    schema[vol.Optional(CONF_DEVICE_ID)] = selector.DeviceSelector()
 
     return schema
 
@@ -344,7 +347,7 @@ def ws_start_preview(
         connection.send_message(
             {
                 "id": msg["id"],
-                "type": websocket_api.const.TYPE_RESULT,
+                "type": websocket_api.TYPE_RESULT,
                 "success": False,
                 "error": {"code": "invalid_user_input", "message": errors},
             }

@@ -140,6 +140,7 @@ async def async_handle(
     except IntentError:
         raise  # bubble up intent related errors
     except Exception as err:
+        _LOGGER.exception("Error handling %s", intent_type)
         raise IntentUnexpectedError(f"Error handling {intent_type}") from err
     return result
 
@@ -1362,6 +1363,8 @@ class IntentResponse:
 
         if self.reprompt:
             response_dict["reprompt"] = self.reprompt
+        if self.speech_slots:
+            response_dict["speech_slots"] = self.speech_slots
 
         response_data: dict[str, Any] = {}
 

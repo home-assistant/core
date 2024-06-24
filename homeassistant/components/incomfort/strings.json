@@ -56,7 +56,23 @@
   "entity": {
     "binary_sensor": {
       "fault": {
-        "name": "Fault"
+        "name": "Fault",
+        "state_attributes": {
+          "fault_code": {
+            "state": {
+              "none": "None"
+            }
+          }
+        }
+      },
+      "is_burning": {
+        "name": "Burner"
+      },
+      "is_pumping": {
+        "name": "Pump"
+      },
+      "is_tapping": {
+        "name": "Hot water tap"
       }
     },
     "sensor": {
@@ -70,16 +86,16 @@
           "unknown": "Unknown",
           "opentherm": "OpenTherm",
           "boiler_ext": "Boiler external",
-          "frost": "Frost",
+          "frost": "Frost protection",
           "central_heating_rf": "Central heating rf",
-          "tapwater_int": "Tapwater internal",
+          "tapwater_int": "Tap water internal",
           "sensor_test": "Sensor test",
           "central_heating": "Central heating",
-          "standby": "Standby",
-          "postrun_boyler": "Postrun boiler",
+          "standby": "Stand-by",
+          "postrun_boyler": "Post run boiler",
           "service": "Service",
-          "tapwater": "Tapwater",
-          "postrun_ch": "Postrun central heating",
+          "tapwater": "Tap water",
+          "postrun_ch": "Post run central heating",
           "boiler_int": "Boiler internal",
           "buffer": "Buffer",
           "sensor_fault_after_self_check_e0": "Sensor fault after self check",

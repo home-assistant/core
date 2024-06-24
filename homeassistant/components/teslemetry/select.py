@@ -14,12 +14,15 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TeslemetryConfigEntry
 from .entity import TeslemetryEnergyInfoEntity, TeslemetryVehicleEntity
+from .helpers import handle_command, handle_vehicle_command
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 OFF = "off"
 LOW = "low"
 MEDIUM = "medium"
 HIGH = "high"
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -146,8 +149,8 @@ class TeslemetrySeatHeaterSelectEntity(TeslemetryVehicleEntity, SelectEntity):
         level = self._attr_options.index(option)
         # AC must be on to turn on seat heater
         if level and not self.get("climate_state_is_climate_on"):
-            await self.handle_command(self.api.auto_conditioning_start())
-        await self.handle_command(
+            await handle_vehicle_command(self.api.auto_conditioning_start())
+        await handle_vehicle_command(
             self.api.remote_seat_heater_request(self.entity_description.position, level)
         )
         self._attr_current_option = option
@@ -191,8 +194,8 @@ class TeslemetryWheelHeaterSelectEntity(TeslemetryVehicleEntity, SelectEntity):
         level = self._attr_options.index(option)
         # AC must be on to turn on steering wheel heater
         if level and not self.get("climate_state_is_climate_on"):
-            await self.handle_command(self.api.auto_conditioning_start())
-        await self.handle_command(
+            await handle_vehicle_command(self.api.auto_conditioning_start())
+        await handle_vehicle_command(
             self.api.remote_steering_wheel_heat_level_request(level)
         )
         self._attr_current_option = option
@@ -224,7 +227,7 @@ class TeslemetryOperationSelectEntity(TeslemetryEnergyInfoEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         self.raise_for_scope()
-        await self.handle_command(self.api.operation(option))
+        await handle_command(self.api.operation(option))
         self._attr_current_option = option
         self.async_write_ha_state()
 
@@ -254,7 +257,7 @@ class TeslemetryExportRuleSelectEntity(TeslemetryEnergyInfoEntity, SelectEntity)
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         self.raise_for_scope()
-        await self.handle_command(
+        await handle_command(
             self.api.grid_import_export(customer_preferred_export_rule=option)
         )
         self._attr_current_option = option

@@ -250,6 +250,14 @@ def gen_issues_schema(config: Config, integration: Integration) -> dict[str, Any
     }
 
 
+_EXCEPTIONS_SCHEMA = {
+    vol.Optional("exceptions"): cv.schema_with_slug_keys(
+        {vol.Optional("message"): translation_value_validator},
+        slug_validator=cv.slug,
+    ),
+}
+
+
 def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
     """Generate a strings schema."""
     return vol.Schema(
@@ -284,6 +292,10 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 vol.Optional("condition_type"): {str: translation_value_validator},
                 vol.Optional("trigger_type"): {str: translation_value_validator},
                 vol.Optional("trigger_subtype"): {str: translation_value_validator},
+                vol.Optional("extra_fields"): {str: translation_value_validator},
+                vol.Optional("extra_fields_descriptions"): {
+                    str: translation_value_validator
+                },
             },
             vol.Optional("system_health"): {
                 vol.Optional("info"): cv.schema_with_slug_keys(
@@ -351,10 +363,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 ),
                 slug_validator=cv.slug,
             ),
-            vol.Optional("exceptions"): cv.schema_with_slug_keys(
-                {vol.Optional("message"): translation_value_validator},
-                slug_validator=cv.slug,
-            ),
+            **_EXCEPTIONS_SCHEMA,
             vol.Optional("services"): cv.schema_with_slug_keys(
                 {
                     vol.Required("name"): translation_value_validator,
@@ -393,6 +402,7 @@ def gen_auth_schema(config: Config, integration: Integration) -> vol.Schema:
                 )
             },
             vol.Optional("issues"): gen_issues_schema(config, integration),
+            **_EXCEPTIONS_SCHEMA,
         }
     )
 

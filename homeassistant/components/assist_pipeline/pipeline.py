@@ -1605,15 +1605,9 @@ class PipelineStorageCollectionWebsocket(
     """Class to expose storage collection management over websocket."""
 
     @callback
-    def async_setup(
-        self,
-        hass: HomeAssistant,
-        *,
-        create_list: bool = True,
-        create_create: bool = True,
-    ) -> None:
+    def async_setup(self, hass: HomeAssistant) -> None:
         """Set up the websocket commands."""
-        super().async_setup(hass, create_list=create_list, create_create=create_create)
+        super().async_setup(hass)
 
         websocket_api.async_register_command(
             hass,
@@ -1648,9 +1642,7 @@ class PipelineStorageCollectionWebsocket(
         try:
             await super().ws_delete_item(hass, connection, msg)
         except PipelinePreferred as exc:
-            connection.send_error(
-                msg["id"], websocket_api.const.ERR_NOT_ALLOWED, str(exc)
-            )
+            connection.send_error(msg["id"], websocket_api.ERR_NOT_ALLOWED, str(exc))
 
     @callback
     def ws_get_item(
@@ -1664,7 +1656,7 @@ class PipelineStorageCollectionWebsocket(
         if item_id not in self.storage_collection.data:
             connection.send_error(
                 msg["id"],
-                websocket_api.const.ERR_NOT_FOUND,
+                websocket_api.ERR_NOT_FOUND,
                 f"Unable to find {self.item_id_key} {item_id}",
             )
             return
@@ -1695,7 +1687,7 @@ class PipelineStorageCollectionWebsocket(
             self.storage_collection.async_set_preferred_item(msg[self.item_id_key])
         except ItemNotFound:
             connection.send_error(
-                msg["id"], websocket_api.const.ERR_NOT_FOUND, "unknown item"
+                msg["id"], websocket_api.ERR_NOT_FOUND, "unknown item"
             )
             return
         connection.send_result(msg["id"])

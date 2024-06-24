@@ -30,6 +30,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_STOP,
+    MATCH_ALL,
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
@@ -306,6 +307,8 @@ def _generate_lambda_stmt(query: str) -> StatementLambdaElement:
 
 class SQLSensor(ManualTriggerSensorEntity):
     """Representation of an SQL sensor."""
+
+    _unrecorded_attributes = frozenset({MATCH_ALL})
 
     def __init__(
         self,
