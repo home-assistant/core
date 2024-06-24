@@ -153,7 +153,8 @@ async def test_mqtt_connects_on_home_assistant_mqtt_setup(
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test if client is connected after mqtt init on bootstrap."""
-    assert setup_with_birth_msg_client_mock.connect.call_count == 1
+    mqtt_client_mock = setup_with_birth_msg_client_mock
+    assert mqtt_client_mock.connect.call_count == 1
 
 
 async def test_mqtt_does_not_disconnect_on_home_assistant_stop(
@@ -161,10 +162,11 @@ async def test_mqtt_does_not_disconnect_on_home_assistant_stop(
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test if client is not disconnected on HA stop."""
+    mqtt_client_mock = setup_with_birth_msg_client_mock
     hass.bus.fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
-    assert setup_with_birth_msg_client_mock.disconnect.call_count == 0
+    assert mqtt_client_mock.disconnect.call_count == 0
 
 
 async def test_mqtt_await_ack_at_disconnect(
@@ -223,12 +225,13 @@ async def test_mqtt_await_ack_at_disconnect(
         await hass.async_block_till_done(wait_background_tasks=True)
 
 
+@pytest.mark.parametrize("mqtt_config_entry_data", [ENTRY_DEFAULT_BIRTH_MESSAGE])
 async def test_publish(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test the publish function."""
-    mqtt_mock = await mqtt_mock_entry()
-    publish_mock: MagicMock = mqtt_mock._mqttc.publish
+    publish_mock: MagicMock = setup_with_birth_msg_client_mock.publish
     await mqtt.async_publish(hass, "test-topic", "test-payload")
     await hass.async_block_till_done()
     assert publish_mock.called
@@ -289,7 +292,7 @@ async def test_publish(
         0,
         False,
     )
-    mqtt_mock.reset_mock()
+    publish_mock.reset_mock()
 
     # test null payload
     mqtt.publish(
@@ -1105,6 +1108,7 @@ async def test_subscribe_and_resubscribe(
     record_calls: MessageCallbackType,
 ) -> None:
     """Test resubscribing within the debounce time."""
+    mqtt_client_mock = setup_with_birth_msg_client_mock
     with (
         patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.4),
         patch("homeassistant.components.mqtt.client.UNSUBSCRIBE_COOLDOWN", 0.4),
@@ -1122,15 +1126,13 @@ async def test_subscribe_and_resubscribe(
         assert recorded_calls[0].topic == "test-topic"
         assert recorded_calls[0].payload == "test-payload"
         # assert unsubscribe was not called
-        setup_with_birth_msg_client_mock.unsubscribe.assert_not_called()
+        mqtt_client_mock.unsubscribe.assert_not_called()
 
         unsub()
 
         await asyncio.sleep(0.2)
-        await hass.async_block_till_done()
-        setup_with_birth_msg_client_mock.unsubscribe.assert_called_once_with(
-            ["test-topic"]
-        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+        mqtt_client_mock.unsubscribe.assert_called_once_with(["test-topic"])
 
 
 async def test_subscribe_topic_non_async(
@@ -1444,6 +1446,7 @@ async def test_subscribe_same_topic(
     When subscribing to the same topic again, SUBSCRIBE must be sent to the broker again
     for it to resend any retained messages.
     """
+    mqtt_client_mock = setup_with_birth_msg_client_mock
     calls_a: list[ReceiveMessage] = []
     calls_b: list[ReceiveMessage] = []
 
@@ -1455,16 +1458,16 @@ async def test_subscribe_same_topic(
     def _callback_b(msg: ReceiveMessage) -> None:
         calls_b.append(msg)
 
-    setup_with_birth_msg_client_mock.reset_mock()
+    mqtt_client_mock.reset_mock()
     await mqtt.async_subscribe(hass, "test/state", _callback_a, qos=0)
     # Simulate a non retained message after the first subscription
     async_fire_mqtt_message(hass, "test/state", "online", qos=0, retain=False)
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done()
     assert len(calls_a) == 1
-    setup_with_birth_msg_client_mock.subscribe.assert_called()
+    mqtt_client_mock.subscribe.assert_called()
     calls_a = []
-    setup_with_birth_msg_client_mock.reset_mock()
+    mqtt_client_mock.reset_mock()
 
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
     await hass.async_block_till_done()
@@ -1478,7 +1481,7 @@ async def test_subscribe_same_topic(
     # Both subscriptions should receive updates
     assert len(calls_a) == 1
     assert len(calls_b) == 1
-    setup_with_birth_msg_client_mock.subscribe.assert_called()
+    mqtt_client_mock.subscribe.assert_called()
 
 
 async def test_replaying_payload_same_topic(
@@ -1492,6 +1495,7 @@ async def test_replaying_payload_same_topic(
     Retained messages must only be replayed for new subscriptions, except
     when the MQTT client is reconnecting.
     """
+    mqtt_client_mock = setup_with_birth_msg_client_mock
     calls_a: list[ReceiveMessage] = []
     calls_b: list[ReceiveMessage] = []
 
@@ -1503,7 +1507,7 @@ async def test_replaying_payload_same_topic(
     def _callback_b(msg: ReceiveMessage) -> None:
         calls_b.append(msg)
 
-    setup_with_birth_msg_client_mock.reset_mock()
+    mqtt_client_mock.reset_mock()
     await mqtt.async_subscribe(hass, "test/state", _callback_a)
     await hass.async_block_till_done()
     async_fire_mqtt_message(
@@ -1514,9 +1518,9 @@ async def test_replaying_payload_same_topic(
     await hass.async_block_till_done()
 
     assert len(calls_a) == 1
-    setup_with_birth_msg_client_mock.subscribe.assert_called()
+    mqtt_client_mock.subscribe.assert_called()
     calls_a = []
-    setup_with_birth_msg_client_mock.reset_mock()
+    mqtt_client_mock.reset_mock()
 
     await mqtt.async_subscribe(hass, "test/state", _callback_b)
 
@@ -1545,11 +1549,11 @@ async def test_replaying_payload_same_topic(
     assert len(calls_b) == 2
     assert help_assert_message(calls_b[0], "test/state", "online", qos=0, retain=False)
     assert help_assert_message(calls_b[1], "test/state", "online", qos=0, retain=True)
-    setup_with_birth_msg_client_mock.subscribe.assert_called()
+    mqtt_client_mock.subscribe.assert_called()
 
     calls_a = []
     calls_b = []
-    setup_with_birth_msg_client_mock.reset_mock()
+    mqtt_client_mock.reset_mock()
 
     # Simulate new message played back on new subscriptions
     # After connecting the retain flag will not be set, even if the
@@ -1567,14 +1571,14 @@ async def test_replaying_payload_same_topic(
     # Now simulate the broker was disconnected shortly
     calls_a = []
     calls_b = []
-    setup_with_birth_msg_client_mock.reset_mock()
-    setup_with_birth_msg_client_mock.on_disconnect(None, None, 0)
-    setup_with_birth_msg_client_mock.on_connect(None, None, None, 0)
+    mqtt_client_mock.reset_mock()
+    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_connect(None, None, None, 0)
     await hass.async_block_till_done()
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
     await asyncio.sleep(0.2)
     await hass.async_block_till_done()
-    setup_with_birth_msg_client_mock.subscribe.assert_called()
+    mqtt_client_mock.subscribe.assert_called()
     # Simulate a (retained) message played back after reconnecting
     async_fire_mqtt_message(hass, "test/state", "online", qos=0, retain=True)
     await hass.async_block_till_done()
@@ -1602,19 +1606,20 @@ async def test_replaying_payload_after_resubscribing(
     Retained messages must only be replayed for new subscriptions, except
     when the MQTT client is reconnection.
     """
+    mqtt_client_mock = setup_with_birth_msg_client_mock
     calls_a: list[ReceiveMessage] = []
 
     @callback
     def _callback_a(msg: ReceiveMessage) -> None:
         calls_a.append(msg)
 
-    setup_with_birth_msg_client_mock.reset_mock()
+    mqtt_client_mock.reset_mock()
     unsub = await mqtt.async_subscribe(hass, "test/state", _callback_a)
     await hass.async_block_till_done()
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
     await hass.async_block_till_done()
     await hass.async_block_till_done()
-    setup_with_birth_msg_client_mock.subscribe.assert_called()
+    mqtt_client_mock.subscribe.assert_called()
 
     # Simulate a (retained) message played back
     async_fire_mqtt_message(hass, "test/state", "online", qos=0, retain=True)
@@ -1639,7 +1644,7 @@ async def test_replaying_payload_after_resubscribing(
     await hass.async_block_till_done()
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
     await hass.async_block_till_done()
-    setup_with_birth_msg_client_mock.subscribe.assert_called()
+    mqtt_client_mock.subscribe.assert_called()
 
     # Simulate we can receive a (retained) played back message again
     async_fire_mqtt_message(hass, "test/state", "online", qos=0, retain=True)
@@ -1662,6 +1667,7 @@ async def test_replaying_payload_wildcard_topic(
     Retained messages should only be replayed for new subscriptions, except
     when the MQTT client is reconnection.
     """
+    mqtt_client_mock = setup_with_birth_msg_client_mock
     calls_a: list[ReceiveMessage] = []
     calls_b: list[ReceiveMessage] = []
 
@@ -1673,7 +1679,7 @@ async def test_replaying_payload_wildcard_topic(
     def _callback_b(msg: ReceiveMessage) -> None:
         calls_b.append(msg)
 
-    setup_with_birth_msg_client_mock.reset_mock()
+    mqtt_client_mock.reset_mock()
     await mqtt.async_subscribe(hass, "test/#", _callback_a)
     # Simulate (retained) messages being played back on new subscriptions
     async_fire_mqtt_message(hass, "test/state1", "new_value_1", qos=0, retain=True)
@@ -1683,9 +1689,9 @@ async def test_replaying_payload_wildcard_topic(
     await asyncio.sleep(0.2)
     await hass.async_block_till_done()
     assert len(calls_a) == 2
-    setup_with_birth_msg_client_mock.subscribe.assert_called()
+    mqtt_client_mock.subscribe.assert_called()
     calls_a = []
-    setup_with_birth_msg_client_mock.reset_mock()
+    mqtt_client_mock.reset_mock()
 
     # resubscribe to the wild card topic again
     await mqtt.async_subscribe(hass, "test/#", _callback_b)
@@ -1699,11 +1705,11 @@ async def test_replaying_payload_wildcard_topic(
     # The retained messages playback should only be processed for the new subscriptions
     assert len(calls_a) == 0
     assert len(calls_b) == 2
-    setup_with_birth_msg_client_mock.subscribe.assert_called()
+    mqtt_client_mock.subscribe.assert_called()
 
     calls_a = []
     calls_b = []
-    setup_with_birth_msg_client_mock.reset_mock()
+    mqtt_client_mock.reset_mock()
 
     # Simulate new messages being received
     async_fire_mqtt_message(hass, "test/state1", "update_value_1", qos=0, retain=False)
@@ -1716,14 +1722,14 @@ async def test_replaying_payload_wildcard_topic(
     # Now simulate the broker was disconnected shortly
     calls_a = []
     calls_b = []
-    setup_with_birth_msg_client_mock.reset_mock()
-    setup_with_birth_msg_client_mock.on_disconnect(None, None, 0)
-    setup_with_birth_msg_client_mock.on_connect(None, None, None, 0)
+    mqtt_client_mock.reset_mock()
+    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_connect(None, None, None, 0)
     await hass.async_block_till_done()
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
     await asyncio.sleep(0.2)
     await hass.async_block_till_done()
-    setup_with_birth_msg_client_mock.subscribe.assert_called()
+    mqtt_client_mock.subscribe.assert_called()
     # Simulate the (retained) messages are played back after reconnecting
     # for all subscriptions
     async_fire_mqtt_message(hass, "test/state1", "update_value_1", qos=0, retain=True)
@@ -1743,19 +1749,20 @@ async def test_not_calling_unsubscribe_with_active_subscribers(
     record_calls: MessageCallbackType,
 ) -> None:
     """Test not calling unsubscribe() when other subscribers are active."""
-    setup_with_birth_msg_client_mock.reset_mock()
+    mqtt_client_mock = setup_with_birth_msg_client_mock
+    mqtt_client_mock.reset_mock()
     unsub = await mqtt.async_subscribe(hass, "test/state", record_calls, 2)
     await mqtt.async_subscribe(hass, "test/state", record_calls, 1)
     await hass.async_block_till_done()
     await asyncio.sleep(0.2)
     await hass.async_block_till_done()
-    assert setup_with_birth_msg_client_mock.subscribe.called
+    assert mqtt_client_mock.subscribe.called
 
     unsub()
     await hass.async_block_till_done()
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
-    await hass.async_block_till_done()
-    assert not setup_with_birth_msg_client_mock.unsubscribe.called
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert not mqtt_client_mock.unsubscribe.called
 
 
 async def test_not_calling_subscribe_when_unsubscribed_within_cooldown(
@@ -1768,13 +1775,14 @@ async def test_not_calling_subscribe_when_unsubscribed_within_cooldown(
     Make sure subscriptions are cleared if unsubscribed before
     the subscribe cool down period has ended.
     """
-    setup_with_birth_msg_client_mock.subscribe.reset_mock()
+    mqtt_client_mock = setup_with_birth_msg_client_mock
+    mqtt_client_mock.subscribe.reset_mock()
 
     unsub = await mqtt.async_subscribe(hass, "test/state", record_calls)
     unsub()
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
     await hass.async_block_till_done()
-    assert not setup_with_birth_msg_client_mock.subscribe.called
+    assert not mqtt_client_mock.subscribe.called
 
 
 async def test_unsubscribe_race(
@@ -1782,6 +1790,7 @@ async def test_unsubscribe_race(
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test not calling unsubscribe() when other subscribers are active."""
+    mqtt_client_mock = setup_with_birth_msg_client_mock
     calls_a: list[ReceiveMessage] = []
     calls_b: list[ReceiveMessage] = []
 
@@ -1793,7 +1802,7 @@ async def test_unsubscribe_race(
     def _callback_b(msg: ReceiveMessage) -> None:
         calls_b.append(msg)
 
-    setup_with_birth_msg_client_mock.reset_mock()
+    mqtt_client_mock.reset_mock()
     unsub = await mqtt.async_subscribe(hass, "test/state", _callback_a)
     unsub()
     await mqtt.async_subscribe(hass, "test/state", _callback_b)
@@ -1820,7 +1829,7 @@ async def test_unsubscribe_race(
     expected_calls_3 = [
         call.subscribe([("test/state", 0)]),
     ]
-    assert setup_with_birth_msg_client_mock.mock_calls in (
+    assert mqtt_client_mock.mock_calls in (
         expected_calls_1,
         expected_calls_2,
         expected_calls_3,
@@ -1837,26 +1846,23 @@ async def test_restore_subscriptions_on_reconnect(
     record_calls: MessageCallbackType,
 ) -> None:
     """Test subscriptions are restored on reconnect."""
+    mqtt_client_mock = setup_with_birth_msg_client_mock
 
-    setup_with_birth_msg_client_mock.reset_mock()
+    mqtt_client_mock.reset_mock()
 
     await mqtt.async_subscribe(hass, "test/state", record_calls)
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
     await asyncio.sleep(0.2)
     await hass.async_block_till_done()
-    assert ("test/state", 0) in help_all_subscribe_calls(
-        setup_with_birth_msg_client_mock
-    )
+    assert ("test/state", 0) in help_all_subscribe_calls(mqtt_client_mock)
 
-    setup_with_birth_msg_client_mock.reset_mock()
-    setup_with_birth_msg_client_mock.on_disconnect(None, None, 0)
-    setup_with_birth_msg_client_mock.on_connect(None, None, None, 0)
+    mqtt_client_mock.reset_mock()
+    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_connect(None, None, None, 0)
     await hass.async_block_till_done()
     await asyncio.sleep(0.2)
     await hass.async_block_till_done()
-    assert ("test/state", 0) in help_all_subscribe_calls(
-        setup_with_birth_msg_client_mock
-    )
+    assert ("test/state", 0) in help_all_subscribe_calls(mqtt_client_mock)
 
 
 @pytest.mark.parametrize(
@@ -1870,7 +1876,8 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test active subscriptions are restored correctly on reconnect."""
-    setup_with_birth_msg_client_mock.reset_mock()
+    mqtt_client_mock = setup_with_birth_msg_client_mock
+    mqtt_client_mock.reset_mock()
     unsub = await mqtt.async_subscribe(hass, "test/state", record_calls, qos=2)
     await mqtt.async_subscribe(hass, "test/state", record_calls, qos=1)
     await mqtt.async_subscribe(hass, "test/state", record_calls, qos=0)
@@ -1883,22 +1890,22 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     expected = [
         call([("test/state", 2)]),
     ]
-    assert setup_with_birth_msg_client_mock.subscribe.mock_calls == expected
+    assert mqtt_client_mock.subscribe.mock_calls == expected
 
     unsub()
     await hass.async_block_till_done()
-    assert setup_with_birth_msg_client_mock.unsubscribe.call_count == 0
+    assert mqtt_client_mock.unsubscribe.call_count == 0
 
-    setup_with_birth_msg_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0)
     await hass.async_block_till_done()
-    setup_with_birth_msg_client_mock.on_connect(None, None, None, 0)
+    mqtt_client_mock.on_connect(None, None, None, 0)
     freezer.tick(3)
     async_fire_time_changed(hass)  # cooldown
     await hass.async_block_till_done()
 
     expected.append(call([("test/state", 1)]))
     for expected_call in expected:
-        assert setup_with_birth_msg_client_mock.subscribe.hass_call(expected_call)
+        assert mqtt_client_mock.subscribe.hass_call(expected_call)
 
     freezer.tick(3)
     async_fire_time_changed(hass)  # cooldown
@@ -1922,16 +1929,15 @@ async def test_subscribed_at_highest_qos(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the highest qos as assigned when subscribing to the same topic."""
-    setup_with_birth_msg_client_mock.reset_mock()
+    mqtt_client_mock = setup_with_birth_msg_client_mock
+    mqtt_client_mock.reset_mock()
     await mqtt.async_subscribe(hass, "test/state", record_calls, qos=0)
     await hass.async_block_till_done()
     freezer.tick(5)
     async_fire_time_changed(hass)  # cooldown
     await hass.async_block_till_done()
-    assert ("test/state", 0) in help_all_subscribe_calls(
-        setup_with_birth_msg_client_mock
-    )
-    setup_with_birth_msg_client_mock.reset_mock()
+    assert ("test/state", 0) in help_all_subscribe_calls(mqtt_client_mock)
+    mqtt_client_mock.reset_mock()
     freezer.tick(5)
     async_fire_time_changed(hass)  # cooldown
     await hass.async_block_till_done()
@@ -1944,9 +1950,7 @@ async def test_subscribed_at_highest_qos(
     async_fire_time_changed(hass)  # cooldown
     await hass.async_block_till_done()
     # the subscription with the highest QoS should survive
-    assert help_all_subscribe_calls(setup_with_birth_msg_client_mock) == [
-        ("test/state", 2)
-    ]
+    assert help_all_subscribe_calls(mqtt_client_mock) == [("test/state", 2)]
 
 
 async def test_reload_entry_with_restored_subscriptions(
@@ -2017,6 +2021,7 @@ async def test_canceling_debouncer_on_shutdown(
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test canceling the debouncer when HA shuts down."""
+    mqtt_client_mock = setup_with_birth_msg_client_mock
 
     with patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 2):
         await hass.async_block_till_done()
@@ -2025,7 +2030,7 @@ async def test_canceling_debouncer_on_shutdown(
         await mqtt.async_subscribe(hass, "test/state1", record_calls)
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=0.1))
         # Stop HA so the scheduled debouncer task will be canceled
-        setup_with_birth_msg_client_mock.subscribe.reset_mock()
+        mqtt_client_mock.subscribe.reset_mock()
         hass.bus.fire(EVENT_HOMEASSISTANT_STOP)
         await mqtt.async_subscribe(hass, "test/state2", record_calls)
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=0.1))
@@ -2037,14 +2042,15 @@ async def test_canceling_debouncer_on_shutdown(
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=0.1))
         await hass.async_block_till_done()
 
-        setup_with_birth_msg_client_mock.subscribe.assert_not_called()
+        mqtt_client_mock.subscribe.assert_not_called()
 
         # Note thet the broker connection will not be disconnected gracefully
         await hass.async_block_till_done()
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
-        await hass.async_block_till_done()
-        setup_with_birth_msg_client_mock.subscribe.assert_not_called()
-        setup_with_birth_msg_client_mock.disconnect.assert_not_called()
+        await asyncio.sleep(0.2)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        mqtt_client_mock.subscribe.assert_not_called()
+        mqtt_client_mock.disconnect.assert_not_called()
 
 
 async def test_canceling_debouncer_normal(
@@ -2109,9 +2115,10 @@ async def test_logs_error_if_no_connect_broker(
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test for setup failure if connection to broker is missing."""
+    mqtt_client_mock = setup_with_birth_msg_client_mock
     # test with rc = 3 -> broker unavailable
-    setup_with_birth_msg_client_mock.on_disconnect(Mock(), None, 0)
-    setup_with_birth_msg_client_mock.on_connect(Mock(), None, None, 3)
+    mqtt_client_mock.on_disconnect(Mock(), None, 0)
+    mqtt_client_mock.on_connect(Mock(), None, None, 3)
     await hass.async_block_till_done()
     assert (
         "Unable to connect to the MQTT broker: Connection Refused: broker unavailable."
@@ -2127,9 +2134,10 @@ async def test_triggers_reauth_flow_if_auth_fails(
     return_code: int,
 ) -> None:
     """Test re-auth is triggered if authentication is failing."""
+    mqtt_client_mock = setup_with_birth_msg_client_mock
     # test with rc = 4 -> CONNACK_REFUSED_NOT_AUTHORIZED and 5 -> CONNACK_REFUSED_BAD_USERNAME_PASSWORD
-    setup_with_birth_msg_client_mock.on_disconnect(Mock(), None, 0)
-    setup_with_birth_msg_client_mock.on_connect(Mock(), None, None, return_code)
+    mqtt_client_mock.on_disconnect(Mock(), None, 0)
+    mqtt_client_mock.on_connect(Mock(), None, None, return_code)
     await hass.async_block_till_done()
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -2143,11 +2151,10 @@ async def test_handle_mqtt_on_callback(
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test receiving an ACK callback before waiting for it."""
-    with patch.object(setup_with_birth_msg_client_mock, "get_mid", return_value=100):
+    mqtt_client_mock = setup_with_birth_msg_client_mock
+    with patch.object(mqtt_client_mock, "get_mid", return_value=100):
         # Simulate an ACK for mid == 100, this will call mqtt_mock._async_get_mid_future(mid)
-        setup_with_birth_msg_client_mock.on_publish(
-            setup_with_birth_msg_client_mock, None, 100
-        )
+        mqtt_client_mock.on_publish(mqtt_client_mock, None, 100)
         await hass.async_block_till_done()
         # Make sure the ACK has been received
         await hass.async_block_till_done()
@@ -2203,12 +2210,13 @@ async def test_subscribe_error(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test publish error."""
-    setup_with_birth_msg_client_mock.reset_mock()
+    mqtt_client_mock = setup_with_birth_msg_client_mock
+    mqtt_client_mock.reset_mock()
     # simulate client is not connected error before subscribing
-    setup_with_birth_msg_client_mock.subscribe.side_effect = lambda *args: (4, None)
+    mqtt_client_mock.subscribe.side_effect = lambda *args: (4, None)
     with patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0):
         await mqtt.async_subscribe(hass, "some-topic", record_calls)
-        while setup_with_birth_msg_client_mock.subscribe.call_count == 0:
+        while mqtt_client_mock.subscribe.call_count == 0:
             await hass.async_block_till_done()
         await hass.async_block_till_done()
         await hass.async_block_till_done()
@@ -2223,6 +2231,7 @@ async def test_handle_message_callback(
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test for handling an incoming message callback."""
+    mqtt_client_mock = setup_with_birth_msg_client_mock
     callbacks = []
 
     @callback
@@ -2233,8 +2242,8 @@ async def test_handle_message_callback(
         "some-topic", b"test-payload", 1, False, "some-topic", datetime.now()
     )
     await mqtt.async_subscribe(hass, "some-topic", _callback)
-    setup_with_birth_msg_client_mock.reset_mock()
-    setup_with_birth_msg_client_mock.on_message(None, None, msg)
+    mqtt_client_mock.reset_mock()
+    mqtt_client_mock.on_message(None, None, msg)
 
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -2509,8 +2518,9 @@ async def test_default_birth_message(
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test sending birth message."""
+    mqtt_client_mock = setup_with_birth_msg_client_mock
     await hass.async_block_till_done(wait_background_tasks=True)
-    setup_with_birth_msg_client_mock.publish.assert_called_with(
+    mqtt_client_mock.publish.assert_called_with(
         "homeassistant/status", "online", 0, False
     )
 
@@ -2604,10 +2614,11 @@ async def test_subscription_done_when_birth_message_is_sent(
     record_calls: MessageCallbackType,
 ) -> None:
     """Test sending birth message until initial subscription has been completed."""
-    subscribe_calls = help_all_subscribe_calls(setup_with_birth_msg_client_mock)
+    mqtt_client_mock = setup_with_birth_msg_client_mock
+    subscribe_calls = help_all_subscribe_calls(mqtt_client_mock)
     assert ("homeassistant/+/+/config", 0) in subscribe_calls
     assert ("homeassistant/+/+/+/config", 0) in subscribe_calls
-    setup_with_birth_msg_client_mock.publish.assert_called_with(
+    mqtt_client_mock.publish.assert_called_with(
         "homeassistant/status", "online", 0, False
     )
 
@@ -2648,7 +2659,8 @@ async def test_default_will_message(
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test will message."""
-    setup_with_birth_msg_client_mock.will_set.assert_called_with(
+    mqtt_client_mock = setup_with_birth_msg_client_mock
+    mqtt_client_mock.will_set.assert_called_with(
         topic="homeassistant/status", payload="offline", qos=0, retain=False
     )
 
@@ -2682,23 +2694,24 @@ async def test_mqtt_subscribes_topics_on_connect(
     record_calls: MessageCallbackType,
 ) -> None:
     """Test subscription to topic on connect."""
+    mqtt_client_mock = setup_with_birth_msg_client_mock
 
     await mqtt.async_subscribe(hass, "topic/test", record_calls)
     await mqtt.async_subscribe(hass, "home/sensor", record_calls, 2)
     await mqtt.async_subscribe(hass, "still/pending", record_calls)
     await mqtt.async_subscribe(hass, "still/pending", record_calls, 1)
 
-    setup_with_birth_msg_client_mock.on_disconnect(Mock(), None, 0)
+    mqtt_client_mock.on_disconnect(Mock(), None, 0)
 
-    setup_with_birth_msg_client_mock.reset_mock()
+    mqtt_client_mock.reset_mock()
 
-    setup_with_birth_msg_client_mock.on_connect(Mock(), None, 0, 0)
+    mqtt_client_mock.on_connect(Mock(), None, 0, 0)
 
     await hass.async_block_till_done()
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    subscribe_calls = help_all_subscribe_calls(setup_with_birth_msg_client_mock)
+    subscribe_calls = help_all_subscribe_calls(mqtt_client_mock)
     assert ("topic/test", 0) in subscribe_calls
     assert ("home/sensor", 2) in subscribe_calls
     assert ("still/pending", 1) in subscribe_calls
@@ -2714,16 +2727,17 @@ async def test_mqtt_subscribes_in_single_call(
     record_calls: MessageCallbackType,
 ) -> None:
     """Test bundled client subscription to topic."""
-    setup_with_birth_msg_client_mock.subscribe.reset_mock()
+    mqtt_client_mock = setup_with_birth_msg_client_mock
+    mqtt_client_mock.subscribe.reset_mock()
     await mqtt.async_subscribe(hass, "topic/test", record_calls)
     await mqtt.async_subscribe(hass, "home/sensor", record_calls)
     # Make sure the debouncer finishes
     await asyncio.sleep(0.2)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert setup_with_birth_msg_client_mock.subscribe.call_count == 1
+    assert mqtt_client_mock.subscribe.call_count == 1
     # Assert we have a single subscription call with both subscriptions
-    assert setup_with_birth_msg_client_mock.subscribe.mock_calls[0][1][0] in [
+    assert mqtt_client_mock.subscribe.mock_calls[0][1][0] in [
         [("topic/test", 0), ("home/sensor", 0)],
         [("home/sensor", 0), ("topic/test", 0)],
     ]
@@ -2738,8 +2752,9 @@ async def test_mqtt_subscribes_and_unsubscribes_in_chunks(
     record_calls: MessageCallbackType,
 ) -> None:
     """Test chunked client subscriptions."""
+    mqtt_client_mock = setup_with_birth_msg_client_mock
 
-    setup_with_birth_msg_client_mock.subscribe.reset_mock()
+    mqtt_client_mock.subscribe.reset_mock()
     unsub_tasks: list[CALLBACK_TYPE] = []
     unsub_tasks.append(await mqtt.async_subscribe(hass, "topic/test1", record_calls))
     unsub_tasks.append(await mqtt.async_subscribe(hass, "home/sensor1", record_calls))
@@ -2749,10 +2764,10 @@ async def test_mqtt_subscribes_and_unsubscribes_in_chunks(
     # Make sure the debouncer finishes
     await asyncio.sleep(0.2)
 
-    assert setup_with_birth_msg_client_mock.subscribe.call_count == 2
+    assert mqtt_client_mock.subscribe.call_count == 2
     # Assert we have a 2 subscription calls with both 2 subscriptions
-    assert len(setup_with_birth_msg_client_mock.subscribe.mock_calls[0][1][0]) == 2
-    assert len(setup_with_birth_msg_client_mock.subscribe.mock_calls[1][1][0]) == 2
+    assert len(mqtt_client_mock.subscribe.mock_calls[0][1][0]) == 2
+    assert len(mqtt_client_mock.subscribe.mock_calls[1][1][0]) == 2
 
     # Unsubscribe all topics
     for task in unsub_tasks:
@@ -2761,10 +2776,10 @@ async def test_mqtt_subscribes_and_unsubscribes_in_chunks(
     # Make sure the debouncer finishes
     await asyncio.sleep(0.2)
 
-    assert setup_with_birth_msg_client_mock.unsubscribe.call_count == 2
+    assert mqtt_client_mock.unsubscribe.call_count == 2
     # Assert we have a 2 unsubscribe calls with both 2 topic
-    assert len(setup_with_birth_msg_client_mock.unsubscribe.mock_calls[0][1][0]) == 2
-    assert len(setup_with_birth_msg_client_mock.unsubscribe.mock_calls[1][1][0]) == 2
+    assert len(mqtt_client_mock.unsubscribe.mock_calls[0][1][0]) == 2
+    assert len(mqtt_client_mock.unsubscribe.mock_calls[1][1][0]) == 2
 
 
 async def test_default_entry_setting_are_applied(
@@ -3582,6 +3597,7 @@ async def test_subscribe_connection_status(
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test connextion status subscription."""
+    mqtt_client_mock = setup_with_birth_msg_client_mock
     mqtt_connected_calls_callback: list[bool] = []
     mqtt_connected_calls_async: list[bool] = []
 
@@ -3598,7 +3614,7 @@ async def test_subscribe_connection_status(
     assert mqtt.is_connected(hass) is True
 
     # Mock disconnect status
-    setup_with_birth_msg_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0)
     await hass.async_block_till_done()
     assert mqtt.is_connected(hass) is False
 
@@ -3611,12 +3627,12 @@ async def test_subscribe_connection_status(
     await hass.async_block_till_done()
 
     # Mock connect status
-    setup_with_birth_msg_client_mock.on_connect(None, None, 0, 0)
+    mqtt_client_mock.on_connect(None, None, 0, 0)
     await hass.async_block_till_done()
     assert mqtt.is_connected(hass) is True
 
     # Mock disconnect status
-    setup_with_birth_msg_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0)
     await hass.async_block_till_done()
     assert mqtt.is_connected(hass) is False
 
@@ -3625,7 +3641,7 @@ async def test_subscribe_connection_status(
     unsub_async()
 
     # Mock connect status
-    setup_with_birth_msg_client_mock.on_connect(None, None, 0, 0)
+    mqtt_client_mock.on_connect(None, None, 0, 0)
     await asyncio.sleep(0.2)
     await hass.async_block_till_done()
     assert mqtt.is_connected(hass) is True
@@ -3646,6 +3662,7 @@ async def test_unload_config_entry(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test unloading the MQTT entry."""
+    mqtt_client_mock = setup_with_birth_msg_client_mock
     assert hass.services.has_service(mqtt.DOMAIN, "dump")
     assert hass.services.has_service(mqtt.DOMAIN, "publish")
 
@@ -3653,15 +3670,13 @@ async def test_unload_config_entry(
     assert mqtt_config_entry.state is ConfigEntryState.LOADED
 
     # Publish just before unloading to test await cleanup
-    setup_with_birth_msg_client_mock.reset_mock()
+    mqtt_client_mock.reset_mock()
     mqtt.publish(hass, "just_in_time", "published", qos=0, retain=False)
     await hass.async_block_till_done()
 
     assert await hass.config_entries.async_unload(mqtt_config_entry.entry_id)
     new_mqtt_config_entry = mqtt_config_entry
-    setup_with_birth_msg_client_mock.publish.assert_any_call(
-        "just_in_time", "published", 0, False
-    )
+    mqtt_client_mock.publish.assert_any_call("just_in_time", "published", 0, False)
     assert new_mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
     await hass.async_block_till_done()
     assert not hass.services.has_service(mqtt.DOMAIN, "dump")
@@ -4276,32 +4291,33 @@ async def test_auto_reconnect(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test reconnection is automatically done."""
-    assert setup_with_birth_msg_client_mock.connect.call_count == 1
-    setup_with_birth_msg_client_mock.reconnect.reset_mock()
+    mqtt_client_mock = setup_with_birth_msg_client_mock
+    assert mqtt_client_mock.connect.call_count == 1
+    mqtt_client_mock.reconnect.reset_mock()
 
-    setup_with_birth_msg_client_mock.disconnect()
-    setup_with_birth_msg_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.disconnect()
+    mqtt_client_mock.on_disconnect(None, None, 0)
     await hass.async_block_till_done()
 
-    setup_with_birth_msg_client_mock.reconnect.side_effect = OSError("foo")
+    mqtt_client_mock.reconnect.side_effect = OSError("foo")
     async_fire_time_changed(
         hass, utcnow() + timedelta(seconds=RECONNECT_INTERVAL_SECONDS)
     )
     await hass.async_block_till_done()
-    assert len(setup_with_birth_msg_client_mock.reconnect.mock_calls) == 1
+    assert len(mqtt_client_mock.reconnect.mock_calls) == 1
     assert "Error re-connecting to MQTT server due to exception: foo" in caplog.text
 
-    setup_with_birth_msg_client_mock.reconnect.side_effect = None
+    mqtt_client_mock.reconnect.side_effect = None
     async_fire_time_changed(
         hass, utcnow() + timedelta(seconds=RECONNECT_INTERVAL_SECONDS)
     )
     await hass.async_block_till_done()
-    assert len(setup_with_birth_msg_client_mock.reconnect.mock_calls) == 2
+    assert len(mqtt_client_mock.reconnect.mock_calls) == 2
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
 
-    setup_with_birth_msg_client_mock.disconnect()
-    setup_with_birth_msg_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.disconnect()
+    mqtt_client_mock.on_disconnect(None, None, 0)
     await hass.async_block_till_done()
 
     async_fire_time_changed(
@@ -4309,7 +4325,7 @@ async def test_auto_reconnect(
     )
     await hass.async_block_till_done()
     # Should not reconnect after stop
-    assert len(setup_with_birth_msg_client_mock.reconnect.mock_calls) == 2
+    assert len(mqtt_client_mock.reconnect.mock_calls) == 2
 
 
 async def test_server_sock_connect_and_disconnect(
@@ -4319,39 +4335,28 @@ async def test_server_sock_connect_and_disconnect(
     record_calls: MessageCallbackType,
 ) -> None:
     """Test handling the socket connected and disconnected."""
-    assert setup_with_birth_msg_client_mock.connect.call_count == 1
+    mqtt_client_mock = setup_with_birth_msg_client_mock
+    assert mqtt_client_mock.connect.call_count == 1
 
-    setup_with_birth_msg_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_SUCCESS
+    mqtt_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_SUCCESS
 
     client, server = socket.socketpair(
         family=socket.AF_UNIX, type=socket.SOCK_STREAM, proto=0
     )
     client.setblocking(False)
     server.setblocking(False)
-    setup_with_birth_msg_client_mock.on_socket_open(
-        setup_with_birth_msg_client_mock, None, client
-    )
-    setup_with_birth_msg_client_mock.on_socket_register_write(
-        setup_with_birth_msg_client_mock, None, client
-    )
+    mqtt_client_mock.on_socket_open(mqtt_client_mock, None, client)
+    mqtt_client_mock.on_socket_register_write(mqtt_client_mock, None, client)
     await hass.async_block_till_done()
 
     server.close()  # mock the server closing the connection on us
 
     unsub = await mqtt.async_subscribe(hass, "test-topic", record_calls)
 
-    setup_with_birth_msg_client_mock.loop_misc.return_value = (
-        paho_mqtt.MQTT_ERR_CONN_LOST
-    )
-    setup_with_birth_msg_client_mock.on_socket_unregister_write(
-        setup_with_birth_msg_client_mock, None, client
-    )
-    setup_with_birth_msg_client_mock.on_socket_close(
-        setup_with_birth_msg_client_mock, None, client
-    )
-    setup_with_birth_msg_client_mock.on_disconnect(
-        setup_with_birth_msg_client_mock, None, client
-    )
+    mqtt_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_CONN_LOST
+    mqtt_client_mock.on_socket_unregister_write(mqtt_client_mock, None, client)
+    mqtt_client_mock.on_socket_close(mqtt_client_mock, None, client)
+    mqtt_client_mock.on_disconnect(mqtt_client_mock, None, client)
     await hass.async_block_till_done()
     unsub()
 
@@ -4365,9 +4370,10 @@ async def test_server_sock_buffer_size(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling the socket buffer size fails."""
-    assert setup_with_birth_msg_client_mock.connect.call_count == 1
+    mqtt_client_mock = setup_with_birth_msg_client_mock
+    assert mqtt_client_mock.connect.call_count == 1
 
-    setup_with_birth_msg_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_SUCCESS
+    mqtt_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_SUCCESS
 
     client, server = socket.socketpair(
         family=socket.AF_UNIX, type=socket.SOCK_STREAM, proto=0
@@ -4375,12 +4381,8 @@ async def test_server_sock_buffer_size(
     client.setblocking(False)
     server.setblocking(False)
     with patch.object(client, "setsockopt", side_effect=OSError("foo")):
-        setup_with_birth_msg_client_mock.on_socket_open(
-            setup_with_birth_msg_client_mock, None, client
-        )
-        setup_with_birth_msg_client_mock.on_socket_register_write(
-            setup_with_birth_msg_client_mock, None, client
-        )
+        mqtt_client_mock.on_socket_open(mqtt_client_mock, None, client)
+        mqtt_client_mock.on_socket_register_write(mqtt_client_mock, None, client)
         await hass.async_block_till_done()
     assert "Unable to increase the socket buffer size" in caplog.text
 
@@ -4391,9 +4393,10 @@ async def test_server_sock_buffer_size_with_websocket(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling the socket buffer size fails."""
-    assert setup_with_birth_msg_client_mock.connect.call_count == 1
+    mqtt_client_mock = setup_with_birth_msg_client_mock
+    assert mqtt_client_mock.connect.call_count == 1
 
-    setup_with_birth_msg_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_SUCCESS
+    mqtt_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_SUCCESS
 
     client, server = socket.socketpair(
         family=socket.AF_UNIX, type=socket.SOCK_STREAM, proto=0
@@ -4408,11 +4411,9 @@ async def test_server_sock_buffer_size_with_websocket(
     wrapped_socket = FakeWebsocket(client, "127.0.01", 1, False, "/", None)
 
     with patch.object(client, "setsockopt", side_effect=OSError("foo")):
-        setup_with_birth_msg_client_mock.on_socket_open(
-            setup_with_birth_msg_client_mock, None, wrapped_socket
-        )
-        setup_with_birth_msg_client_mock.on_socket_register_write(
-            setup_with_birth_msg_client_mock, None, wrapped_socket
+        mqtt_client_mock.on_socket_open(mqtt_client_mock, None, wrapped_socket)
+        mqtt_client_mock.on_socket_register_write(
+            mqtt_client_mock, None, wrapped_socket
         )
         await hass.async_block_till_done()
     assert "Unable to increase the socket buffer size" in caplog.text
@@ -4425,27 +4426,24 @@ async def test_client_sock_failure_after_connect(
     record_calls: MessageCallbackType,
 ) -> None:
     """Test handling the socket connected and disconnected."""
-    assert setup_with_birth_msg_client_mock.connect.call_count == 1
+    mqtt_client_mock = setup_with_birth_msg_client_mock
+    assert mqtt_client_mock.connect.call_count == 1
 
-    setup_with_birth_msg_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_SUCCESS
+    mqtt_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_SUCCESS
 
     client, server = socket.socketpair(
         family=socket.AF_UNIX, type=socket.SOCK_STREAM, proto=0
     )
     client.setblocking(False)
     server.setblocking(False)
-    setup_with_birth_msg_client_mock.on_socket_open(
-        setup_with_birth_msg_client_mock, None, client
-    )
-    setup_with_birth_msg_client_mock.on_socket_register_writer(
-        setup_with_birth_msg_client_mock, None, client
-    )
+    mqtt_client_mock.on_socket_open(mqtt_client_mock, None, client)
+    mqtt_client_mock.on_socket_register_writer(mqtt_client_mock, None, client)
     await hass.async_block_till_done()
 
-    setup_with_birth_msg_client_mock.loop_write.side_effect = OSError("foo")
+    mqtt_client_mock.loop_write.side_effect = OSError("foo")
     client.close()  # close the client socket out from under the client
 
-    assert setup_with_birth_msg_client_mock.connect.call_count == 1
+    assert mqtt_client_mock.connect.call_count == 1
     unsub = await mqtt.async_subscribe(hass, "test-topic", record_calls)
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
     await hass.async_block_till_done()
@@ -4461,27 +4459,20 @@ async def test_loop_write_failure(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling the socket connected and disconnected."""
-    assert setup_with_birth_msg_client_mock.connect.call_count == 1
+    mqtt_client_mock = setup_with_birth_msg_client_mock
+    assert mqtt_client_mock.connect.call_count == 1
 
-    setup_with_birth_msg_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_SUCCESS
+    mqtt_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_SUCCESS
 
     client, server = socket.socketpair(
         family=socket.AF_UNIX, type=socket.SOCK_STREAM, proto=0
     )
     client.setblocking(False)
     server.setblocking(False)
-    setup_with_birth_msg_client_mock.on_socket_open(
-        setup_with_birth_msg_client_mock, None, client
-    )
-    setup_with_birth_msg_client_mock.on_socket_register_write(
-        setup_with_birth_msg_client_mock, None, client
-    )
-    setup_with_birth_msg_client_mock.loop_write.return_value = (
-        paho_mqtt.MQTT_ERR_CONN_LOST
-    )
-    setup_with_birth_msg_client_mock.loop_read.return_value = (
-        paho_mqtt.MQTT_ERR_CONN_LOST
-    )
+    mqtt_client_mock.on_socket_open(mqtt_client_mock, None, client)
+    mqtt_client_mock.on_socket_register_write(mqtt_client_mock, None, client)
+    mqtt_client_mock.loop_write.return_value = paho_mqtt.MQTT_ERR_CONN_LOST
+    mqtt_client_mock.loop_read.return_value = paho_mqtt.MQTT_ERR_CONN_LOST
 
     # Fill up the outgoing buffer to ensure that loop_write
     # and loop_read are called that next time control is
