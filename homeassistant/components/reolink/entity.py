@@ -112,21 +112,30 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
         super().__init__(reolink_data, coordinator)
 
         self._channel = channel
-        self._attr_unique_id = (
-            f"{self._host.unique_id}_{channel}_{self.entity_description.key}"
-        )
+        if self._host.api.supported(channel, "UID"):
+            self._attr_unique_id = f"{self._host.unique_id}_{self._host.api.camera_uid(channel)}_{self.entity_description.key}"
+        else:
+            self._attr_unique_id = (
+                f"{self._host.unique_id}_{channel}_{self.entity_description.key}"
+            )
 
         dev_ch = channel
         if self._host.api.model in DUAL_LENS_MODELS:
             dev_ch = 0
 
         if self._host.api.is_nvr:
+            if self._host.api.supported(dev_ch, "UID"):
+                dev_id = f"{self._host.unique_id}_{self._host.api.camera_uid(dev_ch)}"
+            else:
+                dev_id = f"{self._host.unique_id}_ch{dev_ch}"
+
             self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, f"{self._host.unique_id}_ch{dev_ch}")},
+                identifiers={(DOMAIN, dev_id)},
                 via_device=(DOMAIN, self._host.unique_id),
                 name=self._host.api.camera_name(dev_ch),
                 model=self._host.api.camera_model(dev_ch),
                 manufacturer=self._host.api.manufacturer,
+                hw_version=self._host.api.camera_hardware_version(dev_ch),
                 sw_version=self._host.api.camera_sw_version(dev_ch),
                 serial_number=self._host.api.camera_uid(dev_ch),
                 configuration_url=self._conf_url,

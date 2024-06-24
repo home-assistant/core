@@ -1,5 +1,13 @@
 {
   "entity": {
+    "button": {
+      "co2_calibration": {
+        "default": "mdi:molecule-co2"
+      },
+      "led_bar_test": {
+        "default": "mdi:lightbulb-on-outline"
+      }
+    },
     "sensor": {
       "total_volatile_organic_component_index": {
         "default": "mdi:molecule"

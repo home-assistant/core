@@ -11,9 +11,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.auth.providers.legacy_api_password import (
-    LegacyApiPasswordAuthProvider,
-)
+from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components import http
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.http import KEY_HASS
@@ -115,7 +113,7 @@ async def test_not_log_password(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
-    legacy_auth: LegacyApiPasswordAuthProvider,
+    local_auth: HassAuthProvider,
 ) -> None:
     """Test access with password doesn't get logged."""
     assert await async_setup_component(hass, "api", {"http": {}})

@@ -12,10 +12,9 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from .const import HOST, NAME
 
-NAME = "Solarlog test 1 2 3"
-HOST = "http://1.1.1.1"
+from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -56,7 +55,7 @@ def init_config_flow(hass):
 @pytest.mark.usefixtures("test_connect")
 async def test_user(
     hass: HomeAssistant,
-    mock_solarlog: AsyncMock,
+    mock_solarlog_connector: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test user config."""
@@ -89,7 +88,7 @@ async def test_form_exceptions(
     hass: HomeAssistant,
     exception: Exception,
     error: dict[str, str],
-    mock_solarlog: AsyncMock,
+    mock_solarlog_connector: AsyncMock,
 ) -> None:
     """Test we can handle Form exceptions."""
     flow = init_config_flow(hass)
@@ -98,7 +97,7 @@ async def test_form_exceptions(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    mock_solarlog.return_value.test_connection.side_effect = exception
+    mock_solarlog_connector.test_connection.side_effect = exception
 
     # tests with connection error
     result = await flow.async_step_user(
@@ -110,7 +109,7 @@ async def test_form_exceptions(
     assert result["step_id"] == "user"
     assert result["errors"] == error
 
-    mock_solarlog.return_value.test_connection.side_effect = None
+    mock_solarlog_connector.test_connection.side_effect = None
 
     # tests with all provided
     result = await flow.async_step_user(
@@ -189,3 +188,37 @@ async def test_abort_if_already_setup(hass: HomeAssistant, test_connect) -> None
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "solarlog_test_1_2_3"
     assert result["data"][CONF_HOST] == "http://2.2.2.2"
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test config flow options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="solarlog_test_1_2_3",
+        data={
+            CONF_HOST: HOST,
+            "extended_data": False,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": entry.entry_id,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"extended_data": True}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert len(mock_setup_entry.mock_calls) == 1

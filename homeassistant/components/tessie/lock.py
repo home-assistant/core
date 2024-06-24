@@ -35,7 +35,7 @@ async def async_setup_entry(
     """Set up the Tessie sensor platform from a config entry."""
     data = entry.runtime_data
 
-    entities = [
+    entities: list[TessieEntity] = [
         klass(vehicle)
         for klass in (TessieLockEntity, TessieCableLockEntity)
         for vehicle in data.vehicles

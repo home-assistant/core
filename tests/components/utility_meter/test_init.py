@@ -444,10 +444,12 @@ async def test_setup_and_remove_config_entry(
     assert len(entity_registry.entities) == 0
 
 
-async def test_device_cleaning(hass: HomeAssistant) -> None:
+async def test_device_cleaning(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test for source entity device for Utility Meter."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
 
     # Source entity device config entry
     source_config_entry = MockConfigEntry()
