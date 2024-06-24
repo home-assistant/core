@@ -46,10 +46,7 @@ async def async_setup_entry(
     unique_id = config_entry.unique_id
     assert unique_id is not None
 
-    async_add_entities(
-        [AemetWeather(name, unique_id, weather_coordinator)],
-        False,
-    )
+    async_add_entities([AemetWeather(name, unique_id, weather_coordinator)])
 
 
 class AemetWeather(
