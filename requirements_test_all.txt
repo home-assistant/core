@@ -347,7 +347,7 @@ aioslimproto==3.0.0
 aiosolaredge==0.2.0
 
 # homeassistant.components.steamist
-aiosteamist==0.3.2
+aiosteamist==1.0.0
 
 # homeassistant.components.switcher_kis
 aioswitcher==3.4.3
@@ -509,7 +509,7 @@ bluecurrent-api==1.2.3
 bluemaestro-ble==0.2.3
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.19.2
+bluetooth-adapters==0.19.3
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.4.2
