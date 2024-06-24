@@ -76,12 +76,12 @@ type _StateDataType = list[tuple[_MqttMessageType, str | None, _AttributesType |
 def help_all_subscribe_calls(mqtt_client_mock: MqttMockPahoClient) -> list[Any]:
     """Test of a call."""
     all_calls = []
-    for calls in mqtt_client_mock.subscribe.mock_calls:
-        if hasattr(calls, "args"):
-            all_calls.append(calls[1])
+    for call_l1 in mqtt_client_mock.subscribe.mock_calls:
+        if isinstance(call_l1[1][0], list):
+            for call_l2 in call_l1[1]:
+                all_calls.extend(call_l2)
         else:
-            for call in calls[1]:
-                all_calls.extend(call)
+            all_calls.append(call_l1[1])
     return all_calls
 
 
