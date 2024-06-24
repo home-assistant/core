@@ -17,7 +17,8 @@ import jwt
 import pytest
 from typing_extensions import AsyncGenerator
 
-from homeassistant.components.cloud import CloudClient, const, prefs
+from homeassistant.components.cloud import CloudClient, prefs
+from homeassistant.components.cloud.const import DATA_CLOUD
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -223,7 +224,7 @@ async def mock_cloud_setup(hass):
 @pytest.fixture
 def mock_cloud_login(hass, mock_cloud_setup):
     """Mock cloud is logged in."""
-    hass.data[const.DOMAIN].id_token = jwt.encode(
+    hass.data[DATA_CLOUD].id_token = jwt.encode(
         {
             "email": "hello@home-assistant.io",
             "custom:sub-exp": "2300-01-03",
@@ -231,7 +232,7 @@ def mock_cloud_login(hass, mock_cloud_setup):
         },
         "test",
     )
-    with patch.object(hass.data[const.DOMAIN].auth, "async_check_token"):
+    with patch.object(hass.data[DATA_CLOUD].auth, "async_check_token"):
         yield
 
 
@@ -248,7 +249,7 @@ def mock_auth_fixture():
 @pytest.fixture
 def mock_expired_cloud_login(hass, mock_cloud_setup):
     """Mock cloud is logged in."""
-    hass.data[const.DOMAIN].id_token = jwt.encode(
+    hass.data[DATA_CLOUD].id_token = jwt.encode(
         {
             "email": "hello@home-assistant.io",
             "custom:sub-exp": "2018-01-01",
