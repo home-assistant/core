@@ -2,18 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 from enum import StrEnum
-import logging
-from time import monotonic
 
-from pyloadapi import (
-    CannotConnect,
-    InvalidAuth,
-    ParserError,
-    PyLoadAPI,
-    StatusServerResponse,
-)
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -40,13 +30,11 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PyLoadConfigEntry
 from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN, ISSUE_PLACEHOLDER
-
-_LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(seconds=15)
+from .coordinator import PyLoadCoordinator
 
 
 class PyLoadSensorEntity(StrEnum):
@@ -92,7 +80,6 @@ async def async_setup_platform(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=config
     )
-    _LOGGER.debug(result)
     if (
         result.get("type") == FlowResultType.CREATE_ENTRY
         or result.get("reason") == "already_configured"
@@ -132,91 +119,45 @@ async def async_setup_entry(
 ) -> None:
     """Set up the pyLoad sensors."""
 
-    pyloadapi = entry.runtime_data
+    coordinator = entry.runtime_data
 
     async_add_entities(
         (
             PyLoadSensor(
-                api=pyloadapi,
+                coordinator=coordinator,
                 entity_description=description,
-                client_name=entry.title,
-                entry_id=entry.entry_id,
             )
             for description in SENSOR_DESCRIPTIONS
         ),
-        True,
     )
 
 
-class PyLoadSensor(SensorEntity):
+class PyLoadSensor(CoordinatorEntity[PyLoadCoordinator], SensorEntity):
     """Representation of a pyLoad sensor."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        api: PyLoadAPI,
+        coordinator: PyLoadCoordinator,
         entity_description: SensorEntityDescription,
-        client_name: str,
-        entry_id: str,
     ) -> None:
         """Initialize a new pyLoad sensor."""
-        self.type = entity_description.key
-        self.api = api
-        self._attr_unique_id = f"{entry_id}_{entity_description.key}"
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_{entity_description.key}"
+        )
         self.entity_description = entity_description
-        self._attr_available = False
-        self.data: StatusServerResponse
         self.device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="PyLoad Team",
             model="pyLoad",
-            configuration_url=api.api_url,
-            identifiers={(DOMAIN, entry_id)},
+            configuration_url=coordinator.pyload.api_url,
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+            sw_version=coordinator.version,
         )
-
-    async def async_update(self) -> None:
-        """Update state of sensor."""
-        start = monotonic()
-        try:
-            status = await self.api.get_status()
-        except InvalidAuth:
-            _LOGGER.info("Authentication failed, trying to reauthenticate")
-            try:
-                await self.api.login()
-            except InvalidAuth:
-                _LOGGER.error(
-                    "Authentication failed for %s, check your login credentials",
-                    self.api.username,
-                )
-                return
-            else:
-                _LOGGER.info(
-                    "Unable to retrieve data due to cookie expiration "
-                    "but re-authentication was successful"
-                )
-                return
-            finally:
-                self._attr_available = False
-
-        except CannotConnect:
-            _LOGGER.debug("Unable to connect and retrieve data from pyLoad API")
-            self._attr_available = False
-            return
-        except ParserError:
-            _LOGGER.error("Unable to parse data from pyLoad API")
-            self._attr_available = False
-            return
-        else:
-            self.data = status
-            _LOGGER.debug(
-                "Finished fetching pyload data in %.3f seconds",
-                monotonic() - start,
-            )
-
-        self._attr_available = True
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.data.get(self.entity_description.key)
+        return getattr(self.coordinator.data, self.entity_description.key)
