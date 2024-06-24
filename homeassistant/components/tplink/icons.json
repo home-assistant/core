@@ -51,6 +51,9 @@
         "state": {
           "on": "mdi:transition"
         }
+      },
+      "frost_protection": {
+        "default": "mdi:snowflake-thermometer"
       }
     },
     "sensor": {
