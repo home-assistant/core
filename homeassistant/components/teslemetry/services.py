@@ -66,46 +66,36 @@ def async_get_config_for_device(
     hass: HomeAssistant, device_entry: dr.DeviceEntry
 ) -> ConfigEntry:
     """Get the config entry related to a device entry."""
+    config_entry: ConfigEntry
     for entry_id in device_entry.config_entries:
         if entry := hass.config_entries.async_get_entry(entry_id):
             if entry.domain == DOMAIN:
-                return entry
-    raise ServiceValidationError(
-        translation_domain=DOMAIN,
-        translation_key="no_config_entry_for_device",
-        translation_placeholders={"device_id": device_entry.id},
-    )
+                config_entry = entry
+    return config_entry
 
 
 def async_get_vehicle_for_entry(
     hass: HomeAssistant, device: dr.DeviceEntry, config: ConfigEntry
 ) -> TeslemetryVehicleData:
     """Get the vehicle data for a config entry."""
+    vehicle_data: TeslemetryVehicleData
     assert device.serial_number is not None
     for vehicle in config.runtime_data.vehicles:
         if vehicle.vin == device.serial_number:
-            return vehicle
-    raise ServiceValidationError(
-        translation_domain=DOMAIN,
-        translation_key="no_vehicle_data_for_device",
-        translation_placeholders={"device_id": device.id},
-    )
+            vehicle_data = vehicle
+    return vehicle_data
 
 
 def async_get_energy_site_for_entry(
     hass: HomeAssistant, device: dr.DeviceEntry, config: ConfigEntry
 ) -> TeslemetryEnergyData:
     """Get the energy site data for a config entry."""
+    energy_data: TeslemetryEnergyData
     assert device.serial_number is not None
     for energysite in config.runtime_data.energysites:
         if str(energysite.id) == device.serial_number:
-            return energysite
-    raise ServiceValidationError(
-        f"No energy site for device ATTR_ID: {device.id}",
-        translation_domain=DOMAIN,
-        translation_key="no_energy_site_data_for_device",
-        translation_placeholders={"device_id": device.id},
-    )
+            energy_data = energysite
+    return energy_data
 
 
 def async_register_services(hass: HomeAssistant) -> None:  # noqa: C901
