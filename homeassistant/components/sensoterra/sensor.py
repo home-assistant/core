@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
+
+from sensoterra.probe import Probe, Sensor
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -21,7 +25,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SensoterraConfigEntry
-from .const import CONFIGURATION_URL, DOMAIN
+from .const import CONFIGURATION_URL, DOMAIN, SENSOR_EXPIRATION_DAYS
 from .coordinator import SensoterraCoordinator, SensoterraSensor
 from .models import ProbeSensorType
 
@@ -77,9 +81,11 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     @callback
-    def _async_add_devices(devices: dict[str, SensoterraSensor]) -> None:
+    def _async_add_devices(st_sensors: list[SensoterraSensor]) -> None:
         async_add_devices(
-            SensoterraEntity(coordinator, sensor) for sensor in devices.values()
+            SensoterraEntity(coordinator, st_sensor.probe, st_sensor.sensor)
+            for st_sensor in st_sensors
+            if st_sensor.sensor.type.lower() in SENSORS
         )
 
     coordinator.add_devices_callback = _async_add_devices
@@ -95,7 +101,8 @@ class SensoterraEntity(CoordinatorEntity[SensoterraCoordinator], SensorEntity):
     def __init__(
         self,
         coordinator: SensoterraCoordinator,
-        sensor: SensoterraSensor,
+        probe: Probe,
+        sensor: Sensor,
     ) -> None:
         """Initialize entity."""
         super().__init__(coordinator, context=sensor.id)
@@ -105,23 +112,28 @@ class SensoterraEntity(CoordinatorEntity[SensoterraCoordinator], SensorEntity):
             "depth": "?" if sensor.depth is None else str(sensor.depth)
         }
 
-        self.entity_description = SENSORS[sensor.type]
+        self.entity_description = SENSORS[ProbeSensorType[sensor.type]]
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, sensor.serial)},
-            name=sensor.name,
-            model=sensor.sku,
+            identifiers={(DOMAIN, probe.serial)},
+            name=probe.name,
+            model=probe.sku,
             manufacturer="Sensoterra",
-            serial_number=sensor.serial,
-            suggested_area=sensor.location,
+            serial_number=probe.serial,
+            suggested_area=probe.location,
             configuration_url=CONFIGURATION_URL,
         )
 
     @property
     def native_value(self) -> StateType:
         """Return the sensor value reported by the API."""
-        if self._attr_unique_id is None:
+        sensor = self.coordinator.get_sensor(self._attr_unique_id)
+        if sensor is None:
             return None
-        if self._attr_unique_id not in self.coordinator.data:
+
+        # Expire sensor if no update within the last few days.
+        expiration = datetime.now(UTC) - timedelta(days=SENSOR_EXPIRATION_DAYS)
+        if sensor.timestamp is None or sensor.timestamp < expiration:
             return None
-        return self.coordinator.data[self._attr_unique_id].value
+
+        return sensor.value  # type: ignore[no-any-return]
