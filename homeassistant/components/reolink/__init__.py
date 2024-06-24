@@ -134,7 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     # If camera WAN blocked, firmware check fails and takes long, do not prevent setup
     config_entry.async_create_task(hass, firmware_coordinator.async_refresh())
-    await asyncio.sleep(0.01) # needed to pass tests....
+    await asyncio.sleep(0.01)  # needed to pass tests....
     # Fetch initial data so we have data when entities subscribe
     try:
         await device_coordinator.async_config_entry_first_refresh()
