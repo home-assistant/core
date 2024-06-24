@@ -22,7 +22,6 @@
       "url_error": "There was an issue parsing the Account URL"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
