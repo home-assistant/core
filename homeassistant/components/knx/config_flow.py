@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import AsyncGenerator
 from typing import Any, Final
 
+from typing_extensions import AsyncGenerator
 import voluptuous as vol
 from xknx import XKNX
 from xknx.exceptions.exception import (
@@ -118,7 +118,7 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
         self._tunnel_endpoints: list[XMLInterface] = []
 
         self._gatewayscanner: GatewayScanner | None = None
-        self._async_scan_gen: AsyncGenerator[GatewayDescriptor, None] | None = None
+        self._async_scan_gen: AsyncGenerator[GatewayDescriptor] | None = None
 
     @abstractmethod
     def finish_flow(self) -> ConfigFlowResult:
@@ -332,6 +332,7 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
             self.initial_data.get(CONF_KNX_CONNECTION_TYPE)
             in CONF_KNX_TUNNELING_TYPE_LABELS
         )
+        ip_address: str | None
         if (  # initial attempt on ConfigFlow or coming from automatic / routing
             (isinstance(self, ConfigFlow) or not _reconfiguring_existing_tunnel)
             and not user_input

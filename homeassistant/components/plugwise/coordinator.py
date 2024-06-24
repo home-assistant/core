@@ -19,7 +19,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_USERNAME, DOMAIN, LOGGER
+from .const import DEFAULT_PORT, DEFAULT_USERNAME, DOMAIN, LOGGER
 
 
 class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
@@ -54,14 +54,13 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
             timeout=30,
             websession=async_get_clientsession(hass, verify_ssl=False),
         )
+        self._current_devices: set[str] = set()
+        self.new_devices: set[str] = set()
 
     async def _connect(self) -> None:
         """Connect to the Plugwise Smile."""
         self._connected = await self.api.connect()
         self.api.get_all_devices()
-        self.update_interval = DEFAULT_SCAN_INTERVAL.get(
-            str(self.api.smile_type), timedelta(seconds=60)
-        )
 
     async def _async_update_data(self) -> PlugwiseData:
         """Fetch data from Plugwise."""
@@ -81,4 +80,8 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
             raise ConfigEntryError("Device with unsupported firmware") from err
         except ConnectionFailedError as err:
             raise UpdateFailed("Failed to connect to the Plugwise Smile") from err
+        else:
+            self.new_devices = set(data.devices) - self._current_devices
+            self._current_devices = set(data.devices)
+
         return data

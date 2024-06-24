@@ -1,8 +1,12 @@
 """Constants for the Motionblinds Bluetooth integration."""
 
+ATTR_BATTERY = "battery"
+ATTR_CALIBRATION = "calibration"
 ATTR_CONNECT = "connect"
+ATTR_CONNECTION = "connection"
 ATTR_DISCONNECT = "disconnect"
 ATTR_FAVORITE = "favorite"
+ATTR_SIGNAL_STRENGTH = "signal_strength"
 ATTR_SPEED = "speed"
 
 CONF_LOCAL_NAME = "local_name"
@@ -19,3 +23,6 @@ ERROR_NO_DEVICES_FOUND = "no_devices_found"
 ICON_VERTICAL_BLIND = "mdi:blinds-vertical-closed"
 
 MANUFACTURER = "Motionblinds"
+
+OPTION_DISCONNECT_TIME = "disconnect_time"
+OPTION_PERMANENT_CONNECTION = "permanent_connection"

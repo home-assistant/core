@@ -450,7 +450,6 @@ async def test_service_response_data_errors(
 
     with pytest.raises(vol.Invalid, match=expected_error):
         await script_obj.async_run(context=context)
-        await hass.async_block_till_done()
 
 
 async def test_data_template_with_templated_key(hass: HomeAssistant) -> None:
@@ -4903,15 +4902,15 @@ async def test_script_mode_queued_cancel(hass: HomeAssistant) -> None:
         assert script_obj.is_running
         assert script_obj.runs == 2
 
+        task2.cancel()
         with pytest.raises(asyncio.CancelledError):
-            task2.cancel()
             await task2
 
         assert script_obj.is_running
         assert script_obj.runs == 2
 
+        task1.cancel()
         with pytest.raises(asyncio.CancelledError):
-            task1.cancel()
             await task1
 
         assert not script_obj.is_running

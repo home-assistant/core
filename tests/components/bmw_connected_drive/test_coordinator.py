@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from bimmer_connected.models import MyBMWAPIError, MyBMWAuthError
 from freezegun.api import FrozenDateTimeFactory
-import respx
+import pytest
 
 from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
 from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
@@ -18,7 +18,8 @@ from . import FIXTURE_CONFIG_ENTRY
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_update_success(hass: HomeAssistant, bmw_fixture: respx.Router) -> None:
+@pytest.mark.usefixtures("bmw_fixture")
+async def test_update_success(hass: HomeAssistant) -> None:
     """Test the reauth form."""
     config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
     config_entry.add_to_hass(hass)
@@ -32,8 +33,10 @@ async def test_update_success(hass: HomeAssistant, bmw_fixture: respx.Router) ->
     )
 
 
+@pytest.mark.usefixtures("bmw_fixture")
 async def test_update_failed(
-    hass: HomeAssistant, bmw_fixture: respx.Router, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the reauth form."""
     config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
@@ -59,8 +62,10 @@ async def test_update_failed(
     assert isinstance(coordinator.last_exception, UpdateFailed) is True
 
 
+@pytest.mark.usefixtures("bmw_fixture")
 async def test_update_reauth(
-    hass: HomeAssistant, bmw_fixture: respx.Router, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the reauth form."""
     config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
@@ -96,10 +101,9 @@ async def test_update_reauth(
     assert isinstance(coordinator.last_exception, ConfigEntryAuthFailed) is True
 
 
+@pytest.mark.usefixtures("bmw_fixture")
 async def test_init_reauth(
     hass: HomeAssistant,
-    bmw_fixture: respx.Router,
-    freezer: FrozenDateTimeFactory,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the reauth form."""

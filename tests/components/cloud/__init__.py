@@ -69,7 +69,7 @@ async def mock_cloud(hass, config=None):
         await cloud_inst.initialize()
 
 
-def mock_cloud_prefs(hass, prefs={}):
+def mock_cloud_prefs(hass, prefs):
     """Fixture for cloud component."""
     prefs_to_set = {
         const.PREF_ALEXA_SETTINGS_VERSION: cloud_prefs.ALEXA_SETTINGS_VERSION,

@@ -119,17 +119,17 @@ async def _assert_contexts(client, next_id, contexts, domain=None, item_id=None)
         ("script", "sequence", [set(), set()], [UNDEFINED, UNDEFINED], "id", []),
     ],
 )
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_get_trace(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     domain,
     prefix,
     extra_trace_keys,
     trigger,
     context_key,
     condition_results,
-    enable_custom_integrations: None,
 ) -> None:
     """Test tracing a script or automation."""
     await async_setup_component(hass, "homeassistant", {})
@@ -425,7 +425,10 @@ async def test_get_trace(
 
 @pytest.mark.parametrize("domain", ["automation", "script"])
 async def test_restore_traces(
-    hass: HomeAssistant, hass_storage: dict[str, Any], hass_ws_client, domain
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_ws_client: WebSocketGenerator,
+    domain: str,
 ) -> None:
     """Test restored traces."""
     hass.set_state(CoreState.not_running)
@@ -595,9 +598,9 @@ async def test_trace_overflow(
 async def test_restore_traces_overflow(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
-    hass_ws_client,
-    domain,
-    num_restored_moon_traces,
+    hass_ws_client: WebSocketGenerator,
+    domain: str,
+    num_restored_moon_traces: int,
 ) -> None:
     """Test restored traces are evicted first."""
     hass.set_state(CoreState.not_running)
@@ -675,10 +678,10 @@ async def test_restore_traces_overflow(
 async def test_restore_traces_late_overflow(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
-    hass_ws_client,
-    domain,
-    num_restored_moon_traces,
-    restored_run_id,
+    hass_ws_client: WebSocketGenerator,
+    domain: str,
+    num_restored_moon_traces: int,
+    restored_run_id: str,
 ) -> None:
     """Test restored traces are evicted first."""
     hass.set_state(CoreState.not_running)
@@ -1570,10 +1573,10 @@ async def test_script_mode_2(
     assert trace["script_execution"] == "finished"
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_trace_blueprint_automation(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    enable_custom_integrations: None,
 ) -> None:
     """Test trace of blueprint automation."""
     await async_setup_component(hass, "homeassistant", {})

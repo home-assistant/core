@@ -85,12 +85,11 @@ async def test_create_area_with_name_already_in_use(
 ) -> None:
     """Make sure that we can't create an area with a name already in use."""
     update_events = async_capture_events(hass, ar.EVENT_AREA_REGISTRY_UPDATED)
-    area1 = area_registry.async_create("mock")
+    area_registry.async_create("mock")
 
     with pytest.raises(ValueError) as e_info:
-        area2 = area_registry.async_create("mock")
-        assert area1 != area2
-        assert e_info == "The name mock 2 (mock2) is already in use"
+        area_registry.async_create("mock")
+    assert str(e_info.value) == "The name mock (mock) is already in use"
 
     await hass.async_block_till_done()
 
@@ -226,7 +225,7 @@ async def test_update_area_with_name_already_in_use(
 
     with pytest.raises(ValueError) as e_info:
         area_registry.async_update(area1.id, name="mock2")
-        assert e_info == "The name mock 2 (mock2) is already in use"
+    assert str(e_info.value) == "The name mock2 (mock2) is already in use"
 
     assert area1.name == "mock1"
     assert area2.name == "mock2"
@@ -242,7 +241,7 @@ async def test_update_area_with_normalized_name_already_in_use(
 
     with pytest.raises(ValueError) as e_info:
         area_registry.async_update(area1.id, name="mock2")
-        assert e_info == "The name mock 2 (mock2) is already in use"
+    assert str(e_info.value) == "The name mock2 (mock2) is already in use"
 
     assert area1.name == "mock1"
     assert area2.name == "Moc k2"

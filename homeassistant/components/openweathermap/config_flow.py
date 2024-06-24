@@ -30,7 +30,7 @@ from .const import (
     LANGUAGES,
     OWM_MODES,
 )
-from .utils import validate_api_key
+from .utils import build_data_and_options, validate_api_key
 
 
 class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -64,8 +64,9 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             if not errors:
+                data, options = build_data_and_options(user_input)
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
+                    title=user_input[CONF_NAME], data=data, options=options
                 )
 
         schema = vol.Schema(

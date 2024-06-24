@@ -60,7 +60,9 @@ class KNXNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a notification to knx bus."""
-        migrate_notify_issue(self.hass, DOMAIN, "KNX", "2024.11.0")
+        migrate_notify_issue(
+            self.hass, DOMAIN, "KNX", "2024.11.0", service_name=self._service_name
+        )
         if "target" in kwargs:
             await self._async_send_to_device(message, kwargs["target"])
         else:

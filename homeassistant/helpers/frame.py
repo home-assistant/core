@@ -31,17 +31,17 @@ class IntegrationFrame:
     integration: str
     module: str | None
     relative_filename: str
-    _frame: FrameType
+    frame: FrameType
 
     @cached_property
     def line_number(self) -> int:
         """Return the line number of the frame."""
-        return self._frame.f_lineno
+        return self.frame.f_lineno
 
     @cached_property
     def filename(self) -> str:
         """Return the filename of the frame."""
-        return self._frame.f_code.co_filename
+        return self.frame.f_code.co_filename
 
     @cached_property
     def line(self) -> str:
@@ -119,7 +119,7 @@ def get_integration_frame(exclude_integrations: set | None = None) -> Integratio
         integration=integration,
         module=found_module,
         relative_filename=found_frame.f_code.co_filename[index:],
-        _frame=found_frame,
+        frame=found_frame,
     )
 
 
@@ -218,3 +218,16 @@ def warn_use[_CallableT: Callable](func: _CallableT, what: str) -> _CallableT:
             report(what)
 
     return cast(_CallableT, report_use)
+
+
+def report_non_thread_safe_operation(what: str) -> None:
+    """Report a non-thread safe operation."""
+    report(
+        f"calls {what} from a thread other than the event loop, "
+        "which may cause Home Assistant to crash or data to corrupt. "
+        "For more information, see "
+        "https://developers.home-assistant.io/docs/asyncio_thread_safety/"
+        f"#{what.replace('.', '')}",
+        error_if_core=True,
+        error_if_integration=True,
+    )

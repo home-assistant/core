@@ -1236,7 +1236,7 @@ async def test_group_mixed_domains_on(hass: HomeAssistant) -> None:
     hass.states.async_set("binary_sensor.alexander_garage_side_door_open", "on")
     hass.states.async_set("cover.small_garage_door", "open")
 
-    for domain in ["lock", "binary_sensor", "cover"]:
+    for domain in ("lock", "binary_sensor", "cover"):
         assert await async_setup_component(hass, domain, {})
     assert await async_setup_component(
         hass,
@@ -1261,7 +1261,7 @@ async def test_group_mixed_domains_off(hass: HomeAssistant) -> None:
     hass.states.async_set("binary_sensor.alexander_garage_side_door_open", "off")
     hass.states.async_set("cover.small_garage_door", "closed")
 
-    for domain in ["lock", "binary_sensor", "cover"]:
+    for domain in ("lock", "binary_sensor", "cover"):
         assert await async_setup_component(hass, domain, {})
     assert await async_setup_component(
         hass,
@@ -1487,28 +1487,67 @@ async def test_group_vacuum_on(hass: HomeAssistant) -> None:
     assert hass.states.get("group.group_zero").state == STATE_ON
 
 
-async def test_device_tracker_not_home(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("entity_state_list", "group_state"),
+    [
+        (
+            {
+                "device_tracker.one": "not_home",
+                "device_tracker.two": "not_home",
+                "device_tracker.three": "not_home",
+            },
+            "not_home",
+        ),
+        (
+            {
+                "device_tracker.one": "home",
+                "device_tracker.two": "not_home",
+                "device_tracker.three": "not_home",
+            },
+            "home",
+        ),
+        (
+            {
+                "device_tracker.one": "home",
+                "device_tracker.two": "elsewhere",
+                "device_tracker.three": "not_home",
+            },
+            "home",
+        ),
+        (
+            {
+                "device_tracker.one": "not_home",
+                "device_tracker.two": "elsewhere",
+                "device_tracker.three": "not_home",
+            },
+            "not_home",
+        ),
+    ],
+)
+async def test_device_tracker_or_person_not_home(
+    hass: HomeAssistant,
+    entity_state_list: dict[str, str],
+    group_state: str,
+) -> None:
     """Test group of device_tracker not_home."""
     await async_setup_component(hass, "device_tracker", {})
+    await async_setup_component(hass, "person", {})
     await hass.async_block_till_done()
-    hass.states.async_set("device_tracker.one", "not_home")
-    hass.states.async_set("device_tracker.two", "not_home")
-    hass.states.async_set("device_tracker.three", "not_home")
+    for entity_id, state in entity_state_list.items():
+        hass.states.async_set(entity_id, state)
 
     assert await async_setup_component(
         hass,
         "group",
         {
             "group": {
-                "group_zero": {
-                    "entities": "device_tracker.one, device_tracker.two, device_tracker.three"
-                },
+                "group_zero": {"entities": ", ".join(entity_state_list)},
             }
         },
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("group.group_zero").state == "not_home"
+    assert hass.states.get("group.group_zero").state == group_state
 
 
 async def test_light_removed(hass: HomeAssistant) -> None:

@@ -608,19 +608,22 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
         include_uninitialized: bool,
     ) -> list[_FlowResultT]:
         """Convert a list of FlowHandler to a partial FlowResult that can be serialized."""
-        results = []
-        for flow in flows:
-            if not include_uninitialized and flow.cur_step is None:
-                continue
-            result = self._flow_result(
+        return [
+            self._flow_result(
+                flow_id=flow.flow_id,
+                handler=flow.handler,
+                context=flow.context,
+                step_id=flow.cur_step["step_id"],
+            )
+            if flow.cur_step
+            else self._flow_result(
                 flow_id=flow.flow_id,
                 handler=flow.handler,
                 context=flow.context,
             )
-            if flow.cur_step:
-                result["step_id"] = flow.cur_step["step_id"]
-            results.append(result)
-        return results
+            for flow in flows
+            if include_uninitialized or flow.cur_step is not None
+        ]
 
 
 class FlowHandler(Generic[_FlowResultT, _HandlerT]):

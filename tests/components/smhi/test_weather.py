@@ -13,20 +13,17 @@ from homeassistant.components.smhi.weather import CONDITION_CLASSES, RETRY_TIMEO
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_FORECAST_CONDITION,
+    ATTR_WEATHER_CLOUD_COVERAGE,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_VISIBILITY,
     ATTR_WEATHER_WIND_BEARING,
+    ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
     ATTR_WEATHER_WIND_SPEED_UNIT,
     DOMAIN as WEATHER_DOMAIN,
-    LEGACY_SERVICE_GET_FORECAST,
     SERVICE_GET_FORECASTS,
-)
-from homeassistant.components.weather.const import (
-    ATTR_WEATHER_CLOUD_COVERAGE,
-    ATTR_WEATHER_WIND_GUST_SPEED,
 )
 from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNKNOWN, UnitOfSpeed
 from homeassistant.core import HomeAssistant
@@ -349,7 +346,10 @@ def test_condition_class() -> None:
 
 
 async def test_custom_speed_unit(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, api_response: str
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    api_response: str,
 ) -> None:
     """Test Wind Gust speed with custom unit."""
     uri = APIURL_TEMPLATE.format(
@@ -369,8 +369,7 @@ async def test_custom_speed_unit(
     assert state.name == "test"
     assert state.attributes[ATTR_WEATHER_WIND_GUST_SPEED] == 22.32
 
-    entity_reg = er.async_get(hass)
-    entity_reg.async_update_entity_options(
+    entity_registry.async_update_entity_options(
         state.entity_id,
         WEATHER_DOMAIN,
         {ATTR_WEATHER_WIND_SPEED_UNIT: UnitOfSpeed.METERS_PER_SECOND},
@@ -489,10 +488,7 @@ async def test_forecast_services_lack_of_data(
 
 @pytest.mark.parametrize(
     ("service"),
-    [
-        SERVICE_GET_FORECASTS,
-        LEGACY_SERVICE_GET_FORECAST,
-    ],
+    [SERVICE_GET_FORECASTS],
 )
 async def test_forecast_service(
     hass: HomeAssistant,

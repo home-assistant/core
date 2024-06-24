@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Callable, Coroutine
 from functools import partial
 import logging
@@ -114,13 +115,8 @@ def async_dispatcher_connect[*_Ts](
     This method must be run in the event loop.
     """
     if DATA_DISPATCHER not in hass.data:
-        hass.data[DATA_DISPATCHER] = {}
-
+        hass.data[DATA_DISPATCHER] = defaultdict(dict)
     dispatchers: _DispatcherDataType[*_Ts] = hass.data[DATA_DISPATCHER]
-
-    if signal not in dispatchers:
-        dispatchers[signal] = {}
-
     dispatchers[signal][target] = None
     # Use a partial for the remove since it uses
     # less memory than a full closure since a partial copies

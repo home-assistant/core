@@ -47,7 +47,10 @@ def platforms_from_config(config: list[ConfigType]) -> set[Platform | str]:
 
 
 async def async_forward_entry_setup_and_setup_discovery(
-    hass: HomeAssistant, config_entry: ConfigEntry, platforms: set[Platform | str]
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    platforms: set[Platform | str],
+    late: bool = False,
 ) -> None:
     """Forward the config entry setup to the platforms and set up discovery."""
     mqtt_data = hass.data[DATA_MQTT]

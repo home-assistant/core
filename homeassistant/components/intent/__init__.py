@@ -50,6 +50,7 @@ from .timers import (
     TimerManager,
     TimerStatusIntentHandler,
     UnpauseTimerIntentHandler,
+    async_device_supports_timers,
     async_register_timer_handler,
 )
 
@@ -59,6 +60,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 __all__ = [
     "async_register_timer_handler",
+    "async_device_supports_timers",
     "TimerInfo",
     "TimerEventType",
     "DOMAIN",
@@ -99,7 +101,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             intent.INTENT_TOGGLE,
             HA_DOMAIN,
             SERVICE_TOGGLE,
-            "Toggles a device or entity",
+            description="Toggles a device or entity",
         ),
     )
     intent.async_register(
@@ -344,8 +346,6 @@ class NevermindIntentHandler(intent.IntentHandler):
 class SetPositionIntentHandler(intent.DynamicServiceIntentHandler):
     """Intent handler for setting positions."""
 
-    description = "Sets the position of a device or entity"
-
     def __init__(self) -> None:
         """Create set position handler."""
         super().__init__(
@@ -353,6 +353,8 @@ class SetPositionIntentHandler(intent.DynamicServiceIntentHandler):
             required_slots={
                 ATTR_POSITION: vol.All(vol.Coerce(int), vol.Range(min=0, max=100))
             },
+            description="Sets the position of a device or entity",
+            platforms={COVER_DOMAIN, VALVE_DOMAIN},
         )
 
     def get_domain_and_service(

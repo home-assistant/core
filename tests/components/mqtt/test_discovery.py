@@ -291,9 +291,7 @@ async def test_discovery_with_invalid_integration_info(
     state = hass.states.get("binary_sensor.beer")
 
     assert state is None
-    assert (
-        "Unable to parse origin information from discovery message, got" in caplog.text
-    )
+    assert "Unable to parse origin information from discovery message" in caplog.text
 
 
 async def test_discover_fan(
@@ -829,7 +827,7 @@ async def test_cleanup_device(
     entity_registry: er.EntityRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
-    """Test discvered device is cleaned up when entry removed from device."""
+    """Test discovered device is cleaned up when entry removed from device."""
     mqtt_mock = await mqtt_mock_entry()
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
@@ -874,7 +872,7 @@ async def test_cleanup_device(
 
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_called_once_with(
-        "homeassistant/sensor/bla/config", "", 0, True
+        "homeassistant/sensor/bla/config", None, 0, True
     )
 
 
@@ -978,10 +976,10 @@ async def test_cleanup_device_multiple_config_entries(
         connections={("mac", "12:34:56:AB:CD:EF")}
     )
     assert device_entry is not None
-    assert device_entry.config_entries == {
-        mqtt_config_entry.entry_id,
+    assert device_entry.config_entries == [
         config_entry.entry_id,
-    }
+        mqtt_config_entry.entry_id,
+    ]
     entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
     assert entity_entry is not None
 
@@ -1004,7 +1002,7 @@ async def test_cleanup_device_multiple_config_entries(
     )
     assert device_entry is not None
     entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
-    assert device_entry.config_entries == {config_entry.entry_id}
+    assert device_entry.config_entries == [config_entry.entry_id]
     assert entity_entry is None
 
     # Verify state is removed
@@ -1015,9 +1013,9 @@ async def test_cleanup_device_multiple_config_entries(
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("homeassistant/sensor/bla/config", "", 0, True),
-            call("homeassistant/tag/bla/config", "", 0, True),
-            call("homeassistant/device_automation/bla/config", "", 0, True),
+            call("homeassistant/sensor/bla/config", None, 0, True),
+            call("homeassistant/tag/bla/config", None, 0, True),
+            call("homeassistant/device_automation/bla/config", None, 0, True),
         ],
         any_order=True,
     )
@@ -1072,10 +1070,10 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
         connections={("mac", "12:34:56:AB:CD:EF")}
     )
     assert device_entry is not None
-    assert device_entry.config_entries == {
-        mqtt_config_entry.entry_id,
+    assert device_entry.config_entries == [
         config_entry.entry_id,
-    }
+        mqtt_config_entry.entry_id,
+    ]
     entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
     assert entity_entry is not None
 
@@ -1096,7 +1094,7 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
     )
     assert device_entry is not None
     entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
-    assert device_entry.config_entries == {config_entry.entry_id}
+    assert device_entry.config_entries == [config_entry.entry_id]
     assert entity_entry is None
 
     # Verify state is removed
@@ -1616,11 +1614,11 @@ async def test_clear_config_topic_disabled_entity(
     # Assert all valid discovery topics are cleared
     assert mqtt_mock.async_publish.call_count == 2
     assert (
-        call("homeassistant/sensor/sbfspot_0/sbfspot_12345/config", "", 0, True)
+        call("homeassistant/sensor/sbfspot_0/sbfspot_12345/config", None, 0, True)
         in mqtt_mock.async_publish.mock_calls
     )
     assert (
-        call("homeassistant/sensor/sbfspot_0/sbfspot_12345_1/config", "", 0, True)
+        call("homeassistant/sensor/sbfspot_0/sbfspot_12345_1/config", None, 0, True)
         in mqtt_mock.async_publish.mock_calls
     )
 
