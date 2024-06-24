@@ -314,7 +314,12 @@ async def test_trapezoidal(hass: HomeAssistant) -> None:
     start_time = dt_util.utcnow()
     with freeze_time(start_time) as freezer:
         # Testing a power sensor with non-monotonic intervals and values
-        for time, value in ((20, 10), (30, 30), (40, 5), (50, 0)):
+        for time, value, expected in (
+            (20, 10, 1.67),
+            (30, 30, 5.0),
+            (40, 5, 7.92),
+            (50, 0, 8.33),
+        ):
             freezer.move_to(start_time + timedelta(minutes=time))
             hass.states.async_set(
                 entity_id,
@@ -323,6 +328,8 @@ async def test_trapezoidal(hass: HomeAssistant) -> None:
                 force_update=True,
             )
             await hass.async_block_till_done()
+            state = hass.states.get("sensor.integration")
+            assert round(float(state.state), config["sensor"]["round"]) == expected
 
     state = hass.states.get("sensor.integration")
     assert state is not None
@@ -353,9 +360,15 @@ async def test_left(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     # Testing a power sensor with non-monotonic intervals and values
-    for time, value in ((20, 10), (30, 30), (40, 5), (50, 0)):
-        now = dt_util.utcnow() + timedelta(minutes=time)
-        with freeze_time(now):
+    start_time = dt_util.utcnow()
+    with freeze_time(start_time) as freezer:
+        for time, value, expected in (
+            (20, 10, 0.0),
+            (30, 30, 1.67),
+            (40, 5, 6.67),
+            (50, 0, 7.5),
+        ):
+            freezer.move_to(start_time + timedelta(minutes=time))
             hass.states.async_set(
                 entity_id,
                 value,
@@ -363,6 +376,8 @@ async def test_left(hass: HomeAssistant) -> None:
                 force_update=True,
             )
             await hass.async_block_till_done()
+            state = hass.states.get("sensor.integration")
+            assert round(float(state.state), config["sensor"]["round"]) == expected
 
     state = hass.states.get("sensor.integration")
     assert state is not None
@@ -393,9 +408,15 @@ async def test_right(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     # Testing a power sensor with non-monotonic intervals and values
-    for time, value in ((20, 10), (30, 30), (40, 5), (50, 0)):
-        now = dt_util.utcnow() + timedelta(minutes=time)
-        with freeze_time(now):
+    start_time = dt_util.utcnow()
+    with freeze_time(start_time) as freezer:
+        for time, value, expected in (
+            (20, 10, 3.33),
+            (30, 30, 8.33),
+            (40, 5, 9.17),
+            (50, 0, 9.17),
+        ):
+            freezer.move_to(start_time + timedelta(minutes=time))
             hass.states.async_set(
                 entity_id,
                 value,
@@ -403,6 +424,8 @@ async def test_right(hass: HomeAssistant) -> None:
                 force_update=True,
             )
             await hass.async_block_till_done()
+            state = hass.states.get("sensor.integration")
+            assert round(float(state.state), config["sensor"]["round"]) == expected
 
     state = hass.states.get("sensor.integration")
     assert state is not None
