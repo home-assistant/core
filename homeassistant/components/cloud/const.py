@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.util.hass_dict import HassKey
@@ -14,7 +15,9 @@ if TYPE_CHECKING:
 
 DOMAIN = "cloud"
 DATA_CLOUD: HassKey[Cloud[CloudClient]] = HassKey(DOMAIN)
-DATA_PLATFORMS_SETUP = "cloud_platforms_setup"
+DATA_PLATFORMS_SETUP: HassKey[dict[str, asyncio.Event]] = HassKey(
+    "cloud_platforms_setup"
+)
 REQUEST_TIMEOUT = 10
 
 PREF_ENABLE_ALEXA = "alexa_enabled"

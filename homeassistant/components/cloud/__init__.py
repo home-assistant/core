@@ -374,9 +374,7 @@ def _remote_handle_prefs_updated(cloud: Cloud[CloudClient]) -> None:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    stt_tts_entities_added: asyncio.Event = hass.data[DATA_PLATFORMS_SETUP][
-        "stt_tts_entities_added"
-    ]
+    stt_tts_entities_added = hass.data[DATA_PLATFORMS_SETUP]["stt_tts_entities_added"]
     stt_tts_entities_added.set()
 
     return True

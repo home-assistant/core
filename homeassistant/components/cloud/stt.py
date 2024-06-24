@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import AsyncIterable
 import logging
 
@@ -39,7 +38,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Home Assistant Cloud speech platform via config entry."""
-    stt_platform_loaded: asyncio.Event = hass.data[DATA_PLATFORMS_SETUP][Platform.STT]
+    stt_platform_loaded = hass.data[DATA_PLATFORMS_SETUP][Platform.STT]
     stt_platform_loaded.set()
     cloud = hass.data[DATA_CLOUD]
     async_add_entities([CloudProviderEntity(cloud)])
