@@ -1478,12 +1478,14 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
 
     birth = asyncio.Event()
 
-    async def wait_birth(msg: ReceiveMessage) -> None:
+    @callback
+    def wait_birth(msg: ReceiveMessage) -> None:
         """Handle birth message."""
         birth.set()
 
     wait_unsub = asyncio.Event()
 
+    @callback
     def _mock_unsubscribe(topics: list[str]) -> tuple[int, int]:
         wait_unsub.set()
         return (0, 0)
@@ -1536,12 +1538,14 @@ async def test_mqtt_discovery_unsubscribe_once(
 
     birth = asyncio.Event()
 
-    async def wait_birth(msg: ReceiveMessage) -> None:
+    @callback
+    def wait_birth(msg: ReceiveMessage) -> None:
         """Handle birth message."""
         birth.set()
 
     wait_unsub = asyncio.Event()
 
+    @callback
     def _mock_unsubscribe(topics: list[str]) -> tuple[int, int]:
         wait_unsub.set()
         return (0, 0)
