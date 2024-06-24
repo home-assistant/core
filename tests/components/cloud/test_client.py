@@ -21,7 +21,6 @@ from homeassistant.components.cloud.const import (
 )
 from homeassistant.components.homeassistant.exposed_entities import (
     DATA_EXPOSED_ENTITIES,
-    ExposedEntities,
     async_expose_entity,
 )
 from homeassistant.const import CONTENT_TYPE_JSON, __version__ as HA_VERSION
@@ -262,7 +261,7 @@ async def test_google_config_expose_entity(
     """Test Google config exposing entity method uses latest config."""
 
     # Enable exposing new entities to Google
-    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
     exposed_entities.async_set_expose_new_entities("cloud.google_assistant", True)
 
     # Register a light entity
