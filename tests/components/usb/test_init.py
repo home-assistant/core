@@ -108,6 +108,7 @@ async def test_observer_discovery(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
 
+    # pylint:disable-next=unnecessary-dunder-call
     assert mock_observer.mock_calls == [call.start(), call.__bool__(), call.stop()]
 
 
@@ -771,16 +772,17 @@ def test_get_serial_by_id_no_dir() -> None:
 
 def test_get_serial_by_id() -> None:
     """Test serial by id conversion."""
-    p1 = patch("os.path.isdir", MagicMock(return_value=True))
-    p2 = patch("os.scandir")
 
     def _realpath(path):
         if path is sentinel.matched_link:
             return sentinel.path
         return sentinel.serial_link_path
 
-    p3 = patch("os.path.realpath", side_effect=_realpath)
-    with p1 as is_dir_mock, p2 as scan_mock, p3:
+    with (
+        patch("os.path.isdir", MagicMock(return_value=True)) as is_dir_mock,
+        patch("os.scandir") as scan_mock,
+        patch("os.path.realpath", side_effect=_realpath),
+    ):
         res = usb.get_serial_by_id(sentinel.path)
         assert res is sentinel.path
         assert is_dir_mock.call_count == 1
@@ -1052,3 +1054,109 @@ async def test_resolve_serial_by_id(
     assert len(mock_config_flow.mock_calls) == 1
     assert mock_config_flow.mock_calls[0][1][0] == "test1"
     assert mock_config_flow.mock_calls[0][2]["data"].device == "/dev/serial/by-id/bla"
+
+
+@pytest.mark.parametrize(
+    "ports",
+    [
+        [
+            MagicMock(
+                device="/dev/cu.usbserial-2120",
+                vid=0x3039,
+                pid=0x3039,
+                serial_number=conbee_device.serial_number,
+                manufacturer=conbee_device.manufacturer,
+                description=conbee_device.description,
+            ),
+            MagicMock(
+                device="/dev/cu.usbserial-1120",
+                vid=0x3039,
+                pid=0x3039,
+                serial_number=slae_sh_device.serial_number,
+                manufacturer=slae_sh_device.manufacturer,
+                description=slae_sh_device.description,
+            ),
+            MagicMock(
+                device="/dev/cu.SLAB_USBtoUART",
+                vid=0x3039,
+                pid=0x3039,
+                serial_number=conbee_device.serial_number,
+                manufacturer=conbee_device.manufacturer,
+                description=conbee_device.description,
+            ),
+            MagicMock(
+                device="/dev/cu.SLAB_USBtoUART2",
+                vid=0x3039,
+                pid=0x3039,
+                serial_number=slae_sh_device.serial_number,
+                manufacturer=slae_sh_device.manufacturer,
+                description=slae_sh_device.description,
+            ),
+        ],
+        [
+            MagicMock(
+                device="/dev/cu.SLAB_USBtoUART2",
+                vid=0x3039,
+                pid=0x3039,
+                serial_number=slae_sh_device.serial_number,
+                manufacturer=slae_sh_device.manufacturer,
+                description=slae_sh_device.description,
+            ),
+            MagicMock(
+                device="/dev/cu.SLAB_USBtoUART",
+                vid=0x3039,
+                pid=0x3039,
+                serial_number=conbee_device.serial_number,
+                manufacturer=conbee_device.manufacturer,
+                description=conbee_device.description,
+            ),
+            MagicMock(
+                device="/dev/cu.usbserial-1120",
+                vid=0x3039,
+                pid=0x3039,
+                serial_number=slae_sh_device.serial_number,
+                manufacturer=slae_sh_device.manufacturer,
+                description=slae_sh_device.description,
+            ),
+            MagicMock(
+                device="/dev/cu.usbserial-2120",
+                vid=0x3039,
+                pid=0x3039,
+                serial_number=conbee_device.serial_number,
+                manufacturer=conbee_device.manufacturer,
+                description=conbee_device.description,
+            ),
+        ],
+    ],
+)
+async def test_cp2102n_ordering_on_macos(
+    ports: list[MagicMock], hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test CP2102N ordering on macOS."""
+
+    new_usb = [
+        {"domain": "test1", "vid": "3039", "pid": "3039", "description": "*2652*"}
+    ]
+
+    with (
+        patch("sys.platform", "darwin"),
+        patch("pyudev.Context", side_effect=ImportError),
+        patch("homeassistant.components.usb.async_get_usb", return_value=new_usb),
+        patch("homeassistant.components.usb.comports", return_value=ports),
+        patch.object(hass.config_entries.flow, "async_init") as mock_config_flow,
+    ):
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        ws_client = await hass_ws_client(hass)
+        await ws_client.send_json({"id": 1, "type": "usb/scan"})
+        response = await ws_client.receive_json()
+        assert response["success"]
+        await hass.async_block_till_done()
+
+    assert len(mock_config_flow.mock_calls) == 1
+    assert mock_config_flow.mock_calls[0][1][0] == "test1"
+
+    # We always use `cu.SLAB_USBtoUART`
+    assert mock_config_flow.mock_calls[0][2]["data"].device == "/dev/cu.SLAB_USBtoUART2"

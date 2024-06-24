@@ -29,16 +29,14 @@ async def test_reconnect_client(
     client_payload: list[dict[str, Any]],
 ) -> None:
     """Verify call to reconnect client is performed as expected."""
-    config_entry = config_entry_setup
-
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{config_entry.data[CONF_HOST]}:1234"
-        f"/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/stamgr",
+        f"https://{config_entry_setup.data[CONF_HOST]}:1234"
+        f"/api/s/{config_entry_setup.data[CONF_SITE_ID]}/cmd/stamgr",
     )
 
     device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id=config_entry_setup.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])},
     )
 
@@ -74,12 +72,10 @@ async def test_reconnect_device_without_mac(
     config_entry_setup: ConfigEntry,
 ) -> None:
     """Verify no call is made if device does not have a known mac."""
-    config_entry = config_entry_setup
-
     aioclient_mock.clear_requests()
 
     device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id=config_entry_setup.entry_id,
         connections={("other connection", "not mac")},
     )
 
@@ -103,16 +99,14 @@ async def test_reconnect_client_hub_unavailable(
     client_payload: list[dict[str, Any]],
 ) -> None:
     """Verify no call is made if hub is unavailable."""
-    config_entry = config_entry_setup
-
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{config_entry.data[CONF_HOST]}:1234"
-        f"/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/stamgr",
+        f"https://{config_entry_setup.data[CONF_HOST]}:1234"
+        f"/api/s/{config_entry_setup.data[CONF_SITE_ID]}/cmd/stamgr",
     )
 
     device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id=config_entry_setup.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])},
     )
 
@@ -136,12 +130,9 @@ async def test_reconnect_client_unknown_mac(
     config_entry_setup: ConfigEntry,
 ) -> None:
     """Verify no call is made if trying to reconnect a mac unknown to hub."""
-    config_entry = config_entry_setup
-
     aioclient_mock.clear_requests()
-
     device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id=config_entry_setup.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "mac unknown to hub")},
     )
 
@@ -165,12 +156,9 @@ async def test_reconnect_wired_client(
     client_payload: list[dict[str, Any]],
 ) -> None:
     """Verify no call is made if client is wired."""
-    config_entry = config_entry_setup
-
     aioclient_mock.clear_requests()
-
     device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id=config_entry_setup.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])},
     )
 
@@ -219,12 +207,10 @@ async def test_remove_clients(
     config_entry_setup: ConfigEntry,
 ) -> None:
     """Verify removing different variations of clients work."""
-    config_entry = config_entry_setup
-
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{config_entry.data[CONF_HOST]}:1234"
-        f"/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/stamgr",
+        f"https://{config_entry_setup.data[CONF_HOST]}:1234"
+        f"/api/s/{config_entry_setup.data[CONF_SITE_ID]}/cmd/stamgr",
     )
 
     await hass.services.async_call(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
@@ -233,7 +219,7 @@ async def test_remove_clients(
         "macs": ["00:00:00:00:00:00", "00:00:00:00:00:01"],
     }
 
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert await hass.config_entries.async_unload(config_entry_setup.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -254,7 +240,6 @@ async def test_remove_clients_hub_unavailable(
 ) -> None:
     """Verify no call is made if UniFi Network is unavailable."""
     aioclient_mock.clear_requests()
-
     with patch(
         "homeassistant.components.unifi.UnifiHub.available", new_callable=PropertyMock
     ) as ws_mock:
@@ -283,6 +268,46 @@ async def test_remove_clients_no_call_on_empty_list(
 ) -> None:
     """Verify no call is made if no fitting client has been added to the list."""
     aioclient_mock.clear_requests()
+    await hass.services.async_call(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
+    assert aioclient_mock.call_count == 0
+
+
+@pytest.mark.parametrize(
+    "clients_all_payload",
+    [
+        [
+            {
+                "first_seen": 100,
+                "last_seen": 500,
+                "mac": "00:00:00:00:00:01",
+            }
+        ]
+    ],
+)
+async def test_services_handle_unloaded_config_entry(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    device_registry: dr.DeviceRegistry,
+    config_entry_setup: ConfigEntry,
+    clients_all_payload,
+) -> None:
+    """Verify no call is made if config entry is unloaded."""
+    await hass.config_entries.async_unload(config_entry_setup.entry_id)
+    await hass.async_block_till_done()
+
+    aioclient_mock.clear_requests()
 
     await hass.services.async_call(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
+    assert aioclient_mock.call_count == 0
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry_setup.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, clients_all_payload[0]["mac"])},
+    )
+    await hass.services.async_call(
+        UNIFI_DOMAIN,
+        SERVICE_RECONNECT_CLIENT,
+        service_data={ATTR_DEVICE_ID: device_entry.id},
+        blocking=True,
+    )
     assert aioclient_mock.call_count == 0

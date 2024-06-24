@@ -1,6 +1,5 @@
 """Tests for Ecovacs sensors."""
 
-from deebot_client.capabilities import Capabilities
 from deebot_client.event_bus import EventBus
 from deebot_client.events import (
     BatteryEvent,
@@ -103,7 +102,7 @@ async def test_sensors(
         assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
         assert state.state == STATE_UNKNOWN
 
-    device = next(controller.devices(Capabilities))
+    device = controller.devices[0]
     await notify_events(hass, device.events)
     for entity_id in entity_ids:
         assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"

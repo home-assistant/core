@@ -817,7 +817,7 @@ async def test_report_climate_state(hass: HomeAssistant) -> None:
             {"value": 34.0, "scale": "CELSIUS"},
         )
 
-    for off_modes in [HVACMode.OFF]:
+    for off_modes in (HVACMode.OFF,):
         hass.states.async_set(
             "climate.downstairs",
             off_modes,
@@ -954,7 +954,7 @@ async def test_report_on_off_climate_state(hass: HomeAssistant) -> None:
             {"value": 34.0, "scale": "CELSIUS"},
         )
 
-    for off_modes in [HVACMode.OFF]:
+    for off_modes in (HVACMode.OFF,):
         hass.states.async_set(
             "climate.onoff",
             off_modes,
@@ -1002,7 +1002,7 @@ async def test_report_water_heater_state(hass: HomeAssistant) -> None:
             {"value": 34.0, "scale": "CELSIUS"},
         )
 
-    for off_mode in [STATE_OFF]:
+    for off_mode in (STATE_OFF,):
         hass.states.async_set(
             "water_heater.boyler",
             off_mode,

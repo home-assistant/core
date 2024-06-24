@@ -15,7 +15,6 @@ from homeassistant.components.cloud.const import (
 from homeassistant.components.cloud.prefs import CloudPreferences
 from homeassistant.components.homeassistant.exposed_entities import (
     DATA_EXPOSED_ENTITIES,
-    ExposedEntities,
     async_expose_entity,
     async_get_entity_settings,
 )
@@ -39,13 +38,13 @@ def cloud_stub():
     return Mock(is_logged_in=True, subscription_expired=False)
 
 
-def expose_new(hass, expose_new):
+def expose_new(hass: HomeAssistant, expose_new: bool) -> None:
     """Enable exposing new entities to Alexa."""
-    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
     exposed_entities.async_set_expose_new_entities("cloud.alexa", expose_new)
 
 
-def expose_entity(hass, entity_id, should_expose):
+def expose_entity(hass: HomeAssistant, entity_id: str, should_expose: bool) -> None:
     """Expose an entity to Alexa."""
     async_expose_entity(hass, "cloud.alexa", entity_id, should_expose)
 

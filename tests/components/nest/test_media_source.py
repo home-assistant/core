@@ -95,7 +95,7 @@ def platforms() -> list[str]:
 
 
 @pytest.fixture(autouse=True)
-async def setup_components(hass) -> None:
+async def setup_components(hass: HomeAssistant) -> None:
     """Fixture to initialize the integration."""
     await async_setup_component(hass, "media_source", {})
 

@@ -1,5 +1,6 @@
 """The tests for the Light component."""
 
+from typing import Literal
 from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
@@ -22,13 +23,14 @@ from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.setup import async_setup_component
 import homeassistant.util.color as color_util
 
+from .common import MockLight
+
 from tests.common import (
     MockEntityPlatform,
     MockUser,
     async_mock_service,
     setup_test_component_platform,
 )
-from tests.components.light.common import MockLight
 
 orig_Profiles = light.Profiles
 
@@ -1143,7 +1145,7 @@ invalid_no_brightness_no_color_no_transition,,,
 
 @pytest.mark.parametrize("light_state", [STATE_ON, STATE_OFF])
 async def test_light_backwards_compatibility_supported_color_modes(
-    hass: HomeAssistant, light_state
+    hass: HomeAssistant, light_state: Literal["on", "off"]
 ) -> None:
     """Test supported_color_modes if not implemented by the entity."""
     entities = [

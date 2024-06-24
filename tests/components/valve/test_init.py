@@ -131,7 +131,7 @@ def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
 
 
 @pytest.fixture
-def mock_config_entry(hass) -> tuple[MockConfigEntry, list[ValveEntity]]:
+def mock_config_entry(hass: HomeAssistant) -> tuple[MockConfigEntry, list[ValveEntity]]:
     """Mock a config entry which sets up a couple of valve entities."""
     entities = [
         MockBinaryValveEntity(

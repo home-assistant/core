@@ -240,6 +240,8 @@ async def test_device_tracker_discovery_update(
     # Entity was not updated as the state was not changed
     assert state.last_updated == datetime(2023, 8, 22, 19, 16, tzinfo=UTC)
 
+    await hass.async_block_till_done(wait_background_tasks=True)
+
 
 async def test_cleanup_device_tracker(
     hass: HomeAssistant,

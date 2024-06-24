@@ -182,7 +182,7 @@ class AmbientStation:
             # already been done):
             if not self._entry_setup_complete:
                 self._hass.async_create_task(
-                    self._hass.config_entries.async_late_forward_entry_setups(
+                    self._hass.config_entries.async_forward_entry_setups(
                         self._entry, PLATFORMS
                     ),
                     eager_start=True,

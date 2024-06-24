@@ -96,6 +96,7 @@ from .helpers.deprecation import (
     dir_with_deprecated_constants,
 )
 from .helpers.json import json_bytes, json_fragment
+from .helpers.typing import UNDEFINED, UndefinedType
 from .util import dt as dt_util, location
 from .util.async_ import (
     cancelling,
@@ -131,15 +132,13 @@ FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT = 60
 CLOSE_STAGE_SHUTDOWN_TIMEOUT = 30
 
 
-# Internal; not helpers.typing.UNDEFINED due to circular dependency
-_UNDEF: dict[Any, Any] = {}
 _SENTINEL = object()
 _DataT = TypeVar("_DataT", bound=Mapping[str, Any], default=Mapping[str, Any])
 type CALLBACK_TYPE = Callable[[], None]
 
 CORE_STORAGE_KEY = "core.config"
 CORE_STORAGE_VERSION = 1
-CORE_STORAGE_MINOR_VERSION = 3
+CORE_STORAGE_MINOR_VERSION = 4
 
 DOMAIN = "homeassistant"
 
@@ -2836,6 +2835,9 @@ class Config:
 
     def __init__(self, hass: HomeAssistant, config_dir: str) -> None:
         """Initialize a new config object."""
+        # pylint: disable-next=import-outside-toplevel
+        from .components.zone import DEFAULT_RADIUS
+
         self.hass = hass
 
         self.latitude: float = 0
@@ -2843,6 +2845,9 @@ class Config:
 
         self.elevation: int = 0
         """Elevation (always in meters regardless of the unit system)."""
+
+        self.radius: int = DEFAULT_RADIUS
+        """Radius of the Home Zone (always in meters regardless of the unit system)."""
 
         self.debug: bool = False
         self.location_name: str = "Home"
@@ -2992,6 +2997,7 @@ class Config:
             "language": self.language,
             "safe_mode": self.safe_mode,
             "debug": self.debug,
+            "radius": self.radius,
         }
 
     async def async_set_time_zone(self, time_zone_str: str) -> None:
@@ -3035,12 +3041,12 @@ class Config:
         unit_system: str | None = None,
         location_name: str | None = None,
         time_zone: str | None = None,
-        # pylint: disable=dangerous-default-value # _UNDEFs not modified
-        external_url: str | dict[Any, Any] | None = _UNDEF,
-        internal_url: str | dict[Any, Any] | None = _UNDEF,
+        external_url: str | UndefinedType | None = UNDEFINED,
+        internal_url: str | UndefinedType | None = UNDEFINED,
         currency: str | None = None,
-        country: str | dict[Any, Any] | None = _UNDEF,
+        country: str | UndefinedType | None = UNDEFINED,
         language: str | None = None,
+        radius: int | None = None,
     ) -> None:
         """Update the configuration from a dictionary."""
         self.config_source = source
@@ -3059,16 +3065,18 @@ class Config:
             self.location_name = location_name
         if time_zone is not None:
             await self.async_set_time_zone(time_zone)
-        if external_url is not _UNDEF:
-            self.external_url = cast(str | None, external_url)
-        if internal_url is not _UNDEF:
-            self.internal_url = cast(str | None, internal_url)
+        if external_url is not UNDEFINED:
+            self.external_url = external_url
+        if internal_url is not UNDEFINED:
+            self.internal_url = internal_url
         if currency is not None:
             self.currency = currency
-        if country is not _UNDEF:
-            self.country = cast(str | None, country)
+        if country is not UNDEFINED:
+            self.country = country
         if language is not None:
             self.language = language
+        if radius is not None:
+            self.radius = radius
 
     async def async_update(self, **kwargs: Any) -> None:
         """Update the configuration from a dictionary."""
@@ -3112,11 +3120,12 @@ class Config:
             unit_system=data.get("unit_system_v2"),
             location_name=data.get("location_name"),
             time_zone=data.get("time_zone"),
-            external_url=data.get("external_url", _UNDEF),
-            internal_url=data.get("internal_url", _UNDEF),
+            external_url=data.get("external_url", UNDEFINED),
+            internal_url=data.get("internal_url", UNDEFINED),
             currency=data.get("currency"),
             country=data.get("country"),
             language=data.get("language"),
+            radius=data["radius"],
         )
 
     async def _async_store(self) -> None:
@@ -3135,6 +3144,7 @@ class Config:
             "currency": self.currency,
             "country": self.country,
             "language": self.language,
+            "radius": self.radius,
         }
         await self._store.async_save(data)
 
@@ -3164,6 +3174,10 @@ class Config:
             old_data: dict[str, Any],
         ) -> dict[str, Any]:
             """Migrate to the new version."""
+
+            # pylint: disable-next=import-outside-toplevel
+            from .components.zone import DEFAULT_RADIUS
+
             data = old_data
             if old_major_version == 1 and old_minor_version < 2:
                 # In 1.2, we remove support for "imperial", replaced by "us_customary"
@@ -3200,6 +3214,9 @@ class Config:
                 # pylint: disable-next=broad-except
                 except Exception:
                     _LOGGER.exception("Unexpected error during core config migration")
+            if old_major_version == 1 and old_minor_version < 4:
+                # In 1.4, we add the key "radius", initialize it with the default.
+                data.setdefault("radius", DEFAULT_RADIUS)
 
             if old_major_version > 1:
                 raise NotImplementedError

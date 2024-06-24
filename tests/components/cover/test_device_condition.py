@@ -20,6 +20,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
+from .common import MockCover
+
 from tests.common import (
     MockConfigEntry,
     async_get_device_automation_capabilities,
@@ -27,7 +29,6 @@ from tests.common import (
     async_mock_service,
     setup_test_component_platform,
 )
-from tests.components.cover.common import MockCover
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -164,7 +165,7 @@ async def test_get_conditions_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for condition in ["is_open", "is_closed", "is_opening", "is_closing"]
+        for condition in ("is_open", "is_closed", "is_opening", "is_closing")
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
