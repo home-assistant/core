@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
+from homeassistant.components.script.config import ScriptConfig
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -692,6 +693,43 @@ async def test_script_tool(
     )
     assert response == {"success": True}
 
+    # Test reload script with new parameters
+    config = {
+        "script": {
+            "test_script": ScriptConfig(
+                {
+                    "description": "This is a new test script",
+                    "sequence": [],
+                    "mode": "single",
+                    "max": 2,
+                    "max_exceeded": "WARNING",
+                    "trace": {},
+                    "fields": {
+                        "beer": {"description": "Number of beers", "required": True},
+                    },
+                }
+            )
+        }
+    }
+
+    with patch(
+        "homeassistant.helpers.entity_component.EntityComponent.async_prepare_reload",
+        return_value=config,
+    ):
+        await hass.services.async_call("script", "reload", blocking=True)
+
+    api = await llm.async_get_api(hass, "assist", llm_context)
+
+    tools = [tool for tool in api.tools if isinstance(tool, llm.ScriptTool)]
+    assert len(tools) == 1
+
+    tool = tools[0]
+    assert tool.name == "test_script"
+    assert tool.description == "This is a new test script"
+    assert tool.parameters.schema == {
+        vol.Required("beer", description="Number of beers"): cv.string
+    }
+
 
 def test_selector_serializer() -> None:
     """Test serialization of Selectors in Open API format."""
@@ -722,7 +760,10 @@ def test_selector_serializer() -> None:
     }
     assert llm.selector_serializer(selector.ColorTempSelector()) == {"type": "number"}
     assert llm.selector_serializer(
-        selector.ColorTempSelector({"min": 100, "max": 1000})
+        selector.ColorTempSelector({"min": 0, "max": 1000})
+    ) == {"type": "number", "minimum": 0, "maximum": 1000}
+    assert llm.selector_serializer(
+        selector.ColorTempSelector({"min_mireds": 100, "max_mireds": 1000})
     ) == {"type": "number", "minimum": 100, "maximum": 1000}
     assert llm.selector_serializer(selector.ConfigEntrySelector()) == {"type": "string"}
     assert llm.selector_serializer(selector.ConstantSelector({"value": "test"})) == {
