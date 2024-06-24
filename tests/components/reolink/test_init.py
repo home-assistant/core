@@ -471,7 +471,7 @@ async def test_firmware_repair_issue(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test firmware issue is raised when too old firmware is used."""
-    reolink_connect.sw_version_update_required = True
+    reolink_connect.camera_sw_version_update_required.return_value = True
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
