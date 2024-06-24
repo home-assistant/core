@@ -36,4 +36,3 @@ UNIT_MAPPING = {
     "celsius": UnitOfTemperature.CELSIUS,
     "fahrenheit": UnitOfTemperature.FAHRENHEIT,
 }
-
