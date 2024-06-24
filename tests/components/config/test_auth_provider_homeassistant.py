@@ -38,7 +38,9 @@ async def owner_access_token(hass: HomeAssistant, hass_owner_user: MockUser) -> 
 
 
 @pytest.fixture
-async def hass_admin_credential(hass, auth_provider):
+async def hass_admin_credential(
+    hass: HomeAssistant, auth_provider: prov_ha.HassAuthProvider
+):
     """Overload credentials to admin user."""
     await hass.async_add_executor_job(
         auth_provider.data.add_auth, "test-user", "test-pass"
@@ -284,7 +286,9 @@ async def test_delete_unknown_auth(
 
 
 async def test_change_password(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, auth_provider
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    auth_provider: prov_ha.HassAuthProvider,
 ) -> None:
     """Test that change password succeeds with valid password."""
     client = await hass_ws_client(hass)
@@ -306,7 +310,7 @@ async def test_change_password_wrong_pw(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_admin_user: MockUser,
-    auth_provider,
+    auth_provider: prov_ha.HassAuthProvider,
 ) -> None:
     """Test that change password fails with invalid password."""
 
@@ -349,7 +353,9 @@ async def test_change_password_no_creds(
 
 
 async def test_admin_change_password_not_owner(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, auth_provider
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    auth_provider: prov_ha.HassAuthProvider,
 ) -> None:
     """Test that change password fails when not owner."""
     client = await hass_ws_client(hass)
@@ -372,7 +378,7 @@ async def test_admin_change_password_not_owner(
 
 
 async def test_admin_change_password_no_user(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, owner_access_token
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, owner_access_token: str
 ) -> None:
     """Test that change password fails with unknown user."""
     client = await hass_ws_client(hass, owner_access_token)
@@ -394,7 +400,7 @@ async def test_admin_change_password_no_user(
 async def test_admin_change_password_no_cred(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    owner_access_token,
+    owner_access_token: str,
     hass_admin_user: MockUser,
 ) -> None:
     """Test that change password fails with unknown credential."""
@@ -419,8 +425,8 @@ async def test_admin_change_password_no_cred(
 async def test_admin_change_password(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    owner_access_token,
-    auth_provider,
+    owner_access_token: str,
+    auth_provider: prov_ha.HassAuthProvider,
     hass_admin_user: MockUser,
 ) -> None:
     """Test that owners can change any password."""
