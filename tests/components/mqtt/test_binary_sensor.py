@@ -1,5 +1,6 @@
 """The tests for the  MQTT binary sensor platform."""
 
+import asyncio
 import copy
 from datetime import datetime, timedelta
 import json
@@ -1122,7 +1123,7 @@ async def test_cleanup_triggers_and_restoring_state(
     async_fire_mqtt_message(hass, "test-topic2", payload2)
     state = hass.states.get("binary_sensor.test2")
     assert state.state == state2
-
+    await asyncio.sleep(0)
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
