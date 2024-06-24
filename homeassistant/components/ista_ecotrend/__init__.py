@@ -9,7 +9,7 @@ from pyecotrend_ista import KeycloakError, LoginError, PyEcotrendIsta, ServerErr
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import DOMAIN
 from .coordinator import IstaCoordinator
@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IstaConfigEntry) -> bool
             translation_key="connection_exception",
         ) from e
     except (LoginError, KeycloakError) as e:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="authentication_exception",
             translation_placeholders={CONF_EMAIL: entry.data[CONF_EMAIL]},

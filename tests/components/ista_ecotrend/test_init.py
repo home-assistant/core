@@ -6,7 +6,7 @@ from pyecotrend_ista import KeycloakError, LoginError, ParserError, ServerError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -54,7 +54,7 @@ async def test_config_entry_not_ready(
     ("side_effect"),
     [LoginError, KeycloakError],
 )
-async def test_config_entry_error(
+async def test_config_entry_auth_failed(
     hass: HomeAssistant,
     ista_config_entry: MockConfigEntry,
     mock_ista: MagicMock,
@@ -67,6 +67,7 @@ async def test_config_entry_error(
     await hass.async_block_till_done()
 
     assert ista_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert any(ista_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
 @pytest.mark.usefixtures("mock_ista")

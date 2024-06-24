@@ -11,6 +11,8 @@ from . import TeslemetryConfigEntry
 from .entity import TeslemetryVehicleEntity
 from .models import TeslemetryVehicleData
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
