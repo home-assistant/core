@@ -107,13 +107,6 @@ class SensoterraEntity(CoordinatorEntity[SensoterraCoordinator], SensorEntity):
 
         self.entity_description = SENSORS[sensor.type]
 
-        # Add soil type to certain sensors.
-        if sensor.soil is not None and sensor.type in [
-            ProbeSensorType.MOISTURE,
-            ProbeSensorType.SI,
-        ]:
-            self._attr_extra_state_attributes = {"soil_type": sensor.soil}
-
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, sensor.serial)},
             name=sensor.name,
