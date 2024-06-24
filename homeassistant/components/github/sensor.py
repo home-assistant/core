@@ -149,7 +149,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up GitHub sensor based on a config entry."""
-    repositories = entry.runtime_data.coordinators
+    repositories = entry.runtime_data
     async_add_entities(
         (
             GitHubSensorEntity(coordinator, description)

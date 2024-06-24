@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from aiogithubapi import GitHubAPI
 
 from homeassistant.config_entries import ConfigEntry
@@ -21,14 +19,7 @@ from .coordinator import GitHubDataUpdateCoordinator
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-@dataclass
-class GithubRuntimeData:
-    """Github runtime data."""
-
-    coordinators: dict[str, GitHubDataUpdateCoordinator]
-
-
-type GithubConfigEntry = ConfigEntry[GithubRuntimeData]
+type GithubConfigEntry = ConfigEntry[dict[str, GitHubDataUpdateCoordinator]]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> bool:
@@ -41,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> bo
 
     repositories: list[str] = entry.options[CONF_REPOSITORIES]
 
-    coordinators = {}
+    entry.runtime_data = {}
     for repository in repositories:
         coordinator = GitHubDataUpdateCoordinator(
             hass=hass,
@@ -54,8 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> bo
         if not entry.pref_disable_polling:
             await coordinator.subscribe()
 
-        coordinators[repository] = coordinator
-    entry.runtime_data = GithubRuntimeData(coordinators=coordinators)
+        entry.runtime_data[repository] = coordinator
 
     async_cleanup_device_registry(hass=hass, entry=entry)
 
@@ -95,7 +85,7 @@ def async_cleanup_device_registry(
 
 async def async_unload_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> bool:
     """Unload a config entry."""
-    repositories = entry.runtime_data.coordinators
+    repositories = entry.runtime_data
     for coordinator in repositories.values():
         coordinator.unsubscribe()
 
