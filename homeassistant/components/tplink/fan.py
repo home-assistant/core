@@ -5,7 +5,7 @@ import math
 from typing import Any
 
 from kasa import Device, Module
-from kasa.interfaces import Fan
+from kasa.interfaces import Fan as FanInterface
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant, callback
@@ -35,10 +35,15 @@ async def async_setup_entry(
     entities: list[CoordinatedTPLinkEntity] = []
     if Module.Fan in device.modules:
         entities.append(
-            TPLinkFan(device, parent_coordinator, device.modules[Module.Fan])
+            Fan(device, parent_coordinator, fan_module=device.modules[Module.Fan])
         )
     entities.extend(
-        TPLinkFan(child, parent_coordinator, child.modules[Module.Fan], parent=device)
+        Fan(
+            child,
+            parent_coordinator,
+            fan_module=child.modules[Module.Fan],
+            parent=device,
+        )
         for child in device.children
         if Module.Fan in child.modules
     )
@@ -48,25 +53,26 @@ async def async_setup_entry(
 SPEED_RANGE = (1, 4)  # off is not included
 
 
-class TPLinkFan(CoordinatedTPLinkEntity, FanEntity):
+class Fan(CoordinatedTPLinkEntity, FanEntity):
     """Representation of a fan for a TPLink Fan device."""
 
     _attr_speed_count = int_states_in_range(SPEED_RANGE)
     _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_has_entity_name = True
 
     def __init__(
         self,
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
-        fan_module: Fan,
+        fan_module: FanInterface,
         parent: Device | None = None,
     ) -> None:
         """Initialize the fan."""
+        self._parent = parent
         super().__init__(device, coordinator, parent=parent)
         self.fan_module = fan_module
         # If _attr_name is None the entity name will be the device name
         self._attr_name = None if parent is None else device.alias
-        self._async_call_update_attrs()
 
     @async_refresh_after
     async def async_turn_on(

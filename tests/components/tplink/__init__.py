@@ -110,7 +110,7 @@ def _mocked_device(
     modules: list[str] | None = None,
     children: list[Device] | None = None,
     features: list[str | Feature] | None = None,
-    device_type=DeviceType.Unknown,
+    device_type=None,
     spec: type = Device,
 ) -> Device:
     device = MagicMock(spec=spec, name="Mocked device")
@@ -148,9 +148,13 @@ def _mocked_device(
         )
 
     device.children = children if children else []
-    device.device_type = device_type
-    if device.children and all(
-        child.device_type == DeviceType.StripSocket for child in device.children
+    device.device_type = device_type if device_type else DeviceType.Unknown
+    if (
+        not device_type
+        and device.children
+        and all(
+            child.device_type == DeviceType.StripSocket for child in device.children
+        )
     ):
         device.device_type = DeviceType.Strip
 

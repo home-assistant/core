@@ -228,6 +228,13 @@ def legacy_device_id(device: Device) -> str:
     return device_id.split("_")[1]
 
 
+def get_device_name(device: Device) -> str:
+    """Get a name for the device. alias can be none on some devices."""
+    if device.alias:
+        return device.alias
+    return f"Unnamed {device.model}"
+
+
 async def get_credentials(hass: HomeAssistant) -> Credentials | None:
     """Retrieve the credentials from hass data."""
     if DOMAIN in hass.data and CONF_AUTHENTICATION in hass.data[DOMAIN]:

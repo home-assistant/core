@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from kasa import Module
+from kasa import Device, Module
 
 from homeassistant.components import tplink
 from homeassistant.components.fan import (
@@ -15,7 +15,7 @@ from homeassistant.components.fan import (
 from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -24,7 +24,9 @@ from . import DEVICE_ID, MAC_ADDRESS, _mocked_device, _patch_connect, _patch_dis
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_fan_unique_id(hass: HomeAssistant) -> None:
+async def test_fan_unique_id(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test a fan unique id."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
@@ -33,8 +35,12 @@ async def test_fan_unique_id(hass: HomeAssistant) -> None:
     fan = _mocked_device(modules=[Module.Fan], alias="my_fan")
     with _patch_discovery(device=fan), _patch_connect(device=fan):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, already_migrated_config_entry.entry_id
+    )
+    assert device_entries
     entity_id = "fan.my_fan"
     entity_registry = er.async_get(hass)
     assert entity_registry.async_get(entity_id).unique_id == DEVICE_ID
@@ -116,6 +122,7 @@ async def test_fan_child(
         alias="my_device",
         children=[child_fan_1, child_fan_2],
         modules=[Module.Fan],
+        device_type=Device.Type.WallSwitch,
     )
 
     with _patch_discovery(device=parent_device), _patch_connect(device=parent_device):
