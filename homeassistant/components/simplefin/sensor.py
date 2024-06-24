@@ -1,4 +1,5 @@
 """Platform for sensor integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -99,7 +100,7 @@ class SimpleFinSensor(SimpleFinEntity, SensorEntity):
     def icon(self) -> str | None:
         """Return the currency of this account."""
 
-        if not (icon_fn := getattr(self.entity_description, "icon_fn", None))
+        if not (icon_fn := getattr(self.entity_description, "icon_fn", None)):
             return None
 
         return icon_fn(self.coordinator.data.get_account_for_id(self._account_id))
