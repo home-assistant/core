@@ -768,7 +768,7 @@ def test_date() -> None:
     """Test date validation."""
     schema = vol.Schema(cv.date)
 
-    for value in ["Not a date", "23:42", "2016-11-23T18:59:08"]:
+    for value in ("Not a date", "23:42", "2016-11-23T18:59:08"):
         with pytest.raises(vol.Invalid):
             schema(value)
 
@@ -780,7 +780,7 @@ def test_time() -> None:
     """Test date validation."""
     schema = vol.Schema(cv.time)
 
-    for value in ["Not a time", "2016-11-23", "2016-11-23T18:59:08"]:
+    for value in ("Not a time", "2016-11-23", "2016-11-23T18:59:08"):
         with pytest.raises(vol.Invalid):
             schema(value)
 
@@ -792,7 +792,7 @@ def test_time() -> None:
 def test_datetime() -> None:
     """Test date time validation."""
     schema = vol.Schema(cv.datetime)
-    for value in [date.today(), "Wrong DateTime"]:
+    for value in (date.today(), "Wrong DateTime"):
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
@@ -1240,7 +1240,7 @@ def test_enum() -> None:
         schema("value3")
 
 
-def test_socket_timeout():
+def test_socket_timeout() -> None:
     """Test socket timeout validator."""
     schema = vol.Schema(cv.socket_timeout)
 
@@ -1307,7 +1307,7 @@ def test_uuid4_hex(caplog: pytest.LogCaptureFixture) -> None:
     """Test uuid validation."""
     schema = vol.Schema(cv.uuid4_hex)
 
-    for value in ["Not a hex string", "0", 0]:
+    for value in ("Not a hex string", "0", 0):
         with pytest.raises(vol.Invalid):
             schema(value)
 
@@ -1679,7 +1679,7 @@ def test_color_hex() -> None:
         cv.color_hex(123456)
 
 
-def test_determine_script_action_ambiguous():
+def test_determine_script_action_ambiguous() -> None:
     """Test determine script action with ambiguous actions."""
     assert (
         cv.determine_script_action(
@@ -1696,6 +1696,6 @@ def test_determine_script_action_ambiguous():
     )
 
 
-def test_determine_script_action_non_ambiguous():
+def test_determine_script_action_non_ambiguous() -> None:
     """Test determine script action with a non ambiguous action."""
     assert cv.determine_script_action({"delay": "00:00:05"}) == "delay"

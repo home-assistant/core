@@ -15,8 +15,9 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import setup_integration
+
 from tests.common import MockConfigEntry
-from tests.components.analytics_insights import setup_integration
 
 
 @pytest.mark.parametrize(

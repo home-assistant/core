@@ -2,7 +2,7 @@
 
 import logging
 
-from aioautomower.model import MowerAttributes
+from aioautomower.model import MowerActivities, MowerAttributes, MowerStates
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -11,6 +11,21 @@ from . import AutomowerDataUpdateCoordinator
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+ERROR_ACTIVITIES = (
+    MowerActivities.STOPPED_IN_GARDEN,
+    MowerActivities.UNKNOWN,
+    MowerActivities.NOT_APPLICABLE,
+)
+ERROR_STATES = [
+    MowerStates.FATAL_ERROR,
+    MowerStates.ERROR,
+    MowerStates.ERROR_AT_POWER_UP,
+    MowerStates.NOT_APPLICABLE,
+    MowerStates.UNKNOWN,
+    MowerStates.STOPPED,
+    MowerStates.OFF,
+]
 
 
 class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
@@ -41,10 +56,22 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
         return self.coordinator.data[self.mower_id]
 
 
-class AutomowerControlEntity(AutomowerBaseEntity):
-    """AutomowerControlEntity, for dynamic availability."""
+class AutomowerAvailableEntity(AutomowerBaseEntity):
+    """Replies available when the mower is connected."""
 
     @property
     def available(self) -> bool:
         """Return True if the device is available."""
         return super().available and self.mower_attributes.metadata.connected
+
+
+class AutomowerControlEntity(AutomowerAvailableEntity):
+    """Replies available when the mower is connected and not in error state."""
+
+    @property
+    def available(self) -> bool:
+        """Return True if the device is available."""
+        return super().available and (
+            self.mower_attributes.mower.state not in ERROR_STATES
+            or self.mower_attributes.mower.activity not in ERROR_ACTIVITIES
+        )

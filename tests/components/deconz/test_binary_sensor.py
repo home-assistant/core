@@ -21,7 +21,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 
 from .test_gateway import (
     DECONZ_WEB_REQUEST,
@@ -687,7 +686,8 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
     assert not hass.states.get("binary_sensor.presence_sensor")
 
     assert (
-        len(async_entries_for_config_entry(entity_registry, config_entry.entry_id)) == 0
+        len(er.async_entries_for_config_entry(entity_registry, config_entry.entry_id))
+        == 0
     )
 
     aioclient_mock.clear_requests()
@@ -738,7 +738,8 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_options_change(
     assert not hass.states.get("binary_sensor.presence_sensor")
 
     assert (
-        len(async_entries_for_config_entry(entity_registry, config_entry.entry_id)) == 0
+        len(er.async_entries_for_config_entry(entity_registry, config_entry.entry_id))
+        == 0
     )
 
     aioclient_mock.clear_requests()

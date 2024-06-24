@@ -187,7 +187,20 @@ _SERVICE_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-_SERVICES_SCHEMA = vol.Schema({cv.slug: vol.Any(None, _SERVICE_SCHEMA)})
+
+def starts_with_dot(key: str) -> str:
+    """Check if key starts with dot."""
+    if not key.startswith("."):
+        raise vol.Invalid("Key does not start with .")
+    return key
+
+
+_SERVICES_SCHEMA = vol.Schema(
+    {
+        vol.Remove(vol.All(str, starts_with_dot)): object,
+        cv.slug: vol.Any(None, _SERVICE_SCHEMA),
+    }
+)
 
 
 class ServiceParams(TypedDict):

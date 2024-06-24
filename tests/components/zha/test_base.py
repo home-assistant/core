@@ -2,7 +2,7 @@
 
 from homeassistant.components.zha.core.cluster_handlers import parse_and_log_command
 
-from tests.components.zha.test_cluster_handlers import (  # noqa: F401
+from .test_cluster_handlers import (  # noqa: F401
     endpoint,
     poll_control_ch,
     zigpy_coordinator_device,
