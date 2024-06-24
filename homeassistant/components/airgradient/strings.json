@@ -24,6 +24,14 @@
     }
   },
   "entity": {
+    "button": {
+      "co2_calibration": {
+        "name": "Calibrate CO2 sensor"
+      },
+      "led_bar_test": {
+        "name": "Test LED bar"
+      }
+    },
     "number": {
       "led_bar_brightness": {
         "name": "LED bar brightness"
