@@ -40,13 +40,17 @@ class HydrawiseDataUpdateCoordinator(DataUpdateCoordinator[HydrawiseData]):
 
     async def _async_update_data(self) -> HydrawiseData:
         """Fetch the latest data from Hydrawise."""
-        user = await self.api.get_user()
+        # Don't fetch zones. We'll fetch them for each controller later.
+        # This is to prevent 502 errors in some cases.
+        # See: https://github.com/home-assistant/core/issues/120128
+        user = await self.api.get_user(fetch_zones=False)
         controllers = {}
         zones = {}
         sensors = {}
         daily_water_use: dict[int, ControllerWaterUseSummary] = {}
         for controller in user.controllers:
             controllers[controller.id] = controller
+            controller.zones = await self.api.get_zones(controller)
             for zone in controller.zones:
                 zones[zone.id] = zone
             for sensor in controller.sensors:
