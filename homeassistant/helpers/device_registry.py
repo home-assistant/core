@@ -1009,7 +1009,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """
         for connection in normalized_connections:
             # We need to iterate over each connection because if there was a
-            # conflict the index will only see the last one and we will not
+            # conflict, the index will only see the last one and we will not
             # be able to tell which one caused the conflict
             if (
                 existing_device := self.async_get_device(connections={connection})
@@ -1025,7 +1025,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """Raise if identifiers conflict with another device."""
         for identifier in identifiers:
             # We need to iterate over each identifier because if there was a
-            # conflict the index will only see the last one and we will not
+            # conflict, the index will only see the last one and we will not
             # be able to tell which one caused the conflict
             if (
                 existing_device := self.async_get_device(identifiers={identifier})
