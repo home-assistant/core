@@ -185,6 +185,35 @@ class DeviceInfoError(HomeAssistantError):
         self.domain = domain
 
 
+class DeviceCollisionError(HomeAssistantError):
+    """Raised when a device collision is detected."""
+
+
+class DeviceIdentifierCollisionError(DeviceCollisionError):
+    """Raised when a device identifier collision is detected."""
+
+    def __init__(
+        self, identifiers: set[tuple[str, str]], existing_device: DeviceEntry
+    ) -> None:
+        """Initialize error."""
+        super().__init__(
+            f"Identifiers {identifiers} already registered to {existing_device}"
+        )
+
+
+class DeviceConnectionCollisionError(DeviceCollisionError):
+    """Raised when a device connection collision is detected."""
+
+    def __init__(
+        self, normalized_connections: set[tuple[str, str]], existing_device: DeviceEntry
+    ) -> None:
+        """Initialize error."""
+        super().__init__(
+            f"Connections {normalized_connections} "
+            f"already registered to {existing_device}"
+        )
+
+
 def _validate_device_info(
     config_entry: ConfigEntry,
     device_info: DeviceInfo,
@@ -985,9 +1014,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             if (
                 existing_device := self.async_get_device(connections={connection})
             ) and existing_device.id != device_id:
-                raise HomeAssistantError(
-                    f"Connections {normalized_connections} "
-                    f"already registered to {existing_device}"
+                raise DeviceConnectionCollisionError(
+                    normalized_connections, existing_device
                 )
 
     @callback
@@ -1002,10 +1030,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             if (
                 existing_device := self.async_get_device(identifiers={identifier})
             ) and existing_device.id != device_id:
-                raise HomeAssistantError(
-                    f"Identifiers {identifiers} already "
-                    f"registered to {existing_device}"
-                )
+                raise DeviceIdentifierCollisionError(identifiers, existing_device)
 
     @callback
     def async_remove_device(self, device_id: str) -> None:
