@@ -41,7 +41,7 @@ async def async_setup_entry(
     config_entry: TPLinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up sensors."""
+    """Set up climate entities."""
     data = config_entry.runtime_data
     parent_coordinator = data.parent_coordinator
     device = parent_coordinator.device
@@ -78,7 +78,7 @@ class Climate(CoordinatedTPLinkEntity, ClimateEntity):
         *,
         parent: Device,
     ) -> None:
-        """Initialize the switch."""
+        """Initialize the climate entity."""
         super().__init__(device, coordinator, parent=parent)
         self._state_feature = self._device.features["state"]
         self._mode_feature = self._device.features["thermostat_mode"]

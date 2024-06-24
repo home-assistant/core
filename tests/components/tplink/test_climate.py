@@ -168,7 +168,7 @@ async def test_turn_on_and_off(hass: HomeAssistant, mocked_hub: Device) -> None:
 async def test_unknown_mode(
     hass: HomeAssistant, mocked_hub: Device, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test that set_temperature service calls the setter."""
+    """Test that unknown device modes log a warning and default to off."""
 
     mocked_thermostat = mocked_hub.children[0]
     mocked_state = mocked_thermostat.features["thermostat_mode"]
