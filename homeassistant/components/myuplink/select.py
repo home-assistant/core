@@ -70,10 +70,7 @@ class MyUplinkSelect(MyUplinkEntity, SelectEntity):
             str(int(x["value"])): x["text"].capitalize()
             for x in device_point.enum_values
         }
-        self.options_rev = {
-            x["text"].capitalize(): str(int(x["value"]))
-            for x in device_point.enum_values
-        }
+        self.options_rev = {value: key for key, value in self.options_map.items()}
 
     @property
     def current_option(self) -> str | None:
