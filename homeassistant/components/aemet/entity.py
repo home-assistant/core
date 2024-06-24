@@ -10,12 +10,15 @@ from homeassistant.components.weather import Forecast
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import ATTRIBUTION, DOMAIN
 from .coordinator import WeatherUpdateCoordinator
 
 
 class AemetEntity(CoordinatorEntity[WeatherUpdateCoordinator]):
     """Define an AEMET entity."""
+
+    _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(
         self,
