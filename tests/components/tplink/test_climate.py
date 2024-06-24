@@ -22,6 +22,7 @@ from homeassistant.components.climate import (
 from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -108,9 +109,7 @@ async def test_set_temperature(hass: HomeAssistant, mocked_hub: Device) -> None:
     target_temp_feature.set_value.assert_called_with(10)
 
 
-async def test_set_hvac_mode(
-    hass: HomeAssistant, mocked_hub: Device, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_set_hvac_mode(hass: HomeAssistant, mocked_hub: Device) -> None:
     """Test that set_hvac_mode service works."""
     mocked_thermostat = mocked_hub.children[0]
     mocked_state = mocked_thermostat.features["state"]
@@ -133,13 +132,13 @@ async def test_set_hvac_mode(
     )
     mocked_state.set_value.assert_called_with(True)
 
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: [ENTITY_ID], ATTR_HVAC_MODE: HVACMode.DRY},
-        blocking=True,
-    )
-    assert "Tried to set unsupported mode" in caplog.text
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: [ENTITY_ID], ATTR_HVAC_MODE: HVACMode.DRY},
+            blocking=True,
+        )
 
 
 async def test_turn_on_and_off(hass: HomeAssistant, mocked_hub: Device) -> None:
@@ -166,7 +165,9 @@ async def test_turn_on_and_off(hass: HomeAssistant, mocked_hub: Device) -> None:
     mocked_state.set_value.assert_called_with(True)
 
 
-async def test_unknown_mode(hass: HomeAssistant, mocked_hub: Device) -> None:
+async def test_unknown_mode(
+    hass: HomeAssistant, mocked_hub: Device, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that set_temperature service calls the setter."""
 
     mocked_thermostat = mocked_hub.children[0]
@@ -177,3 +178,4 @@ async def test_unknown_mode(hass: HomeAssistant, mocked_hub: Device) -> None:
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
+    assert "Unknown thermostat state, defaulting to OFF" in caplog.text

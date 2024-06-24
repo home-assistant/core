@@ -17,12 +17,21 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import PRECISION_WHOLE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TPLinkConfigEntry
 from .const import UNIT_MAPPING
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkEntity, async_refresh_after
+
+# Upstream state to HVACAction
+STATE_TO_ACTION = {
+    ThermostatState.Idle: HVACAction.IDLE,
+    ThermostatState.Heating: HVACAction.HEATING,
+    ThermostatState.Off: HVACAction.OFF,
+}
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,13 +46,12 @@ async def async_setup_entry(
     parent_coordinator = data.parent_coordinator
     device = parent_coordinator.device
 
-    entities: list[Climate] = []
     # As there are no standalone thermostats, we just iterate over the children.
-    entities.extend(
+    entities: list[Climate] = [
         Climate(child, parent_coordinator, parent=device)
         for child in device.children
-        if child.device_type == DeviceType.Thermostat
-    )
+        if child.device_type is DeviceType.Thermostat
+    ]
 
     async_add_entities(entities)
 
@@ -84,19 +92,17 @@ class Climate(CoordinatedTPLinkEntity, ClimateEntity):
     @async_refresh_after
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
-        await self._target_feature.set_value(int(temperature))
+        await self._target_feature.set_value(int(kwargs[ATTR_TEMPERATURE]))
 
     @async_refresh_after
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set hvac mode (on/off)."""
+        """Set hvac mode (heat/off)."""
         if hvac_mode is HVACMode.HEAT:
             await self._state_feature.set_value(True)
         elif hvac_mode is HVACMode.OFF:
             await self._state_feature.set_value(False)
         else:
-            _LOGGER.warning("Tried to set unsupported mode: %s", hvac_mode)
+            raise ServiceValidationError(f"Tried to set unsupported mode: {hvac_mode}")
 
     @async_refresh_after
     async def async_turn_on(self) -> None:
@@ -118,11 +124,6 @@ class Climate(CoordinatedTPLinkEntity, ClimateEntity):
             HVACMode.HEAT if self._state_feature.value else HVACMode.OFF
         )
 
-        STATE_TO_ACTION = {
-            ThermostatState.Idle: HVACAction.IDLE,
-            ThermostatState.Heating: HVACAction.HEATING,
-            ThermostatState.Off: HVACAction.OFF,
-        }
         if (
             self._mode_feature.value not in STATE_TO_ACTION
             and self._attr_hvac_action is not HVACAction.OFF
