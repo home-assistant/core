@@ -31,19 +31,14 @@ CONF_KNX_GROUP_VALUE_RESPONSE: Final = "group_value_response"
 CONF_KNX_INCOMING: Final = "incoming"
 CONF_KNX_OUTGOING: Final = "outgoing"
 
-TELEGRAM_TRIGGER_OPTIONS: Final = {
+
+TELEGRAM_TRIGGER_SCHEMA: Final = {
+    vol.Optional(CONF_KNX_DESTINATION): vol.All(cv.ensure_list, [ga_validator]),
     vol.Optional(CONF_KNX_GROUP_VALUE_WRITE, default=True): cv.boolean,
     vol.Optional(CONF_KNX_GROUP_VALUE_RESPONSE, default=True): cv.boolean,
     vol.Optional(CONF_KNX_GROUP_VALUE_READ, default=True): cv.boolean,
     vol.Optional(CONF_KNX_INCOMING, default=True): cv.boolean,
     vol.Optional(CONF_KNX_OUTGOING, default=True): cv.boolean,
-}
-TELEGRAM_TRIGGER_SCHEMA: Final = {
-    vol.Optional(CONF_KNX_DESTINATION): vol.All(
-        cv.ensure_list,
-        [ga_validator],
-    ),
-    **TELEGRAM_TRIGGER_OPTIONS,
 }
 # TRIGGER_SCHEMA is exclusive to triggers, the above are used in device triggers too
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(

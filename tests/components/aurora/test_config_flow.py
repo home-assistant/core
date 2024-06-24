@@ -11,8 +11,9 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import setup_integration
+
 from tests.common import MockConfigEntry
-from tests.components.aurora import setup_integration
 
 DATA = {
     CONF_LATITUDE: -10,

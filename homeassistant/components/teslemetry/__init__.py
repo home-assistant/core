@@ -18,7 +18,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN, MODELS
+from .const import DOMAIN, LOGGER, MODELS
 from .coordinator import (
     TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergySiteLiveCoordinator,
@@ -102,6 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 manufacturer="Tesla",
                 configuration_url="https://teslemetry.com/console",
                 name=product.get("site_name", "Energy Site"),
+                serial_number=str(site_id),
             )
 
             energysites.append(
@@ -152,3 +153,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Unload Teslemetry Config."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate config entry."""
+    if config_entry.version > 1:
+        return False
+
+    if config_entry.version == 1 and config_entry.minor_version < 2:
+        # Add unique_id to existing entry
+        teslemetry = Teslemetry(
+            session=async_get_clientsession(hass),
+            access_token=config_entry.data[CONF_ACCESS_TOKEN],
+        )
+        try:
+            metadata = await teslemetry.metadata()
+        except TeslaFleetError as e:
+            LOGGER.error(e.message)
+            return False
+
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=metadata["uid"], version=1, minor_version=2
+        )
+    return True
