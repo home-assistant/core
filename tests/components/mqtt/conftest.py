@@ -6,7 +6,17 @@ from unittest.mock import patch
 import pytest
 from typing_extensions import Generator
 
-from tests.components.light.conftest import mock_light_profiles  # noqa: F401
+from homeassistant.components import mqtt
+
+ENTRY_DEFAULT_BIRTH_MESSAGE = {
+    mqtt.CONF_BROKER: "mock-broker",
+    mqtt.CONF_BIRTH_MESSAGE: {
+        mqtt.ATTR_TOPIC: "homeassistant/status",
+        mqtt.ATTR_PAYLOAD: "online",
+        mqtt.ATTR_QOS: 0,
+        mqtt.ATTR_RETAIN: False,
+    },
+}
 
 
 @pytest.fixture(autouse=True)
