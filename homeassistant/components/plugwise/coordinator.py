@@ -116,7 +116,7 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
                         via_device = device_entry.id
                     elif (  # then remove the connected orphaned device(s)
                         device_entry.via_device_id == via_device
-                        and item[1] not in list(data.devices.keys())
+                        and item[1] not in data.devices
                     ):
                         device_reg.async_update_device(
                             device_entry.id, remove_config_entry_id=entry.entry_id
