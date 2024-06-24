@@ -145,6 +145,7 @@ CONFIG_SENSOR_TYPES: tuple[AirGradientConfigSensorEntityDescription, ...] = (
         translation_key="co2_automatic_baseline_calibration_days",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.DAYS,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda config: config.co2_automatic_baseline_calibration_days,
     ),
     AirGradientConfigSensorEntityDescription(
@@ -152,6 +153,7 @@ CONFIG_SENSOR_TYPES: tuple[AirGradientConfigSensorEntityDescription, ...] = (
         translation_key="nox_learning_offset",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.DAYS,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda config: config.nox_learning_offset,
     ),
     AirGradientConfigSensorEntityDescription(
@@ -159,6 +161,7 @@ CONFIG_SENSOR_TYPES: tuple[AirGradientConfigSensorEntityDescription, ...] = (
         translation_key="tvoc_learning_offset",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.DAYS,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda config: config.tvoc_learning_offset,
     ),
 )
@@ -169,12 +172,14 @@ CONFIG_LED_BAR_SENSOR_TYPES: tuple[AirGradientConfigSensorEntityDescription, ...
         translation_key="led_bar_mode",
         device_class=SensorDeviceClass.ENUM,
         options=[x.value for x in LedBarMode],
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda config: config.led_bar_mode,
     ),
     AirGradientConfigSensorEntityDescription(
         key="led_bar_brightness",
         translation_key="led_bar_brightness",
         native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda config: config.led_bar_brightness,
     ),
 )
@@ -185,6 +190,7 @@ CONFIG_DISPLAY_SENSOR_TYPES: tuple[AirGradientConfigSensorEntityDescription, ...
         translation_key="display_temperature_unit",
         device_class=SensorDeviceClass.ENUM,
         options=[x.value for x in TemperatureUnit],
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda config: config.temperature_unit,
     ),
     AirGradientConfigSensorEntityDescription(
@@ -192,12 +198,14 @@ CONFIG_DISPLAY_SENSOR_TYPES: tuple[AirGradientConfigSensorEntityDescription, ...
         translation_key="display_pm_standard",
         device_class=SensorDeviceClass.ENUM,
         options=list(PM_STANDARD_REVERSE),
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda config: PM_STANDARD.get(config.pm_standard),
     ),
     AirGradientConfigSensorEntityDescription(
         key="display_brightness",
         translation_key="display_brightness",
         native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda config: config.display_brightness,
     ),
 )
