@@ -51,11 +51,11 @@ Answer in plain text. Keep it simple and to the point.
 
 @callback
 def async_render_no_api_prompt(hass: HomeAssistant) -> str:
-    """Return the prompt to be used when no API is configured."""
-    return (
-        "Only if the user wants to control a device, tell them to edit the AI configuration "
-        "and allow access to Home Assistant."
-    )
+    """Return the prompt to be used when no API is configured.
+
+    No longer used since Home Assistant 2024.7.
+    """
+    return ""
 
 
 @singleton("llm")
