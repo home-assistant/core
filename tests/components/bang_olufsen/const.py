@@ -1,6 +1,7 @@
 """Constants used for testing the bang_olufsen integration."""
 
 from ipaddress import IPv4Address, IPv6Address
+from unittest.mock import Mock
 
 from mozart_api.exceptions import ApiException
 from mozart_api.models import (
@@ -180,4 +181,14 @@ TEST_DEEZER_TRACK = PlayQueueItem(
     type="track",
     uri="1234567890",
 )
-TEST_DEEZER_INVALID_FLOW = ApiException(status=400, reason="Bad Request")
+
+# codespell can't see the escaped ', so it thinks the word is misspelled
+TEST_DEEZER_INVALID_FLOW = ApiException(
+    status=400,
+    reason="Bad Request",
+    http_resp=Mock(
+        status=400,
+        reason="Bad Request",
+        data='{"message": "Couldn\'t start user flow for me"}',  # codespell:ignore
+    ),
+)

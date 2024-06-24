@@ -2,8 +2,6 @@
 
 from unittest.mock import patch
 
-from mozart_api.exceptions import ApiException
-
 from homeassistant.components.bang_olufsen.const import (
     BANG_OLUFSEN_STATES,
     WebsocketNotification,
@@ -35,6 +33,7 @@ from homeassistant.setup import async_setup_component
 from .const import (
     TEST_AUDIO_SOURCES,
     TEST_DEEZER_FLOW,
+    TEST_DEEZER_INVALID_FLOW,
     TEST_DEEZER_PLAYLIST,
     TEST_DEEZER_TRACK,
     TEST_FALLBACK_SOURCES,
@@ -989,9 +988,8 @@ async def test_async_play_media_invalid_deezer(
     hass: HomeAssistant, mock_mozart_client, mock_config_entry
 ) -> None:
     """Test async_play_media with an invalid/no Deezer login."""
-    mock_mozart_client.start_deezer_flow.side_effect = ApiException(
-        status=400, reason="Bad Request"
-    )
+
+    mock_mozart_client.start_deezer_flow.side_effect = TEST_DEEZER_INVALID_FLOW
 
     # Setup entity
     mock_config_entry.add_to_hass(hass)
@@ -1013,7 +1011,5 @@ async def test_async_play_media_invalid_deezer(
         # Ensure that the logger has been called with the error message
         mock_logger.assert_called_once()
 
-    # # Check API call
-    # mock_mozart_client.start_deezer_flow.assert_called_once_with(
-    #     user_flow=TEST_DEEZER_FLOW
-    # )
+    # Check API call
+    mock_mozart_client.start_deezer_flow.assert_called_once()
