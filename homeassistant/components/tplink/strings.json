@@ -94,6 +94,12 @@
     "select": {
       "light_preset": {
         "name": "Light preset"
+      },
+      "alarm_sound": {
+        "name": "Alarm sound"
+      },
+      "alarm_volume": {
+        "name": "Alarm volume"
       }
     },
     "sensor": {
