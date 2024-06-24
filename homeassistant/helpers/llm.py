@@ -501,8 +501,9 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
     if isinstance(schema, selector.ConstantSelector):
         return {"enum": [schema.config["value"]]}
 
+    result: dict[str, Any]
     if isinstance(schema, selector.ColorTempSelector):
-        result: dict[str, Any] = {"type": "number"}
+        result = {"type": "number"}
         if "min" in schema.config:
             result["minimum"] = schema.config["min"]
         elif "min_mireds" in schema.config:
@@ -542,7 +543,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         return convert(schema.DATA_SCHEMA)
 
     if isinstance(schema, selector.NumberSelector):
-        result: dict[str, Any] = {"type": "number"}
+        result = {"type": "number"}
         if "min" in schema.config:
             result["minimum"] = schema.config["min"]
         if "max" in schema.config:
