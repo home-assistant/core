@@ -42,10 +42,10 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -575,8 +575,8 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
             # Exit if the source uses unsupported file.
             if media_id.endswith(".m3u"):
-                raise BrowseError(
-                    "Media sources with the .m3u extension are not supported"
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="m3u_invalid_format"
                 )
 
         if announce:
