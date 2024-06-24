@@ -1195,6 +1195,7 @@ ovoenergy==2.0.0
 p1monitor==3.0.0
 
 # homeassistant.components.mqtt
+# homeassistant.components.shiftr
 paho-mqtt==1.6.1
 
 # homeassistant.components.panasonic_viera
@@ -1311,7 +1312,7 @@ pyElectra==1.2.0
 pyRFXtrx==0.31.0
 
 # homeassistant.components.tibber
-pyTibber==0.29.1
+pyTibber==0.29.3
 
 # homeassistant.components.dlink
 pyW215==0.7.0
