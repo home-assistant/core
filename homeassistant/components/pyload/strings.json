@@ -64,7 +64,7 @@
         "name": "Pause/Resume queue"
       },
       "reconnect": {
-        "name": "Reconnect"
+        "name": "Auto-Reconnect"
       }
     }
   },
