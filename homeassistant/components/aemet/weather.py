@@ -71,7 +71,7 @@ class AemetWeather(
         coordinator: WeatherUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, name, unique_id)
         self._attr_name = name
         self._attr_unique_id = unique_id
 
