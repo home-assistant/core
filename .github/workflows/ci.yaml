@@ -528,6 +528,7 @@ jobs:
     needs:
       - info
       - base
+      - pylint-tests
     steps:
       - name: Install additional OS dependencies
         run: |
@@ -567,6 +568,7 @@ jobs:
     needs:
       - info
       - base
+      - pylint-tests
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
@@ -644,6 +646,7 @@ jobs:
     needs:
       - info
       - base
+      - pylint-tests
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
@@ -717,14 +720,14 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          pylint --ignore-missing-annotations=y tests
+          pylint tests
       - name: Run pylint (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
         run: |
           . venv/bin/activate
           python --version
-          pylint --ignore-missing-annotations=y tests/components/${{ needs.info.outputs.tests_glob }}
+          pylint tests/components/${{ needs.info.outputs.tests_glob }}
 
   mypy:
     name: Check mypy
@@ -736,6 +739,7 @@ jobs:
     needs:
       - info
       - base
+      - pylint-tests
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
@@ -801,6 +805,7 @@ jobs:
     needs:
       - info
       - base
+      - pylint-tests
     name: Split tests for full run
     steps:
       - name: Install additional OS dependencies
@@ -852,6 +857,7 @@ jobs:
     needs:
       - info
       - base
+      - pylint-tests
       - gen-requirements-all
       - hassfest
       - lint-other
@@ -973,6 +979,7 @@ jobs:
     needs:
       - info
       - base
+      - pylint-tests
       - gen-requirements-all
       - hassfest
       - lint-other
@@ -1099,6 +1106,7 @@ jobs:
     needs:
       - info
       - base
+      - pylint-tests
       - gen-requirements-all
       - hassfest
       - lint-other
@@ -1245,6 +1253,7 @@ jobs:
     needs:
       - info
       - base
+      - pylint-tests
       - gen-requirements-all
       - hassfest
       - lint-other

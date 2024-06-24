@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from astroid.typing import InferenceResult
 
 _COMMON_ARGUMENTS: dict[str, list[str]] = {
-    "hass": ["HomeAssistant", "HomeAssistant | None"]
+    # "hass": ["HomeAssistant", "HomeAssistant | None"]
 }
 _PLATFORMS: set[str] = {platform.value for platform in Platform}
 _KNOWN_GENERIC_TYPES: set[str] = {
