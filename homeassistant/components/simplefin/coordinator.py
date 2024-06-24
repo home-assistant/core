@@ -1,4 +1,5 @@
 """Data update coordinator for the SimpleFIN integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -39,6 +40,6 @@ class SimpleFinDataUpdateCoordinator(DataUpdateCoordinator[Any]):
 
         except SimpleFinPaymentRequiredError as err:
             LOGGER.warning(
-                "There is a billing info with your SimpleFin Account. Please correct and try again later"
+                "There is a billing issue with your SimpleFin account, contact Simplefin to address this issue"
             )
             raise ConfigEntryNotReady from err
