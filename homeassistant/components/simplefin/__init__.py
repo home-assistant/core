@@ -1,4 +1,5 @@
 """The SimpleFIN integration."""
+
 from __future__ import annotations
 
 from simplefin4py import SimpleFin
@@ -17,15 +18,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
     access_url = entry.data[CONF_ACCESS_URL]
     sf_client: SimpleFin = SimpleFin(access_url)
-
     sf_coordinator = SimpleFinDataUpdateCoordinator(hass, sf_client)
     await sf_coordinator.async_config_entry_first_refresh()
-
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = sf_coordinator
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(async_update_entry))
-
     return True
 
 
