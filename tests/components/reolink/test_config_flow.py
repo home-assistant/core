@@ -397,7 +397,7 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) -> No
             None,
             None,
             TEST_HOST2,
-            [TEST_HOST, TEST_HOST2, TEST_HOST2, TEST_HOST2],
+            [TEST_HOST, TEST_HOST2, TEST_HOST2],
         ),
         (
             True,
@@ -458,7 +458,7 @@ async def test_dhcp_ip_update(
         # ensure the last_update_succes is False for the device_coordinator.
         reolink_connect.get_states = AsyncMock(side_effect=ReolinkError("Test error"))
         async_fire_time_changed(
-            hass, utcnow() + DEVICE_UPDATE_INTERVAL + timedelta(seconds=30)
+            hass, utcnow() + DEVICE_UPDATE_INTERVAL + timedelta(minutes=1)
         )
         await hass.async_block_till_done()
 
