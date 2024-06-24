@@ -8,5 +8,5 @@
   "documentation": "https://www.home-assistant.io/integrations/bedrock_agent",
   "integration_type": "service",
   "iot_class": "cloud_push",
-  "requirements": []
+  "requirements": ["boto3==1.34.116"]
 }
