@@ -180,15 +180,15 @@ async def async_setup_platform(
         receiver = receivers[origin]
         _LOGGER.debug("Received update callback from %s: %s", receiver.name, message)
 
-        zone, _, _ = message
+        zone, _, value = message
         entity = entities[origin].get(zone)
         if entity is not None:
             if entity.enabled:
                 entity.process_update(message)
-        elif zone in ZONES:
-            # When we receive the status for a zone, it is available on the receiver,
-            # so we create the entity for it.
-            _LOGGER.debug("Discovered %s on %s,", ZONES[zone], receiver.name)
+        elif zone in ZONES and value != "N/A":
+            # When we receive the status for a zone, and the value is not "N/A",
+            # then zone is available on the receiver, so we create the entity for it.
+            _LOGGER.debug("Discovered %s on %s", ZONES[zone], receiver.name)
             zone_entity = OnkyoMediaPlayer(
                 receiver, sources, zone, max_volume, receiver_max_volume
             )
@@ -199,7 +199,7 @@ async def async_setup_platform(
     def async_onkyo_connect_callback(origin: str) -> None:
         """Receiver (re)connected."""
         receiver = receivers[origin]
-        _LOGGER.debug("Receiver (re)connected: %s", receiver.name)
+        _LOGGER.debug("Receiver (re)connected: %s (%s)", receiver.name, receiver.host)
 
         for entity in entities[origin].values():
             entity.backfill_state()
@@ -217,6 +217,7 @@ async def async_setup_platform(
             receiver.query_property(zone, "power")
 
         # Add the main zone to entities, since it is always active.
+        _LOGGER.debug("Adding Main Zone on %s", receiver.name)
         main_entity = OnkyoMediaPlayer(
             receiver, sources, "main", max_volume, receiver_max_volume
         )
@@ -224,6 +225,7 @@ async def async_setup_platform(
         async_add_entities([main_entity])
 
     if host is not None and host not in KNOWN_HOSTS:
+        _LOGGER.debug("Manually creating receiver: %s (%s)", name, host)
         receiver = await pyeiscp.Connection.create(
             host=host,
             update_callback=async_onkyo_update_callback,
@@ -246,6 +248,7 @@ async def async_setup_platform(
                 await receiver.connect()
                 setup_receiver(receiver)
 
+        _LOGGER.debug("Discovering receivers")
         await pyeiscp.Connection.discover(
             update_callback=async_onkyo_update_callback,
             connect_callback=async_onkyo_connect_callback,
