@@ -2632,48 +2632,40 @@ async def test_async_remove_device_thread_safety(
         )
 
 
-async def test_device_registry_collisions(
+async def test_device_registry_connections_collision(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
-    """Test identifiers and connection collisions in the device registry."""
+    """Test connection collisions in the device registry."""
     config_entry = MockConfigEntry()
     config_entry.add_to_hass(hass)
 
     device1 = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "none")},
-        identifiers={("bridgeid", "1234")},
         manufacturer="manufacturer",
         model="model",
     )
     device2 = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "none")},
-        identifiers={("bridgeid", "0123")},
-        manufacturer="manufacturer",
-        model="model",
-    )
-    device3 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "AA:BB:CC:DD:EE:FF")},
-        identifiers={("bridgeid", "0123")},
-        manufacturer="manufacturer",
-        model="model",
-    )
-    device4 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "EE:EE:EE:EE:EE:EE")},
-        identifiers={("bridgeid", "dev4")},
         manufacturer="manufacturer",
         model="model",
     )
 
     assert device1.id == device2.id
-    assert device1.id == device3.id
-    assert device2.id == device3.id
-    assert device4.id != device1.id
 
-    with pytest.raises(HomeAssistantError):
+    device3 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    # Attempt to merge connection for device3 with the same
+    # connection that already exists in device1
+    with pytest.raises(
+        HomeAssistantError, match=f"Connections.*already registered.*{device1.id}"
+    ):
         device_registry.async_update_device(
             device3.id,
             merge_connections={
@@ -2682,25 +2674,93 @@ async def test_device_registry_collisions(
             },
         )
 
-    device = device_registry.async_get(device3.id)
-    assert device.connections == {
-        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"),
-        (dr.CONNECTION_NETWORK_MAC, "ee:ee:ee:ee:ee:ee"),
-        (dr.CONNECTION_NETWORK_MAC, "none"),
-    }
-    assert device.id == device1.id
+    # Attempt to add new connections for device3 with the same
+    # connection that already exists in device1
+    with pytest.raises(
+        HomeAssistantError, match=f"Connections.*already registered.*{device1.id}"
+    ):
+        device_registry.async_update_device(
+            device3.id,
+            new_connections={
+                (dr.CONNECTION_NETWORK_MAC, "EE:EE:EE:EE:EE:EE"),
+                (dr.CONNECTION_NETWORK_MAC, "none"),
+            },
+        )
 
-    new_connections = device.connections.copy()
-    new_connections.discard((dr.CONNECTION_NETWORK_MAC, "none"))
-    assert new_connections == {
-        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"),
-        (dr.CONNECTION_NETWORK_MAC, "ee:ee:ee:ee:ee:ee"),
-    }
-    device_registry.async_update_device(device3.id, new_connections=new_connections)
-    device = device_registry.async_get(device3.id)
-    assert device.connections == {
-        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"),
-        (dr.CONNECTION_NETWORK_MAC, "ee:ee:ee:ee:ee:ee"),
-    }
+    device3_refetched = device_registry.async_get(device3.id)
+    assert device3_refetched.connections == set()
+    assert device3_refetched.identifiers == {("bridgeid", "0123")}
 
-    assert len(device_registry.devices) == 1
+    device1_refetched = device_registry.async_get(device1.id)
+    assert device1_refetched.connections == {(dr.CONNECTION_NETWORK_MAC, "none")}
+    assert device1_refetched.identifiers == set()
+
+    device2_refetched = device_registry.async_get(device2.id)
+    assert device2_refetched.connections == {(dr.CONNECTION_NETWORK_MAC, "none")}
+    assert device2_refetched.identifiers == set()
+
+    assert device2_refetched.id == device1_refetched.id
+    assert len(device_registry.devices) == 2
+
+
+async def test_device_registry_identifiers_collision(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test identifiers collisions in the device registry."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+
+    device1 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    device2 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    assert device1.id == device2.id
+
+    device3 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("bridgeid", "4567")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    # Attempt to merge identifiers for device3 with the same
+    # connection that already exists in device1
+    with pytest.raises(
+        HomeAssistantError, match=f"Identifiers.*already registered.*{device1.id}"
+    ):
+        device_registry.async_update_device(
+            device3.id, merge_identifiers={("bridgeid", "0123"), ("bridgeid", "8888")}
+        )
+
+    # Attempt to add new identifiers for device3 with the same
+    # connection that already exists in device1
+    with pytest.raises(
+        HomeAssistantError, match=f"Identifiers.*already registered.*{device1.id}"
+    ):
+        device_registry.async_update_device(
+            device3.id, new_identifiers={("bridgeid", "0123"), ("bridgeid", "8888")}
+        )
+
+    device3_refetched = device_registry.async_get(device3.id)
+    assert device3_refetched.connections == set()
+    assert device3_refetched.identifiers == {("bridgeid", "4567")}
+
+    device1_refetched = device_registry.async_get(device1.id)
+    assert device1_refetched.connections == set()
+    assert device1_refetched.identifiers == {("bridgeid", "0123")}
+
+    device2_refetched = device_registry.async_get(device2.id)
+    assert device2_refetched.connections == set()
+    assert device2_refetched.identifiers == {("bridgeid", "0123")}
+
+    assert device2_refetched.id == device1_refetched.id
+    assert len(device_registry.devices) == 2
