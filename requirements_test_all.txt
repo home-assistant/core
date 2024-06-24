@@ -282,7 +282,7 @@ aionanoleaf==0.2.1
 aionotion==2024.03.0
 
 # homeassistant.components.nut
-aionut==4.3.2
+aionut==4.3.3
 
 # homeassistant.components.oncue
 aiooncue==0.3.7
@@ -291,7 +291,7 @@ aiooncue==0.3.7
 aioopenexchangerates==0.4.0
 
 # homeassistant.components.nmap_tracker
-aiooui==0.1.5
+aiooui==0.1.6
 
 # homeassistant.components.pegel_online
 aiopegelonline==0.0.10
@@ -2171,7 +2171,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==3.1.8
+uiprotect==3.3.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
