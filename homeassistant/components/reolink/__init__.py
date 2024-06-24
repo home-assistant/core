@@ -38,6 +38,7 @@ PLATFORMS = [
 ]
 DEVICE_UPDATE_INTERVAL = timedelta(seconds=60)
 FIRMWARE_UPDATE_INTERVAL = timedelta(hours=12)
+NUM_CRED_ERRORS = 3
 
 
 @dataclass
@@ -75,7 +76,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
 
     starting = True
-    credential_errors = 0
 
     async def async_device_config_update() -> None:
         """Update the host state cache and renew the ONVIF-subscription."""
@@ -83,16 +83,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             try:
                 await host.update_states()
             except CredentialsInvalidError as err:
-                credential_errors += 1
-                if credential_errors >= 3:
+                host.credential_errors += 1
+                if host.credential_errors >= NUM_CRED_ERRORS:
                     await host.stop()
                     raise ConfigEntryAuthFailed(err) from err
                 raise UpdateFailed(str(err)) from err
             except ReolinkError as err:
-                credential_errors = 0
+                host.credential_errors = 0
                 raise UpdateFailed(str(err)) from err
 
-        credential_errors = 0
+        host.credential_errors = 0
 
         async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
             await host.renew()
