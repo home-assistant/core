@@ -1,5 +1,7 @@
 """Constants for the Homeassistant integration."""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Final
 
 import homeassistant.core as ha
@@ -10,7 +12,7 @@ if TYPE_CHECKING:
 
 DOMAIN = ha.DOMAIN
 
-DATA_EXPOSED_ENTITIES: HassKey["ExposedEntities"] = HassKey(f"{DOMAIN}.exposed_entites")
+DATA_EXPOSED_ENTITIES: HassKey[ExposedEntities] = HassKey(f"{DOMAIN}.exposed_entites")
 DATA_STOP_HANDLER = f"{DOMAIN}.stop_handler"
 
 SERVICE_HOMEASSISTANT_STOP: Final = "stop"
