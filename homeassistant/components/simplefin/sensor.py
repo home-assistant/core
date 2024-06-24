@@ -99,13 +99,10 @@ class SimpleFinSensor(SimpleFinEntity, SensorEntity):
     def icon(self) -> str | None:
         """Return the currency of this account."""
 
-        icon_fn = getattr(self.entity_description, "icon_fn", None)
+        if not (icon_fn := getattr(self.entity_description, "icon_fn", None))
+            return None
 
-        if icon_fn and callable(icon_fn):
-            account_data = self.coordinator.data.get_account_for_id(self._account_id)
-            return icon_fn(account_data)
-
-        return icon_fn
+        return icon_fn(self.coordinator.data.get_account_for_id(self._account_id))
 
     @property
     def native_unit_of_measurement(self) -> str | None:
