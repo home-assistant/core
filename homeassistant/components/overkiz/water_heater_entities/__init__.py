@@ -2,7 +2,9 @@
 
 from pyoverkiz.enums.ui import UIWidget
 
-from .atlantic_dhw import AtlanticDomesticHotWaterProductionMBLComponent
+from .atlantic_domestic_hot_water_production import (
+    AtlanticDomesticHotWaterProductionMBLComponent,
+)
 from .atlantic_pass_apc_dhw import AtlanticPassAPCDHW
 from .domestic_hot_water_production import DomesticHotWaterProduction
 from .hitachi_dhw import HitachiDHW
