@@ -910,7 +910,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             if (
                 device_info_type == "primary"
                 and add_config_entry.entry_id != old.primary_config_entry
-                and add_config_entry.domain not in LOW_PRIO_CONFIG_ENTRY_DOMAINS
+                and (
+                    old.primary_config_entry is None
+                    or add_config_entry.domain not in LOW_PRIO_CONFIG_ENTRY_DOMAINS
+                )
             ):
                 new_values["primary_config_entry"] = add_config_entry.entry_id
                 old_values["primary_config_entry"] = old.primary_config_entry

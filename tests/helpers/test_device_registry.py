@@ -2990,7 +2990,7 @@ async def test_primary_config_entry(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test the primary integration field."""
-    mock_config_entry_1 = MockConfigEntry(title=None)
+    mock_config_entry_1 = MockConfigEntry(domain="mqtt", title=None)
     mock_config_entry_1.add_to_hass(hass)
     mock_config_entry_2 = MockConfigEntry(title=None)
     mock_config_entry_2.add_to_hass(hass)
