@@ -2960,6 +2960,8 @@ async def test_primary_config_entry(
     mock_config_entry_1.add_to_hass(hass)
     mock_config_entry_2 = MockConfigEntry(title=None)
     mock_config_entry_2.add_to_hass(hass)
+    mock_config_entry_3 = MockConfigEntry(domain="matter", title=None)
+    mock_config_entry_3.add_to_hass(hass)
 
     # Create device without model name etc, config entry will not be marked primary
     device = device_registry.async_get_or_create(
@@ -2982,6 +2984,14 @@ async def test_primary_config_entry(
         config_entry_id=mock_config_entry_2.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         model="model 2",
+    )
+    assert device.primary_config_entry == mock_config_entry_2.entry_id
+
+    # New matter config entry with model will not be promoted to primary
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry_3.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        model="model 3",
     )
     assert device.primary_config_entry == mock_config_entry_2.entry_id
 
