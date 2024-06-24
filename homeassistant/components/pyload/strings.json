@@ -31,6 +31,18 @@
     "sensor": {
       "speed": {
         "name": "Speed"
+      },
+      "active": {
+        "name": "Active downloads"
+      },
+      "queue": {
+        "name": "Downloads in queue"
+      },
+      "total": {
+        "name": "Total downlods"
+      },
+      "free_space": {
+        "name": "Free space"
       }
     }
   },

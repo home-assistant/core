@@ -3,6 +3,15 @@
     "sensor": {
       "speed": {
         "default": "mdi:speedometer"
+      },
+      "active": {
+        "default": "mdi:cloud-download"
+      },
+      "queue": {
+        "default": "mdi:cloud-clock"
+      },
+      "total": {
+        "default": "mdi:cloud-alert"
       }
     }
   }
