@@ -123,14 +123,17 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         if operation_mode in (STATE_PERFORMANCE, OverkizCommandParam.BOOST):
-            await self.async_turn_away_mode_off()
+            if self.is_away_mode_on:
+                await self.async_turn_away_mode_off()
             await self.async_turn_boost_mode_on()
         elif operation_mode in (
             OverkizCommandParam.ECO,
             OverkizCommandParam.MANUAL_ECO_ACTIVE,
         ):
-            await self.async_turn_away_mode_off()
-            await self.async_turn_boost_mode_off()
+            if self.is_away_mode_on:
+                await self.async_turn_away_mode_off()
+            if self.is_boost_mode_on:
+                await self.async_turn_boost_mode_off()
             await self.executor.async_execute_command(
                 OverkizCommand.SET_DHW_MODE, OverkizCommandParam.AUTO_MODE
             )
@@ -138,14 +141,18 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
             OverkizCommandParam.MANUAL,
             OverkizCommandParam.MANUAL_ECO_INACTIVE,
         ):
-            await self.async_turn_away_mode_off()
-            await self.async_turn_boost_mode_off()
+            if self.is_away_mode_on:
+                await self.async_turn_away_mode_off()
+            if self.is_boost_mode_on:
+                await self.async_turn_boost_mode_off()
             await self.executor.async_execute_command(
                 OverkizCommand.SET_DHW_MODE, OverkizCommandParam.MANUAL_ECO_INACTIVE
             )
         else:
-            await self.async_turn_boost_mode_off()
-            await self.async_turn_away_mode_off()
+            if self.is_away_mode_on:
+                await self.async_turn_away_mode_off()
+            if self.is_boost_mode_on:
+                await self.async_turn_boost_mode_off()
             await self.executor.async_execute_command(
                 OverkizCommand.SET_DHW_MODE, operation_mode
             )
