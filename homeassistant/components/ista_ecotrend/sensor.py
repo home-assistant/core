@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
+import logging
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -22,6 +23,8 @@ from . import IstaConfigEntry
 from .const import DOMAIN
 from .coordinator import IstaCoordinator
 from .util import IstaConsumptionType, IstaValueType, get_native_value
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(kw_only=True, frozen=True)

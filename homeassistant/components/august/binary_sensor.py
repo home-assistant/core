@@ -5,14 +5,10 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from functools import partial
 import logging
 
-from yalexs.activity import (
-    ACTION_DOORBELL_CALL_MISSED,
-    SOURCE_PUBNUB,
-    Activity,
-    ActivityType,
-)
+from yalexs.activity import ACTION_DOORBELL_CALL_MISSED, Activity, ActivityType
 from yalexs.doorbell import DoorbellDetail
 from yalexs.lock import LockDetail, LockDoorStatus
 from yalexs.manager.const import ACTIVITY_UPDATE_INTERVAL
@@ -51,28 +47,14 @@ def _retrieve_online_state(
     return detail.bridge_is_online
 
 
-def _retrieve_motion_state(data: AugustData, detail: DoorbellDetail) -> bool:
-    assert data.activity_stream is not None
-    latest = data.activity_stream.get_latest_device_activity(
-        detail.device_id, {ActivityType.DOORBELL_MOTION}
-    )
-
-    if latest is None:
-        return False
-
-    return _activity_time_based_state(latest)
-
-
-_IMAGE_ACTIVITIES = {ActivityType.DOORBELL_IMAGE_CAPTURE}
-
-
-def _retrieve_image_capture_state(data: AugustData, detail: DoorbellDetail) -> bool:
+def _retrieve_time_based_state(
+    activities: set[ActivityType], data: AugustData, detail: DoorbellDetail
+) -> bool:
+    """Get the latest state of the sensor."""
     stream = data.activity_stream
-    assert stream is not None
-    latest = stream.get_latest_device_activity(detail.device_id, _IMAGE_ACTIVITIES)
-    if latest is None:
-        return False
-    return _activity_time_based_state(latest)
+    if latest := stream.get_latest_device_activity(detail.device_id, activities):
+        return _activity_time_based_state(latest)
+    return False
 
 
 _RING_ACTIVITIES = {ActivityType.DOORBELL_DING}
@@ -80,7 +62,6 @@ _RING_ACTIVITIES = {ActivityType.DOORBELL_DING}
 
 def _retrieve_ding_state(data: AugustData, detail: DoorbellDetail | LockDetail) -> bool:
     stream = data.activity_stream
-    assert stream is not None
     latest = stream.get_latest_device_activity(detail.device_id, _RING_ACTIVITIES)
     if latest is None or (
         data.push_updates_connected and latest.action == ACTION_DOORBELL_CALL_MISSED
@@ -118,13 +99,15 @@ SENSOR_TYPES_VIDEO_DOORBELL = (
     AugustDoorbellBinarySensorEntityDescription(
         key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
-        value_fn=_retrieve_motion_state,
+        value_fn=partial(_retrieve_time_based_state, {ActivityType.DOORBELL_MOTION}),
         is_time_based=True,
     ),
     AugustDoorbellBinarySensorEntityDescription(
         key="image capture",
         translation_key="image_capture",
-        value_fn=_retrieve_image_capture_state,
+        value_fn=partial(
+            _retrieve_time_based_state, {ActivityType.DOORBELL_IMAGE_CAPTURE}
+        ),
         is_time_based=True,
     ),
     AugustDoorbellBinarySensorEntityDescription(
@@ -185,22 +168,12 @@ class AugustDoorBinarySensor(AugustDescriptionEntity, BinarySensorEntity):
     @callback
     def _update_from_data(self) -> None:
         """Get the latest state of the sensor and update activity."""
-        assert self._data.activity_stream is not None
-        door_activity = self._data.activity_stream.get_latest_device_activity(
-            self._device_id, {ActivityType.DOOR_OPERATION}
-        )
-
-        if door_activity is not None:
+        if door_activity := self._get_latest({ActivityType.DOOR_OPERATION}):
             update_lock_detail_from_activity(self._detail, door_activity)
-            # If the source is pubnub the lock must be online since its a live update
-            if door_activity.source == SOURCE_PUBNUB:
+            if door_activity.was_pushed:
                 self._detail.set_online(True)
 
-        bridge_activity = self._data.activity_stream.get_latest_device_activity(
-            self._device_id, {ActivityType.BRIDGE_OPERATION}
-        )
-
-        if bridge_activity is not None:
+        if bridge_activity := self._get_latest({ActivityType.BRIDGE_OPERATION}):
             update_lock_detail_from_activity(self._detail, bridge_activity)
         self._attr_available = self._detail.bridge_is_online
         self._attr_is_on = self._detail.door_state == LockDoorStatus.OPEN

@@ -899,7 +899,7 @@ class MQTT:
         """Return a string with the exception message."""
         # if msg_callback is a partial we return the name of the first argument
         if isinstance(msg_callback, partial):
-            call_back_name = getattr(msg_callback.args[0], "__name__")  # type: ignore[unreachable]
+            call_back_name = getattr(msg_callback.args[0], "__name__")
         else:
             call_back_name = getattr(msg_callback, "__name__")
         return (
@@ -1035,7 +1035,8 @@ class MQTT:
         self, birth_message: PublishMessage
     ) -> None:
         """Resubscribe to all topics and publish birth message."""
-        await self._async_perform_subscriptions()
+        self._async_queue_resubscribe()
+        self._subscribe_debouncer.async_schedule()
         await self._ha_started.wait()  # Wait for Home Assistant to start
         await self._discovery_cooldown()  # Wait for MQTT discovery to cool down
         # Update subscribe cooldown period to a shorter time
@@ -1091,7 +1092,6 @@ class MQTT:
             result_code,
         )
 
-        self._async_queue_resubscribe()
         birth: dict[str, Any]
         if birth := self.conf.get(CONF_BIRTH_MESSAGE, DEFAULT_BIRTH):
             birth_message = PublishMessage(**birth)
@@ -1102,13 +1102,8 @@ class MQTT:
             )
         else:
             # Update subscribe cooldown period to a shorter time
-            self.config_entry.async_create_background_task(
-                self.hass,
-                self._async_perform_subscriptions(),
-                name="mqtt re-subscribe",
-            )
-            self._subscribe_debouncer.set_timeout(SUBSCRIBE_COOLDOWN)
-            _LOGGER.info("MQTT client initialized")
+            self._async_queue_resubscribe()
+            self._subscribe_debouncer.async_schedule()
 
         self._async_connection_result(True)
 
