@@ -159,13 +159,13 @@ async def test_mqtt_connects_on_home_assistant_mqtt_setup(
 
 async def test_mqtt_does_not_disconnect_on_home_assistant_stop(
     hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test if client is not disconnected on HA stop."""
     mqtt_client_mock = setup_with_birth_msg_client_mock
     hass.bus.fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await mock_debouncer.wait()
     assert mqtt_client_mock.disconnect.call_count == 0
 
 
@@ -1103,6 +1103,7 @@ async def test_subscribe_mqtt_config_entry_disabled(
 async def test_subscribe_and_resubscribe(
     hass: HomeAssistant,
     client_debug_log: None,
+    mock_debouncer: asyncio.Event,
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
     recorded_calls: list[ReceiveMessage],
     record_calls: MessageCallbackType,
@@ -1113,15 +1114,16 @@ async def test_subscribe_and_resubscribe(
         patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.4),
         patch("homeassistant.components.mqtt.client.UNSUBSCRIBE_COOLDOWN", 0.4),
     ):
+        mock_debouncer.clear()
         unsub = await mqtt.async_subscribe(hass, "test-topic", record_calls)
         # This unsub will be un-done with the following subscribe
         # unsubscribe should not be called at the broker
         unsub()
         unsub = await mqtt.async_subscribe(hass, "test-topic", record_calls)
+        await mock_debouncer.wait()
+        mock_debouncer.clear()
 
         async_fire_mqtt_message(hass, "test-topic", "test-payload")
-        await asyncio.sleep(0.1)
-        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert len(recorded_calls) == 1
         assert recorded_calls[0].topic == "test-topic"
@@ -1129,10 +1131,10 @@ async def test_subscribe_and_resubscribe(
         # assert unsubscribe was not called
         mqtt_client_mock.unsubscribe.assert_not_called()
 
+        mock_debouncer.clear()
         unsub()
 
-        await asyncio.sleep(0.1)
-        await hass.async_block_till_done(wait_background_tasks=True)
+        await mock_debouncer.wait()
         mqtt_client_mock.unsubscribe.assert_called_once_with(["test-topic"])
 
 
