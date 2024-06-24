@@ -194,10 +194,10 @@ class Device:
         """Set force_poll, and (un)subscribe if needed."""
         self._force_poll = force_poll
 
-        if self.force_poll:
+        if self._force_poll:
             # No need for subscriptions, as eventing will never be used.
             await self.async_unsubscribe_services()
-        elif not self.force_poll and not self._igd_device.is_subscribed:
+        elif not self._force_poll and not self._igd_device.is_subscribed:
             await self.async_subscribe_services()
 
     async def async_subscribe_services(self) -> None:

@@ -29,10 +29,8 @@ CONFIG_ENTRY_ORIGINAL_UDN = "original_udn"
 CONFIG_ENTRY_MAC_ADDRESS = "mac_address"
 CONFIG_ENTRY_LOCATION = "location"
 CONFIG_ENTRY_HOST = "host"
-CONFIG_ENTRY_FORCE_POLL = "force_poll"
 IDENTIFIER_HOST = "upnp_host"
 IDENTIFIER_SERIAL_NUMBER = "upnp_serial_number"
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30).total_seconds()
-DEFAULT_CONFIG_ENTRY_FORCE_POLL = False
 ST_IGD_V1 = "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
 ST_IGD_V2 = "urn:schemas-upnp-org:device:InternetGatewayDevice:2"
