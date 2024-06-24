@@ -50,6 +50,14 @@ BINARYSENSOR_DESCRIPTIONS: Final = (
     TPLinkBinarySensorEntityDescription(
         key="humidity_warning",
     ),
+    TPLinkBinarySensorEntityDescription(
+        key="is_open",
+        device_class=BinarySensorDeviceClass.DOOR,
+    ),
+    TPLinkBinarySensorEntityDescription(
+        key="water_alert",
+        device_class=BinarySensorDeviceClass.MOISTURE,
+    ),
 )
 
 BINARYSENSOR_DESCRIPTIONS_MAP = {desc.key: desc for desc in BINARYSENSOR_DESCRIPTIONS}
