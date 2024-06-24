@@ -61,54 +61,52 @@ async def test_legacy_notify_service_simple(
 
 
 @pytest.mark.usefixtures("bmw_fixture")
+@pytest.mark.parametrize(
+    ("data", "exc_translation"),
+    [
+        (
+            {
+                "latitude": POI_DATA.get("lat"),
+            },
+            "Invalid data for point of interest: required key not provided @ data['longitude']",
+        ),
+        (
+            {
+                "latitude": POI_DATA.get("lat"),
+                "longitude": "text",
+            },
+            "Invalid data for point of interest: invalid longitude for dictionary value @ data['longitude']",
+        ),
+        (
+            {
+                "latitude": POI_DATA.get("lat"),
+                "longitude": 9999,
+            },
+            "Invalid data for point of interest: invalid longitude for dictionary value @ data['longitude']",
+        ),
+    ],
+)
 async def test_service_call_invalid_input(
     hass: HomeAssistant,
+    data: dict,
+    exc_translation: str,
 ) -> None:
     """Test invalid inputs."""
 
     # Setup component
     assert await setup_mocked_integration(hass)
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
             "notify",
             "bmw_connected_drive_ix_xdrive50",
             {
                 "message": POI_DATA.get("name"),
-                "data": {
-                    "latitude": POI_DATA.get("lat"),
-                },
+                "data": data,
             },
             blocking=True,
         )
-
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            "notify",
-            "bmw_connected_drive_ix_xdrive50",
-            {
-                "message": POI_DATA.get("name"),
-                "data": {
-                    "latitude": POI_DATA.get("lat"),
-                    "longitude": "text",
-                },
-            },
-            blocking=True,
-        )
-
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            "notify",
-            "bmw_connected_drive_ix_xdrive50",
-            {
-                "message": POI_DATA.get("name"),
-                "data": {
-                    "latitude": POI_DATA.get("lat"),
-                    "longitude": 9999,
-                },
-            },
-            blocking=True,
-        )
+    assert str(exc.value) == exc_translation
 
 
 @pytest.mark.usefixtures("bmw_fixture")

@@ -89,7 +89,13 @@ class BMWNotificationService(BaseNotificationService):
             )
 
         except (vol.Invalid, TypeError, ValueError) as ex:
-            raise ServiceValidationError(f"Invalid POI data: {ex}") from ex
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_poi",
+                translation_placeholders={
+                    "poi_exception": str(ex),
+                },
+            ) from ex
 
         for vehicle in kwargs[ATTR_TARGET]:
             vehicle = cast(MyBMWVehicle, vehicle)
