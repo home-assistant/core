@@ -15,6 +15,7 @@ from homeassistant.components.cloud.client import (
     CloudClient,
 )
 from homeassistant.components.cloud.const import (
+    DATA_CLOUD,
     PREF_ALEXA_REPORT_STATE,
     PREF_ENABLE_ALEXA,
     PREF_ENABLE_GOOGLE,
@@ -63,7 +64,7 @@ async def test_handler_alexa(hass: HomeAssistant) -> None:
     )
 
     mock_cloud_prefs(hass, {PREF_ALEXA_REPORT_STATE: False})
-    cloud = hass.data["cloud"]
+    cloud = hass.data[DATA_CLOUD]
 
     resp = await cloud.client.async_alexa_message(
         test_alexa.get_new_request("Alexa.Discovery", "Discover")
@@ -83,7 +84,7 @@ async def test_handler_alexa(hass: HomeAssistant) -> None:
 async def test_handler_alexa_disabled(hass: HomeAssistant, mock_cloud_fixture) -> None:
     """Test handler Alexa when user has disabled it."""
     mock_cloud_fixture._prefs[PREF_ENABLE_ALEXA] = False
-    cloud = hass.data["cloud"]
+    cloud = hass.data[DATA_CLOUD]
 
     resp = await cloud.client.async_alexa_message(
         test_alexa.get_new_request("Alexa.Discovery", "Discover")
@@ -117,7 +118,7 @@ async def test_handler_google_actions(hass: HomeAssistant) -> None:
     )
 
     mock_cloud_prefs(hass, {})
-    cloud = hass.data["cloud"]
+    cloud = hass.data[DATA_CLOUD]
 
     reqid = "5711642932632160983"
     data = {"requestId": reqid, "inputs": [{"intent": "action.devices.SYNC"}]}
@@ -164,7 +165,7 @@ async def test_handler_google_actions_disabled(
     reqid = "5711642932632160983"
     data = {"requestId": reqid, "inputs": [{"intent": intent}]}
 
-    cloud = hass.data["cloud"]
+    cloud = hass.data[DATA_CLOUD]
     with patch(
         "hass_nabucasa.Cloud._decode_claims",
         return_value={"cognito:username": "myUserName"},
@@ -182,7 +183,7 @@ async def test_webhook_msg(
     with patch("hass_nabucasa.Cloud.initialize"):
         setup = await async_setup_component(hass, "cloud", {"cloud": {}})
         assert setup
-    cloud = hass.data["cloud"]
+    cloud = hass.data[DATA_CLOUD]
 
     await cloud.client.prefs.async_initialize()
     await cloud.client.prefs.async_update(
@@ -269,7 +270,7 @@ async def test_google_config_expose_entity(
         "light", "test", "unique", suggested_object_id="kitchen"
     )
 
-    cloud_client = hass.data[DOMAIN].client
+    cloud_client = hass.data[DATA_CLOUD].client
     state = State(entity_entry.entity_id, "on")
     gconf = await cloud_client.get_google_config()
 
@@ -293,7 +294,7 @@ async def test_google_config_should_2fa(
         "light", "test", "unique", suggested_object_id="kitchen"
     )
 
-    cloud_client = hass.data[DOMAIN].client
+    cloud_client = hass.data[DATA_CLOUD].client
     gconf = await cloud_client.get_google_config()
     state = State(entity_entry.entity_id, "on")
 
@@ -350,7 +351,7 @@ async def test_system_msg(hass: HomeAssistant) -> None:
     with patch("hass_nabucasa.Cloud.initialize"):
         setup = await async_setup_component(hass, "cloud", {"cloud": {}})
         assert setup
-    cloud = hass.data["cloud"]
+    cloud = hass.data[DATA_CLOUD]
 
     assert cloud.client.relayer_region is None
 
@@ -373,7 +374,7 @@ async def test_cloud_connection_info(hass: HomeAssistant) -> None:
         hexmock.return_value = "12345678901234567890"
         setup = await async_setup_component(hass, "cloud", {"cloud": {}})
         assert setup
-    cloud = hass.data["cloud"]
+    cloud = hass.data[DATA_CLOUD]
 
     response = await cloud.client.async_cloud_connection_info({})
 
