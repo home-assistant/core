@@ -559,17 +559,17 @@ class PrometheusMetrics:
                 )
 
         preset_mode = state.attributes.get(ATTR_PRESET_MODE)
-        available_presets = state.attributes.get(ATTR_PRESET_MODES)
-        if preset_mode and available_presets:
+        available_preset_modes = state.attributes.get(ATTR_PRESET_MODES)
+        if preset_mode and available_preset_modes:
             preset_metric = self._metric(
                 "climate_preset_mode",
                 prometheus_client.Gauge,
                 "Preset mode enum",
-                ["preset"],
+                ["mode"],
             )
-            for preset in available_presets:
-                preset_metric.labels(**dict(self._labels(state), preset=preset)).set(
-                    float(preset == preset_mode)
+            for mode in available_preset_modes:
+                preset_metric.labels(**dict(self._labels(state), mode=mode)).set(
+                    float(mode == preset_mode)
                 )
 
         fan_mode = state.attributes.get(ATTR_FAN_MODE)

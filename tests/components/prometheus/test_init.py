@@ -410,7 +410,7 @@ async def test_climate(
         'climate_preset_mode{domain="climate",'
         'entity="climate.ecobee",'
         'friendly_name="Ecobee",'
-        'preset="away"} 1.0' in body
+        'mode="away"} 1.0' in body
     )
     assert (
         'climate_fan_mode{domain="climate",'
