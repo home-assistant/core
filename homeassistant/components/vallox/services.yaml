@@ -35,16 +35,11 @@ set_profile:
       selector:
         select:
           options:
-            - label: "Home"
-              value: "1"
-            - label: "Away"
-              value: "2"
-            - label: "Boost"
-              value: "3"
-            - label: "Fireplace"
-              value: "4"
-            - label: "Extra"
-              value: "5"
+            - "Home"
+            - "Away"
+            - "Boost"
+            - "Fireplace"
+            - "Extra"
     duration:
       required: false
       selector:
