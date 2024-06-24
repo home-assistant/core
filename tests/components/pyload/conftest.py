@@ -62,42 +62,41 @@ def pyload_config() -> ConfigType:
 def mock_pyloadapi() -> Generator[AsyncMock, None, None]:
     """Mock PyLoadAPI."""
     with (
-        patch("homeassistant.components.pyload.PyLoadAPI") as mock_client,
+        patch(
+            "homeassistant.components.pyload.PyLoadAPI", autospec=True
+        ) as mock_client,
         patch("homeassistant.components.pyload.config_flow.PyLoadAPI", new=mock_client),
     ):
         client = mock_client.return_value
         client.username = "username"
         client.api_url = "https://pyload.local:8000/"
-        client.login = AsyncMock(
-            return_value=LoginResponse(
-                {
-                    "_permanent": True,
-                    "authenticated": True,
-                    "id": 2,
-                    "name": "username",
-                    "role": 0,
-                    "perms": 0,
-                    "template": "default",
-                    "_flashes": [["message", "Logged in successfully"]],
-                }
-            )
+        client.login.return_value = LoginResponse(
+            {
+                "_permanent": True,
+                "authenticated": True,
+                "id": 2,
+                "name": "username",
+                "role": 0,
+                "perms": 0,
+                "template": "default",
+                "_flashes": [["message", "Logged in successfully"]],
+            }
         )
-        client.get_status = AsyncMock(
-            return_value=StatusServerResponse(
-                {
-                    "pause": False,
-                    "active": 1,
-                    "queue": 6,
-                    "total": 37,
-                    "speed": 5405963.0,
-                    "download": True,
-                    "reconnect": False,
-                    "captcha": False,
-                }
-            )
+
+        client.get_status.return_value = StatusServerResponse(
+            {
+                "pause": False,
+                "active": 1,
+                "queue": 6,
+                "total": 37,
+                "speed": 5405963.0,
+                "download": True,
+                "reconnect": False,
+                "captcha": False,
+            }
         )
-        client.version = AsyncMock(return_value="0.5.0")
-        client.free_space = AsyncMock(return_value=99999999999)
+        client.version.return_value = "0.5.0"
+        client.free_space.return_value = 99999999999
         yield client
 
 
