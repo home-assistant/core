@@ -889,24 +889,26 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             self._raise_for_conflicting_connections(
                 device_id, normalized_merge_connections
             )
-            old_value = old.connections
-            if not normalized_merge_connections.issubset(old_value):
-                new_values["connections"] = old_value | normalized_merge_connections
-                old_values["connections"] = old_value
+            old_connections = old.connections
+            if not normalized_merge_connections.issubset(old_connections):
+                new_values["connections"] = (
+                    old_connections | normalized_merge_connections
+                )
+                old_values["connections"] = old_connections
 
         if merge_identifiers is not UNDEFINED:
             self._raise_for_conflicting_identifiers(device_id, merge_identifiers)
-            old_value = old.identifiers
-            if not merge_identifiers.issubset(old_value):
-                new_values["identifiers"] = old_value | merge_identifiers
-                old_values["identifiers"] = old_value
+            old_identifiers = old.identifiers
+            if not merge_identifiers.issubset(old_identifiers):
+                new_values["identifiers"] = old_identifiers | merge_identifiers
+                old_values["identifiers"] = old_identifiers
 
         if new_connections is not UNDEFINED:
             normalized_new_connections = _normalize_connections(new_connections)
             self._raise_for_conflicting_connections(
                 device_id, normalized_new_connections
             )
-            new_values["connections"] = _normalize_connections(new_connections)
+            new_values["connections"] = normalized_new_connections
             old_values["connections"] = old.connections
 
         if new_identifiers is not UNDEFINED:
@@ -969,10 +971,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
     @callback
     def _raise_for_conflicting_connections(
-        self, device_id: str, normalized_merge_connections: set[tuple[str, str]]
+        self, device_id: str, normalized_connections: set[tuple[str, str]]
     ) -> None:
-        """Raise if connections conflict with another device."""
-        for connection in normalized_merge_connections:
+        """Raise if connections conflict with another device.
+
+        Connections must be normalized before calling this method
+        with _normalize_connections.
+        """
+        for connection in normalized_connections:
             # We need to iterate over each connection because if there was a
             # conflict the index will only see the last one and we will not
             # be able to tell which one caused the conflict
@@ -980,7 +986,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 existing_device := self.async_get_device(connections={connection})
             ) and existing_device.id != device_id:
                 raise HomeAssistantError(
-                    f"Connections {normalized_merge_connections} already registered to {existing_device}"
+                    f"Connections {normalized_connections} "
+                    f"already registered to {existing_device}"
                 )
 
     @callback
@@ -996,7 +1003,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 existing_device := self.async_get_device(identifiers={identifier})
             ) and existing_device.id != device_id:
                 raise HomeAssistantError(
-                    f"Identifiers {identifiers} already registered to {existing_device}"
+                    f"Identifiers {identifiers} already "
+                    f"registered to {existing_device}"
                 )
 
     @callback
