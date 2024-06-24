@@ -1140,29 +1140,32 @@ async def test_subscribe_and_resubscribe(
 
 async def test_subscribe_topic_non_async(
     hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     recorded_calls: list[ReceiveMessage],
     record_calls: MessageCallbackType,
 ) -> None:
     """Test the subscription of a topic using the non-async function."""
     await mqtt_mock_entry()
+    await mock_debouncer.wait()
+    mock_debouncer.clear()
     unsub = await hass.async_add_executor_job(
         mqtt.subscribe, hass, "test-topic", record_calls
     )
-    await hass.async_block_till_done()
+    await mock_debouncer.wait()
 
     async_fire_mqtt_message(hass, "test-topic", "test-payload")
 
-    await hass.async_block_till_done()
     assert len(recorded_calls) == 1
     assert recorded_calls[0].topic == "test-topic"
     assert recorded_calls[0].payload == "test-payload"
 
+    mock_debouncer.clear()
     await hass.async_add_executor_job(unsub)
+    await mock_debouncer.wait()
 
     async_fire_mqtt_message(hass, "test-topic", "test-payload")
 
-    await hass.async_block_till_done()
     assert len(recorded_calls) == 1
 
 
@@ -1437,11 +1440,9 @@ async def test_subscribe_special_characters(
     assert recorded_calls[0].payload == payload
 
 
-@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
-@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
-@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_subscribe_same_topic(
     hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test subscribing to same topic twice and simulate retained messages.
@@ -1462,25 +1463,22 @@ async def test_subscribe_same_topic(
         calls_b.append(msg)
 
     mqtt_client_mock.reset_mock()
+    mock_debouncer.clear()
     await mqtt.async_subscribe(hass, "test/state", _callback_a, qos=0)
     # Simulate a non retained message after the first subscription
     async_fire_mqtt_message(hass, "test/state", "online", qos=0, retain=False)
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
-    await hass.async_block_till_done()
+    await mock_debouncer.wait()
     assert len(calls_a) == 1
     mqtt_client_mock.subscribe.assert_called()
     calls_a = []
     mqtt_client_mock.reset_mock()
 
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
     await hass.async_block_till_done()
+    mock_debouncer.clear()
     await mqtt.async_subscribe(hass, "test/state", _callback_b, qos=1)
     # Simulate an other non retained message after the second subscription
     async_fire_mqtt_message(hass, "test/state", "online", qos=0, retain=False)
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
-    await hass.async_block_till_done()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
-    await hass.async_block_till_done()
+    await mock_debouncer.wait()
     # Both subscriptions should receive updates
     assert len(calls_a) == 1
     assert len(calls_b) == 1
@@ -1489,6 +1487,7 @@ async def test_subscribe_same_topic(
 
 async def test_replaying_payload_same_topic(
     hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test replaying retained messages.
@@ -1511,21 +1510,20 @@ async def test_replaying_payload_same_topic(
         calls_b.append(msg)
 
     mqtt_client_mock.reset_mock()
+    mock_debouncer.clear()
     await mqtt.async_subscribe(hass, "test/state", _callback_a)
-    await hass.async_block_till_done()
+    await mock_debouncer.wait()
     async_fire_mqtt_message(
         hass, "test/state", "online", qos=0, retain=True
     )  # Simulate a (retained) message played back
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
-    await asyncio.sleep(0)
-    await hass.async_block_till_done()
-
     assert len(calls_a) == 1
     mqtt_client_mock.subscribe.assert_called()
     calls_a = []
     mqtt_client_mock.reset_mock()
 
+    mock_debouncer.clear()
     await mqtt.async_subscribe(hass, "test/state", _callback_b)
+    await mock_debouncer.wait()
 
     # Simulate edge case where non retained message was received
     # after subscription at HA but before the debouncer delay was passed.
@@ -1535,12 +1533,6 @@ async def test_replaying_payload_same_topic(
 
     # Simulate a (retained) message played back on new subscriptions
     async_fire_mqtt_message(hass, "test/state", "online", qos=0, retain=True)
-
-    # Make sure the debouncer delay was passed
-    await hass.async_block_till_done()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
-    await asyncio.sleep(0)
-    await hass.async_block_till_done()
 
     # The current subscription only received the message without retain flag
     assert len(calls_a) == 1
@@ -1562,10 +1554,6 @@ async def test_replaying_payload_same_topic(
     # After connecting the retain flag will not be set, even if the
     # payload published was retained, we cannot see that
     async_fire_mqtt_message(hass, "test/state", "online", qos=0, retain=False)
-    await hass.async_block_till_done()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
-    await asyncio.sleep(0)
-    await hass.async_block_till_done()
     assert len(calls_a) == 1
     assert help_assert_message(calls_a[0], "test/state", "online", qos=0, retain=False)
     assert len(calls_b) == 1
@@ -1576,18 +1564,13 @@ async def test_replaying_payload_same_topic(
     calls_b = []
     mqtt_client_mock.reset_mock()
     mqtt_client_mock.on_disconnect(None, None, 0)
+
+    mock_debouncer.clear()
     mqtt_client_mock.on_connect(None, None, None, 0)
-    await hass.async_block_till_done()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
-    await asyncio.sleep(0)
-    await hass.async_block_till_done()
+    await mock_debouncer.wait()
     mqtt_client_mock.subscribe.assert_called()
     # Simulate a (retained) message played back after reconnecting
     async_fire_mqtt_message(hass, "test/state", "online", qos=0, retain=True)
-    await hass.async_block_till_done()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
-    await asyncio.sleep(0)
-    await hass.async_block_till_done(wait_background_tasks=True)
     # Both subscriptions now should replay the retained message
     assert len(calls_a) == 1
     assert help_assert_message(calls_a[0], "test/state", "online", qos=0, retain=True)
@@ -1595,11 +1578,9 @@ async def test_replaying_payload_same_topic(
     assert help_assert_message(calls_b[0], "test/state", "online", qos=0, retain=True)
 
 
-@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
-@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
-@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_replaying_payload_after_resubscribing(
     hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test replaying and filtering retained messages after resubscribing.
@@ -1617,22 +1598,18 @@ async def test_replaying_payload_after_resubscribing(
         calls_a.append(msg)
 
     mqtt_client_mock.reset_mock()
+    mock_debouncer.clear()
     unsub = await mqtt.async_subscribe(hass, "test/state", _callback_a)
-    await hass.async_block_till_done()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await mock_debouncer.wait()
     mqtt_client_mock.subscribe.assert_called()
 
     # Simulate a (retained) message played back
     async_fire_mqtt_message(hass, "test/state", "online", qos=0, retain=True)
-    await hass.async_block_till_done()
     assert help_assert_message(calls_a[0], "test/state", "online", qos=0, retain=True)
     calls_a.clear()
 
     # Test we get updates
     async_fire_mqtt_message(hass, "test/state", "offline", qos=0, retain=False)
-    await hass.async_block_till_done()
     assert help_assert_message(calls_a[0], "test/state", "offline", qos=0, retain=False)
     calls_a.clear()
 
@@ -1642,24 +1619,20 @@ async def test_replaying_payload_after_resubscribing(
     assert len(calls_a) == 0
 
     # Unsubscribe an resubscribe again
+    mock_debouncer.clear()
     unsub()
     unsub = await mqtt.async_subscribe(hass, "test/state", _callback_a)
-    await hass.async_block_till_done()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
-    await hass.async_block_till_done()
+    await mock_debouncer.wait()
     mqtt_client_mock.subscribe.assert_called()
 
     # Simulate we can receive a (retained) played back message again
     async_fire_mqtt_message(hass, "test/state", "online", qos=0, retain=True)
-    await hass.async_block_till_done()
     assert help_assert_message(calls_a[0], "test/state", "online", qos=0, retain=True)
 
 
-@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
-@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
-@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_replaying_payload_wildcard_topic(
     hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test replaying retained messages.
@@ -1683,28 +1656,24 @@ async def test_replaying_payload_wildcard_topic(
         calls_b.append(msg)
 
     mqtt_client_mock.reset_mock()
+    mock_debouncer.clear()
     await mqtt.async_subscribe(hass, "test/#", _callback_a)
+    await mock_debouncer.wait()
     # Simulate (retained) messages being played back on new subscriptions
     async_fire_mqtt_message(hass, "test/state1", "new_value_1", qos=0, retain=True)
     async_fire_mqtt_message(hass, "test/state2", "new_value_2", qos=0, retain=True)
-    await hass.async_block_till_done()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
-    await asyncio.sleep(0)
-    await hass.async_block_till_done()
     assert len(calls_a) == 2
     mqtt_client_mock.subscribe.assert_called()
     calls_a = []
     mqtt_client_mock.reset_mock()
 
     # resubscribe to the wild card topic again
+    mock_debouncer.clear()
     await mqtt.async_subscribe(hass, "test/#", _callback_b)
+    await mock_debouncer.wait()
     # Simulate (retained) messages being played back on new subscriptions
     async_fire_mqtt_message(hass, "test/state1", "initial_value_1", qos=0, retain=True)
     async_fire_mqtt_message(hass, "test/state2", "initial_value_2", qos=0, retain=True)
-    await hass.async_block_till_done()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
-    await asyncio.sleep(0)
-    await hass.async_block_till_done()
     # The retained messages playback should only be processed for the new subscriptions
     assert len(calls_a) == 0
     assert len(calls_b) == 2
@@ -1717,8 +1686,6 @@ async def test_replaying_payload_wildcard_topic(
     # Simulate new messages being received
     async_fire_mqtt_message(hass, "test/state1", "update_value_1", qos=0, retain=False)
     async_fire_mqtt_message(hass, "test/state2", "update_value_2", qos=0, retain=False)
-    await hass.async_block_till_done()
-    await asyncio.sleep(0)
     assert len(calls_a) == 2
     assert len(calls_b) == 2
 
@@ -1727,20 +1694,16 @@ async def test_replaying_payload_wildcard_topic(
     calls_b = []
     mqtt_client_mock.reset_mock()
     mqtt_client_mock.on_disconnect(None, None, 0)
+
+    mock_debouncer.clear()
     mqtt_client_mock.on_connect(None, None, None, 0)
-    await hass.async_block_till_done()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
-    await asyncio.sleep(0)
-    await hass.async_block_till_done()
+    await mock_debouncer.wait()
+
     mqtt_client_mock.subscribe.assert_called()
     # Simulate the (retained) messages are played back after reconnecting
     # for all subscriptions
     async_fire_mqtt_message(hass, "test/state1", "update_value_1", qos=0, retain=True)
     async_fire_mqtt_message(hass, "test/state2", "update_value_2", qos=0, retain=True)
-    await hass.async_block_till_done()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
-    await asyncio.sleep(0)
-    await hass.async_block_till_done(wait_background_tasks=True)
     # Both subscriptions should replay
     assert len(calls_a) == 2
     assert len(calls_b) == 2
@@ -1748,29 +1711,32 @@ async def test_replaying_payload_wildcard_topic(
 
 async def test_not_calling_unsubscribe_with_active_subscribers(
     hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
     record_calls: MessageCallbackType,
 ) -> None:
     """Test not calling unsubscribe() when other subscribers are active."""
     mqtt_client_mock = setup_with_birth_msg_client_mock
     mqtt_client_mock.reset_mock()
+    mock_debouncer.clear()
     unsub = await mqtt.async_subscribe(hass, "test/state", record_calls, 2)
     await mqtt.async_subscribe(hass, "test/state", record_calls, 1)
-    await hass.async_block_till_done()
-    await asyncio.sleep(0)
-    await hass.async_block_till_done()
+    await mock_debouncer.wait()
     assert mqtt_client_mock.subscribe.called
 
+    mock_debouncer.clear()
     unsub()
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
     await hass.async_block_till_done(wait_background_tasks=True)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
     assert not mqtt_client_mock.unsubscribe.called
+    assert not mock_debouncer.is_set()
 
 
 async def test_not_calling_subscribe_when_unsubscribed_within_cooldown(
     hass: HomeAssistant,
-    setup_with_birth_msg_client_mock: MqttMockPahoClient,
+    mock_debouncer: asyncio.Event,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     record_calls: MessageCallbackType,
 ) -> None:
     """Test not calling subscribe() when it is unsubscribed.
@@ -1778,13 +1744,16 @@ async def test_not_calling_subscribe_when_unsubscribed_within_cooldown(
     Make sure subscriptions are cleared if unsubscribed before
     the subscribe cool down period has ended.
     """
-    mqtt_client_mock = setup_with_birth_msg_client_mock
-    mqtt_client_mock.subscribe.reset_mock()
+    mqtt_mock = await mqtt_mock_entry()
+    mqtt_client_mock = mqtt_mock._mqttc
+    await mock_debouncer.wait()
 
+    mock_debouncer.clear()
+    mqtt_client_mock.subscribe.reset_mock()
     unsub = await mqtt.async_subscribe(hass, "test/state", record_calls)
     unsub()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
-    await hass.async_block_till_done()
+    await mock_debouncer.wait()
+    # The debouncer executes without an pending subscribes
     assert not mqtt_client_mock.subscribe.called
 
 
