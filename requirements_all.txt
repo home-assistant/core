@@ -815,9 +815,6 @@ epion==0.0.3
 # homeassistant.components.epson
 epson-projector==0.5.1
 
-# homeassistant.components.epsonworkforce
-epsonprinter==0.0.9
-
 # homeassistant.components.eq3btsmart
 eq3btsmart==1.1.6
 
@@ -1414,9 +1411,6 @@ nuheat==1.0.1
 
 # homeassistant.components.numato
 numato-gpio==0.13.0
-
-# homeassistant.components.opencv
-numpy==1.23.2
 
 # homeassistant.components.compensation
 # homeassistant.components.iqvia
