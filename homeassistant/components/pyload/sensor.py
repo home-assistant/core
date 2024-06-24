@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     UnitOfDataRate,
+    UnitOfInformation,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -40,7 +41,11 @@ from .coordinator import PyLoadCoordinator
 class PyLoadSensorEntity(StrEnum):
     """pyLoad Sensor Entities."""
 
+    ACTIVE = "active"
+    FREE_SPACE = "free_space"
+    QUEUE = "queue"
     SPEED = "speed"
+    TOTAL = "total"
 
 
 SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
@@ -50,6 +55,26 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        suggested_display_precision=1,
+    ),
+    SensorEntityDescription(
+        key=PyLoadSensorEntity.ACTIVE,
+        translation_key=PyLoadSensorEntity.ACTIVE,
+    ),
+    SensorEntityDescription(
+        key=PyLoadSensorEntity.QUEUE,
+        translation_key=PyLoadSensorEntity.QUEUE,
+    ),
+    SensorEntityDescription(
+        key=PyLoadSensorEntity.TOTAL,
+        translation_key=PyLoadSensorEntity.TOTAL,
+    ),
+    SensorEntityDescription(
+        key=PyLoadSensorEntity.FREE_SPACE,
+        translation_key=PyLoadSensorEntity.FREE_SPACE,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         suggested_display_precision=1,
     ),
 )
