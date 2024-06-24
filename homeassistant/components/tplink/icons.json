@@ -52,7 +52,7 @@
           "on": "mdi:transition"
         }
       },
-      "frost_protection": {
+      "frost_protection_enabled": {
         "default": "mdi:snowflake-thermometer"
       }
     },
