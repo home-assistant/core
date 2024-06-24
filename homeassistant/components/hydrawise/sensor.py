@@ -178,26 +178,26 @@ async def async_setup_entry(
             for description in CONTROLLER_SENSORS
         )
         entities.extend(
-            HydrawiseSensor(coordinator, description, controller)
-            for description in FLOW_CONTROLLER_SENSORS
-            if coordinator.data.daily_water_summary[controller.id].total_use is not None
-        )
-        entities.extend(
             HydrawiseSensor(coordinator, description, controller, zone_id=zone.id)
             for zone in controller.zones
             for description in ZONE_SENSORS
         )
-        entities.extend(
-            HydrawiseSensor(
-                coordinator,
-                description,
-                controller,
-                zone_id=zone.id,
+        if coordinator.data.daily_water_summary[controller.id].total_use is not None:
+            # we have a flow sensor for this controller
+            entities.extend(
+                HydrawiseSensor(coordinator, description, controller)
+                for description in FLOW_CONTROLLER_SENSORS
             )
-            for zone in controller.zones
-            for description in FLOW_ZONE_SENSORS
-            if coordinator.data.daily_water_summary[controller.id].total_use is not None
-        )
+            entities.extend(
+                HydrawiseSensor(
+                    coordinator,
+                    description,
+                    controller,
+                    zone_id=zone.id,
+                )
+                for zone in controller.zones
+                for description in FLOW_ZONE_SENSORS
+            )
     async_add_entities(entities)
 
 
