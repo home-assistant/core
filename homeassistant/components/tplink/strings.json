@@ -81,6 +81,20 @@
           "off": "[%key:component::binary_sensor::entity_component::update::state::off%]",
           "on": "[%key:component::binary_sensor::entity_component::update::state::on%]"
         }
+      },
+      "is_open": {
+        "name": "[%key:component::binary_sensor::entity_component::door::name%]",
+        "state": {
+          "off": "[%key:common::state::closed%]",
+          "on": "[%key:common::state::open%]"
+        }
+      },
+      "water_alert": {
+        "name": "[%key:component::binary_sensor::entity_component::moisture::name%]",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::moisture::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::moisture::state::on%]"
+        }
       }
     },
     "button": {

@@ -145,7 +145,7 @@
     'supported_features': 0,
     'translation_key': 'battery_level',
     'unique_id': '123456789ABCDEFGH_battery_level',
-    'unit_of_measurement': None,
+    'unit_of_measurement': '%',
   })
 # ---
 # name: test_states[sensor.my_device_battery_level-state]
@@ -154,6 +154,7 @@
       'device_class': 'battery',
       'friendly_name': 'my_device Battery level',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_device_battery_level',
@@ -198,7 +199,7 @@
     'supported_features': 0,
     'translation_key': 'current',
     'unique_id': '123456789ABCDEFGH_current_a',
-    'unit_of_measurement': 1,
+    'unit_of_measurement': 'A',
   })
 # ---
 # name: test_states[sensor.my_device_current-state]
@@ -207,7 +208,7 @@
       'device_class': 'current',
       'friendly_name': 'my_device Current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 1,
+      'unit_of_measurement': 'A',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_device_current',
@@ -252,7 +253,7 @@
     'supported_features': 0,
     'translation_key': 'current_consumption',
     'unique_id': '123456789ABCDEFGH_current_power_w',
-    'unit_of_measurement': 3,
+    'unit_of_measurement': 'W',
   })
 # ---
 # name: test_states[sensor.my_device_current_consumption-state]
@@ -261,7 +262,7 @@
       'device_class': 'power',
       'friendly_name': 'my_device Current consumption',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 3,
+      'unit_of_measurement': 'W',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_device_current_consumption',
@@ -336,7 +337,7 @@
     'supported_features': 0,
     'translation_key': 'humidity',
     'unique_id': '123456789ABCDEFGH_humidity',
-    'unit_of_measurement': None,
+    'unit_of_measurement': '%',
   })
 # ---
 # name: test_states[sensor.my_device_humidity-state]
@@ -345,6 +346,7 @@
       'device_class': 'humidity',
       'friendly_name': 'my_device Humidity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_device_humidity',
@@ -417,7 +419,7 @@
     'supported_features': 0,
     'translation_key': 'report_interval',
     'unique_id': '123456789ABCDEFGH_report_interval',
-    'unit_of_measurement': None,
+    'unit_of_measurement': '%',
   })
 # ---
 # name: test_states[sensor.my_device_signal_level-entry]
@@ -567,7 +569,7 @@
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': '123456789ABCDEFGH_temperature',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
 # name: test_states[sensor.my_device_this_month_s_consumption-entry]
@@ -605,7 +607,7 @@
     'supported_features': 0,
     'translation_key': 'consumption_this_month',
     'unique_id': '123456789ABCDEFGH_consumption_this_month',
-    'unit_of_measurement': 3,
+    'unit_of_measurement': 'kWh',
   })
 # ---
 # name: test_states[sensor.my_device_this_month_s_consumption-state]
@@ -614,7 +616,7 @@
       'device_class': 'energy',
       'friendly_name': "my_device This month's consumption",
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 3,
+      'unit_of_measurement': 'kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_device_this_month_s_consumption',
@@ -659,7 +661,7 @@
     'supported_features': 0,
     'translation_key': 'consumption_today',
     'unique_id': '123456789ABCDEFGH_today_energy_kwh',
-    'unit_of_measurement': 3,
+    'unit_of_measurement': 'kWh',
   })
 # ---
 # name: test_states[sensor.my_device_today_s_consumption-state]
@@ -668,7 +670,7 @@
       'device_class': 'energy',
       'friendly_name': "my_device Today's consumption",
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 3,
+      'unit_of_measurement': 'kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_device_today_s_consumption',
@@ -713,7 +715,7 @@
     'supported_features': 0,
     'translation_key': 'consumption_total',
     'unique_id': '123456789ABCDEFGH_total_energy_kwh',
-    'unit_of_measurement': 3,
+    'unit_of_measurement': 'kWh',
   })
 # ---
 # name: test_states[sensor.my_device_total_consumption-state]
@@ -722,7 +724,7 @@
       'device_class': 'energy',
       'friendly_name': 'my_device Total consumption',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 3,
+      'unit_of_measurement': 'kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_device_total_consumption',
@@ -767,7 +769,7 @@
     'supported_features': 0,
     'translation_key': 'voltage',
     'unique_id': '123456789ABCDEFGH_voltage',
-    'unit_of_measurement': 2,
+    'unit_of_measurement': 'v',
   })
 # ---
 # name: test_states[sensor.my_device_voltage-state]
@@ -776,7 +778,7 @@
       'device_class': 'voltage',
       'friendly_name': 'my_device Voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 2,
+      'unit_of_measurement': 'v',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_device_voltage',

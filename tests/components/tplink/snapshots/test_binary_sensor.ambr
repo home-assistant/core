@@ -79,6 +79,53 @@
     'state': 'off',
   })
 # ---
+# name: test_states[binary_sensor.my_device_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.my_device_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_open',
+    'unique_id': '123456789ABCDEFGH_is_open',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[binary_sensor.my_device_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'my_device Door',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_device_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_states[binary_sensor.my_device_humidity_warning-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -110,6 +157,53 @@
     'translation_key': 'humidity_warning',
     'unique_id': '123456789ABCDEFGH_humidity_warning',
     'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[binary_sensor.my_device_moisture-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.my_device_moisture',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
+    'original_icon': None,
+    'original_name': 'Moisture',
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_alert',
+    'unique_id': '123456789ABCDEFGH_water_alert',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[binary_sensor.my_device_moisture-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'moisture',
+      'friendly_name': 'my_device Moisture',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_device_moisture',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_states[binary_sensor.my_device_overheated-entry]

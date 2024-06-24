@@ -180,6 +180,16 @@
     "type": "BinarySensor",
     "category": "Debug"
   },
+  "water_alert": {
+    "value": false,
+    "type": "BinarySensor",
+    "category": "Primary"
+  },
+  "is_open": {
+    "value": false,
+    "type": "BinarySensor",
+    "category": "Primary"
+  },
   "test_alarm": {
     "value": "<Action>",
     "type": "Action",
@@ -236,5 +246,37 @@
     "type": "Choice",
     "category": "Config",
     "choices": ["Off", "Preset 1", "Preset 2"]
+  },
+  "alarm_sound": {
+    "value": "Phone Ring",
+    "type": "Choice",
+    "category": "Config",
+    "choices": [
+      "Doorbell Ring 1",
+      "Doorbell Ring 2",
+      "Doorbell Ring 3",
+      "Doorbell Ring 4",
+      "Doorbell Ring 5",
+      "Doorbell Ring 6",
+      "Doorbell Ring 7",
+      "Doorbell Ring 8",
+      "Doorbell Ring 9",
+      "Doorbell Ring 10",
+      "Phone Ring",
+      "Alarm 1",
+      "Alarm 2",
+      "Alarm 3",
+      "Alarm 4",
+      "Dripping Tap",
+      "Alarm 5",
+      "Connection 1",
+      "Connection 2"
+    ]
+  },
+  "alarm_volume": {
+    "value": "normal",
+    "type": "Choice",
+    "category": "Config",
+    "choices": ["low", "normal", "high"]
   }
 }
