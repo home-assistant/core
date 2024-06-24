@@ -2,19 +2,19 @@
 
 from __future__ import annotations
 
-import base64
 from functools import partial
 from io import BytesIO
-import json
 import logging
 import mimetypes
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 from urllib.error import HTTPError
 from urllib.request import urlopen
 
 import boto3
-from PIL import Image
+from botocore.exceptions import ClientError
+import PIL.Image
+from PIL.Image import Image
 import voluptuous as vol
 
 from homeassistant.components import conversation
@@ -28,7 +28,8 @@ from homeassistant.core import (
     SupportsResponse,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, intent
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.intent import IntentResponse, IntentResponseErrorCode
 
 from .const import (
     CONST_KEY_ID,
@@ -67,6 +68,21 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     return True
 
 
+async def build_converse_prompt_content(image: Image) -> Any:
+    buffered = BytesIO()
+    image.save(buffered, format=image.format)
+    file_image_byte = buffered.getvalue()
+    file_image_format = (
+        image.format if image.format in ["jpeg", "png", "gif", "webp"] else "jpeg"
+    )
+    return {
+        "image": {
+            "format": file_image_format,
+            "source": {"bytes": file_image_byte},
+        },
+    }
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bedrock Agent from a config entry."""
     hass.data.setdefault(DOMAIN, {})
@@ -84,8 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             CONST_SERVICE_PARAM_MODEL_ID, "anthropic.claude-3-haiku-20240307-v1:0"
         )
         param_prompt = call.data.get(CONST_SERVICE_PARAM_PROMPT)
-        prompt_content = [{"type": "text", "text": param_prompt}]
-
+        prompt_content = [{"text": param_prompt}]
         image_filenames = call.data.get(CONST_SERVICE_PARAM_FILENAMES)
         for image_filename in image_filenames or []:
             if not hass.config.is_allowed_path(image_filename):
@@ -99,41 +114,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             mime_type, _ = mimetypes.guess_type(image_filename)
             if mime_type is None or not mime_type.startswith("image"):
                 raise HomeAssistantError(f"`{image_filename}` is not an image")
-            file_image_data = await hass.async_add_executor_job(
-                Path(image_filename).read_bytes
+            file_image = await hass.async_add_executor_job(
+                PIL.Image.open, image_filename
             )
-            file_image_data_base64 = base64.b64encode(file_image_data)
-            file_image_data_str = file_image_data_base64.decode("utf-8")
-            prompt_content.append(
-                {
-                    "type": "image",
-                    "source": {
-                        "type": "base64",
-                        "media_type": "image/jpeg",
-                        "data": file_image_data_str,
-                    },
-                }
-            )
+            prompt_content.append(await build_converse_prompt_content(file_image))
 
         param_image_urls = call.data.get(CONST_SERVICE_PARAM_IMAGE_URLS)
         for param_image_url in param_image_urls or []:
             try:
+                mime_type, _ = mimetypes.guess_type(param_image_url)
+                if mime_type is None or not mime_type.startswith("image"):
+                    raise HomeAssistantError(f"`{param_image_url}` is not an image")
                 opened_url = await hass.async_add_executor_job(urlopen, param_image_url)
-                url_image = Image.open(opened_url)
-                buffered = BytesIO()
-                url_image.save(buffered, format="JPEG")
-                url_image_base64 = base64.b64encode(buffered.getvalue())
-                url_image_str = url_image_base64.decode("utf-8")
-                prompt_content.append(
-                    {
-                        "type": "image",
-                        "source": {
-                            "type": "base64",
-                            "media_type": "image/jpeg",
-                            "data": url_image_str,
-                        },
-                    }
-                )
+                url_image = PIL.Image.open(opened_url)
+                prompt_content.append(await build_converse_prompt_content(url_image))
             except HTTPError as error:  # status reason
                 raise HomeAssistantError(
                     f"Cannot access file from `{param_image_url}`."
@@ -147,33 +141,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             aws_secret_access_key=entry.data[CONST_KEY_SECRET],
         )
 
-        body = json.dumps(
-            {
-                "anthropic_version": "bedrock-2023-05-31",
-                "max_tokens": 1024,
-                "messages": [{"role": "user", "content": prompt_content}],
-            }
+        message = {"role": "user", "content": prompt_content}
+        messages = [message]
+
+        try:
+            bedrock_response = await hass.async_add_executor_job(
+                partial(
+                    bedrock.converse,
+                    modelId=param_model_id,
+                    messages=messages,
+                ),
+            )
+        except ClientError as error:
+            raise HomeAssistantError(
+                f"Bedrock Error: `{error.response.get("Error").get("Message")}`"
+            ) from error
+
+        description = (
+            bedrock_response["output"]["message"].get("content")[0].get("text")
         )
-
-        accept = "application/json"
-        contentType = "application/json"
-
-        bedrock_response = await hass.async_add_executor_job(
-            partial(
-                bedrock.invoke_model,
-                body=body,
-                modelId=param_model_id,
-                accept=accept,
-                contentType=contentType,
-            ),
-        )
-
-        response_body = json.loads(bedrock_response.get("body").read())
-        description = response_body.get("content")[0].get("text")
 
         return {"text": f"{description}"}
 
-    IMAGE_DESCRIPTION_SCHEMA = vol.Schema(
+    COGNITIVE_TASK_SCHEMA = vol.Schema(
         {
             vol.Required(CONST_SERVICE_PARAM_PROMPT): str,
             vol.Optional(CONST_SERVICE_PARAM_MODEL_ID): str,
@@ -190,7 +180,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DOMAIN,
         "cognitive_task",
         async_cognitive_task,
-        schema=IMAGE_DESCRIPTION_SCHEMA,
+        schema=COGNITIVE_TASK_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
 
@@ -246,7 +236,6 @@ class BedrockAgent(conversation.AbstractConversationAgent):
 
         modelId = self.entry.options[CONST_MODEL_ID]
         knowledgebaseId = self.entry.options.get(CONST_KNOWLEDGEBASE_ID) or ""
-        body = json.dumps({"prompt": question})
 
         if knowledgebaseId != "":
             agent_input = {"text": question}
@@ -268,86 +257,37 @@ class BedrockAgent(conversation.AbstractConversationAgent):
 
             return bedrock_agent_response["output"]["text"]
 
-        # switch case statement
-        if modelId.startswith("amazon.titan-text-express-v1"):
-            body = json.dumps(
-                {
-                    "inputText": question,
-                    "textGenerationConfig": {
-                        "temperature": 0,
-                        "topP": 1,
-                        "maxTokenCount": 512,
-                    },
-                }
-            )
-        elif modelId.startswith("anthropic.claude"):
-            body = json.dumps(
-                {
-                    "prompt": f"\n\nHuman:{question}\n\nAssistant:",
-                    "max_tokens_to_sample": 200,
-                    "temperature": 0.1,
-                    "top_p": 0.9,
-                }
-            )
-        elif modelId.startswith("ai21.j2"):
-            body = json.dumps(
-                {
-                    "prompt": question,
-                    "temperature": 0.5,
-                    "topP": 0.5,
-                    "maxTokens": 200,
-                    "countPenalty": {"scale": 0},
-                    "presencePenalty": {"scale": 0},
-                    "frequencyPenalty": {"scale": 0},
-                }
-            )
-        elif modelId.startswith("mistral.mistral-"):
-            body = json.dumps(
-                {
-                    "prompt": f"<s>[INST] {question} [/INST]",
-                    "max_tokens": 512,
-                    "temperature": 0.5,
-                    "top_p": 0.9,
-                    "top_k": 50,
-                }
-            )
+        prompt_content = [{"text": question}]
+        message = {"role": "user", "content": prompt_content}
+        messages = [message]
 
-        accept = "application/json"
-        contentType = "application/json"
+        try:
+            bedrock_response = await self.hass.async_add_executor_job(
+                partial(
+                    self.bedrock.converse,
+                    modelId=modelId,
+                    messages=messages,
+                ),
+            )
+        except ClientError as error:
+            raise HomeAssistantError(
+                f"Amazon Bedrock Error: `{error.response.get("Error").get("Message")}`"
+            ) from error
 
-        bedrock_response = await self.hass.async_add_executor_job(
-            partial(
-                self.bedrock.invoke_model,
-                body=body,
-                modelId=modelId,
-                accept=accept,
-                contentType=contentType,
-            ),
-        )
-
-        response_body = json.loads(bedrock_response.get("body").read())
-        if modelId.startswith("amazon.titan-text-express-v1"):
-            answer = response_body["results"][0]["outputText"]
-        elif modelId.startswith("anthropic.claude"):
-            answer = response_body["completion"]
-        elif modelId.startswith("ai21.j2"):
-            answer = response_body["completions"][0]["data"]["text"]
-        elif modelId in [
-            "mistral.mistral-7b-instruct-v0:2",
-            "mistral.mixtral-8x7b-instruct-v0:1",
-        ]:
-            answer = response_body["outputs"][0]["text"]
-        else:
-            answer = "Sorry I am not able to understand my underlying model."
-
-        return answer
+        return bedrock_response["output"]["message"].get("content")[0].get("text")
 
     async def async_process(
         self, user_input: agent_manager.ConversationInput
     ) -> agent_manager.ConversationResult:
         """Process a sentence."""
-        answer = await self.async_call_bedrock(user_input.text)
+        response = IntentResponse(language=user_input.language)
 
-        response = intent.IntentResponse(language=user_input.language)
-        response.async_set_speech(answer)
+        try:
+            answer = await self.async_call_bedrock(user_input.text)
+            response.async_set_speech(answer)
+        except HomeAssistantError as error:
+            response.async_set_error(
+                IntentResponseErrorCode.FAILED_TO_HANDLE, error.args[0]
+            )
+
         return agent_manager.ConversationResult(conversation_id=None, response=response)

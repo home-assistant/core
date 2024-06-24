@@ -526,6 +526,9 @@ bond-async==0.2.1
 # homeassistant.components.bosch_shc
 boschshcpy==0.2.91
 
+# homeassistant.components.bedrock_agent
+boto3==1.34.116
+
 # homeassistant.components.bring
 bring-api==0.7.1
 
