@@ -32,6 +32,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.setup import async_setup_component
 
@@ -107,10 +108,9 @@ def _load_feature_fixtures():
         if isinstance(fixture["value"], str):
             try:
                 time = datetime.strptime(fixture["value"], "%Y-%m-%d %H:%M:%S.%f%z")
+                fixture["value"] = time
             except ValueError:
                 pass
-            else:
-                fixture["value"] = time
     return fixtures
 
 
@@ -151,7 +151,13 @@ async def snapshot_platform(
         len({entity_entry.domain for entity_entry in entity_entries}) == 1
     ), "Please limit the loaded platforms to 1 platform."
 
+    translations = await async_get_translations(hass, "en", "entity", [DOMAIN])
     for entity_entry in entity_entries:
+        if entity_entry.translation_key:
+            key = f"component.{DOMAIN}.entity.{entity_entry.domain}.{entity_entry.translation_key}.name"
+            assert (
+                key in translations
+            ), f"No translation for entity {entity_entry.unique_id}, expected {key}"
         assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
         if entity_entry.disabled_by is None:
             state = hass.states.get(entity_entry.entity_id)
@@ -245,6 +251,7 @@ def _mocked_feature(
     feature = MagicMock(spec=Feature, name=f"Mocked {id} feature")
     feature.id = id
     feature.name = name or id.upper()
+    feature.set_value = AsyncMock()
     if not (fixture := FEATURES_FIXTURE.get(id)):
         assert (
             require_fixture is False
@@ -256,14 +263,16 @@ def _mocked_feature(
     elif value is not UNDEFINED:
         fixture["value"] = value
     feature.value = fixture["value"]
-    feature.choices = choices or fixture.get("choices")
+
     feature.type = type_ or Feature.Type[fixture["type"]]
     feature.category = category or Feature.Category[fixture["category"]]
+
     feature.precision_hint = precision_hint or fixture.get("precision_hint")
-    feature.unit = unit or fixture.get("precision_hint")
+    feature.unit = unit or fixture.get("unit")
     feature.minimum_value = minimum_value or fixture.get("minimum_value")
     feature.maximum_value = maximum_value or fixture.get("maximum_value")
-    feature.set_value = AsyncMock()
+
+    feature.choices = choices or fixture.get("choices")
     return feature
 
 

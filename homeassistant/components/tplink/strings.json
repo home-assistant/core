@@ -68,6 +68,19 @@
       },
       "overheated": {
         "name": "Overheated"
+      },
+      "battery_low": {
+        "name": "Battery low"
+      },
+      "cloud_connection": {
+        "name": "Cloud connection"
+      },
+      "update_available": {
+        "name": "[%key:component::binary_sensor::entity_component::update::name%]",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::update::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::update::state::on%]"
+        }
       }
     },
     "button": {
@@ -110,6 +123,36 @@
       },
       "available_firmware_version": {
         "name": "Available firmware version"
+      },
+      "battery_level": {
+        "name": "Battery level"
+      },
+      "temperature": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      },
+      "voltage": {
+        "name": "[%key:component::sensor::entity_component::voltage::name%]"
+      },
+      "current": {
+        "name": "[%key:component::sensor::entity_component::current::name%]"
+      },
+      "humidity": {
+        "name": "[%key:component::sensor::entity_component::humidity::name%]"
+      },
+      "device_time": {
+        "name": "Device time"
+      },
+      "auto_off_at": {
+        "name": "Auto off at"
+      },
+      "report_interval": {
+        "name": "Report interval"
+      },
+      "alarm_source": {
+        "name": "Alarm source"
+      },
+      "rssi": {
+        "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
       }
     },
     "switch": {

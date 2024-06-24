@@ -33,7 +33,87 @@
     'via_device_id': None,
   })
 # ---
-# name: test_states[sensor.my_device_battery-entry]
+# name: test_states[sensor.my_device_alarm_source-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_device_alarm_source',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Alarm source',
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_source',
+    'unique_id': '123456789ABCDEFGH_alarm_source',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[sensor.my_device_auto_off_at-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_device_auto_off_at',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Auto off at',
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_off_at',
+    'unique_id': '123456789ABCDEFGH_auto_off_at',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[sensor.my_device_auto_off_at-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'my_device Auto off at',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_device_auto_off_at',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-06-24T09:03:11+00:00',
+  })
+# ---
+# name: test_states[sensor.my_device_battery_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -47,7 +127,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.my_device_battery',
+    'entity_id': 'sensor.my_device_battery_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -59,7 +139,7 @@
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'Battery',
+    'original_name': 'Battery level',
     'platform': 'tplink',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -68,15 +148,15 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_states[sensor.my_device_battery-state]
+# name: test_states[sensor.my_device_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'my_device Battery',
+      'friendly_name': 'my_device Battery level',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.my_device_battery',
+    'entity_id': 'sensor.my_device_battery_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -191,7 +271,7 @@
     'state': '5.23',
   })
 # ---
-# name: test_states[sensor.my_device_duration-entry]
+# name: test_states[sensor.my_device_device_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -203,7 +283,7 @@
     'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.my_device_duration',
+    'entity_id': 'sensor.my_device_device_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -213,14 +293,14 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Duration',
+    'original_name': 'Device time',
     'platform': 'tplink',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'report_interval',
-    'unique_id': '123456789ABCDEFGH_report_interval',
+    'translation_key': 'device_time',
+    'unique_id': '123456789ABCDEFGH_device_time',
     'unit_of_measurement': None,
   })
 # ---
@@ -274,39 +354,6 @@
     'state': '12',
   })
 # ---
-# name: test_states[sensor.my_device_none-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.my_device_none',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'tplink',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'alarm_source',
-    'unique_id': '123456789ABCDEFGH_alarm_source',
-    'unit_of_measurement': None,
-  })
-# ---
 # name: test_states[sensor.my_device_on_since-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -337,6 +384,39 @@
     'supported_features': 0,
     'translation_key': 'on_since',
     'unique_id': '123456789ABCDEFGH_on_since',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[sensor.my_device_report_interval-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_device_report_interval',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Report interval',
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'report_interval',
+    'unique_id': '123456789ABCDEFGH_report_interval',
     'unit_of_measurement': None,
   })
 # ---
@@ -542,86 +622,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15.345',
-  })
-# ---
-# name: test_states[sensor.my_device_timestamp-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.my_device_timestamp',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Timestamp',
-    'platform': 'tplink',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'auto_off_at',
-    'unique_id': '123456789ABCDEFGH_auto_off_at',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_states[sensor.my_device_timestamp-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'my_device Timestamp',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.my_device_timestamp',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2024-06-24T09:03:11+00:00',
-  })
-# ---
-# name: test_states[sensor.my_device_timestamp_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.my_device_timestamp_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Timestamp',
-    'platform': 'tplink',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'device_time',
-    'unique_id': '123456789ABCDEFGH_device_time',
-    'unit_of_measurement': None,
   })
 # ---
 # name: test_states[sensor.my_device_today_s_consumption-entry]

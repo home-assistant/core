@@ -34,7 +34,7 @@ def mocked_feature_button() -> Feature:
     """Return mocked tplink binary sensor feature."""
     return _mocked_feature(
         "test_alarm",
-        value=False,
+        value="<Action>",
         name="Test alarm",
         type_=Feature.Type.Action,
         category=Feature.Category.Primary,
