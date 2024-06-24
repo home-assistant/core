@@ -886,53 +886,31 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         if merge_connections is not UNDEFINED:
             normalized_merge_connections = _normalize_connections(merge_connections)
-            # FIXME: If the connections match more than one device its random which one we get
-            if (
-                existing_device := self.async_get_device(
-                    connections=normalized_merge_connections
-                )
-            ) and existing_device.id != device_id:
-                raise HomeAssistantError(
-                    f"Connections {normalized_merge_connections} already registered to {existing_device}"
-                )
-
+            self._raise_for_conflicting_connections(
+                device_id, normalized_merge_connections
+            )
             old_value = old.connections
             if not normalized_merge_connections.issubset(old_value):
                 new_values["connections"] = old_value | normalized_merge_connections
                 old_values["connections"] = old_value
 
         if merge_identifiers is not UNDEFINED:
-            # FIXME: If the identifiers match more than one device its random which one we get
-            if (
-                existing_device := self.async_get_device(identifiers=merge_identifiers)
-            ) and existing_device.id != device_id:
-                raise HomeAssistantError(
-                    f"Identifiers {merge_identifiers} already registered to {existing_device}"
-                )
+            self._raise_for_conflicting_identifiers(device_id, merge_identifiers)
             old_value = old.identifiers
             if not merge_identifiers.issubset(old_value):
                 new_values["identifiers"] = old_value | merge_identifiers
                 old_values["identifiers"] = old_value
 
         if new_connections is not UNDEFINED:
-            # FIXME: If the connections match more than one device its random which one we get
-            if (
-                existing_device := self.async_get_device(identifiers=new_connections)
-            ) and existing_device.id != device_id:
-                raise HomeAssistantError(
-                    f"Connections {new_connections} already registered to {existing_device}"
-                )
+            normalized_new_connections = _normalize_connections(new_connections)
+            self._raise_for_conflicting_connections(
+                device_id, normalized_new_connections
+            )
             new_values["connections"] = _normalize_connections(new_connections)
             old_values["connections"] = old.connections
 
         if new_identifiers is not UNDEFINED:
-            # FIXME: If the identifiers match more than one device its random which one we get
-            if (
-                existing_device := self.async_get_device(identifiers=new_identifiers)
-            ) and existing_device.id != device_id:
-                raise HomeAssistantError(
-                    f"Identifiers {new_identifiers} already registered to {existing_device}"
-                )
+            self._raise_for_conflicting_identifiers(device_id, new_identifiers)
             new_values["identifiers"] = new_identifiers
             old_values["identifiers"] = old.identifiers
 
@@ -988,6 +966,38 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self.hass.bus.async_fire_internal(EVENT_DEVICE_REGISTRY_UPDATED, data)
 
         return new
+
+    @callback
+    def _raise_for_conflicting_connections(
+        self, device_id: str, normalized_merge_connections: set[tuple[str, str]]
+    ) -> None:
+        """Raise if connections conflict with another device."""
+        for connection in normalized_merge_connections:
+            # We need to iterate over each connection because if there was a
+            # conflict the index will only see the last one and we will not
+            # be able to tell which one caused the conflict
+            if (
+                existing_device := self.async_get_device(connections={connection})
+            ) and existing_device.id != device_id:
+                raise HomeAssistantError(
+                    f"Connections {normalized_merge_connections} already registered to {existing_device}"
+                )
+
+    @callback
+    def _raise_for_conflicting_identifiers(
+        self, device_id: str, identifiers: set[tuple[str, str]]
+    ) -> None:
+        """Raise if identifiers conflict with another device."""
+        for identifier in identifiers:
+            # We need to iterate over each identifier because if there was a
+            # conflict the index will only see the last one and we will not
+            # be able to tell which one caused the conflict
+            if (
+                existing_device := self.async_get_device(identifiers={identifier})
+            ) and existing_device.id != device_id:
+                raise HomeAssistantError(
+                    f"Identifiers {identifiers} already registered to {existing_device}"
+                )
 
     @callback
     def async_remove_device(self, device_id: str) -> None:
