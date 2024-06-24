@@ -340,11 +340,6 @@ def _mocked_energy_features(
             _mocked_feature(
                 "current_consumption",
                 value=power,
-                name="Current consumption",
-                type_=Feature.Type.Sensor,
-                category=Feature.Category.Primary,
-                unit="W",
-                precision_hint=1,
             )
         )
     if total is not None:
@@ -352,11 +347,6 @@ def _mocked_energy_features(
             _mocked_feature(
                 "consumption_total",
                 value=total,
-                name="Total consumption",
-                type_=Feature.Type.Sensor,
-                category=Feature.Category.Info,
-                unit="kWh",
-                precision_hint=3,
             )
         )
     if voltage is not None:
@@ -364,11 +354,6 @@ def _mocked_energy_features(
             _mocked_feature(
                 "voltage",
                 value=voltage,
-                name="Voltage",
-                type_=Feature.Type.Sensor,
-                category=Feature.Category.Primary,
-                unit="V",
-                precision_hint=1,
             )
         )
     if current is not None:
@@ -376,11 +361,6 @@ def _mocked_energy_features(
             _mocked_feature(
                 "current",
                 value=current,
-                name="Current",
-                type_=Feature.Type.Sensor,
-                category=Feature.Category.Primary,
-                unit="A",
-                precision_hint=2,
             )
         )
     # Today is always reported as 0 by the library rather than none
@@ -388,11 +368,6 @@ def _mocked_energy_features(
         _mocked_feature(
             "consumption_today",
             value=today if today is not None else 0.0,
-            name="Today's consumption",
-            type_=Feature.Type.Sensor,
-            category=Feature.Category.Info,
-            unit="kWh",
-            precision_hint=3,
         )
     )
     return feats

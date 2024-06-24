@@ -34,7 +34,7 @@
     "type": "Sensor",
     "category": "Primary",
     "unit": "W",
-    "precision_hint": 3
+    "precision_hint": 1
   },
   "consumption_today": {
     "value": 5.23,
@@ -62,14 +62,14 @@
     "type": "Sensor",
     "category": "Primary",
     "unit": "A",
-    "precision_hint": 1
+    "precision_hint": 2
   },
   "voltage": {
     "value": 121.1,
     "type": "Sensor",
     "category": "Primary",
     "unit": "v",
-    "precision_hint": 2
+    "precision_hint": 1
   },
   "device_id": {
     "value": "94hd2dn298812je12u0931828",
