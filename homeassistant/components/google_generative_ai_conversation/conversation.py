@@ -349,27 +349,22 @@ class GoogleGenerativeAIConversationEntity(
         ):
             user_name = user.name
 
-        if llm_api:
-            api_prompt = llm_api.api_prompt
-        else:
-            api_prompt = llm.async_render_no_api_prompt(self.hass)
-
-        return "\n".join(
-            (
-                template.Template(
-                    llm.BASE_PROMPT
-                    + self.entry.options.get(
-                        CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
-                    ),
-                    self.hass,
-                ).async_render(
-                    {
-                        "ha_name": self.hass.config.location_name,
-                        "user_name": user_name,
-                        "llm_context": llm_context,
-                    },
-                    parse_result=False,
-                ),
-                api_prompt,
+        parts = [
+            template.Template(
+                llm.BASE_PROMPT
+                + self.entry.options.get(CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT),
+                self.hass,
+            ).async_render(
+                {
+                    "ha_name": self.hass.config.location_name,
+                    "user_name": user_name,
+                    "llm_context": llm_context,
+                },
+                parse_result=False,
             )
-        )
+        ]
+
+        if llm_api:
+            parts.append(llm_api.api_prompt)
+
+        return "\n".join(parts)
