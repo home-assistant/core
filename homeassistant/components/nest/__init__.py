@@ -224,7 +224,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Close connection when hass stops."""
         subscriber.stop_async()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
+    )
 
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_SUBSCRIBER: subscriber,

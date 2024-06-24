@@ -1,5 +1,6 @@
 """Tests for the llm helpers."""
 
+from decimal import Decimal
 from unittest.mock import patch
 
 import pytest
@@ -49,9 +50,7 @@ async def test_register_api(hass: HomeAssistant, llm_context: llm.LLMContext) ->
     """Test registering an llm api."""
 
     class MyAPI(llm.API):
-        async def async_get_api_instance(
-            self, tool_context: llm.ToolInput
-        ) -> llm.APIInstance:
+        async def async_get_api_instance(self, _: llm.ToolInput) -> llm.APIInstance:
             """Return a list of tools."""
             return llm.APIInstance(self, "", [], llm_context)
 
@@ -149,8 +148,13 @@ async def test_assist_api(
 
     assert test_context.json_fragment  # To reproduce an error case in tracing
     intent_response = intent.IntentResponse("*")
-    intent_response.matched_states = [State("light.matched", "on")]
-    intent_response.unmatched_states = [State("light.unmatched", "on")]
+    intent_response.async_set_states(
+        [State("light.matched", "on")], [State("light.unmatched", "on")]
+    )
+    intent_response.async_set_speech("Some speech")
+    intent_response.async_set_card("Card title", "card content")
+    intent_response.async_set_speech_slots({"hello": 1})
+    intent_response.async_set_reprompt("Do it again")
     tool_input = llm.ToolInput(
         tool_name="test_intent",
         tool_args={"area": "kitchen", "floor": "ground_floor"},
@@ -181,8 +185,22 @@ async def test_assist_api(
             "success": [],
             "targets": [],
         },
+        "reprompt": {
+            "plain": {
+                "extra_data": None,
+                "reprompt": "Do it again",
+            },
+        },
         "response_type": "action_done",
-        "speech": {},
+        "speech": {
+            "plain": {
+                "extra_data": None,
+                "speech": "Some speech",
+            },
+        },
+        "speech_slots": {
+            "hello": 1,
+        },
     }
 
     # Call with a device/area/floor
@@ -227,7 +245,21 @@ async def test_assist_api(
             "targets": [],
         },
         "response_type": "action_done",
-        "speech": {},
+        "reprompt": {
+            "plain": {
+                "extra_data": None,
+                "reprompt": "Do it again",
+            },
+        },
+        "speech": {
+            "plain": {
+                "extra_data": None,
+                "speech": "Some speech",
+            },
+        },
+        "speech_slots": {
+            "hello": 1,
+        },
     }
 
 
@@ -247,6 +279,39 @@ async def test_assist_api_get_timer_tools(
 
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert "HassStartTimer" in [tool.name for tool in api.tools]
+
+
+async def test_assist_api_tools(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test getting timer tools with Assist API."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    llm_context.device_id = "test_device"
+
+    async_register_timer_handler(hass, "test_device", lambda *args: None)
+
+    class MyIntentHandler(intent.IntentHandler):
+        intent_type = "Super crazy intent with unique nåme"
+        description = "my intent handler"
+
+    intent.async_register(hass, MyIntentHandler())
+
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    assert [tool.name for tool in api.tools] == [
+        "HassTurnOn",
+        "HassTurnOff",
+        "HassSetPosition",
+        "HassStartTimer",
+        "HassCancelTimer",
+        "HassIncreaseTimer",
+        "HassDecreaseTimer",
+        "HassPauseTimer",
+        "HassUnpauseTimer",
+        "HassTimerStatus",
+        "Super_crazy_intent_with_unique_name",
+    ]
 
 
 async def test_assist_api_description(
@@ -338,7 +403,11 @@ async def test_assist_api_prompt(
         suggested_object_id="living_room",
         device_id=device.id,
     )
-    hass.states.async_set(entry1.entity_id, "on", {"friendly_name": "Kitchen"})
+    hass.states.async_set(
+        entry1.entity_id,
+        "on",
+        {"friendly_name": "Kitchen", "temperature": Decimal("0.9")},
+    )
     hass.states.async_set(entry2.entity_id, "on", {"friendly_name": "Living Room"})
 
     def create_entity(device: dr.DeviceEntry, write_state=True) -> None:
@@ -446,6 +515,9 @@ async def test_assist_api_prompt(
         entry1.entity_id: {
             "names": "Kitchen",
             "state": "on",
+            "attributes": {
+                "temperature": "0.9",
+            },
         },
         entry2.entity_id: {
             "areas": "Test Area, Alternative name",

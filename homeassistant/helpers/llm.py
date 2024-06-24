@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from decimal import Decimal
 from enum import Enum
+from functools import cache, partial
 from typing import Any
 
+import slugify as unicode_slug
 import voluptuous as vol
 
 from homeassistant.components.climate.intent import INTENT_GET_TEMPERATURE
@@ -41,17 +44,18 @@ BASE_PROMPT = (
 )
 
 DEFAULT_INSTRUCTIONS_PROMPT = """You are a voice assistant for Home Assistant.
+Answer questions about the world truthfully.
 Answer in plain text. Keep it simple and to the point.
 """
 
 
 @callback
 def async_render_no_api_prompt(hass: HomeAssistant) -> str:
-    """Return the prompt to be used when no API is configured."""
-    return (
-        "Only if the user wants to control a device, tell them to edit the AI configuration "
-        "and allow access to Home Assistant."
-    )
+    """Return the prompt to be used when no API is configured.
+
+    No longer used since Home Assistant 2024.7.
+    """
+    return ""
 
 
 @singleton("llm")
@@ -175,10 +179,11 @@ class IntentTool(Tool):
 
     def __init__(
         self,
+        name: str,
         intent_handler: intent.IntentHandler,
     ) -> None:
         """Init the class."""
-        self.name = intent_handler.intent_type
+        self.name = name
         self.description = (
             intent_handler.description or f"Execute Home Assistant {self.name} intent"
         )
@@ -260,6 +265,9 @@ class AssistAPI(API):
             hass=hass,
             id=LLM_API_ASSIST,
             name="Assist",
+        )
+        self.cached_slugify = cache(
+            partial(unicode_slug.slugify, separator="_", lowercase=False)
         )
 
     async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
@@ -373,7 +381,10 @@ class AssistAPI(API):
                 or intent_handler.platforms & exposed_domains
             ]
 
-        return [IntentTool(intent_handler) for intent_handler in intent_handlers]
+        return [
+            IntentTool(self.cached_slugify(intent_handler.intent_type), intent_handler)
+            for intent_handler in intent_handlers
+        ]
 
 
 def _get_exposed_entities(
@@ -451,7 +462,9 @@ def _get_exposed_entities(
             info["areas"] = ", ".join(area_names)
 
         if attributes := {
-            attr_name: str(attr_value) if isinstance(attr_value, Enum) else attr_value
+            attr_name: str(attr_value)
+            if isinstance(attr_value, (Enum, Decimal))
+            else attr_value
             for attr_name, attr_value in state.attributes.items()
             if attr_name in interesting_attributes
         }:

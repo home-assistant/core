@@ -2,10 +2,9 @@
 
 from unittest.mock import AsyncMock, patch
 
-from hass_nabucasa import Cloud
-
 from homeassistant.components import cloud
 from homeassistant.components.cloud import const, prefs as cloud_prefs
+from homeassistant.components.cloud.const import DATA_CLOUD
 from homeassistant.setup import async_setup_component
 
 PIPELINE_DATA = {
@@ -64,12 +63,12 @@ async def mock_cloud(hass, config=None):
     assert await async_setup_component(hass, "homeassistant", {})
 
     assert await async_setup_component(hass, cloud.DOMAIN, {"cloud": config or {}})
-    cloud_inst: Cloud = hass.data["cloud"]
+    cloud_inst = hass.data[DATA_CLOUD]
     with patch("hass_nabucasa.Cloud.run_executor", AsyncMock(return_value=None)):
         await cloud_inst.initialize()
 
 
-def mock_cloud_prefs(hass, prefs={}):
+def mock_cloud_prefs(hass, prefs):
     """Fixture for cloud component."""
     prefs_to_set = {
         const.PREF_ALEXA_SETTINGS_VERSION: cloud_prefs.ALEXA_SETTINGS_VERSION,
@@ -79,5 +78,5 @@ def mock_cloud_prefs(hass, prefs={}):
         const.PREF_GOOGLE_SETTINGS_VERSION: cloud_prefs.GOOGLE_SETTINGS_VERSION,
     }
     prefs_to_set.update(prefs)
-    hass.data[cloud.DOMAIN].client._prefs._prefs = prefs_to_set
-    return hass.data[cloud.DOMAIN].client._prefs
+    hass.data[DATA_CLOUD].client._prefs._prefs = prefs_to_set
+    return hass.data[DATA_CLOUD].client._prefs

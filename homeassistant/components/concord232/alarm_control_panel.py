@@ -86,6 +86,7 @@ class Concord232Alarm(AlarmControlPanelEntity):
 
         self._attr_name = name
         self._code = code
+        self._alarm_control_panel_option_default_code = code
         self._mode = mode
         self._url = url
         self._alarm = concord232_client.Client(self._url)

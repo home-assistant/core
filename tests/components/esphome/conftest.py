@@ -7,7 +7,7 @@ from asyncio import Event
 from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aioesphomeapi import (
     APIClient,
@@ -47,12 +47,12 @@ def mock_bluetooth(enable_bluetooth: None) -> None:
 
 
 @pytest.fixture(autouse=True)
-def esphome_mock_async_zeroconf(mock_async_zeroconf):
+def esphome_mock_async_zeroconf(mock_async_zeroconf: MagicMock) -> None:
     """Auto mock zeroconf."""
 
 
 @pytest.fixture(autouse=True)
-async def load_homeassistant(hass) -> None:
+async def load_homeassistant(hass: HomeAssistant) -> None:
     """Load the homeassistant integration."""
     assert await async_setup_component(hass, "homeassistant", {})
 
@@ -63,7 +63,7 @@ def mock_tts(mock_tts_cache_dir: Path) -> None:
 
 
 @pytest.fixture
-def mock_config_entry(hass) -> MockConfigEntry:
+def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return the default mocked config entry."""
     config_entry = MockConfigEntry(
         title="ESPHome Device",

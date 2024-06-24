@@ -4,19 +4,12 @@ from __future__ import annotations
 
 import logging
 
-from pyecotrend_ista.exception_classes import (
-    InternalServerError,
-    KeycloakError,
-    LoginError,
-    ServerError,
-)
-from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
-from requests.exceptions import RequestException
+from pyecotrend_ista import KeycloakError, LoginError, PyEcotrendIsta, ServerError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import DOMAIN
 from .coordinator import IstaCoordinator
@@ -29,7 +22,7 @@ type IstaConfigEntry = ConfigEntry[IstaCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IstaConfigEntry) -> bool:
-    """Set up ista Ecotrend from a config entry."""
+    """Set up ista EcoTrend from a config entry."""
     ista = PyEcotrendIsta(
         entry.data[CONF_EMAIL],
         entry.data[CONF_PASSWORD],
@@ -37,13 +30,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: IstaConfigEntry) -> bool
     )
     try:
         await hass.async_add_executor_job(ista.login)
-    except (ServerError, InternalServerError, RequestException, TimeoutError) as e:
+    except ServerError as e:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="connection_exception",
         ) from e
     except (LoginError, KeycloakError) as e:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="authentication_exception",
             translation_placeholders={CONF_EMAIL: entry.data[CONF_EMAIL]},

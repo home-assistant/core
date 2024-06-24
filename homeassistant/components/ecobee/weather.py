@@ -59,7 +59,7 @@ class EcobeeWeather(WeatherEntity):
     _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
     _attr_native_visibility_unit = UnitOfLength.METERS
-    _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
+    _attr_native_wind_speed_unit = UnitOfSpeed.MILES_PER_HOUR
     _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_features = WeatherEntityFeature.FORECAST_DAILY

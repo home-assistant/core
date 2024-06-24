@@ -39,7 +39,7 @@ from homeassistant.components.smartthings.const import (
     STORAGE_VERSION,
 )
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_CLIENT_ID,
@@ -55,7 +55,9 @@ from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 COMPONENT_PREFIX = "homeassistant.components.smartthings."
 
 
-async def setup_platform(hass, platform: str, *, devices=None, scenes=None):
+async def setup_platform(
+    hass: HomeAssistant, platform: str, *, devices=None, scenes=None
+):
     """Set up the SmartThings platform and prerequisites."""
     hass.config.components.add(DOMAIN)
     config_entry = MockConfigEntry(
@@ -70,7 +72,8 @@ async def setup_platform(hass, platform: str, *, devices=None, scenes=None):
     )
 
     hass.data[DOMAIN] = {DATA_BROKERS: {config_entry.entry_id: broker}}
-    await hass.config_entries.async_forward_entry_setup(config_entry, platform)
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    await hass.config_entries.async_forward_entry_setups(config_entry, [platform])
     await hass.async_block_till_done()
     return config_entry
 

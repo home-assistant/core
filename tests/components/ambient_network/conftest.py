@@ -1,11 +1,11 @@
 """Common fixtures for the Ambient Weather Network integration tests."""
 
-from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from aioambient import OpenAPI
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components import ambient_network
 from homeassistant.core import HomeAssistant
@@ -18,7 +18,7 @@ from tests.common import (
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.ambient_network.async_setup_entry", return_value=True

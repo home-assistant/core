@@ -1,18 +1,18 @@
 """Configuration for Abode tests."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from jaraco.abode.helpers import urls as URL
 import pytest
 from requests_mock import Mocker
+from typing_extensions import Generator
 
 from tests.common import load_fixture
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.abode.async_setup_entry", return_value=True

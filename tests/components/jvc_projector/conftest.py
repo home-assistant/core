@@ -1,9 +1,9 @@
 """Fixtures for JVC Projector integration."""
 
-from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.jvc_projector.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry
 @pytest.fixture(name="mock_device")
 def fixture_mock_device(
     request: pytest.FixtureRequest,
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Return a mocked JVC Projector device."""
     target = "homeassistant.components.jvc_projector.JvcProjector"
     if hasattr(request, "param"):

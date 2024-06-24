@@ -261,7 +261,7 @@ async def test_platform_setup_with_error(
 
     async def async_get_service(hass, config, discovery_info=None):
         """Return None for an invalid notify service."""
-        raise Exception("Setup error")
+        raise Exception("Setup error")  # pylint: disable=broad-exception-raised
 
     mock_notify_platform(
         hass, tmp_path, "testnotify", async_get_service=async_get_service
@@ -507,7 +507,6 @@ async def test_sending_none_message(hass: HomeAssistant, tmp_path: Path) -> None
         await hass.services.async_call(
             notify.DOMAIN, notify.SERVICE_NOTIFY, {notify.ATTR_MESSAGE: None}
         )
-        await hass.async_block_till_done()
     assert (
         str(exc.value)
         == "template value is None for dictionary value @ data['message']"

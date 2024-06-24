@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from typing_extensions import Generator
 
 TEST_MAC = "abcd"
 TEST_NAME = f"MOTION_{TEST_MAC.upper()}"
@@ -10,7 +11,9 @@ TEST_ADDRESS = "test_adress"
 
 
 @pytest.fixture(name="motionblinds_ble_connect", autouse=True)
-def motion_blinds_connect_fixture(enable_bluetooth):
+def motion_blinds_connect_fixture(
+    enable_bluetooth: None,
+) -> Generator[tuple[AsyncMock, Mock]]:
     """Mock motion blinds ble connection and entry setup."""
     device = Mock()
     device.name = TEST_NAME
