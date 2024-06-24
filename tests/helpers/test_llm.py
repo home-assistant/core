@@ -1,5 +1,6 @@
 """Tests for the llm helpers."""
 
+from decimal import Decimal
 from unittest.mock import patch
 
 import pytest
@@ -402,7 +403,11 @@ async def test_assist_api_prompt(
         suggested_object_id="living_room",
         device_id=device.id,
     )
-    hass.states.async_set(entry1.entity_id, "on", {"friendly_name": "Kitchen"})
+    hass.states.async_set(
+        entry1.entity_id,
+        "on",
+        {"friendly_name": "Kitchen", "temperature": Decimal("0.9")},
+    )
     hass.states.async_set(entry2.entity_id, "on", {"friendly_name": "Living Room"})
 
     def create_entity(device: dr.DeviceEntry, write_state=True) -> None:
@@ -510,6 +515,9 @@ async def test_assist_api_prompt(
         entry1.entity_id: {
             "names": "Kitchen",
             "state": "on",
+            "attributes": {
+                "temperature": "0.9",
+            },
         },
         entry2.entity_id: {
             "areas": "Test Area, Alternative name",
