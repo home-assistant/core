@@ -8,7 +8,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN, LOGGER
 
 
-class KnockiCoordinator(DataUpdateCoordinator[dict[str, Trigger]]):
+class KnockiCoordinator(DataUpdateCoordinator[dict[int, Trigger]]):
     """The Knocki coordinator."""
 
     def __init__(self, hass: HomeAssistant, client: KnockiClient) -> None:
@@ -20,7 +20,7 @@ class KnockiCoordinator(DataUpdateCoordinator[dict[str, Trigger]]):
         )
         self.client = client
 
-    async def _async_update_data(self) -> dict[str, Trigger]:
+    async def _async_update_data(self) -> dict[int, Trigger]:
         try:
             triggers = await self.client.get_triggers()
         except KnockiConnectionError as exc:
