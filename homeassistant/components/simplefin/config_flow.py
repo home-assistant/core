@@ -39,16 +39,16 @@ async def _validate_or_obtain_access_url(input_string: str) -> str:
     """
 
     if not input_string.startswith("http"):
-        LOGGER.info("[Setup Token] - Claiming Access URL")
+        LOGGER.debug("[Setup Token] - Claiming Access URL")
         access_url = await SimpleFin.claim_setup_token(input_string)
 
     else:
-        LOGGER.info("[Access Url] - 'http' string detected")
+        LOGGER.debug("[Access Url] - 'http' string detected")
         access_url = input_string
-        LOGGER.info("[Access Url] - validating access url")
+        LOGGER.debug("[Access Url] - validating access url")
         SimpleFin.decode_access_url(access_url)
 
-    LOGGER.info("[Access Url] - Fetching data")
+    LOGGER.debug("[Access Url] - Fetching data")
     simple_fin = SimpleFin(access_url=access_url)
     await simple_fin.fetch_data()
     return access_url
