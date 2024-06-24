@@ -75,8 +75,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, host.stop)
     )
 
-    starting = True
-
     async def async_device_config_update() -> None:
         """Update the host state cache and renew the ONVIF-subscription."""
         async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
@@ -103,7 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             try:
                 await host.api.check_new_firmware(host.firmware_ch_list)
             except ReolinkError as err:
-                if starting:
+                if host.starting:
                     _LOGGER.debug(
                         "Error checking Reolink firmware update at startup "
                         "from %s, possibly internet access is blocked",
@@ -117,7 +115,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                     "disable the update entity"
                 ) from err
             finally:
-                starting = False
+                host.starting = False
 
     device_coordinator = DataUpdateCoordinator(
         hass,
@@ -135,7 +133,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
 
     # If camera WAN blocked, firmware check fails and takes long, do not prevent setup
-    config_entry.async_create_task(firmware_coordinator.async_refresh())
+    config_entry.async_create_task(hass, firmware_coordinator.async_refresh())
     # Fetch initial data so we have data when entities subscribe
     try:
         await device_coordinator.async_config_entry_first_refresh()
