@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-import logging
 from typing import Any
 
 from sensoterra.customerapi import (
@@ -21,9 +20,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import DOMAIN, TOKEN_EXPIRATION_DAYS
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, LOGGER, TOKEN_EXPIRATION_DAYS
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -57,12 +54,12 @@ class SensoterraConfigFlow(ConfigFlow, domain=DOMAIN):
                     f"Home Assistant {uuid}", "READONLY", expiration
                 )
             except StInvalidAuth as exp:
-                _LOGGER.error(
+                LOGGER.error(
                     "Login attempt with %s: %s", user_input[CONF_EMAIL], exp.message
                 )
                 errors["base"] = "invalid_auth"
             except StTimeout:
-                _LOGGER.error("Login attempt with %s: time out", user_input[CONF_EMAIL])
+                LOGGER.error("Login attempt with %s: time out", user_input[CONF_EMAIL])
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(

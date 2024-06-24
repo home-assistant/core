@@ -4,13 +4,15 @@ from __future__ import annotations
 
 from sensoterra.customerapi import CustomerApi
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 
 from .coordinator import SensoterraCoordinator
-from .sensor import SensoterraConfigEntry
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
+
+type SensoterraConfigEntry = ConfigEntry[SensoterraCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SensoterraConfigEntry) -> bool:

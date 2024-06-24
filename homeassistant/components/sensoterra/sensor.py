@@ -8,7 +8,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -18,17 +17,16 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import SensoterraConfigEntry
 from .const import CONFIGURATION_URL, DOMAIN
 from .coordinator import SensoterraCoordinator, SensoterraSensor
 from .models import ProbeSensorType
 
-type SensoterraConfigEntry = ConfigEntry[SensoterraCoordinator]
-
-
-SENSORS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+SENSORS: dict[ProbeSensorType, SensorEntityDescription] = {
+    ProbeSensorType.MOISTURE: SensorEntityDescription(
         key=ProbeSensorType.MOISTURE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
@@ -36,20 +34,20 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         translation_key="soil_moisture_at_cm",
     ),
-    SensorEntityDescription(
+    ProbeSensorType.SI: SensorEntityDescription(
         key=ProbeSensorType.SI,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        name="SI @ {depth} cm",
+        translation_key="si_at_cm",
     ),
-    SensorEntityDescription(
+    ProbeSensorType.TEMPERATURE: SensorEntityDescription(
         key=ProbeSensorType.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
-    SensorEntityDescription(
+    ProbeSensorType.BATTERY: SensorEntityDescription(
         key=ProbeSensorType.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
@@ -57,21 +55,16 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    SensorEntityDescription(
+    ProbeSensorType.RSSI: SensorEntityDescription(
         key=ProbeSensorType.RSSI,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
-        key=ProbeSensorType.LASTSEEN,
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        translation_key="last_seen",
-    ),
-)
+}
 
 
 async def async_setup_entry(
@@ -86,10 +79,7 @@ async def async_setup_entry(
     @callback
     def _async_add_devices(devices: dict[str, SensoterraSensor]) -> None:
         async_add_devices(
-            SensoterraEntity(coordinator, sensor, description)
-            for sensor in devices.values()
-            for description in SENSORS
-            if sensor.type == description.key
+            SensoterraEntity(coordinator, sensor) for sensor in devices.values()
         )
 
     coordinator.add_devices_callback = _async_add_devices
@@ -100,24 +90,22 @@ async def async_setup_entry(
 class SensoterraEntity(CoordinatorEntity[SensoterraCoordinator], SensorEntity):
     """Sensoterra sensor like a soil moisture or temperature sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: SensoterraCoordinator,
         sensor: SensoterraSensor,
-        description: SensorEntityDescription,
     ) -> None:
         """Initialize entity."""
         super().__init__(coordinator, context=sensor.id)
 
         self._attr_unique_id = sensor.id
-        self._attr_has_entity_name = True
+        self._attr_translation_placeholders = {
+            "depth": "?" if sensor.depth is None else str(sensor.depth)
+        }
 
-        self.entity_description = description
-
-        # Make sure {depth} placeholders gets substituted.
-        self._attr_translation_placeholders = {"depth": str(sensor.depth)}
-        if isinstance(self.entity_description.name, str):
-            self._attr_name = self.entity_description.name.format(depth=sensor.depth)
+        self.entity_description = SENSORS[sensor.type]
 
         # Add soil type to certain sensors.
         if sensor.soil is not None and sensor.type in [
@@ -136,14 +124,11 @@ class SensoterraEntity(CoordinatorEntity[SensoterraCoordinator], SensorEntity):
             configuration_url=CONFIGURATION_URL,
         )
 
-        if sensor.value is not None:
-            self._attr_native_value = sensor.value
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        if self._attr_unique_id is not None:
-            sensor = self.coordinator.data[self._attr_unique_id]
-            if sensor.value is not None:
-                self._attr_native_value = sensor.value
-                self.async_write_ha_state()
+    @property
+    def native_value(self) -> StateType:
+        """Return the sensor value reported by the API."""
+        if self._attr_unique_id is None:
+            return None
+        if self._attr_unique_id not in self.coordinator.data:
+            return None
+        return self.coordinator.data[self._attr_unique_id].value

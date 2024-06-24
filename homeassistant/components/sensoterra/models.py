@@ -1,7 +1,7 @@
 """Sensoterra models."""
 
-from datetime import UTC, datetime
-from enum import IntEnum, StrEnum, auto
+from datetime import datetime
+from enum import StrEnum, auto
 
 from sensoterra.probe import Probe, Sensor
 
@@ -16,15 +16,6 @@ class ProbeSensorType(StrEnum):
     TEMPERATURE = auto()
     BATTERY = auto()
     RSSI = auto()
-    LASTSEEN = auto()
-
-
-class ProbeBatteryLevel(IntEnum):
-    """Map API strings to corresponding integers."""
-
-    NORMAL = 100
-    FAIR = 50
-    POOR = 10
 
 
 class SensoterraSensor:
@@ -61,14 +52,8 @@ class SensoterraSensor:
                     self.value = probe.rssi
                     self.timestamp = probe.timestamp
             elif self.type == ProbeSensorType.BATTERY:
-                try:
-                    self.value = ProbeBatteryLevel[probe.battery]
-                except KeyError:
-                    pass
-                else:
+                if probe.battery is not None:
+                    self.value = probe.battery
                     self.timestamp = probe.timestamp
-            elif self.type == ProbeSensorType.LASTSEEN:
-                self.value = probe.timestamp
-                self.timestamp = datetime.now(UTC)
             else:
                 raise UpdateFailed(f"Unknown sensor {sensor}")

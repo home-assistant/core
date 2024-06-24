@@ -27,11 +27,11 @@
   },
   "entity": {
     "sensor": {
-      "soil_moisture": {
-        "name": "Soil moisture"
-      },
       "soil_moisture_at_cm": {
         "name": "Soil moisture @ {depth} cm"
+      },
+      "si_at_cm": {
+        "name": "SI @ {depth} cm"
       },
       "last_seen": {
         "name": "Last seen"
