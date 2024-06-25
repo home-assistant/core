@@ -20,7 +20,6 @@ from homeassistant.helpers.typing import StateType
 from . import DelugeConfigEntry, DelugeEntity
 from .const import (
     CURRENT_STATUS,
-    DOMAIN,
     DOWNLOAD_SPEED,
     PROTOCOL_TRAFFIC_DOWNLOAD_SPEED,
     PROTOCOL_TRAFFIC_UPLOAD_SPEED,
