@@ -43,7 +43,7 @@
   "issues": {
     "homeassistant_provider_not_normalized_usernames": {
       "title": "Not normalized usernames detected",
-      "description": "The Home Assistant auth provider is running in legacy mode because we detected not normalized usernames. The legacy mode is deprecated and will be removed. Please change the following usernames:\n\n{usernames}"
+      "description": "The Home Assistant auth provider is running in legacy mode because we detected not normalized usernames. The legacy mode is deprecated and will be removed. Please change the following usernames:\n\n{usernames}\n\nNormalized usernames are case folded (lower case) and stripped of whitespaces."
     }
   }
 }

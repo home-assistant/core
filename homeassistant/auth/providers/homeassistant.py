@@ -107,41 +107,24 @@ class Data:
         if (data := await self._store.async_load()) is None:
             data = cast(dict[str, list[dict[str, str]]], {"users": []})
 
-        seen: set[str] = set()
         not_normalized_usernames: set[str] = set()
 
         for user in data["users"]:
             username = user["username"]
 
-            # check if we have duplicates
-            if (folded := username.casefold()) in seen:
+            if self.normalize_username(username, force_normalize=True) != username:
+                # check if we have usernames is casefolded
                 self.is_legacy = True
 
                 logging.getLogger(__name__).warning(
                     (
                         "Home Assistant auth provider is running in legacy mode "
-                        "because we detected usernames that are case-insensitive"
-                        "equivalent. Please change the username: '%s'."
+                        "because we detected usernames that are normalized (lowercase and without spaces)."
+                        " Please change the username: '%s'."
                     ),
                     username,
                 )
                 not_normalized_usernames.add(username)
-
-            # check if we have unstripped usernames
-            elif username != username.strip():
-                self.is_legacy = True
-
-                logging.getLogger(__name__).warning(
-                    (
-                        "Home Assistant auth provider is running in legacy mode "
-                        "because we detected usernames that start or end in a "
-                        "space. Please change the username: '%s'."
-                    ),
-                    username,
-                )
-                not_normalized_usernames.add(username)
-
-            seen.add(folded)
 
         self._data = data
         if not_normalized_usernames:
@@ -154,7 +137,7 @@ class Data:
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="homeassistant_provider_not_normalized_usernames",
                 translation_placeholders={
-                    "usernames": f'- "{'"\n'.join(not_normalized_usernames)}"'
+                    "usernames": f'- "{'"\n- "'.join(not_normalized_usernames)}"'
                 },
                 learn_more_url="homeassistant://config/users",
             )
