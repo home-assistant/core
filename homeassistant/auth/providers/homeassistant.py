@@ -234,6 +234,7 @@ class Data:
         else:
             raise InvalidUser
 
+    @callback
     def _validate_new_username(self, new_username: str) -> None:
         """Validate that username is normalized and unique.
 
@@ -257,6 +258,7 @@ class Data:
                 translation_placeholders={"username": new_username},
             )
 
+    @callback
     def change_username(self, username: str, new_username: str) -> None:
         """Update the username.
 
@@ -354,9 +356,7 @@ class HassAuthProvider(AuthProvider):
             await self.async_initialize()
             assert self.data is not None
 
-        await self.hass.async_add_executor_job(
-            self.data.change_username, credential.data["username"], new_username
-        )
+        self.data.change_username(credential.data["username"], new_username)
         self.hass.auth.async_update_user_credentials_data(
             credential, {**credential.data, "username": new_username}
         )
