@@ -234,7 +234,7 @@ def _mocked_device(
         not device_type
         and device.children
         and all(
-            child.device_type == DeviceType.StripSocket for child in device.children
+            child.device_type is DeviceType.StripSocket for child in device.children
         )
     ):
         device.device_type = DeviceType.Strip
