@@ -7,7 +7,6 @@ from typing import Any
 from aioesphomeapi import EntityInfo, LockCommand, LockEntityState, LockInfo, LockState
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CODE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -18,10 +17,13 @@ from .entity import (
     esphome_state_property,
     platform_async_setup_entry,
 )
+from .entry_data import ESPHomeConfigEntry
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ESPHomeConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up ESPHome switches based on a config entry."""
     await platform_async_setup_entry(

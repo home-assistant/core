@@ -9,7 +9,7 @@ import pytest
 from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt.models import ReceiveMessage
+from homeassistant.components.mqtt.models import MessageCallbackType, ReceiveMessage
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant, callback
 
@@ -79,3 +79,21 @@ async def setup_with_birth_msg_client_mock(
         await hass.async_block_till_done()
         await birth.wait()
         yield mqtt_client_mock
+
+
+@pytest.fixture
+def recorded_calls() -> list[ReceiveMessage]:
+    """Fixture to hold recorded calls."""
+    return []
+
+
+@pytest.fixture
+def record_calls(recorded_calls: list[ReceiveMessage]) -> MessageCallbackType:
+    """Fixture to record calls."""
+
+    @callback
+    def record_calls(msg: ReceiveMessage) -> None:
+        """Record calls."""
+        recorded_calls.append(msg)
+
+    return record_calls

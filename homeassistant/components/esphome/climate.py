@@ -45,7 +45,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
@@ -62,13 +61,16 @@ from .entity import (
     esphome_state_property,
     platform_async_setup_entry,
 )
+from .entry_data import ESPHomeConfigEntry
 from .enum_mapper import EsphomeEnumMapper
 
 FAN_QUIET = "quiet"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ESPHomeConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up ESPHome climate devices based on a config entry."""
     await platform_async_setup_entry(
