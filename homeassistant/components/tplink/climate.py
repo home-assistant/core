@@ -50,7 +50,7 @@ async def async_setup_entry(
     async_add_entities(
         TPLinkClimateEntity(child, parent_coordinator, parent=device)
         for child in device.children
-        if child.device_type is DeviceType.Thermostat    
+        if child.device_type is DeviceType.Thermostat
     )
 
 
