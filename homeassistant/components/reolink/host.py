@@ -79,6 +79,8 @@ class ReolinkHost:
         )
         self.firmware_ch_list: list[int | None] = []
 
+        self.credential_errors: int = 0
+
         self.webhook_id: str | None = None
         self._onvif_push_supported: bool = True
         self._onvif_long_poll_supported: bool = True
