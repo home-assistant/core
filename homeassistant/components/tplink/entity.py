@@ -53,17 +53,14 @@ DEVICETYPES_WITH_SPECIALIZED_PLATFORMS = {
     DeviceType.LightStrip,
     DeviceType.Dimmer,
     DeviceType.Fan,
+    DeviceType.Thermostat,
 }
 
 # Features excluded due to future platform additions
 EXCLUDED_FEATURES = {
-    # climate
-    "target_temperature",
-    "thermostat_mode",
     # update
     "current_firmware_version",
     "available_firmware_version",
-    "frost_protection_enabled",
     # fan
     "fan_speed_level",
 }

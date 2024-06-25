@@ -28,7 +28,6 @@ import voluptuous as vol
 
 from homeassistant.components import tag, zeroconf
 from homeassistant.components.intent import async_register_timer_handler
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_MODE,
@@ -73,7 +72,7 @@ from .dashboard import async_get_dashboard
 from .domain_data import DomainData
 
 # Import config flow so that it's added to the registry
-from .entry_data import RuntimeEntryData
+from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .voice_assistant import (
     VoiceAssistantAPIPipeline,
     VoiceAssistantPipeline,
@@ -159,13 +158,12 @@ class ESPHomeManager:
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: ESPHomeConfigEntry,
         host: str,
         password: str | None,
         cli: APIClient,
         zeroconf_instance: zeroconf.HaZeroconf,
         domain_data: DomainData,
-        entry_data: RuntimeEntryData,
     ) -> None:
         """Initialize the esphome manager."""
         self.hass = hass
@@ -178,7 +176,7 @@ class ESPHomeManager:
         self.voice_assistant_pipeline: VoiceAssistantPipeline | None = None
         self.reconnect_logic: ReconnectLogic | None = None
         self.zeroconf_instance = zeroconf_instance
-        self.entry_data = entry_data
+        self.entry_data = entry.runtime_data
 
     async def on_stop(self, event: Event) -> None:
         """Cleanup the socket client on HA close."""
@@ -639,7 +637,7 @@ class ESPHomeManager:
 
 @callback
 def _async_setup_device_registry(
-    hass: HomeAssistant, entry: ConfigEntry, entry_data: RuntimeEntryData
+    hass: HomeAssistant, entry: ESPHomeConfigEntry, entry_data: RuntimeEntryData
 ) -> str:
     """Set up device registry feature for a particular config entry."""
     device_info = entry_data.device_info
@@ -839,10 +837,11 @@ def _setup_services(
         _async_register_service(hass, entry_data, device_info, service)
 
 
-async def cleanup_instance(hass: HomeAssistant, entry: ConfigEntry) -> RuntimeEntryData:
+async def cleanup_instance(
+    hass: HomeAssistant, entry: ESPHomeConfigEntry
+) -> RuntimeEntryData:
     """Cleanup the esphome client if it exists."""
-    domain_data = DomainData.get(hass)
-    data = domain_data.pop_entry_data(entry)
+    data = entry.runtime_data
     data.async_on_disconnect()
     for cleanup_callback in data.cleanup_callbacks:
         cleanup_callback()
