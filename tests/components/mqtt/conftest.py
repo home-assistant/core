@@ -10,6 +10,7 @@ from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt.models import MessageCallbackType, ReceiveMessage
+from homeassistant.components.mqtt.util import EnsureJobAfterCooldown
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant, callback
 
@@ -47,6 +48,29 @@ def mock_temp_dir(temp_dir_prefix: str) -> Generator[str]:
         f"home-assistant-mqtt-{temp_dir_prefix}-{getrandbits(10):03x}",
     ) as mocked_temp_dir:
         yield mocked_temp_dir
+
+
+@pytest.fixture
+def mock_debouncer(hass: HomeAssistant) -> Generator[asyncio.Event]:
+    """Mock EnsureJobAfterCooldown.
+
+    Returns an asyncio.Event that allows to await the debouncer task to be finished.
+    """
+    task_done = asyncio.Event()
+
+    class MockDeboncer(EnsureJobAfterCooldown):
+        """Mock the MQTT client (un)subscribe debouncer."""
+
+        async def _async_job(self) -> None:
+            """Execute after a cooldown period."""
+            await super()._async_job()
+            task_done.set()
+
+    # We mock the import of EnsureJobAfterCooldown in client.py
+    with patch(
+        "homeassistant.components.mqtt.client.EnsureJobAfterCooldown", MockDeboncer
+    ):
+        yield task_done
 
 
 @pytest.fixture
