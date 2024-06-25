@@ -581,7 +581,7 @@ class Entity(
         """Return a unique ID."""
         return self._attr_unique_id
 
-    @property
+    @cached_property
     def use_device_name(self) -> bool:
         """Return if this entity does not have its own name.
 
@@ -589,14 +589,12 @@ class Entity(
         """
         if hasattr(self, "_attr_name"):
             return not self._attr_name
-
-        if name_translation_key := self._name_translation_key:
-            if name_translation_key in self.platform.platform_translations:
-                return False
-
+        if (
+            name_translation_key := self._name_translation_key
+        ) and name_translation_key in self.platform.platform_translations:
+            return False
         if hasattr(self, "entity_description"):
             return not self.entity_description.name
-
         return not self.name
 
     @cached_property

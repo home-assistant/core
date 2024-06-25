@@ -43,7 +43,7 @@ from . import patch_time  # noqa: F401, isort:skip
 from homeassistant import core as ha, loader, runner
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
-from homeassistant.auth.providers import homeassistant, legacy_api_password
+from homeassistant.auth.providers import homeassistant
 from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
@@ -106,8 +106,6 @@ from .common import (  # noqa: E402, isort:skip
     MockUser,
     async_fire_mqtt_message,
     async_test_home_assistant,
-    get_test_home_assistant,
-    init_recorder_component,
     mock_storage,
     patch_yaml_files,
     extract_stack_to_frame,
@@ -743,26 +741,12 @@ async def hass_supervisor_user(
 @pytest.fixture
 async def hass_supervisor_access_token(
     hass: HomeAssistant,
-    hass_supervisor_user,
+    hass_supervisor_user: MockUser,
     local_auth: homeassistant.HassAuthProvider,
 ) -> str:
     """Return a Home Assistant Supervisor access token."""
     refresh_token = await hass.auth.async_create_refresh_token(hass_supervisor_user)
     return hass.auth.async_create_access_token(refresh_token)
-
-
-@pytest.fixture
-def legacy_auth(
-    hass: HomeAssistant,
-) -> legacy_api_password.LegacyApiPasswordAuthProvider:
-    """Load legacy API password provider."""
-    prv = legacy_api_password.LegacyApiPasswordAuthProvider(
-        hass,
-        hass.auth._store,
-        {"type": "legacy_api_password", "api_password": "test-password"},
-    )
-    hass.auth._providers[(prv.type, prv.id)] = prv
-    return prv
 
 
 @pytest.fixture
@@ -836,7 +820,7 @@ def current_request_with_host(current_request: MagicMock) -> None:
 @pytest.fixture
 def hass_ws_client(
     aiohttp_client: ClientSessionGenerator,
-    hass_access_token: str | None,
+    hass_access_token: str,
     hass: HomeAssistant,
     socket_enabled: None,
 ) -> WebSocketGenerator:
@@ -974,6 +958,7 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient]:
         mock_client.subscribe.side_effect = _subscribe
         mock_client.unsubscribe.side_effect = _unsubscribe
         mock_client.publish.side_effect = _async_fire_mqtt_message
+        mock_client.loop_read.return_value = 0
         yield mock_client
 
 
@@ -1361,120 +1346,6 @@ def recorder_db_url(
         sqlalchemy_utils.drop_database(db_url)
     elif db_url.startswith("postgresql://"):
         sqlalchemy_utils.drop_database(db_url)
-
-
-@pytest.fixture
-def hass_recorder(
-    recorder_db_url: str,
-    enable_nightly_purge: bool,
-    enable_statistics: bool,
-    enable_schema_validation: bool,
-    enable_migrate_context_ids: bool,
-    enable_migrate_event_type_ids: bool,
-    enable_migrate_entity_ids: bool,
-    hass_storage,
-) -> Generator[Callable[..., HomeAssistant]]:
-    """Home Assistant fixture with in-memory recorder."""
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components import recorder
-
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.recorder import migration
-
-    with get_test_home_assistant() as hass:
-        nightly = (
-            recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
-        )
-        stats = (
-            recorder.Recorder.async_periodic_statistics if enable_statistics else None
-        )
-        compile_missing = (
-            recorder.Recorder._schedule_compile_missing_statistics
-            if enable_statistics
-            else None
-        )
-        schema_validate = (
-            migration._find_schema_errors
-            if enable_schema_validation
-            else itertools.repeat(set())
-        )
-        migrate_states_context_ids = (
-            recorder.Recorder._migrate_states_context_ids
-            if enable_migrate_context_ids
-            else None
-        )
-        migrate_events_context_ids = (
-            recorder.Recorder._migrate_events_context_ids
-            if enable_migrate_context_ids
-            else None
-        )
-        migrate_event_type_ids = (
-            recorder.Recorder._migrate_event_type_ids
-            if enable_migrate_event_type_ids
-            else None
-        )
-        migrate_entity_ids = (
-            recorder.Recorder._migrate_entity_ids if enable_migrate_entity_ids else None
-        )
-        with (
-            patch(
-                "homeassistant.components.recorder.Recorder.async_nightly_tasks",
-                side_effect=nightly,
-                autospec=True,
-            ),
-            patch(
-                "homeassistant.components.recorder.Recorder.async_periodic_statistics",
-                side_effect=stats,
-                autospec=True,
-            ),
-            patch(
-                "homeassistant.components.recorder.migration._find_schema_errors",
-                side_effect=schema_validate,
-                autospec=True,
-            ),
-            patch(
-                "homeassistant.components.recorder.Recorder._migrate_events_context_ids",
-                side_effect=migrate_events_context_ids,
-                autospec=True,
-            ),
-            patch(
-                "homeassistant.components.recorder.Recorder._migrate_states_context_ids",
-                side_effect=migrate_states_context_ids,
-                autospec=True,
-            ),
-            patch(
-                "homeassistant.components.recorder.Recorder._migrate_event_type_ids",
-                side_effect=migrate_event_type_ids,
-                autospec=True,
-            ),
-            patch(
-                "homeassistant.components.recorder.Recorder._migrate_entity_ids",
-                side_effect=migrate_entity_ids,
-                autospec=True,
-            ),
-            patch(
-                "homeassistant.components.recorder.Recorder._schedule_compile_missing_statistics",
-                side_effect=compile_missing,
-                autospec=True,
-            ),
-        ):
-
-            def setup_recorder(
-                *, config: dict[str, Any] | None = None, timezone: str | None = None
-            ) -> HomeAssistant:
-                """Set up with params."""
-                if timezone is not None:
-                    asyncio.run_coroutine_threadsafe(
-                        hass.config.async_set_time_zone(timezone), hass.loop
-                    ).result()
-                init_recorder_component(hass, config, recorder_db_url)
-                hass.start()
-                hass.block_till_done()
-                hass.data[recorder.DATA_INSTANCE].block_till_done()
-                return hass
-
-            yield setup_recorder
-            hass.stop()
 
 
 async def _async_init_recorder_component(

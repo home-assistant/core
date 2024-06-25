@@ -19,7 +19,7 @@ class MockYouTube:
         channel_fixture: str = "youtube/get_channel.json",
         playlist_items_fixture: str = "youtube/get_playlist_items.json",
         subscriptions_fixture: str = "youtube/get_subscriptions.json",
-    ):
+    ) -> None:
         """Initialize mock service."""
         self._channel_fixture = channel_fixture
         self._playlist_items_fixture = playlist_items_fixture

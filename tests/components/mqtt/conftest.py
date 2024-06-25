@@ -1,12 +1,30 @@
 """Test fixtures for mqtt component."""
 
+import asyncio
 from random import getrandbits
+from typing import Any
 from unittest.mock import patch
 
 import pytest
-from typing_extensions import Generator
+from typing_extensions import AsyncGenerator, Generator
 
-from tests.components.light.conftest import mock_light_profiles  # noqa: F401
+from homeassistant.components import mqtt
+from homeassistant.components.mqtt.models import ReceiveMessage
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import HomeAssistant, callback
+
+from tests.common import MockConfigEntry
+from tests.typing import MqttMockPahoClient
+
+ENTRY_DEFAULT_BIRTH_MESSAGE = {
+    mqtt.CONF_BROKER: "mock-broker",
+    mqtt.CONF_BIRTH_MESSAGE: {
+        mqtt.ATTR_TOPIC: "homeassistant/status",
+        mqtt.ATTR_PAYLOAD: "online",
+        mqtt.ATTR_QOS: 0,
+        mqtt.ATTR_RETAIN: False,
+    },
+}
 
 
 @pytest.fixture(autouse=True)
@@ -29,3 +47,35 @@ def mock_temp_dir(temp_dir_prefix: str) -> Generator[str]:
         f"home-assistant-mqtt-{temp_dir_prefix}-{getrandbits(10):03x}",
     ) as mocked_temp_dir:
         yield mocked_temp_dir
+
+
+@pytest.fixture
+async def setup_with_birth_msg_client_mock(
+    hass: HomeAssistant,
+    mqtt_config_entry_data: dict[str, Any] | None,
+    mqtt_client_mock: MqttMockPahoClient,
+) -> AsyncGenerator[MqttMockPahoClient]:
+    """Test sending birth message."""
+    birth = asyncio.Event()
+    with (
+        patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0),
+        patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0),
+        patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0),
+    ):
+        entry = MockConfigEntry(
+            domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"}
+        )
+        entry.add_to_hass(hass)
+        hass.config.components.add(mqtt.DOMAIN)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+
+        @callback
+        def wait_birth(msg: ReceiveMessage) -> None:
+            """Handle birth message."""
+            birth.set()
+
+        await mqtt.async_subscribe(hass, "homeassistant/status", wait_birth)
+        await hass.async_block_till_done()
+        await birth.wait()
+        yield mqtt_client_mock

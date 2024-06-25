@@ -3,18 +3,19 @@
 from __future__ import annotations
 
 from calendar import timegm
-from datetime import datetime, timedelta
+from datetime import datetime
 from logging import getLogger
 from time import gmtime, struct_time
+from urllib.error import URLError
 
 import feedparser
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 DELAY_SAVE = 30
 EVENT_FEEDREADER = "feedreader"
@@ -31,7 +32,6 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
         self,
         hass: HomeAssistant,
         url: str,
-        scan_interval: timedelta,
         max_entries: int,
         storage: StoredData,
     ) -> None:
@@ -40,7 +40,7 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
             hass=hass,
             logger=_LOGGER,
             name=f"{DOMAIN} {url}",
-            update_interval=scan_interval,
+            update_interval=DEFAULT_SCAN_INTERVAL,
         )
         self._url = url
         self._max_entries = max_entries
@@ -69,8 +69,8 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
         self._feed = await self.hass.async_add_executor_job(self._fetch_feed)
 
         if not self._feed:
-            _LOGGER.error("Error fetching feed data from %s", self._url)
-            return None
+            raise UpdateFailed(f"Error fetching feed data from {self._url}")
+
         # The 'bozo' flag really only indicates that there was an issue
         # during the initial parsing of the XML, but it doesn't indicate
         # whether this is an unrecoverable error. In this case the
@@ -78,6 +78,12 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
         # If an error is detected here, log warning message but continue
         # processing the feed entries if present.
         if self._feed.bozo != 0:
+            if isinstance(self._feed.bozo_exception, URLError):
+                raise UpdateFailed(
+                    f"Error fetching feed data from {self._url}: {self._feed.bozo_exception}"
+                )
+
+            # no connection issue, but parsing issue
             _LOGGER.warning(
                 "Possible issue parsing feed %s: %s",
                 self._url,
@@ -169,16 +175,17 @@ class StoredData:
         self._data: dict[str, struct_time] = {}
         self.hass = hass
         self._store: Store[dict[str, str]] = Store(hass, STORAGE_VERSION, DOMAIN)
+        self.is_initialized = False
 
     async def async_setup(self) -> None:
         """Set up storage."""
-        if (store_data := await self._store.async_load()) is None:
-            return
-        # Make sure that dst is set to 0, by using gmtime() on the timestamp.
-        self._data = {
-            feed_id: gmtime(datetime.fromisoformat(timestamp_string).timestamp())
-            for feed_id, timestamp_string in store_data.items()
-        }
+        if (store_data := await self._store.async_load()) is not None:
+            # Make sure that dst is set to 0, by using gmtime() on the timestamp.
+            self._data = {
+                feed_id: gmtime(datetime.fromisoformat(timestamp_string).timestamp())
+                for feed_id, timestamp_string in store_data.items()
+            }
+        self.is_initialized = True
 
     def get_timestamp(self, feed_id: str) -> struct_time | None:
         """Return stored timestamp for given feed id."""

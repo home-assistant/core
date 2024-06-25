@@ -63,16 +63,7 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
     _attr_icon = "mdi:spotlight-beam"
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-
-    @callback
-    def _async_get_state_attrs(self) -> tuple[Any, ...]:
-        """Retrieve data that goes into the current state of the entity.
-
-        Called before and after updating entity and state is only written if there
-        is a change.
-        """
-
-        return (self._attr_available, self._attr_is_on, self._attr_brightness)
+    _state_attrs = ("_attr_available", "_attr_is_on", "_attr_brightness")
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
