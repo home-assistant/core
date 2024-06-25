@@ -1,6 +1,7 @@
 """Tests for tplink number platform."""
 
 from kasa import Feature
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import tplink
 from homeassistant.components.number import (
@@ -9,7 +10,9 @@ from homeassistant.components.number import (
     SERVICE_SET_VALUE,
 )
 from homeassistant.components.tplink.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
+from homeassistant.components.tplink.entity import EXCLUDED_FEATURES
+from homeassistant.components.tplink.number import NUMBER_DESCRIPTIONS
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -22,9 +25,32 @@ from . import (
     _mocked_strip_children,
     _patch_connect,
     _patch_discovery,
+    setup_platform_for_device,
+    snapshot_platform,
 )
 
 from tests.common import MockConfigEntry
+
+
+async def test_states(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test a sensor unique ids."""
+    features = {description.key for description in NUMBER_DESCRIPTIONS}
+    features.update(EXCLUDED_FEATURES)
+    device = _mocked_device(alias="my_device", features=features)
+
+    await setup_platform_for_device(hass, mock_config_entry, Platform.NUMBER, device)
+    await snapshot_platform(
+        hass, entity_registry, device_registry, snapshot, mock_config_entry.entry_id
+    )
+
+    for excluded in EXCLUDED_FEATURES:
+        assert hass.states.get(f"sensor.my_device_{excluded}") is None
 
 
 async def test_number(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
@@ -34,8 +60,8 @@ async def test_number(hass: HomeAssistant, entity_registry: er.EntityRegistry) -
     )
     already_migrated_config_entry.add_to_hass(hass)
     new_feature = _mocked_feature(
-        10,
         "temperature_offset",
+        value=10,
         name="Temperature offset",
         type_=Feature.Type.Number,
         category=Feature.Category.Config,
@@ -64,8 +90,8 @@ async def test_number_children(
     )
     already_migrated_config_entry.add_to_hass(hass)
     new_feature = _mocked_feature(
-        10,
         "temperature_offset",
+        value=10,
         name="Some number",
         type_=Feature.Type.Number,
         category=Feature.Category.Config,
@@ -106,8 +132,8 @@ async def test_number_set(
     )
     already_migrated_config_entry.add_to_hass(hass)
     new_feature = _mocked_feature(
-        10,
         "temperature_offset",
+        value=10,
         name="Some number",
         type_=Feature.Type.Number,
         category=Feature.Category.Config,

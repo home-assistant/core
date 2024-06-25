@@ -2,6 +2,7 @@
 
 from kasa import Feature
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import tplink
 from homeassistant.components.select import (
@@ -10,7 +11,9 @@ from homeassistant.components.select import (
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.components.tplink.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
+from homeassistant.components.tplink.entity import EXCLUDED_FEATURES
+from homeassistant.components.tplink.select import SELECT_DESCRIPTIONS
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -23,6 +26,8 @@ from . import (
     _mocked_strip_children,
     _patch_connect,
     _patch_discovery,
+    setup_platform_for_device,
+    snapshot_platform,
 )
 
 from tests.common import MockConfigEntry
@@ -32,13 +37,34 @@ from tests.common import MockConfigEntry
 def mocked_feature_select() -> Feature:
     """Return mocked tplink binary sensor feature."""
     return _mocked_feature(
-        "First choice",
         "light_preset",
+        value="First choice",
         name="light_preset",
         choices=["First choice", "Second choice"],
         type_=Feature.Type.Choice,
         category=Feature.Category.Config,
     )
+
+
+async def test_states(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test a sensor unique ids."""
+    features = {description.key for description in SELECT_DESCRIPTIONS}
+    features.update(EXCLUDED_FEATURES)
+    device = _mocked_device(alias="my_device", features=features)
+
+    await setup_platform_for_device(hass, mock_config_entry, Platform.SELECT, device)
+    await snapshot_platform(
+        hass, entity_registry, device_registry, snapshot, mock_config_entry.entry_id
+    )
+
+    for excluded in EXCLUDED_FEATURES:
+        assert hass.states.get(f"sensor.my_device_{excluded}") is None
 
 
 async def test_select(

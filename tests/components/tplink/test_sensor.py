@@ -2,10 +2,13 @@
 
 from kasa import Feature, Module
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import tplink
 from homeassistant.components.tplink.const import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.components.tplink.entity import EXCLUDED_FEATURES
+from homeassistant.components.tplink.sensor import SENSOR_DESCRIPTIONS
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -19,9 +22,32 @@ from . import (
     _mocked_strip_children,
     _patch_connect,
     _patch_discovery,
+    setup_platform_for_device,
+    snapshot_platform,
 )
 
 from tests.common import MockConfigEntry
+
+
+async def test_states(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test a sensor unique ids."""
+    features = {description.key for description in SENSOR_DESCRIPTIONS}
+    features.update(EXCLUDED_FEATURES)
+    device = _mocked_device(alias="my_device", features=features)
+
+    await setup_platform_for_device(hass, mock_config_entry, Platform.SENSOR, device)
+    await snapshot_platform(
+        hass, entity_registry, device_registry, snapshot, mock_config_entry.entry_id
+    )
+
+    for excluded in EXCLUDED_FEATURES:
+        assert hass.states.get(f"sensor.my_device_{excluded}") is None
 
 
 async def test_color_light_with_an_emeter(hass: HomeAssistant) -> None:
@@ -166,8 +192,8 @@ async def test_undefined_sensor(
     )
     already_migrated_config_entry.add_to_hass(hass)
     new_feature = _mocked_feature(
-        5.2,
         "consumption_this_fortnight",
+        value=5.2,
         name="Consumption for fortnight",
         type_=Feature.Type.Sensor,
         category=Feature.Category.Primary,
@@ -197,8 +223,8 @@ async def test_sensor_children(
     )
     already_migrated_config_entry.add_to_hass(hass)
     feature = _mocked_feature(
-        5.2,
         "consumption_this_month",
+        value=5.2,
         # integration should ignore name and use the value from strings.json:
         # This month's consumption
         name="Consumption for month",
