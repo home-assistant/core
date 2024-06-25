@@ -399,7 +399,7 @@ async def test_change_username_not_normalized(
         (["Uppercase"], '- "Uppercase"'),
         ([" leading"], '- " leading"'),
         (["trailing "], '- "trailing "'),
-        (["Test", "test", "Fritz "], '- "Test"\n- "Fritz "'),
+        (["Test", "test", "Fritz "], '- "Fritz "\n- "Test"'),
     ],
 )
 async def test_create_repair_on_legacy_usernames(
@@ -410,6 +410,10 @@ async def test_create_repair_on_legacy_usernames(
     usernames_in_repair: str,
 ) -> None:
     """Test that we create a repair issue for legacy usernames."""
+    assert not issue_registry.issues.get(
+        ("auth", "homeassistant_provider_not_normalized_usernames")
+    ), "Repair issue already exists"
+
     hass_storage[hass_auth.STORAGE_KEY] = {
         "version": 1,
         "minor_version": 1,
@@ -431,3 +435,47 @@ async def test_create_repair_on_legacy_usernames(
     )
     assert issue, "Repair issue not created"
     assert issue.translation_placeholders == {"usernames": usernames_in_repair}
+
+
+async def test_delete_repair_after_fixing_usernames(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that the repair is deleted after fixing the usernames."""
+    hass_storage[hass_auth.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": "auth_provider.homeassistant",
+        "data": {
+            "users": [
+                {
+                    "username": "Test",
+                    "password": "onlyherebecauseweneedapasswordstring",
+                },
+                {
+                    "username": "bla ",
+                    "password": "onlyherebecauseweneedapasswordstring",
+                },
+            ]
+        },
+    }
+    data = hass_auth.Data(hass)
+    await data.async_load()
+    issue = issue_registry.issues.get(
+        ("auth", "homeassistant_provider_not_normalized_usernames")
+    )
+    assert issue, "Repair issue not created"
+    assert issue.translation_placeholders == {"usernames": '- "Test"\n- "bla "'}
+
+    data.change_username("Test", "test")
+    issue = issue_registry.issues.get(
+        ("auth", "homeassistant_provider_not_normalized_usernames")
+    )
+    assert issue
+    assert issue.translation_placeholders == {"usernames": '- "bla "'}
+
+    data.change_username("bla ", "bla")
+    assert not issue_registry.issues.get(
+        ("auth", "homeassistant_provider_not_normalized_usernames")
+    ), "Repair issue should be deleted"

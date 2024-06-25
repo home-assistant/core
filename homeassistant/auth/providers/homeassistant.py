@@ -107,15 +107,19 @@ class Data:
         if (data := await self._store.async_load()) is None:
             data = cast(dict[str, list[dict[str, str]]], {"users": []})
 
+        self._async_check_for_not_normalized_usernames(data)
+        self._data = data
+
+    @callback
+    def _async_check_for_not_normalized_usernames(
+        self, data: dict[str, list[dict[str, str]]]
+    ) -> None:
         not_normalized_usernames: set[str] = set()
 
         for user in data["users"]:
             username = user["username"]
 
             if self.normalize_username(username, force_normalize=True) != username:
-                # check if we have usernames is casefolded
-                self.is_legacy = True
-
                 logging.getLogger(__name__).warning(
                     (
                         "Home Assistant auth provider is running in legacy mode "
@@ -126,8 +130,8 @@ class Data:
                 )
                 not_normalized_usernames.add(username)
 
-        self._data = data
         if not_normalized_usernames:
+            self.is_legacy = True
             ir.async_create_issue(
                 self.hass,
                 "auth",
@@ -137,9 +141,14 @@ class Data:
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="homeassistant_provider_not_normalized_usernames",
                 translation_placeholders={
-                    "usernames": f'- "{'"\n- "'.join(not_normalized_usernames)}"'
+                    "usernames": f'- "{'"\n- "'.join(sorted(not_normalized_usernames))}"'
                 },
                 learn_more_url="homeassistant://config/users",
+            )
+        else:
+            self.is_legacy = False
+            ir.async_delete_issue(
+                self.hass, "auth", "homeassistant_provider_not_normalized_usernames"
             )
 
     @property
@@ -260,6 +269,8 @@ class Data:
         for user in self.users:
             if self.normalize_username(user["username"]) == username:
                 user["username"] = new_username
+                assert self._data is not None
+                self._async_check_for_not_normalized_usernames(self._data)
                 break
         else:
             raise InvalidUser
