@@ -19,14 +19,7 @@ from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import (
-    CONF_BASE_URL,
-    CONF_INCLUDE_SHARED,
-    CONF_USER_DATA,
-    DEFAULT_INCLUDE_SHARED,
-    DOMAIN,
-    PLATFORMS,
-)
+from .const import CONF_BASE_URL, CONF_USER_DATA, DOMAIN, PLATFORMS
 from .coordinator import RoborockDataUpdateCoordinator
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -58,11 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             translation_key="home_data_fail",
         ) from err
     _LOGGER.debug("Got home data %s", home_data)
-    all_devices: list[HomeDataDevice] = (
-        home_data.devices + home_data.received_devices
-        if entry.options.get(CONF_INCLUDE_SHARED, DEFAULT_INCLUDE_SHARED)
-        else home_data.devices
-    )
+    all_devices: list[HomeDataDevice] = home_data.devices + home_data.received_devices
     device_map: dict[str, HomeDataDevice] = {
         device.duid: device for device in all_devices
     }

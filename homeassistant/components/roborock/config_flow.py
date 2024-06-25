@@ -30,15 +30,10 @@ from homeassistant.core import callback
 from .const import (
     CONF_BASE_URL,
     CONF_ENTRY_CODE,
-    CONF_INCLUDE_SHARED,
     CONF_USER_DATA,
     DEFAULT_DRAWABLES,
-    DEFAULT_INCLUDE_SHARED,
-    DEFAULT_SIZES,
     DOMAIN,
     DRAWABLES,
-    MAPS,
-    SIZES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -187,60 +182,7 @@ class RoborockOptionsFlowHandler(OptionsFlowWithConfigEntry):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
-        return self.async_show_menu(step_id="init", menu_options=[DOMAIN, MAPS])
-
-    async def async_step_roborock(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options domain wide."""
-        if user_input is not None:
-            return self.async_create_entry(
-                title="", data={**self.config_entry.options, **user_input}
-            )
-        return self.async_show_form(
-            step_id=DOMAIN,
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_INCLUDE_SHARED,
-                        default=self.config_entry.options.get(
-                            CONF_INCLUDE_SHARED, DEFAULT_INCLUDE_SHARED
-                        ),
-                    ): bool
-                }
-            ),
-        )
-
-    async def async_step_maps(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Open the menu for the map options."""
-        return self.async_show_menu(step_id=MAPS, menu_options=[DRAWABLES, SIZES])
-
-    async def async_step_sizes(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the map object size options."""
-        if user_input is not None:
-            new_sizes = {
-                SIZES: {**self.config_entry.options.get(SIZES, {}), **user_input}
-            }
-            return self.async_create_entry(
-                title="", data={**self.config_entry.options, **new_sizes}
-            )
-        data_schema = {}
-        current_sizes = self.config_entry.options.get(SIZES, {})
-        for size, default_value in DEFAULT_SIZES.items():
-            data_schema[
-                vol.Required(
-                    size.value,
-                    default=current_sizes.get(size, default_value),
-                )
-            ] = vol.All(vol.Coerce(float), vol.Range(min=0))
-        return self.async_show_form(
-            step_id=SIZES,
-            data_schema=vol.Schema(data_schema),
-        )
+        return await self.async_step_drawables()
 
     async def async_step_drawables(
         self, user_input: dict[str, Any] | None = None
