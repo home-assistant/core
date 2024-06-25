@@ -41,6 +41,10 @@
       "macaddress": "5091E3*"
     },
     {
+      "hostname": "p1*",
+      "macaddress": "5091E3*"
+    },
+    {
       "hostname": "k[lps]*",
       "macaddress": "9C5322*"
     },
@@ -217,11 +221,23 @@
       "macaddress": "3C52A1*"
     },
     {
+      "hostname": "h1*",
+      "macaddress": "3C52A1*"
+    },
+    {
       "hostname": "l9*",
       "macaddress": "A842A1*"
     },
     {
+      "hostname": "p1*",
+      "macaddress": "A842A1*"
+    },
+    {
       "hostname": "l9*",
+      "macaddress": "3460F9*"
+    },
+    {
+      "hostname": "p1*",
       "macaddress": "3460F9*"
     },
     {
@@ -230,6 +246,10 @@
     },
     {
       "hostname": "k[lps]*",
+      "macaddress": "74DA88*"
+    },
+    {
+      "hostname": "p1*",
       "macaddress": "74DA88*"
     },
     {
@@ -262,6 +282,14 @@
     },
     {
       "hostname": "l9*",
+      "macaddress": "F0A731*"
+    },
+    {
+      "hostname": "ks2*",
+      "macaddress": "F0A731*"
+    },
+    {
+      "hostname": "kh1*",
       "macaddress": "F0A731*"
     }
   ],

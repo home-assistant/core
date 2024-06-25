@@ -21,6 +21,7 @@ TO_REDACT = {
     "hwId",
     "oemId",
     "deviceId",
+    "id",  # child id for HS300
     # Device location
     "latitude",
     "latitude_i",
@@ -36,6 +37,9 @@ TO_REDACT = {
     "ssid",
     "nickname",
     "ip",
+    # Child device information
+    "original_device_id",
+    "parent_device_id",
 }
 
 
