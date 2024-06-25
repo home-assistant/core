@@ -16,6 +16,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import MadVRCoordinator
+from .utils import cancel_tasks
 from .wakeonlan import send_magic_packet
 
 _LOGGER = logging.getLogger(__name__)
@@ -82,6 +83,7 @@ class MadvrRemote(CoordinatorEntity, RemoteEntity):
         _LOGGER.debug("Removing from hass")
         self.madvr_client.stop()
         await self.madvr_client.close_connection()
+        await cancel_tasks(self.madvr_client)
         for task in self.tasks:
             if not task.done():
                 task.cancel()

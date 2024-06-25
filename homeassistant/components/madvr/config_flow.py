@@ -13,7 +13,7 @@ from homeassistant.core import callback
 
 from .const import DOMAIN
 from .coordinator import MadVRCoordinator
-from .utils import cancel_tasks
+from .utils import CannotConnect, cancel_tasks
 from .wakeonlan import send_magic_packet
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,10 +37,11 @@ class MadVRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=user_input["name"], data=user_input
                 )
             except CannotConnect:
+                _LOGGER.error("CannotConnect error caught")
                 errors["base"] = "cannot_connect"
                 self.context["user_input"] = user_input
                 # allow user to skip connection test
-                return await self.async_step_confirm(user_input)
+                return await self.async_step_confirm()
 
         return self.async_show_form(
             step_id="user",
@@ -88,19 +89,26 @@ class MadVRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await madvr_client.close_connection()
             _LOGGER.debug("Finished testing connection")
 
+        except ValueError as err:
+            _LOGGER.error("Error sending magic packet: %s", err)
+            raise CannotConnect from err
         # connection can raise HeartBeatError if the device is not available or connection does not work
         except (TimeoutError, aiohttp.ClientError, OSError, HeartBeatError) as err:
             _LOGGER.error("Error connecting to MadVR: %s", err)
             raise CannotConnect from err
 
-    async def async_step_confirm(self, user_input) -> ConfigFlowResult:
+    async def async_step_confirm(self, user_input=None) -> ConfigFlowResult:
         """Handle confirmation step if connection test fails."""
         if user_input is not None:
-            return self.async_create_entry(title=user_input["name"], data=user_input)
+            return self.async_create_entry(
+                title=self.context["user_input"]["name"],
+                data=self.context["user_input"],
+            )
 
         return self.async_show_form(
             step_id="confirm",
-            description_placeholders={"name": ""},
+            description_placeholders={"name": self.context["user_input"]["name"]},
+            data_schema=vol.Schema({vol.Required("confirm", default=False): bool}),
         )
 
     @staticmethod
@@ -143,7 +151,3 @@ class MadVROptionsFlowHandler(config_entries.OptionsFlow):
         )
 
         return self.async_show_form(step_id="user", data_schema=data_schema)
-
-
-class CannotConnect(Exception):
-    """Error to indicate we cannot connect."""
