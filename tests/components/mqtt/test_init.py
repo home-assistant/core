@@ -2080,20 +2080,18 @@ async def test_subscribe_error(
     mqtt_client_mock.reset_mock()
     # simulate client is not connected error before subscribing
     mqtt_client_mock.subscribe.side_effect = lambda *args: (4, None)
-    with patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0):
-        await mqtt.async_subscribe(hass, "some-topic", record_calls)
-        while mqtt_client_mock.subscribe.call_count == 0:
-            await hass.async_block_till_done()
+    await mqtt.async_subscribe(hass, "some-topic", record_calls)
+    while mqtt_client_mock.subscribe.call_count == 0:
         await hass.async_block_till_done()
-        await hass.async_block_till_done()
-        assert (
-            "Error talking to MQTT: The client is not currently connected."
-            in caplog.text
-        )
+    await hass.async_block_till_done()
+    assert (
+        "Error talking to MQTT: The client is not currently connected." in caplog.text
+    )
 
 
 async def test_handle_message_callback(
     hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test for handling an incoming message callback."""
@@ -2107,12 +2105,12 @@ async def test_handle_message_callback(
     msg = ReceiveMessage(
         "some-topic", b"test-payload", 1, False, "some-topic", datetime.now()
     )
+    mock_debouncer.clear()
     await mqtt.async_subscribe(hass, "some-topic", _callback)
+    await mock_debouncer.wait()
     mqtt_client_mock.reset_mock()
     mqtt_client_mock.on_message(None, None, msg)
 
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     assert len(callbacks) == 1
     assert callbacks[0].topic == "some-topic"
     assert callbacks[0].qos == 1
