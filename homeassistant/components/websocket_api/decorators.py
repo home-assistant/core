@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
+from homeassistant.helpers.typing import VolDictType
 
 from . import const, messages
 from .connection import ActiveConnection
@@ -130,7 +131,7 @@ def ws_require_user(
 
 
 def websocket_command(
-    schema: dict[vol.Marker, Any] | vol.All,
+    schema: VolDictType | vol.All,
 ) -> Callable[[const.WebSocketCommandHandler], const.WebSocketCommandHandler]:
     """Tag a function as a websocket command.
 

@@ -1037,6 +1037,7 @@ def key_dependency(
 
 def custom_serializer(schema: Any) -> Any:
     """Serialize additional types for voluptuous_serialize."""
+    from .. import data_entry_flow  # pylint: disable=import-outside-toplevel
     from . import selector  # pylint: disable=import-outside-toplevel
 
     if schema is positive_time_period_dict:
@@ -1047,6 +1048,15 @@ def custom_serializer(schema: Any) -> Any:
 
     if schema is boolean:
         return {"type": "boolean"}
+
+    if isinstance(schema, data_entry_flow.section):
+        return {
+            "type": "expandable",
+            "schema": voluptuous_serialize.convert(
+                schema.schema, custom_serializer=custom_serializer
+            ),
+            "expanded": not schema.options["collapsed"],
+        }
 
     if isinstance(schema, multi_select):
         return {"type": "multi_select", "options": schema.options}
