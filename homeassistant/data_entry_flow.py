@@ -906,6 +906,33 @@ class FlowHandler(Generic[_FlowResultT, _HandlerT]):
         self.__progress_task = progress_task
 
 
+class SectionConfig(TypedDict, total=False):
+    """Class to represent a section config."""
+
+    collapsed: bool
+
+
+class section:
+    """Data entry flow section."""
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("collapsed", default=False): bool,
+        },
+    )
+
+    def __init__(
+        self, schema: vol.Schema, options: SectionConfig | None = None
+    ) -> None:
+        """Initialize."""
+        self.schema = schema
+        self.options: SectionConfig = self.CONFIG_SCHEMA(options or {})
+
+    def __call__(self, value: Any) -> Any:
+        """Validate input."""
+        return self.schema(value)
+
+
 # These can be removed if no deprecated constant are in this module anymore
 __getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
 __dir__ = partial(
