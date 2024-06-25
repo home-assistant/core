@@ -383,6 +383,13 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                         },
                         slug_validator=translation_key_validator,
                     ),
+                    vol.Optional("sections"): cv.schema_with_slug_keys(
+                        {
+                            vol.Required("name"): str,
+                            vol.Optional("description"): translation_value_validator,
+                        },
+                        slug_validator=translation_key_validator,
+                    ),
                 },
                 slug_validator=translation_key_validator,
             ),

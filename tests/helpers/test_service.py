@@ -990,6 +990,17 @@ async def test_async_get_all_descriptions_filter(hass: HomeAssistant) -> None:
                     - light.ColorMode.COLOR_TEMP
               selector:
                 number:
+            advanced_stuff:
+              fields:
+                temperature:
+                  filter:
+                    supported_features:
+                      - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_HOME
+                    attribute:
+                      supported_color_modes:
+                        - light.ColorMode.COLOR_TEMP
+                  selector:
+                    number:
     """
 
     domain = "test_domain"
@@ -1024,6 +1035,17 @@ async def test_async_get_all_descriptions_filter(hass: HomeAssistant) -> None:
     test_service_schema = {
         "description": "",
         "fields": {
+            "advanced_stuff": {
+                "fields": {
+                    "temperature": {
+                        "filter": {
+                            "attribute": {"supported_color_modes": ["color_temp"]},
+                            "supported_features": [1],
+                        },
+                        "selector": {"number": None},
+                    },
+                },
+            },
             "temperature": {
                 "filter": {
                     "attribute": {"supported_color_modes": ["color_temp"]},
