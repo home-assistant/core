@@ -76,7 +76,7 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Determines if the entity is available."""
         return self.cached_map != b""
 
@@ -98,13 +98,16 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
             and bool(self.coordinator.roborock_device_info.props.status.in_cleaning)
         )
 
-    def _handle_coordinator_update(self):
+    def _handle_coordinator_update(self) -> None:
         # Bump last updated every third time the coordinator runs, so that async_image
         # will be called and we will evaluate on the new coordinator data if we should
         # update the cache.
         if (
-            dt_util.utcnow() - self.image_last_updated
-        ).total_seconds() > IMAGE_CACHE_INTERVAL and self.is_map_valid():
+            self.image_last_updated is not None
+            and (dt_util.utcnow() - self.image_last_updated).total_seconds()
+            > IMAGE_CACHE_INTERVAL
+            and self.is_map_valid()
+        ):
             self._attr_image_last_updated = dt_util.utcnow()
         super()._handle_coordinator_update()
 
