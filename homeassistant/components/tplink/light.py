@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 import logging
-from typing import Any, Final
+from typing import Any
 
 from kasa import Device, DeviceType, LightState, Module
 from kasa.interfaces import Light, LightEffect
@@ -27,6 +27,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 
 from . import TPLinkConfigEntry, legacy_device_id
 from .coordinator import TPLinkDataUpdateCoordinator
@@ -43,7 +44,7 @@ VAL = vol.Range(min=0, max=100)
 TRANSITION = vol.Range(min=0, max=6000)
 HSV_SEQUENCE = vol.ExactSequence((HUE, SAT, VAL))
 
-BASE_EFFECT_DICT: Final = {
+BASE_EFFECT_DICT: VolDictType = {
     vol.Optional("brightness", default=100): vol.All(
         vol.Coerce(int), vol.Range(min=0, max=100)
     ),
@@ -58,7 +59,7 @@ BASE_EFFECT_DICT: Final = {
     ),
 }
 
-SEQUENCE_EFFECT_DICT: Final = {
+SEQUENCE_EFFECT_DICT: VolDictType = {
     **BASE_EFFECT_DICT,
     vol.Required("sequence"): vol.All(
         cv.ensure_list,
@@ -76,7 +77,7 @@ SEQUENCE_EFFECT_DICT: Final = {
     ),
 }
 
-RANDOM_EFFECT_DICT: Final = {
+RANDOM_EFFECT_DICT: VolDictType = {
     **BASE_EFFECT_DICT,
     vol.Optional("fadeoff", default=0): vol.All(
         vol.Coerce(int), vol.Range(min=0, max=3000)

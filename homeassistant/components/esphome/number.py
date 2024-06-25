@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import partial
 import math
 
 from aioesphomeapi import (
@@ -12,9 +13,7 @@ from aioesphomeapi import (
 )
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import callback
 from homeassistant.util.enum import try_parse_enum
 
 from .entity import (
@@ -24,23 +23,6 @@ from .entity import (
     platform_async_setup_entry,
 )
 from .enum_mapper import EsphomeEnumMapper
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up esphome numbers based on a config entry."""
-    await platform_async_setup_entry(
-        hass,
-        entry,
-        async_add_entities,
-        info_type=NumberInfo,
-        entity_type=EsphomeNumber,
-        state_type=NumberState,
-    )
-
 
 NUMBER_MODES: EsphomeEnumMapper[EsphomeNumberMode, NumberMode] = EsphomeEnumMapper(
     {
@@ -87,3 +69,11 @@ class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         self._client.number_command(self._key, value)
+
+
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=NumberInfo,
+    entity_type=EsphomeNumber,
+    state_type=NumberState,
+)
