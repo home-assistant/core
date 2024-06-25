@@ -16,7 +16,7 @@ from homeassistant.components.lawn_mower import (
     LawnMowerEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -92,6 +92,21 @@ async def async_setup_entry(
         },
         "async_override_schedule",
     )
+    for mower_id in coordinator.data:
+        if coordinator.data[mower_id].capabilities.work_areas:
+            platform.async_register_entity_service(
+                "override_schedule_workarea",
+                {
+                    vol.Required("work_area_id"): vol.Coerce(int),
+                    vol.Required("duration"): vol.All(
+                        cv.time_period,
+                        cv.positive_timedelta,
+                        vol.Range(min=timedelta(minutes=1), max=timedelta(days=42)),
+                    ),
+                },
+                "async_override_schedule_workarea",
+            )
+            break
 
 
 class AutomowerLawnMowerEntity(AutomowerAvailableEntity, LawnMowerEntity):
@@ -147,3 +162,16 @@ class AutomowerLawnMowerEntity(AutomowerAvailableEntity, LawnMowerEntity):
             await self.coordinator.api.commands.start_for(self.mower_id, duration)
         if override_mode == PARK:
             await self.coordinator.api.commands.park_for(self.mower_id, duration)
+
+    @handle_sending_exception
+    async def async_override_schedule_workarea(
+        self, work_area_id: int, duration: timedelta
+    ) -> None:
+        """Override the schedule with a certain workarea."""
+        if not self.mower_attributes.capabilities.work_areas:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="work_areas_not_supported"
+            )
+        await self.coordinator.api.commands.start_in_workarea(
+            self.mower_id, work_area_id, duration
+        )
