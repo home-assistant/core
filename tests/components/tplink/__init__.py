@@ -270,7 +270,6 @@ def _mocked_feature(
     # sensor
     feature.precision_hint = precision_hint or fixture.get("precision_hint")
     feature.unit = unit or fixture.get("unit")
-    
 
     # number
     feature.minimum_value = minimum_value or fixture.get("minimum_value")
