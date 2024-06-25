@@ -25,7 +25,7 @@ class DioChaconDataUpdateCoordinator(DataUpdateCoordinator):
         password = config[CONF_PASSWORD]
         dio_chacon_id = config[CONF_UNIQUE_ID]
 
-        def callback_device_state(data: Any) -> None:
+        def callback_device_state(data: dict[str, Any]) -> None:
             """Receive callback for device state notification pushed from the server."""
 
             _LOGGER.debug("Data received from server %s", data)
@@ -35,10 +35,11 @@ class DioChaconDataUpdateCoordinator(DataUpdateCoordinator):
             username,
             password,
             dio_chacon_id,
-            callback_device_state,
         )
+        # Register callback for device state notification pushed from the server
+        self.dio_chacon_client.set_callback_device_state(callback_device_state)
 
-        self.list_devices: dict = {}
+        self.list_devices: dict[str, Any] = {}
 
         super().__init__(
             hass,

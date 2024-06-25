@@ -1,5 +1,7 @@
 """Base entity for the Dio Chacon entity."""
 
+from typing import Any
+
 from dio_chacon_wifi_api import DIOChaconAPIClient
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -39,7 +41,7 @@ class DioChaconEntity(CoordinatorEntity):
         )
 
     @property
-    def coordinator_data(self):
+    def coordinator_data(self) -> dict[str, Any] | None:
         """Return the coordinator data for received callback information by filtering on the correct device id."""
         if self.coordinator.data and self.coordinator.data["id"] == self._target_id:
             return self.coordinator.data

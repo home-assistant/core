@@ -46,7 +46,7 @@ class DioChaconCover(DioChaconEntity, CoverEntity):
     def __init__(
         self,
         coordinator: DioChaconDataUpdateCoordinator,
-        device,
+        device: dict[str, Any],
     ) -> None:
         """Initialize the cover."""
 
