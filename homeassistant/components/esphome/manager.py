@@ -164,7 +164,6 @@ class ESPHomeManager:
         cli: APIClient,
         zeroconf_instance: zeroconf.HaZeroconf,
         domain_data: DomainData,
-        entry_data: RuntimeEntryData,
     ) -> None:
         """Initialize the esphome manager."""
         self.hass = hass
@@ -177,7 +176,7 @@ class ESPHomeManager:
         self.voice_assistant_pipeline: VoiceAssistantPipeline | None = None
         self.reconnect_logic: ReconnectLogic | None = None
         self.zeroconf_instance = zeroconf_instance
-        self.entry_data = entry_data
+        self.entry_data = entry.runtime_data
 
     async def on_stop(self, event: Event) -> None:
         """Cleanup the socket client on HA close."""

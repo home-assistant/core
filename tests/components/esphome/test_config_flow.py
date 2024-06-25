@@ -2,7 +2,7 @@
 
 from ipaddress import ip_address
 import json
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from aioesphomeapi import (
     APIClient,
@@ -18,7 +18,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp, zeroconf
-from homeassistant.components.esphome import DomainData, dashboard
+from homeassistant.components.esphome import dashboard
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_DEVICE_NAME,
@@ -1136,10 +1136,7 @@ async def test_discovery_dhcp_no_changes(
     )
     entry.add_to_hass(hass)
 
-    mock_entry_data = MagicMock()
-    mock_entry_data.device_info.name = "test8266"
-    domain_data = DomainData.get(hass)
-    domain_data.set_entry_data(entry, mock_entry_data)
+    mock_client.device_info = AsyncMock(return_value=DeviceInfo(name="test8266"))
 
     service_info = dhcp.DhcpServiceInfo(
         ip="192.168.43.183",
