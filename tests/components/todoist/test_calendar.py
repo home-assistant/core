@@ -367,6 +367,73 @@ async def test_task_due_datetime(
 
 
 @pytest.mark.parametrize(
+    ("todoist_config", "due", "start", "end", "expected_response"),
+    [
+        (
+            {"custom_projects": [{"name": "Test", "labels": ["Label1"]}]},
+            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            "2023-03-28T00:00:00.000Z",
+            "2023-04-01T00:00:00.000Z",
+            [get_events_response({"date": "2023-03-30"}, {"date": "2023-03-31"})],
+        ),
+        (
+            {"custom_projects": [{"name": "Test", "labels": ["custom"]}]},
+            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            "2023-03-28T00:00:00.000Z",
+            "2023-04-01T00:00:00.000Z",
+            [],
+        ),
+        (
+            {"custom_projects": [{"name": "Test", "include_projects": ["Name"]}]},
+            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            "2023-03-28T00:00:00.000Z",
+            "2023-04-01T00:00:00.000Z",
+            [get_events_response({"date": "2023-03-30"}, {"date": "2023-03-31"})],
+        ),
+        (
+            {"custom_projects": [{"name": "Test", "due_date_days": 1}]},
+            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            "2023-03-28T00:00:00.000Z",
+            "2023-04-01T00:00:00.000Z",
+            [get_events_response({"date": "2023-03-30"}, {"date": "2023-03-31"})],
+        ),
+        (
+            {"custom_projects": [{"name": "Test", "due_date_days": 1}]},
+            Due(
+                date=(dt_util.now() + timedelta(days=2)).strftime("%Y-%m-%d"),
+                is_recurring=False,
+                string="Mar 30",
+            ),
+            dt_util.now().isoformat(),
+            (dt_util.now() + timedelta(days=5)).isoformat(),
+            [],
+        ),
+    ],
+    ids=[
+        "in_labels_whitelist",
+        "not_in_labels_whitelist",
+        "in_include_projects",
+        "in_due_date_days",
+        "not_in_due_date_days",
+    ],
+)
+async def test_events_filtered_for_custom_projects(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    start: str,
+    end: str,
+    expected_response: dict[str, Any],
+) -> None:
+    """Test we filter out tasks from custom projects based on their config."""
+    client = await hass_client()
+    response = await client.get(
+        get_events_url("calendar.test", start, end),
+    )
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == expected_response
+
+
+@pytest.mark.parametrize(
     ("due", "setup_platform"),
     [
         (
