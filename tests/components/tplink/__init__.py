@@ -16,7 +16,7 @@ from kasa import (
     KasaException,
     Module,
 )
-from kasa.interfaces import Light, LightEffect, LightState
+from kasa.interfaces import Fan, Light, LightEffect, LightState
 from kasa.protocol import BaseProtocol
 from syrupy import SnapshotAssertion
 
@@ -129,6 +129,7 @@ async def setup_platform_for_device(
         _patch_connect(device=device),
     ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        # Good practice to wait background tasks in tests see PR #112726
         await hass.async_block_till_done(wait_background_tasks=True)
 
 
@@ -330,6 +331,13 @@ def _mocked_light_effect_module() -> LightEffect:
     return effect
 
 
+def _mocked_fan_module() -> Fan:
+    fan = MagicMock(auto_spec=Fan, name="Mocked fan")
+    fan.fan_speed_level = 0
+    fan.set_fan_speed_level = AsyncMock()
+    return fan
+
+
 def _mocked_strip_children(features=None, alias=None) -> list[Device]:
     plug0 = _mocked_device(
         alias="Plug0" if alias is None else alias,
@@ -395,6 +403,7 @@ def _mocked_energy_features(
 MODULE_TO_MOCK_GEN = {
     Module.Light: _mocked_light_module,
     Module.LightEffect: _mocked_light_effect_module,
+    Module.Fan: _mocked_fan_module,
 }
 
 

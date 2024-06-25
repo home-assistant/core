@@ -187,6 +187,9 @@
       },
       "smooth_transitions": {
         "name": "Smooth transitions"
+      },
+      "fan_sleep_mode": {
+        "name": "Fan sleep mode"
       }
     },
     "number": {

@@ -29,6 +29,11 @@
     "type": "Switch",
     "category": "Config"
   },
+  "fan_sleep_mode": {
+    "value": false,
+    "type": "Switch",
+    "category": "Config"
+  },
   "current_consumption": {
     "value": 5.23,
     "type": "Sensor",
