@@ -2,26 +2,23 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+import json
 import logging
 import time
-from typing import Literal
+from typing import Any, Literal
 
 import ollama
+import voluptuous as vol
+from voluptuous_openapi import convert
 
 from homeassistant.components import assist_pipeline, conversation
 from homeassistant.components.conversation import trace
-from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import MATCH_ALL
+from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import (
-    area_registry as ar,
-    device_registry as dr,
-    entity_registry as er,
-    intent,
-    template,
-)
+from homeassistant.exceptions import HomeAssistantError, TemplateError
+from homeassistant.helpers import intent, llm, template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import ulid
 
@@ -30,12 +27,16 @@ from .const import (
     CONF_MODEL,
     CONF_PROMPT,
     DEFAULT_MAX_HISTORY,
-    DEFAULT_PROMPT,
     DOMAIN,
     KEEP_ALIVE_FOREVER,
     MAX_HISTORY_SECONDS,
+    TOOL_CALL,
+    TOOLS_PROMPT,
 )
-from .models import ExposedEntity, MessageHistory, MessageRole
+from .models import MessageHistory, MessageRole
+
+# Max number of back and forth with the LLM to generate a response
+MAX_TOOL_ITERATIONS = 10
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +49,19 @@ async def async_setup_entry(
     """Set up conversation entities."""
     agent = OllamaConversationEntity(config_entry)
     async_add_entities([agent])
+
+
+def _format_tool(
+    tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
+) -> dict[str, Any]:
+    """Format tool specification."""
+    tool_spec = {
+        "name": tool.name,
+        "parameters": convert(tool.parameters, custom_serializer=custom_serializer),
+    }
+    if tool.description:
+        tool_spec["description"] = tool.description
+    return tool_spec
 
 
 class OllamaConversationEntity(
@@ -93,6 +107,47 @@ class OllamaConversationEntity(
         client = self.hass.data[DOMAIN][self.entry.entry_id]
         conversation_id = user_input.conversation_id or ulid.ulid_now()
         model = settings[CONF_MODEL]
+        intent_response = intent.IntentResponse(language=user_input.language)
+        llm_api: llm.APIInstance | None = None
+        tools: list[dict[str, Any]] | None = None
+        user_name: str | None = None
+        llm_context = llm.LLMContext(
+            platform=DOMAIN,
+            context=user_input.context,
+            user_prompt=user_input.text,
+            language=user_input.language,
+            assistant=conversation.DOMAIN,
+            device_id=user_input.device_id,
+        )
+
+        if settings.get(CONF_LLM_HASS_API):
+            try:
+                llm_api = await llm.async_get_api(
+                    self.hass,
+                    settings[CONF_LLM_HASS_API],
+                    llm_context,
+                )
+            except HomeAssistantError as err:
+                _LOGGER.error("Error getting LLM API: %s", err)
+                intent_response.async_set_error(
+                    intent.IntentResponseErrorCode.UNKNOWN,
+                    f"Error preparing LLM API: {err}",
+                )
+                return conversation.ConversationResult(
+                    response=intent_response, conversation_id=user_input.conversation_id
+                )
+            tools = [
+                _format_tool(tool, llm_api.custom_serializer) for tool in llm_api.tools
+            ]
+
+        if (
+            user_input.context
+            and user_input.context.user_id
+            and (
+                user := await self.hass.auth.async_get_user(user_input.context.user_id)
+            )
+        ):
+            user_name = user.name
 
         # Look up message history
         message_history: MessageHistory | None = None
@@ -101,13 +156,24 @@ class OllamaConversationEntity(
             # New history
             #
             # Render prompt and error out early if there's a problem
-            raw_prompt = settings.get(CONF_PROMPT, DEFAULT_PROMPT)
             try:
-                prompt = self._generate_prompt(raw_prompt)
-                _LOGGER.debug("Prompt: %s", prompt)
+                prompt_parts = [
+                    template.Template(
+                        llm.BASE_PROMPT
+                        + settings.get(CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT),
+                        self.hass,
+                    ).async_render(
+                        {
+                            "ha_name": self.hass.config.location_name,
+                            "user_name": user_name,
+                            "llm_context": llm_context,
+                        },
+                        parse_result=False,
+                    )
+                ]
+
             except TemplateError as err:
                 _LOGGER.error("Error rendering prompt: %s", err)
-                intent_response = intent.IntentResponse(language=user_input.language)
                 intent_response.async_set_error(
                     intent.IntentResponseErrorCode.UNKNOWN,
                     f"Sorry, I had a problem generating my prompt: {err}",
@@ -115,6 +181,15 @@ class OllamaConversationEntity(
                 return conversation.ConversationResult(
                     response=intent_response, conversation_id=conversation_id
                 )
+
+            if llm_api:
+                if tools:
+                    prompt_parts.append(TOOLS_PROMPT)
+                    prompt_parts.append(f"{tools}")
+                prompt_parts.append(llm_api.api_prompt)
+
+            prompt = "\n".join(prompt_parts)
+            _LOGGER.debug("Prompt: %s", prompt)
 
             message_history = MessageHistory(
                 timestamp=time.monotonic(),
@@ -145,34 +220,71 @@ class OllamaConversationEntity(
         )
 
         # Get response
-        try:
-            response = await client.chat(
-                model=model,
-                # Make a copy of the messages because we mutate the list later
-                messages=list(message_history.messages),
-                stream=False,
-                keep_alive=KEEP_ALIVE_FOREVER,
-            )
-        except (ollama.RequestError, ollama.ResponseError) as err:
-            _LOGGER.error("Unexpected error talking to Ollama server: %s", err)
-            intent_response = intent.IntentResponse(language=user_input.language)
-            intent_response.async_set_error(
-                intent.IntentResponseErrorCode.UNKNOWN,
-                f"Sorry, I had a problem talking to the Ollama server: {err}",
-            )
-            return conversation.ConversationResult(
-                response=intent_response, conversation_id=conversation_id
+        # To prevent infinite loops, we limit the number of iterations
+        for _iteration in range(MAX_TOOL_ITERATIONS):
+            try:
+                response = await client.chat(
+                    model=model,
+                    # Make a copy of the messages because we mutate the list later
+                    messages=list(message_history.messages),
+                    stream=False,
+                    keep_alive=KEEP_ALIVE_FOREVER,
+                )
+            except (ollama.RequestError, ollama.ResponseError) as err:
+                _LOGGER.error("Unexpected error talking to Ollama server: %s", err)
+                intent_response.async_set_error(
+                    intent.IntentResponseErrorCode.UNKNOWN,
+                    f"Sorry, I had a problem talking to the Ollama server: {err}",
+                )
+                return conversation.ConversationResult(
+                    response=intent_response, conversation_id=conversation_id
+                )
+
+            response_message = response["message"]
+            message_history.messages.append(
+                ollama.Message(
+                    role=response_message["role"], content=response_message["content"]
+                )
             )
 
-        response_message = response["message"]
-        message_history.messages.append(
-            ollama.Message(
-                role=response_message["role"], content=response_message["content"]
+            if not response_message["content"].startswith(TOOL_CALL) or not llm_api:
+                break
+
+            try:
+                tool_call = json.loads(response_message["content"][len(TOOL_CALL) :])
+                tool_input = llm.ToolInput(
+                    tool_name=tool_call["name"],
+                    tool_args=tool_call["parameters"],
+                )
+            except json.decoder.JSONDecodeError as err:
+                _LOGGER.error("Unable to parse tools: %s", err)
+                message_history.messages.append(
+                    ollama.Message(
+                        role=MessageRole.SYSTEM.value,
+                        content=f"Unable to parse tool parameters, please fix and try again, the error is {err}",
+                    )
+                )
+                continue
+
+            _LOGGER.debug(
+                "Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args
             )
-        )
+
+            try:
+                tool_response = await llm_api.async_call_tool(tool_input)
+            except (HomeAssistantError, vol.Invalid) as e:
+                tool_response = {"error": type(e).__name__}
+                if str(e):
+                    tool_response["error_text"] = str(e)
+
+            _LOGGER.debug("Tool response: %s", tool_response)
+            message_history.messages.append(
+                ollama.Message(
+                    role=MessageRole.SYSTEM.value, content=json.dumps(tool_response)
+                )
+            )
 
         # Create intent response
-        intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(response_message["content"])
         return conversation.ConversationResult(
             response=intent_response, conversation_id=conversation_id
@@ -202,62 +314,3 @@ class OllamaConversationEntity(
             message_history.messages = [
                 message_history.messages[0]
             ] + message_history.messages[drop_index:]
-
-    def _generate_prompt(self, raw_prompt: str) -> str:
-        """Generate a prompt for the user."""
-        return template.Template(raw_prompt, self.hass).async_render(
-            {
-                "ha_name": self.hass.config.location_name,
-                "ha_language": self.hass.config.language,
-                "exposed_entities": self._get_exposed_entities(),
-            },
-            parse_result=False,
-        )
-
-    def _get_exposed_entities(self) -> list[ExposedEntity]:
-        """Get state list of exposed entities."""
-        area_registry = ar.async_get(self.hass)
-        entity_registry = er.async_get(self.hass)
-        device_registry = dr.async_get(self.hass)
-
-        exposed_entities = []
-        exposed_states = [
-            state
-            for state in self.hass.states.async_all()
-            if async_should_expose(self.hass, conversation.DOMAIN, state.entity_id)
-        ]
-
-        for state in exposed_states:
-            entity_entry = entity_registry.async_get(state.entity_id)
-            names = [state.name]
-            area_names = []
-
-            if entity_entry is not None:
-                # Add aliases
-                names.extend(entity_entry.aliases)
-                if entity_entry.area_id and (
-                    area := area_registry.async_get_area(entity_entry.area_id)
-                ):
-                    # Entity is in area
-                    area_names.append(area.name)
-                    area_names.extend(area.aliases)
-                elif entity_entry.device_id and (
-                    device := device_registry.async_get(entity_entry.device_id)
-                ):
-                    # Check device area
-                    if device.area_id and (
-                        area := area_registry.async_get_area(device.area_id)
-                    ):
-                        area_names.append(area.name)
-                        area_names.extend(area.aliases)
-
-            exposed_entities.append(
-                ExposedEntity(
-                    entity_id=state.entity_id,
-                    state=state,
-                    names=names,
-                    area_names=area_names,
-                )
-            )
-
-        return exposed_entities
