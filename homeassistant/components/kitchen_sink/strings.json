@@ -6,6 +6,26 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {}
+      },
+      "options_1": {
+        "section": {
+          "section_1": {
+            "data": {
+              "bool": "Optional boolean",
+              "int": "Numeric input"
+            },
+            "description": "This section allows input of some extra data",
+            "name": "Collapsible section"
+          }
+        },
+        "submit": "Save!"
+      }
+    }
+  },
   "device": {
     "n_ch_power_strip": {
       "name": "Power strip with {number_of_sockets} sockets"

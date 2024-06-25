@@ -45,7 +45,6 @@ from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.setup import SetupPhases, async_pause_setup
-from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.logging import catch_log_exception, log_exception
 
@@ -85,7 +84,7 @@ from .models import (
     PublishPayloadType,
     ReceiveMessage,
 )
-from .util import get_file_path, mqtt_config_entry_enabled
+from .util import EnsureJobAfterCooldown, get_file_path, mqtt_config_entry_enabled
 
 if TYPE_CHECKING:
     # Only import for paho-mqtt type checking here, imports are done locally
@@ -356,103 +355,6 @@ class MqttClientSetup:
     def client(self) -> AsyncMQTTClient:
         """Return the paho MQTT client."""
         return self._client
-
-
-class EnsureJobAfterCooldown:
-    """Ensure a cool down period before executing a job.
-
-    When a new execute request arrives we cancel the current request
-    and start a new one.
-    """
-
-    def __init__(
-        self, timeout: float, callback_job: Callable[[], Coroutine[Any, None, None]]
-    ) -> None:
-        """Initialize the timer."""
-        self._loop = asyncio.get_running_loop()
-        self._timeout = timeout
-        self._callback = callback_job
-        self._task: asyncio.Task | None = None
-        self._timer: asyncio.TimerHandle | None = None
-        self._next_execute_time = 0.0
-
-    def set_timeout(self, timeout: float) -> None:
-        """Set a new timeout period."""
-        self._timeout = timeout
-
-    async def _async_job(self) -> None:
-        """Execute after a cooldown period."""
-        try:
-            await self._callback()
-        except HomeAssistantError as ha_error:
-            _LOGGER.error("%s", ha_error)
-
-    @callback
-    def _async_task_done(self, task: asyncio.Task) -> None:
-        """Handle task done."""
-        self._task = None
-
-    @callback
-    def async_execute(self) -> asyncio.Task:
-        """Execute the job."""
-        if self._task:
-            # Task already running,
-            # so we schedule another run
-            self.async_schedule()
-            return self._task
-
-        self._async_cancel_timer()
-        self._task = create_eager_task(self._async_job())
-        self._task.add_done_callback(self._async_task_done)
-        return self._task
-
-    @callback
-    def _async_cancel_timer(self) -> None:
-        """Cancel any pending task."""
-        if self._timer:
-            self._timer.cancel()
-            self._timer = None
-
-    @callback
-    def async_schedule(self) -> None:
-        """Ensure we execute after a cooldown period."""
-        # We want to reschedule the timer in the future
-        # every time this is called.
-        next_when = self._loop.time() + self._timeout
-        if not self._timer:
-            self._timer = self._loop.call_at(next_when, self._async_timer_reached)
-            return
-
-        if self._timer.when() < next_when:
-            # Timer already running, set the next execute time
-            # if it fires too early, it will get rescheduled
-            self._next_execute_time = next_when
-
-    @callback
-    def _async_timer_reached(self) -> None:
-        """Handle timer fire."""
-        self._timer = None
-        if self._loop.time() >= self._next_execute_time:
-            self.async_execute()
-            return
-        # Timer fired too early because there were multiple
-        # calls async_schedule. Reschedule the timer.
-        self._timer = self._loop.call_at(
-            self._next_execute_time, self._async_timer_reached
-        )
-
-    async def async_cleanup(self) -> None:
-        """Cleanup any pending task."""
-        self._async_cancel_timer()
-        if not self._task:
-            return
-        self._task.cancel()
-        try:
-            await self._task
-        except asyncio.CancelledError:
-            pass
-        except Exception:
-            _LOGGER.exception("Error cleaning up task")
 
 
 class MQTT:

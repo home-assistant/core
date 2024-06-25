@@ -488,6 +488,7 @@ jobs:
           sudo apt-get -y install \
             bluez \
             ffmpeg \
+            libturbojpeg \
             libavcodec-dev \
             libavdevice-dev \
             libavfilter-dev \
@@ -747,6 +748,7 @@ jobs:
           sudo apt-get -y install \
             bluez \
             ffmpeg \
+            libturbojpeg \
             libgammu-dev
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
@@ -809,6 +811,7 @@ jobs:
           sudo apt-get -y install \
             bluez \
             ffmpeg \
+            libturbojpeg \
             libgammu-dev
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
@@ -926,6 +929,7 @@ jobs:
           sudo apt-get -y install \
             bluez \
             ffmpeg \
+            libturbojpeg \
             libmariadb-dev-compat
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
@@ -1050,6 +1054,7 @@ jobs:
           sudo apt-get -y install \
             bluez \
             ffmpeg \
+            libturbojpeg \
             postgresql-server-dev-14
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
@@ -1194,6 +1199,7 @@ jobs:
           sudo apt-get -y install \
             bluez \
             ffmpeg \
+            libturbojpeg \
             libgammu-dev
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
