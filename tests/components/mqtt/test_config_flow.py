@@ -1104,7 +1104,6 @@ async def test_skipping_advanced_options(
 )
 async def test_step_reauth(
     hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
     mqtt_client_mock: MqttMockPahoClient,
     mock_try_connection: MagicMock,
     mock_reload_after_entry_update: MagicMock,
@@ -1115,12 +1114,9 @@ async def test_step_reauth(
     """Test that the reauth step works."""
 
     # Prepare the config entry
-    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    hass.config_entries.async_update_entry(
-        config_entry,
-        data=test_input,
-    )
-    await mqtt_mock_entry()
+    config_entry = MockConfigEntry(domain=mqtt.DOMAIN, data=test_input)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     # Start reauth flow
     config_entry.async_start_reauth(hass)

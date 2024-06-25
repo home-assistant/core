@@ -85,7 +85,7 @@ class GeniusBattery(GeniusDevice, SensorEntity):
         return icon
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         level = self._device.data["state"][self._state_attr]
         return level if level != 255 else 0

@@ -68,22 +68,16 @@ async def async_setup_entry(
         if not coordinator.new_devices:
             return
 
-        entities: list[PlugwiseSwitchEntity] = []
-        for device_id, device in coordinator.data.devices.items():
-            if not (switches := device.get("switches")):
-                continue
-            for description in SWITCHES:
-                if description.key not in switches:
-                    continue
-                entities.append(
-                    PlugwiseSwitchEntity(coordinator, device_id, description)
-                )
-
-        async_add_entities(entities)
-
-    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
+        async_add_entities(
+            PlugwiseSwitchEntity(coordinator, device_id, description)
+            for device_id in coordinator.new_devices
+            if (switches := coordinator.data.devices[device_id].get("switches"))
+            for description in SWITCHES
+            if description.key in switches
+        )
 
     _add_entities()
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 
 
 class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
