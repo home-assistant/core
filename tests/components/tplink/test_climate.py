@@ -5,8 +5,8 @@ from datetime import timedelta
 from kasa import Device, Feature
 from kasa.smart.modules.temperaturecontrol import ThermostatState
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import tplink
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,
@@ -20,21 +20,18 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.tplink.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import (
     DEVICE_ID,
-    MAC_ADDRESS,
     _mocked_device,
     _mocked_feature,
-    _patch_connect,
-    _patch_discovery,
+    setup_platform_for_device,
+    snapshot_platform,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -45,10 +42,6 @@ ENTITY_ID = "climate.thermostat"
 @pytest.fixture
 async def mocked_hub(hass: HomeAssistant) -> Device:
     """Return mocked tplink binary sensor feature."""
-    already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
-    )
-    already_migrated_config_entry.add_to_hass(hass)
 
     features = [
         _mocked_feature(
@@ -79,20 +72,22 @@ async def mocked_hub(hass: HomeAssistant) -> Device:
         alias="thermostat", features=features, device_type=Device.Type.Thermostat
     )
 
-    device = _mocked_device(
+    return _mocked_device(
         alias="hub", children=[thermostat], device_type=Device.Type.Hub
     )
-    with _patch_discovery(device=device), _patch_connect(device=device):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
-        await hass.async_block_till_done()
-
-    return device
 
 
 async def test_climate(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, mocked_hub: Device
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mocked_hub: Device,
 ) -> None:
     """Test initialization."""
+    await setup_platform_for_device(
+        hass, mock_config_entry, Platform.CLIMATE, mocked_hub
+    )
+
     entity = entity_registry.async_get(ENTITY_ID)
     assert entity
     assert entity.unique_id == f"{DEVICE_ID}_climate"
@@ -103,8 +98,31 @@ async def test_climate(
     assert state.attributes[ATTR_TEMPERATURE] == 22
 
 
-async def test_set_temperature(hass: HomeAssistant, mocked_hub: Device) -> None:
+async def test_states(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+    mocked_hub: Device,
+) -> None:
+    """Snapshot test."""
+    await setup_platform_for_device(
+        hass, mock_config_entry, Platform.CLIMATE, mocked_hub
+    )
+
+    await snapshot_platform(
+        hass, entity_registry, device_registry, snapshot, mock_config_entry.entry_id
+    )
+
+
+async def test_set_temperature(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mocked_hub: Device
+) -> None:
     """Test that set_temperature service calls the setter."""
+    await setup_platform_for_device(
+        hass, mock_config_entry, Platform.CLIMATE, mocked_hub
+    )
 
     mocked_thermostat = mocked_hub.children[0]
 
@@ -118,8 +136,14 @@ async def test_set_temperature(hass: HomeAssistant, mocked_hub: Device) -> None:
     target_temp_feature.set_value.assert_called_with(10)
 
 
-async def test_set_hvac_mode(hass: HomeAssistant, mocked_hub: Device) -> None:
+async def test_set_hvac_mode(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mocked_hub: Device
+) -> None:
     """Test that set_hvac_mode service works."""
+    await setup_platform_for_device(
+        hass, mock_config_entry, Platform.CLIMATE, mocked_hub
+    )
+
     mocked_thermostat = mocked_hub.children[0]
     mocked_state = mocked_thermostat.features["state"]
     assert mocked_state is not None
@@ -150,8 +174,14 @@ async def test_set_hvac_mode(hass: HomeAssistant, mocked_hub: Device) -> None:
         )
 
 
-async def test_turn_on_and_off(hass: HomeAssistant, mocked_hub: Device) -> None:
+async def test_turn_on_and_off(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mocked_hub: Device
+) -> None:
     """Test that turn_on and turn_off services work as expected."""
+    await setup_platform_for_device(
+        hass, mock_config_entry, Platform.CLIMATE, mocked_hub
+    )
+
     mocked_thermostat = mocked_hub.children[0]
     mocked_state = mocked_thermostat.features["state"]
 
@@ -175,9 +205,15 @@ async def test_turn_on_and_off(hass: HomeAssistant, mocked_hub: Device) -> None:
 
 
 async def test_unknown_mode(
-    hass: HomeAssistant, mocked_hub: Device, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_hub: Device,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that unknown device modes log a warning and default to off."""
+    await setup_platform_for_device(
+        hass, mock_config_entry, Platform.CLIMATE, mocked_hub
+    )
 
     mocked_thermostat = mocked_hub.children[0]
     mocked_state = mocked_thermostat.features["thermostat_mode"]
