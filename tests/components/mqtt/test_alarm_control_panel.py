@@ -1167,10 +1167,7 @@ async def test_entity_device_info_remove(
 ) -> None:
     """Test device registry remove."""
     await help_test_entity_device_info_remove(
-        hass,
-        mqtt_mock_entry,
-        alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, alarm_control_panel.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -1188,10 +1185,7 @@ async def test_entity_id_update_discovery_update(
 ) -> None:
     """Test MQTT discovery update when entity_id is updated."""
     await help_test_entity_id_update_discovery_update(
-        hass,
-        mqtt_mock_entry,
-        alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, alarm_control_panel.DOMAIN, DEFAULT_CONFIG
     )
 
 
