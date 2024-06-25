@@ -168,6 +168,14 @@ class MockDevices:
             yield address
         await asyncio.sleep(0.01)
 
+    def values(self):
+        """Return the devices."""
+        return self._devices.values()
+
+    def items(self):
+        """Return the address, device pair."""
+        return self._devices.items()
+
     def subscribe(self, listener, force_strong_ref=False):
         """Mock the subscribe function."""
         subscribe_topic(listener, DEVICE_LIST_CHANGED)
