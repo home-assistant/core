@@ -166,6 +166,13 @@ def gen_data_entry_schema(
                 vol.Optional("data_description"): {str: translation_value_validator},
                 vol.Optional("menu_options"): {str: translation_value_validator},
                 vol.Optional("submit"): translation_value_validator,
+                vol.Optional("section"): {
+                    str: {
+                        vol.Optional("data"): {str: translation_value_validator},
+                        vol.Optional("description"): translation_value_validator,
+                        vol.Optional("name"): translation_value_validator,
+                    },
+                },
             }
         },
         vol.Optional("error"): {str: translation_value_validator},
@@ -373,6 +380,13 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                             vol.Required("name"): str,
                             vol.Required("description"): translation_value_validator,
                             vol.Optional("example"): translation_value_validator,
+                        },
+                        slug_validator=translation_key_validator,
+                    ),
+                    vol.Optional("sections"): cv.schema_with_slug_keys(
+                        {
+                            vol.Required("name"): str,
+                            vol.Optional("description"): translation_value_validator,
                         },
                         slug_validator=translation_key_validator,
                     ),

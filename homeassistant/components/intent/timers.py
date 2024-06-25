@@ -278,7 +278,7 @@ class TimerManager:
             name=f"Timer {timer_id}",
         )
 
-        if timer.device_id in self.handlers:
+        if (not timer.conversation_command) and (timer.device_id in self.handlers):
             self.handlers[timer.device_id](TimerEventType.STARTED, timer)
         _LOGGER.debug(
             "Timer started: id=%s, name=%s, hours=%s, minutes=%s, seconds=%s, device_id=%s",
@@ -317,7 +317,7 @@ class TimerManager:
 
         timer.cancel()
 
-        if timer.device_id in self.handlers:
+        if (not timer.conversation_command) and (timer.device_id in self.handlers):
             self.handlers[timer.device_id](TimerEventType.CANCELLED, timer)
         _LOGGER.debug(
             "Timer cancelled: id=%s, name=%s, seconds_left=%s, device_id=%s",
@@ -346,7 +346,7 @@ class TimerManager:
                 name=f"Timer {timer_id}",
             )
 
-        if timer.device_id in self.handlers:
+        if (not timer.conversation_command) and (timer.device_id in self.handlers):
             self.handlers[timer.device_id](TimerEventType.UPDATED, timer)
 
         if seconds > 0:
@@ -384,7 +384,7 @@ class TimerManager:
         task = self.timer_tasks.pop(timer_id)
         task.cancel()
 
-        if timer.device_id in self.handlers:
+        if (not timer.conversation_command) and (timer.device_id in self.handlers):
             self.handlers[timer.device_id](TimerEventType.UPDATED, timer)
         _LOGGER.debug(
             "Timer paused: id=%s, name=%s, seconds_left=%s, device_id=%s",
@@ -410,7 +410,7 @@ class TimerManager:
             name=f"Timer {timer.id}",
         )
 
-        if timer.device_id in self.handlers:
+        if (not timer.conversation_command) and (timer.device_id in self.handlers):
             self.handlers[timer.device_id](TimerEventType.UPDATED, timer)
         _LOGGER.debug(
             "Timer unpaused: id=%s, name=%s, seconds_left=%s, device_id=%s",
@@ -425,15 +425,6 @@ class TimerManager:
         timer = self.timers.pop(timer_id)
 
         timer.finish()
-
-        if timer.device_id in self.handlers:
-            self.handlers[timer.device_id](TimerEventType.FINISHED, timer)
-        _LOGGER.debug(
-            "Timer finished: id=%s, name=%s, device_id=%s",
-            timer_id,
-            timer.name,
-            timer.device_id,
-        )
 
         if timer.conversation_command:
             # pylint: disable-next=import-outside-toplevel
@@ -451,6 +442,15 @@ class TimerManager:
                 ),
                 "timer assist command",
             )
+        elif timer.device_id in self.handlers:
+            self.handlers[timer.device_id](TimerEventType.FINISHED, timer)
+
+        _LOGGER.debug(
+            "Timer finished: id=%s, name=%s, device_id=%s",
+            timer_id,
+            timer.name,
+            timer.device_id,
+        )
 
     def is_timer_device(self, device_id: str) -> bool:
         """Return True if device has been registered to handle timer events."""

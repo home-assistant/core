@@ -33,7 +33,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from homeassistant.util import dt as dt_util
 
 from . import subscription
@@ -185,7 +185,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
         await MqttEntity.async_will_remove_from_hass(self)
 
     @staticmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 

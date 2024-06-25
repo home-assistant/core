@@ -1,6 +1,7 @@
 """Tests for the pyLoad Sensors."""
 
-from unittest.mock import AsyncMock
+from collections.abc import AsyncGenerator
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyloadapi.exceptions import CannotConnect, InvalidAuth, ParserError
@@ -11,12 +12,23 @@ from homeassistant.components.pyload.const import DOMAIN
 from homeassistant.components.pyload.coordinator import SCAN_INTERVAL
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+async def sensor_only() -> AsyncGenerator[None, None]:
+    """Enable only the sensor platform."""
+    with patch(
+        "homeassistant.components.pyload.PLATFORMS",
+        [Platform.SENSOR],
+    ):
+        yield
 
 
 async def test_setup(
