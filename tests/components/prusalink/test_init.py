@@ -37,7 +37,10 @@ async def test_unloading(
         assert state.state == "unavailable"
 
 
-@pytest.mark.parametrize("exception", [InvalidAuth, PrusaLinkError, ConnectError])
+@pytest.mark.parametrize(
+    "exception",
+    [InvalidAuth, PrusaLinkError, ConnectError("All connection attempts failed")],
+)
 async def test_failed_update(
     hass: HomeAssistant, mock_config_entry: ConfigEntry, exception
 ) -> None:
