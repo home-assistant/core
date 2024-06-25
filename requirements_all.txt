@@ -2936,7 +2936,7 @@ yalesmartalarmclient==0.3.9
 
 # homeassistant.components.august
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.4.2
+yalexs-ble==2.4.3
 
 # homeassistant.components.august
 yalexs==6.4.1
