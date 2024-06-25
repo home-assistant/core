@@ -153,10 +153,10 @@ class RequirementsManager:
 
         cache = self.integrations_with_reqs
         int_or_fut = cache.get(domain)
+        if type(int_or_fut) is Integration:
+            return int_or_fut
         if isinstance(int_or_fut, asyncio.Future):
             return await int_or_fut
-        if isinstance(int_or_fut, Integration):
-            return int_or_fut
 
         future = cache[domain] = self.hass.loop.create_future()
         try:
