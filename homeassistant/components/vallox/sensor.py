@@ -5,8 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, time
 
-from vallox_websocket_api import Profile
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -136,19 +134,10 @@ class ValloxProfileDurationSensor(ValloxSensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        minutes_left: int | float | None = 0
 
-        if Profile.EXTRA is self.coordinator.data.profile:
-            minutes_left = self.coordinator.data.get("A_CYC_EXTRA_TIMER", 0)
-        elif Profile.FIREPLACE is self.coordinator.data.profile:
-            minutes_left = self.coordinator.data.get("A_CYC_FIREPLACE_TIMER", 0)
-        elif Profile.BOOST is self.coordinator.data.profile:
-            minutes_left = self.coordinator.data.get("A_CYC_BOOST_TIMER", 0)
-
-        if not isinstance(minutes_left, int):
-            return 0
-
-        return minutes_left
+        return self.coordinator.data.get_remaining_profile_duration(
+            self.coordinator.data.profile
+        )
 
 
 @dataclass(frozen=True)
@@ -284,7 +273,6 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         entity_type=ValloxProfileDurationSensor,
-        entity_registry_enabled_default=False,
     ),
 )
 
