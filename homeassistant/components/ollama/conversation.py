@@ -185,7 +185,7 @@ class OllamaConversationEntity(
             if llm_api:
                 if tools:
                     prompt_parts.append(TOOLS_PROMPT)
-                    prompt_parts.append(f"{tools}")
+                    prompt_parts.append(json.dumps(tools))
                 prompt_parts.append(llm_api.api_prompt)
 
             prompt = "\n".join(prompt_parts)

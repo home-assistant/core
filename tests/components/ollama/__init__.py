@@ -1,7 +1,7 @@
 """Tests for the Ollama integration."""
 
 from homeassistant.components import ollama
-from homeassistant.components.ollama.const import DEFAULT_PROMPT
+from homeassistant.helpers import llm
 
 TEST_USER_DATA = {
     ollama.CONF_URL: "http://localhost:11434",
@@ -9,6 +9,6 @@ TEST_USER_DATA = {
 }
 
 TEST_OPTIONS = {
-    ollama.CONF_PROMPT: DEFAULT_PROMPT,
+    ollama.CONF_PROMPT: llm.DEFAULT_INSTRUCTIONS_PROMPT,
     ollama.CONF_MAX_HISTORY: 2,
 }

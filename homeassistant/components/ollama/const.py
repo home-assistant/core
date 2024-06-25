@@ -11,8 +11,8 @@ TOOLS_PROMPT = (
     " and get the result before answering to the user. You can either call a tool or"
     """ respond to the user in one response.
 To call the tool, start the response with TOOL_CALL followed by tool name and"""
-    " parameters in json format, example: TOOL_CALL {'name': 'tool_name', parameters:"
-    """ {'arg': 42}}
+    ' parameters in json format, example: TOOL_CALL {"name": "tool_name", parameters:'
+    """ {\"arg\": 42}}
 Available tools in JSON object schema format:"""
 )
 
