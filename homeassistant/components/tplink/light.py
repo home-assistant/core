@@ -185,7 +185,6 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
 
     _attr_supported_features = LightEntityFeature.TRANSITION
     _fixed_color_mode: ColorMode | None = None
-    _attr_has_entity_name = True
 
     def __init__(
         self,

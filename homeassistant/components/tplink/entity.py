@@ -67,8 +67,6 @@ LEGACY_KEY_MAPPING = {
 class TPLinkFeatureEntityDescription(EntityDescription):
     """Base class for a TPLink feature based entity description."""
 
-    has_entity_name = True
-
 
 def async_refresh_after[_T: CoordinatedTPLinkEntity, **_P](
     func: Callable[Concatenate[_T, _P], Awaitable[None]],
@@ -115,6 +113,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
     """Common base class for all coordinated tplink entities."""
 
     _device: Device
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -130,16 +129,11 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         self._feature = feature
 
         registry_device = device
-        device_name = get_device_name(device)
+        device_name = get_device_name(device, parent=parent)
         if parent and parent.device_type is not Device.Type.Hub:
-            if (
-                not feature
-                or feature.id == PRIMARY_STATE_ID
-                or parent.device_type is Device.Type.WallSwitch
-            ):
+            if not feature or feature.id == PRIMARY_STATE_ID:
                 # Entity will be added to parent if not a hub and no feature parameter
                 # (i.e. core platform like Light, Fan) or the feature is the primary state
-                # or the device is a wall switch with children like the ks240.
                 registry_device = parent
                 device_name = get_device_name(registry_device)
             else:
@@ -148,7 +142,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
                 # alias makes more sense in the context of the parent.
                 # i.e. Hall Ceiling Fan & Bedroom Ceiling Fan; Child device aliases will be Ceiling Fan
                 # and Dimmer Switch for both so should be distinguished by the parent name.
-                device_name = f"{get_device_name(parent)} {get_device_name(device)}"
+                device_name = f"{get_device_name(parent)} {get_device_name(device, parent=parent)}"
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(registry_device.device_id))},
@@ -159,7 +153,11 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
             hw_version=registry_device.hw_info["hw_ver"],
         )
 
-        if parent is not None and parent != registry_device:
+        if (
+            parent is not None
+            and parent != registry_device
+            and parent.device_type is not Device.Type.WallSwitch
+        ):
             self._attr_device_info["via_device"] = (DOMAIN, parent.device_id)
         else:
             self._attr_device_info["connections"] = {
@@ -286,27 +284,18 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
             # _attr_name > translation.name > description.name
             # > device_class (if base platform supports).
             entity_name: str | None | UndefinedType = UNDEFINED
-            has_entity_name = True
 
             # The state feature gets the device name or the child device
             # name if it's a child device
             if feature.id == PRIMARY_STATE_ID:
                 translation_key = None
                 entity_name = (
-                    get_device_name(device) if parent else None
+                    get_device_name(device, parent=parent) if parent else None
                 )  # if None will use device name
-
-            # All entities are added to the parent for wall switches
-            if parent and parent.device_type is Device.Type.WallSwitch:
-                entity_name = (
-                    f"{get_device_name(parent)}_{get_device_name(device)}_{feature.id}"
-                )
-                has_entity_name = False
 
             return replace(
                 desc,
                 translation_key=translation_key,
-                has_entity_name=has_entity_name,
                 name=entity_name,  # if undefined will use translation key
                 entity_category=cls._category_for_feature(feature),
                 # enabled_default can be overridden to False in the description

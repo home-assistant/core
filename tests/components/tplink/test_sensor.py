@@ -231,20 +231,18 @@ async def test_sensor_children(
     assert entity
     device = device_registry.async_get(entity.device_id)
 
-    entity_name_suffix = (
-        "consumption_this_month" if on_parent_device else "this_month_s_consumption"
-    )
     for plug_id in range(2):
-        child_entity_id = f"sensor.my_plug_plug{plug_id}_{entity_name_suffix}"
+        child_entity_id = f"sensor.my_plug_plug{plug_id}_this_month_s_consumption"
         child_entity = entity_registry.async_get(child_entity_id)
         assert child_entity
         assert child_entity.unique_id == f"PLUG{plug_id}DEVICEID_consumption_this_month"
+        child_device = device_registry.async_get(child_entity.device_id)
+        assert child_device
         if on_parent_device:
             assert child_entity.device_id == entity.device_id
+            assert child_device.connections == device.connections
         else:
             assert child_entity.device_id != entity.device_id
-            child_device = device_registry.async_get(child_entity.device_id)
-            assert child_device
             assert child_device.via_device_id == device.id
 
 

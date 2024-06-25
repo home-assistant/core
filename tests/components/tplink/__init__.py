@@ -107,6 +107,8 @@ def _mocked_device(
     mac=MAC_ADDRESS,
     device_id=DEVICE_ID,
     alias=ALIAS,
+    model=MODEL,
+    ip_address=IP_ADDRESS,
     modules: list[str] | None = None,
     children: list[Device] | None = None,
     features: list[str | Feature] | None = None,
@@ -120,8 +122,8 @@ def _mocked_device(
 
     device.mac = mac
     device.alias = alias
-    device.model = MODEL
-    device.host = IP_ADDRESS
+    device.model = model
+    device.host = ip_address
     device.device_id = device_id
     device.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
     device.modules = {}
@@ -146,8 +148,11 @@ def _mocked_device(
                 if isinstance(feature, Feature)
             }
         )
-
-    device.children = children if children else []
+    device.children = []
+    if children:
+        for child in children:
+            child.mac = mac
+        device.children = children
     device.device_type = device_type if device_type else DeviceType.Unknown
     if (
         not device_type
@@ -234,16 +239,16 @@ def _mocked_fan_module() -> Fan:
     return fan
 
 
-def _mocked_strip_children(features=None) -> list[Device]:
+def _mocked_strip_children(features=None, alias=None) -> list[Device]:
     plug0 = _mocked_device(
-        alias="Plug0",
+        alias="Plug0" if alias is None else alias,
         device_id="bb:bb:cc:dd:ee:ff_PLUG0DEVICEID",
         mac="bb:bb:cc:dd:ee:ff",
         device_type=DeviceType.StripSocket,
         features=features,
     )
     plug1 = _mocked_device(
-        alias="Plug1",
+        alias="Plug1" if alias is None else alias,
         device_id="cc:bb:cc:dd:ee:ff_PLUG1DEVICEID",
         mac="cc:bb:cc:dd:ee:ff",
         device_type=DeviceType.StripSocket,

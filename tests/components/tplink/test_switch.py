@@ -232,6 +232,30 @@ async def test_strip_unique_ids(
         )
 
 
+async def test_strip_blank_alias(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a strip unique id."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    strip = _mocked_device(
+        alias="",
+        model="KS123",
+        children=_mocked_strip_children(features=["state", "led"], alias=""),
+        features=["state", "led"],
+    )
+    with _patch_discovery(device=strip), _patch_connect(device=strip):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    for plug_id in range(2):
+        entity_id = f"switch.unnamed_ks123_stripsocket_{plug_id + 1}"
+        state = hass.states.get(entity_id)
+        assert state.name == f"Unnamed KS123 Stripsocket {plug_id + 1}"
+
+
 @pytest.mark.parametrize(
     ("exception_type", "msg", "reauth_expected"),
     [
