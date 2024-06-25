@@ -3,5 +3,3 @@
 DOMAIN = "dio_chacon"
 
 MANUFACTURER = "Chacon"
-
-EVENT_DIO_CHACON_DEVICE_STATE_CHANGED = "event_dio_chacon_device_state"

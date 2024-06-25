@@ -1,21 +1,13 @@
 """The dio_chacon integration."""
 
 import logging
-from typing import Any
-
-from dio_chacon_wifi_api import DIOChaconAPIClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_UNIQUE_ID,
-    CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
-    Platform,
-)
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, EVENT_DIO_CHACON_DEVICE_STATE_CHANGED
+from .const import DOMAIN
+from .coordinator import DioChaconDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,31 +21,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
 
-    config = entry.data
-
-    def callback_device_state(data: Any) -> None:
-        """Receive callback for device state notification pushed from the server."""
-
-        hass.bus.fire(EVENT_DIO_CHACON_DEVICE_STATE_CHANGED, data)
-
-    # Authentication verification and login
-    dio_chacon_client = DIOChaconAPIClient(
-        config[CONF_USERNAME],
-        config[CONF_PASSWORD],
-        config[CONF_UNIQUE_ID],
-        callback_device_state,
-    )
+    coordinator = DioChaconDataUpdateCoordinator(hass, entry)
+    await coordinator.async_config_entry_first_refresh()
 
     # Store an API object for the platforms to access
-    entry.runtime_data = dio_chacon_client
-
-    # Disconnects the permanent websocket connection of home assistant on shutdown
-    async def call_disconnect(event: Event) -> None:
-        await dio_chacon_client.disconnect()
-
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, call_disconnect)
-    )
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -65,8 +37,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.debug("Start of async_unload_entry for dio_chacon integration")
 
-    dio_chacon_client = entry.runtime_data
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        coordinator: DioChaconDataUpdateCoordinator = entry.runtime_data
+        await coordinator.async_shutdown()
 
-    await dio_chacon_client.disconnect()
-
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    return unload_ok

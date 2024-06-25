@@ -4,7 +4,6 @@ import logging
 from unittest.mock import patch
 
 from dio_chacon_wifi_api import DIOChaconAPIClient
-from dio_chacon_wifi_api.const import DeviceTypeEnum
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -64,14 +63,9 @@ async def test_cover(hass: HomeAssistant, entity_registry: er.EntityRegistry) ->
 
     entry.add_to_hass(hass)
 
-    def mock_side_effect(*args, **kwargs):
-        if kwargs["device_type_to_search"] == [DeviceTypeEnum.SHUTTER]:
-            return MOCK_COVER_DEVICE
-        return None
-
     with patch(
         "dio_chacon_wifi_api.DIOChaconAPIClient.search_all_devices",
-        side_effect=mock_side_effect,
+        return_value=MOCK_COVER_DEVICE,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -143,7 +137,7 @@ async def test_cover(hass: HomeAssistant, entity_registry: er.EntityRegistry) ->
         assert state.state == STATE_OPENING
 
     # Server side callback tests
-    client: DIOChaconAPIClient = entry.runtime_data
+    client: DIOChaconAPIClient = entry.runtime_data.dio_chacon_client
     client._callback_device_state(
         {
             "id": "L4HActuator_idmock1",
