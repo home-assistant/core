@@ -1,4 +1,5 @@
 """SimpleFin Base Entity."""
+
 from simplefin4py import Account
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo

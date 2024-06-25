@@ -1,4 +1,5 @@
 """Test fixtures for SimpleFIN."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
