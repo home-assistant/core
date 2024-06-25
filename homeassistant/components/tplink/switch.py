@@ -47,9 +47,6 @@ SWITCH_DESCRIPTIONS: tuple[TPLinkSwitchEntityDescription, ...] = (
         key="smooth_transitions",
     ),
     TPLinkSwitchEntityDescription(
-        key="frost_protection_enabled",
-    ),
-    TPLinkSwitchEntityDescription(
         key="fan_sleep_mode",
     ),
 )

@@ -129,6 +129,7 @@ async def setup_platform_for_device(
         _patch_connect(device=device),
     ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        # Good practice to wait background tasks in tests see PR #112726
         await hass.async_block_till_done(wait_background_tasks=True)
 
 
@@ -234,7 +235,7 @@ def _mocked_device(
         not device_type
         and device.children
         and all(
-            child.device_type == DeviceType.StripSocket for child in device.children
+            child.device_type is DeviceType.StripSocket for child in device.children
         )
     ):
         device.device_type = DeviceType.Strip

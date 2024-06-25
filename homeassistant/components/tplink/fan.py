@@ -35,10 +35,12 @@ async def async_setup_entry(
     entities: list[CoordinatedTPLinkEntity] = []
     if Module.Fan in device.modules:
         entities.append(
-            Fan(device, parent_coordinator, fan_module=device.modules[Module.Fan])
+            TPLinkFanEntity(
+                device, parent_coordinator, fan_module=device.modules[Module.Fan]
+            )
         )
     entities.extend(
-        Fan(
+        TPLinkFanEntity(
             child,
             parent_coordinator,
             fan_module=child.modules[Module.Fan],
@@ -53,7 +55,7 @@ async def async_setup_entry(
 SPEED_RANGE = (1, 4)  # off is not included
 
 
-class Fan(CoordinatedTPLinkEntity, FanEntity):
+class TPLinkFanEntity(CoordinatedTPLinkEntity, FanEntity):
     """Representation of a fan for a TPLink Fan device."""
 
     _attr_speed_count = int_states_in_range(SPEED_RANGE)
@@ -67,7 +69,6 @@ class Fan(CoordinatedTPLinkEntity, FanEntity):
         parent: Device | None = None,
     ) -> None:
         """Initialize the fan."""
-        self._parent = parent
         super().__init__(device, coordinator, parent=parent)
         self.fan_module = fan_module
         # If _attr_name is None the entity name will be the device name

@@ -6,39 +6,32 @@ from datetime import timedelta
 
 from kasa import Device, Module
 
-from homeassistant.components import tplink
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_PERCENTAGE,
 )
-from homeassistant.components.tplink.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from . import DEVICE_ID, MAC_ADDRESS, _mocked_device, _patch_connect, _patch_discovery
+from . import DEVICE_ID, _mocked_device, setup_platform_for_device
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_fan_unique_id(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test a fan unique id."""
-    already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
-    )
-    already_migrated_config_entry.add_to_hass(hass)
     fan = _mocked_device(modules=[Module.Fan], alias="my_fan")
-    with _patch_discovery(device=fan), _patch_connect(device=fan):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
-        await hass.async_block_till_done(wait_background_tasks=True)
+    await setup_platform_for_device(hass, mock_config_entry, Platform.FAN, fan)
 
     device_entries = dr.async_entries_for_config_entry(
-        device_registry, already_migrated_config_entry.entry_id
+        device_registry, mock_config_entry.entry_id
     )
     assert device_entries
     entity_id = "fan.my_fan"
@@ -46,18 +39,12 @@ async def test_fan_unique_id(
     assert entity_registry.async_get(entity_id).unique_id == DEVICE_ID
 
 
-async def test_fan(hass: HomeAssistant) -> None:
+async def test_fan(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
     """Test a color fan and that all transitions are correctly passed."""
-    already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
-    )
-    already_migrated_config_entry.add_to_hass(hass)
     device = _mocked_device(modules=[Module.Fan], alias="my_fan")
     fan = device.modules[Module.Fan]
     fan.fan_speed_level = 0
-    with _patch_discovery(device=device), _patch_connect(device=device):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
-        await hass.async_block_till_done(wait_background_tasks=True)
+    await setup_platform_for_device(hass, mock_config_entry, Platform.FAN, device)
 
     entity_id = "fan.my_fan"
 
@@ -72,7 +59,7 @@ async def test_fan(hass: HomeAssistant) -> None:
 
     fan.fan_speed_level = 4
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get(entity_id)
     assert state.state == "on"
 
@@ -103,14 +90,10 @@ async def test_fan(hass: HomeAssistant) -> None:
 
 async def test_fan_child(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test child fans are added to parent device with the right ids."""
-    already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
-    )
-    already_migrated_config_entry.add_to_hass(hass)
-
     child_fan_1 = _mocked_device(
         modules=[Module.Fan], alias="my_fan_0", device_id=f"{DEVICE_ID}00"
     )
@@ -124,10 +107,9 @@ async def test_fan_child(
         modules=[Module.Fan],
         device_type=Device.Type.WallSwitch,
     )
-
-    with _patch_discovery(device=parent_device), _patch_connect(device=parent_device):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
-        await hass.async_block_till_done()
+    await setup_platform_for_device(
+        hass, mock_config_entry, Platform.FAN, parent_device
+    )
 
     entity_id = "fan.my_device"
     entity = entity_registry.async_get(entity_id)
