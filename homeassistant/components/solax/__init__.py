@@ -8,7 +8,13 @@ from solax import InverterResponse, RealTimeAPI, real_time_api
 from solax.inverter import InverterError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, Platform
+from homeassistant.const import (
+    CONF_IP_ADDRESS,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SCAN_INTERVAL,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -16,8 +22,6 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from .coordinator import SolaxDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
-
-SCAN_INTERVAL = timedelta(seconds=30)
 
 
 @dataclass(slots=True)
@@ -42,6 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolaxConfigEntry) -> boo
             entry.data[CONF_PORT],
             entry.data[CONF_PASSWORD],
         )
+        SCAN_INTERVAL = int(entry.data[CONF_SCAN_INTERVAL])
     except Exception as err:
         raise ConfigEntryNotReady from err
 
@@ -55,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolaxConfigEntry) -> boo
         hass,
         logger=_LOGGER,
         name=f"solax {entry.title}",
-        update_interval=SCAN_INTERVAL,
+        update_interval=timedelta(seconds=SCAN_INTERVAL),
         update_method=_async_update,
     )
     await coordinator.async_config_entry_first_refresh()
