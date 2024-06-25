@@ -47,13 +47,11 @@ async def async_setup_entry(
     device = parent_coordinator.device
 
     # As there are no standalone thermostats, we just iterate over the children.
-    entities: list[TPLinkClimateEntity] = [
+    async_add_entities(
         TPLinkClimateEntity(child, parent_coordinator, parent=device)
         for child in device.children
-        if child.device_type is DeviceType.Thermostat
-    ]
-
-    async_add_entities(entities)
+        if child.device_type is DeviceType.Thermostat    
+    )
 
 
 class TPLinkClimateEntity(CoordinatedTPLinkEntity, ClimateEntity):
