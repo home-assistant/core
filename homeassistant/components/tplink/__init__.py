@@ -228,6 +228,24 @@ def legacy_device_id(device: Device) -> str:
     return device_id.split("_")[1]
 
 
+def get_device_name(device: Device, parent: Device | None = None) -> str:
+    """Get a name for the device. alias can be none on some devices."""
+    if device.alias:
+        return device.alias
+    # Return the child device type with an index if there's more than one child device
+    # of the same type. i.e. Devices like the ks240 with one child of each type
+    # skip the suffix
+    if parent:
+        devices = [
+            child.device_id
+            for child in parent.children
+            if child.device_type is device.device_type
+        ]
+        suffix = f" {devices.index(device.device_id) + 1}" if len(devices) > 1 else ""
+        return f"{device.device_type.value.capitalize()}{suffix}"
+    return f"Unnamed {device.model}"
+
+
 async def get_credentials(hass: HomeAssistant) -> Credentials | None:
     """Retrieve the credentials from hass data."""
     if DOMAIN in hass.data and CONF_AUTHENTICATION in hass.data[DOMAIN]:

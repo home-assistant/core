@@ -143,7 +143,9 @@ async def snapshot_platform(
     device_entries = dr.async_entries_for_config_entry(device_registry, config_entry_id)
     assert device_entries
     for device_entry in device_entries:
-        assert device_entry == snapshot(name=f"{device_entry.name}-entry")
+        assert device_entry == snapshot(
+            name=f"{device_entry.name}-entry"
+        ), f"device entry snapshot failed for {device_entry.name}"
 
     entity_entries = er.async_entries_for_config_entry(entity_registry, config_entry_id)
     assert entity_entries
@@ -158,11 +160,15 @@ async def snapshot_platform(
             assert (
                 key in translations
             ), f"No translation for entity {entity_entry.unique_id}, expected {key}"
-        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert entity_entry == snapshot(
+            name=f"{entity_entry.entity_id}-entry"
+        ), f"entity entry snapshot failed for {entity_entry.entity_id}"
         if entity_entry.disabled_by is None:
             state = hass.states.get(entity_entry.entity_id)
             assert state, f"State not found for {entity_entry.entity_id}"
-            assert state == snapshot(name=f"{entity_entry.entity_id}-state")
+            assert state == snapshot(
+                name=f"{entity_entry.entity_id}-state"
+            ), f"state snapshot failed for {entity_entry.entity_id}"
 
 
 def _mock_protocol() -> BaseProtocol:
@@ -177,10 +183,12 @@ def _mocked_device(
     mac=MAC_ADDRESS,
     device_id=DEVICE_ID,
     alias=ALIAS,
+    model=MODEL,
+    ip_address=IP_ADDRESS,
     modules: list[str] | None = None,
     children: list[Device] | None = None,
     features: list[str | Feature] | None = None,
-    device_type=DeviceType.Unknown,
+    device_type=None,
     spec: type = Device,
 ) -> Device:
     device = MagicMock(spec=spec, name="Mocked device")
@@ -190,8 +198,8 @@ def _mocked_device(
 
     device.mac = mac
     device.alias = alias
-    device.model = MODEL
-    device.host = IP_ADDRESS
+    device.model = model
+    device.host = ip_address
     device.device_id = device_id
     device.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
     device.modules = {}
@@ -216,11 +224,18 @@ def _mocked_device(
                 if isinstance(feature, Feature)
             }
         )
-
-    device.children = children if children else []
-    device.device_type = device_type
-    if device.children and all(
-        child.device_type == DeviceType.StripSocket for child in device.children
+    device.children = []
+    if children:
+        for child in children:
+            child.mac = mac
+        device.children = children
+    device.device_type = device_type if device_type else DeviceType.Unknown
+    if (
+        not device_type
+        and device.children
+        and all(
+            child.device_type == DeviceType.StripSocket for child in device.children
+        )
     ):
         device.device_type = DeviceType.Strip
 
@@ -315,16 +330,16 @@ def _mocked_light_effect_module() -> LightEffect:
     return effect
 
 
-def _mocked_strip_children(features=None) -> list[Device]:
+def _mocked_strip_children(features=None, alias=None) -> list[Device]:
     plug0 = _mocked_device(
-        alias="Plug0",
+        alias="Plug0" if alias is None else alias,
         device_id="bb:bb:cc:dd:ee:ff_PLUG0DEVICEID",
         mac="bb:bb:cc:dd:ee:ff",
         device_type=DeviceType.StripSocket,
         features=features,
     )
     plug1 = _mocked_device(
-        alias="Plug1",
+        alias="Plug1" if alias is None else alias,
         device_id="cc:bb:cc:dd:ee:ff_PLUG1DEVICEID",
         mac="cc:bb:cc:dd:ee:ff",
         device_type=DeviceType.StripSocket,

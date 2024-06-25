@@ -1,6 +1,6 @@
 """Tests for light platform."""
 
-from kasa import Feature, Module
+from kasa import Device, Feature, Module
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -212,10 +212,19 @@ async def test_undefined_sensor(
     assert msg in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("device_type", "on_parent_device"),
+    [
+        pytest.param(Device.Type.Strip, False, id="Strip"),
+        pytest.param(Device.Type.WallSwitch, True, id="WallSwitch"),
+    ],
+)
 async def test_sensor_children(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
+    device_type,
+    on_parent_device,
 ) -> None:
     """Test a sensor unique ids."""
     already_migrated_config_entry = MockConfigEntry(
@@ -237,6 +246,7 @@ async def test_sensor_children(
         alias="my_plug",
         features=[feature],
         children=_mocked_strip_children(features=[feature]),
+        device_type=device_type,
     )
     with _patch_discovery(device=plug), _patch_connect(device=plug):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
@@ -252,10 +262,14 @@ async def test_sensor_children(
         child_entity = entity_registry.async_get(child_entity_id)
         assert child_entity
         assert child_entity.unique_id == f"PLUG{plug_id}DEVICEID_consumption_this_month"
-        assert child_entity.device_id != entity.device_id
         child_device = device_registry.async_get(child_entity.device_id)
         assert child_device
-        assert child_device.via_device_id == device.id
+        if on_parent_device:
+            assert child_entity.device_id == entity.device_id
+            assert child_device.connections == device.connections
+        else:
+            assert child_entity.device_id != entity.device_id
+            assert child_device.via_device_id == device.id
 
 
 @pytest.mark.skip
