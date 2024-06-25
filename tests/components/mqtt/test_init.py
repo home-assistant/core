@@ -2360,26 +2360,22 @@ async def test_tls_version(
 @patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_custom_birth_message(
     hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
     mqtt_config_entry_data: dict[str, Any],
     mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test sending birth message."""
 
-    birth = asyncio.Event()
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data=mqtt_config_entry_data)
     entry.add_to_hass(hass)
     hass.config.components.add(mqtt.DOMAIN)
     assert await hass.config_entries.async_setup(entry.entry_id)
+    mock_debouncer.clear()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-
-    @callback
-    def wait_birth(msg: ReceiveMessage) -> None:
-        """Handle birth message."""
-        birth.set()
-
-    await mqtt.async_subscribe(hass, "birth", wait_birth)
-    await hass.async_block_till_done()
-    await birth.wait()
+    # discovery cooldown
+    await mock_debouncer.wait()
+    # Wait for publish call to finish
+    await hass.async_block_till_done(wait_background_tasks=True)
     mqtt_client_mock.publish.assert_called_with("birth", "birth", 0, False)
 
 
@@ -2408,6 +2404,8 @@ async def test_default_birth_message(
 @patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_no_birth_message(
     hass: HomeAssistant,
+    record_calls: MessageCallbackType,
+    mock_debouncer: asyncio.Event,
     mqtt_config_entry_data: dict[str, Any],
     mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
@@ -2415,26 +2413,19 @@ async def test_no_birth_message(
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data=mqtt_config_entry_data)
     entry.add_to_hass(hass)
     hass.config.components.add(mqtt.DOMAIN)
+    mock_debouncer.clear()
     assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
-    await hass.async_block_till_done()
-    mqtt_client_mock.reset_mock()
-
-    await hass.async_block_till_done()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
-    await hass.async_block_till_done()
+    # Wait for discovery cooldown
+    await mock_debouncer.wait()
+    # Ensure any publishing could have been processed
+    await hass.async_block_till_done(wait_background_tasks=True)
     mqtt_client_mock.publish.assert_not_called()
 
-    @callback
-    def msg_callback(msg: ReceiveMessage) -> None:
-        """Handle callback."""
-
     mqtt_client_mock.reset_mock()
-    await mqtt.async_subscribe(hass, "homeassistant/some-topic", msg_callback)
-    await hass.async_block_till_done()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
-    await hass.async_block_till_done()
+    mock_debouncer.clear()
+    await mqtt.async_subscribe(hass, "homeassistant/some-topic", record_calls)
+    # Wait for discovery cooldown
+    await mock_debouncer.wait()
     mqtt_client_mock.subscribe.assert_called()
 
 
@@ -2456,7 +2447,6 @@ async def test_delayed_birth_message(
     entry.add_to_hass(hass)
     hass.config.components.add(mqtt.DOMAIN)
     assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
 
     @callback
     def wait_birth(msg: ReceiveMessage) -> None:
@@ -2464,7 +2454,6 @@ async def test_delayed_birth_message(
         birth.set()
 
     await mqtt.async_subscribe(hass, "homeassistant/status", wait_birth)
-    await hass.async_block_till_done()
     with pytest.raises(TimeoutError):
         await asyncio.wait_for(birth.wait(), 0.05)
     assert not mqtt_client_mock.publish.called
@@ -2564,26 +2553,27 @@ async def test_no_will_message(
 )
 async def test_mqtt_subscribes_topics_on_connect(
     hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
     record_calls: MessageCallbackType,
 ) -> None:
     """Test subscription to topic on connect."""
     mqtt_client_mock = setup_with_birth_msg_client_mock
 
+    mock_debouncer.clear()
     await mqtt.async_subscribe(hass, "topic/test", record_calls)
     await mqtt.async_subscribe(hass, "home/sensor", record_calls, 2)
     await mqtt.async_subscribe(hass, "still/pending", record_calls)
     await mqtt.async_subscribe(hass, "still/pending", record_calls, 1)
+    await mock_debouncer.wait()
 
     mqtt_client_mock.on_disconnect(Mock(), None, 0)
 
     mqtt_client_mock.reset_mock()
 
+    mock_debouncer.clear()
     mqtt_client_mock.on_connect(Mock(), None, 0, 0)
-
-    await hass.async_block_till_done()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await mock_debouncer.wait()
 
     subscribe_calls = help_all_subscribe_calls(mqtt_client_mock)
     assert ("topic/test", 0) in subscribe_calls
@@ -2597,17 +2587,18 @@ async def test_mqtt_subscribes_topics_on_connect(
 )
 async def test_mqtt_subscribes_in_single_call(
     hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
     record_calls: MessageCallbackType,
 ) -> None:
     """Test bundled client subscription to topic."""
     mqtt_client_mock = setup_with_birth_msg_client_mock
     mqtt_client_mock.subscribe.reset_mock()
+    mock_debouncer.clear()
     await mqtt.async_subscribe(hass, "topic/test", record_calls)
     await mqtt.async_subscribe(hass, "home/sensor", record_calls)
     # Make sure the debouncer finishes
-    await asyncio.sleep(0)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await mock_debouncer.wait()
 
     assert mqtt_client_mock.subscribe.call_count == 1
     # Assert we have a single subscription call with both subscriptions
@@ -2622,6 +2613,7 @@ async def test_mqtt_subscribes_in_single_call(
 @patch("homeassistant.components.mqtt.client.MAX_UNSUBSCRIBES_PER_CALL", 2)
 async def test_mqtt_subscribes_and_unsubscribes_in_chunks(
     hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
     record_calls: MessageCallbackType,
 ) -> None:
@@ -2630,13 +2622,13 @@ async def test_mqtt_subscribes_and_unsubscribes_in_chunks(
 
     mqtt_client_mock.subscribe.reset_mock()
     unsub_tasks: list[CALLBACK_TYPE] = []
+    mock_debouncer.clear()
     unsub_tasks.append(await mqtt.async_subscribe(hass, "topic/test1", record_calls))
     unsub_tasks.append(await mqtt.async_subscribe(hass, "home/sensor1", record_calls))
     unsub_tasks.append(await mqtt.async_subscribe(hass, "topic/test2", record_calls))
     unsub_tasks.append(await mqtt.async_subscribe(hass, "home/sensor2", record_calls))
     # Make sure the debouncer finishes
-    await asyncio.sleep(0.1)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await mock_debouncer.wait()
 
     assert mqtt_client_mock.subscribe.call_count == 2
     # Assert we have a 2 subscription calls with both 2 subscriptions
@@ -2644,12 +2636,11 @@ async def test_mqtt_subscribes_and_unsubscribes_in_chunks(
     assert len(mqtt_client_mock.subscribe.mock_calls[1][1][0]) == 2
 
     # Unsubscribe all topics
+    mock_debouncer.clear()
     for task in unsub_tasks:
         task()
-    await hass.async_block_till_done()
     # Make sure the debouncer finishes
-    await asyncio.sleep(0.1)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await mock_debouncer.wait()
 
     assert mqtt_client_mock.unsubscribe.call_count == 2
     # Assert we have a 2 unsubscribe calls with both 2 topic
@@ -2717,6 +2708,7 @@ async def test_message_callback_exception_gets_logged(
 async def test_message_partial_callback_exception_gets_logged(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
+    mock_debouncer: asyncio.Event,
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test exception raised by message handler."""
@@ -2734,15 +2726,13 @@ async def test_message_partial_callback_exception_gets_logged(
         """Partial callback handler."""
         msg_callback(msg)
 
+    mock_debouncer.clear()
     await mqtt.async_subscribe(
         hass, "test-topic", partial(parial_handler, bad_handler, {"some_attr"})
     )
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await mock_debouncer.wait()
     async_fire_mqtt_message(hass, "test-topic", "test")
     await hass.async_block_till_done()
-    await hass.async_block_till_done()
-    await asyncio.sleep(0)
-    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         "Exception in bad_handler when handling msg on 'test-topic':"
@@ -3469,6 +3459,7 @@ async def test_publish_json_from_template(
 
 async def test_subscribe_connection_status(
     hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test connextion status subscription."""
@@ -3502,8 +3493,9 @@ async def test_subscribe_connection_status(
     await hass.async_block_till_done()
 
     # Mock connect status
+    mock_debouncer.clear()
     mqtt_client_mock.on_connect(None, None, 0, 0)
-    await hass.async_block_till_done()
+    await mock_debouncer.wait()
     assert mqtt.is_connected(hass) is True
 
     # Mock disconnect status
@@ -3516,9 +3508,9 @@ async def test_subscribe_connection_status(
     unsub_async()
 
     # Mock connect status
+    mock_debouncer.clear()
     mqtt_client_mock.on_connect(None, None, 0, 0)
-    await asyncio.sleep(0)
-    await hass.async_block_till_done()
+    await mock_debouncer.wait()
     assert mqtt.is_connected(hass) is True
 
     # Check calls
@@ -3553,7 +3545,7 @@ async def test_unload_config_entry(
     new_mqtt_config_entry = mqtt_config_entry
     mqtt_client_mock.publish.assert_any_call("just_in_time", "published", 0, False)
     assert new_mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert not hass.services.has_service(mqtt.DOMAIN, "dump")
     assert not hass.services.has_service(mqtt.DOMAIN, "publish")
     assert "No ACK from MQTT server" not in caplog.text
@@ -4205,6 +4197,7 @@ async def test_auto_reconnect(
 
 async def test_server_sock_connect_and_disconnect(
     hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
     recorded_calls: list[ReceiveMessage],
     record_calls: MessageCallbackType,
@@ -4226,14 +4219,19 @@ async def test_server_sock_connect_and_disconnect(
 
     server.close()  # mock the server closing the connection on us
 
+    mock_debouncer.clear()
     unsub = await mqtt.async_subscribe(hass, "test-topic", record_calls)
+    await mock_debouncer.wait()
 
     mqtt_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_CONN_LOST
     mqtt_client_mock.on_socket_unregister_write(mqtt_client_mock, None, client)
     mqtt_client_mock.on_socket_close(mqtt_client_mock, None, client)
     mqtt_client_mock.on_disconnect(mqtt_client_mock, None, client)
     await hass.async_block_till_done()
+    mock_debouncer.clear()
     unsub()
+    await hass.async_block_till_done()
+    assert not mock_debouncer.is_set()
 
     # Should have failed
     assert len(recorded_calls) == 0
