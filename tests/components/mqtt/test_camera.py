@@ -222,11 +222,7 @@ async def test_update_with_json_attrs_not_dict(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        camera.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, camera.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -237,11 +233,7 @@ async def test_update_with_json_attrs_bad_json(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        camera.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, camera.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -368,11 +360,7 @@ async def test_entity_id_update_subscriptions(
 ) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     await help_test_entity_id_update_subscriptions(
-        hass,
-        mqtt_mock_entry,
-        camera.DOMAIN,
-        DEFAULT_CONFIG,
-        ["test_topic"],
+        hass, mqtt_mock_entry, camera.DOMAIN, DEFAULT_CONFIG, ["test_topic"]
     )
 
 

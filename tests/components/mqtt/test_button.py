@@ -159,13 +159,7 @@ async def test_default_availability_payload(
         }
     }
     await help_test_default_availability_payload(
-        hass,
-        mqtt_mock_entry,
-        button.DOMAIN,
-        config,
-        True,
-        "state-topic",
-        "1",
+        hass, mqtt_mock_entry, button.DOMAIN, config, True, "state-topic", "1"
     )
 
 
@@ -184,13 +178,7 @@ async def test_custom_availability_payload(
     }
 
     await help_test_custom_availability_payload(
-        hass,
-        mqtt_mock_entry,
-        button.DOMAIN,
-        config,
-        True,
-        "state-topic",
-        "1",
+        hass, mqtt_mock_entry, button.DOMAIN, config, True, "state-topic", "1"
     )
 
 
