@@ -9,7 +9,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
-from . import CONF_NOISE_PSK, DomainData
+from . import CONF_NOISE_PSK
 from .dashboard import async_get_dashboard
 from .entry_data import ESPHomeConfigEntry
 
@@ -26,7 +26,7 @@ async def async_get_config_entry_diagnostics(
 
     diag["config"] = config_entry.as_dict()
 
-    entry_data = DomainData.get(hass).get_entry_data(config_entry)
+    entry_data = config_entry.runtime_data
 
     if (storage_data := await entry_data.store.async_load()) is not None:
         diag["storage_data"] = storage_data

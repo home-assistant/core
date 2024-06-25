@@ -842,8 +842,7 @@ async def cleanup_instance(
     hass: HomeAssistant, entry: ESPHomeConfigEntry
 ) -> RuntimeEntryData:
     """Cleanup the esphome client if it exists."""
-    domain_data = DomainData.get(hass)
-    data = domain_data.pop_entry_data(entry)
+    data = entry.runtime_data
     data.async_on_disconnect()
     for cleanup_callback in data.cleanup_callbacks:
         cleanup_callback()

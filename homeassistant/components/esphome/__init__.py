@@ -58,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> b
         store=domain_data.get_or_create_store(hass, entry),
         original_options=dict(entry.options),
     )
-    domain_data.set_entry_data(entry, entry_data)
+    entry.runtime_data = entry_data
 
     manager = ESPHomeManager(
         hass, entry, host, password, cli, zeroconf_instance, domain_data, entry_data

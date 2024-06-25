@@ -26,8 +26,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .domain_data import DomainData
-
 # Import config flow so that it's added to the registry
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
@@ -96,7 +94,7 @@ async def platform_async_setup_entry(
     This method is in charge of receiving, distributing and storing
     info and state updates.
     """
-    entry_data: RuntimeEntryData = DomainData.get(hass).get_entry_data(entry)
+    entry_data = entry.runtime_data
     entry_data.info[info_type] = {}
     entry_data.state.setdefault(state_type, {})
     platform = entity_platform.async_get_current_platform()

@@ -39,12 +39,6 @@ class DomainData:
         """Set the runtime entry data associated with this config entry."""
         entry.runtime_data = entry_data
 
-    def pop_entry_data(self, entry: ESPHomeConfigEntry) -> RuntimeEntryData:
-        """Pop the runtime entry data instance associated with this config entry."""
-        data = entry.runtime_data
-        delattr(entry, "runtime_data")
-        return data
-
     def get_or_create_store(
         self, hass: HomeAssistant, entry: ESPHomeConfigEntry
     ) -> ESPHomeStorage:
