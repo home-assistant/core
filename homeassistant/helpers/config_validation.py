@@ -20,7 +20,7 @@ import re
 from socket import (  # type: ignore[attr-defined]  # private, not in typeshed
     _GLOBAL_DEFAULT_TIMEOUT,
 )
-from typing import Any, TypedDict, cast, overload
+from typing import Any, cast, overload
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -862,33 +862,6 @@ class multi_select:
         return selected
 
 
-class SectionConfig(TypedDict, total=False):
-    """Class to represent a section config."""
-
-    collapsed: bool
-
-
-class section:
-    """Data input flow section."""
-
-    CONFIG_SCHEMA = vol.Schema(
-        {
-            vol.Optional("collapsed", default=False): boolean,
-        },
-    )
-
-    def __init__(
-        self, schema: vol.Schema, options: SectionConfig | None = None
-    ) -> None:
-        """Initialize."""
-        self.schema = schema
-        self.options: SectionConfig = self.CONFIG_SCHEMA(options or {})
-
-    def __call__(self, value: Any) -> Any:
-        """Validate input."""
-        return self.schema(value)
-
-
 def _deprecated_or_removed(
     key: str,
     replacement_key: str | None,
@@ -1064,6 +1037,7 @@ def key_dependency(
 
 def custom_serializer(schema: Any) -> Any:
     """Serialize additional types for voluptuous_serialize."""
+    from .. import data_entry_flow  # pylint: disable=import-outside-toplevel
     from . import selector  # pylint: disable=import-outside-toplevel
 
     if schema is positive_time_period_dict:
@@ -1075,7 +1049,7 @@ def custom_serializer(schema: Any) -> Any:
     if schema is boolean:
         return {"type": "boolean"}
 
-    if isinstance(schema, section):
+    if isinstance(schema, data_entry_flow.section):
         return {
             "type": "expandable",
             "schema": voluptuous_serialize.convert(
