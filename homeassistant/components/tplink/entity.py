@@ -144,16 +144,19 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         device_name = get_device_name(device, parent=parent)
         if parent and parent.device_type is not Device.Type.Hub:
             if not feature or feature.id == PRIMARY_STATE_ID:
-                # Entity will be added to parent if not a hub and no feature parameter
-                # (i.e. core platform like Light, Fan) or the feature is the primary state
+                # Entity will be added to parent if not a hub and no feature
+                # parameter (i.e. core platform like Light, Fan) or the feature
+                # is the primary state
                 registry_device = parent
                 device_name = get_device_name(registry_device)
             else:
-                # Prefix the device name with the parent name unless it is a hub attached device.
-                # Sensible default for child devices like strip plugs or the ks240 where the child
-                # alias makes more sense in the context of the parent.
-                # i.e. Hall Ceiling Fan & Bedroom Ceiling Fan; Child device aliases will be Ceiling Fan
-                # and Dimmer Switch for both so should be distinguished by the parent name.
+                # Prefix the device name with the parent name unless it is a
+                # hub attached device. Sensible default for child devices like
+                # strip plugs or the ks240 where the child alias makes more
+                # sense in the context of the parent. i.e. Hall Ceiling Fan &
+                # Bedroom Ceiling Fan; Child device aliases will be Ceiling Fan
+                # and Dimmer Switch for both so should be distinguished by the
+                # parent name.
                 device_name = f"{get_device_name(parent)} {get_device_name(device, parent=parent)}"
 
         self._attr_device_info = DeviceInfo(
@@ -252,13 +255,15 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""
         key = self.entity_description.key
-        # The unique id for the state feature in the switch platform is the device_id
+        # The unique id for the state feature in the switch platform is the
+        # device_id
         if key == PRIMARY_STATE_ID:
             return legacy_device_id(self._device)
 
-        # Historically the legacy device emeter attributes which are now replaced with
-        # features used slightly different keys. This ensures that those entities
-        # are not orphaned. Returns the mapped key or the provided key if not mapped.
+        # Historically the legacy device emeter attributes which are now
+        # replaced with features used slightly different keys. This ensures
+        # that those entities are not orphaned. Returns the mapped key or the
+        # provided key if not mapped.
         key = LEGACY_KEY_MAPPING.get(key, key)
         return f"{legacy_device_id(self._device)}_{key}"
 
@@ -290,8 +295,8 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
     ) -> _D | None:
         """Return description object for the given feature.
 
-        This is responsible for setting the common parameters & deciding based on feature id
-        which additional parameters are passed.
+        This is responsible for setting the common parameters & deciding
+        based on feature id which additional parameters are passed.
         """
 
         if descriptions and (desc := descriptions.get(feature.id)):
@@ -400,8 +405,9 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
         if device.children:
             _LOGGER.debug("Initializing device with %s children", len(device.children))
             for idx, child in enumerate(device.children):
-                # HS300 does not like too many concurrent requests and its emeter data requires
-                # a request for each socket, so we receive separate coordinators.
+                # HS300 does not like too many concurrent requests and its
+                # emeter data requires a request for each socket, so we receive
+                # separate coordinators.
                 if child_coordinators:
                     child_coordinator = child_coordinators[idx]
                 else:

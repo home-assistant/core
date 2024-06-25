@@ -137,14 +137,14 @@ async def async_setup_entry(
         device=device,
         coordinator=parent_coordinator,
         feature_type=Feature.Type.Sensor,
-        entity_class=Sensor,
+        entity_class=TPLinkSensorEntity,
         descriptions=SENSOR_DESCRIPTIONS_MAP,
         child_coordinators=children_coordinators,
     )
     async_add_entities(entities)
 
 
-class Sensor(CoordinatedTPLinkFeatureEntity, SensorEntity):
+class TPLinkSensorEntity(CoordinatedTPLinkFeatureEntity, SensorEntity):
     """Representation of a feature-based TPLink sensor."""
 
     entity_description: TPLinkSensorEntityDescription

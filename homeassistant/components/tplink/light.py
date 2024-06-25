@@ -138,12 +138,12 @@ async def async_setup_entry(
     data = config_entry.runtime_data
     parent_coordinator = data.parent_coordinator
     device = parent_coordinator.device
-    entities: list[TPLinkSmartBulb | TPLinkSmartLightStrip] = []
+    entities: list[TPLinkLightEntity | TPLinkLightEffectEntity] = []
     if (
         effect_module := device.modules.get(Module.LightEffect)
     ) and effect_module.has_custom_effects:
         entities.append(
-            TPLinkSmartLightStrip(
+            TPLinkLightEffectEntity(
                 device,
                 parent_coordinator,
                 light_module=device.modules[Module.Light],
@@ -163,12 +163,12 @@ async def async_setup_entry(
         )
     elif Module.Light in device.modules:
         entities.append(
-            TPLinkSmartBulb(
+            TPLinkLightEntity(
                 device, parent_coordinator, light_module=device.modules[Module.Light]
             )
         )
     entities.extend(
-        TPLinkSmartBulb(
+        TPLinkLightEntity(
             child,
             parent_coordinator,
             light_module=child.modules[Module.Light],
@@ -180,7 +180,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
+class TPLinkLightEntity(CoordinatedTPLinkEntity, LightEntity):
     """Representation of a TPLink Smart Bulb."""
 
     _attr_supported_features = LightEntityFeature.TRANSITION
@@ -227,7 +227,8 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             # Dimmers used to use the switch format since
             # pyHS100 treated them as SmartPlug but the old code
             # created them as lights
-            # https://github.com/home-assistant/core/blob/2021.9.7/homeassistant/components/tplink/common.py#L86
+            # https://github.com/home-assistant/core/blob/2021.9.7/ \
+            # homeassistant/components/tplink/common.py#L86
             return legacy_device_id(device)
 
         # Newer devices can have child lights. While there isn't currently
@@ -249,11 +250,11 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             brightness = round((brightness * 100.0) / 255.0)
 
         if self._device.device_type == DeviceType.Dimmer and transition is None:
-            # This is a stopgap solution for inconsistent set_brightness handling
-            # in the upstream library, see #57265.
+            # This is a stopgap solution for inconsistent set_brightness
+            # handling in the upstream library, see #57265.
             # This should be removed when the upstream has fixed the issue.
             # The device logic is to change the settings without turning it on
-            # except when transition is defined, so we leverage that here for now.
+            # except when transition is defined so we leverage that for now.
             transition = 1
 
         return brightness, transition
@@ -345,7 +346,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             self._attr_hs_color = hue, saturation
 
 
-class TPLinkSmartLightStrip(TPLinkSmartBulb):
+class TPLinkLightEffectEntity(TPLinkLightEntity):
     """Representation of a TPLink Smart Light Strip."""
 
     def __init__(

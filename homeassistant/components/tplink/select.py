@@ -57,14 +57,14 @@ async def async_setup_entry(
         device=device,
         coordinator=parent_coordinator,
         feature_type=Feature.Type.Choice,
-        entity_class=Select,
+        entity_class=TPLinkSelectEntity,
         descriptions=SELECT_DESCRIPTIONS_MAP,
         child_coordinators=children_coordinators,
     )
     async_add_entities(entities)
 
 
-class Select(CoordinatedTPLinkFeatureEntity, SelectEntity):
+class TPLinkSelectEntity(CoordinatedTPLinkFeatureEntity, SelectEntity):
     """Representation of a tplink select entity."""
 
     entity_description: TPLinkSelectEntityDescription

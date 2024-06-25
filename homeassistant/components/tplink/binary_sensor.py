@@ -26,7 +26,7 @@ class TPLinkBinarySensorEntityDescription(
     """Base class for a TPLink feature based sensor entity description."""
 
 
-BINARYSENSOR_DESCRIPTIONS: Final = (
+BINARY_SENSOR_DESCRIPTIONS: Final = (
     TPLinkBinarySensorEntityDescription(
         key="overheated",
         device_class=BinarySensorDeviceClass.PROBLEM,
@@ -60,7 +60,7 @@ BINARYSENSOR_DESCRIPTIONS: Final = (
     ),
 )
 
-BINARYSENSOR_DESCRIPTIONS_MAP = {desc.key: desc for desc in BINARYSENSOR_DESCRIPTIONS}
+BINARYSENSOR_DESCRIPTIONS_MAP = {desc.key: desc for desc in BINARY_SENSOR_DESCRIPTIONS}
 
 
 async def async_setup_entry(
@@ -78,14 +78,14 @@ async def async_setup_entry(
         device=device,
         coordinator=parent_coordinator,
         feature_type=Feature.Type.BinarySensor,
-        entity_class=BinarySensor,
+        entity_class=TPLinkBinarySensorEntity,
         descriptions=BINARYSENSOR_DESCRIPTIONS_MAP,
         child_coordinators=children_coordinators,
     )
     async_add_entities(entities)
 
 
-class BinarySensor(CoordinatedTPLinkFeatureEntity, BinarySensorEntity):
+class TPLinkBinarySensorEntity(CoordinatedTPLinkFeatureEntity, BinarySensorEntity):
     """Representation of a TPLink binary sensor."""
 
     entity_description: TPLinkBinarySensorEntityDescription

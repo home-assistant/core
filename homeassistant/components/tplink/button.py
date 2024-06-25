@@ -49,14 +49,14 @@ async def async_setup_entry(
         device=device,
         coordinator=parent_coordinator,
         feature_type=Feature.Type.Action,
-        entity_class=Button,
+        entity_class=TPLinkButtonEntity,
         descriptions=BUTTON_DESCRIPTIONS_MAP,
         child_coordinators=children_coordinators,
     )
     async_add_entities(entities)
 
 
-class Button(CoordinatedTPLinkFeatureEntity, ButtonEntity):
+class TPLinkButtonEntity(CoordinatedTPLinkFeatureEntity, ButtonEntity):
     """Representation of a TPLink button entity."""
 
     entity_description: TPLinkButtonEntityDescription
