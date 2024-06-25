@@ -30,6 +30,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: KnockiConfigEntry) -> bo
         client.register_listener(EventType.CREATED, coordinator.add_trigger)
     )
 
+    entry.async_on_unload(
+        client.register_listener(
+            EventType.DELETED, lambda _: coordinator.async_refresh()
+        )
+    )
+
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
