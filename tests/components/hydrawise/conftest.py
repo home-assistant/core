@@ -1,6 +1,6 @@
 """Common fixtures for the Hydrawise tests."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Generator
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
@@ -20,7 +20,6 @@ from pydrawise.schema import (
     Zone,
 )
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.hydrawise.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
@@ -67,9 +66,9 @@ def mock_pydrawise(
     """Mock Hydrawise."""
     with patch("pydrawise.client.Hydrawise", autospec=True) as mock_pydrawise:
         user.controllers = [controller]
-        controller.zones = zones
         controller.sensors = sensors
         mock_pydrawise.return_value.get_user.return_value = user
+        mock_pydrawise.return_value.get_zones.return_value = zones
         mock_pydrawise.return_value.get_water_use_summary.return_value = (
             controller_water_use_summary
         )
@@ -142,7 +141,7 @@ def sensors() -> list[Sensor]:
             ),
             status=SensorStatus(
                 water_flow=LocalizedValueType(value=577.0044752010709, unit="gal"),
-                active=None,
+                active=False,
             ),
         ),
     ]
@@ -154,7 +153,6 @@ def zones() -> list[Zone]:
     return [
         Zone(
             name="Zone One",
-            number=1,
             id=5965394,
             scheduled_runs=ScheduledZoneRuns(
                 summary="",
@@ -171,7 +169,6 @@ def zones() -> list[Zone]:
         ),
         Zone(
             name="Zone Two",
-            number=2,
             id=5965395,
             scheduled_runs=ScheduledZoneRuns(
                 current_run=ScheduledZoneRun(
