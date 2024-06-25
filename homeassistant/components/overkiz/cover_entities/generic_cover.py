@@ -70,6 +70,14 @@ class OverkizGenericCover(OverkizEntity, CoverEntity):
             )
 
     @property
+    def is_opened(self) -> bool | None:
+        """Return if the cover is opened"""
+        if self.current_cover_position is not None:
+            return self.current_cover_position == 100
+        else:
+            return None
+
+    @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
 

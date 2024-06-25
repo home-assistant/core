@@ -100,13 +100,15 @@ class VerticalCover(OverkizGenericCover):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        if command := self.executor.select_command(*COMMANDS_OPEN):
-            await self.executor.async_execute_command(command)
+        if not self.is_opened:
+            if command := self.executor.select_command(*COMMANDS_OPEN):
+                await self.executor.async_execute_command(command)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        if command := self.executor.select_command(*COMMANDS_CLOSE):
-            await self.executor.async_execute_command(command)
+        if not self.is_closed:
+            if command := self.executor.select_command(*COMMANDS_CLOSE):
+                await self.executor.async_execute_command(command)
 
     @property
     def is_opening(self) -> bool | None:
