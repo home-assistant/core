@@ -51,7 +51,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 import homeassistant.util.color as color_util
 from homeassistant.util.json import json_loads_object
 from homeassistant.util.yaml import dump as yaml_dump
@@ -267,7 +267,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     _deprecated_color_handling: bool = False
 
     @staticmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA_JSON
 

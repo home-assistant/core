@@ -63,7 +63,9 @@ from tests.common import MockConfigEntry, patch
 
 
 async def test_default_setup(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, dsmr_connection_fixture
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
     """Test the default setup."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
@@ -191,7 +193,9 @@ async def test_default_setup(
 
 
 async def test_setup_only_energy(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, dsmr_connection_fixture
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
     """Test the default setup."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
@@ -240,7 +244,9 @@ async def test_setup_only_energy(
     assert not entry
 
 
-async def test_v4_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
+async def test_v4_meter(
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
+) -> None:
     """Test if v4 meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -319,7 +325,10 @@ async def test_v4_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     ],
 )
 async def test_v5_meter(
-    hass: HomeAssistant, dsmr_connection_fixture, value: Decimal, state: str
+    hass: HomeAssistant,
+    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
+    value: Decimal,
+    state: str,
 ) -> None:
     """Test if v5 meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
@@ -386,7 +395,9 @@ async def test_v5_meter(
     )
 
 
-async def test_luxembourg_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
+async def test_luxembourg_meter(
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
+) -> None:
     """Test if v5 meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -468,7 +479,9 @@ async def test_luxembourg_meter(hass: HomeAssistant, dsmr_connection_fixture) ->
     )
 
 
-async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
+async def test_belgian_meter(
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
+) -> None:
     """Test if Belgian meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -651,7 +664,9 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     )
 
 
-async def test_belgian_meter_alt(hass: HomeAssistant, dsmr_connection_fixture) -> None:
+async def test_belgian_meter_alt(
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
+) -> None:
     """Test if Belgian meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -798,7 +813,9 @@ async def test_belgian_meter_alt(hass: HomeAssistant, dsmr_connection_fixture) -
     )
 
 
-async def test_belgian_meter_mbus(hass: HomeAssistant, dsmr_connection_fixture) -> None:
+async def test_belgian_meter_mbus(
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
+) -> None:
     """Test if Belgian meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -905,7 +922,9 @@ async def test_belgian_meter_mbus(hass: HomeAssistant, dsmr_connection_fixture) 
     )
 
 
-async def test_belgian_meter_low(hass: HomeAssistant, dsmr_connection_fixture) -> None:
+async def test_belgian_meter_low(
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
+) -> None:
     """Test if Belgian meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -951,7 +970,9 @@ async def test_belgian_meter_low(hass: HomeAssistant, dsmr_connection_fixture) -
     assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
 
-async def test_swedish_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
+async def test_swedish_meter(
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
+) -> None:
     """Test if v5 meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -1017,7 +1038,9 @@ async def test_swedish_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     )
 
 
-async def test_easymeter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
+async def test_easymeter(
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
+) -> None:
     """Test if Q3D meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -1086,7 +1109,9 @@ async def test_easymeter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     )
 
 
-async def test_tcp(hass: HomeAssistant, dsmr_connection_fixture) -> None:
+async def test_tcp(
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
+) -> None:
     """If proper config provided TCP connection should be made."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -1112,7 +1137,10 @@ async def test_tcp(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     assert connection_factory.call_args_list[0][0][1] == "1234"
 
 
-async def test_rfxtrx_tcp(hass: HomeAssistant, rfxtrx_dsmr_connection_fixture) -> None:
+async def test_rfxtrx_tcp(
+    hass: HomeAssistant,
+    rfxtrx_dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
+) -> None:
     """If proper config provided RFXtrx TCP connection should be made."""
     (connection_factory, transport, protocol) = rfxtrx_dsmr_connection_fixture
 
@@ -1140,7 +1168,7 @@ async def test_rfxtrx_tcp(hass: HomeAssistant, rfxtrx_dsmr_connection_fixture) -
 
 @patch("homeassistant.components.dsmr.sensor.DEFAULT_RECONNECT_INTERVAL", 0)
 async def test_connection_errors_retry(
-    hass: HomeAssistant, dsmr_connection_fixture
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
 ) -> None:
     """Connection should be retried on error during setup."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
@@ -1177,7 +1205,9 @@ async def test_connection_errors_retry(
 
 
 @patch("homeassistant.components.dsmr.sensor.DEFAULT_RECONNECT_INTERVAL", 0)
-async def test_reconnect(hass: HomeAssistant, dsmr_connection_fixture) -> None:
+async def test_reconnect(
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
+) -> None:
     """If transport disconnects, the connection should be retried."""
 
     (connection_factory, transport, protocol) = dsmr_connection_fixture
@@ -1255,7 +1285,7 @@ async def test_reconnect(hass: HomeAssistant, dsmr_connection_fixture) -> None:
 
 
 async def test_gas_meter_providing_energy_reading(
-    hass: HomeAssistant, dsmr_connection_fixture
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
 ) -> None:
     """Test that gas providing energy readings use the correct device class."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture

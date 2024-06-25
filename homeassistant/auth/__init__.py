@@ -374,6 +374,13 @@ class AuthManager:
 
         self.hass.bus.async_fire(EVENT_USER_UPDATED, {"user_id": user.id})
 
+    @callback
+    def async_update_user_credentials_data(
+        self, credentials: models.Credentials, data: dict[str, Any]
+    ) -> None:
+        """Update credentials data."""
+        self._store.async_update_user_credentials_data(credentials, data=data)
+
     async def async_activate_user(self, user: models.User) -> None:
         """Activate a user."""
         await self._store.async_activate_user(user)
