@@ -90,7 +90,6 @@ DEFAULT_CONFIG = {
 async def test_setting_sensor_value_expires_availability_topic(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the expiration of the value."""
     await mqtt_mock_entry()
@@ -797,17 +796,11 @@ async def test_update_with_json_attrs_bad_json(
 
 
 async def test_discovery_update_attr(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        binary_sensor.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, binary_sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -840,21 +833,15 @@ async def test_unique_id(
 
 
 async def test_discovery_removal_binary_sensor(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered binary_sensor."""
     data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][binary_sensor.DOMAIN])
-    await help_test_discovery_removal(
-        hass, mqtt_mock_entry, caplog, binary_sensor.DOMAIN, data
-    )
+    await help_test_discovery_removal(hass, mqtt_mock_entry, binary_sensor.DOMAIN, data)
 
 
 async def test_discovery_update_binary_sensor_topic_template(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered binary_sensor."""
     config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][binary_sensor.DOMAIN])
@@ -881,7 +868,6 @@ async def test_discovery_update_binary_sensor_topic_template(
     await help_test_discovery_update(
         hass,
         mqtt_mock_entry,
-        caplog,
         binary_sensor.DOMAIN,
         config1,
         config2,
@@ -891,9 +877,7 @@ async def test_discovery_update_binary_sensor_topic_template(
 
 
 async def test_discovery_update_binary_sensor_template(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered binary_sensor."""
     config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][binary_sensor.DOMAIN])
@@ -918,7 +902,6 @@ async def test_discovery_update_binary_sensor_template(
     await help_test_discovery_update(
         hass,
         mqtt_mock_entry,
-        caplog,
         binary_sensor.DOMAIN,
         config1,
         config2,
@@ -962,9 +945,7 @@ async def test_encoding_subscribable_topics(
 
 
 async def test_discovery_update_unchanged_binary_sensor(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered binary_sensor."""
     config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][binary_sensor.DOMAIN])
@@ -975,31 +956,19 @@ async def test_discovery_update_unchanged_binary_sensor(
         "homeassistant.components.mqtt.binary_sensor.MqttBinarySensor.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass,
-            mqtt_mock_entry,
-            caplog,
-            binary_sensor.DOMAIN,
-            data1,
-            discovery_update,
+            hass, mqtt_mock_entry, binary_sensor.DOMAIN, data1, discovery_update
         )
 
 
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer",  "off_delay": -1 }'
     data2 = '{ "name": "Milk",  "state_topic": "test_topic" }'
     await help_test_discovery_broken(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        binary_sensor.DOMAIN,
-        data1,
-        data2,
+        hass, mqtt_mock_entry, binary_sensor.DOMAIN, data1, data2
     )
 
 
@@ -1172,6 +1141,8 @@ async def test_cleanup_triggers_and_restoring_state(
     async_fire_mqtt_message(hass, "test-topic2", payload2)
     state = hass.states.get("binary_sensor.test2")
     assert state.state == state2
+
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.mark.parametrize(

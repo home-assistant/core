@@ -7,11 +7,16 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import pytest
 from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
 
-from homeassistant.components.reolink import FIRMWARE_UPDATE_INTERVAL, const
+from homeassistant.components.reolink import (
+    DEVICE_UPDATE_INTERVAL,
+    FIRMWARE_UPDATE_INTERVAL,
+    NUM_CRED_ERRORS,
+    const,
+)
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -58,7 +63,7 @@ pytestmark = pytest.mark.usefixtures("reolink_connect", "reolink_platforms")
             ConfigEntryState.SETUP_RETRY,
         ),
         (
-            "get_states",
+            "get_host_data",
             AsyncMock(side_effect=CredentialsInvalidError("Test error")),
             ConfigEntryState.SETUP_ERROR,
         ),
@@ -111,6 +116,33 @@ async def test_firmware_error_twice(
     await hass.async_block_till_done()
 
     assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
+
+
+async def test_credential_error_three(
+    hass: HomeAssistant,
+    reolink_connect: MagicMock,
+    config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test when the update gives credential error 3 times."""
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    reolink_connect.get_states = AsyncMock(
+        side_effect=CredentialsInvalidError("Test error")
+    )
+
+    issue_id = f"config_entry_reauth_{const.DOMAIN}_{config_entry.entry_id}"
+    for _ in range(NUM_CRED_ERRORS):
+        assert (HA_DOMAIN, issue_id) not in issue_registry.issues
+        async_fire_time_changed(
+            hass, utcnow() + DEVICE_UPDATE_INTERVAL + timedelta(seconds=30)
+        )
+        await hass.async_block_till_done()
+
+    assert (HA_DOMAIN, issue_id) in issue_registry.issues
 
 
 async def test_entry_reloading(

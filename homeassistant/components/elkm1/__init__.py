@@ -171,8 +171,8 @@ DEVICE_SCHEMA = vol.All(
             vol.Optional(CONF_THERMOSTAT, default={}): DEVICE_SCHEMA_SUBDOMAIN,
             vol.Optional(CONF_ZONE, default={}): DEVICE_SCHEMA_SUBDOMAIN,
         },
-        _host_validator,
     ),
+    _host_validator,
 )
 
 CONFIG_SCHEMA = vol.Schema(
