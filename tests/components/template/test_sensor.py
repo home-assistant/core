@@ -2061,7 +2061,7 @@ async def test_trigger_conditional_action(hass: HomeAssistant, start_ha) -> None
 
     assert len(events) == 1
 
-    
+
 async def test_device_id(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
