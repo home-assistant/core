@@ -143,7 +143,7 @@ class ViCareFan(ViCareEntity, FanEntity):
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
 
-        if self._attributes["active_vicare_mode"] is not str(VentilationMode.PERMANENT):
+        if self._attributes["active_vicare_mode"] != str(VentilationMode.PERMANENT):
             self.set_preset_mode(VentilationMode.PERMANENT)
 
         level = percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage)
