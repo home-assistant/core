@@ -24,7 +24,6 @@ from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.client import (
     _LOGGER as CLIENT_LOGGER,
     RECONNECT_INTERVAL_SECONDS,
-    EnsureJobAfterCooldown,
 )
 from homeassistant.components.mqtt.models import (
     MessageCallbackType,
@@ -99,24 +98,6 @@ class _DebugInfo(TypedDict):
 @pytest.fixture(autouse=True)
 def mock_storage(hass_storage: dict[str, Any]) -> None:
     """Autouse hass_storage for the TestCase tests."""
-
-
-@pytest.fixture
-def recorded_calls() -> list[ReceiveMessage]:
-    """Fixture to hold recorded calls."""
-    return []
-
-
-@pytest.fixture
-def record_calls(recorded_calls: list[ReceiveMessage]) -> MessageCallbackType:
-    """Fixture to record calls."""
-
-    @callback
-    def record_calls(msg: ReceiveMessage) -> None:
-        """Record calls."""
-        recorded_calls.append(msg)
-
-    return record_calls
 
 
 @pytest.fixture
@@ -1070,6 +1051,7 @@ async def test_subscribe_topic(
 
 async def test_subscribe_topic_not_initialize(
     hass: HomeAssistant,
+    record_calls: MessageCallbackType,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test the subscription of a topic when MQTT was not initialized."""
@@ -1080,7 +1062,7 @@ async def test_subscribe_topic_not_initialize(
 
 
 async def test_subscribe_mqtt_config_entry_disabled(
-    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, record_calls: MessageCallbackType
 ) -> None:
     """Test the subscription of a topic when MQTT config entry is disabled."""
     mqtt_mock.connected = True
@@ -2014,84 +1996,6 @@ async def test_reload_entry_with_restored_subscriptions(
     assert recorded_calls[0].payload == "test-payload3"
     assert recorded_calls[1].topic == "wild/any/card"
     assert recorded_calls[1].payload == "wild-card-payload3"
-
-
-async def test_canceling_debouncer_on_shutdown(
-    hass: HomeAssistant,
-    record_calls: MessageCallbackType,
-    setup_with_birth_msg_client_mock: MqttMockPahoClient,
-) -> None:
-    """Test canceling the debouncer when HA shuts down."""
-    mqtt_client_mock = setup_with_birth_msg_client_mock
-
-    with patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 2):
-        await hass.async_block_till_done()
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
-        await hass.async_block_till_done()
-        await mqtt.async_subscribe(hass, "test/state1", record_calls)
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=0.1))
-        # Stop HA so the scheduled debouncer task will be canceled
-        mqtt_client_mock.subscribe.reset_mock()
-        hass.bus.fire(EVENT_HOMEASSISTANT_STOP)
-        await mqtt.async_subscribe(hass, "test/state2", record_calls)
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=0.1))
-        await mqtt.async_subscribe(hass, "test/state3", record_calls)
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=0.1))
-        await mqtt.async_subscribe(hass, "test/state4", record_calls)
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=0.1))
-        await mqtt.async_subscribe(hass, "test/state5", record_calls)
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=0.1))
-        await hass.async_block_till_done()
-
-        mqtt_client_mock.subscribe.assert_not_called()
-
-        # Note thet the broker connection will not be disconnected gracefully
-        await hass.async_block_till_done()
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
-        await asyncio.sleep(0)
-        await hass.async_block_till_done(wait_background_tasks=True)
-        mqtt_client_mock.subscribe.assert_not_called()
-        mqtt_client_mock.disconnect.assert_not_called()
-
-
-async def test_canceling_debouncer_normal(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test canceling the debouncer before completion."""
-
-    async def _async_myjob() -> None:
-        await asyncio.sleep(1.0)
-
-    debouncer = EnsureJobAfterCooldown(0.0, _async_myjob)
-    debouncer.async_schedule()
-    await asyncio.sleep(0.01)
-    assert debouncer._task is not None
-    await debouncer.async_cleanup()
-    assert debouncer._task is None
-
-
-async def test_canceling_debouncer_throws(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test canceling the debouncer when HA shuts down."""
-
-    async def _async_myjob() -> None:
-        await asyncio.sleep(1.0)
-
-    debouncer = EnsureJobAfterCooldown(0.0, _async_myjob)
-    debouncer.async_schedule()
-    await asyncio.sleep(0.01)
-    assert debouncer._task is not None
-    # let debouncer._task fail by mocking it
-    with patch.object(debouncer, "_task") as task:
-        task.cancel = MagicMock(return_value=True)
-        await debouncer.async_cleanup()
-        assert "Error cleaning up task" in caplog.text
-        await hass.async_block_till_done()
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
-        await hass.async_block_till_done()
 
 
 async def test_initial_setup_logs_error(
