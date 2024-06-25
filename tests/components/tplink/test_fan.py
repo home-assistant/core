@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 from kasa import Device, Module
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
@@ -16,9 +17,39 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.util.dt as dt_util
 
-from . import DEVICE_ID, _mocked_device, setup_platform_for_device
+from . import DEVICE_ID, _mocked_device, setup_platform_for_device, snapshot_platform
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+async def test_states(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test a fan state."""
+    child_fan_1 = _mocked_device(
+        modules=[Module.Fan], alias="my_fan_0", device_id=f"{DEVICE_ID}00"
+    )
+    child_fan_2 = _mocked_device(
+        modules=[Module.Fan], alias="my_fan_1", device_id=f"{DEVICE_ID}01"
+    )
+    parent_device = _mocked_device(
+        device_id=DEVICE_ID,
+        alias="my_device",
+        children=[child_fan_1, child_fan_2],
+        modules=[Module.Fan],
+        device_type=Device.Type.WallSwitch,
+    )
+
+    await setup_platform_for_device(
+        hass, mock_config_entry, Platform.FAN, parent_device
+    )
+    await snapshot_platform(
+        hass, entity_registry, device_registry, snapshot, mock_config_entry.entry_id
+    )
 
 
 async def test_fan_unique_id(
