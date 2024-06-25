@@ -190,7 +190,7 @@ _SERVICE_SCHEMA = vol.Schema(
     {
         vol.Optional("target"): vol.Any(TargetSelector.CONFIG_SCHEMA, None),
         vol.Optional("fields"): vol.Schema(
-            {str: vol.Any(_FIELD_SCHEMA, _SECTION_SCHEMA)}
+            {str: vol.Any(_SECTION_SCHEMA, _FIELD_SCHEMA)}
         ),
     },
     extra=vol.ALLOW_EXTRA,
