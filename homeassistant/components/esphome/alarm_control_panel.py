@@ -16,7 +16,6 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     CodeFormat,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
@@ -38,6 +37,7 @@ from .entity import (
     esphome_state_property,
     platform_async_setup_entry,
 )
+from .entry_data import ESPHomeConfigEntry
 from .enum_mapper import EsphomeEnumMapper
 
 _ESPHOME_ACP_STATE_TO_HASS_STATE: EsphomeEnumMapper[AlarmControlPanelState, str] = (
@@ -70,7 +70,9 @@ class EspHomeACPFeatures(APIIntEnum):
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ESPHomeConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up ESPHome switches based on a config entry."""
     await platform_async_setup_entry(
