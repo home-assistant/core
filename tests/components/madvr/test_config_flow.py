@@ -18,16 +18,7 @@ def mock_madvr():
         yield mock_madvr
 
 
-@pytest.fixture(name="mock_wakeonlan")
-def mock_wakeonlan():
-    """Mock the wake-on-LAN function."""
-    with patch(
-        "homeassistant.components.madvr.config_flow.send_magic_packet"
-    ) as mock_wol:
-        yield mock_wol
-
-
-async def test_user_form(hass: HomeAssistant, mock_madvr, mock_wakeonlan) -> None:
+async def test_user_form(hass: HomeAssistant, mock_madvr) -> None:
     """Test we get the user form and can set up the integration successfully."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -65,9 +56,7 @@ async def test_user_form(hass: HomeAssistant, mock_madvr, mock_wakeonlan) -> Non
     }
 
 
-async def test_user_form_cannot_connect(
-    hass: HomeAssistant, mock_madvr, mock_wakeonlan
-) -> None:
+async def test_user_form_cannot_connect(hass: HomeAssistant, mock_madvr) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

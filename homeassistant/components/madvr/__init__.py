@@ -29,18 +29,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: MadVRConfigEntry) -> boo
         host=entry.data[CONF_HOST],
         logger=_LOGGER,
         port=entry.data.get(CONF_PORT, 44077),
+        mac=entry.data[CONF_MAC],
         connect_timeout=10,
     )
     coordinator = MadVRCoordinator(
         hass,
         madVRClient,
-        mac=entry.data[CONF_MAC],
         name=name,
     )
     hass.data.setdefault(DOMAIN, {})
     await coordinator.async_refresh()
     hass.data[DOMAIN][entry.entry_id] = coordinator
-    hass.data[DOMAIN]["entry_id"] = entry.runtime_data
+    hass.data[DOMAIN]["entry_id"] = entry.entry_id
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -57,7 +57,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: MadVRConfigEntry) -> bo
     if unload_ok:
         coordinator: MadVRCoordinator = hass.data[DOMAIN].pop(entry.entry_id, None)
         if coordinator:
-            await cancel_tasks(coordinator.my_api)
+            await cancel_tasks(coordinator.client)
 
     return unload_ok
 

@@ -19,8 +19,7 @@ class MadVRCoordinator(DataUpdateCoordinator[dict]):
     def __init__(
         self,
         hass: HomeAssistant,
-        my_api: Madvr,
-        mac: str,
+        client: Madvr,
         name: str,
     ) -> None:
         """Initialize my coordinator."""
@@ -30,11 +29,14 @@ class MadVRCoordinator(DataUpdateCoordinator[dict]):
             name="Madvr Coordinator",
         )
         self.entry_id = self.config_entry.entry_id
-        self.my_api = my_api
-        self.mac = mac
+        self.client = client
         self.name = name
-        self.my_api.set_update_callback(self.handle_push_data)
+        self.client.set_update_callback(self.handle_push_data)
         _LOGGER.debug("MadVRCoordinator initialized")
+
+    async def _async_update_data(self):
+        """No-op method for initial setup."""
+        return
 
     def handle_push_data(self, data: dict):
         """Handle new data pushed from the API."""

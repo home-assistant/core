@@ -15,7 +15,6 @@ from homeassistant.core import callback
 from .const import DOMAIN
 from .coordinator import MadVRCoordinator
 from .utils import CannotConnect, cancel_tasks
-from .wakeonlan import send_magic_packet
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,8 +47,8 @@ class MadVRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_NAME): str,
                     vol.Required(CONF_HOST): str,
                     vol.Required(CONF_MAC): str,
-                    vol.Optional(CONF_PORT, default=44077): int,
-                    vol.Optional("keep_power_on", default=False): bool,
+                    vol.Required(CONF_PORT, default=44077): int,
+                    vol.Required("keep_power_on", default=False): bool,
                 }
             ),
             errors=errors,
@@ -63,7 +62,7 @@ class MadVRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "Testing connection to MadVR at %s:%s with mac %s", host, port, mac
             )
             # turn on the device
-            send_magic_packet(mac)
+            await madvr_client.power_on()
             # wait for it to be available (envy takes about 15s to boot)
             await asyncio.sleep(15)
             # try to connect

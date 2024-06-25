@@ -17,7 +17,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import MadVRCoordinator
 from .utils import cancel_tasks
-from .wakeonlan import send_magic_packet
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +29,7 @@ async def async_setup_entry(
     """Set up the MadVR remote."""
     coordinator: MadVRCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    madvr_client = coordinator.my_api
+    madvr_client = coordinator.client
 
     async_add_entities(
         [
@@ -55,7 +54,6 @@ class MadvrRemote(CoordinatorEntity, RemoteEntity):
         self._attr_name = coordinator.name
         self._attr_unique_id = f"{entry_id}_remote"
         self.entry_id = hass.data[DOMAIN]["entry_id"]
-        self.mac = coordinator.mac
         self._attr_should_poll = False
         self.tasks: list = []
         self.connection_event = self.madvr_client.connection_event
@@ -159,9 +157,8 @@ class MadvrRemote(CoordinatorEntity, RemoteEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
-        _LOGGER.debug("Turning on with mac %s", self.mac)
-        send_magic_packet(self.mac, logger=_LOGGER)
-        await asyncio.sleep(5)
+        _LOGGER.debug("Turning on device")
+        await self.madvr_client.power_on()
         self.stop_processing_commands.clear()
         _LOGGER.debug("Firing event to turn on")
         # Fire power state change event
