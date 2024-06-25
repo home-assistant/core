@@ -1,6 +1,5 @@
 """Test config flow."""
 
-
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -12,7 +11,7 @@ async def test_init(
     mock_access_url,
     mock_config_entry: MockConfigEntry,
     mock_get_financial_data,
-):
+) -> None:
     """Test the init method."""
     mock_config_entry.add_to_hass(hass)
 
