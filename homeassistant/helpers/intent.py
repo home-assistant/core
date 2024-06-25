@@ -33,6 +33,7 @@ from . import (
     entity_registry,
     floor_registry,
 )
+from .typing import VolSchemaType
 
 _LOGGER = logging.getLogger(__name__)
 type _SlotsType = dict[str, Any]
@@ -807,8 +808,8 @@ class DynamicServiceIntentHandler(IntentHandler):
         self,
         intent_type: str,
         speech: str | None = None,
-        required_slots: dict[str | tuple[str, str], vol.Schema] | None = None,
-        optional_slots: dict[str | tuple[str, str], vol.Schema] | None = None,
+        required_slots: dict[str | tuple[str, str], VolSchemaType] | None = None,
+        optional_slots: dict[str | tuple[str, str], VolSchemaType] | None = None,
         required_domains: set[str] | None = None,
         required_features: int | None = None,
         required_states: set[str] | None = None,
@@ -824,7 +825,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         self.description = description
         self.platforms = platforms
 
-        self.required_slots: dict[tuple[str, str], vol.Schema] = {}
+        self.required_slots: dict[tuple[str, str], VolSchemaType] = {}
         if required_slots:
             for key, value_schema in required_slots.items():
                 if isinstance(key, str):
@@ -833,7 +834,7 @@ class DynamicServiceIntentHandler(IntentHandler):
 
                 self.required_slots[key] = value_schema
 
-        self.optional_slots: dict[tuple[str, str], vol.Schema] = {}
+        self.optional_slots: dict[tuple[str, str], VolSchemaType] = {}
         if optional_slots:
             for key, value_schema in optional_slots.items():
                 if isinstance(key, str):
@@ -1107,8 +1108,8 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
         domain: str,
         service: str,
         speech: str | None = None,
-        required_slots: dict[str | tuple[str, str], vol.Schema] | None = None,
-        optional_slots: dict[str | tuple[str, str], vol.Schema] | None = None,
+        required_slots: dict[str | tuple[str, str], VolSchemaType] | None = None,
+        optional_slots: dict[str | tuple[str, str], VolSchemaType] | None = None,
         required_domains: set[str] | None = None,
         required_features: int | None = None,
         required_states: set[str] | None = None,
