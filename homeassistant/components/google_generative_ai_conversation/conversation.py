@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import codecs
+from collections.abc import Callable
 from typing import Any, Literal
 
 from google.api_core.exceptions import GoogleAPICallError
@@ -89,11 +90,13 @@ def _format_schema(schema: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
-def _format_tool(tool: llm.Tool) -> dict[str, Any]:
+def _format_tool(
+    tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
+) -> dict[str, Any]:
     """Format tool specification."""
 
     parameters = _format_schema(
-        convert(tool.parameters, custom_serializer=llm.selector_serializer)
+        convert(tool.parameters, custom_serializer=custom_serializer)
     )
 
     return protos.Tool(
@@ -195,7 +198,9 @@ class GoogleGenerativeAIConversationEntity(
                     f"Error preparing LLM API: {err}",
                 )
                 return result
-            tools = [_format_tool(tool) for tool in llm_api.tools]
+            tools = [
+                _format_tool(tool, llm_api.custom_serializer) for tool in llm_api.tools
+            ]
 
         try:
             prompt = await self._async_render_prompt(user_input, llm_api, llm_context)

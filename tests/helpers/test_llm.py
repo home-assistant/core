@@ -782,103 +782,106 @@ async def test_script_tool(
     }
 
 
-def test_selector_serializer() -> None:
+async def test_selector_serializer(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
     """Test serialization of Selectors in Open API format."""
-    assert llm.selector_serializer(selector.ActionSelector()) == {"type": "string"}
-    assert llm.selector_serializer(selector.AddonSelector()) == {"type": "string"}
-    assert llm.selector_serializer(selector.AreaSelector()) == {"type": "string"}
-    assert llm.selector_serializer(selector.AreaSelector({"multiple": True})) == {
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    selector_serializer = api.custom_serializer
+
+    assert selector_serializer(selector.ActionSelector()) == {"type": "string"}
+    assert selector_serializer(selector.AddonSelector()) == {"type": "string"}
+    assert selector_serializer(selector.AreaSelector()) == {"type": "string"}
+    assert selector_serializer(selector.AreaSelector({"multiple": True})) == {
         "type": "array",
         "items": {"type": "string"},
     }
-    assert llm.selector_serializer(selector.AssistPipelineSelector()) == {
-        "type": "string"
-    }
-    assert llm.selector_serializer(
+    assert selector_serializer(selector.AssistPipelineSelector()) == {"type": "string"}
+    assert selector_serializer(
         selector.AttributeSelector({"entity_id": "sensor.test"})
     ) == {"type": "string"}
-    assert llm.selector_serializer(selector.BackupLocationSelector()) == {
+    assert selector_serializer(selector.BackupLocationSelector()) == {
         "type": "string",
         "pattern": "^(?:\\/backup|\\w+)$",
     }
-    assert llm.selector_serializer(selector.BooleanSelector()) == {"type": "boolean"}
-    assert llm.selector_serializer(selector.ColorRGBSelector()) == {
+    assert selector_serializer(selector.BooleanSelector()) == {"type": "boolean"}
+    assert selector_serializer(selector.ColorRGBSelector()) == {
         "type": "array",
         "items": {"type": "number"},
         "maxItems": 3,
         "minItems": 3,
         "format": "RGB",
     }
-    assert llm.selector_serializer(selector.ColorTempSelector()) == {"type": "number"}
-    assert llm.selector_serializer(
-        selector.ColorTempSelector({"min": 0, "max": 1000})
-    ) == {"type": "number", "minimum": 0, "maximum": 1000}
-    assert llm.selector_serializer(
+    assert selector_serializer(selector.ColorTempSelector()) == {"type": "number"}
+    assert selector_serializer(selector.ColorTempSelector({"min": 0, "max": 1000})) == {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1000,
+    }
+    assert selector_serializer(
         selector.ColorTempSelector({"min_mireds": 100, "max_mireds": 1000})
     ) == {"type": "number", "minimum": 100, "maximum": 1000}
-    assert llm.selector_serializer(selector.ConfigEntrySelector()) == {"type": "string"}
-    assert llm.selector_serializer(selector.ConstantSelector({"value": "test"})) == {
+    assert selector_serializer(selector.ConfigEntrySelector()) == {"type": "string"}
+    assert selector_serializer(selector.ConstantSelector({"value": "test"})) == {
         "enum": ["test"]
     }
-    assert llm.selector_serializer(selector.ConstantSelector({"value": 1})) == {
-        "enum": [1]
-    }
-    assert llm.selector_serializer(selector.ConstantSelector({"value": True})) == {
+    assert selector_serializer(selector.ConstantSelector({"value": 1})) == {"enum": [1]}
+    assert selector_serializer(selector.ConstantSelector({"value": True})) == {
         "enum": [True]
     }
-    assert llm.selector_serializer(selector.QrCodeSelector({"data": "test"})) == {
+    assert selector_serializer(selector.QrCodeSelector({"data": "test"})) == {
         "type": "string"
     }
-    assert llm.selector_serializer(selector.ConversationAgentSelector()) == {
+    assert selector_serializer(selector.ConversationAgentSelector()) == {
         "type": "string"
     }
-    assert llm.selector_serializer(selector.CountrySelector()) == {
+    assert selector_serializer(selector.CountrySelector()) == {
         "type": "string",
         "format": "ISO 3166-1 alpha-2",
     }
-    assert llm.selector_serializer(
+    assert selector_serializer(
         selector.CountrySelector({"countries": ["GB", "FR"]})
     ) == {"type": "string", "enum": ["GB", "FR"]}
-    assert llm.selector_serializer(selector.DateSelector()) == {
+    assert selector_serializer(selector.DateSelector()) == {
         "type": "string",
         "format": "date",
     }
-    assert llm.selector_serializer(selector.DateTimeSelector()) == {
+    assert selector_serializer(selector.DateTimeSelector()) == {
         "type": "string",
         "format": "date-time",
     }
-    assert llm.selector_serializer(selector.DeviceSelector()) == {"type": "string"}
-    assert llm.selector_serializer(selector.DeviceSelector({"multiple": True})) == {
+    assert selector_serializer(selector.DeviceSelector()) == {"type": "string"}
+    assert selector_serializer(selector.DeviceSelector({"multiple": True})) == {
         "type": "array",
         "items": {"type": "string"},
     }
-    assert llm.selector_serializer(selector.EntitySelector()) == {
+    assert selector_serializer(selector.EntitySelector()) == {
         "type": "string",
         "format": "entity_id",
     }
-    assert llm.selector_serializer(selector.EntitySelector({"multiple": True})) == {
+    assert selector_serializer(selector.EntitySelector({"multiple": True})) == {
         "type": "array",
         "items": {"type": "string", "format": "entity_id"},
     }
-    assert llm.selector_serializer(selector.FloorSelector()) == {"type": "string"}
-    assert llm.selector_serializer(selector.FloorSelector({"multiple": True})) == {
+    assert selector_serializer(selector.FloorSelector()) == {"type": "string"}
+    assert selector_serializer(selector.FloorSelector({"multiple": True})) == {
         "type": "array",
         "items": {"type": "string"},
     }
-    assert llm.selector_serializer(selector.IconSelector()) == {"type": "string"}
-    assert llm.selector_serializer(selector.LabelSelector()) == {"type": "string"}
-    assert llm.selector_serializer(selector.LabelSelector({"multiple": True})) == {
+    assert selector_serializer(selector.IconSelector()) == {"type": "string"}
+    assert selector_serializer(selector.LabelSelector()) == {"type": "string"}
+    assert selector_serializer(selector.LabelSelector({"multiple": True})) == {
         "type": "array",
         "items": {"type": "string"},
     }
-    assert llm.selector_serializer(selector.LanguageSelector()) == {
+    assert selector_serializer(selector.LanguageSelector()) == {
         "type": "string",
         "format": "RFC 5646",
     }
-    assert llm.selector_serializer(
+    assert selector_serializer(
         selector.LanguageSelector({"languages": ["en", "fr"]})
     ) == {"type": "string", "enum": ["en", "fr"]}
-    assert llm.selector_serializer(selector.LocationSelector()) == {
+    assert selector_serializer(selector.LocationSelector()) == {
         "type": "object",
         "properties": {
             "latitude": {"type": "number"},
@@ -887,7 +890,7 @@ def test_selector_serializer() -> None:
         },
         "required": ["latitude", "longitude"],
     }
-    assert llm.selector_serializer(selector.MediaSelector()) == {
+    assert selector_serializer(selector.MediaSelector()) == {
         "type": "object",
         "properties": {
             "entity_id": {"type": "string"},
@@ -897,14 +900,16 @@ def test_selector_serializer() -> None:
         },
         "required": ["entity_id", "media_content_id", "media_content_type"],
     }
-    assert llm.selector_serializer(selector.NumberSelector({"mode": "box"})) == {
+    assert selector_serializer(selector.NumberSelector({"mode": "box"})) == {
         "type": "number"
     }
-    assert llm.selector_serializer(
-        selector.NumberSelector({"min": 30, "max": 100})
-    ) == {"type": "number", "minimum": 30, "maximum": 100}
-    assert llm.selector_serializer(selector.ObjectSelector()) == {"type": "object"}
-    assert llm.selector_serializer(
+    assert selector_serializer(selector.NumberSelector({"min": 30, "max": 100})) == {
+        "type": "number",
+        "minimum": 30,
+        "maximum": 100,
+    }
+    assert selector_serializer(selector.ObjectSelector()) == {"type": "object"}
+    assert selector_serializer(
         selector.SelectSelector(
             {
                 "options": [
@@ -915,34 +920,34 @@ def test_selector_serializer() -> None:
             }
         )
     ) == {"type": "string", "enum": ["A", "B", "C"]}
-    assert llm.selector_serializer(
+    assert selector_serializer(
         selector.SelectSelector({"options": ["A", "B", "C"], "multiple": True})
     ) == {
         "type": "array",
         "items": {"type": "string", "enum": ["A", "B", "C"]},
         "uniqueItems": True,
     }
-    assert llm.selector_serializer(
+    assert selector_serializer(
         selector.StateSelector({"entity_id": "sensor.test"})
     ) == {"type": "string"}
-    assert llm.selector_serializer(selector.TemplateSelector()) == {
+    assert selector_serializer(selector.TemplateSelector()) == {
         "type": "string",
         "format": "jinja2",
     }
-    assert llm.selector_serializer(selector.TextSelector()) == {"type": "string"}
-    assert llm.selector_serializer(selector.TextSelector({"multiple": True})) == {
+    assert selector_serializer(selector.TextSelector()) == {"type": "string"}
+    assert selector_serializer(selector.TextSelector({"multiple": True})) == {
         "type": "array",
         "items": {"type": "string"},
     }
-    assert llm.selector_serializer(selector.ThemeSelector()) == {"type": "string"}
-    assert llm.selector_serializer(selector.TimeSelector()) == {
+    assert selector_serializer(selector.ThemeSelector()) == {"type": "string"}
+    assert selector_serializer(selector.TimeSelector()) == {
         "type": "string",
         "format": "time",
     }
-    assert llm.selector_serializer(selector.TriggerSelector()) == {
+    assert selector_serializer(selector.TriggerSelector()) == {
         "type": "array",
         "items": {"type": "string"},
     }
-    assert llm.selector_serializer(selector.FileSelector({"accept": ".txt"})) == {
+    assert selector_serializer(selector.FileSelector({"accept": ".txt"})) == {
         "type": "string"
     }

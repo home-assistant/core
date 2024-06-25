@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
@@ -161,6 +162,7 @@ class APIInstance:
     api_prompt: str
     llm_context: LLMContext
     tools: list[Tool]
+    custom_serializer: Callable[[Any], Any] | None = None
 
     async def async_call_tool(self, tool_input: ToolInput) -> JsonObjectType:
         """Call a LLM tool, validate args and return the response."""
@@ -302,6 +304,7 @@ class AssistAPI(API):
             api_prompt=self._async_get_api_prompt(llm_context, exposed_entities),
             llm_context=llm_context,
             tools=self._async_get_tools(llm_context, exposed_entities),
+            custom_serializer=_selector_serializer,
         )
 
     @callback
@@ -492,7 +495,7 @@ def _get_exposed_entities(
     return entities
 
 
-def selector_serializer(schema: Any) -> Any:  # noqa: C901
+def _selector_serializer(schema: Any) -> Any:  # noqa: C901
     """Convert selectors into OpenAPI schema."""
     if not isinstance(schema, selector.Selector):
         return UNSUPPORTED
