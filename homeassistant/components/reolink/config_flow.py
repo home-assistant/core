@@ -124,7 +124,9 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self.async_step_user()
         placeholders = {"name": self.context["title_placeholders"]["name"]}
-        return self.async_show_form(step_id="reauth_confirm", description_placeholders=placeholders)
+        return self.async_show_form(
+            step_id="reauth_confirm", description_placeholders=placeholders
+        )
 
     async def async_step_dhcp(
         self, discovery_info: dhcp.DhcpServiceInfo
