@@ -681,6 +681,8 @@ async def test_script_tool(
     area = area_registry.async_create("Living room")
     floor = floor_registry.async_create("2")
 
+    assert llm.SCRIPT_PARAMETERS_CACHE not in hass.data
+
     api = await llm.async_get_api(hass, "assist", llm_context)
 
     tools = [tool for tool in api.tools if isinstance(tool, llm.ScriptTool)]
@@ -689,7 +691,7 @@ async def test_script_tool(
     tool = tools[0]
     assert tool.name == "test_script"
     assert tool.description == "This is a test script"
-    assert tool.parameters.schema == {
+    schema = {
         vol.Required("beer", description="Number of beers"): cv.string,
         vol.Optional("wine"): selector.NumberSelector({"min": 0, "max": 3}),
         vol.Optional("where"): selector.AreaSelector(),
@@ -697,6 +699,11 @@ async def test_script_tool(
         vol.Optional("floor"): selector.FloorSelector(),
         vol.Optional("floor_list"): selector.FloorSelector({"multiple": True}),
         vol.Optional("extra_field"): selector.AreaSelector(),
+    }
+    assert tool.parameters.schema == schema
+
+    assert hass.data[llm.SCRIPT_PARAMETERS_CACHE] == {
+        "test_script": ("This is a test script", vol.Schema(schema))
     }
 
     tool_input = llm.ToolInput(
@@ -757,6 +764,8 @@ async def test_script_tool(
     ):
         await hass.services.async_call("script", "reload", blocking=True)
 
+    assert hass.data[llm.SCRIPT_PARAMETERS_CACHE] == {}
+
     api = await llm.async_get_api(hass, "assist", llm_context)
 
     tools = [tool for tool in api.tools if isinstance(tool, llm.ScriptTool)]
@@ -765,8 +774,11 @@ async def test_script_tool(
     tool = tools[0]
     assert tool.name == "test_script"
     assert tool.description == "This is a new test script"
-    assert tool.parameters.schema == {
-        vol.Required("beer", description="Number of beers"): cv.string
+    schema = {vol.Required("beer", description="Number of beers"): cv.string}
+    assert tool.parameters.schema == schema
+
+    assert hass.data[llm.SCRIPT_PARAMETERS_CACHE] == {
+        "test_script": ("This is a new test script", vol.Schema(schema))
     }
 
 
