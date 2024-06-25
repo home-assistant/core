@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import CookieJar
 from pyloadapi.api import PyLoadAPI
@@ -23,7 +24,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
+from . import PyLoadConfigEntry
 from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,6 +43,23 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_VERIFY_SSL, default=True): bool,
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
+    }
+)
+
+REAUTH_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                autocomplete="username",
+            ),
+        ),
+        vol.Required(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            ),
+        ),
     }
 )
 
@@ -67,8 +91,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for pyLoad."""
 
     VERSION = 1
-    # store values from yaml import so we can use them as
-    # suggested values when the configuration step is resumed
+    config_entry: PyLoadConfigEntry | None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -118,3 +141,51 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
         if errors := result.get("errors"):
             return self.async_abort(reason=errors["base"])
         return result
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        self.config_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        errors = {}
+
+        if TYPE_CHECKING:
+            assert self.config_entry
+
+        if user_input is not None:
+            new_input = self.config_entry.data | user_input
+            try:
+                await validate_input(self.hass, new_input)
+            except (CannotConnect, ParserError):
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    self.config_entry, data=new_input
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                REAUTH_SCHEMA,
+                {
+                    CONF_USERNAME: user_input[CONF_USERNAME]
+                    if user_input is not None
+                    else self.config_entry.data[CONF_USERNAME]
+                },
+            ),
+            description_placeholders={CONF_NAME: self.config_entry.data[CONF_USERNAME]},
+            errors=errors,
+        )

@@ -352,7 +352,7 @@ class MatchTargetsCandidate:
     matched_name: str | None = None
 
 
-def _find_areas(
+def find_areas(
     name: str, areas: area_registry.AreaRegistry
 ) -> Iterable[area_registry.AreaEntry]:
     """Find all areas matching a name (including aliases)."""
@@ -372,7 +372,7 @@ def _find_areas(
                 break
 
 
-def _find_floors(
+def find_floors(
     name: str, floors: floor_registry.FloorRegistry
 ) -> Iterable[floor_registry.FloorEntry]:
     """Find all floors matching a name (including aliases)."""
@@ -530,7 +530,7 @@ def async_match_targets(  # noqa: C901
         if not states:
             return MatchTargetsResult(False, MatchFailedReason.STATE)
 
-    # Exit early so we can to avoid registry lookups
+    # Exit early so we can avoid registry lookups
     if not (
         constraints.name
         or constraints.features
@@ -580,7 +580,7 @@ def async_match_targets(  # noqa: C901
         if constraints.floor_name:
             # Filter by areas associated with floor
             fr = floor_registry.async_get(hass)
-            targeted_floors = list(_find_floors(constraints.floor_name, fr))
+            targeted_floors = list(find_floors(constraints.floor_name, fr))
             if not targeted_floors:
                 return MatchTargetsResult(
                     False,
@@ -609,7 +609,7 @@ def async_match_targets(  # noqa: C901
             possible_area_ids = {area.id for area in ar.async_list_areas()}
 
         if constraints.area_name:
-            targeted_areas = list(_find_areas(constraints.area_name, ar))
+            targeted_areas = list(find_areas(constraints.area_name, ar))
             if not targeted_areas:
                 return MatchTargetsResult(
                     False,

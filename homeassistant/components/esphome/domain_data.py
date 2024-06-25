@@ -33,12 +33,6 @@ class DomainData:
         """
         return entry.runtime_data
 
-    def set_entry_data(
-        self, entry: ESPHomeConfigEntry, entry_data: RuntimeEntryData
-    ) -> None:
-        """Set the runtime entry data associated with this config entry."""
-        entry.runtime_data = entry_data
-
     def get_or_create_store(
         self, hass: HomeAssistant, entry: ESPHomeConfigEntry
     ) -> ESPHomeStorage:
