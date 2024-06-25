@@ -16,8 +16,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import WLEDConfigEntry
 from .const import ATTR_INTENSITY, ATTR_SPEED
 from .coordinator import WLEDDataUpdateCoordinator
+from .entity import WLEDEntity
 from .helpers import wled_exception_handler
-from .models import WLEDEntity
 
 PARALLEL_UPDATES = 1
 

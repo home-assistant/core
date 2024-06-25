@@ -350,7 +350,7 @@ async def test_schema_migrate(
 
         This simulates an existing db with the old schema.
         """
-        module = f"tests.components.recorder.db_schema_{str(start_version)}"
+        module = f"tests.components.recorder.db_schema_{start_version!s}"
         importlib.import_module(module)
         old_models = sys.modules[module]
         engine = create_engine(*args, **kwargs)

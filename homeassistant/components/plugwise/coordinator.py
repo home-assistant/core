@@ -19,7 +19,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_USERNAME, DOMAIN, LOGGER
+from .const import DEFAULT_PORT, DEFAULT_USERNAME, DOMAIN, LOGGER
 
 
 class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
@@ -27,7 +27,9 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
 
     _connected: bool = False
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
@@ -45,21 +47,20 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
         )
 
         self.api = Smile(
-            host=entry.data[CONF_HOST],
-            username=entry.data.get(CONF_USERNAME, DEFAULT_USERNAME),
-            password=entry.data[CONF_PASSWORD],
-            port=entry.data.get(CONF_PORT, DEFAULT_PORT),
+            host=self.config_entry.data[CONF_HOST],
+            username=self.config_entry.data.get(CONF_USERNAME, DEFAULT_USERNAME),
+            password=self.config_entry.data[CONF_PASSWORD],
+            port=self.config_entry.data.get(CONF_PORT, DEFAULT_PORT),
             timeout=30,
             websession=async_get_clientsession(hass, verify_ssl=False),
         )
+        self._current_devices: set[str] = set()
+        self.new_devices: set[str] = set()
 
     async def _connect(self) -> None:
         """Connect to the Plugwise Smile."""
         self._connected = await self.api.connect()
         self.api.get_all_devices()
-        self.update_interval = DEFAULT_SCAN_INTERVAL.get(
-            str(self.api.smile_type), timedelta(seconds=60)
-        )
 
     async def _async_update_data(self) -> PlugwiseData:
         """Fetch data from Plugwise."""
@@ -79,4 +80,8 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
             raise ConfigEntryError("Device with unsupported firmware") from err
         except ConnectionFailedError as err:
             raise UpdateFailed("Failed to connect to the Plugwise Smile") from err
+        else:
+            self.new_devices = set(data.devices) - self._current_devices
+            self._current_devices = set(data.devices)
+
         return data

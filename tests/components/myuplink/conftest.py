@@ -1,6 +1,5 @@
 """Test helpers for myuplink."""
 
-from collections.abc import AsyncGenerator, Generator
 import time
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -8,6 +7,7 @@ from unittest.mock import MagicMock, patch
 from myuplink import Device, DevicePoint, System
 import orjson
 import pytest
+from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -135,7 +135,7 @@ def mock_myuplink_client(
     device_points_fixture,
     system_fixture,
     load_systems_jv_file,
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Mock a myuplink client."""
 
     with patch(
@@ -182,7 +182,7 @@ async def setup_platform(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     platforms,
-) -> AsyncGenerator[None, None]:
+) -> AsyncGenerator[None]:
     """Set up one or all platforms."""
 
     with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):

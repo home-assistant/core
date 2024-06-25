@@ -1,10 +1,10 @@
 """Provide basic Ondilo fixture."""
 
-from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.ondilo_ico.const import DOMAIN
 
@@ -31,11 +31,11 @@ def mock_ondilo_client(
     ico_details1: dict[str, Any],
     ico_details2: dict[str, Any],
     last_measures: list[dict[str, Any]],
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Mock a Homeassistant Ondilo client."""
     with (
         patch(
-            "homeassistant.components.ondilo_ico.api.OndiloClient",
+            "homeassistant.components.ondilo_ico.OndiloClient",
             autospec=True,
         ) as mock_ondilo,
     ):

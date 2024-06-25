@@ -25,6 +25,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
+    CONF_DEVICE_ID,
     CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_FRIENDLY_NAME,
     CONF_FRIENDLY_NAME_TEMPLATE,
@@ -40,7 +41,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import config_validation as cv, selector, template
+from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.trigger_template_entity import TEMPLATE_SENSOR_BASE_SCHEMA
@@ -86,6 +88,7 @@ SENSOR_SCHEMA = vol.All(
         {
             vol.Required(CONF_STATE): cv.template,
             vol.Optional(ATTR_LAST_RESET): cv.template,
+            vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
         }
     )
     .extend(TEMPLATE_SENSOR_BASE_SCHEMA.schema)
@@ -257,8 +260,12 @@ class SensorTemplate(TemplateEntity, SensorEntity):
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
         self._template: template.Template = config[CONF_STATE]
-        self._attr_last_reset_template: None | template.Template = config.get(
+        self._attr_last_reset_template: template.Template | None = config.get(
             ATTR_LAST_RESET
+        )
+        self._attr_device_info = async_device_info_to_link_from_device_id(
+            hass,
+            config.get(CONF_DEVICE_ID),
         )
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(

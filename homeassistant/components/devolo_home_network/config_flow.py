@@ -63,7 +63,7 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except DeviceNotFound:
             errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -140,11 +140,4 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_IP_ADDRESS: self.context[CONF_HOST],
             CONF_PASSWORD: user_input[CONF_PASSWORD],
         }
-        self.hass.config_entries.async_update_entry(
-            reauth_entry,
-            data=data,
-        )
-        self.hass.async_create_task(
-            self.hass.config_entries.async_reload(reauth_entry.entry_id)
-        )
-        return self.async_abort(reason="reauth_successful")
+        return self.async_update_reload_and_abort(reauth_entry, data=data)

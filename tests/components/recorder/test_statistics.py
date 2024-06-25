@@ -1102,7 +1102,7 @@ async def test_daily_statistics_sum(
     timezone,
 ) -> None:
     """Test daily statistics."""
-    hass.config.set_time_zone(timezone)
+    await hass.config.async_set_time_zone(timezone)
     await async_wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
@@ -1282,7 +1282,7 @@ async def test_weekly_statistics_mean(
     timezone,
 ) -> None:
     """Test weekly statistics."""
-    hass.config.set_time_zone(timezone)
+    await hass.config.async_set_time_zone(timezone)
     await async_wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
@@ -1417,7 +1417,7 @@ async def test_weekly_statistics_sum(
     timezone,
 ) -> None:
     """Test weekly statistics."""
-    hass.config.set_time_zone(timezone)
+    await hass.config.async_set_time_zone(timezone)
     await async_wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
@@ -1597,7 +1597,7 @@ async def test_monthly_statistics_sum(
     timezone,
 ) -> None:
     """Test monthly statistics."""
-    hass.config.set_time_zone(timezone)
+    await hass.config.async_set_time_zone(timezone)
     await async_wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
@@ -1917,7 +1917,7 @@ async def test_change(
     timezone,
 ) -> None:
     """Test deriving change from sum statistic."""
-    hass.config.set_time_zone(timezone)
+    await hass.config.async_set_time_zone(timezone)
     await async_wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
@@ -2256,7 +2256,7 @@ async def test_change_with_none(
     This tests the behavior when some record has None sum. The calculated change
     is not expected to be correct, but we should not raise on this error.
     """
-    hass.config.set_time_zone(timezone)
+    await hass.config.async_set_time_zone(timezone)
     await async_wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text

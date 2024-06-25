@@ -1,0 +1,134 @@
+{
+  "config": {
+    "flow_title": "{model}",
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Airgradient device."
+        }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to setup {model}?"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_version": "This firmware version is unsupported. Please upgrade the firmware of the device to at least version 3.1.1."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "button": {
+      "co2_calibration": {
+        "name": "Calibrate CO2 sensor"
+      },
+      "led_bar_test": {
+        "name": "Test LED bar"
+      }
+    },
+    "number": {
+      "led_bar_brightness": {
+        "name": "LED bar brightness"
+      },
+      "display_brightness": {
+        "name": "Display brightness"
+      }
+    },
+    "select": {
+      "configuration_control": {
+        "name": "Configuration source",
+        "state": {
+          "cloud": "Cloud",
+          "local": "Local"
+        }
+      },
+      "display_temperature_unit": {
+        "name": "Display temperature unit",
+        "state": {
+          "c": "Celsius",
+          "f": "Fahrenheit"
+        }
+      },
+      "display_pm_standard": {
+        "name": "Display PM standard",
+        "state": {
+          "ugm3": "µg/m³",
+          "us_aqi": "US AQI"
+        }
+      },
+      "led_bar_mode": {
+        "name": "LED bar mode",
+        "state": {
+          "off": "Off",
+          "co2": "Carbon dioxide",
+          "pm": "Particulate matter"
+        }
+      }
+    },
+    "sensor": {
+      "total_volatile_organic_component_index": {
+        "name": "VOC index"
+      },
+      "nitrogen_index": {
+        "name": "NOx index"
+      },
+      "pm003_count": {
+        "name": "PM0.3"
+      },
+      "raw_total_volatile_organic_component": {
+        "name": "Raw VOC"
+      },
+      "raw_nitrogen": {
+        "name": "Raw NOx"
+      },
+      "display_pm_standard": {
+        "name": "[%key:component::airgradient::entity::select::display_pm_standard::name%]",
+        "state": {
+          "ugm3": "[%key:component::airgradient::entity::select::display_pm_standard::state::ugm3%]",
+          "us_aqi": "[%key:component::airgradient::entity::select::display_pm_standard::state::us_aqi%]"
+        }
+      },
+      "co2_automatic_baseline_calibration_days": {
+        "name": "Carbon dioxide automatic baseline calibration"
+      },
+      "nox_learning_offset": {
+        "name": "NOx learning offset"
+      },
+      "tvoc_learning_offset": {
+        "name": "VOC learning offset"
+      },
+      "led_bar_mode": {
+        "name": "[%key:component::airgradient::entity::select::led_bar_mode::name%]",
+        "state": {
+          "off": "[%key:component::airgradient::entity::select::led_bar_mode::state::off%]",
+          "co2": "[%key:component::airgradient::entity::select::led_bar_mode::state::co2%]",
+          "pm": "[%key:component::airgradient::entity::select::led_bar_mode::state::pm%]"
+        }
+      },
+      "led_bar_brightness": {
+        "name": "[%key:component::airgradient::entity::number::led_bar_brightness::name%]"
+      },
+      "display_temperature_unit": {
+        "name": "[%key:component::airgradient::entity::select::display_temperature_unit::name%]",
+        "state": {
+          "c": "[%key:component::airgradient::entity::select::display_temperature_unit::state::c%]",
+          "f": "[%key:component::airgradient::entity::select::display_temperature_unit::state::f%]"
+        }
+      },
+      "display_brightness": {
+        "name": "[%key:component::airgradient::entity::number::display_brightness::name%]"
+      }
+    }
+  },
+  "exceptions": {
+    "no_local_configuration": {
+      "message": "Device should be configured with local configuration to be able to change settings."
+    }
+  }
+}
