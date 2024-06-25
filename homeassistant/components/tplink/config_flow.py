@@ -55,7 +55,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for tplink."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
     reauth_entry: ConfigEntry | None = None
 
     def __init__(self) -> None:

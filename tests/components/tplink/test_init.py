@@ -24,12 +24,13 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import (
     CREATE_ENTRY_DATA_AUTH,
+    CREATE_ENTRY_DATA_LEGACY,
     DEVICE_CONFIG_AUTH,
     IP_ADDRESS,
     MAC_ADDRESS,
@@ -100,7 +101,7 @@ async def test_config_entry_retry(hass: HomeAssistant) -> None:
 
 
 async def test_dimmer_switch_unique_id_fix_original_entity_still_exists(
-    hass: HomeAssistant, entity_reg: EntityRegistry
+    hass: HomeAssistant, entity_reg: er.EntityRegistry
 ) -> None:
     """Test no migration happens if the original entity id still exists."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=MAC_ADDRESS)
@@ -302,7 +303,7 @@ async def test_plug_auth_fails(hass: HomeAssistant) -> None:
 
 async def test_update_attrs_fails_in_init(
     hass: HomeAssistant,
-    entity_registry: EntityRegistry,
+    entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a smart plug auth failure."""
@@ -329,7 +330,7 @@ async def test_update_attrs_fails_in_init(
 
 async def test_update_attrs_fails_on_update(
     hass: HomeAssistant,
-    entity_registry: EntityRegistry,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -374,7 +375,7 @@ async def test_update_attrs_fails_on_update(
 
 async def test_feature_no_category(
     hass: HomeAssistant,
-    entity_registry: EntityRegistry,
+    entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a strip unique id."""
@@ -396,3 +397,68 @@ async def test_feature_no_category(
     assert entity
     assert entity.entity_category == EntityCategory.DIAGNOSTIC
     assert "Unhandled category Category.Unset, fallback to DIAGNOSTIC" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("identifier_base", "expected_message", "expected_count"),
+    [
+        pytest.param("C0:06:C3:42:54:2B", "Replaced", 1, id="success"),
+        pytest.param("123456789", "Unable to replace", 3, id="failure"),
+    ],
+)
+async def test_unlink_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    identifier_base,
+    expected_message,
+    expected_count,
+) -> None:
+    """Test for unlinking child device ids."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**CREATE_ENTRY_DATA_LEGACY},
+        entry_id="123456",
+        unique_id="any",
+        version=1,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+
+    # Setup initial device registry, with linkages
+    mac = "C0:06:C3:42:54:2B"
+    identifiers = [
+        (DOMAIN, identifier_base),
+        (DOMAIN, f"{identifier_base}_0001"),
+        (DOMAIN, f"{identifier_base}_0002"),
+    ]
+    device_registry.async_get_or_create(
+        config_entry_id="123456",
+        connections={
+            (dr.CONNECTION_NETWORK_MAC, mac.lower()),
+        },
+        identifiers=set(identifiers),
+        model="hs300",
+        name="dummy",
+    )
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+
+    assert device_entries[0].connections == {
+        (dr.CONNECTION_NETWORK_MAC, mac.lower()),
+    }
+    assert device_entries[0].identifiers == set(identifiers)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+
+    assert device_entries[0].connections == {(dr.CONNECTION_NETWORK_MAC, mac.lower())}
+    # If expected count is 1 will be the first identifier only
+    expected_identifiers = identifiers[:expected_count]
+    assert device_entries[0].identifiers == set(expected_identifiers)
+    assert entry.version == 1
+    assert entry.minor_version == 3
+
+    msg = f"{expected_message} identifiers for device dummy (hs300): {set(identifiers)}"
+    assert msg in caplog.text

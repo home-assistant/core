@@ -266,3 +266,67 @@ async def set_credentials(hass: HomeAssistant, username: str, password: str) -> 
 def mac_alias(mac: str) -> str:
     """Convert a MAC address to a short address for the UI."""
     return mac.replace(":", "")[-4:].upper()
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    version = config_entry.version
+    minor_version = config_entry.minor_version
+
+    _LOGGER.debug("Migrating from version %s.%s", version, minor_version)
+
+    if version == 1 and minor_version < 3:
+        # Previously entities on child devices added themselves to the parent
+        # device and set their device id as identifiers along with mac
+        # as a connection which creates a single device entry linked by all
+        # identifiers. Now we create separate devices connected with via_device
+        # so the identifier linkage must be removed otherwise the devices will
+        # always be linked into one device.
+        dev_reg = dr.async_get(hass)
+        for device in dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id):
+            new_identifiers: set[tuple[str, str]] | None = None
+            if len(device.identifiers) > 1 and (
+                mac := next(
+                    iter(
+                        [
+                            conn[1]
+                            for conn in device.connections
+                            if conn[0] == dr.CONNECTION_NETWORK_MAC
+                        ]
+                    ),
+                    None,
+                )
+            ):
+                for identifier in device.identifiers:
+                    # Previously only iot devices that use the MAC address as
+                    # device_id had child devices so check for mac as the
+                    # parent device.
+                    if identifier[0] == DOMAIN and identifier[1].upper() == mac.upper():
+                        new_identifiers = {identifier}
+                        break
+                if new_identifiers:
+                    dev_reg.async_update_device(
+                        device.id, new_identifiers=new_identifiers
+                    )
+                    _LOGGER.debug(
+                        "Replaced identifiers for device %s (%s): %s with: %s",
+                        device.name,
+                        device.model,
+                        device.identifiers,
+                        new_identifiers,
+                    )
+                else:
+                    # No match on mac so raise an error.
+                    _LOGGER.error(
+                        "Unable to replace identifiers for device %s (%s): %s",
+                        device.name,
+                        device.model,
+                        device.identifiers,
+                    )
+
+        minor_version = 3
+        hass.config_entries.async_update_entry(config_entry, minor_version=3)
+
+        _LOGGER.debug("Migration to version %s.%s successful", version, minor_version)
+
+    return True
