@@ -1077,11 +1077,11 @@ def custom_serializer(schema: Any) -> Any:
 
     if isinstance(schema, section):
         return {
-            "type": "section",
+            "type": "expandable",
             "schema": voluptuous_serialize.convert(
                 schema.schema, custom_serializer=custom_serializer
             ),
-            "collapsed": schema.options["collapsed"],
+            "expanded": schema.options["collapsed"],
         }
 
     if isinstance(schema, multi_select):
