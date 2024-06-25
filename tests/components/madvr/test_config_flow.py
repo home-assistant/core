@@ -24,7 +24,7 @@ async def test_user_form(hass: HomeAssistant, mock_madvr) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {}  # Changed from `is None` to `== {}`
+    assert result["errors"] == {}
 
     mock_madvr.return_value.open_connection = MagicMock()
     mock_madvr.return_value.connected.return_value = True
@@ -81,16 +81,26 @@ async def test_user_form_cannot_connect(hass: HomeAssistant, mock_madvr) -> None
 
     # Check that we're still on the form step after the error
     assert result2["type"] == FlowResultType.FORM
-    # Check that we're on the confirm step
-    assert result2["step_id"] == "confirm"
+    # Check that we're still on the user step
+    assert result2["step_id"] == "user"
+    # Check that we have the correct error
+    assert result2["errors"] == {"base": "cannot_connect"}
 
-    # Test that we can continue even if connection fails
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
-        {
-            "confirm": True,
-        },
-    )
+    # Test that we can retry the connection
+    with patch(
+        "homeassistant.components.madvr.config_flow.MadVRConfigFlow._test_connection",
+        return_value=None,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                "name": "Test MadVR",
+                "host": "192.168.1.100",
+                "mac": "00:11:22:33:44:55",
+                "port": 44077,
+                "keep_power_on": False,
+            },
+        )
 
     assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Test MadVR"

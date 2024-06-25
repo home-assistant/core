@@ -33,80 +33,91 @@ class MadVRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             keep_power_on = user_input["keep_power_on"]
             try:
                 await self._test_connection(host, port, mac, keep_power_on)
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME], data=user_input
+                )
             except CannotConnect:
                 _LOGGER.error("CannotConnect error caught")
                 errors["base"] = "cannot_connect"
-                self.context["user_input"] = user_input
-                # allow user to skip connection test
-                return await self.async_step_confirm()
-            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+
+        # Whether it's the first attempt or a retry, show the form
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_NAME): str,
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_MAC): str,
-                    vol.Required(CONF_PORT, default=44077): int,
-                    vol.Required("keep_power_on", default=False): bool,
+                    vol.Required(
+                        CONF_NAME,
+                        default=user_input.get(CONF_NAME, "") if user_input else "",
+                    ): str,
+                    vol.Required(
+                        CONF_HOST,
+                        default=user_input.get(CONF_HOST, "") if user_input else "",
+                    ): str,
+                    vol.Required(
+                        CONF_MAC,
+                        default=user_input.get(CONF_MAC, "") if user_input else "",
+                    ): str,
+                    vol.Required(
+                        CONF_PORT,
+                        default=user_input.get(CONF_PORT, 44077)
+                        if user_input
+                        else 44077,
+                    ): int,
+                    vol.Required(
+                        "keep_power_on",
+                        default=user_input.get("keep_power_on", False)
+                        if user_input
+                        else False,
+                    ): bool,
                 }
             ),
             errors=errors,
+            description_placeholders={
+                "error_message": "Failed to connect. Please check your settings and ensure the device is on."
+                if errors
+                else ""
+            },
         )
 
     async def _test_connection(self, host, port, mac, keep_power_on: bool):
         """Test if we can connect to the device."""
         try:
-            madvr_client = Madvr(host=host, port=port)
+            madvr_client = Madvr(host=host, port=port, mac=mac)
             _LOGGER.debug(
                 "Testing connection to MadVR at %s:%s with mac %s", host, port, mac
             )
             # turn on the device
             await madvr_client.power_on()
-            # wait for it to be available (envy takes about 15s to boot)
-            await asyncio.sleep(15)
-            # try to connect
-            await asyncio.wait_for(madvr_client.open_connection(), timeout=15)
-
-            # don't need tasks running
-            await asyncio.sleep(2)  # let them run once
-            await cancel_tasks(madvr_client)
-
-            # check if we are connected
-            if not madvr_client.connected():
-                raise CannotConnect("Connection failed")
-
-            _LOGGER.debug("Connection test successful")
-            if not keep_power_on:
-                _LOGGER.debug("Turning off device")
-                await madvr_client.power_off()
-            else:
-                # remote will open a new connection, so close this one
-                _LOGGER.debug("Closing connection")
-                await madvr_client.close_connection()
-            _LOGGER.debug("Finished testing connection")
-
         except ValueError as err:
             _LOGGER.error("Error sending magic packet: %s", err)
             raise CannotConnect from err
+        # wait for it to be available (envy takes about 15s to boot)
+        await asyncio.sleep(15)
+        # try to connect
+        try:
+            await asyncio.wait_for(madvr_client.open_connection(), timeout=15)
         # connection can raise HeartBeatError if the device is not available or connection does not work
         except (TimeoutError, aiohttp.ClientError, OSError, HeartBeatError) as err:
             _LOGGER.error("Error connecting to MadVR: %s", err)
             raise CannotConnect from err
 
-    async def async_step_confirm(self, user_input=None) -> ConfigFlowResult:
-        """Handle confirmation step if connection test fails."""
-        if user_input is not None:
-            return self.async_create_entry(
-                title=self.context["user_input"][CONF_NAME],
-                data=self.context["user_input"],
-            )
+        # don't need tasks running
+        await asyncio.sleep(2)  # let them run once
+        await cancel_tasks(madvr_client)
 
-        return self.async_show_form(
-            step_id="confirm",
-            description_placeholders={CONF_NAME: self.context["user_input"][CONF_NAME]},
-            data_schema=vol.Schema({vol.Required("confirm", default=False): bool}),
-        )
+        # check if we are connected
+        if not madvr_client.connected():
+            raise CannotConnect("Connection failed")
+
+        _LOGGER.debug("Connection test successful")
+        if not keep_power_on:
+            _LOGGER.debug("Turning off device")
+            await madvr_client.power_off()
+        else:
+            # remote will open a new connection, so close this one
+            _LOGGER.debug("Closing connection")
+            await madvr_client.close_connection()
+        _LOGGER.debug("Finished testing connection")
 
     @staticmethod
     @callback

@@ -1,15 +1,9 @@
 {
   "config": {
     "step": {
-      "confirm": {
-        "description": "Failed to connect to the device. If you are sure your information is correct, you may choose to proceed.",
-        "data": {
-          "confirm": "Connection failed. Proceed anyway?"
-        }
-      },
       "user": {
         "title": "Setup MadVR Envy",
-        "description": "Your device will be turned on so we can test the connection.",
+        "description": "Your device will be turned on so we can test the connection. ",
         "data": {
           "name": "Name",
           "host": "Host or IP Address",
