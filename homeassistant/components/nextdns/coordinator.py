@@ -1,6 +1,5 @@
 """NextDns coordinator."""
 
-import asyncio
 from datetime import timedelta
 import logging
 from typing import TypeVar
@@ -58,9 +57,13 @@ class NextDnsUpdateCoordinator(DataUpdateCoordinator[CoordinatorDataT]):
     async def _async_update_data(self) -> CoordinatorDataT:
         """Update data via internal method."""
         try:
-            async with asyncio.timeout(10):
-                return await self._async_update_data_internal()
-        except (ApiError, ClientConnectorError, InvalidApiKeyError) as err:
+            return await self._async_update_data_internal()
+        except (
+            ApiError,
+            ClientConnectorError,
+            InvalidApiKeyError,
+            TimeoutError,
+        ) as err:
             raise UpdateFailed(err) from err
 
     async def _async_update_data_internal(self) -> CoordinatorDataT:
