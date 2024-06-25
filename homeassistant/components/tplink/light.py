@@ -250,7 +250,7 @@ class TPLinkLightEntity(CoordinatedTPLinkEntity, LightEntity):
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
             brightness = round((brightness * 100.0) / 255.0)
 
-        if self._device.device_type == DeviceType.Dimmer and transition is None:
+        if self._device.device_type is DeviceType.Dimmer and transition is None:
             # This is a stopgap solution for inconsistent set_brightness
             # handling in the upstream library, see #57265.
             # This should be removed when the upstream has fixed the issue.
