@@ -251,8 +251,6 @@ async def help_test_default_availability_list_payload_all(
     domain: str,
     config: ConfigType,
     no_assumed_state: bool = False,
-    state_topic: str | None = None,
-    state_message: str | None = None,
 ) -> None:
     """Test availability by default payload with defined topic.
 
@@ -314,8 +312,6 @@ async def help_test_default_availability_list_payload_any(
     domain: str,
     config: ConfigType,
     no_assumed_state: bool = False,
-    state_topic: str | None = None,
-    state_message: str | None = None,
 ) -> None:
     """Test availability by default payload with defined topic.
 
@@ -657,7 +653,6 @@ async def help_test_update_with_json_attrs_bad_json(
 async def help_test_discovery_update_attr(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
     domain: str,
     config: ConfigType,
 ) -> None:
@@ -696,9 +691,7 @@ async def help_test_discovery_update_attr(
 
 
 async def help_test_unique_id(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    domain: str,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator, domain: str
 ) -> None:
     """Test unique id option only creates one entity per unique_id."""
     await mqtt_mock_entry()
@@ -709,7 +702,6 @@ async def help_test_unique_id(
 async def help_test_discovery_removal(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
     domain: str,
     data: str,
 ) -> None:
@@ -735,8 +727,7 @@ async def help_test_discovery_removal(
 async def help_test_discovery_update(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog,
-    domain,
+    domain: str,
     discovery_config1: DiscoveryInfoType,
     discovery_config2: DiscoveryInfoType,
     state_data1: _StateDataType | None = None,
@@ -800,7 +791,6 @@ async def help_test_discovery_update(
 async def help_test_discovery_update_unchanged(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
     domain: str,
     data1: str,
     discovery_update: MagicMock,
@@ -826,7 +816,6 @@ async def help_test_discovery_update_unchanged(
 async def help_test_discovery_broken(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
     domain: str,
     data1: str,
     data2: str,
