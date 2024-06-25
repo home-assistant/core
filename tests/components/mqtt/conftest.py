@@ -9,8 +9,8 @@ import pytest
 from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt.client import EnsureJobAfterCooldown
 from homeassistant.components.mqtt.models import MessageCallbackType, ReceiveMessage
+from homeassistant.components.mqtt.util import EnsureJobAfterCooldown
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant, callback
 
@@ -66,6 +66,7 @@ def mock_debouncer(hass: HomeAssistant) -> Generator[asyncio.Event]:
             await super()._async_job()
             task_done.set()
 
+    # We mock the import of EnsureJobAfterCooldown in client.py
     with patch(
         "homeassistant.components.mqtt.client.EnsureJobAfterCooldown", MockDeboncer
     ):

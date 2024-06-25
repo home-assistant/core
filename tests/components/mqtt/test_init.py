@@ -2250,7 +2250,6 @@ async def test_handle_mqtt_timeout_on_callback(
         assert "No ACK from MQTT server" in caplog.text
         # Ensure we stop lingering background tasks
         await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
         # Assert we did not have any completed subscribes,
         # because the debouncer subscribe job failed to receive an ACK,
         # and the time auto caused the debouncer job to fail.
