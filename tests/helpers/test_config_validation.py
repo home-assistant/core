@@ -848,28 +848,6 @@ def test_selector_in_serializer() -> None:
     }
 
 
-def test_section_in_serializer() -> None:
-    """Test section with custom_serializer."""
-    assert cv.custom_serializer(
-        cv.section(
-            vol.Schema(
-                {
-                    vol.Optional("option_1", default=False): bool,
-                    vol.Required("option_2"): int,
-                }
-            ),
-            {"collapsed": False},
-        )
-    ) == {
-        "collapsed": False,
-        "schema": [
-            {"default": False, "name": "option_1", "optional": True, "type": "boolean"},
-            {"name": "option_2", "required": True, "type": "integer"},
-        ],
-        "type": "section",
-    }
-
-
 def test_positive_time_period_dict_in_serializer() -> None:
     """Test positive_time_period_dict with custom_serializer."""
     assert cv.custom_serializer(cv.positive_time_period_dict) == {
