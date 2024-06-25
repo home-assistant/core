@@ -222,6 +222,8 @@ async def test_setting_event_value_via_mqtt_json_message_and_default_current_sta
     assert state.attributes.get("val") == "valcontent"
     assert state.attributes.get("par") == "parcontent"
 
+    await hass.async_block_till_done(wait_background_tasks=True)
+
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_availability_when_connection_lost(

@@ -1605,14 +1605,9 @@ class PipelineStorageCollectionWebsocket(
     """Class to expose storage collection management over websocket."""
 
     @callback
-    def async_setup(
-        self,
-        hass: HomeAssistant,
-        *,
-        create_create: bool = True,
-    ) -> None:
+    def async_setup(self, hass: HomeAssistant) -> None:
         """Set up the websocket commands."""
-        super().async_setup(hass, create_create=create_create)
+        super().async_setup(hass)
 
         websocket_api.async_register_command(
             hass,

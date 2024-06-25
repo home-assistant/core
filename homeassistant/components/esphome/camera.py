@@ -12,15 +12,17 @@ from aiohttp import web
 
 from homeassistant.components import camera
 from homeassistant.components.camera import Camera
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .entity import EsphomeEntity, platform_async_setup_entry
+from .entry_data import ESPHomeConfigEntry
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ESPHomeConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up esphome cameras based on a config entry."""
     await platform_async_setup_entry(

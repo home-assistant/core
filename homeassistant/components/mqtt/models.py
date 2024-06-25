@@ -11,15 +11,18 @@ from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, TypedDict
 
-import voluptuous as vol
-
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError, TemplateError
 from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, TemplateVarsType
+from homeassistant.helpers.typing import (
+    ConfigType,
+    DiscoveryInfoType,
+    TemplateVarsType,
+    VolSchemaType,
+)
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
@@ -418,7 +421,7 @@ class MqttData:
     platforms_loaded: set[Platform | str] = field(default_factory=set)
     reload_dispatchers: list[CALLBACK_TYPE] = field(default_factory=list)
     reload_handlers: dict[str, CALLBACK_TYPE] = field(default_factory=dict)
-    reload_schema: dict[str, vol.Schema] = field(default_factory=dict)
+    reload_schema: dict[str, VolSchemaType] = field(default_factory=dict)
     state_write_requests: EntityTopicState = field(default_factory=EntityTopicState)
     subscriptions_to_restore: list[Subscription] = field(default_factory=list)
     tags: dict[str, dict[str, MQTTTagScanner]] = field(default_factory=dict)

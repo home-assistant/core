@@ -7,17 +7,17 @@ from datetime import datetime
 from aioesphomeapi import DateTimeInfo, DateTimeState
 
 from homeassistant.components.datetime import DateTimeEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .entry_data import ESPHomeConfigEntry
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ESPHomeConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up esphome datetimes based on a config entry."""

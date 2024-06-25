@@ -30,6 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.network import is_link_local
 
 from . import AxisConfigEntry
@@ -63,7 +64,7 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
     def __init__(self) -> None:
         """Initialize the Axis config flow."""
         self.config: dict[str, Any] = {}
-        self.discovery_schema: dict[vol.Required, type[str | int]] | None = None
+        self.discovery_schema: VolDictType | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

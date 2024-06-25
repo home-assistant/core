@@ -10,7 +10,12 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.components.enphase_envoy.const import DOMAIN, PLATFORMS
+from homeassistant.components.enphase_envoy.const import (
+    DOMAIN,
+    OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
+    OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
+    PLATFORMS,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -796,6 +801,57 @@ async def test_reauth(
     await hass.async_block_till_done()
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
+
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        pytest.param("envoy", id="envoy"),
+    ],
+    indirect=["mock_envoy"],
+)
+async def test_options_default(
+    hass: HomeAssistant, config_entry, setup_enphase_envoy
+) -> None:
+    """Test we can configure options."""
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE
+    }
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        pytest.param("envoy", id="envoy"),
+    ],
+    indirect=["mock_envoy"],
+)
+async def test_options_set(
+    hass: HomeAssistant, config_entry, setup_enphase_envoy
+) -> None:
+    """Test we can configure options."""
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: True}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: True}
+
 
 
 @pytest.mark.parametrize(

@@ -575,7 +575,7 @@ async def test_connection_aborted_wrong_device(
     entry.add_to_hass(hass)
     disconnect_done = hass.loop.create_future()
 
-    def async_disconnect(*args, **kwargs) -> None:
+    async def async_disconnect(*args, **kwargs) -> None:
         disconnect_done.set_result(None)
 
     mock_client.disconnect = async_disconnect
@@ -1156,3 +1156,28 @@ async def test_start_reauth(
     assert len(flows) == 1
     flow = flows[0]
     assert flow["context"]["source"] == "reauth"
+
+
+async def test_entry_missing_unique_id(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test the unique id is added from storage if available."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=None,
+        data={
+            CONF_HOST: "test.local",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+        },
+        options={CONF_ALLOW_SERVICE_CALLS: True},
+    )
+    entry.add_to_hass(hass)
+    await mock_esphome_device(mock_client=mock_client, mock_storage=True)
+    await hass.async_block_till_done()
+    assert entry.unique_id == "11:22:33:44:55:aa"

@@ -31,7 +31,7 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
@@ -246,7 +246,7 @@ class MqttCover(MqttEntity, CoverEntity):
     _tilt_range: tuple[int, int]
 
     @staticmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
