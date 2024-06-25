@@ -73,9 +73,9 @@
     },
     {
       "label": "Code Coverage",
-      "detail": "Generate code coverage report for a given integration.",
+      "detail": "Generate translation and code coverage report for a given integration.",
       "type": "shell",
-      "command": "python3 -m pytest ./tests/components/${input:integrationName}/ --cov=homeassistant.components.${input:integrationName} --cov-report term-missing --durations-min=1 --durations=0 --numprocesses=auto",
+      "command": "python3 -m script.translations develop --integration ${input:integrationName} & python3 -m pytest ./tests/components/${input:integrationName}/ --cov=homeassistant.components.${input:integrationName} --cov-report term-missing --durations-min=1 --durations=0 --numprocesses=auto",
       "group": {
         "kind": "test",
         "isDefault": true
