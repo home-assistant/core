@@ -3,13 +3,8 @@
 import logging
 from typing import TYPE_CHECKING, Any
 
-from aioautomower.model import (
-    MowerActivities,
-    MowerModes,
-    MowerStates,
-    StayOutZones,
-    Zone,
-)
+from aioautomower.exceptions import ApiException
+from aioautomower.model import MowerModes, StayOutZones, Zone
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import Platform
@@ -22,21 +17,6 @@ from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerControlEntity, handle_sending_exception
 
 _LOGGER = logging.getLogger(__name__)
-
-ERROR_ACTIVITIES = (
-    MowerActivities.STOPPED_IN_GARDEN,
-    MowerActivities.UNKNOWN,
-    MowerActivities.NOT_APPLICABLE,
-)
-ERROR_STATES = [
-    MowerStates.FATAL_ERROR,
-    MowerStates.ERROR,
-    MowerStates.ERROR_AT_POWER_UP,
-    MowerStates.NOT_APPLICABLE,
-    MowerStates.UNKNOWN,
-    MowerStates.STOPPED,
-    MowerStates.OFF,
-]
 
 
 async def async_setup_entry(
@@ -84,15 +64,7 @@ class AutomowerScheduleSwitchEntity(AutomowerControlEntity, SwitchEntity):
         """Return the state of the switch."""
         return self.mower_attributes.mower.mode != MowerModes.HOME
 
-    @property
-    def available(self) -> bool:
-        """Return True if the device is available."""
-        return super().available and (
-            self.mower_attributes.mower.state not in ERROR_STATES
-            or self.mower_attributes.mower.activity not in ERROR_ACTIVITIES
-        )
-
-    @handle_sending_exception(poll_after_sending=False)
+    @handle_sending_exception()
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.coordinator.api.commands.park_until_further_notice(self.mower_id)

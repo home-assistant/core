@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.cloud import account_link
+from homeassistant.components.cloud.const import DATA_CLOUD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -133,7 +134,7 @@ async def test_setup_provide_implementation(hass: HomeAssistant) -> None:
 
 async def test_get_services_cached(hass: HomeAssistant) -> None:
     """Test that we cache services."""
-    hass.data["cloud"] = None
+    hass.data[DATA_CLOUD] = None
 
     services = 1
 
@@ -165,7 +166,7 @@ async def test_get_services_cached(hass: HomeAssistant) -> None:
 
 async def test_get_services_error(hass: HomeAssistant) -> None:
     """Test that we cache services."""
-    hass.data["cloud"] = None
+    hass.data[DATA_CLOUD] = None
 
     with (
         patch.object(account_link, "CACHE_TIMEOUT", 0),
@@ -181,7 +182,7 @@ async def test_get_services_error(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_implementation(hass: HomeAssistant, flow_handler) -> None:
     """Test Cloud OAuth2 implementation."""
-    hass.data["cloud"] = None
+    hass.data[DATA_CLOUD] = None
 
     impl = account_link.CloudOAuth2Implementation(hass, "test")
     assert impl.name == "Home Assistant Cloud"

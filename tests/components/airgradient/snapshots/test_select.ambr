@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[select.airgradient_configuration_source-entry]
+# name: test_all_entities[indoor][select.airgradient_configuration_source-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -37,7 +37,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[select.airgradient_configuration_source-state]
+# name: test_all_entities[indoor][select.airgradient_configuration_source-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Airgradient Configuration source',
@@ -54,7 +54,7 @@
     'state': 'local',
   })
 # ---
-# name: test_all_entities[select.airgradient_display_pm_standard-entry]
+# name: test_all_entities[indoor][select.airgradient_display_pm_standard-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -92,7 +92,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[select.airgradient_display_pm_standard-state]
+# name: test_all_entities[indoor][select.airgradient_display_pm_standard-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Airgradient Display PM standard',
@@ -109,7 +109,7 @@
     'state': 'ugm3',
   })
 # ---
-# name: test_all_entities[select.airgradient_display_temperature_unit-entry]
+# name: test_all_entities[indoor][select.airgradient_display_temperature_unit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -147,7 +147,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[select.airgradient_display_temperature_unit-state]
+# name: test_all_entities[indoor][select.airgradient_display_temperature_unit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Airgradient Display temperature unit',
@@ -164,7 +164,7 @@
     'state': 'c',
   })
 # ---
-# name: test_all_entities[select.airgradient_led_bar_mode-entry]
+# name: test_all_entities[indoor][select.airgradient_led_bar_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -203,7 +203,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[select.airgradient_led_bar_mode-state]
+# name: test_all_entities[indoor][select.airgradient_led_bar_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Airgradient LED bar mode',
@@ -221,7 +221,7 @@
     'state': 'co2',
   })
 # ---
-# name: test_all_entities_outdoor[select.airgradient_configuration_source-entry]
+# name: test_all_entities[outdoor][select.airgradient_configuration_source-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -259,7 +259,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities_outdoor[select.airgradient_configuration_source-state]
+# name: test_all_entities[outdoor][select.airgradient_configuration_source-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Airgradient Configuration source',

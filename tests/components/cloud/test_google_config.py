@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components.cloud import GACTIONS_SCHEMA
 from homeassistant.components.cloud.const import (
+    DATA_CLOUD,
     PREF_DISABLE_2FA,
     PREF_GOOGLE_DEFAULT_EXPOSE,
     PREF_GOOGLE_ENTITY_CONFIGS,
@@ -18,7 +19,6 @@ from homeassistant.components.cloud.prefs import CloudPreferences
 from homeassistant.components.google_assistant import helpers as ga_helpers
 from homeassistant.components.homeassistant.exposed_entities import (
     DATA_EXPOSED_ENTITIES,
-    ExposedEntities,
     async_expose_entity,
     async_get_entity_settings,
 )
@@ -47,13 +47,13 @@ def mock_conf(hass, cloud_prefs):
     )
 
 
-def expose_new(hass, expose_new):
+def expose_new(hass: HomeAssistant, expose_new: bool) -> None:
     """Enable exposing new entities to Google."""
-    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
     exposed_entities.async_set_expose_new_entities("cloud.google_assistant", expose_new)
 
 
-def expose_entity(hass, entity_id, should_expose):
+def expose_entity(hass: HomeAssistant, entity_id: str, should_expose: bool) -> None:
     """Expose an entity to Google."""
     async_expose_entity(hass, "cloud.google_assistant", entity_id, should_expose)
 
@@ -197,7 +197,7 @@ async def test_google_entity_registry_sync(
     expose_new(hass, True)
 
     config = CloudGoogleConfig(
-        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data["cloud"]
+        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data[DATA_CLOUD]
     )
     await config.async_initialize()
     await config.async_connect_agent_user("mock-user-id")
@@ -265,7 +265,7 @@ async def test_google_device_registry_sync(
 ) -> None:
     """Test Google config responds to device registry."""
     config = CloudGoogleConfig(
-        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data["cloud"]
+        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data[DATA_CLOUD]
     )
 
     # Enable exposing new entities to Google
@@ -334,7 +334,7 @@ async def test_sync_google_when_started(
 ) -> None:
     """Test Google config syncs on init."""
     config = CloudGoogleConfig(
-        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data["cloud"]
+        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data[DATA_CLOUD]
     )
     with patch.object(config, "async_sync_entities_all") as mock_sync:
         await config.async_initialize()
@@ -347,7 +347,7 @@ async def test_sync_google_on_home_assistant_start(
 ) -> None:
     """Test Google config syncs when home assistant started."""
     config = CloudGoogleConfig(
-        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data["cloud"]
+        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data[DATA_CLOUD]
     )
     hass.set_state(CoreState.not_running)
     with patch.object(config, "async_sync_entities_all") as mock_sync:
@@ -442,11 +442,11 @@ def test_enabled_requires_valid_sub(
 ) -> None:
     """Test that google config enabled requires a valid Cloud sub."""
     assert cloud_prefs.google_enabled
-    assert hass.data["cloud"].is_logged_in
-    assert hass.data["cloud"].subscription_expired
+    assert hass.data[DATA_CLOUD].is_logged_in
+    assert hass.data[DATA_CLOUD].subscription_expired
 
     config = CloudGoogleConfig(
-        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data["cloud"]
+        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data[DATA_CLOUD]
     )
 
     assert not config.enabled
@@ -495,7 +495,7 @@ async def test_google_handle_logout(
     await cloud_prefs.get_cloud_user()
 
     with patch.object(
-        hass.data["cloud"].auth,
+        hass.data[DATA_CLOUD].auth,
         "async_check_token",
         side_effect=AssertionError("Should not be called"),
     ):
@@ -858,7 +858,7 @@ async def test_google_config_get_agent_user_id(
 ) -> None:
     """Test overridden get_agent_user_id_from_webhook method."""
     config = CloudGoogleConfig(
-        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data["cloud"]
+        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data[DATA_CLOUD]
     )
     assert (
         config.get_agent_user_id_from_webhook(cloud_prefs.google_local_webhook_id)
