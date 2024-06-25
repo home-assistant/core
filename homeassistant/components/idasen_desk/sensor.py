@@ -89,7 +89,7 @@ class IdasenDeskSensor(CoordinatorEntity[IdasenDeskCoordinator], SensorEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._desk.is_connected is True
+        return super().available and self._desk.is_connected is True
 
     @callback
     def _handle_coordinator_update(self, *args: Any) -> None:
