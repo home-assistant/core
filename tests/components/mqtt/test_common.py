@@ -103,9 +103,7 @@ def help_custom_config(
 
 
 async def help_test_availability_when_connection_lost(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    domain: str,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator, domain: str
 ) -> None:
     """Test availability after MQTT disconnection."""
     mqtt_mock = await mqtt_mock_entry()
