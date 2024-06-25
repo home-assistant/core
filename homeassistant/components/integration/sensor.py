@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
     SensorExtraStoredData,
@@ -81,7 +81,7 @@ DEFAULT_ROUND = 3
 
 PLATFORM_SCHEMA = vol.All(
     cv.removed(CONF_UNIT_OF_MEASUREMENT),
-    PLATFORM_SCHEMA.extend(
+    SENSOR_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
