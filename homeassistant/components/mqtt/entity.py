@@ -81,6 +81,7 @@ from .const import (
     CONF_JSON_ATTRS_TEMPLATE,
     CONF_JSON_ATTRS_TOPIC,
     CONF_MANUFACTURER,
+    CONF_MIGRATE_DISCOVERY,
     CONF_OBJECT_ID,
     CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE,
@@ -685,6 +686,7 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
         self._config_entry = config_entry
         self._config_entry_id = config_entry.entry_id
         self._skip_device_removal: bool = False
+        self._migrate_discovery: str | None = None
 
         discovery_hash = get_discovery_hash(discovery_data)
         self._remove_discovery_updated = async_dispatcher_connect(
@@ -723,6 +725,41 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
             discovery_hash,
             discovery_payload,
         )
+        new_discovery_data = discovery_payload.discovery_data
+        new_discovery_topic = new_discovery_data[ATTR_DISCOVERY_TOPIC]
+        if not discovery_payload and self._migrate_discovery == new_discovery_topic:
+            # Ignore empty update from migrated and removed discovery config.
+            _LOGGER.info(
+                "Component migration successfully completed: %s", discovery_hash
+            )
+            send_discovery_done(self.hass, self._discovery_data)
+            return
+
+        if discovery_payload and (
+            new_discovery_topic != self._discovery_data[ATTR_DISCOVERY_TOPIC]
+        ):
+            if discovery_payload.get(CONF_MIGRATE_DISCOVERY):
+                # Migrate the discovery topic
+                self._migrate_discovery = self._discovery_data[ATTR_DISCOVERY_TOPIC]
+                self._discovery_data[ATTR_DISCOVERY_TOPIC] = new_discovery_topic
+                _LOGGER.info(
+                    "Migrating component: %s "
+                    "It is save to remove the old discovery topic %s "
+                    "with an empty retained payload",
+                    discovery_hash,
+                    self._migrate_discovery,
+                )
+            else:
+                # Not migrating tag or automation ignoring update
+                _LOGGER.debug(
+                    "Ignoring discovery update for %s on %s, "
+                    "component is already migrated and registered at %s",
+                    discovery_hash,
+                    new_discovery_topic,
+                    self._discovery_data[ATTR_DISCOVERY_TOPIC],
+                )
+                send_discovery_done(self.hass, self._discovery_data)
+                return
         if (
             discovery_payload
             and discovery_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
@@ -819,6 +856,7 @@ class MqttDiscoveryUpdateMixin(Entity):
         mqtt_data = hass.data[DATA_MQTT]
         self._registry_hooks = mqtt_data.discovery_registry_hooks
         discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
+        self._migrate_discovery: str | None = None
         if discovery_hash in self._registry_hooks:
             self._registry_hooks.pop(discovery_hash)()
 
@@ -901,12 +939,49 @@ class MqttDiscoveryUpdateMixin(Entity):
         old_payload = self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
         debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
         if not payload:
+            new_discovery_topic = payload.discovery_data[ATTR_DISCOVERY_TOPIC]
+            if new_discovery_topic == self._migrate_discovery:
+                # Ignore empty update of the migrated and removed discovery config.
+                _LOGGER.info(
+                    "Component migration successfully completed: %s (%s)",
+                    self.entity_id,
+                    discovery_hash,
+                )
+                send_discovery_done(self.hass, self._discovery_data)
+                return
             # Empty payload: Remove component
             _LOGGER.info("Removing component: %s", self.entity_id)
             self.hass.async_create_task(
                 self._async_process_discovery_update_and_remove()
             )
         elif self._discovery_update:
+            new_discovery_topic = payload.discovery_data[ATTR_DISCOVERY_TOPIC]
+            if new_discovery_topic != self._discovery_data[ATTR_DISCOVERY_TOPIC]:
+                if payload.get(CONF_MIGRATE_DISCOVERY):
+                    # Make sure the migrated discovery topic is removed.
+                    self._migrate_discovery = self._discovery_data[ATTR_DISCOVERY_TOPIC]
+                    self._discovery_data[ATTR_DISCOVERY_TOPIC] = new_discovery_topic
+                    _LOGGER.info(
+                        "Migrating component: %s (%s). "
+                        "It is save to remove the old discovery topic %s"
+                        "with an empty retained payload",
+                        self.entity_id,
+                        discovery_hash,
+                        self._migrate_discovery,
+                    )
+                else:
+                    # Not migrating entity ignoring update
+                    _LOGGER.debug(
+                        "Ignoring discovery update for %s (%s) on %s, "
+                        "component is already migrated and registered at %s",
+                        self.entity_id,
+                        discovery_hash,
+                        new_discovery_topic,
+                        self._discovery_data[ATTR_DISCOVERY_TOPIC],
+                    )
+                    send_discovery_done(self.hass, self._discovery_data)
+                    return
+
             if old_payload != payload:
                 # Non-empty, changed payload: Notify component
                 _LOGGER.info("Updating component: %s", self.entity_id)
