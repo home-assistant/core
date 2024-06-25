@@ -26,7 +26,7 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import legacy_device_id
+from . import get_device_name, legacy_device_id
 from .const import (
     ATTR_CURRENT_A,
     ATTR_CURRENT_POWER_W,
@@ -141,20 +141,23 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         self._feature = feature
 
         registry_device = device
-        device_name = device.alias
-        if parent and parent.device_type != Device.Type.Hub:
+        device_name = get_device_name(device, parent=parent)
+        if parent and parent.device_type is not Device.Type.Hub:
             if not feature or feature.id == PRIMARY_STATE_ID:
-                # Entity will be added to parent if not a hub and no feature parameter
-                # (i.e. core platform like Light, Fan) or the feature is the primary state
+                # Entity will be added to parent if not a hub and no feature
+                # parameter (i.e. core platform like Light, Fan) or the feature
+                # is the primary state
                 registry_device = parent
-                device_name = registry_device.alias
+                device_name = get_device_name(registry_device)
             else:
-                # Prefix the device name with the parent name unless it is a hub attached device.
-                # Sensible default for child devices like strip plugs or the ks240 where the child
-                # alias makes more sense in the context of the parent.
-                # i.e. Hall Ceiling Fan & Bedroom Ceiling Fan; Child device aliases will be Ceiling Fan
-                # and Dimmer Switch for both so should be distinguished by the parent name.
-                device_name = f"{parent.alias} {device.alias}"
+                # Prefix the device name with the parent name unless it is a
+                # hub attached device. Sensible default for child devices like
+                # strip plugs or the ks240 where the child alias makes more
+                # sense in the context of the parent. i.e. Hall Ceiling Fan &
+                # Bedroom Ceiling Fan; Child device aliases will be Ceiling Fan
+                # and Dimmer Switch for both so should be distinguished by the
+                # parent name.
+                device_name = f"{get_device_name(parent)} {get_device_name(device, parent=parent)}"
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(registry_device.device_id))},
@@ -165,7 +168,11 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
             hw_version=registry_device.hw_info["hw_ver"],
         )
 
-        if parent is not None and parent != registry_device:
+        if (
+            parent is not None
+            and parent != registry_device
+            and parent.device_type is not Device.Type.WallSwitch
+        ):
             self._attr_device_info["via_device"] = (DOMAIN, parent.device_id)
         else:
             self._attr_device_info["connections"] = {
@@ -248,13 +255,15 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""
         key = self.entity_description.key
-        # The unique id for the state feature in the switch platform is the device_id
+        # The unique id for the state feature in the switch platform is the
+        # device_id
         if key == PRIMARY_STATE_ID:
             return legacy_device_id(self._device)
 
-        # Historically the legacy device emeter attributes which are now replaced with
-        # features used slightly different keys. This ensures that those entities
-        # are not orphaned. Returns the mapped key or the provided key if not mapped.
+        # Historically the legacy device emeter attributes which are now
+        # replaced with features used slightly different keys. This ensures
+        # that those entities are not orphaned. Returns the mapped key or the
+        # provided key if not mapped.
         key = LEGACY_KEY_MAPPING.get(key, key)
         return f"{legacy_device_id(self._device)}_{key}"
 
@@ -281,12 +290,13 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
         feature: Feature,
         descriptions: Mapping[str, _D],
         *,
-        child_alias: str | None = None,
+        device: Device,
+        parent: Device | None = None,
     ) -> _D | None:
         """Return description object for the given feature.
 
-        This is responsible for setting the common parameters & deciding based on feature id
-        which additional parameters are passed.
+        This is responsible for setting the common parameters & deciding
+        based on feature id which additional parameters are passed.
         """
 
         if descriptions and (desc := descriptions.get(feature.id)):
@@ -294,18 +304,19 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
             # HA logic is to name entities based on the following logic:
             # _attr_name > translation.name > description.name
             # > device_class (if base platform supports).
-            entity_name: str | None | UndefinedType = UNDEFINED
+            name: str | None | UndefinedType = UNDEFINED
 
             # The state feature gets the device name or the child device
             # name if it's a child device
             if feature.id == PRIMARY_STATE_ID:
                 translation_key = None
-                entity_name = child_alias  # if None will use device name
+                # if None will use device name
+                name = get_device_name(device, parent=parent) if parent else None
 
             return replace(
                 desc,
                 translation_key=translation_key,
-                name=entity_name,  # if undefined will use translation key
+                name=name,  # if undefined will use translation key
                 entity_category=cls._category_for_feature(feature),
                 # enabled_default can be overridden to False in the description
                 entity_registry_enabled_default=feature.category
@@ -356,7 +367,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
             )
             and (
                 desc := cls._description_for_feature(
-                    feat, descriptions, child_alias=device.alias if parent else None
+                    feat, descriptions, device=device, parent=parent
                 )
             )
         ]
@@ -394,8 +405,9 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
         if device.children:
             _LOGGER.debug("Initializing device with %s children", len(device.children))
             for idx, child in enumerate(device.children):
-                # HS300 does not like too many concurrent requests and its emeter data requires
-                # a request for each socket, so we receive separate coordinators.
+                # HS300 does not like too many concurrent requests and its
+                # emeter data requires a request for each socket, so we receive
+                # separate coordinators.
                 if child_coordinators:
                     child_coordinator = child_coordinators[idx]
                 else:

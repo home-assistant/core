@@ -5,7 +5,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import tplink
-from homeassistant.components.tplink.binary_sensor import BINARYSENSOR_DESCRIPTIONS
+from homeassistant.components.tplink.binary_sensor import BINARY_SENSOR_DESCRIPTIONS
 from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.components.tplink.entity import EXCLUDED_FEATURES
 from homeassistant.const import CONF_HOST, Platform
@@ -48,7 +48,7 @@ async def test_states(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test a sensor unique ids."""
-    features = {description.key for description in BINARYSENSOR_DESCRIPTIONS}
+    features = {description.key for description in BINARY_SENSOR_DESCRIPTIONS}
     features.update(EXCLUDED_FEATURES)
     device = _mocked_device(alias="my_device", features=features)
 
