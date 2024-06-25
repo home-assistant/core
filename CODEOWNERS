@@ -1185,8 +1185,8 @@ build.json @home-assistant/supervisor
 /tests/components/rituals_perfume_genie/ @milanmeu @frenck
 /homeassistant/components/rmvtransport/ @cgtobi
 /tests/components/rmvtransport/ @cgtobi
-/homeassistant/components/roborock/ @humbertogontijo @Lash-L
-/tests/components/roborock/ @humbertogontijo @Lash-L
+/homeassistant/components/roborock/ @Lash-L
+/tests/components/roborock/ @Lash-L
 /homeassistant/components/roku/ @ctalkington
 /tests/components/roku/ @ctalkington
 /homeassistant/components/romy/ @xeniter

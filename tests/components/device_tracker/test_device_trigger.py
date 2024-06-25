@@ -43,7 +43,7 @@ def calls(hass: HomeAssistant) -> list[ServiceCall]:
 
 
 @pytest.fixture(autouse=True)
-def setup_zone(hass):
+def setup_zone(hass: HomeAssistant) -> None:
     """Create test zone."""
     hass.loop.run_until_complete(
         async_setup_component(

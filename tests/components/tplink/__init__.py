@@ -1,7 +1,7 @@
 """Tests for the TP-Link component."""
 
 from collections import namedtuple
-from datetime import UTC, datetime, timedelta
+from datetime import datetime
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -18,6 +18,7 @@ from kasa import (
 )
 from kasa.interfaces import Fan, Light, LightEffect, LightState
 from kasa.protocol import BaseProtocol
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.tplink import (
     CONF_ALIAS,
@@ -27,9 +28,15 @@ from homeassistant.components.tplink import (
     Credentials,
 )
 from homeassistant.components.tplink.const import DOMAIN
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.translation import async_get_translations
+from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_value_fixture
 
 ColorTempRange = namedtuple("ColorTempRange", ["min", "max"])
 
@@ -95,6 +102,75 @@ CREATE_ENTRY_DATA_AUTH2 = {
 }
 
 
+def _load_feature_fixtures():
+    fixtures = load_json_value_fixture("features.json", DOMAIN)
+    for fixture in fixtures.values():
+        if isinstance(fixture["value"], str):
+            try:
+                time = datetime.strptime(fixture["value"], "%Y-%m-%d %H:%M:%S.%f%z")
+                fixture["value"] = time
+            except ValueError:
+                pass
+    return fixtures
+
+
+FEATURES_FIXTURE = _load_feature_fixtures()
+
+
+async def setup_platform_for_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, platform: Platform, device: Device
+):
+    """Set up a single tplink platform with a device."""
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.tplink.PLATFORMS", [platform]),
+        _patch_discovery(device=device),
+        _patch_connect(device=device),
+    ):
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def snapshot_platform(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+    config_entry_id: str,
+) -> None:
+    """Snapshot a platform."""
+    device_entries = dr.async_entries_for_config_entry(device_registry, config_entry_id)
+    assert device_entries
+    for device_entry in device_entries:
+        assert device_entry == snapshot(
+            name=f"{device_entry.name}-entry"
+        ), f"device entry snapshot failed for {device_entry.name}"
+
+    entity_entries = er.async_entries_for_config_entry(entity_registry, config_entry_id)
+    assert entity_entries
+    assert (
+        len({entity_entry.domain for entity_entry in entity_entries}) == 1
+    ), "Please limit the loaded platforms to 1 platform."
+
+    translations = await async_get_translations(hass, "en", "entity", [DOMAIN])
+    for entity_entry in entity_entries:
+        if entity_entry.translation_key:
+            key = f"component.{DOMAIN}.entity.{entity_entry.domain}.{entity_entry.translation_key}.name"
+            assert (
+                key in translations
+            ), f"No translation for entity {entity_entry.unique_id}, expected {key}"
+        assert entity_entry == snapshot(
+            name=f"{entity_entry.entity_id}-entry"
+        ), f"entity entry snapshot failed for {entity_entry.entity_id}"
+        if entity_entry.disabled_by is None:
+            state = hass.states.get(entity_entry.entity_id)
+            assert state, f"State not found for {entity_entry.entity_id}"
+            assert state == snapshot(
+                name=f"{entity_entry.entity_id}-state"
+            ), f"state snapshot failed for {entity_entry.entity_id}"
+
+
 def _mock_protocol() -> BaseProtocol:
     protocol = MagicMock(spec=BaseProtocol)
     protocol.close = AsyncMock()
@@ -136,7 +212,7 @@ def _mocked_device(
 
     if features:
         device.features = {
-            feature_id: FEATURE_TO_MOCK_GEN[feature_id]()
+            feature_id: _mocked_feature(feature_id, require_fixture=True)
             for feature_id in features
             if isinstance(feature_id, str)
         }
@@ -170,30 +246,52 @@ def _mocked_device(
 
 
 def _mocked_feature(
-    value: Any,
     id: str,
     *,
+    require_fixture=False,
+    value: Any = UNDEFINED,
     name=None,
-    type_=Feature.Type.Sensor,
-    category=Feature.Category.Debug,
+    type_=None,
+    category=None,
     precision_hint=None,
     choices=None,
     unit=None,
     minimum_value=0,
     maximum_value=2**16,  # Arbitrary max
 ) -> Feature:
-    feature = MagicMock(spec=Feature, name="Mocked feature")
+    """Get a mocked feature.
+
+    If kwargs are provided they will override the attributes for any features defined in fixtures.json
+    """
+    feature = MagicMock(spec=Feature, name=f"Mocked {id} feature")
     feature.id = id
-    feature.name = name or id
-    feature.value = value
-    feature.choices = choices
-    feature.type = type_
-    feature.category = category
-    feature.precision_hint = precision_hint
-    feature.unit = unit
+    feature.name = name or id.upper()
     feature.set_value = AsyncMock()
-    feature.minimum_value = minimum_value
-    feature.maximum_value = maximum_value
+    if not (fixture := FEATURES_FIXTURE.get(id)):
+        assert (
+            require_fixture is False
+        ), f"No fixture defined for feature {id} and require_fixture is True"
+        assert (
+            value is not UNDEFINED
+        ), f"Value must be provided if feature {id} not defined in features.json"
+        fixture = {"value": value, "category": "Primary", "type": "Sensor"}
+    elif value is not UNDEFINED:
+        fixture["value"] = value
+    feature.value = fixture["value"]
+
+    feature.type = type_ or Feature.Type[fixture["type"]]
+    feature.category = category or Feature.Category[fixture["category"]]
+
+    # sensor
+    feature.precision_hint = precision_hint or fixture.get("precision_hint")
+    feature.unit = unit or fixture.get("unit")
+
+    # number
+    feature.minimum_value = minimum_value or fixture.get("minimum_value")
+    feature.maximum_value = maximum_value or fixture.get("maximum_value")
+
+    # select
+    feature.choices = choices or fixture.get("choices")
     return feature
 
 
@@ -266,61 +364,36 @@ def _mocked_energy_features(
     if power is not None:
         feats.append(
             _mocked_feature(
-                power,
                 "current_consumption",
-                name="Current consumption",
-                type_=Feature.Type.Sensor,
-                category=Feature.Category.Primary,
-                unit="W",
-                precision_hint=1,
+                value=power,
             )
         )
     if total is not None:
         feats.append(
             _mocked_feature(
-                total,
                 "consumption_total",
-                name="Total consumption",
-                type_=Feature.Type.Sensor,
-                category=Feature.Category.Info,
-                unit="kWh",
-                precision_hint=3,
+                value=total,
             )
         )
     if voltage is not None:
         feats.append(
             _mocked_feature(
-                voltage,
                 "voltage",
-                name="Voltage",
-                type_=Feature.Type.Sensor,
-                category=Feature.Category.Primary,
-                unit="V",
-                precision_hint=1,
+                value=voltage,
             )
         )
     if current is not None:
         feats.append(
             _mocked_feature(
-                current,
                 "current",
-                name="Current",
-                type_=Feature.Type.Sensor,
-                category=Feature.Category.Primary,
-                unit="A",
-                precision_hint=2,
+                value=current,
             )
         )
     # Today is always reported as 0 by the library rather than none
     feats.append(
         _mocked_feature(
-            today if today is not None else 0.0,
             "consumption_today",
-            name="Today's consumption",
-            type_=Feature.Type.Sensor,
-            category=Feature.Category.Info,
-            unit="kWh",
-            precision_hint=3,
+            value=today if today is not None else 0.0,
         )
     )
     return feats
@@ -330,26 +403,6 @@ MODULE_TO_MOCK_GEN = {
     Module.Light: _mocked_light_module,
     Module.LightEffect: _mocked_light_effect_module,
     Module.Fan: _mocked_fan_module,
-}
-
-FEATURE_TO_MOCK_GEN = {
-    "state": lambda: _mocked_feature(
-        True, "state", type_=Feature.Type.Switch, category=Feature.Category.Primary
-    ),
-    "led": lambda: _mocked_feature(
-        True,
-        "led",
-        name="LED",
-        type_=Feature.Type.Switch,
-        category=Feature.Category.Config,
-    ),
-    "on_since": lambda: _mocked_feature(
-        datetime.now(UTC).astimezone() - timedelta(minutes=5),
-        "on_since",
-        name="On since",
-        type_=Feature.Type.Sensor,
-        category=Feature.Category.Info,
-    ),
 }
 
 

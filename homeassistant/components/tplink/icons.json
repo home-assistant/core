@@ -25,6 +25,17 @@
     "select": {
       "light_preset": {
         "default": "mdi:sign-direction"
+      },
+      "alarm_sound": {
+        "default": "mdi:music-note"
+      },
+      "alarm_volume": {
+        "default": "mdi:volume-medium",
+        "state": {
+          "low": "mdi:volume-low",
+          "medium": "mdi:volume-medium",
+          "high": "mdi:volume-high"
+        }
       }
     },
     "switch": {

@@ -4,12 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from airgradient import AirGradientClient, Config
-from airgradient.models import (
-    ConfigurationControl,
-    LedBarMode,
-    PmStandard,
-    TemperatureUnit,
-)
+from airgradient.models import ConfigurationControl, LedBarMode, TemperatureUnit
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -18,15 +13,9 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AirGradientConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, PM_STANDARD, PM_STANDARD_REVERSE
 from .coordinator import AirGradientConfigCoordinator
 from .entity import AirGradientEntity
-
-PM_STANDARD = {
-    PmStandard.UGM3: "ugm3",
-    PmStandard.USAQI: "us_aqi",
-}
-PM_STANDARD_REVERSE = {v: k for k, v in PM_STANDARD.items()}
 
 
 @dataclass(frozen=True, kw_only=True)

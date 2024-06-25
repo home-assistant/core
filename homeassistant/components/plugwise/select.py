@@ -74,14 +74,13 @@ async def async_setup_entry(
 
         async_add_entities(
             PlugwiseSelectEntity(coordinator, device_id, description)
-            for device_id, device in coordinator.data.devices.items()
+            for device_id in coordinator.new_devices
             for description in SELECT_TYPES
-            if description.options_key in device
+            if description.options_key in coordinator.data.devices[device_id]
         )
 
-    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
-
     _add_entities()
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 
 
 class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):

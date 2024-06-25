@@ -2,11 +2,14 @@
 
 from kasa import Feature
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import tplink
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.tplink.button import BUTTON_DESCRIPTIONS
 from homeassistant.components.tplink.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
+from homeassistant.components.tplink.entity import EXCLUDED_FEATURES
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -19,6 +22,8 @@ from . import (
     _mocked_strip_children,
     _patch_connect,
     _patch_discovery,
+    setup_platform_for_device,
+    snapshot_platform,
 )
 
 from tests.common import MockConfigEntry
@@ -28,12 +33,33 @@ from tests.common import MockConfigEntry
 def mocked_feature_button() -> Feature:
     """Return mocked tplink binary sensor feature."""
     return _mocked_feature(
-        False,
         "test_alarm",
+        value="<Action>",
         name="Test alarm",
         type_=Feature.Type.Action,
         category=Feature.Category.Primary,
     )
+
+
+async def test_states(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test a sensor unique ids."""
+    features = {description.key for description in BUTTON_DESCRIPTIONS}
+    features.update(EXCLUDED_FEATURES)
+    device = _mocked_device(alias="my_device", features=features)
+
+    await setup_platform_for_device(hass, mock_config_entry, Platform.BUTTON, device)
+    await snapshot_platform(
+        hass, entity_registry, device_registry, snapshot, mock_config_entry.entry_id
+    )
+
+    for excluded in EXCLUDED_FEATURES:
+        assert hass.states.get(f"sensor.my_device_{excluded}") is None
 
 
 async def test_button(

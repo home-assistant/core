@@ -46,7 +46,7 @@ async def test_form(
         CONF_PASSWORD: "__password__",
     }
     assert len(mock_setup_entry.mock_calls) == 1
-    mock_pydrawise.get_user.assert_called_once_with()
+    mock_pydrawise.get_user.assert_called_once_with(fetch_zones=False)
 
 
 async def test_form_api_error(

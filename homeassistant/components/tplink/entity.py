@@ -55,6 +55,19 @@ DEVICETYPES_WITH_SPECIALIZED_PLATFORMS = {
     DeviceType.Fan,
 }
 
+# Features excluded due to future platform additions
+EXCLUDED_FEATURES = {
+    # climate
+    "target_temperature",
+    "thermostat_mode",
+    # update
+    "current_firmware_version",
+    "available_firmware_version",
+    "frost_protection_enabled",
+    # fan
+    "fan_speed_level",
+}
+
 LEGACY_KEY_MAPPING = {
     "current": ATTR_CURRENT_A,
     "current_consumption": ATTR_CURRENT_POWER_W,
@@ -340,6 +353,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
             )
             for feat in device.features.values()
             if feat.type == feature_type
+            and feat.id not in EXCLUDED_FEATURES
             and (
                 feat.category is not Feature.Category.Primary
                 or device.device_type not in DEVICETYPES_WITH_SPECIALIZED_PLATFORMS

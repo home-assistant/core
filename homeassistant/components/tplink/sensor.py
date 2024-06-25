@@ -117,22 +117,6 @@ SENSOR_DESCRIPTIONS: tuple[TPLinkSensorEntityDescription, ...] = (
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
-    # Firmware based features are all disabled by default pending
-    # the update platform
-    TPLinkSensorEntityDescription(
-        entity_registry_enabled_default=False,
-        key="current_firmware_version",
-    ),
-    TPLinkSensorEntityDescription(
-        entity_registry_enabled_default=False,
-        key="available_firmware_version",
-    ),
-    # Thermostat based features are all disabled by default pending
-    # the climate platform
-    TPLinkSensorEntityDescription(
-        key="thermostat_mode",
-        entity_registry_enabled_default=False,
-    ),
 )
 
 SENSOR_DESCRIPTIONS_MAP = {desc.key: desc for desc in SENSOR_DESCRIPTIONS}

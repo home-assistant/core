@@ -1430,18 +1430,10 @@ async def test_start_timer_with_conversation_command(
     timer_name = "test timer"
     test_command = "turn on the lights"
     agent_id = "test_agent"
-    finished_event = asyncio.Event()
 
-    @callback
-    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
-        if event_type == TimerEventType.FINISHED:
-            assert timer.conversation_command == test_command
-            assert timer.conversation_agent_id == agent_id
-            finished_event.set()
+    mock_handle_timer = MagicMock()
+    async_register_timer_handler(hass, device_id, mock_handle_timer)
 
-    async_register_timer_handler(hass, device_id, handle_timer)
-
-    # Device id is required if no conversation command
     timer_manager = TimerManager(hass)
     with pytest.raises(ValueError):
         timer_manager.start_timer(
@@ -1468,9 +1460,11 @@ async def test_start_timer_with_conversation_command(
 
         assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
-        async with asyncio.timeout(1):
-            await finished_event.wait()
+        # No timer events for delayed commands
+        mock_handle_timer.assert_not_called()
 
+        # Wait for process service call to finish
+        await hass.async_block_till_done()
         mock_converse.assert_called_once()
         assert mock_converse.call_args.args[1] == test_command
 
