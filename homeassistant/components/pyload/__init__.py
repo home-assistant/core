@@ -22,7 +22,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .coordinator import PyLoadCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.SENSOR]
 
 type PyLoadConfigEntry = ConfigEntry[PyLoadCoordinator]
 

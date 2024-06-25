@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterable, Iterable
 from typing import Final, cast
-from unittest.mock import Mock, create_autospec, patch, seal
+from unittest.mock import AsyncMock, MagicMock, Mock, create_autospec, patch, seal
 
 from async_upnp_client.client import UpnpDevice, UpnpService
 from async_upnp_client.utils import absolute_url
@@ -87,6 +87,8 @@ def aiohttp_session_requester_mock() -> Iterable[Mock]:
     with patch(
         "homeassistant.components.dlna_dms.dms.AiohttpSessionRequester", autospec=True
     ) as requester_mock:
+        requester_mock.return_value = mock = AsyncMock()
+        mock.async_http_request.return_value.body = MagicMock()
         yield requester_mock
 
 
