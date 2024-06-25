@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterable
+import contextlib
 import logging
 import os
 from typing import Any
@@ -13,7 +14,6 @@ from packaging.requirements import Requirement
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
 from .helpers import singleton
-from .helpers.typing import UNDEFINED, UndefinedType
 from .loader import Integration, IntegrationNotFound, async_get_integration
 from .util import package as pkg_util
 
@@ -132,7 +132,7 @@ class RequirementsManager:
         self.hass = hass
         self.pip_lock = asyncio.Lock()
         self.integrations_with_reqs: dict[
-            str, Integration | asyncio.Future[None] | UndefinedType
+            str, Integration | asyncio.Future[Integration]
         ] = {}
         self.install_failure_history: set[str] = set()
         self.is_installed_cache: set[str] = set()
@@ -152,33 +152,29 @@ class RequirementsManager:
             done.add(domain)
 
         cache = self.integrations_with_reqs
-        int_or_fut = cache.get(domain, UNDEFINED)
-
+        int_or_fut = cache.get(domain)
         if isinstance(int_or_fut, asyncio.Future):
-            await int_or_fut
-            # When we have waited and it's UNDEFINED, it doesn't exist
-            # We don't cache that it doesn't exist, or else people can't fix it
-            # and then restart, because their config will never be valid.
-            if (int_or_fut := cache.get(domain, UNDEFINED)) is UNDEFINED:
-                raise IntegrationNotFound(domain)
-
+            return await int_or_fut
         if isinstance(int_or_fut, Integration):
             return int_or_fut
 
         future = cache[domain] = self.hass.loop.create_future()
-
         try:
             integration = await async_get_integration(self.hass, domain)
             if not self.hass.config.skip_pip:
                 await self._async_process_integration(integration, done)
-        except Exception:
+        except BaseException as ex:
+            future.set_exception(ex)
+            with contextlib.suppress(BaseException):
+                # Clear the flag as its normal that nothing
+                # will wait for this future to be resolved
+                # if there are no concurrent setup attempts
+                await future
             del cache[domain]
             raise
-        finally:
-            _set_result_unless_done(future)
 
         cache[domain] = integration
-        _set_result_unless_done(future)
+        future.set_result(integration)
         return integration
 
     async def _async_process_integration(
