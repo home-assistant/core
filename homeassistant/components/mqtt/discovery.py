@@ -73,7 +73,9 @@ class MQTTDiscoveryPayload(dict[str, Any]):
 
 def clear_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]) -> None:
     """Clear entry from already discovered list."""
-    hass.data[DATA_MQTT].discovery_already_discovered.remove(discovery_hash)
+    already_discovered = hass.data[DATA_MQTT].discovery_already_discovered
+    if discovery_hash in already_discovered:
+        already_discovered.remove(discovery_hash)
 
 
 def set_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]) -> None:

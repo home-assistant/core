@@ -823,7 +823,7 @@ async def test_duplicate_removal(
     assert "Component has already been discovered: binary_sensor bla" not in caplog.text
 
 
-async def test_cleanup_device(
+async def test_cleanup_device_manual(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
@@ -1026,6 +1026,7 @@ async def test_cleanup_device_multiple_config_entries(
 
 async def test_cleanup_device_multiple_config_entries_mqtt(
     hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
@@ -1107,6 +1108,7 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
 
     # Verify retained discovery topics have not been cleared again
     mqtt_mock.async_publish.assert_not_called()
+    assert "KeyError:" not in caplog.text
 
 
 async def test_discovery_expansion(
