@@ -586,23 +586,6 @@ class ESPHomeManager:
         if entry.options.get(CONF_ALLOW_SERVICE_CALLS, DEFAULT_ALLOW_SERVICE_CALLS):
             async_delete_issue(hass, DOMAIN, self.services_issue)
 
-        # Use async_listen instead of async_listen_once so that we don't deregister
-        # the callback twice when shutting down Home Assistant.
-        # "Unable to remove unknown listener
-        # <function EventBus.async_listen_once.<locals>.onetime_listener>"
-        # We only close the connection at the last possible moment
-        # when the CLOSE event is fired so anything using a Bluetooth
-        # proxy has a chance to shut down properly.
-        entry_data.cleanup_callbacks.append(
-            hass.bus.async_listen(EVENT_HOMEASSISTANT_CLOSE, self.on_stop)
-        )
-        entry_data.cleanup_callbacks.append(
-            hass.bus.async_listen(
-                EVENT_LOGGING_CHANGED,
-                self._async_handle_logging_changed,
-            )
-        )
-
         reconnect_logic = ReconnectLogic(
             client=self.cli,
             on_connect=self.on_connect,
@@ -612,6 +595,21 @@ class ESPHomeManager:
             on_connect_error=self.on_connect_error,
         )
         self.reconnect_logic = reconnect_logic
+
+        # Use async_listen instead of async_listen_once so that we don't deregister
+        # the callback twice when shutting down Home Assistant.
+        # "Unable to remove unknown listener
+        # <function EventBus.async_listen_once.<locals>.onetime_listener>"
+        # We only close the connection at the last possible moment
+        # when the CLOSE event is fired so anything using a Bluetooth
+        # proxy has a chance to shut down properly.
+        bus = hass.bus
+        cleanups = (
+            bus.async_listen(EVENT_HOMEASSISTANT_CLOSE, self.on_stop),
+            bus.async_listen(EVENT_LOGGING_CHANGED, self._async_handle_logging_changed),
+            reconnect_logic.stop_callback,
+        )
+        entry_data.cleanup_callbacks.extend(cleanups)
 
         infos, services = await entry_data.async_load_from_store()
         if entry.unique_id:
@@ -628,7 +626,6 @@ class ESPHomeManager:
                 )
 
         await reconnect_logic.start()
-        entry_data.cleanup_callbacks.append(reconnect_logic.stop_callback)
 
         entry.async_on_unload(
             entry.add_update_listener(entry_data.async_update_listener)
