@@ -2040,9 +2040,9 @@ async def test_handle_mqtt_on_callback_after_timeout(
     """Test receiving an ACK after a timeout."""
     mqtt_mock = await mqtt_mock_entry()
     # Simulate the mid future getting a timeout
-    mqtt_mock()._async_get_mid_future(100).set_exception(asyncio.TimeoutError)
-    # Simulate an ACK for mid == 100, being received after the timeout
-    mqtt_client_mock.on_publish(mqtt_client_mock, None, 100)
+    mqtt_mock()._async_get_mid_future(101).set_exception(asyncio.TimeoutError)
+    # Simulate an ACK for mid == 101, being received after the timeout
+    mqtt_client_mock.on_publish(mqtt_client_mock, None, 101)
     await hass.async_block_till_done()
     assert "No ACK from MQTT server" not in caplog.text
     assert "InvalidStateError" not in caplog.text
@@ -2200,7 +2200,7 @@ async def test_setup_mqtt_client_protocol(
 
 @patch("homeassistant.components.mqtt.client.TIMEOUT_ACK", 0.2)
 async def test_handle_mqtt_timeout_on_callback(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_debouncer: asyncio.Event
 ) -> None:
     """Test publish without receiving an ACK callback."""
     mid = 0
@@ -2208,7 +2208,7 @@ async def test_handle_mqtt_timeout_on_callback(
     class FakeInfo:
         """Returns a simulated client publish response."""
 
-        mid = 100
+        mid = 102
         rc = 0
 
     with patch(
@@ -2225,7 +2225,9 @@ async def test_handle_mqtt_timeout_on_callback(
         # We want to simulate the publish behaviour MQTT client
         mock_client = mock_client.return_value
         mock_client.publish.return_value = FakeInfo()
+        # Mock we get a mid and rc=0
         mock_client.subscribe.side_effect = _mock_ack
+        mock_client.unsubscribe.side_effect = _mock_ack
         mock_client.connect = MagicMock(
             return_value=0,
             side_effect=lambda *args, **kwargs: hass.loop.call_soon_threadsafe(
@@ -2239,6 +2241,7 @@ async def test_handle_mqtt_timeout_on_callback(
         entry.add_to_hass(hass)
 
         # Set up the integration
+        mock_debouncer.clear()
         assert await hass.config_entries.async_setup(entry.entry_id)
 
         # Now call we publish without simulating and ACK callback
@@ -2247,6 +2250,13 @@ async def test_handle_mqtt_timeout_on_callback(
         # There is no ACK so we should see a timeout in the log after publishing
         assert len(mock_client.publish.mock_calls) == 1
         assert "No ACK from MQTT server" in caplog.text
+        # Ensure we stop lingering background tasks
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        # Assert we did not have any completed subscribes,
+        # because the debouncer subscribe job failed to receive an ACK,
+        # and the time auto caused the debouncer job to fail.
+        assert not mock_debouncer.is_set()
 
 
 async def test_setup_raises_config_entry_not_ready_if_no_connect_broker(
