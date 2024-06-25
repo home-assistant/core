@@ -267,11 +267,16 @@ def _mocked_feature(
     feature.type = type_ or Feature.Type[fixture["type"]]
     feature.category = category or Feature.Category[fixture["category"]]
 
+    # sensor
     feature.precision_hint = precision_hint or fixture.get("precision_hint")
     feature.unit = unit or fixture.get("unit")
+    
+
+    # number
     feature.minimum_value = minimum_value or fixture.get("minimum_value")
     feature.maximum_value = maximum_value or fixture.get("maximum_value")
 
+    # select
     feature.choices = choices or fixture.get("choices")
     return feature
 
