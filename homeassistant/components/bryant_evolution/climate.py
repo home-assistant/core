@@ -12,9 +12,9 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import CONF_HOST, UnitOfTemperature
+from homeassistant.const import CONF_FILENAME, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -27,6 +27,12 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
+async def _can_reach_device(client: BryantEvolutionClient) -> bool:
+    """Return whether we can reach the device at the given client."""
+    # Verify that we can read S1Z1 to check that the client is valid.
+    return await client.read_hvac_mode() is not None
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BryantEvolutionConfigEntry,
@@ -34,8 +40,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up a config entry."""
     client = config_entry.runtime_data
+    if not await _can_reach_device(client):
+        raise ConfigEntryNotReady
     climate = BryantEvolutionClimate(
-        config_entry.data[CONF_HOST],
+        config_entry.data[CONF_FILENAME],
         config_entry.data[CONF_SYSTEM_ID],
         config_entry.data[CONF_ZONE_ID],
         client,
@@ -53,34 +61,34 @@ class BryantEvolutionClimate(ClimateEntity):
     """
 
     _attr_has_entity_name = True
+    _attr_name = None
+    _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.TURN_OFF
+    )
+    _attr_hvac_modes = [
+        HVACMode.HEAT,
+        HVACMode.COOL,
+        HVACMode.HEAT_COOL,
+        HVACMode.OFF,
+    ]
+    _attr_fan_modes = ["auto", "low", "med", "high"]
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self: ClimateEntity,
-        host: str,
+        filename: str,
         system_id: int,
         zone_id: int,
         client: BryantEvolutionClient,
     ) -> None:
         """Initialize an entity from parts."""
         self._client = client
-        self._attr_name = None
-        self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
-        self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE
-            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-            | ClimateEntityFeature.FAN_MODE
-            | ClimateEntityFeature.TURN_ON
-            | ClimateEntityFeature.TURN_OFF
-        )
-        self._attr_hvac_modes = [
-            HVACMode.HEAT,
-            HVACMode.COOL,
-            HVACMode.HEAT_COOL,
-            HVACMode.OFF,
-        ]
-        self._attr_fan_modes = ["AUTO", "LOW", "MED", "HIGH"]
-        self._enable_turn_on_off_backwards_compatibility = False
-        self._attr_unique_id = f"bryant_evolution_{host}_{system_id}_{zone_id}"
+        self._attr_unique_id = f"bryant_evolution_{filename}_{system_id}_{zone_id}"
         assert self.unique_id is not None  # Prevent mypy failure on next line
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
@@ -90,7 +98,7 @@ class BryantEvolutionClimate(ClimateEntity):
     async def async_update(self) -> None:
         """Update the entity state."""
         self._attr_current_temperature = await self._client.read_current_temperature()
-        self._attr_fan_mode = await self._client.read_fan_mode()
+        self._attr_fan_mode = (await self._client.read_fan_mode()).lower()
 
         self._attr_target_temperature = None
         self._attr_target_temperature_high = None
@@ -237,5 +245,5 @@ class BryantEvolutionClimate(ClimateEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="failed_to_set_fan_mode"
             )
-        self._attr_fan_mode = fan_mode
+        self._attr_fan_mode = fan_mode.lower()
         self.async_write_ha_state()

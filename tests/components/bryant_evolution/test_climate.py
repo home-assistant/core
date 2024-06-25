@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
-from evolutionhttp import BryantEvolutionClient
+from evolutionhttp import BryantEvolutionLocalClient
 import pytest
 
 from homeassistant.components.bryant_evolution.const import (
@@ -22,7 +22,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
+from homeassistant.const import ATTR_ENTITY_ID, CONF_FILENAME
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -39,7 +39,7 @@ async def _wait_for_cond(predicate: Callable[[], bool]) -> None:
         await asyncio.sleep(0.1)
 
 
-class _FakeEvolutionClient(BryantEvolutionClient):
+class _FakeEvolutionClient(BryantEvolutionLocalClient):
     """Fake version of `BryantEvolutionClient.
 
     Important design point: this type provides a `set_allow_reads` method.
@@ -126,7 +126,7 @@ async def mock_evolution_entry(
     hass.config.units = US_CUSTOMARY_SYSTEM
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "localhost", CONF_SYSTEM_ID: 1, CONF_ZONE_ID: 1},
+        data={CONF_FILENAME: "/dev/ttyUSB0", CONF_SYSTEM_ID: 1, CONF_ZONE_ID: 1},
     )
     entry.runtime_data = _FakeEvolutionClient()
     entry.add_to_hass(hass)
@@ -142,7 +142,7 @@ async def test_setup_integration(
     state = hass.states.get("climate.bryant_evolution_system_1_zone_1")
     assert state, hass.states.async_all()
     assert state.state == "cool"
-    assert state.attributes["fan_mode"] == "AUTO"
+    assert state.attributes["fan_mode"] == "auto"
     assert state.attributes["current_temperature"] == 75
     assert state.attributes["temperature"] == 72
 
@@ -157,7 +157,7 @@ async def test_set_temperature(
         mode: HVACMode
         initial_temp: int
         new_temp: int
-        temp_reader: Callable[[BryantEvolutionClient], int]
+        temp_reader: Callable[[BryantEvolutionLocalClient], int]
 
     testcases = [
         TestCase(
@@ -252,7 +252,7 @@ async def test_set_fan_mode(
     hass: HomeAssistant, mock_evolution_entry: MockConfigEntry
 ) -> None:
     """Test that setting fan mode works."""
-    fan_modes = ["AUTO", "LOW", "MED", "HIGH"]
+    fan_modes = ["auto", "low", "med", "high"]
     client = mock_evolution_entry.runtime_data
     for mode in fan_modes:
         # Change the fan mode, pausing reads to the device so that we
@@ -293,7 +293,7 @@ async def test_hvac_action(
     # mode to trigger the integration to re-read the device.
     await client.set_is_active(True)
     assert await client.read_hvac_mode() == ("COOL", True)
-    data = {ATTR_FAN_MODE: "AUTO"}
+    data = {ATTR_FAN_MODE: "auto"}
     data[ATTR_ENTITY_ID] = "climate.bryant_evolution_system_1_zone_1"
     await hass.services.async_call(
         "climate", SERVICE_SET_FAN_MODE, data, blocking=False
