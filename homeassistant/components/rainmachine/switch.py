@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Concatenate
+from typing import Any, Concatenate, cast
 
 from regenmaschine.errors import RainMachineError
 import voluptuous as vol
@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 
 from . import RainMachineData, RainMachineEntity, async_update_programs_and_zones
 from .const import (
@@ -191,7 +192,8 @@ async def async_setup_entry(
         ("stop_program", {}, "async_stop_program"),
         ("stop_zone", {}, "async_stop_zone"),
     ):
-        platform.async_register_entity_service(service_name, schema, method)
+        schema_dict = cast(VolDictType, schema)
+        platform.async_register_entity_service(service_name, schema_dict, method)
 
     data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
     entities: list[RainMachineBaseSwitch] = []
