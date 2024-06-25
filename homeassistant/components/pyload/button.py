@@ -99,7 +99,7 @@ class PyLoadBinarySensor(CoordinatorEntity[PyLoadCoordinator], ButtonEntity):
             model=SERVICE_NAME,
             configuration_url=coordinator.pyload.api_url,
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            translation_key=DOMAIN,
+            sw_version=coordinator.version,
         )
 
     async def async_press(self) -> None:
