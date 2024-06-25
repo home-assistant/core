@@ -484,12 +484,12 @@ async def test_bandwidth_sensors(
     ],
 )
 @pytest.mark.parametrize(
-    ("initial_uptime", "event_uptime", "new_uptime"),
+    ("initial_uptime", "event_uptime", "small_variation_uptime", "new_uptime"),
     [
         # Uptime listed in epoch time should never change
-        (1609462800, 1609462800, 1612141200),
+        (1609462800, 1609462800, 1609462800, 1612141200),
         # Uptime counted in seconds increases with every event
-        (60, 64, 60),
+        (60, 240, 480, 60),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -503,6 +503,7 @@ async def test_uptime_sensors(
     client_payload: list[dict[str, Any]],
     initial_uptime,
     event_uptime,
+    small_variation_uptime,
     new_uptime,
 ) -> None:
     """Verify that uptime sensors are working as expected."""
@@ -519,12 +520,21 @@ async def test_uptime_sensors(
     )
 
     # Verify normal new event doesn't change uptime
-    # 4 seconds has passed
+    # 4 minutes have passed
     uptime_client["uptime"] = event_uptime
-    now = datetime(2021, 1, 1, 1, 1, 4, tzinfo=dt_util.UTC)
+    now = datetime(2021, 1, 1, 1, 4, 0, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.now", return_value=now):
         mock_websocket_message(message=MessageKey.CLIENT, data=uptime_client)
         await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.client1_uptime").state == "2021-01-01T01:00:00+00:00"
+
+    # Verify small variation of uptime (<120 seconds) is ignored
+    # 15 seconds variation after 8 minutes
+    uptime_client["uptime"] = small_variation_uptime
+    now = datetime(2021, 1, 1, 1, 8, 15, tzinfo=dt_util.UTC)
+    with patch("homeassistant.util.dt.now", return_value=now):
+        mock_websocket_message(message=MessageKey.CLIENT, data=uptime_client)
 
     assert hass.states.get("sensor.client1_uptime").state == "2021-01-01T01:00:00+00:00"
 
@@ -911,10 +921,20 @@ async def test_device_uptime(
     )
 
     # Verify normal new event doesn't change uptime
-    # 4 seconds has passed
+    # 4 minutes have passed
     device = device_payload[0]
-    device["uptime"] = 64
-    now = datetime(2021, 1, 1, 1, 1, 4, tzinfo=dt_util.UTC)
+    device["uptime"] = 240
+    now = datetime(2021, 1, 1, 1, 4, 0, tzinfo=dt_util.UTC)
+    with patch("homeassistant.util.dt.now", return_value=now):
+        mock_websocket_message(message=MessageKey.DEVICE, data=device)
+
+    assert hass.states.get("sensor.device_uptime").state == "2021-01-01T01:00:00+00:00"
+
+    # Verify small variation of uptime (<120 seconds) is ignored
+    # 15 seconds variation after 8 minutes
+    device = device_payload[0]
+    device["uptime"] = 480
+    now = datetime(2021, 1, 1, 1, 8, 15, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.now", return_value=now):
         mock_websocket_message(message=MessageKey.DEVICE, data=device)
 
