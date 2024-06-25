@@ -1178,6 +1178,6 @@ async def test_entry_missing_unique_id(
         options={CONF_ALLOW_SERVICE_CALLS: True},
     )
     entry.add_to_hass(hass)
-    await mock_esphome_device(mock_client=mock_client, enable_storage=True)
+    await mock_esphome_device(mock_client=mock_client, mock_storage=True)
     await hass.async_block_till_done()
     assert entry.unique_id == "11:22:33:44:55:aa"
