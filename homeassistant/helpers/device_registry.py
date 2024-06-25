@@ -185,6 +185,35 @@ class DeviceInfoError(HomeAssistantError):
         self.domain = domain
 
 
+class DeviceCollisionError(HomeAssistantError):
+    """Raised when a device collision is detected."""
+
+
+class DeviceIdentifierCollisionError(DeviceCollisionError):
+    """Raised when a device identifier collision is detected."""
+
+    def __init__(
+        self, identifiers: set[tuple[str, str]], existing_device: DeviceEntry
+    ) -> None:
+        """Initialize error."""
+        super().__init__(
+            f"Identifiers {identifiers} already registered with {existing_device}"
+        )
+
+
+class DeviceConnectionCollisionError(DeviceCollisionError):
+    """Raised when a device connection collision is detected."""
+
+    def __init__(
+        self, normalized_connections: set[tuple[str, str]], existing_device: DeviceEntry
+    ) -> None:
+        """Initialize error."""
+        super().__init__(
+            f"Connections {normalized_connections} "
+            f"already registered with {existing_device}"
+        )
+
+
 def _validate_device_info(
     config_entry: ConfigEntry,
     device_info: DeviceInfo,
@@ -759,6 +788,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         device = self.async_update_device(
             device.id,
+            allow_collisions=True,
             add_config_entry_id=config_entry_id,
             configuration_url=configuration_url,
             device_info_type=device_info_type,
@@ -782,11 +812,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         return device
 
     @callback
-    def async_update_device(
+    def async_update_device(  # noqa: C901
         self,
         device_id: str,
         *,
         add_config_entry_id: str | UndefinedType = UNDEFINED,
+        # Temporary flag so we don't blow up when collisions are implicitly introduced
+        # by calls to async_get_or_create. Must not be set by integrations.
+        allow_collisions: bool = False,
         area_id: str | None | UndefinedType = UNDEFINED,
         configuration_url: str | URL | None | UndefinedType = UNDEFINED,
         device_info_type: str | UndefinedType = UNDEFINED,
@@ -894,12 +927,36 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 new_values[attr_name] = old_value | setvalue
                 old_values[attr_name] = old_value
 
+        if merge_connections is not UNDEFINED:
+            normalized_connections = self._validate_connections(
+                device_id,
+                merge_connections,
+                allow_collisions,
+            )
+            old_connections = old.connections
+            if not normalized_connections.issubset(old_connections):
+                new_values["connections"] = old_connections | normalized_connections
+                old_values["connections"] = old_connections
+
+        if merge_identifiers is not UNDEFINED:
+            merge_identifiers = self._validate_identifiers(
+                device_id, merge_identifiers, allow_collisions
+            )
+            old_identifiers = old.identifiers
+            if not merge_identifiers.issubset(old_identifiers):
+                new_values["identifiers"] = old_identifiers | merge_identifiers
+                old_values["identifiers"] = old_identifiers
+
         if new_connections is not UNDEFINED:
-            new_values["connections"] = _normalize_connections(new_connections)
+            new_values["connections"] = self._validate_connections(
+                device_id, new_connections, False
+            )
             old_values["connections"] = old.connections
 
         if new_identifiers is not UNDEFINED:
-            new_values["identifiers"] = new_identifiers
+            new_values["identifiers"] = self._validate_identifiers(
+                device_id, new_identifiers, False
+            )
             old_values["identifiers"] = old.identifiers
 
         if configuration_url is not UNDEFINED:
@@ -954,6 +1011,53 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self.hass.bus.async_fire_internal(EVENT_DEVICE_REGISTRY_UPDATED, data)
 
         return new
+
+    @callback
+    def _validate_connections(
+        self,
+        device_id: str,
+        connections: set[tuple[str, str]],
+        allow_collisions: bool,
+    ) -> set[tuple[str, str]]:
+        """Normalize and validate connections, raise on collision with other devices."""
+        normalized_connections = _normalize_connections(connections)
+        if allow_collisions:
+            return normalized_connections
+
+        for connection in normalized_connections:
+            # We need to iterate over each connection because if there is a
+            # conflict, the index will only see the last one and we will not
+            # be able to tell which one caused the conflict
+            if (
+                existing_device := self.async_get_device(connections={connection})
+            ) and existing_device.id != device_id:
+                raise DeviceConnectionCollisionError(
+                    normalized_connections, existing_device
+                )
+
+        return normalized_connections
+
+    @callback
+    def _validate_identifiers(
+        self,
+        device_id: str,
+        identifiers: set[tuple[str, str]],
+        allow_collisions: bool,
+    ) -> set[tuple[str, str]]:
+        """Validate identifiers, raise on collision with other devices."""
+        if allow_collisions:
+            return identifiers
+
+        for identifier in identifiers:
+            # We need to iterate over each identifier because if there is a
+            # conflict, the index will only see the last one and we will not
+            # be able to tell which one caused the conflict
+            if (
+                existing_device := self.async_get_device(identifiers={identifier})
+            ) and existing_device.id != device_id:
+                raise DeviceIdentifierCollisionError(identifiers, existing_device)
+
+        return identifiers
 
     @callback
     def async_remove_device(self, device_id: str) -> None:
