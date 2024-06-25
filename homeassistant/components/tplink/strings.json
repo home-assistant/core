@@ -187,9 +187,6 @@
       },
       "smooth_transitions": {
         "name": "Smooth transitions"
-      },
-      "frost_protection_enabled": {
-        "name": "Frost protection"
       }
     },
     "number": {
