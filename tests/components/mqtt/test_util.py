@@ -26,15 +26,15 @@ from tests.typing import MqttMockHAClient, MqttMockPahoClient
 async def test_canceling_debouncer_on_shutdown(
     hass: HomeAssistant,
     record_calls: MessageCallbackType,
+    mock_debouncer: asyncio.Event,
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test canceling the debouncer when HA shuts down."""
     mqtt_client_mock = setup_with_birth_msg_client_mock
-
+    # Mock we are past initial setup
+    await mock_debouncer.wait()
     with patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 2):
-        await hass.async_block_till_done()
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
-        await hass.async_block_till_done()
+        mock_debouncer.clear()
         await mqtt.async_subscribe(hass, "test/state1", record_calls)
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=0.1))
         # Stop HA so the scheduled debouncer task will be canceled
@@ -47,9 +47,10 @@ async def test_canceling_debouncer_on_shutdown(
         await mqtt.async_subscribe(hass, "test/state4", record_calls)
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=0.1))
         await mqtt.async_subscribe(hass, "test/state5", record_calls)
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=0.1))
-        await hass.async_block_till_done()
-
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
+        await hass.async_block_till_done(wait_background_tasks=True)
+        # Assert the debouncer subscribe job was not executed
+        assert not mock_debouncer.is_set()
         mqtt_client_mock.subscribe.assert_not_called()
 
         # Note thet the broker connection will not be disconnected gracefully
