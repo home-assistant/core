@@ -81,14 +81,13 @@ async def async_setup_entry(
 
         async_add_entities(
             PlugwiseNumberEntity(coordinator, device_id, description)
-            for device_id, device in coordinator.data.devices.items()
+            for device_id in coordinator.new_devices
             for description in NUMBER_TYPES
-            if description.key in device
+            if description.key in coordinator.data.devices[device_id]
         )
 
-    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
-
     _add_entities()
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 
 
 class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):

@@ -6,10 +6,13 @@ from unittest.mock import AsyncMock
 from kasa import AuthenticationError, Device, KasaException, Module, TimeoutError
 from kasa.iot import IotStrip
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import tplink
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.tplink.const import DOMAIN
+from homeassistant.components.tplink.entity import EXCLUDED_FEATURES
+from homeassistant.components.tplink.switch import SWITCH_DESCRIPTIONS
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -17,10 +20,11 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, slugify
 
@@ -31,9 +35,32 @@ from . import (
     _mocked_strip_children,
     _patch_connect,
     _patch_discovery,
+    setup_platform_for_device,
+    snapshot_platform,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+async def test_states(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test a sensor unique ids."""
+    features = {description.key for description in SWITCH_DESCRIPTIONS}
+    features.update(EXCLUDED_FEATURES)
+    device = _mocked_device(alias="my_device", features=features)
+
+    await setup_platform_for_device(hass, mock_config_entry, Platform.SWITCH, device)
+    await snapshot_platform(
+        hass, entity_registry, device_registry, snapshot, mock_config_entry.entry_id
+    )
+
+    for excluded in EXCLUDED_FEATURES:
+        assert hass.states.get(f"sensor.my_device_{excluded}") is None
 
 
 async def test_plug(hass: HomeAssistant) -> None:
@@ -230,6 +257,30 @@ async def test_strip_unique_ids(
         assert (
             entity_registry.async_get(entity_id).unique_id == f"PLUG{plug_id}DEVICEID"
         )
+
+
+async def test_strip_blank_alias(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a strip unique id."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    strip = _mocked_device(
+        alias="",
+        model="KS123",
+        children=_mocked_strip_children(features=["state", "led"], alias=""),
+        features=["state", "led"],
+    )
+    with _patch_discovery(device=strip), _patch_connect(device=strip):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    for plug_id in range(2):
+        entity_id = f"switch.unnamed_ks123_stripsocket_{plug_id + 1}"
+        state = hass.states.get(entity_id)
+        assert state.name == f"Unnamed KS123 Stripsocket {plug_id + 1}"
 
 
 @pytest.mark.parametrize(

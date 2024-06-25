@@ -49,10 +49,6 @@ NUMBER_DESCRIPTIONS: Final = (
         key="temperature_offset",
         mode=NumberMode.BOX,
     ),
-    TPLinkNumberEntityDescription(
-        key="target_temperature",
-        mode=NumberMode.BOX,
-    ),
 )
 
 NUMBER_DESCRIPTIONS_MAP = {desc.key: desc for desc in NUMBER_DESCRIPTIONS}
@@ -72,7 +68,7 @@ async def async_setup_entry(
         device=device,
         coordinator=parent_coordinator,
         feature_type=Feature.Type.Number,
-        entity_class=Number,
+        entity_class=TPLinkNumberEntity,
         descriptions=NUMBER_DESCRIPTIONS_MAP,
         child_coordinators=children_coordinators,
     )
@@ -80,7 +76,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class Number(CoordinatedTPLinkFeatureEntity, NumberEntity):
+class TPLinkNumberEntity(CoordinatedTPLinkFeatureEntity, NumberEntity):
     """Representation of a feature-based TPLink sensor."""
 
     entity_description: TPLinkNumberEntityDescription

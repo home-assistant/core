@@ -1,11 +1,14 @@
 """Tests for light platform."""
 
-from kasa import Feature, Module
+from kasa import Device, Feature, Module
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import tplink
 from homeassistant.components.tplink.const import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.components.tplink.entity import EXCLUDED_FEATURES
+from homeassistant.components.tplink.sensor import SENSOR_DESCRIPTIONS
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -19,9 +22,32 @@ from . import (
     _mocked_strip_children,
     _patch_connect,
     _patch_discovery,
+    setup_platform_for_device,
+    snapshot_platform,
 )
 
 from tests.common import MockConfigEntry
+
+
+async def test_states(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test a sensor unique ids."""
+    features = {description.key for description in SENSOR_DESCRIPTIONS}
+    features.update(EXCLUDED_FEATURES)
+    device = _mocked_device(alias="my_device", features=features)
+
+    await setup_platform_for_device(hass, mock_config_entry, Platform.SENSOR, device)
+    await snapshot_platform(
+        hass, entity_registry, device_registry, snapshot, mock_config_entry.entry_id
+    )
+
+    for excluded in EXCLUDED_FEATURES:
+        assert hass.states.get(f"sensor.my_device_{excluded}") is None
 
 
 async def test_color_light_with_an_emeter(hass: HomeAssistant) -> None:
@@ -166,8 +192,8 @@ async def test_undefined_sensor(
     )
     already_migrated_config_entry.add_to_hass(hass)
     new_feature = _mocked_feature(
-        5.2,
         "consumption_this_fortnight",
+        value=5.2,
         name="Consumption for fortnight",
         type_=Feature.Type.Sensor,
         category=Feature.Category.Primary,
@@ -186,19 +212,19 @@ async def test_undefined_sensor(
     assert msg in caplog.text
 
 
-async def test_sensor_children(
+async def test_sensor_children_on_parent(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test a sensor unique ids."""
+    """Test a WallSwitch sensor entities are added to parent."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     feature = _mocked_feature(
-        5.2,
         "consumption_this_month",
+        value=5.2,
         # integration should ignore name and use the value from strings.json:
         # This month's consumption
         name="Consumption for month",
@@ -211,6 +237,7 @@ async def test_sensor_children(
         alias="my_plug",
         features=[feature],
         children=_mocked_strip_children(features=[feature]),
+        device_type=Device.Type.WallSwitch,
     )
     with _patch_discovery(device=plug), _patch_connect(device=plug):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
@@ -226,9 +253,58 @@ async def test_sensor_children(
         child_entity = entity_registry.async_get(child_entity_id)
         assert child_entity
         assert child_entity.unique_id == f"PLUG{plug_id}DEVICEID_consumption_this_month"
-        assert child_entity.device_id != entity.device_id
         child_device = device_registry.async_get(child_entity.device_id)
         assert child_device
+
+        assert child_entity.device_id == entity.device_id
+        assert child_device.connections == device.connections
+
+
+async def test_sensor_children_on_child(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test strip sensors are on child device."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    feature = _mocked_feature(
+        "consumption_this_month",
+        value=5.2,
+        # integration should ignore name and use the value from strings.json:
+        # This month's consumption
+        name="Consumption for month",
+        type_=Feature.Type.Sensor,
+        category=Feature.Category.Primary,
+        unit="A",
+        precision_hint=2,
+    )
+    plug = _mocked_device(
+        alias="my_plug",
+        features=[feature],
+        children=_mocked_strip_children(features=[feature]),
+        device_type=Device.Type.Strip,
+    )
+    with _patch_discovery(device=plug), _patch_connect(device=plug):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "sensor.my_plug_this_month_s_consumption"
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+    device = device_registry.async_get(entity.device_id)
+
+    for plug_id in range(2):
+        child_entity_id = f"sensor.my_plug_plug{plug_id}_this_month_s_consumption"
+        child_entity = entity_registry.async_get(child_entity_id)
+        assert child_entity
+        assert child_entity.unique_id == f"PLUG{plug_id}DEVICEID_consumption_this_month"
+        child_device = device_registry.async_get(child_entity.device_id)
+        assert child_device
+
+        assert child_entity.device_id != entity.device_id
         assert child_device.via_device_id == device.id
 
 

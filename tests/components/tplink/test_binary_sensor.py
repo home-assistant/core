@@ -2,10 +2,13 @@
 
 from kasa import Feature
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import tplink
+from homeassistant.components.tplink.binary_sensor import BINARY_SENSOR_DESCRIPTIONS
 from homeassistant.components.tplink.const import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.components.tplink.entity import EXCLUDED_FEATURES
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -18,6 +21,8 @@ from . import (
     _mocked_strip_children,
     _patch_connect,
     _patch_discovery,
+    setup_platform_for_device,
+    snapshot_platform,
 )
 
 from tests.common import MockConfigEntry
@@ -27,12 +32,35 @@ from tests.common import MockConfigEntry
 def mocked_feature_binary_sensor() -> Feature:
     """Return mocked tplink binary sensor feature."""
     return _mocked_feature(
-        False,
         "overheated",
+        value=False,
         name="Overheated",
         type_=Feature.Type.BinarySensor,
         category=Feature.Category.Primary,
     )
+
+
+async def test_states(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test a sensor unique ids."""
+    features = {description.key for description in BINARY_SENSOR_DESCRIPTIONS}
+    features.update(EXCLUDED_FEATURES)
+    device = _mocked_device(alias="my_device", features=features)
+
+    await setup_platform_for_device(
+        hass, mock_config_entry, Platform.BINARY_SENSOR, device
+    )
+    await snapshot_platform(
+        hass, entity_registry, device_registry, snapshot, mock_config_entry.entry_id
+    )
+
+    for excluded in EXCLUDED_FEATURES:
+        assert hass.states.get(f"sensor.my_device_{excluded}") is None
 
 
 async def test_binary_sensor(

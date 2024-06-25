@@ -332,6 +332,7 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
             self.initial_data.get(CONF_KNX_CONNECTION_TYPE)
             in CONF_KNX_TUNNELING_TYPE_LABELS
         )
+        ip_address: str | None
         if (  # initial attempt on ConfigFlow or coming from automatic / routing
             (isinstance(self, ConfigFlow) or not _reconfiguring_existing_tunnel)
             and not user_input

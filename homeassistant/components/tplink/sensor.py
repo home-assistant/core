@@ -112,22 +112,6 @@ SENSOR_DESCRIPTIONS: tuple[TPLinkSensorEntityDescription, ...] = (
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
-    # Firmware based features are all disabled by default pending
-    # the update platform
-    TPLinkSensorEntityDescription(
-        entity_registry_enabled_default=False,
-        key="current_firmware_version",
-    ),
-    TPLinkSensorEntityDescription(
-        entity_registry_enabled_default=False,
-        key="available_firmware_version",
-    ),
-    # Thermostat based features are all disabled by default pending
-    # the climate platform
-    TPLinkSensorEntityDescription(
-        key="thermostat_mode",
-        entity_registry_enabled_default=False,
-    ),
 )
 
 SENSOR_DESCRIPTIONS_MAP = {desc.key: desc for desc in SENSOR_DESCRIPTIONS}
@@ -148,14 +132,14 @@ async def async_setup_entry(
         device=device,
         coordinator=parent_coordinator,
         feature_type=Feature.Type.Sensor,
-        entity_class=Sensor,
+        entity_class=TPLinkSensorEntity,
         descriptions=SENSOR_DESCRIPTIONS_MAP,
         child_coordinators=children_coordinators,
     )
     async_add_entities(entities)
 
 
-class Sensor(CoordinatedTPLinkFeatureEntity, SensorEntity):
+class TPLinkSensorEntity(CoordinatedTPLinkFeatureEntity, SensorEntity):
     """Representation of a feature-based TPLink sensor."""
 
     entity_description: TPLinkSensorEntityDescription

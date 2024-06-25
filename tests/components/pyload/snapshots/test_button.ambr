@@ -1,0 +1,185 @@
+# serializer version: 1
+# name: test_state[button.pyload_abort_all_running_downloads-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.pyload_abort_all_running_downloads',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Abort all running downloads',
+    'platform': 'pyload',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PyLoadButtonEntity.ABORT_DOWNLOADS: 'abort_downloads'>,
+    'unique_id': 'XXXXXXXXXXXXXX_abort_downloads',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state[button.pyload_abort_all_running_downloads-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'pyload Abort all running downloads',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.pyload_abort_all_running_downloads',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_state[button.pyload_delete_finished_files_packages-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.pyload_delete_finished_files_packages',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Delete finished files/packages',
+    'platform': 'pyload',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PyLoadButtonEntity.DELETE_FINISHED: 'delete_finished'>,
+    'unique_id': 'XXXXXXXXXXXXXX_delete_finished',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state[button.pyload_delete_finished_files_packages-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'pyload Delete finished files/packages',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.pyload_delete_finished_files_packages',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_state[button.pyload_restart_all_failed_files-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.pyload_restart_all_failed_files',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Restart all failed files',
+    'platform': 'pyload',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PyLoadButtonEntity.RESTART_FAILED: 'restart_failed'>,
+    'unique_id': 'XXXXXXXXXXXXXX_restart_failed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state[button.pyload_restart_all_failed_files-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'pyload Restart all failed files',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.pyload_restart_all_failed_files',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_state[button.pyload_restart_pyload_core-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.pyload_restart_pyload_core',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Restart pyload core',
+    'platform': 'pyload',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PyLoadButtonEntity.RESTART: 'restart'>,
+    'unique_id': 'XXXXXXXXXXXXXX_restart',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state[button.pyload_restart_pyload_core-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'pyload Restart pyload core',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.pyload_restart_pyload_core',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

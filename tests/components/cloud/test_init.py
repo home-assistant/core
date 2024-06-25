@@ -4,7 +4,6 @@ from collections.abc import Callable, Coroutine
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from hass_nabucasa import Cloud
 import pytest
 
 from homeassistant.components import cloud
@@ -13,7 +12,7 @@ from homeassistant.components.cloud import (
     CloudNotConnected,
     async_get_or_create_cloudhook,
 )
-from homeassistant.components.cloud.const import DOMAIN, PREF_CLOUDHOOKS
+from homeassistant.components.cloud.const import DATA_CLOUD, DOMAIN, PREF_CLOUDHOOKS
 from homeassistant.components.cloud.prefs import STORAGE_KEY
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Context, HomeAssistant
@@ -47,7 +46,7 @@ async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
         )
         assert result
 
-    cl = hass.data["cloud"]
+    cl = hass.data[DATA_CLOUD]
     assert cl.mode == cloud.MODE_DEV
     assert cl.cognito_client_id == "test-cognito_client_id"
     assert cl.user_pool_id == "test-user_pool_id"
@@ -65,7 +64,7 @@ async def test_remote_services(
     hass: HomeAssistant, mock_cloud_fixture, hass_read_only_user: MockUser
 ) -> None:
     """Setup cloud component and test services."""
-    cloud = hass.data[DOMAIN]
+    cloud = hass.data[DATA_CLOUD]
 
     assert hass.services.has_service(DOMAIN, "remote_connect")
     assert hass.services.has_service(DOMAIN, "remote_disconnect")
@@ -145,7 +144,7 @@ async def test_setup_existing_cloud_user(
 
 async def test_on_connect(hass: HomeAssistant, mock_cloud_fixture) -> None:
     """Test cloud on connect triggers."""
-    cl: Cloud[cloud.client.CloudClient] = hass.data["cloud"]
+    cl = hass.data[DATA_CLOUD]
 
     assert len(cl.iot._on_connect) == 3
 
@@ -202,7 +201,7 @@ async def test_on_connect(hass: HomeAssistant, mock_cloud_fixture) -> None:
 
 async def test_remote_ui_url(hass: HomeAssistant, mock_cloud_fixture) -> None:
     """Test getting remote ui url."""
-    cl = hass.data["cloud"]
+    cl = hass.data[DATA_CLOUD]
 
     # Not logged in
     with pytest.raises(cloud.CloudNotAvailable):
