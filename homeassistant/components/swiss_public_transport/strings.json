@@ -52,7 +52,7 @@
   "services": {
     "fetch_connections": {
       "name": "Fetch Connections",
-      "description": "Fetch a list of connections from the swiss public transport api.",
+      "description": "Fetch a list of connections from the swiss public transport.",
       "fields": {
         "entity_id": {
           "name": "List",
@@ -75,8 +75,8 @@
     "cannot_connect": {
       "message": "Cannot connect to server.\n{error}"
     },
-    "bad_config": {
-      "message": "Request failed due to bad config: Check at the [stationboard]({stationboard_url}) if your station names are valid.\n{error}"
+    "service_entity_unavailable": {
+      "message": "Sensor entity or service is unavailable."
     }
   }
 }
