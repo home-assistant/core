@@ -13,13 +13,14 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class MadVRCoordinator(DataUpdateCoordinator):
+class MadVRCoordinator(DataUpdateCoordinator[dict]):
     """My custom coordinator for push-based API."""
+
+    config_entry: ConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
         my_api: Madvr,
         mac: str,
         name: str,
@@ -28,19 +29,15 @@ class MadVRCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
-            name="My API Coordinator",
+            name="Madvr Coordinator",
         )
-        self.entry_id = config_entry.entry_id
+        self.entry_id = self.config_entry.entry_id
         self.my_api = my_api
         self.mac = mac
         self.name = name
         self.previous_data: dict = {}
         self.my_api.set_update_callback(self.handle_push_data)
         _LOGGER.debug("MadVRCoordinator initialized")
-
-    async def _async_update_data(self):
-        """No-op method for initial setup."""
-        return self.previous_data
 
     def handle_push_data(self, data: dict):
         """Handle new data pushed from the API."""

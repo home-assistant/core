@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT
 from homeassistant.core import callback
 
 from .const import DOMAIN
@@ -27,30 +28,27 @@ class MadVRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            host = user_input["host"]
-            port = user_input.get("port", 44077)
-            mac = user_input["mac"]
+            host = user_input[CONF_HOST]
+            port = user_input.get(CONF_PORT, 44077)
+            mac = user_input[CONF_MAC]
             keep_power_on = user_input["keep_power_on"]
             try:
                 await self._test_connection(host, port, mac, keep_power_on)
-                return self.async_create_entry(
-                    title=user_input["name"], data=user_input
-                )
             except CannotConnect:
                 _LOGGER.error("CannotConnect error caught")
                 errors["base"] = "cannot_connect"
                 self.context["user_input"] = user_input
                 # allow user to skip connection test
                 return await self.async_step_confirm()
-
+            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required("name"): str,
-                    vol.Required("host"): str,
-                    vol.Required("mac"): str,
-                    vol.Optional("port", default=44077): int,
+                    vol.Required(CONF_NAME): str,
+                    vol.Required(CONF_HOST): str,
+                    vol.Required(CONF_MAC): str,
+                    vol.Optional(CONF_PORT, default=44077): int,
                     vol.Optional("keep_power_on", default=False): bool,
                 }
             ),
@@ -101,13 +99,13 @@ class MadVRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle confirmation step if connection test fails."""
         if user_input is not None:
             return self.async_create_entry(
-                title=self.context["user_input"]["name"],
+                title=self.context["user_input"][CONF_NAME],
                 data=self.context["user_input"],
             )
 
         return self.async_show_form(
             step_id="confirm",
-            description_placeholders={"name": self.context["user_input"]["name"]},
+            description_placeholders={CONF_NAME: self.context["user_input"][CONF_NAME]},
             data_schema=vol.Schema({vol.Required("confirm", default=False): bool}),
         )
 
@@ -143,10 +141,10 @@ class MadVROptionsFlowHandler(config_entries.OptionsFlow):
         options = self.config_entry.data
         data_schema = vol.Schema(
             {
-                vol.Optional("name", default=options.get("name", "")): str,
-                vol.Optional("host", default=options.get("host", "")): str,
-                vol.Optional("mac", default=options.get("mac", "")): str,
-                vol.Optional("port", default=options.get("port", 44077)): int,
+                vol.Optional(CONF_NAME, default=options.get(CONF_NAME, "")): str,
+                vol.Optional(CONF_HOST, default=options.get(CONF_HOST, "")): str,
+                vol.Optional(CONF_MAC, default=options.get(CONF_MAC, "")): str,
+                vol.Optional(CONF_PORT, default=options.get(CONF_PORT, 44077)): int,
             }
         )
 
