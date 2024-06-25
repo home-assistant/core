@@ -62,6 +62,18 @@ SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED = vol.Schema(
     }
 )
 
+ATTR_PROFILE = "profile"
+ATTR_DURATION = "duration"
+
+SERVICE_SCHEMA_SET_PROFILE = vol.Schema(
+    {
+        vol.Required(ATTR_PROFILE): vol.In(PRESET_MODE_TO_VALLOX_PROFILE),
+        vol.Optional(ATTR_DURATION): vol.All(
+            vol.Coerce(int), vol.Clamp(min=1, max=65535)
+        ),
+    }
+)
+
 
 class ServiceMethodDetails(NamedTuple):
     """Details for SERVICE_TO_METHOD mapping."""
@@ -89,15 +101,7 @@ SERVICE_TO_METHOD = {
         schema=SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
     ),
     SERVICE_SET_PROFILE: ServiceMethodDetails(
-        method="async_set_profile",
-        schema=vol.Schema(
-            {
-                vol.Required("profile"): vol.In(PRESET_MODE_TO_VALLOX_PROFILE),
-                vol.Optional("duration"): vol.All(
-                    vol.Coerce(int), vol.Clamp(min=1, max=65535)
-                ),
-            }
-        ),
+        method="async_set_profile", schema=SERVICE_SCHEMA_SET_PROFILE
     ),
 }
 
@@ -200,14 +204,14 @@ class ValloxServiceHandler:
         self, profile: str, duration: int | None = None
     ) -> bool:
         """Activate profile for given duration."""
-        _LOGGER.debug("Activating profile %s for %d min", profile, duration)
+        _LOGGER.debug("Activating profile %s for %s min", profile, duration)
         try:
             await self._client.set_profile(
                 PRESET_MODE_TO_VALLOX_PROFILE[profile], duration
             )
         except ValloxApiException as err:
             _LOGGER.error(
-                "Error setting profile %d for duration %d: %s", profile, duration, err
+                "Error setting profile %d for duration %s: %s", profile, duration, err
             )
             return False
         return True
