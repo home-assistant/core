@@ -817,7 +817,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         device_id: str,
         *,
         add_config_entry_id: str | UndefinedType = UNDEFINED,
-        allow_collisions: bool = False,  # Temporary, must not be set by integrations
+        # Temporary flag so we don't blow up when collisions are implicitly introduced
+        # by calls to async_get_or_create. Must not be set by integrations.
+        allow_collisions: bool = False,
         area_id: str | None | UndefinedType = UNDEFINED,
         configuration_url: str | URL | None | UndefinedType = UNDEFINED,
         device_info_type: str | UndefinedType = UNDEFINED,
