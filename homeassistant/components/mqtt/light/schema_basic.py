@@ -39,7 +39,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 import homeassistant.util.color as color_util
 
 from .. import subscription
@@ -249,7 +249,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     _optimistic_xy_color: bool
 
     @staticmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA_BASIC
 
