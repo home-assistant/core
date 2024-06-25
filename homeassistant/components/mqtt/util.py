@@ -51,7 +51,7 @@ class EnsureJobAfterCooldown:
     When a new execute request arrives we cancel the current request
     and start a new one.
 
-    We allow pathing this util, as we generally have exceptions
+    We allow patching this util, as we generally have exceptions
     for sleeps/waits/debouncers/timers causing long run times in tests.
     """
 
