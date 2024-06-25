@@ -13,7 +13,6 @@ from homeassistant.components.fan import (
     FanEntity,
     FanEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
@@ -29,13 +28,16 @@ from .entity import (
     esphome_state_property,
     platform_async_setup_entry,
 )
+from .entry_data import ESPHomeConfigEntry
 from .enum_mapper import EsphomeEnumMapper
 
 ORDERED_NAMED_FAN_SPEEDS = [FanSpeed.LOW, FanSpeed.MEDIUM, FanSpeed.HIGH]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ESPHomeConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up ESPHome fans based on a config entry."""
     await platform_async_setup_entry(
