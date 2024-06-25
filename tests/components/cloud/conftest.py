@@ -17,8 +17,13 @@ import jwt
 import pytest
 from typing_extensions import AsyncGenerator
 
-from homeassistant.components.cloud import CloudClient, prefs
+from homeassistant.components.cloud.client import CloudClient
 from homeassistant.components.cloud.const import DATA_CLOUD
+from homeassistant.components.cloud.prefs import (
+    PREF_ALEXA_DEFAULT_EXPOSE,
+    PREF_GOOGLE_DEFAULT_EXPOSE,
+    CloudPreferences,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -174,8 +179,8 @@ def set_cloud_prefs_fixture(
     async def set_cloud_prefs(prefs_settings: dict[str, Any]) -> None:
         """Set cloud prefs."""
         prefs_to_set = cloud.client.prefs.as_dict()
-        prefs_to_set.pop(prefs.PREF_ALEXA_DEFAULT_EXPOSE)
-        prefs_to_set.pop(prefs.PREF_GOOGLE_DEFAULT_EXPOSE)
+        prefs_to_set.pop(PREF_ALEXA_DEFAULT_EXPOSE)
+        prefs_to_set.pop(PREF_GOOGLE_DEFAULT_EXPOSE)
         prefs_to_set.update(prefs_settings)
         await cloud.client.prefs.async_update(**prefs_to_set)
 
@@ -210,7 +215,7 @@ def mock_cloud_fixture(hass):
 @pytest.fixture
 async def cloud_prefs(hass):
     """Fixture for cloud preferences."""
-    cloud_prefs = prefs.CloudPreferences(hass)
+    cloud_prefs = CloudPreferences(hass)
     await cloud_prefs.async_initialize()
     return cloud_prefs
 

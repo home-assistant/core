@@ -12,7 +12,8 @@ from typing_extensions import AsyncGenerator
 import voluptuous as vol
 
 from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY
-from homeassistant.components.cloud import DOMAIN, const, tts
+from homeassistant.components.cloud.const import DEFAULT_TTS_DEFAULT_VOICE, DOMAIN
+from homeassistant.components.cloud.tts import PLATFORM_SCHEMA, SUPPORT_LANGUAGES, Voice
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as DOMAIN_MP,
@@ -57,33 +58,30 @@ async def internal_url_mock(hass: HomeAssistant) -> None:
 
 def test_default_exists() -> None:
     """Test our default language exists."""
-    assert const.DEFAULT_TTS_DEFAULT_VOICE[0] in TTS_VOICES
-    assert (
-        const.DEFAULT_TTS_DEFAULT_VOICE[1]
-        in TTS_VOICES[const.DEFAULT_TTS_DEFAULT_VOICE[0]]
-    )
+    assert DEFAULT_TTS_DEFAULT_VOICE[0] in TTS_VOICES
+    assert DEFAULT_TTS_DEFAULT_VOICE[1] in TTS_VOICES[DEFAULT_TTS_DEFAULT_VOICE[0]]
 
 
 def test_schema() -> None:
     """Test schema."""
-    assert "nl-NL" in tts.SUPPORT_LANGUAGES
+    assert "nl-NL" in SUPPORT_LANGUAGES
 
-    processed = tts.PLATFORM_SCHEMA({"platform": "cloud", "language": "nl-NL"})
+    processed = PLATFORM_SCHEMA({"platform": "cloud", "language": "nl-NL"})
     assert processed["gender"] == "female"
 
     with pytest.raises(vol.Invalid):
-        tts.PLATFORM_SCHEMA(
+        PLATFORM_SCHEMA(
             {"platform": "cloud", "language": "non-existing", "gender": "female"}
         )
 
     with pytest.raises(vol.Invalid):
-        tts.PLATFORM_SCHEMA(
+        PLATFORM_SCHEMA(
             {"platform": "cloud", "language": "nl-NL", "gender": "not-supported"}
         )
 
     # Should not raise
-    tts.PLATFORM_SCHEMA({"platform": "cloud", "language": "nl-NL", "gender": "female"})
-    tts.PLATFORM_SCHEMA({"platform": "cloud"})
+    PLATFORM_SCHEMA({"platform": "cloud", "language": "nl-NL", "gender": "female"})
+    PLATFORM_SCHEMA({"platform": "cloud"})
 
 
 @pytest.mark.parametrize(
@@ -188,7 +186,7 @@ async def test_provider_properties(
     assert "nl-NL" in engine.supported_languages
     supported_voices = engine.async_get_supported_voices("nl-NL")
     assert supported_voices is not None
-    assert tts.Voice("ColetteNeural", "ColetteNeural") in supported_voices
+    assert Voice("ColetteNeural", "ColetteNeural") in supported_voices
     supported_voices = engine.async_get_supported_voices("missing_language")
     assert supported_voices is None
 
