@@ -6,6 +6,7 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -13,7 +14,6 @@ from homeassistant.config_entries import (
     OptionsFlowWithConfigEntry,
 )
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN
 
@@ -73,7 +73,7 @@ class OptionsFlowHandler(OptionsFlowWithConfigEntry):
             step_id="options_1",
             data_schema=vol.Schema(
                 {
-                    vol.Required("section_1"): cv.section(
+                    vol.Required("section_1"): data_entry_flow.section(
                         vol.Schema(
                             {
                                 vol.Optional(
