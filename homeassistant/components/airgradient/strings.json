@@ -125,10 +125,5 @@
         "name": "[%key:component::airgradient::entity::number::display_brightness::name%]"
       }
     }
-  },
-  "exceptions": {
-    "no_local_configuration": {
-      "message": "Device should be configured with local configuration to be able to change settings."
-    }
   }
 }
