@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components import tplink
 from homeassistant.components.climate import (
+    ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_TEMPERATURE,
@@ -51,21 +52,24 @@ async def mocked_hub(hass: HomeAssistant) -> Device:
 
     features = [
         _mocked_feature(
-            20, "temperature", category=Feature.Category.Primary, unit="celsius"
+            "temperature", value=20, category=Feature.Category.Primary, unit="celsius"
         ),
         _mocked_feature(
-            22,
             "target_temperature",
+            value=22,
             type_=Feature.Type.Number,
             category=Feature.Category.Primary,
             unit="celsius",
         ),
         _mocked_feature(
-            True, "state", type_=Feature.Type.Switch, category=Feature.Category.Primary
+            "state",
+            value=True,
+            type_=Feature.Type.Switch,
+            category=Feature.Category.Primary,
         ),
         _mocked_feature(
-            ThermostatState.Heating,
             "thermostat_mode",
+            value=ThermostatState.Heating,
             type_=Feature.Type.Choice,
             category=Feature.Category.Primary,
         ),
@@ -92,6 +96,11 @@ async def test_climate(
     entity = entity_registry.async_get(ENTITY_ID)
     assert entity
     assert entity.unique_id == f"{DEVICE_ID}_climate"
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_HVAC_ACTION] is HVACAction.HEATING
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 20
+    assert state.attributes[ATTR_TEMPERATURE] == 22
 
 
 async def test_set_temperature(hass: HomeAssistant, mocked_hub: Device) -> None:
