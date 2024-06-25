@@ -169,6 +169,9 @@ class RequirementsManager:
                 # will wait for this future to be resolved
                 # if there are no concurrent setup attempts
                 await future
+            # We do not cache failures as we want to retry, or
+            # else people can't fix it and then restart, because
+            # their config will never be valid.
             del cache[domain]
             raise
 
