@@ -64,7 +64,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
 
 from .const import (  # noqa: F401
@@ -130,14 +130,14 @@ _RND: Final = SystemRandom()
 
 MIN_STREAM_INTERVAL: Final = 0.5  # seconds
 
-CAMERA_SERVICE_SNAPSHOT: Final = {vol.Required(ATTR_FILENAME): cv.template}
+CAMERA_SERVICE_SNAPSHOT: VolDictType = {vol.Required(ATTR_FILENAME): cv.template}
 
-CAMERA_SERVICE_PLAY_STREAM: Final = {
+CAMERA_SERVICE_PLAY_STREAM: VolDictType = {
     vol.Required(ATTR_MEDIA_PLAYER): cv.entities_domain(DOMAIN_MP),
     vol.Optional(ATTR_FORMAT, default="hls"): vol.In(OUTPUT_FORMATS),
 }
 
-CAMERA_SERVICE_RECORD: Final = {
+CAMERA_SERVICE_RECORD: VolDictType = {
     vol.Required(CONF_FILENAME): cv.template,
     vol.Optional(CONF_DURATION, default=30): vol.Coerce(int),
     vol.Optional(CONF_LOOKBACK, default=0): vol.Coerce(int),
