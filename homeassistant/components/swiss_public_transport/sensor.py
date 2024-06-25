@@ -8,24 +8,19 @@ from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING
 
-from opendata_transport.exceptions import (
-    OpendataTransportConnectionError,
-    OpendataTransportError,
-)
+from opendata_transport.exceptions import OpendataTransportConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import ATTR_ENTITY_ID, UnitOfTime
+from homeassistant.const import UnitOfTime
 from homeassistant.core import SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.selector import (
@@ -39,7 +34,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     ATTR_LIMIT,
     DOMAIN,
-    PLACEHOLDERS,
     SENSOR_CONNECTIONS_COUNT,
     SENSOR_CONNECTIONS_MAX,
     SERVICE_FETCH_CONNECTIONS,
@@ -121,7 +115,6 @@ async def async_setup_entry(
         SERVICE_FETCH_CONNECTIONS,
         vol.Schema(
             {
-                vol.Required(ATTR_ENTITY_ID): cv.entities_domain(SENSOR_DOMAIN),
                 vol.Required(
                     ATTR_LIMIT, default=SENSOR_CONNECTIONS_COUNT
                 ): NumberSelector(
@@ -173,6 +166,11 @@ class SwissPublicTransportSensor(
         limit: int,
     ) -> dict:
         """Fetch a set of connections."""
+        if not self.available:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_entity_unavailable",
+            )
         try:
             connections = await self.coordinator.fetch_connections(limit=int(limit))
         except OpendataTransportConnectionError as e:
@@ -180,15 +178,6 @@ class SwissPublicTransportSensor(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
                 translation_placeholders={
-                    "error": e,
-                },
-            ) from e
-        except OpendataTransportError as e:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="bad_config",
-                translation_placeholders={
-                    **PLACEHOLDERS,
                     "error": e,
                 },
             ) from e

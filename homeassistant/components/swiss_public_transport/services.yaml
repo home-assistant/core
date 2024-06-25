@@ -1,12 +1,9 @@
 fetch_connections:
+  target:
+    entity:
+      integration: swiss_public_transport
+      domain: sensor
   fields:
-    entity_id:
-      required: true
-      example: sensor.lausanne_zurich
-      selector:
-        entity:
-          domain: sensor
-          integration: swiss_public_transport
     limit:
       example: 3
       required: true
