@@ -527,6 +527,7 @@ FLOWS = {
         "srp_energy",
         "starline",
         "starlink",
+        "statistics",
         "steam_online",
         "steamist",
         "stookalert",
