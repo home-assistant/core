@@ -9,17 +9,19 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
 from .domain_data import DomainData
 from .entity import EsphomeAssistEntity, EsphomeEntity, platform_async_setup_entry
+from .entry_data import ESPHomeConfigEntry
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ESPHomeConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up ESPHome binary sensors based on a config entry."""
     await platform_async_setup_entry(

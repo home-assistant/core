@@ -16,7 +16,6 @@ from aioesphomeapi import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -30,7 +29,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .domain_data import DomainData
 
 # Import config flow so that it's added to the registry
-from .entry_data import RuntimeEntryData
+from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
 
 _R = TypeVar("_R")
@@ -85,7 +84,7 @@ def async_static_info_updated(
 
 async def platform_async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ESPHomeConfigEntry,
     async_add_entities: AddEntitiesCallback,
     *,
     info_type: type[_InfoT],
