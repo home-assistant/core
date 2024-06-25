@@ -1173,6 +1173,8 @@ async def test_cleanup_triggers_and_restoring_state(
     state = hass.states.get("binary_sensor.test2")
     assert state.state == state2
 
+    await hass.async_block_till_done(wait_background_tasks=True)
+
 
 @pytest.mark.parametrize(
     "hass_config",
