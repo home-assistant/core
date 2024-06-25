@@ -125,8 +125,8 @@ def async_refresh_after[_T: CoordinatedTPLinkEntity, **_P](
 class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], ABC):
     """Common base class for all coordinated tplink entities."""
 
-    _device: Device
     _attr_has_entity_name = True
+    _device: Device
 
     def __init__(
         self,
