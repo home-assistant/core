@@ -1,6 +1,5 @@
 """The tests for the  MQTT binary sensor platform."""
 
-import asyncio
 import copy
 from datetime import datetime, timedelta
 import json
@@ -213,6 +212,7 @@ async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
 ) -> None:
     """Test that binary_sensor with expire_after set behaves correctly on discovery and discovery update."""
     await mqtt_mock_entry()
+    await hass.async_block_till_done()
     config = {
         "name": "Test",
         "state_topic": "test-topic",
@@ -281,6 +281,9 @@ async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
     # Test that binary_sensor is still expired
     state = hass.states.get("binary_sensor.test")
     assert state.state == STATE_UNAVAILABLE
+
+    async_fire_time_changed(hass, now)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
@@ -1123,8 +1126,7 @@ async def test_cleanup_triggers_and_restoring_state(
     async_fire_mqtt_message(hass, "test-topic2", payload2)
     state = hass.states.get("binary_sensor.test2")
     assert state.state == state2
-    await asyncio.sleep(0)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
