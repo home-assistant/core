@@ -223,24 +223,22 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_COMMAND_OFF, default=0x00): cv.positive_int,
         vol.Optional(CONF_COMMAND_ON, default=0x01): cv.positive_int,
         vol.Optional(CONF_VERIFY): vol.Maybe(
-            vol.Schema(
-                {
-                    vol.Optional(CONF_ADDRESS): cv.positive_int,
-                    vol.Optional(CONF_INPUT_TYPE): vol.In(
-                        [
-                            CALL_TYPE_REGISTER_HOLDING,
-                            CALL_TYPE_DISCRETE,
-                            CALL_TYPE_REGISTER_INPUT,
-                            CALL_TYPE_COIL,
-                            CALL_TYPE_X_COILS,
-                            CALL_TYPE_X_REGISTER_HOLDINGS,
-                        ]
-                    ),
-                    vol.Optional(CONF_STATE_OFF): cv.positive_int,
-                    vol.Optional(CONF_STATE_ON): cv.positive_int,
-                    vol.Optional(CONF_DELAY, default=0): cv.positive_int,
-                }
-            )
+            {
+                vol.Optional(CONF_ADDRESS): cv.positive_int,
+                vol.Optional(CONF_INPUT_TYPE): vol.In(
+                    [
+                        CALL_TYPE_REGISTER_HOLDING,
+                        CALL_TYPE_DISCRETE,
+                        CALL_TYPE_REGISTER_INPUT,
+                        CALL_TYPE_COIL,
+                        CALL_TYPE_X_COILS,
+                        CALL_TYPE_X_REGISTER_HOLDINGS,
+                    ]
+                ),
+                vol.Optional(CONF_STATE_OFF): cv.positive_int,
+                vol.Optional(CONF_STATE_ON): cv.positive_int,
+                vol.Optional(CONF_DELAY, default=0): cv.positive_int,
+            }
         ),
     }
 )
@@ -258,35 +256,33 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_HVAC_ONOFF_REGISTER): cv.positive_int,
             vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
             vol.Optional(CONF_HVAC_MODE_REGISTER): vol.Maybe(
-                vol.Schema(
-                    {
-                        CONF_ADDRESS: cv.positive_int,
-                        CONF_HVAC_MODE_VALUES: {
-                            vol.Optional(CONF_HVAC_MODE_OFF): vol.Any(
-                                cv.positive_int, [cv.positive_int]
-                            ),
-                            vol.Optional(CONF_HVAC_MODE_HEAT): vol.Any(
-                                cv.positive_int, [cv.positive_int]
-                            ),
-                            vol.Optional(CONF_HVAC_MODE_COOL): vol.Any(
-                                cv.positive_int, [cv.positive_int]
-                            ),
-                            vol.Optional(CONF_HVAC_MODE_HEAT_COOL): vol.Any(
-                                cv.positive_int, [cv.positive_int]
-                            ),
-                            vol.Optional(CONF_HVAC_MODE_AUTO): vol.Any(
-                                cv.positive_int, [cv.positive_int]
-                            ),
-                            vol.Optional(CONF_HVAC_MODE_DRY): vol.Any(
-                                cv.positive_int, [cv.positive_int]
-                            ),
-                            vol.Optional(CONF_HVAC_MODE_FAN_ONLY): vol.Any(
-                                cv.positive_int, [cv.positive_int]
-                            ),
-                        },
-                        vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
-                    }
-                )
+                {
+                    CONF_ADDRESS: cv.positive_int,
+                    CONF_HVAC_MODE_VALUES: {
+                        vol.Optional(CONF_HVAC_MODE_OFF): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_HEAT): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_COOL): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_HEAT_COOL): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_AUTO): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_DRY): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_FAN_ONLY): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                    },
+                    vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
+                }
             ),
             vol.Optional(CONF_FAN_MODE_REGISTER): vol.Maybe(
                 vol.All(
