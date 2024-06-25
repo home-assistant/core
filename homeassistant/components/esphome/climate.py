@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import partial
 from typing import Any, cast
 
 from aioesphomeapi import (
@@ -45,7 +46,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
@@ -53,8 +53,7 @@ from homeassistant.const import (
     PRECISION_WHOLE,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import callback
 
 from .entity import (
     EsphomeEntity,
@@ -65,20 +64,6 @@ from .entity import (
 from .enum_mapper import EsphomeEnumMapper
 
 FAN_QUIET = "quiet"
-
-
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Set up ESPHome climate devices based on a config entry."""
-    await platform_async_setup_entry(
-        hass,
-        entry,
-        async_add_entities,
-        info_type=ClimateInfo,
-        entity_type=EsphomeClimateEntity,
-        state_type=ClimateState,
-    )
 
 
 _CLIMATE_MODES: EsphomeEnumMapper[ClimateMode, HVACMode] = EsphomeEnumMapper(
@@ -333,3 +318,11 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         self._client.climate_command(
             key=self._key, swing_mode=_SWING_MODES.from_hass(swing_mode)
         )
+
+
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=ClimateInfo,
+    entity_type=EsphomeClimateEntity,
+    state_type=ClimateState,
+)

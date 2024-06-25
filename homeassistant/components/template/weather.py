@@ -41,7 +41,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
+from homeassistant.helpers.config_validation import (
+    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
+)
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
@@ -136,7 +138,7 @@ WEATHER_SCHEMA = vol.Schema(
 
 PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_FORECAST_TEMPLATE),
-    PLATFORM_SCHEMA.extend(WEATHER_SCHEMA.schema),
+    BASE_PLATFORM_SCHEMA.extend(WEATHER_SCHEMA.schema),
 )
 
 

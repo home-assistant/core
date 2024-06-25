@@ -28,6 +28,7 @@ from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 
 from .browse_media import async_browse_media
 from .const import (
@@ -78,7 +79,7 @@ ATTRS_TO_PLAY_ON_ROKU_AUDIO_PARAMS = {
     ATTR_THUMBNAIL: "albumArtUrl",
 }
 
-SEARCH_SCHEMA = {vol.Required(ATTR_KEYWORD): str}
+SEARCH_SCHEMA: VolDictType = {vol.Required(ATTR_KEYWORD): str}
 
 
 async def async_setup_entry(
