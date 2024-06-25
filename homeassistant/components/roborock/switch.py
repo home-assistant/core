@@ -171,5 +171,4 @@ class RoborockSwitch(RoborockEntity, SwitchEntity):
             self.get_cache(self.entity_description.cache_key).value.get(
                 self.entity_description.attribute
             )
-            == 1
         )
