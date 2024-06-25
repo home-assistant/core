@@ -82,6 +82,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
+
 @pytest.mark.usefixtures("no_platforms")
 async def test_options_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
