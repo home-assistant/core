@@ -2899,6 +2899,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "iskra": {
+      "name": "iskra",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "islamic_prayer_times": {
       "integration_type": "hub",
       "config_flow": true,

@@ -621,6 +621,9 @@ omit =
     homeassistant/components/iqvia/__init__.py
     homeassistant/components/iqvia/sensor.py
     homeassistant/components/irish_rail_transport/sensor.py
+    homeassistant/components/iskra/__init__.py
+    homeassistant/components/iskra/coordinator.py
+    homeassistant/components/iskra/sensor.py
     homeassistant/components/iss/__init__.py
     homeassistant/components/iss/sensor.py
     homeassistant/components/ista_ecotrend/coordinator.py
