@@ -14,7 +14,6 @@ from .const import DOMAIN
 from .coordinator import MadVRCoordinator
 from .utils import cancel_tasks
 
-# For your initial PR, limit it to 1 platform.
 PLATFORMS: list[Platform] = [Platform.REMOTE]
 
 type MadVRConfigEntry = ConfigEntry[MadVRCoordinator]
@@ -28,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MadVRConfigEntry) -> boo
     madVRClient = Madvr(
         host=entry.data[CONF_HOST],
         logger=_LOGGER,
-        port=entry.data.get(CONF_PORT, 44077),
+        port=entry.data[CONF_PORT],
         mac=entry.data[CONF_MAC],
         connect_timeout=10,
     )
