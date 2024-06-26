@@ -1,0 +1,161 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Iskra Device",
+        "description": "Enter the IP address of your Iskra Device and select protocol.",
+        "data": {
+          "host": "Host"
+        }
+      },
+      "authentication": {
+        "title": "Configure Rest API Credentials",
+        "description": "Enter username and password",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      },
+      "modbus_tcp": {
+        "title": "Configure Modbus TCP",
+        "description": "Enter Modbus TCP port and device's Modbus address.",
+        "data": {
+          "port": "Port",
+          "address": "Modbus address"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the device",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "total_active_power": {
+        "name": "Total active power"
+      },
+      "total_apparent_power": {
+        "name": "Total apparent power"
+      },
+      "total_reactive_power": {
+        "name": "Total reactive power"
+      },
+      "phase1_power": {
+        "name": "Phase 1 power"
+      },
+      "phase2_power": {
+        "name": "Phase 2 power"
+      },
+      "phase3_power": {
+        "name": "Phase 3 power"
+      },
+      "phase1_voltage": {
+        "name": "Phase 1 voltage"
+      },
+      "phase2_voltage": {
+        "name": "Phase 2 voltage"
+      },
+      "phase3_voltage": {
+        "name": "Phase 3 voltage"
+      },
+      "phase1_current": {
+        "name": "Phase 1 current"
+      },
+      "phase2_current": {
+        "name": "Phase 2 current"
+      },
+      "phase3_current": {
+        "name": "Phase 3 current"
+      },
+      "frequency": {
+        "name": "Frequency"
+      },
+      "total_active_import": {
+        "name": "Total imported active energy"
+      },
+      "total_active_export": {
+        "name": "Total exported active energy"
+      },
+      "total_reactive_import": {
+        "name": "Total imported reactive energy"
+      },
+      "total_reactive_export": {
+        "name": "Total exported reactive energy"
+      },
+      "total_apparent_energy_import": {
+        "name": "Total imported apparent energy"
+      },
+      "total_apparent_energy_export": {
+        "name": "Total exported apparent energy"
+      },
+      "resettable_counter1": {
+        "name": "Resettable counter 1"
+      },
+      "resettable_counter2": {
+        "name": "Resettable counter 2"
+      },
+      "resettable_counter3": {
+        "name": "Resettable counter 3"
+      },
+      "resettable_counter4": {
+        "name": "Resettable counter 4"
+      },
+      "resettable_counter5": {
+        "name": "Resettable counter 5"
+      },
+      "resettable_counter6": {
+        "name": "Resettable counter 6"
+      },
+      "resettable_counter7": {
+        "name": "Resettable counter 7"
+      },
+      "resettable_counter8": {
+        "name": "Resettable counter 8"
+      },
+      "resettable_counter9": {
+        "name": "Resettable counter 9"
+      },
+      "resettable_counter10": {
+        "name": "Resettable counter 10"
+      },
+      "resettable_counter11": {
+        "name": "Resettable counter 11"
+      },
+      "resettable_counter12": {
+        "name": "Resettable counter 12"
+      },
+      "resettable_counter13": {
+        "name": "Resettable counter 13"
+      },
+      "resettable_counter14": {
+        "name": "Resettable counter 14"
+      },
+      "resettable_counter15": {
+        "name": "Resettable counter 15"
+      },
+      "resettable_counter16": {
+        "name": "Resettable counter 16"
+      },
+      "resettable_counter17": {
+        "name": "Resettable counter 17"
+      },
+      "resettable_counter18": {
+        "name": "Resettable counter 18"
+      },
+      "resettable_counter19": {
+        "name": "Resettable counter 19"
+      },
+      "resettable_counter20": {
+        "name": "Resettable counter 20"
+      },
+      "connected_devices": {
+        "name": "Connected devices"
+      }
+    }
+  }
+}
