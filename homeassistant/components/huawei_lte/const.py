@@ -26,7 +26,7 @@ NOTIFY_SUPPRESS_TIMEOUT = 30
 
 SERVICE_DELETE_MESSAGE = "delete_message"
 SERVICE_GET_MESSAGES = "get_messages"
-SERVICE_READ_MESSAGE = "read_message'
+SERVICE_READ_MESSAGE = "read_message"
 SERVICE_RESUME_INTEGRATION = "resume_integration"
 SERVICE_SAVE_MESSAGE = "save_message"
 SERVICE_SUSPEND_INTEGRATION = "suspend_integration"
