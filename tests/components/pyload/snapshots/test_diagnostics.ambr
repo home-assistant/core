@@ -2,7 +2,7 @@
 # name: test_diagnostics
   dict({
     'config_entry_data': dict({
-      'host': 'pyload.local',
+      'host': '**REDACTED**',
       'password': '**REDACTED**',
       'port': 8000,
       'ssl': True,
