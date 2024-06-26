@@ -11,7 +11,6 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_OFF,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
@@ -31,7 +30,7 @@ async def test_adam_climate_switch_entities(
 
     state = hass.states.get("switch.fibaro_hc2_relay")
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == STATE_ON
 
 
 async def test_adam_climate_switch_negative_testing(
