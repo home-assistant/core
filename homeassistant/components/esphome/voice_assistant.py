@@ -467,7 +467,7 @@ def handle_timer_event(
         native_event_type,
         timer_info.id,
         timer_info.name,
-        timer_info.seconds,
+        timer_info.created_seconds,
         timer_info.seconds_left,
         timer_info.is_active,
     )

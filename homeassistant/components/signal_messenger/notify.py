@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.core import HomeAssistant
@@ -57,7 +57,7 @@ DATA_SCHEMA = vol.Any(
     DATA_URLS_SCHEMA,
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SENDER_NR): cv.string,
         vol.Required(CONF_SIGNAL_CLI_REST_API): cv.string,

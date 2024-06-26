@@ -125,7 +125,6 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "hass_owner_user": "MockUser",
     "hass_read_only_access_token": "str",
     "hass_read_only_user": "MockUser",
-    "hass_recorder": "Callable[..., HomeAssistant]",
     "hass_storage": "dict[str, Any]",
     "hass_supervisor_access_token": "str",
     "hass_supervisor_user": "MockUser",

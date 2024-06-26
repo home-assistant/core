@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
     CoverEntity,
     CoverEntityFeature,
 )
@@ -36,7 +36,7 @@ CONF_ADS_VAR_OPEN = "adsvar_open"
 CONF_ADS_VAR_CLOSE = "adsvar_close"
 CONF_ADS_VAR_STOP = "adsvar_stop"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_ADS_VAR): cv.string,
         vol.Optional(CONF_ADS_VAR_POSITION): cv.string,
