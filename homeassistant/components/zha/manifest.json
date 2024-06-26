@@ -23,7 +23,7 @@
   "requirements": [
     "bellows==0.39.1",
     "pyserial==3.5",
-    "zha-quirks==0.0.116",
+    "zha-quirks==0.0.117",
     "zigpy-deconz==0.23.2",
     "zigpy==0.64.1",
     "zigpy-xbee==0.20.1",
