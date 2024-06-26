@@ -100,8 +100,9 @@ class BryantEvolutionClimate(ClimateEntity):
     async def async_update(self) -> None:
         """Update the entity state."""
         self._attr_current_temperature = await self._client.read_current_temperature()
-        self._attr_fan_mode = (await self._client.read_fan_mode()).lower()
-
+        self._attr_fan_mode = await self._client.read_fan_mode()
+        if self._attr_fan_mode is not None:
+            self._attr_fan_mode = self._attr_fan_mode.lower()
         self._attr_target_temperature = None
         self._attr_target_temperature_high = None
         self._attr_target_temperature_low = None

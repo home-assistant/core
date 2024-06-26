@@ -97,6 +97,8 @@ class _FakeEvolutionClient(BryantEvolutionLocalClient):
     async def read_hvac_mode(self) -> tuple[str, bool] | None:
         async with self._allow_reads_cond:
             await self._allow_reads_cond.wait_for(self._are_reads_allowed)
+            if not self._mode:
+                return None
             return (self._mode, self._is_active)
 
     async def set_fan_mode(self, fan_mode: str) -> bool:
@@ -149,6 +151,28 @@ async def test_setup_integration(
     assert state.attributes["fan_mode"] == "auto"
     assert state.attributes["current_temperature"] == 75
     assert state.attributes["temperature"] == 72
+
+
+async def test_setup_integration_client_returns_none(hass: HomeAssistant) -> None:
+    """Test that an instance can be constructed from an unavailable client."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    with patch(
+        "evolutionhttp.BryantEvolutionLocalClient.get_client",
+        return_value=_FakeEvolutionClient(),
+    ) as p:
+        mock_evolution_entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={CONF_FILENAME: "/dev/ttyUSB0", CONF_SYSTEM_ID: 1, CONF_ZONE_ID: 1},
+        )
+        client = p.return_value
+        client._fan = None
+        client._clsp = None
+        client._htsp = None
+        mock_evolution_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_evolution_entry.entry_id)
+        await hass.async_block_till_done()
+        state = hass.states.get("climate.bryant_evolution_system_1_zone_1")
+        assert state, hass.states.async_all()
 
 
 async def test_set_temperature(
