@@ -25,4 +25,5 @@ dt_util.utcnow = _utcnow  # type: ignore[assignment]
 event_helper.time_tracker_utcnow = _utcnow  # type: ignore[assignment]
 util.utcnow = _utcnow  # type: ignore[assignment]
 
+# Replace bound methods which are not found by freezegun
 runner.monotonic = _monotonic  # type: ignore[assignment]

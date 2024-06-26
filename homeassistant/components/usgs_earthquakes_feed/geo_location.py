@@ -13,7 +13,10 @@ from aio_geojson_usgs_earthquakes.feed_entry import (
 )
 import voluptuous as vol
 
-from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
+from homeassistant.components.geo_location import (
+    PLATFORM_SCHEMA as GEO_LOCATION_PLATFORM_SCHEMA,
+    GeolocationEvent,
+)
 from homeassistant.const import (
     ATTR_TIME,
     CONF_LATITUDE,
@@ -81,7 +84,7 @@ VALID_FEED_TYPES = [
     "past_month_all_earthquakes",
 ]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = GEO_LOCATION_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_FEED_TYPE): vol.In(VALID_FEED_TYPES),
         vol.Optional(CONF_LATITUDE): cv.latitude,

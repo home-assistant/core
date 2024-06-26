@@ -697,7 +697,7 @@ datadog==0.15.0
 datapoint==0.9.9
 
 # homeassistant.components.bluetooth
-dbus-fast==2.21.3
+dbus-fast==2.22.1
 
 # homeassistant.components.debugpy
 debugpy==1.8.1
@@ -929,9 +929,6 @@ gassist-text==0.0.11
 # homeassistant.components.google
 gcal-sync==6.0.4
 
-# homeassistant.components.aladdin_connect
-genie-partner-sdk==1.0.2
-
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
 
@@ -1096,10 +1093,10 @@ hole==0.8.0
 holidays==0.51
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240610.1
+home-assistant-frontend==20240626.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.6.21
+home-assistant-intents==2024.6.26
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1473,9 +1470,6 @@ omnilogic==0.4.5
 # homeassistant.components.ondilo_ico
 ondilo==0.5.0
 
-# homeassistant.components.onkyo
-onkyo-eiscp==1.2.7
-
 # homeassistant.components.onvif
 onvif-zeep-async==3.1.12
 
@@ -1828,6 +1822,9 @@ pyefergy==22.5.0
 
 # homeassistant.components.energenie_power_sockets
 pyegps==0.2.5
+
+# homeassistant.components.onkyo
+pyeiscp==0.0.7
 
 # homeassistant.components.emoncms
 pyemoncms==0.0.7
@@ -2287,7 +2284,7 @@ python-kasa[speedups]==0.7.0.1
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==6.1.0
+python-matter-server==6.2.0b1
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2716,6 +2713,7 @@ temperusb==1.6.1
 # tensorflow==2.5.0
 
 # homeassistant.components.teslemetry
+# homeassistant.components.tessie
 tesla-fleet-api==0.6.1
 
 # homeassistant.components.powerwall
@@ -2971,7 +2969,7 @@ zeroconf==0.132.2
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.116
+zha-quirks==0.0.117
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.12
@@ -2980,16 +2978,16 @@ zhong-hong-hvac==1.0.12
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
-zigpy-deconz==0.23.1
+zigpy-deconz==0.23.2
 
 # homeassistant.components.zha
 zigpy-xbee==0.20.1
 
 # homeassistant.components.zha
-zigpy-zigate==0.12.0
+zigpy-zigate==0.12.1
 
 # homeassistant.components.zha
-zigpy-znp==0.12.1
+zigpy-znp==0.12.2
 
 # homeassistant.components.zha
 zigpy==0.64.1
