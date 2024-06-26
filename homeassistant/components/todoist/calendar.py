@@ -14,7 +14,7 @@ from todoist_api_python.models import Due, Label, Task
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CALENDAR_PLATFORM_SCHEMA,
     CalendarEntity,
     CalendarEvent,
 )
@@ -82,7 +82,7 @@ NEW_TASK_SERVICE_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CALENDAR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_TOKEN): cv.string,
         vol.Optional(CONF_EXTRA_PROJECTS, default=[]): vol.All(
