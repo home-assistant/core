@@ -34,7 +34,15 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateTyp
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PyLoadConfigEntry
-from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN, ISSUE_PLACEHOLDER
+from .const import (
+    DEFAULT_HOST,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    DOMAIN,
+    ISSUE_PLACEHOLDER,
+    MANUFACTURER,
+    SERVICE_NAME,
+)
 from .coordinator import PyLoadCoordinator
 
 
@@ -175,8 +183,8 @@ class PyLoadSensor(CoordinatorEntity[PyLoadCoordinator], SensorEntity):
         self.entity_description = entity_description
         self.device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            manufacturer="PyLoad Team",
-            model="pyLoad",
+            manufacturer=MANUFACTURER,
+            model=SERVICE_NAME,
             configuration_url=coordinator.pyload.api_url,
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             sw_version=coordinator.version,
