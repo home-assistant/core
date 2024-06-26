@@ -92,6 +92,7 @@ from .const import (
     SERVICE_SET_EXTRA_FEATURES,
 )
 from .device import XiaomiCoordinatedMiioEntity
+from .typing import ServiceMethodDetails
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -182,11 +183,11 @@ SERVICE_SCHEMA_EXTRA_FEATURES = AIRPURIFIER_SERVICE_SCHEMA.extend(
 )
 
 SERVICE_TO_METHOD = {
-    SERVICE_RESET_FILTER: {"method": "async_reset_filter"},
-    SERVICE_SET_EXTRA_FEATURES: {
-        "method": "async_set_extra_features",
-        "schema": SERVICE_SCHEMA_EXTRA_FEATURES,
-    },
+    SERVICE_RESET_FILTER: ServiceMethodDetails(method="async_reset_filter"),
+    SERVICE_SET_EXTRA_FEATURES: ServiceMethodDetails(
+        method="async_set_extra_features",
+        schema=SERVICE_SCHEMA_EXTRA_FEATURES,
+    ),
 }
 
 FAN_DIRECTIONS_MAP = {
@@ -271,7 +272,7 @@ async def async_setup_entry(
         update_tasks = []
 
         for entity in filtered_entities:
-            entity_method = getattr(entity, method["method"], None)
+            entity_method = getattr(entity, method.method, None)
             if not entity_method:
                 continue
             await entity_method(**params)
@@ -281,7 +282,7 @@ async def async_setup_entry(
             await asyncio.wait(update_tasks)
 
     for air_purifier_service, method in SERVICE_TO_METHOD.items():
-        schema = method.get("schema", AIRPURIFIER_SERVICE_SCHEMA)
+        schema = method.schema or AIRPURIFIER_SERVICE_SCHEMA
         hass.services.async_register(
             DOMAIN, air_purifier_service, async_service_handler, schema=schema
         )
