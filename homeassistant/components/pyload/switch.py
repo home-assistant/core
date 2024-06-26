@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import PyLoadConfigEntry
+from .coordinator import pyLoadData
 from .entity import BasePyLoadEntity
 
 
@@ -35,6 +36,7 @@ class PyLoadSwitchEntityDescription(SwitchEntityDescription):
     turn_on_fn: Callable[[PyLoadAPI], Awaitable[Any]]
     turn_off_fn: Callable[[PyLoadAPI], Awaitable[Any]]
     toggle_fn: Callable[[PyLoadAPI], Awaitable[Any]]
+    value_fn: Callable[[pyLoadData], bool]
 
 
 SENSOR_DESCRIPTIONS: tuple[PyLoadSwitchEntityDescription, ...] = (
@@ -45,6 +47,7 @@ SENSOR_DESCRIPTIONS: tuple[PyLoadSwitchEntityDescription, ...] = (
         turn_on_fn=lambda api: api.unpause(),
         turn_off_fn=lambda api: api.pause(),
         toggle_fn=lambda api: api.toggle_pause(),
+        value_fn=lambda data: data.download,
     ),
     PyLoadSwitchEntityDescription(
         key=PyLoadSwitch.RECONNECT,
@@ -53,6 +56,7 @@ SENSOR_DESCRIPTIONS: tuple[PyLoadSwitchEntityDescription, ...] = (
         turn_on_fn=lambda api: api.toggle_reconnect(),
         turn_off_fn=lambda api: api.toggle_reconnect(),
         toggle_fn=lambda api: api.toggle_reconnect(),
+        value_fn=lambda data: data.reconnect,
     ),
 )
 
@@ -80,7 +84,9 @@ class PyLoadSwitchEntity(BasePyLoadEntity, SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return the state of the device."""
-        return getattr(self.coordinator.data, self.entity_description.key)
+        return self.entity_description.value_fn(
+            self.coordinator.data,
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
