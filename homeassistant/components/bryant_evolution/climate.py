@@ -12,7 +12,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import CONF_FILENAME, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -43,7 +43,8 @@ async def async_setup_entry(
     if not await _can_reach_device(client):
         raise ConfigEntryNotReady
     climate = BryantEvolutionClimate(
-        config_entry.data[CONF_FILENAME],
+        # Suffix with -climate since we expect to add more entities later.
+        f"{config_entry.entry_id}-climate",
         config_entry.data[CONF_SYSTEM_ID],
         config_entry.data[CONF_ZONE_ID],
         client,
@@ -81,14 +82,15 @@ class BryantEvolutionClimate(ClimateEntity):
 
     def __init__(
         self: ClimateEntity,
-        filename: str,
+        unique_id: str,
         system_id: int,
         zone_id: int,
         client: BryantEvolutionClient,
     ) -> None:
         """Initialize an entity from parts."""
         self._client = client
-        self._attr_unique_id = f"bryant_evolution_{filename}_{system_id}_{zone_id}"
+
+        self._attr_unique_id = unique_id
         assert self.unique_id is not None  # Prevent mypy failure on next line
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
