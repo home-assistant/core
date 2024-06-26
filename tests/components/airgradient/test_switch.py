@@ -1,4 +1,4 @@
-"""Tests for the AirGradient number platform."""
+"""Tests for the AirGradient switch platform."""
 
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
@@ -8,12 +8,13 @@ from freezegun.api import FrozenDateTimeFactory
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.airgradient import DOMAIN
-from homeassistant.components.number import (
-    ATTR_VALUE,
-    DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    Platform,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -35,7 +36,7 @@ async def test_all_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
-    with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.NUMBER]):
+    with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.SWITCH]):
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
@@ -50,32 +51,31 @@ async def test_setting_value(
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
-        NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        service_data={ATTR_VALUE: 50},
-        target={ATTR_ENTITY_ID: "number.airgradient_display_brightness"},
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        target={ATTR_ENTITY_ID: "switch.airgradient_post_data_to_airgradient"},
         blocking=True,
     )
-    mock_airgradient_client.set_display_brightness.assert_called_once()
+    mock_airgradient_client.enable_sharing_data.assert_called_once()
+    mock_airgradient_client.enable_sharing_data.reset_mock()
 
     await hass.services.async_call(
-        NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        service_data={ATTR_VALUE: 50},
-        target={ATTR_ENTITY_ID: "number.airgradient_led_bar_brightness"},
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        target={ATTR_ENTITY_ID: "switch.airgradient_post_data_to_airgradient"},
         blocking=True,
     )
-    mock_airgradient_client.set_led_bar_brightness.assert_called_once()
+    mock_airgradient_client.enable_sharing_data.assert_called_once()
 
 
-async def test_cloud_creates_no_number(
+async def test_cloud_creates_no_switch(
     hass: HomeAssistant,
     mock_cloud_airgradient_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test cloud configuration control."""
-    with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.NUMBER]):
+    with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.SWITCH]):
         await setup_integration(hass, mock_config_entry)
 
     assert len(hass.states.async_all()) == 0
@@ -88,7 +88,7 @@ async def test_cloud_creates_no_number(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 1
 
     mock_cloud_airgradient_client.get_config.return_value = Config.from_json(
         load_fixture("get_config_cloud.json", DOMAIN)
