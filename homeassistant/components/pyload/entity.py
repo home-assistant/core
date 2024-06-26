@@ -4,14 +4,13 @@ from __future__ import annotations
 
 from homeassistant.components.button import EntityDescription
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, SERVICE_NAME
 from .coordinator import PyLoadCoordinator
 
 
-class BasePyLoadEntity(CoordinatorEntity[PyLoadCoordinator], Entity):
+class BasePyLoadEntity(CoordinatorEntity[PyLoadCoordinator]):
     """BaseEntity for pyLoad."""
 
     _attr_has_entity_name = True

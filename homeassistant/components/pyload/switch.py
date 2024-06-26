@@ -18,7 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import PyLoadConfigEntry
-from .coordinator import PyLoadCoordinator
 from .entity import BasePyLoadEntity
 
 
@@ -77,14 +76,6 @@ class PyLoadSwitchEntity(BasePyLoadEntity, SwitchEntity):
     """Representation of a pyLoad sensor."""
 
     entity_description: PyLoadSwitchEntityDescription
-
-    def __init__(
-        self,
-        coordinator: PyLoadCoordinator,
-        entity_description: PyLoadSwitchEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, entity_description)
 
     @property
     def is_on(self) -> bool | None:

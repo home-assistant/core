@@ -43,7 +43,7 @@ from .const import (
     ISSUE_PLACEHOLDER,
     UNIT_DOWNLOADS,
 )
-from .coordinator import PyLoadCoordinator, pyLoadData
+from .coordinator import pyLoadData
 from .entity import BasePyLoadEntity
 
 
@@ -188,14 +188,6 @@ class PyLoadSensor(BasePyLoadEntity, SensorEntity):
     """Representation of a pyLoad sensor."""
 
     entity_description: PyLoadSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: PyLoadCoordinator,
-        entity_description: PyLoadSensorEntityDescription,
-    ) -> None:
-        """Initialize a new pyLoad sensor."""
-        super().__init__(coordinator, entity_description)
 
     @property
     def native_value(self) -> StateType:

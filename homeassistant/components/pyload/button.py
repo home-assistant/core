@@ -14,7 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import PyLoadConfigEntry
-from .coordinator import PyLoadCoordinator
 from .entity import BasePyLoadEntity
 
 
@@ -78,14 +77,6 @@ class PyLoadBinarySensor(BasePyLoadEntity, ButtonEntity):
     """Representation of a pyLoad button."""
 
     entity_description: PyLoadButtonEntityDescription
-
-    def __init__(
-        self,
-        coordinator: PyLoadCoordinator,
-        entity_description: PyLoadButtonEntityDescription,
-    ) -> None:
-        """Initialize the button."""
-        super().__init__(coordinator, entity_description)
 
     async def async_press(self) -> None:
         """Handle the button press."""
