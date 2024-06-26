@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from enum import StrEnum
 
 import voluptuous as vol
@@ -28,11 +30,9 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PyLoadConfigEntry
 from .const import (
@@ -41,11 +41,10 @@ from .const import (
     DEFAULT_PORT,
     DOMAIN,
     ISSUE_PLACEHOLDER,
-    MANUFACTURER,
-    SERVICE_NAME,
     UNIT_DOWNLOADS,
 )
-from .coordinator import PyLoadCoordinator
+from .coordinator import pyLoadData
+from .entity import BasePyLoadEntity
 
 
 class PyLoadSensorEntity(StrEnum):
@@ -58,40 +57,52 @@ class PyLoadSensorEntity(StrEnum):
     TOTAL = "total"
 
 
-SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+@dataclass(kw_only=True, frozen=True)
+class PyLoadSensorEntityDescription(SensorEntityDescription):
+    """Describes pyLoad switch entity."""
+
+    value_fn: Callable[[pyLoadData], StateType]
+
+
+SENSOR_DESCRIPTIONS: tuple[PyLoadSensorEntityDescription, ...] = (
+    PyLoadSensorEntityDescription(
         key=PyLoadSensorEntity.SPEED,
         translation_key=PyLoadSensorEntity.SPEED,
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         suggested_display_precision=1,
+        value_fn=lambda data: data.speed,
     ),
-    SensorEntityDescription(
+    PyLoadSensorEntityDescription(
         key=PyLoadSensorEntity.ACTIVE,
         translation_key=PyLoadSensorEntity.ACTIVE,
         native_unit_of_measurement=UNIT_DOWNLOADS,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.active,
     ),
-    SensorEntityDescription(
+    PyLoadSensorEntityDescription(
         key=PyLoadSensorEntity.QUEUE,
         translation_key=PyLoadSensorEntity.QUEUE,
         native_unit_of_measurement=UNIT_DOWNLOADS,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.queue,
     ),
-    SensorEntityDescription(
+    PyLoadSensorEntityDescription(
         key=PyLoadSensorEntity.TOTAL,
         translation_key=PyLoadSensorEntity.TOTAL,
         native_unit_of_measurement=UNIT_DOWNLOADS,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.total,
     ),
-    SensorEntityDescription(
+    PyLoadSensorEntityDescription(
         key=PyLoadSensorEntity.FREE_SPACE,
         translation_key=PyLoadSensorEntity.FREE_SPACE,
         device_class=SensorDeviceClass.DATA_SIZE,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         suggested_display_precision=1,
+        value_fn=lambda data: data.free_space,
     ),
 )
 
@@ -173,32 +184,12 @@ async def async_setup_entry(
     )
 
 
-class PyLoadSensor(CoordinatorEntity[PyLoadCoordinator], SensorEntity):
+class PyLoadSensor(BasePyLoadEntity, SensorEntity):
     """Representation of a pyLoad sensor."""
 
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: PyLoadCoordinator,
-        entity_description: SensorEntityDescription,
-    ) -> None:
-        """Initialize a new pyLoad sensor."""
-        super().__init__(coordinator)
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.entry_id}_{entity_description.key}"
-        )
-        self.entity_description = entity_description
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            manufacturer=MANUFACTURER,
-            model=SERVICE_NAME,
-            configuration_url=coordinator.pyload.api_url,
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            sw_version=coordinator.version,
-        )
+    entity_description: PyLoadSensorEntityDescription
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return getattr(self.coordinator.data, self.entity_description.key)
+        return self.entity_description.value_fn(self.coordinator.data)
