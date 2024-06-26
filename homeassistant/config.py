@@ -947,7 +947,7 @@ def _log_pkg_error(
 def _identify_config_schema(module: ComponentProtocol) -> str | None:
     """Extract the schema and identify list or dict based."""
     if not isinstance(module.CONFIG_SCHEMA, vol.Schema):
-        return None
+        return None  # type: ignore[unreachable]
 
     schema = module.CONFIG_SCHEMA.schema
 

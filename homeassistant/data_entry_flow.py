@@ -114,7 +114,7 @@ class UnknownStep(FlowError):
 
 # ignore misc is required as vol.Invalid is not typed
 # mypy error: Class cannot subclass "Invalid" (has type "Any")
-class InvalidData(vol.Invalid):  # type: ignore[misc]
+class InvalidData(vol.Invalid):
     """Invalid data provided."""
 
     def __init__(
