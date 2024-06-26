@@ -110,10 +110,6 @@ def async_get_otbr_data(
         except HomeAssistantError as exc:
             connection.send_error(msg["id"], "get_extended_address_failed", str(exc))
             return
-
-        # The border agent ID is checked when the OTBR config entry is setup,
-        # we can assert it's not None
-        assert extended_address is not None
         if extended_address.hex() != msg["extended_address"]:
             connection.send_error(msg["id"], "unknown_router", "")
             return
