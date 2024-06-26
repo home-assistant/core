@@ -211,9 +211,9 @@
         "name": "State",
         "state": {
           "booting": "Booting",
-          "charging": "Charging",
-          "disconnected": "Disconnected",
-          "connected": "Connected",
+          "charging": "[%key:components::tessie::entity::sensor::charge_state_charging_state::state::charging%]",
+          "disconnected": "[%key:common::state::disconnected%]",
+          "connected": "[%key:common::state::connected%]",
           "scheduled": "Scheduled",
           "negotiating": "Negotiating",
           "error": "Error",
