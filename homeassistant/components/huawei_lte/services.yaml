@@ -22,7 +22,7 @@ get_messages:
       example: true
       selector:
         boolean:
-    limit:
+    max_messages:
       example: 20
       selector:
         number:
