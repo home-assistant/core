@@ -435,20 +435,18 @@ async def test_update_addon(
 
 
 # This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     (
-        "expected_lingering_tasks",
         "connect_side_effect",
         "issue_raised",
     ),
     [
         (
-            True,
             ServerVersionTooOld("Invalid version"),
             "server_version_version_too_old",
         ),
         (
-            True,
             ServerVersionTooNew("Invalid version"),
             "server_version_version_too_new",
         ),
