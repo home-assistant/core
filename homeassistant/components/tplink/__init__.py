@@ -43,6 +43,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_CREDENTIALS_HASH,
     CONF_DEVICE_CONFIG,
     CONNECT_TIMEOUT,
     DISCOVERY_TIMEOUT,
@@ -71,9 +72,18 @@ def create_async_tplink_clientsession(hass: HomeAssistant) -> ClientSession:
 def async_trigger_discovery(
     hass: HomeAssistant,
     discovered_devices: dict[str, Device],
+    have_credentials: bool,
 ) -> None:
     """Trigger config flows for discovered devices."""
+
     for formatted_mac, device in discovered_devices.items():
+        # Only include the credentials_hash if discovery was triggered with credentials
+        # otherwise the hash is useless and could be invalid
+        if device.credentials_hash and have_credentials:
+            credentials_hash = device.credentials_hash
+        else:
+            credentials_hash = None
+
         discovery_flow.async_create_flow(
             hass,
             DOMAIN,
@@ -83,17 +93,18 @@ def async_trigger_discovery(
                 CONF_HOST: device.host,
                 CONF_MAC: formatted_mac,
                 CONF_DEVICE_CONFIG: device.config.to_dict(
-                    credentials_hash=device.credentials_hash,
+                    credentials_hash=credentials_hash,
                     exclude_credentials=True,
                 ),
             },
         )
 
 
-async def async_discover_devices(hass: HomeAssistant) -> dict[str, Device]:
+async def async_discover_devices(
+    hass: HomeAssistant, credentials: Credentials | None
+) -> dict[str, Device]:
     """Discover TPLink devices on configured network interfaces."""
 
-    credentials = await get_credentials(hass)
     broadcast_addresses = await network.async_get_ipv4_broadcast_addresses(hass)
     tasks = [
         Discover.discover(
@@ -116,8 +127,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     async def _async_discovery(*_: Any) -> None:
-        if discovered := await async_discover_devices(hass):
-            async_trigger_discovery(hass, discovered)
+        credentials = await get_credentials(hass)
+        if discovered := await async_discover_devices(hass, credentials):
+            async_trigger_discovery(
+                hass, discovered, have_credentials=bool(credentials)
+            )
 
     hass.async_create_background_task(
         _async_discovery(), "tplink first discovery", eager_start=True
@@ -142,6 +156,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
             _LOGGER.warning(
                 "Invalid connection type dict for %s: %s", host, config_dict
             )
+    entry_credentials_hash = entry.data.get(CONF_CREDENTIALS_HASH)
 
     if not config:
         config = DeviceConfig(host)
@@ -151,8 +166,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
     config.timeout = CONNECT_TIMEOUT
     if config.uses_http is True:
         config.http_client = create_async_tplink_clientsession(hass)
+
+    # If we have in memory credentials use them otherwise check for credentials_hash
     if credentials:
         config.credentials = credentials
+    elif entry_credentials_hash:
+        config.credentials_hash = entry_credentials_hash
+
     try:
         device: Device = await Device.connect(config=config)
     except AuthenticationError as ex:
@@ -160,10 +180,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
     except KasaException as ex:
         raise ConfigEntryNotReady from ex
 
-    device_config_dict = device.config.to_dict(
-        credentials_hash=device.credentials_hash, exclude_credentials=True
-    )
+    device_credentials_hash = device.credentials_hash
+    device_config_dict = device.config.to_dict(exclude_credentials=True)
     updates: dict[str, Any] = {}
+    if device_credentials_hash and device_credentials_hash != entry_credentials_hash:
+        updates[CONF_CREDENTIALS_HASH] = device_credentials_hash
     if device_config_dict != config_dict:
         updates[CONF_DEVICE_CONFIG] = device_config_dict
     if entry.data.get(CONF_ALIAS) != device.alias:
