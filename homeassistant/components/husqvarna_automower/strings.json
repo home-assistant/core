@@ -276,6 +276,9 @@
     },
     "work_areas_not_supported": {
       "message": "This mower does not support work areas."
+    },
+    "work_area_not_existing": {
+      "message": "The selected workarea does not exist."
     }
   },
   "selector": {

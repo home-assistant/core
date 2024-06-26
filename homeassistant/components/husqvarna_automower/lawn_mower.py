@@ -4,10 +4,10 @@ from collections.abc import Awaitable, Callable, Coroutine
 from datetime import timedelta
 import functools
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aioautomower.exceptions import ApiException
-from aioautomower.model import MowerActivities, MowerStates
+from aioautomower.model import MowerActivities, MowerStates, WorkArea
 import voluptuous as vol
 
 from homeassistant.components.lawn_mower import (
@@ -138,6 +138,11 @@ class AutomowerLawnMowerEntity(AutomowerAvailableEntity, LawnMowerEntity):
             return LawnMowerActivity.DOCKED
         return LawnMowerActivity.ERROR
 
+    @property
+    def work_areas(self) -> dict[int, WorkArea] | None:
+        """Return the workareas of the mower."""
+        return self.mower_attributes.work_areas
+
     @handle_sending_exception
     async def async_start_mowing(self) -> None:
         """Resume schedule."""
@@ -171,6 +176,12 @@ class AutomowerLawnMowerEntity(AutomowerAvailableEntity, LawnMowerEntity):
         if not self.mower_attributes.capabilities.work_areas:
             raise ServiceValidationError(
                 translation_domain=DOMAIN, translation_key="work_areas_not_supported"
+            )
+        if TYPE_CHECKING:
+            assert self.work_areas is not None
+        if work_area_id not in self.work_areas:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="work_area_not_existing"
             )
         await self.coordinator.api.commands.start_in_workarea(
             self.mower_id, work_area_id, duration

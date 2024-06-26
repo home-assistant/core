@@ -212,7 +212,7 @@ async def test_lawn_mower_override_workarea_command(
 
 
 @pytest.mark.parametrize(
-    ("service", "service_data", "exception"),
+    ("service", "service_data", "mower_support_wa", "exception"),
     [
         (
             "override_schedule",
@@ -220,6 +220,7 @@ async def test_lawn_mower_override_workarea_command(
                 "duration": {"days": 1, "hours": 12, "minutes": 30},
                 "override_mode": "fly_to_moon",
             },
+            False,
             MultipleInvalid,
         ),
         (
@@ -228,6 +229,16 @@ async def test_lawn_mower_override_workarea_command(
                 "work_area_id": 123456,
                 "duration": {"days": 40},
             },
+            False,
+            ServiceValidationError,
+        ),
+        (
+            "override_schedule_workarea",
+            {
+                "work_area_id": 12345,
+                "duration": {"days": 40},
+            },
+            True,
             ServiceValidationError,
         ),
     ],
@@ -236,6 +247,7 @@ async def test_lawn_mower_wrong_service_commands(
     hass: HomeAssistant,
     service: str,
     service_data: dict[str, int] | None,
+    mower_support_wa: bool,
     exception,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -246,7 +258,7 @@ async def test_lawn_mower_wrong_service_commands(
     values = mower_list_to_dictionary_dataclass(
         load_json_value_fixture("mower.json", DOMAIN)
     )
-    values[TEST_MOWER_ID].capabilities.work_areas = None
+    values[TEST_MOWER_ID].capabilities.work_areas = mower_support_wa
     mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
