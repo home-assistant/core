@@ -7,7 +7,7 @@ from asyncio import CancelledError, timeout
 from datetime import timedelta
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, NamedTuple
 from urllib import parse
 
 import aiohttp
@@ -18,7 +18,7 @@ import xmltodict
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -70,7 +70,7 @@ UPDATE_CAPTURE_INTERVAL = timedelta(minutes=30)
 UPDATE_PRESETS_INTERVAL = timedelta(minutes=30)
 UPDATE_SERVICES_INTERVAL = timedelta(minutes=30)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOSTS): vol.All(
             cv.ensure_list,
@@ -85,15 +85,27 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+
+class ServiceMethodDetails(NamedTuple):
+    """Details for SERVICE_TO_METHOD mapping."""
+
+    method: str
+    schema: vol.Schema
+
+
 BS_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 
 BS_JOIN_SCHEMA = BS_SCHEMA.extend({vol.Required(ATTR_MASTER): cv.entity_id})
 
 SERVICE_TO_METHOD = {
-    SERVICE_JOIN: {"method": "async_join", "schema": BS_JOIN_SCHEMA},
-    SERVICE_UNJOIN: {"method": "async_unjoin", "schema": BS_SCHEMA},
-    SERVICE_SET_TIMER: {"method": "async_increase_timer", "schema": BS_SCHEMA},
-    SERVICE_CLEAR_TIMER: {"method": "async_clear_timer", "schema": BS_SCHEMA},
+    SERVICE_JOIN: ServiceMethodDetails(method="async_join", schema=BS_JOIN_SCHEMA),
+    SERVICE_UNJOIN: ServiceMethodDetails(method="async_unjoin", schema=BS_SCHEMA),
+    SERVICE_SET_TIMER: ServiceMethodDetails(
+        method="async_increase_timer", schema=BS_SCHEMA
+    ),
+    SERVICE_CLEAR_TIMER: ServiceMethodDetails(
+        method="async_clear_timer", schema=BS_SCHEMA
+    ),
 }
 
 
@@ -188,12 +200,11 @@ async def async_setup_platform(
             target_players = hass.data[DATA_BLUESOUND]
 
         for player in target_players:
-            await getattr(player, method["method"])(**params)
+            await getattr(player, method.method)(**params)
 
     for service, method in SERVICE_TO_METHOD.items():
-        schema = method["schema"]
         hass.services.async_register(
-            DOMAIN, service, async_service_handler, schema=schema
+            DOMAIN, service, async_service_handler, schema=method.schema
         )
 
 

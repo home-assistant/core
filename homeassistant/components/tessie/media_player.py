@@ -11,8 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TessieConfigEntry
-from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
+from .models import TessieVehicleData
 
 STATES = {
     "Playing": MediaPlayerState.PLAYING,
@@ -39,10 +39,10 @@ class TessieMediaEntity(TessieEntity, MediaPlayerEntity):
 
     def __init__(
         self,
-        coordinator: TessieStateUpdateCoordinator,
+        vehicle: TessieVehicleData,
     ) -> None:
         """Initialize the media player entity."""
-        super().__init__(coordinator, "media")
+        super().__init__(vehicle, "media")
 
     @property
     def state(self) -> MediaPlayerState:

@@ -6,18 +6,11 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from pyecotrend_ista.exception_classes import (
-    InternalServerError,
-    KeycloakError,
-    LoginError,
-    ServerError,
-)
-from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
-from requests.exceptions import RequestException
+from pyecotrend_ista import KeycloakError, LoginError, PyEcotrendIsta, ServerError
 
 from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -47,17 +40,12 @@ class IstaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         try:
             return await self.hass.async_add_executor_job(self.get_consumption_data)
-        except (
-            ServerError,
-            InternalServerError,
-            RequestException,
-            TimeoutError,
-        ) as e:
+        except ServerError as e:
             raise UpdateFailed(
                 "Unable to connect and retrieve data from ista EcoTrend, try again later"
             ) from e
         except (LoginError, KeycloakError) as e:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="authentication_exception",
                 translation_placeholders={CONF_EMAIL: self.ista._email},  # noqa: SLF001
@@ -67,8 +55,8 @@ class IstaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Get raw json data for all consumption units."""
 
         return {
-            consumption_unit: self.ista.get_raw(consumption_unit)
-            for consumption_unit in self.ista.getUUIDs()
+            consumption_unit: self.ista.get_consumption_data(consumption_unit)
+            for consumption_unit in self.ista.get_uuids()
         }
 
     async def async_get_details(self) -> dict[str, Any]:
@@ -77,17 +65,12 @@ class IstaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             result = await self.hass.async_add_executor_job(
                 self.ista.get_consumption_unit_details
             )
-        except (
-            ServerError,
-            InternalServerError,
-            RequestException,
-            TimeoutError,
-        ) as e:
+        except ServerError as e:
             raise UpdateFailed(
                 "Unable to connect and retrieve data from ista EcoTrend, try again later"
             ) from e
         except (LoginError, KeycloakError) as e:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="authentication_exception",
                 translation_placeholders={CONF_EMAIL: self.ista._email},  # noqa: SLF001
@@ -99,5 +82,5 @@ class IstaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     for details in result["consumptionUnits"]
                     if details["id"] == consumption_unit
                 )
-                for consumption_unit in self.ista.getUUIDs()
+                for consumption_unit in self.ista.get_uuids()
             }

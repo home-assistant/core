@@ -1936,6 +1936,7 @@ async def test_config_defaults() -> None:
     assert config.currency == "EUR"
     assert config.country is None
     assert config.language == "en"
+    assert config.radius == 100
 
 
 async def test_config_path_with_file() -> None:
@@ -1983,6 +1984,7 @@ async def test_config_as_dict() -> None:
         "language": "en",
         "safe_mode": False,
         "debug": False,
+        "radius": 100,
     }
 
     assert expected == config.as_dict()
@@ -3092,14 +3094,14 @@ async def test_get_release_channel(
         assert get_release_channel() == release_channel
 
 
-def test_is_callback_check_partial():
+def test_is_callback_check_partial() -> None:
     """Test is_callback_check_partial matches HassJob."""
 
     @ha.callback
-    def callback_func():
+    def callback_func() -> None:
         pass
 
-    def not_callback_func():
+    def not_callback_func() -> None:
         pass
 
     assert ha.is_callback(callback_func)
@@ -3128,14 +3130,14 @@ def test_is_callback_check_partial():
     )
 
 
-def test_hassjob_passing_job_type():
+def test_hassjob_passing_job_type() -> None:
     """Test passing the job type to HassJob when we already know it."""
 
     @ha.callback
-    def callback_func():
+    def callback_func() -> None:
         pass
 
-    def not_callback_func():
+    def not_callback_func() -> None:
         pass
 
     assert (
@@ -3235,7 +3237,7 @@ async def test_async_run_job_deprecated(
 ) -> None:
     """Test async_run_job warns about its deprecation."""
 
-    async def _test():
+    async def _test() -> None:
         pass
 
     hass.async_run_job(_test)
@@ -3252,7 +3254,7 @@ async def test_async_add_job_deprecated(
 ) -> None:
     """Test async_add_job warns about its deprecation."""
 
-    async def _test():
+    async def _test() -> None:
         pass
 
     hass.async_add_job(_test)
@@ -3269,7 +3271,7 @@ async def test_async_add_hass_job_deprecated(
 ) -> None:
     """Test async_add_hass_job warns about its deprecation."""
 
-    async def _test():
+    async def _test() -> None:
         pass
 
     hass.async_add_hass_job(HassJob(_test))
@@ -3383,24 +3385,24 @@ async def test_statemachine_report_state(hass: HomeAssistant) -> None:
     hass.states.async_set("light.bowl", "on", None, True)
     await hass.async_block_till_done()
     assert len(state_changed_events) == 1
-    assert len(state_reported_events) == 2
+    assert len(state_reported_events) == 1
 
     hass.states.async_set("light.bowl", "off")
     await hass.async_block_till_done()
     assert len(state_changed_events) == 2
-    assert len(state_reported_events) == 3
+    assert len(state_reported_events) == 1
 
     hass.states.async_remove("light.bowl")
     await hass.async_block_till_done()
     assert len(state_changed_events) == 3
-    assert len(state_reported_events) == 4
+    assert len(state_reported_events) == 1
 
     unsub()
 
     hass.states.async_set("light.bowl", "on")
     await hass.async_block_till_done()
     assert len(state_changed_events) == 4
-    assert len(state_reported_events) == 4
+    assert len(state_reported_events) == 1
 
 
 async def test_report_state_listener_restrictions(hass: HomeAssistant) -> None:

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from homeassistant.helpers.device_registry import DeviceInfo
+
 from .coordinator import TessieStateUpdateCoordinator
 
 
@@ -11,4 +13,13 @@ from .coordinator import TessieStateUpdateCoordinator
 class TessieData:
     """Data for the Tessie integration."""
 
-    vehicles: list[TessieStateUpdateCoordinator]
+    vehicles: list[TessieVehicleData]
+
+
+@dataclass
+class TessieVehicleData:
+    """Data for a Tessie vehicle."""
+
+    data_coordinator: TessieStateUpdateCoordinator
+    device: DeviceInfo
+    vin: str

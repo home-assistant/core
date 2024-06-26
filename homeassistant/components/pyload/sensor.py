@@ -2,21 +2,17 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
-import logging
+from enum import StrEnum
 
-from aiohttp import CookieJar
-from pyloadapi.api import PyLoadAPI
-from pyloadapi.exceptions import CannotConnect, InvalidAuth, ParserError
-from pyloadapi.types import StatusServerResponse
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
@@ -26,35 +22,76 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     UnitOfDataRate,
+    UnitOfInformation,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT
+from . import PyLoadConfigEntry
+from .const import (
+    DEFAULT_HOST,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    DOMAIN,
+    ISSUE_PLACEHOLDER,
+    MANUFACTURER,
+    SERVICE_NAME,
+)
+from .coordinator import PyLoadCoordinator
 
-_LOGGER = logging.getLogger(__name__)
+
+class PyLoadSensorEntity(StrEnum):
+    """pyLoad Sensor Entities."""
+
+    ACTIVE = "active"
+    FREE_SPACE = "free_space"
+    QUEUE = "queue"
+    SPEED = "speed"
+    TOTAL = "total"
 
 
-SCAN_INTERVAL = timedelta(seconds=15)
-
-SENSOR_TYPES = {
-    "speed": SensorEntityDescription(
-        key="speed",
-        name="Speed",
-        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=PyLoadSensorEntity.SPEED,
+        translation_key=PyLoadSensorEntity.SPEED,
         device_class=SensorDeviceClass.DATA_RATE,
-    )
-}
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        suggested_display_precision=1,
+    ),
+    SensorEntityDescription(
+        key=PyLoadSensorEntity.ACTIVE,
+        translation_key=PyLoadSensorEntity.ACTIVE,
+    ),
+    SensorEntityDescription(
+        key=PyLoadSensorEntity.QUEUE,
+        translation_key=PyLoadSensorEntity.QUEUE,
+    ),
+    SensorEntityDescription(
+        key=PyLoadSensorEntity.TOTAL,
+        translation_key=PyLoadSensorEntity.TOTAL,
+    ),
+    SensorEntityDescription(
+        key=PyLoadSensorEntity.FREE_SPACE,
+        translation_key=PyLoadSensorEntity.FREE_SPACE,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        suggested_display_precision=1,
+    ),
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_MONITORED_VARIABLES, default=["speed"]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+            cv.ensure_list, [vol.In(PyLoadSensorEntity)]
         ),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
@@ -68,90 +105,92 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
+    add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the pyLoad sensors."""
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
-    protocol = "https" if config[CONF_SSL] else "http"
-    name = config[CONF_NAME]
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    monitored_types = config[CONF_MONITORED_VARIABLES]
-    url = f"{protocol}://{host}:{port}/"
+    """Import config from yaml."""
 
-    session = async_create_clientsession(
-        hass,
-        verify_ssl=False,
-        cookie_jar=CookieJar(unsafe=True),
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
     )
-    pyloadapi = PyLoadAPI(session, api_url=url, username=username, password=password)
-    try:
-        await pyloadapi.login()
-    except CannotConnect as conn_err:
-        raise PlatformNotReady(
-            "Unable to connect and retrieve data from pyLoad API"
-        ) from conn_err
-    except ParserError as e:
-        raise PlatformNotReady("Unable to parse data from pyLoad API") from e
-    except InvalidAuth as e:
-        raise PlatformNotReady(
-            f"Authentication failed for {config[CONF_USERNAME]}, check your login credentials"
-        ) from e
-
-    devices = []
-    for ng_type in monitored_types:
-        new_sensor = PyLoadSensor(
-            api=pyloadapi, sensor_type=SENSOR_TYPES[ng_type], client_name=name
+    if (
+        result.get("type") == FlowResultType.CREATE_ENTRY
+        or result.get("reason") == "already_configured"
+    ):
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            breaks_in_ha_version="2025.2.0",
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "pyLoad",
+            },
         )
-        devices.append(new_sensor)
+    elif error := result.get("reason"):
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{error}",
+            breaks_in_ha_version="2025.2.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{error}",
+            translation_placeholders=ISSUE_PLACEHOLDER,
+        )
 
-    async_add_entities(devices, True)
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: PyLoadConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the pyLoad sensors."""
+
+    coordinator = entry.runtime_data
+
+    async_add_entities(
+        (
+            PyLoadSensor(
+                coordinator=coordinator,
+                entity_description=description,
+            )
+            for description in SENSOR_DESCRIPTIONS
+        ),
+    )
 
 
-class PyLoadSensor(SensorEntity):
+class PyLoadSensor(CoordinatorEntity[PyLoadCoordinator], SensorEntity):
     """Representation of a pyLoad sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
-        self, api: PyLoadAPI, sensor_type: SensorEntityDescription, client_name
+        self,
+        coordinator: PyLoadCoordinator,
+        entity_description: SensorEntityDescription,
     ) -> None:
         """Initialize a new pyLoad sensor."""
-        self._attr_name = f"{client_name} {sensor_type.name}"
-        self.type = sensor_type.key
-        self.api = api
-        self.entity_description = sensor_type
-        self.data: StatusServerResponse
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_{entity_description.key}"
+        )
+        self.entity_description = entity_description
+        self.device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer=MANUFACTURER,
+            model=SERVICE_NAME,
+            configuration_url=coordinator.pyload.api_url,
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+            sw_version=coordinator.version,
+        )
 
-    async def async_update(self) -> None:
-        """Update state of sensor."""
-        try:
-            self.data = await self.api.get_status()
-        except InvalidAuth:
-            _LOGGER.info("Authentication failed, trying to reauthenticate")
-            try:
-                await self.api.login()
-            except InvalidAuth:
-                _LOGGER.error(
-                    "Authentication failed for %s, check your login credentials",
-                    self.api.username,
-                )
-                return
-            else:
-                _LOGGER.info(
-                    "Unable to retrieve data due to cookie expiration "
-                    "but re-authentication was successful"
-                )
-                return
-        except CannotConnect:
-            _LOGGER.debug("Unable to connect and retrieve data from pyLoad API")
-            return
-        except ParserError:
-            _LOGGER.error("Unable to parse data from pyLoad API")
-            return
-
-        value = getattr(self.data, self.type)
-
-        if "speed" in self.type and value > 0:
-            # Convert download rate from Bytes/s to MBytes/s
-            self._attr_native_value = round(value / 2**20, 2)
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return getattr(self.coordinator.data, self.entity_description.key)
