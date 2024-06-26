@@ -583,7 +583,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         router = router_resolver(service)
         if (limit := service.data.get(CONF_MAX_MESSAGES)) is None:
             messages = router.client.sms.get_messages(
-                unread_preferred=service.data[CONF_UNREAD_PREFERRED]
+                unread_preferred=service.data[CONF_PREFER_UNREAD]
             )
         elif limit <= 0:
             _LOGGER.error("%s: limit must be a positive number", service.service)
@@ -594,7 +594,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             for _, message in zip(
                 range(limit),
                 router.client.sms.get_messages(
-                    unread_preferred=service.data[CONF_UNREAD_PREFERRED],
+                    unread_preferred=service.data[CONF_PREFER_UNREAD],
                     read_count=read_count,
                 )
             ):
