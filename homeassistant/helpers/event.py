@@ -385,7 +385,6 @@ _KEYED_TRACK_STATE_REPORTED = _KeyedEventTracker(
 )
 
 
-@bind_hass
 def async_track_state_reported_event(
     hass: HomeAssistant,
     entity_ids: str | Iterable[str],
