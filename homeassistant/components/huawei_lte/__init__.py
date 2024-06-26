@@ -599,7 +599,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 )
             ):
                 messages.append(message)
-        return {"messages": [msg.as_dict() for msg in messages]}
+        return {"messages": [msg.to_dict() for msg in messages]}
         
     hass.services.async_register(
         DOMAIN,
