@@ -158,16 +158,16 @@ class RequirementsManager:
             if not self.hass.config.skip_pip:
                 await self._async_process_integration(integration, done)
         except BaseException as ex:
+            # We do not cache failures as we want to retry, or
+            # else people can't fix it and then restart, because
+            # their config will never be valid.
+            del cache[domain]
             future.set_exception(ex)
             with contextlib.suppress(BaseException):
                 # Clear the flag as its normal that nothing
                 # will wait for this future to be resolved
                 # if there are no concurrent requirements fetches.
                 await future
-            # We do not cache failures as we want to retry, or
-            # else people can't fix it and then restart, because
-            # their config will never be valid.
-            del cache[domain]
             raise
 
         cache[domain] = integration
