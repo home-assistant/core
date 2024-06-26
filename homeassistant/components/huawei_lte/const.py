@@ -4,6 +4,7 @@ DOMAIN = "huawei_lte"
 
 ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 
+CONF_BOX_TYPE = "box_type"
 CONF_DATETIME = "datetime"
 CONF_MANUFACTURER = "manufacturer"
 CONF_MESSAGE = "message"
