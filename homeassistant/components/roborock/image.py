@@ -1,6 +1,7 @@
 """Support for Roborock image."""
 
 import asyncio
+from datetime import datetime
 import io
 from itertools import chain
 
@@ -48,6 +49,7 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
     """A class to let you visualize the map."""
 
     _attr_has_entity_name = True
+    image_last_updated: datetime
 
     def __init__(
         self,
@@ -103,11 +105,8 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         # will be called and we will evaluate on the new coordinator data if we should
         # update the cache.
         if (
-            self.image_last_updated is not None
-            and (dt_util.utcnow() - self.image_last_updated).total_seconds()
-            > IMAGE_CACHE_INTERVAL
-            and self.is_map_valid()
-        ):
+            dt_util.utcnow() - self.image_last_updated
+        ).total_seconds() > IMAGE_CACHE_INTERVAL and self.is_map_valid():
             self._attr_image_last_updated = dt_util.utcnow()
         super()._handle_coordinator_update()
 
