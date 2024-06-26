@@ -54,3 +54,54 @@ get_messages:
           min: 1
           step: 1
           mode: box
+
+read_message:
+  fields:
+    id: 
+      example: "4006"
+      selector:
+        number:
+          min: 0
+          step: 1
+          mode: box
+
+delete_message:
+  fields:
+    id: 
+      example: "4006"
+      selector:
+        number:
+          min: 0
+          step: 1
+          mode: box
+
+save_message:
+  fields:
+    id:
+      example: "4006"
+      default: -1
+      selector:
+        number:
+          min: 0
+          step: 1
+          mode: box
+    sender:
+      example: >-
+        - "+123456789"
+        - "+987654321"
+      required: true
+      selector: 
+        object:
+    message:
+      example: Hello!
+      required: true
+      selector:
+        text:
+          multiline: true
+    datetime:
+      selector:
+        datetime:
+    sca:
+      example: "+123456789"
+      selector: 
+        text:
