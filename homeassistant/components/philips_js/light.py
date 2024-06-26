@@ -379,3 +379,12 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
 
         self._update_from_coordinator()
         self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Return true if entity is available."""
+        if not super().available:
+            return False
+        if not self.coordinator.api.on:
+            return False
+        return self.coordinator.api.powerstate == "On"

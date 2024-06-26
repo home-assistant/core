@@ -12,6 +12,9 @@ import voluptuous as vol
 
 from homeassistant.components import conversation
 from homeassistant.components.conversation import trace
+from homeassistant.components.google_generative_ai_conversation.const import (
+    CONF_CHAT_MODEL,
+)
 from homeassistant.components.google_generative_ai_conversation.conversation import (
     _escape_decode,
 )
@@ -72,10 +75,6 @@ async def test_default_prompt(
             "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI._async_get_api_prompt",
             return_value="<api_prompt>",
         ),
-        patch(
-            "homeassistant.components.google_generative_ai_conversation.conversation.llm.async_render_no_api_prompt",
-            return_value="<no_api_prompt>",
-        ),
     ):
         mock_chat = AsyncMock()
         mock_model.return_value.start_chat.return_value = mock_chat
@@ -99,13 +98,22 @@ async def test_default_prompt(
     assert mock_get_tools.called == (CONF_LLM_HASS_API in config_entry_options)
 
 
+@pytest.mark.parametrize(
+    ("model_name", "supports_system_instruction"),
+    [("models/gemini-1.5-pro", True), ("models/gemini-1.0-pro", False)],
+)
 async def test_chat_history(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,
+    model_name: str,
+    supports_system_instruction: bool,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that the agent keeps track of the chat history."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_CHAT_MODEL: model_name}
+    )
     with patch("google.generativeai.GenerativeModel") as mock_model:
         mock_chat = AsyncMock()
         mock_model.return_value.start_chat.return_value = mock_chat
@@ -115,9 +123,14 @@ async def test_chat_history(
         mock_part.function_call = None
         mock_part.text = "1st model response"
         chat_response.parts = [mock_part]
-        mock_chat.history = [
-            {"role": "user", "parts": "prompt"},
-            {"role": "model", "parts": "Ok"},
+        if supports_system_instruction:
+            mock_chat.history = []
+        else:
+            mock_chat.history = [
+                {"role": "user", "parts": "prompt"},
+                {"role": "model", "parts": "Ok"},
+            ]
+        mock_chat.history += [
             {"role": "user", "parts": "1st user request"},
             {"role": "model", "parts": "1st model response"},
         ]
@@ -256,7 +269,7 @@ async def test_function_call(
     ]
     # AGENT_DETAIL event contains the raw prompt passed to the model
     detail_event = trace_events[1]
-    assert "Answer in plain text" in detail_event["data"]["messages"][0]["parts"]
+    assert "Answer in plain text" in detail_event["data"]["prompt"]
 
 
 @patch(
@@ -492,9 +505,9 @@ async def test_template_variables(
     ), result
     assert (
         "The user name is Test User."
-        in mock_model.mock_calls[1][2]["history"][0]["parts"]
+        in mock_model.mock_calls[0][2]["system_instruction"]
     )
-    assert "The user id is 12345." in mock_model.mock_calls[1][2]["history"][0]["parts"]
+    assert "The user id is 12345." in mock_model.mock_calls[0][2]["system_instruction"]
 
 
 async def test_conversation_agent(

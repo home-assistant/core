@@ -24,7 +24,7 @@ from homeassistant.helpers.deprecation import (
 )
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 
 from .const import (  # noqa: F401
     _DEPRECATED_SUPPORT_DURATION,
@@ -44,7 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-TURN_ON_SCHEMA = {
+TURN_ON_SCHEMA: VolDictType = {
     vol.Optional(ATTR_TONE): vol.Any(vol.Coerce(int), cv.string),
     vol.Optional(ATTR_DURATION): cv.positive_int,
     vol.Optional(ATTR_VOLUME_LEVEL): cv.small_float,
