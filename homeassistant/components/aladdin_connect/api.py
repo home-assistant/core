@@ -3,7 +3,7 @@
 from typing import cast
 
 from aiohttp import ClientSession
-from genie_partner_sdk.auth import Auth
+# from genie_partner_sdk.auth import Auth
 
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 

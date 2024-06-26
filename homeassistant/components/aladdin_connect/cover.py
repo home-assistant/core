@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from genie_partner_sdk.model import GarageDoor
+# from genie_partner_sdk.model import GarageDoor
 
 from homeassistant.components.cover import (
     CoverDeviceClass,

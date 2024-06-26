@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from genie_partner_sdk.client import AladdinConnectClient
+# from genie_partner_sdk.client import AladdinConnectClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
