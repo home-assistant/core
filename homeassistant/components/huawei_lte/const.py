@@ -6,8 +6,10 @@ ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 
 CONF_DATETIME = "datetime"
 CONF_MANUFACTURER = "manufacturer"
+CONF_MESSAGE = "message"
 CONF_MAX_MESSAGES = "max_messages"
 CONF_PREFER_UNREAD = "prefer_unread"
+CONF_SCA = "sca"
 CONF_TRACK_WIRED_CLIENTS = "track_wired_clients"
 CONF_UNAUTHENTICATED_MODE = "unauthenticated_mode"
 
