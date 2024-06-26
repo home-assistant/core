@@ -18,6 +18,31 @@ get_messages:
       example: http://192.168.100.1/
       selector:
         text:
+    box_type:
+      example: "mix_type"
+      selector: 
+        select: 
+          options:
+            - label: "Local inbox"
+              value: 1
+            - label: "Local sent"
+              value: 2
+            - label: "Local draft"
+              value: 3
+            - label: "Local trash"
+              value: 4
+            - label: "SIM inbox"
+              value: 5
+            - label: "SIM sent"
+              value: 6
+            - label: "SIM draft"
+              value: 7
+            - label: "Mix inbox"
+              value: 8
+            - label: "Mix sent"
+              value: 9
+            - label: "Mix draft"
+              value: 10
     prefer_unread:
       example: true
       selector:
