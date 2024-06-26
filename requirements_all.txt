@@ -1905,7 +1905,7 @@ pyialarm==2.2.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.6.1
+pyinsteon==1.6.3
 
 # homeassistant.components.intesishome
 pyintesishome==1.8.0
@@ -2278,7 +2278,7 @@ python-join-api==0.0.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.6.2.1
+python-kasa[speedups]==0.7.0.1
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
@@ -2315,7 +2315,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==2.3.0
+python-roborock==2.5.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
@@ -2791,7 +2791,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==3.4.0
+uiprotect==3.7.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
