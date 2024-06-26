@@ -27,6 +27,7 @@ STRETCH_USERNAME: Final = "stretch"
 
 PLATFORMS: Final[list[str]] = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.CLIMATE,
     Platform.NUMBER,
     Platform.SELECT,
