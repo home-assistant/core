@@ -45,7 +45,12 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -531,7 +536,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         elif not routers:
             _LOGGER.error("%s: no routers configured", service.service)
-            return
+            raise ServiceValidationError
         elif len(routers) == 1:
             router = next(iter(routers.values()))
         else:
@@ -540,18 +545,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 service.service,
                 sorted(router.url for router in routers.values()),
             )
-            return
+            raise ServiceValidationError
         if not router:
             _LOGGER.error("%s: router %s unavailable", service.service, url)
-            return
+            raise HomeAssistantError
         return router
 
     def admin_service_handler(service: ServiceCall) -> None:
         """
         Handle administrative service call.
         """
-        if not (router := router_resolver(service)):
-            return
+        router = router_resolver(service)
         if service.service == SERVICE_RESUME_INTEGRATION:
             # Login will be handled automatically on demand
             router.suspended = False
@@ -576,15 +580,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """
         Handle calls to retrieve SMS messages.
         """
-        if not (router := router_resolver(service)):
-            return
+        router = router_resolver(service)
         if (limit := service.data.get(CONF_MAX_MESSAGES)) is None:
             messages = router.client.sms.get_messages(
                 unread_preferred=service.data[CONF_UNREAD_PREFERRED]
             )
         elif limit <= 0:
             _LOGGER.error("%s: limit must be a positive number", service.service)
-            return
+            raise ServiceValidationError
         else:
             read_count = min(limit, DEFAULT_MESSAGES_CHUNK)
             messages = []
