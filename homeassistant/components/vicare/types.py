@@ -99,6 +99,7 @@ VICARE_TO_HA_MODE_VENTILATION = {
     VentilationMode.SENSOR_OVERRIDE: "sensor_override",
 }
 
+
 class VentilationProgram(enum.StrEnum):
     """ViCare preset ventilation programs.
 
