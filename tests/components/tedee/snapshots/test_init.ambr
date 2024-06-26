@@ -23,6 +23,7 @@
     'model': 'Bridge',
     'name': 'Bridge-AB1C',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': '0000-0000',
     'suggested_area': None,
     'sw_version': None,
