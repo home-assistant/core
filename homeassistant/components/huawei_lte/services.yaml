@@ -57,8 +57,13 @@ get_messages:
 
 read_message:
   fields:
-    id: 
+    url:
+      example: http://192.168.100.1/
+      selector:
+        text:
+    id:
       example: "4006"
+      required: true
       selector:
         number:
           min: 0
@@ -67,8 +72,13 @@ read_message:
 
 delete_message:
   fields:
+    url:
+      example: http://192.168.100.1/
+      selector:
+        text:
     id: 
       example: "4006"
+      required: true
       selector:
         number:
           min: 0
@@ -77,6 +87,10 @@ delete_message:
 
 save_message:
   fields:
+    url:
+      example: http://192.168.100.1/
+      selector:
+        text:
     id:
       example: "4006"
       default: -1
