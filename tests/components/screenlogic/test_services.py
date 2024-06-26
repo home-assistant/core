@@ -1,12 +1,12 @@
 """Tests for ScreenLogic integration service calls."""
 
-from collections.abc import AsyncGenerator
 from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, patch
 
 import pytest
 from screenlogicpy import ScreenLogicGateway
 from screenlogicpy.device_const.system import COLOR_MODE
+from typing_extensions import AsyncGenerator
 
 from homeassistant.components.screenlogic import DOMAIN
 from homeassistant.components.screenlogic.const import (
@@ -53,7 +53,7 @@ async def setup_screenlogic_services_fixture(
     request: pytest.FixtureRequest,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
-) -> AsyncGenerator[dict[str, Any], None]:
+) -> AsyncGenerator[dict[str, Any]]:
     """Define the setup for a patched screenlogic integration."""
     data = (
         marker.args[0]

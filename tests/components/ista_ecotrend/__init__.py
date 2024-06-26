@@ -1,1 +1,1 @@
-"""Tests for the ista Ecotrend integration."""
+"""Tests for the ista EcoTrend integration."""

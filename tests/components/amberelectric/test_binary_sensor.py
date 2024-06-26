@@ -28,7 +28,7 @@ MOCK_API_TOKEN = "psk_0000000000000000"
 
 
 @pytest.fixture
-async def setup_no_spike(hass) -> AsyncGenerator:
+async def setup_no_spike(hass: HomeAssistant) -> AsyncGenerator[Mock]:
     """Set up general channel."""
     MockConfigEntry(
         domain="amberelectric",
@@ -51,7 +51,7 @@ async def setup_no_spike(hass) -> AsyncGenerator:
 
 
 @pytest.fixture
-async def setup_potential_spike(hass) -> AsyncGenerator:
+async def setup_potential_spike(hass: HomeAssistant) -> AsyncGenerator[Mock]:
     """Set up general channel."""
     MockConfigEntry(
         domain="amberelectric",
@@ -80,7 +80,7 @@ async def setup_potential_spike(hass) -> AsyncGenerator:
 
 
 @pytest.fixture
-async def setup_spike(hass) -> AsyncGenerator:
+async def setup_spike(hass: HomeAssistant) -> AsyncGenerator[Mock]:
     """Set up general channel."""
     MockConfigEntry(
         domain="amberelectric",
@@ -108,7 +108,8 @@ async def setup_spike(hass) -> AsyncGenerator:
         yield mock_update.return_value
 
 
-def test_no_spike_sensor(hass: HomeAssistant, setup_no_spike) -> None:
+@pytest.mark.usefixtures("setup_no_spike")
+def test_no_spike_sensor(hass: HomeAssistant) -> None:
     """Testing the creation of the Amber renewables sensor."""
     assert len(hass.states.async_all()) == 5
     sensor = hass.states.get("binary_sensor.mock_title_price_spike")
@@ -118,7 +119,8 @@ def test_no_spike_sensor(hass: HomeAssistant, setup_no_spike) -> None:
     assert sensor.attributes["spike_status"] == "none"
 
 
-def test_potential_spike_sensor(hass: HomeAssistant, setup_potential_spike) -> None:
+@pytest.mark.usefixtures("setup_potential_spike")
+def test_potential_spike_sensor(hass: HomeAssistant) -> None:
     """Testing the creation of the Amber renewables sensor."""
     assert len(hass.states.async_all()) == 5
     sensor = hass.states.get("binary_sensor.mock_title_price_spike")
@@ -128,7 +130,8 @@ def test_potential_spike_sensor(hass: HomeAssistant, setup_potential_spike) -> N
     assert sensor.attributes["spike_status"] == "potential"
 
 
-def test_spike_sensor(hass: HomeAssistant, setup_spike) -> None:
+@pytest.mark.usefixtures("setup_spike")
+def test_spike_sensor(hass: HomeAssistant) -> None:
     """Testing the creation of the Amber renewables sensor."""
     assert len(hass.states.async_all()) == 5
     sensor = hass.states.get("binary_sensor.mock_title_price_spike")

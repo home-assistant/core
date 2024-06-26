@@ -28,6 +28,7 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
     DurationConverter,
@@ -126,6 +127,7 @@ QUERY_STATISTICS_SUMMARY_SUM = (
 
 
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
+    **{unit: ConductivityConverter for unit in ConductivityConverter.VALID_UNITS},
     **{unit: DataRateConverter for unit in DataRateConverter.VALID_UNITS},
     **{unit: DistanceConverter for unit in DistanceConverter.VALID_UNITS},
     **{unit: DurationConverter for unit in DurationConverter.VALID_UNITS},
@@ -154,7 +156,7 @@ def mean(values: list[float]) -> float | None:
 
     This is a very simple version that only works
     with a non-empty list of floats. The built-in
-    statistics.mean is more robust but is is almost
+    statistics.mean is more robust but is almost
     an order of magnitude slower.
     """
     return sum(values) / len(values)
@@ -241,7 +243,8 @@ def _get_statistic_to_display_unit_converter(
     statistic_unit: str | None,
     state_unit: str | None,
     requested_units: dict[str, str] | None,
-) -> Callable[[float | None], float | None] | None:
+    allow_none: bool = True,
+) -> Callable[[float | None], float | None] | Callable[[float], float] | None:
     """Prepare a converter from the statistics unit to display unit."""
     if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
         return None
@@ -260,9 +263,11 @@ def _get_statistic_to_display_unit_converter(
     if display_unit == statistic_unit:
         return None
 
-    return converter.converter_factory_allow_none(
-        from_unit=statistic_unit, to_unit=display_unit
-    )
+    if allow_none:
+        return converter.converter_factory_allow_none(
+            from_unit=statistic_unit, to_unit=display_unit
+        )
+    return converter.converter_factory(from_unit=statistic_unit, to_unit=display_unit)
 
 
 def _get_display_to_statistic_unit_converter(
@@ -392,7 +397,7 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
     """
     start_time = start.replace(minute=0)
     start_time_ts = start_time.timestamp()
-    end_time = start_time + timedelta(hours=1)
+    end_time = start_time + Statistics.duration
     end_time_ts = end_time.timestamp()
 
     # Compute last hour's average, min, max
@@ -460,7 +465,9 @@ def compile_missing_statistics(instance: Recorder) -> bool:
     ) as session:
         # Find the newest statistics run, if any
         if last_run := session.query(func.max(StatisticsRuns.start)).scalar():
-            start = max(start, process_timestamp(last_run) + timedelta(minutes=5))
+            start = max(
+                start, process_timestamp(last_run) + StatisticsShortTerm.duration
+            )
 
         periods_without_commit = 0
         while start < last_period:
@@ -529,7 +536,7 @@ def _compile_statistics(
     returns a set of modified statistic_ids if any were modified.
     """
     assert start.tzinfo == dt_util.UTC, "start must be in UTC"
-    end = start + timedelta(minutes=5)
+    end = start + StatisticsShortTerm.duration
     statistics_meta_manager = instance.statistics_meta_manager
     modified_statistic_ids: set[str] = set()
 
@@ -948,7 +955,8 @@ def reduce_day_ts_factory() -> (
     ]
 ):
     """Return functions to match same day and day start end."""
-    _boundries: tuple[float, float] = (0, 0)
+    _lower_bound: float = 0
+    _upper_bound: float = 0
 
     # We have to recreate _local_from_timestamp in the closure in case the timezone changes
     _local_from_timestamp = partial(
@@ -957,10 +965,10 @@ def reduce_day_ts_factory() -> (
 
     def _same_day_ts(time1: float, time2: float) -> bool:
         """Return True if time1 and time2 are in the same date."""
-        nonlocal _boundries
-        if not _boundries[0] <= time1 < _boundries[1]:
-            _boundries = _day_start_end_ts_cached(time1)
-        return _boundries[0] <= time2 < _boundries[1]
+        nonlocal _lower_bound, _upper_bound
+        if not _lower_bound <= time1 < _upper_bound:
+            _lower_bound, _upper_bound = _day_start_end_ts_cached(time1)
+        return _lower_bound <= time2 < _upper_bound
 
     def _day_start_end_ts(time: float) -> tuple[float, float]:
         """Return the start and end of the period (day) time is within."""
@@ -968,8 +976,8 @@ def reduce_day_ts_factory() -> (
             hour=0, minute=0, second=0, microsecond=0
         )
         return (
-            start_local.astimezone(dt_util.UTC).timestamp(),
-            (start_local + timedelta(days=1)).astimezone(dt_util.UTC).timestamp(),
+            start_local.timestamp(),
+            (start_local + timedelta(days=1)).timestamp(),
         )
 
     # We create _day_start_end_ts_cached in the closure in case the timezone changes
@@ -996,7 +1004,8 @@ def reduce_week_ts_factory() -> (
     ]
 ):
     """Return functions to match same week and week start end."""
-    _boundries: tuple[float, float] = (0, 0)
+    _lower_bound: float = 0
+    _upper_bound: float = 0
 
     # We have to recreate _local_from_timestamp in the closure in case the timezone changes
     _local_from_timestamp = partial(
@@ -1005,21 +1014,20 @@ def reduce_week_ts_factory() -> (
 
     def _same_week_ts(time1: float, time2: float) -> bool:
         """Return True if time1 and time2 are in the same year and week."""
-        nonlocal _boundries
-        if not _boundries[0] <= time1 < _boundries[1]:
-            _boundries = _week_start_end_ts_cached(time1)
-        return _boundries[0] <= time2 < _boundries[1]
+        nonlocal _lower_bound, _upper_bound
+        if not _lower_bound <= time1 < _upper_bound:
+            _lower_bound, _upper_bound = _week_start_end_ts_cached(time1)
+        return _lower_bound <= time2 < _upper_bound
 
     def _week_start_end_ts(time: float) -> tuple[float, float]:
         """Return the start and end of the period (week) time is within."""
-        nonlocal _boundries
         time_local = _local_from_timestamp(time)
         start_local = time_local.replace(
             hour=0, minute=0, second=0, microsecond=0
         ) - timedelta(days=time_local.weekday())
         return (
-            start_local.astimezone(dt_util.UTC).timestamp(),
-            (start_local + timedelta(days=7)).astimezone(dt_util.UTC).timestamp(),
+            start_local.timestamp(),
+            (start_local + timedelta(days=7)).timestamp(),
         )
 
     # We create _week_start_end_ts_cached in the closure in case the timezone changes
@@ -1054,7 +1062,8 @@ def reduce_month_ts_factory() -> (
     ]
 ):
     """Return functions to match same month and month start end."""
-    _boundries: tuple[float, float] = (0, 0)
+    _lower_bound: float = 0
+    _upper_bound: float = 0
 
     # We have to recreate _local_from_timestamp in the closure in case the timezone changes
     _local_from_timestamp = partial(
@@ -1063,10 +1072,10 @@ def reduce_month_ts_factory() -> (
 
     def _same_month_ts(time1: float, time2: float) -> bool:
         """Return True if time1 and time2 are in the same year and month."""
-        nonlocal _boundries
-        if not _boundries[0] <= time1 < _boundries[1]:
-            _boundries = _month_start_end_ts_cached(time1)
-        return _boundries[0] <= time2 < _boundries[1]
+        nonlocal _lower_bound, _upper_bound
+        if not _lower_bound <= time1 < _upper_bound:
+            _lower_bound, _upper_bound = _month_start_end_ts_cached(time1)
+        return _lower_bound <= time2 < _upper_bound
 
     def _month_start_end_ts(time: float) -> tuple[float, float]:
         """Return the start and end of the period (month) time is within."""
@@ -1074,10 +1083,7 @@ def reduce_month_ts_factory() -> (
             day=1, hour=0, minute=0, second=0, microsecond=0
         )
         end_local = _find_month_end_time(start_local)
-        return (
-            start_local.astimezone(dt_util.UTC).timestamp(),
-            end_local.astimezone(dt_util.UTC).timestamp(),
-        )
+        return (start_local.timestamp(), end_local.timestamp())
 
     # We create _month_start_end_ts_cached in the closure in case the timezone changes
     _month_start_end_ts_cached = lru_cache(maxsize=6)(_month_start_end_ts)
@@ -1245,11 +1251,28 @@ def _first_statistic(
     table: type[StatisticsBase],
     metadata_id: int,
 ) -> datetime | None:
-    """Return the data of the oldest statistic row for a given metadata id."""
+    """Return the date of the oldest statistic row for a given metadata id."""
     stmt = lambda_stmt(
         lambda: select(table.start_ts)
         .filter(table.metadata_id == metadata_id)
         .order_by(table.start_ts.asc())
+        .limit(1)
+    )
+    if stats := cast(Sequence[Row], execute_stmt_lambda_element(session, stmt)):
+        return dt_util.utc_from_timestamp(stats[0].start_ts)
+    return None
+
+
+def _last_statistic(
+    session: Session,
+    table: type[StatisticsBase],
+    metadata_id: int,
+) -> datetime | None:
+    """Return the date of the newest statistic row for a given metadata id."""
+    stmt = lambda_stmt(
+        lambda: select(table.start_ts)
+        .filter(table.metadata_id == metadata_id)
+        .order_by(table.start_ts.desc())
         .limit(1)
     )
     if stats := cast(Sequence[Row], execute_stmt_lambda_element(session, stmt)):
@@ -1263,6 +1286,7 @@ def _get_oldest_sum_statistic(
     main_start_time: datetime | None,
     tail_start_time: datetime | None,
     oldest_stat: datetime | None,
+    oldest_5_min_stat: datetime | None,
     tail_only: bool,
     metadata_id: int,
 ) -> float | None:
@@ -1307,6 +1331,15 @@ def _get_oldest_sum_statistic(
 
     if (
         head_start_time is not None
+        and oldest_5_min_stat is not None
+        and (
+            # If we want stats older than the short term purge window, don't lookup
+            # the oldest sum in the short term table, as it would be prioritized
+            # over older LongTermStats.
+            (oldest_stat is None)
+            or (oldest_5_min_stat < oldest_stat)
+            or (oldest_5_min_stat <= head_start_time)
+        )
         and (
             oldest_sum := _get_oldest_sum_statistic_in_sub_period(
                 session, head_start_time, StatisticsShortTerm, metadata_id
@@ -1448,7 +1481,7 @@ def statistic_during_period(
         tail_only = (
             start_time is not None
             and end_time is not None
-            and end_time - start_time < timedelta(hours=1)
+            and end_time - start_time < Statistics.duration
         )
 
         # Calculate the head period
@@ -1458,32 +1491,37 @@ def statistic_during_period(
             not tail_only
             and oldest_stat is not None
             and oldest_5_min_stat is not None
-            and oldest_5_min_stat - oldest_stat < timedelta(hours=1)
+            and oldest_5_min_stat - oldest_stat < Statistics.duration
             and (start_time is None or start_time < oldest_5_min_stat)
         ):
             # To improve accuracy of averaged for statistics which were added within
             # recorder's retention period.
             head_start_time = oldest_5_min_stat
-            head_end_time = oldest_5_min_stat.replace(
-                minute=0, second=0, microsecond=0
-            ) + timedelta(hours=1)
+            head_end_time = (
+                oldest_5_min_stat.replace(minute=0, second=0, microsecond=0)
+                + Statistics.duration
+            )
         elif not tail_only and start_time is not None and start_time.minute:
             head_start_time = start_time
-            head_end_time = start_time.replace(
-                minute=0, second=0, microsecond=0
-            ) + timedelta(hours=1)
+            head_end_time = (
+                start_time.replace(minute=0, second=0, microsecond=0)
+                + Statistics.duration
+            )
 
         # Calculate the tail period
         tail_start_time: datetime | None = None
         tail_end_time: datetime | None = None
         if end_time is None:
-            tail_start_time = now.replace(minute=0, second=0, microsecond=0)
+            tail_start_time = _last_statistic(session, Statistics, metadata_id)
+            if tail_start_time:
+                tail_start_time += Statistics.duration
+            else:
+                tail_start_time = now.replace(minute=0, second=0, microsecond=0)
+        elif tail_only:
+            tail_start_time = start_time
+            tail_end_time = end_time
         elif end_time.minute:
-            tail_start_time = (
-                start_time
-                if tail_only
-                else end_time.replace(minute=0, second=0, microsecond=0)
-            )
+            tail_start_time = end_time.replace(minute=0, second=0, microsecond=0)
             tail_end_time = end_time
 
         # Calculate the main period
@@ -1518,6 +1556,7 @@ def statistic_during_period(
                     main_start_time,
                     tail_start_time,
                     oldest_stat,
+                    oldest_5_min_stat,
                     tail_only,
                     metadata_id,
                 )
@@ -1730,13 +1769,11 @@ def _statistics_during_period_with_session(
 
     result = _sorted_statistics_to_dict(
         hass,
-        session,
         stats,
         statistic_ids,
         metadata,
         True,
         table,
-        start_time,
         units,
         types,
     )
@@ -1848,13 +1885,11 @@ def _get_last_statistics(
         # Return statistics combined with metadata
         return _sorted_statistics_to_dict(
             hass,
-            session,
             stats,
             statistic_ids,
             metadata,
             convert_units,
             table,
-            None,
             None,
             types,
         )
@@ -1963,13 +1998,11 @@ def get_latest_short_term_statistics_with_session(
     # Return statistics combined with metadata
     return _sorted_statistics_to_dict(
         hass,
-        session,
         stats,
         statistic_ids,
         metadata,
         False,
         StatisticsShortTerm,
-        None,
         None,
         types,
     )
@@ -2017,42 +2050,119 @@ def _statistics_at_time(
     return cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
 
 
-def _fast_build_sum_list(
-    stats_list: list[Row],
+def _build_sum_converted_stats(
+    db_rows: list[Row],
     table_duration_seconds: float,
-    convert: Callable | None,
+    start_ts_idx: int,
+    sum_idx: int,
+    convert: Callable[[float | None], float | None] | Callable[[float], float],
+) -> list[StatisticsRow]:
+    """Build a list of sum statistics."""
+    return [
+        {
+            "start": (start_ts := db_row[start_ts_idx]),
+            "end": start_ts + table_duration_seconds,
+            "sum": None if (v := db_row[sum_idx]) is None else convert(v),
+        }
+        for db_row in db_rows
+    ]
+
+
+def _build_sum_stats(
+    db_rows: list[Row],
+    table_duration_seconds: float,
     start_ts_idx: int,
     sum_idx: int,
 ) -> list[StatisticsRow]:
     """Build a list of sum statistics."""
-    if convert:
-        return [
-            {
-                "start": (start_ts := db_state[start_ts_idx]),
-                "end": start_ts + table_duration_seconds,
-                "sum": convert(db_state[sum_idx]),
-            }
-            for db_state in stats_list
-        ]
     return [
         {
-            "start": (start_ts := db_state[start_ts_idx]),
+            "start": (start_ts := db_row[start_ts_idx]),
             "end": start_ts + table_duration_seconds,
-            "sum": db_state[sum_idx],
+            "sum": db_row[sum_idx],
         }
-        for db_state in stats_list
+        for db_row in db_rows
     ]
 
 
-def _sorted_statistics_to_dict(  # noqa: C901
+def _build_stats(
+    db_rows: list[Row],
+    table_duration_seconds: float,
+    start_ts_idx: int,
+    mean_idx: int | None,
+    min_idx: int | None,
+    max_idx: int | None,
+    last_reset_ts_idx: int | None,
+    state_idx: int | None,
+    sum_idx: int | None,
+) -> list[StatisticsRow]:
+    """Build a list of statistics without unit conversion."""
+    result: list[StatisticsRow] = []
+    ent_results_append = result.append
+    for db_row in db_rows:
+        row: StatisticsRow = {
+            "start": (start_ts := db_row[start_ts_idx]),
+            "end": start_ts + table_duration_seconds,
+        }
+        if last_reset_ts_idx is not None:
+            row["last_reset"] = db_row[last_reset_ts_idx]
+        if mean_idx is not None:
+            row["mean"] = db_row[mean_idx]
+        if min_idx is not None:
+            row["min"] = db_row[min_idx]
+        if max_idx is not None:
+            row["max"] = db_row[max_idx]
+        if state_idx is not None:
+            row["state"] = db_row[state_idx]
+        if sum_idx is not None:
+            row["sum"] = db_row[sum_idx]
+        ent_results_append(row)
+    return result
+
+
+def _build_converted_stats(
+    db_rows: list[Row],
+    table_duration_seconds: float,
+    start_ts_idx: int,
+    mean_idx: int | None,
+    min_idx: int | None,
+    max_idx: int | None,
+    last_reset_ts_idx: int | None,
+    state_idx: int | None,
+    sum_idx: int | None,
+    convert: Callable[[float | None], float | None] | Callable[[float], float],
+) -> list[StatisticsRow]:
+    """Build a list of statistics with unit conversion."""
+    result: list[StatisticsRow] = []
+    ent_results_append = result.append
+    for db_row in db_rows:
+        row: StatisticsRow = {
+            "start": (start_ts := db_row[start_ts_idx]),
+            "end": start_ts + table_duration_seconds,
+        }
+        if last_reset_ts_idx is not None:
+            row["last_reset"] = db_row[last_reset_ts_idx]
+        if mean_idx is not None:
+            row["mean"] = None if (v := db_row[mean_idx]) is None else convert(v)
+        if min_idx is not None:
+            row["min"] = None if (v := db_row[min_idx]) is None else convert(v)
+        if max_idx is not None:
+            row["max"] = None if (v := db_row[max_idx]) is None else convert(v)
+        if state_idx is not None:
+            row["state"] = None if (v := db_row[state_idx]) is None else convert(v)
+        if sum_idx is not None:
+            row["sum"] = None if (v := db_row[sum_idx]) is None else convert(v)
+        ent_results_append(row)
+    return result
+
+
+def _sorted_statistics_to_dict(
     hass: HomeAssistant,
-    session: Session,
     stats: Sequence[Row[Any]],
     statistic_ids: set[str] | None,
     _metadata: dict[str, tuple[int, StatisticMetaData]],
     convert_units: bool,
     table: type[StatisticsBase],
-    start_time: datetime | None,
     units: dict[str, str] | None,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[StatisticsRow]]:
@@ -2090,19 +2200,23 @@ def _sorted_statistics_to_dict(  # noqa: C901
     state_idx = field_map["state"] if "state" in types else None
     sum_idx = field_map["sum"] if "sum" in types else None
     sum_only = len(types) == 1 and sum_idx is not None
+    row_idxes = (mean_idx, min_idx, max_idx, last_reset_ts_idx, state_idx, sum_idx)
     # Append all statistic entries, and optionally do unit conversion
     table_duration_seconds = table.duration.total_seconds()
-    for meta_id, stats_list in stats_by_meta_id.items():
+    for meta_id, db_rows in stats_by_meta_id.items():
         metadata_by_id = metadata[meta_id]
         statistic_id = metadata_by_id["statistic_id"]
         if convert_units:
             state_unit = unit = metadata_by_id["unit_of_measurement"]
             if state := hass.states.get(statistic_id):
                 state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
+            convert = _get_statistic_to_display_unit_converter(
+                unit, state_unit, units, allow_none=False
+            )
         else:
             convert = None
 
+        build_args = (db_rows, table_duration_seconds, start_ts_idx)
         if sum_only:
             # This function is extremely flexible and can handle all types of
             # statistics, but in practice we only ever use a few combinations.
@@ -2110,53 +2224,16 @@ def _sorted_statistics_to_dict(  # noqa: C901
             # For energy, we only need sum statistics, so we can optimize
             # this path to avoid the overhead of the more generic function.
             assert sum_idx is not None
-            result[statistic_id] = _fast_build_sum_list(
-                stats_list,
-                table_duration_seconds,
-                convert,
-                start_ts_idx,
-                sum_idx,
-            )
-            continue
-
-        ent_results_append = result[statistic_id].append
-        #
-        # The below loop is a red hot path for energy, and every
-        # optimization counts in here.
-        #
-        # Specifically, we want to avoid function calls,
-        # attribute lookups, and dict lookups as much as possible.
-        #
-        for db_state in stats_list:
-            row: StatisticsRow = {
-                "start": (start_ts := db_state[start_ts_idx]),
-                "end": start_ts + table_duration_seconds,
-            }
-            if last_reset_ts_idx is not None:
-                row["last_reset"] = db_state[last_reset_ts_idx]
             if convert:
-                if mean_idx is not None:
-                    row["mean"] = convert(db_state[mean_idx])
-                if min_idx is not None:
-                    row["min"] = convert(db_state[min_idx])
-                if max_idx is not None:
-                    row["max"] = convert(db_state[max_idx])
-                if state_idx is not None:
-                    row["state"] = convert(db_state[state_idx])
-                if sum_idx is not None:
-                    row["sum"] = convert(db_state[sum_idx])
+                _stats = _build_sum_converted_stats(*build_args, sum_idx, convert)
             else:
-                if mean_idx is not None:
-                    row["mean"] = db_state[mean_idx]
-                if min_idx is not None:
-                    row["min"] = db_state[min_idx]
-                if max_idx is not None:
-                    row["max"] = db_state[max_idx]
-                if state_idx is not None:
-                    row["state"] = db_state[state_idx]
-                if sum_idx is not None:
-                    row["sum"] = db_state[sum_idx]
-            ent_results_append(row)
+                _stats = _build_sum_stats(*build_args, sum_idx)
+        elif convert:
+            _stats = _build_converted_stats(*build_args, *row_idxes, convert)
+        else:
+            _stats = _build_stats(*build_args, *row_idxes)
+
+        result[statistic_id] = _stats
 
     return result
 

@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from google.api_core.exceptions import ClientError, DeadlineExceeded
-from google.rpc.error_details_pb2 import ErrorInfo
+from google.rpc.error_details_pb2 import ErrorInfo  # pylint: disable=no-name-in-module
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -94,22 +94,20 @@ async def test_generate_content_service_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test generate content service handles errors."""
-    with (
-        patch("google.generativeai.GenerativeModel") as mock_model,
-        pytest.raises(
-            HomeAssistantError, match="Error generating content: None reason"
-        ),
-    ):
+    with patch("google.generativeai.GenerativeModel") as mock_model:
         mock_model.return_value.generate_content_async = AsyncMock(
             side_effect=ClientError("reason")
         )
-        await hass.services.async_call(
-            "google_generative_ai_conversation",
-            "generate_content",
-            {"prompt": "write a story about an epic fail"},
-            blocking=True,
-            return_response=True,
-        )
+        with pytest.raises(
+            HomeAssistantError, match="Error generating content: None reason"
+        ):
+            await hass.services.async_call(
+                "google_generative_ai_conversation",
+                "generate_content",
+                {"prompt": "write a story about an epic fail"},
+                blocking=True,
+                return_response=True,
+            )
 
 
 @pytest.mark.usefixtures("mock_init_component")
@@ -120,20 +118,20 @@ async def test_generate_content_response_has_empty_parts(
     """Test generate content service handles response with empty parts."""
     with (
         patch("google.generativeai.GenerativeModel") as mock_model,
-        pytest.raises(HomeAssistantError, match="Error generating content"),
     ):
         mock_response = MagicMock()
         mock_response.parts = []
         mock_model.return_value.generate_content_async = AsyncMock(
             return_value=mock_response
         )
-        await hass.services.async_call(
-            "google_generative_ai_conversation",
-            "generate_content",
-            {"prompt": "write a story about an epic fail"},
-            blocking=True,
-            return_response=True,
-        )
+        with pytest.raises(HomeAssistantError, match="Error generating content"):
+            await hass.services.async_call(
+                "google_generative_ai_conversation",
+                "generate_content",
+                {"prompt": "write a story about an epic fail"},
+                blocking=True,
+                return_response=True,
+            )
 
 
 async def test_generate_content_service_with_image_not_allowed_path(

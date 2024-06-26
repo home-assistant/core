@@ -23,6 +23,7 @@
     'model': 'HPTS-50 200 202172000',
     'name': 'My water heater',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': 'serial',
     'suggested_area': 'Basement',
     'sw_version': '2.14',

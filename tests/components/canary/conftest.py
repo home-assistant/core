@@ -4,16 +4,19 @@ from unittest.mock import MagicMock, patch
 
 from canary.api import Api
 import pytest
+from typing_extensions import Generator
+
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture(autouse=True)
-def mock_ffmpeg(hass):
+def mock_ffmpeg(hass: HomeAssistant) -> None:
     """Mock ffmpeg is loaded."""
     hass.config.components.add("ffmpeg")
 
 
 @pytest.fixture
-def canary(hass):
+def canary() -> Generator[MagicMock]:
     """Mock the CanaryApi for easier testing."""
     with (
         patch.object(Api, "login", return_value=True),
@@ -38,7 +41,7 @@ def canary(hass):
 
 
 @pytest.fixture
-def canary_config_flow(hass):
+def canary_config_flow() -> Generator[MagicMock]:
     """Mock the CanaryApi for easier config flow testing."""
     with (
         patch.object(Api, "login", return_value=True),

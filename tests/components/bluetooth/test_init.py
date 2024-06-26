@@ -129,7 +129,7 @@ async def test_setup_and_stop_passive(
 
     assert init_kwargs == {
         "adapter": "hci0",
-        "bluez": scanner.PASSIVE_SCANNER_ARGS,
+        "bluez": scanner.PASSIVE_SCANNER_ARGS,  # pylint: disable=c-extension-no-member
         "scanning_mode": "passive",
         "detection_callback": ANY,
     }
@@ -432,11 +432,11 @@ async def test_discovery_match_by_service_uuid(
         }
     ],
 )
+@pytest.mark.usefixtures("mock_bluetooth_adapters")
 async def test_discovery_match_by_service_uuid_and_short_local_name(
     mock_async_get_bluetooth: AsyncMock,
     hass: HomeAssistant,
     mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
 ) -> None:
     """Test bluetooth discovery match by service_uuid and short local name."""
     entry = MockConfigEntry(domain="bluetooth", unique_id="00:00:00:00:00:01")

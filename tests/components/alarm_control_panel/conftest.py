@@ -1,9 +1,9 @@
 """Fixturs for Alarm Control Panel tests."""
 
-from collections.abc import Generator
 from unittest.mock import MagicMock
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
@@ -108,7 +108,7 @@ class MockFlow(ConfigFlow):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -160,7 +160,6 @@ async def setup_lock_platform_test_entity(
         )
         return True
 
-    MockPlatform(hass, f"{TEST_DOMAIN}.config_flow")
     mock_integration(
         hass,
         MockModule(

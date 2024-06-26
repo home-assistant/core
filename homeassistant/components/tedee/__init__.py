@@ -12,7 +12,7 @@ from pytedee_async.exception import TedeeDataUpdateException, TedeeWebhookExcept
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.webhook import (
     async_generate_id as webhook_generate_id,
-    async_generate_path as webhook_generate_path,
+    async_generate_url as webhook_generate_url,
     async_register as webhook_register,
     async_unregister as webhook_unregister,
 )
@@ -66,8 +66,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TedeeConfigEntry) -> boo
             await coordinator.tedee_client.cleanup_webhooks_by_host(instance_url)
         except (TedeeDataUpdateException, TedeeWebhookException) as ex:
             _LOGGER.warning("Failed to cleanup Tedee webhooks by host: %s", ex)
-        webhook_url = (
-            f"{instance_url}{webhook_generate_path(entry.data[CONF_WEBHOOK_ID])}"
+
+        webhook_url = webhook_generate_url(
+            hass, entry.data[CONF_WEBHOOK_ID], allow_external=False, allow_ip=True
         )
         webhook_name = "Tedee"
         if entry.title != NAME:

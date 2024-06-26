@@ -354,9 +354,8 @@ async def test_esphome_device_with_current_bluetooth(
     )
 
 
-async def test_unique_id_updated_to_mac(
-    hass: HomeAssistant, mock_client, mock_zeroconf: None
-) -> None:
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_unique_id_updated_to_mac(hass: HomeAssistant, mock_client) -> None:
     """Test we update config entry unique ID to MAC address."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -384,8 +383,9 @@ async def test_unique_id_updated_to_mac(
     assert entry.unique_id == "11:22:33:44:55:aa"
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_unique_id_not_updated_if_name_same_and_already_mac(
-    hass: HomeAssistant, mock_client: APIClient, mock_zeroconf: None
+    hass: HomeAssistant, mock_client: APIClient
 ) -> None:
     """Test we never update the entry unique ID event if the name is the same."""
     entry = MockConfigEntry(
@@ -418,8 +418,9 @@ async def test_unique_id_not_updated_if_name_same_and_already_mac(
     assert entry.unique_id == "11:22:33:44:55:aa"
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_unique_id_updated_if_name_unset_and_already_mac(
-    hass: HomeAssistant, mock_client: APIClient, mock_zeroconf: None
+    hass: HomeAssistant, mock_client: APIClient
 ) -> None:
     """Test we never update config entry unique ID even if the name is unset."""
     entry = MockConfigEntry(
@@ -447,8 +448,9 @@ async def test_unique_id_updated_if_name_unset_and_already_mac(
     assert entry.unique_id == "11:22:33:44:55:aa"
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_unique_id_not_updated_if_name_different_and_already_mac(
-    hass: HomeAssistant, mock_client: APIClient, mock_zeroconf: None
+    hass: HomeAssistant, mock_client: APIClient
 ) -> None:
     """Test we do not update config entry unique ID if the name is different."""
     entry = MockConfigEntry(
@@ -483,8 +485,9 @@ async def test_unique_id_not_updated_if_name_different_and_already_mac(
     assert entry.data[CONF_DEVICE_NAME] == "test"
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_name_updated_only_if_mac_matches(
-    hass: HomeAssistant, mock_client: APIClient, mock_zeroconf: None
+    hass: HomeAssistant, mock_client: APIClient
 ) -> None:
     """Test we update config entry name only if the mac matches."""
     entry = MockConfigEntry(
@@ -517,8 +520,9 @@ async def test_name_updated_only_if_mac_matches(
     assert entry.data[CONF_DEVICE_NAME] == "new"
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_name_updated_only_if_mac_was_unset(
-    hass: HomeAssistant, mock_client: APIClient, mock_zeroconf: None
+    hass: HomeAssistant, mock_client: APIClient
 ) -> None:
     """Test we update config entry name if the old unique id was not a mac."""
     entry = MockConfigEntry(
@@ -551,10 +555,10 @@ async def test_name_updated_only_if_mac_was_unset(
     assert entry.data[CONF_DEVICE_NAME] == "new"
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_connection_aborted_wrong_device(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_zeroconf: None,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test we abort the connection if the unique id is a mac and neither name or mac match."""
@@ -571,7 +575,7 @@ async def test_connection_aborted_wrong_device(
     entry.add_to_hass(hass)
     disconnect_done = hass.loop.create_future()
 
-    def async_disconnect(*args, **kwargs) -> None:
+    async def async_disconnect(*args, **kwargs) -> None:
         disconnect_done.set_result(None)
 
     mock_client.disconnect = async_disconnect
@@ -615,10 +619,10 @@ async def test_connection_aborted_wrong_device(
     assert "Unexpected device found at" not in caplog.text
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_failure_during_connect(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_zeroconf: None,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test we disconnect when there is a failure during connection setup."""
@@ -1152,3 +1156,28 @@ async def test_start_reauth(
     assert len(flows) == 1
     flow = flows[0]
     assert flow["context"]["source"] == "reauth"
+
+
+async def test_entry_missing_unique_id(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test the unique id is added from storage if available."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=None,
+        data={
+            CONF_HOST: "test.local",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+        },
+        options={CONF_ALLOW_SERVICE_CALLS: True},
+    )
+    entry.add_to_hass(hass)
+    await mock_esphome_device(mock_client=mock_client, mock_storage=True)
+    await hass.async_block_till_done()
+    assert entry.unique_id == "11:22:33:44:55:aa"

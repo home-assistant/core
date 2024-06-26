@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 import datetime as dt
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.srp_energy.const import DOMAIN, PHOENIX_TIME_ZONE
 from homeassistant.const import CONF_ID
@@ -48,7 +48,7 @@ def fixture_mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture(name="mock_srp_energy")
-def fixture_mock_srp_energy() -> Generator[None, MagicMock, None]:
+def fixture_mock_srp_energy() -> Generator[MagicMock]:
     """Return a mocked SrpEnergyClient client."""
     with patch(
         "homeassistant.components.srp_energy.SrpEnergyClient", autospec=True
@@ -60,7 +60,7 @@ def fixture_mock_srp_energy() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture(name="mock_srp_energy_config_flow")
-def fixture_mock_srp_energy_config_flow() -> Generator[None, MagicMock, None]:
+def fixture_mock_srp_energy_config_flow() -> Generator[MagicMock]:
     """Return a mocked config_flow SrpEnergyClient client."""
     with patch(
         "homeassistant.components.srp_energy.config_flow.SrpEnergyClient", autospec=True

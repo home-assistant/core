@@ -8,6 +8,7 @@ from homeassistant import config_entries
 from homeassistant.components.izone.const import DISPATCH_CONTROLLER_DISCOVERED, IZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 
 @pytest.fixture
@@ -20,8 +21,6 @@ def mock_disco():
 
 
 def _mock_start_discovery(hass, mock_disco):
-    from homeassistant.helpers.dispatcher import async_dispatcher_send
-
     def do_disovered(*args):
         async_dispatcher_send(hass, DISPATCH_CONTROLLER_DISCOVERED, True)
         return mock_disco

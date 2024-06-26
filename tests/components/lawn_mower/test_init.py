@@ -1,9 +1,9 @@
 """The tests for the lawn mower integration."""
 
-from collections.abc import Generator
 from unittest.mock import MagicMock
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.lawn_mower import (
     DOMAIN as LAWN_MOWER_DOMAIN,
@@ -52,7 +52,7 @@ class MockLawnMowerEntity(LawnMowerEntity):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 

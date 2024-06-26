@@ -42,6 +42,12 @@
         "state": {
           "on": "mdi:motion-sensor"
         }
+      },
+      "sleep": {
+        "default": "mdi:sleep-off",
+        "state": {
+          "on": "mdi:sleep"
+        }
       }
     },
     "button": {
@@ -256,6 +262,9 @@
         "default": "mdi:message-badge"
       },
       "record": {
+        "default": "mdi:record-rec"
+      },
+      "manual_record": {
         "default": "mdi:record-rec"
       },
       "buzzer": {

@@ -1,12 +1,12 @@
 """Tests for Renault setup process."""
 
-from collections.abc import Generator
 from typing import Any
 from unittest.mock import Mock, patch
 
 import aiohttp
 import pytest
 from renault_api.gigya.exceptions import GigyaException, InvalidCredentialsException
+from typing_extensions import Generator
 
 from homeassistant.components.renault.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -18,7 +18,7 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
-def override_platforms() -> Generator[None, None, None]:
+def override_platforms() -> Generator[None]:
     """Override PLATFORMS."""
     with patch("homeassistant.components.renault.PLATFORMS", []):
         yield

@@ -18,7 +18,7 @@ from .util.hass_dict import HassKey
 from .util.signal_type import SignalType
 
 if TYPE_CHECKING:
-    from .core import EventStateChangedData
+    from .core import EventStateChangedData, EventStateReportedData
     from .helpers.typing import NoEventData
 
 APPLICATION_NAME: Final = "HomeAssistant"
@@ -321,7 +321,7 @@ EVENT_LOGGING_CHANGED: Final = "logging_changed"
 EVENT_SERVICE_REGISTERED: Final = "service_registered"
 EVENT_SERVICE_REMOVED: Final = "service_removed"
 EVENT_STATE_CHANGED: EventType[EventStateChangedData] = EventType("state_changed")
-EVENT_STATE_REPORTED: Final = "state_reported"
+EVENT_STATE_REPORTED: EventType[EventStateReportedData] = EventType("state_reported")
 EVENT_THEMES_UPDATED: Final = "themes_updated"
 EVENT_PANELS_UPDATED: Final = "panels_updated"
 EVENT_LOVELACE_UPDATED: Final = "lovelace_updated"
@@ -1129,8 +1129,21 @@ _DEPRECATED_MASS_POUNDS: Final = DeprecatedConstantEnum(
 )
 """Deprecated: please use UnitOfMass.POUNDS"""
 
+
 # Conductivity units
-CONDUCTIVITY: Final = "µS/cm"
+class UnitOfConductivity(StrEnum):
+    """Conductivity units."""
+
+    SIEMENS = "S/cm"
+    MICROSIEMENS = "µS/cm"
+    MILLISIEMENS = "mS/cm"
+
+
+_DEPRECATED_CONDUCTIVITY: Final = DeprecatedConstantEnum(
+    UnitOfConductivity.MICROSIEMENS,
+    "2025.6",
+)
+"""Deprecated: please use UnitOfConductivity.MICROSIEMENS"""
 
 # Light units
 LIGHT_LUX: Final = "lx"

@@ -516,7 +516,6 @@ async def test_thermostat_invalid_hvac_mode(
 
     with pytest.raises(ValueError):
         await common.async_set_hvac_mode(hass, HVACMode.DRY)
-        await hass.async_block_till_done()
 
     assert thermostat.state == HVACMode.OFF
     assert auth.method is None  # No communication with API
@@ -1206,7 +1205,6 @@ async def test_thermostat_invalid_fan_mode(
 
     with pytest.raises(ServiceValidationError):
         await common.async_set_fan_mode(hass, FAN_LOW)
-        await hass.async_block_till_done()
 
 
 async def test_thermostat_target_temp(
@@ -1378,7 +1376,6 @@ async def test_thermostat_unexpected_hvac_status(
 
     with pytest.raises(ValueError):
         await common.async_set_hvac_mode(hass, HVACMode.DRY)
-        await hass.async_block_till_done()
     assert thermostat.state == HVACMode.OFF
 
 
@@ -1488,7 +1485,6 @@ async def test_thermostat_invalid_set_preset_mode(
     # Set preset mode that is invalid
     with pytest.raises(ServiceValidationError):
         await common.async_set_preset_mode(hass, PRESET_SLEEP)
-        await hass.async_block_till_done()
 
     # No RPC sent
     assert auth.method is None
@@ -1538,7 +1534,6 @@ async def test_thermostat_hvac_mode_failure(
     auth.responses = [aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST)]
     with pytest.raises(HomeAssistantError) as e_info:
         await common.async_set_hvac_mode(hass, HVACMode.HEAT)
-        await hass.async_block_till_done()
     assert "HVAC mode" in str(e_info)
     assert "climate.my_thermostat" in str(e_info)
     assert HVACMode.HEAT in str(e_info)
@@ -1546,7 +1541,6 @@ async def test_thermostat_hvac_mode_failure(
     auth.responses = [aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST)]
     with pytest.raises(HomeAssistantError) as e_info:
         await common.async_set_temperature(hass, temperature=25.0)
-        await hass.async_block_till_done()
     assert "temperature" in str(e_info)
     assert "climate.my_thermostat" in str(e_info)
     assert "25.0" in str(e_info)
@@ -1554,7 +1548,6 @@ async def test_thermostat_hvac_mode_failure(
     auth.responses = [aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST)]
     with pytest.raises(HomeAssistantError) as e_info:
         await common.async_set_fan_mode(hass, FAN_ON)
-        await hass.async_block_till_done()
     assert "fan mode" in str(e_info)
     assert "climate.my_thermostat" in str(e_info)
     assert FAN_ON in str(e_info)
@@ -1562,7 +1555,6 @@ async def test_thermostat_hvac_mode_failure(
     auth.responses = [aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST)]
     with pytest.raises(HomeAssistantError) as e_info:
         await common.async_set_preset_mode(hass, PRESET_ECO)
-        await hass.async_block_till_done()
     assert "preset mode" in str(e_info)
     assert "climate.my_thermostat" in str(e_info)
     assert PRESET_ECO in str(e_info)

@@ -563,7 +563,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Sorry, I am not aware of any device called kitchen light',
+          'speech': 'Sorry, I am not aware of any device called kitchen',
         }),
       }),
     }),
@@ -703,7 +703,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Sorry, I am not aware of any device called late added light',
+          'speech': 'Sorry, I am not aware of any device called late added',
         }),
       }),
     }),
@@ -783,7 +783,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Sorry, I am not aware of any device called kitchen light',
+          'speech': 'Sorry, I am not aware of any device called kitchen',
         }),
       }),
     }),
@@ -803,7 +803,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Sorry, I am not aware of any device called my cool light',
+          'speech': 'Sorry, I am not aware of any device called my cool',
         }),
       }),
     }),
@@ -943,7 +943,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Sorry, I am not aware of any device called kitchen light',
+          'speech': 'Sorry, I am not aware of any device called kitchen',
         }),
       }),
     }),
@@ -993,7 +993,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Sorry, I am not aware of any device called renamed light',
+          'speech': 'Sorry, I am not aware of any device called renamed',
         }),
       }),
     }),

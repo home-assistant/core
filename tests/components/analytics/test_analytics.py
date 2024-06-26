@@ -566,10 +566,10 @@ async def test_reusing_uuid(
     assert analytics.uuid == "NOT_MOCK_UUID"
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_custom_integrations(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    enable_custom_integrations: None,
     caplog: pytest.LogCaptureFixture,
     installation_type_mock: Generator[Any, Any, None],
     snapshot: SnapshotAssertion,

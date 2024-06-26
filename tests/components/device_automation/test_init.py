@@ -13,7 +13,7 @@ from homeassistant.components.device_automation import (
     InvalidDeviceAutomationConfig,
     toggle_entity,
 )
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -46,7 +46,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-def fake_integration(hass):
+def fake_integration(hass: HomeAssistant) -> None:
     """Set up a mock integration with device automation support."""
     DOMAIN = "fake_integration"
 

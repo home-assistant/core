@@ -15,8 +15,9 @@ from homeassistant.components.youtube.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from . import MockYouTube
+
 from tests.common import MockConfigEntry
-from tests.components.youtube import MockYouTube
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 type ComponentSetup = Callable[[], Awaitable[MockYouTube]]

@@ -148,7 +148,7 @@
       "car_special_type": "base",
       "car_type": "model3",
       "charge_port_type": "CCS",
-      "cop_user_set_temp_supported": false,
+      "cop_user_set_temp_supported": true,
       "dashcam_clip_save_supported": true,
       "default_charge_to_max": false,
       "driver_assist": "TeslaAP3",
