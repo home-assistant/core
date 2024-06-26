@@ -24,7 +24,7 @@ from .const import DOMAIN, MANUFACTURER, SERVICE_NAME
 from .coordinator import PyLoadCoordinator
 
 
-class PyLoadSwitchEntity(StrEnum):
+class PyLoadSwitch(StrEnum):
     """PyLoad Switch Entities."""
 
     PAUSE_RESUME_QUEUE = "download"
@@ -42,16 +42,16 @@ class PyLoadSwitchEntityDescription(SwitchEntityDescription):
 
 SENSOR_DESCRIPTIONS: tuple[PyLoadSwitchEntityDescription, ...] = (
     PyLoadSwitchEntityDescription(
-        key=PyLoadSwitchEntity.PAUSE_RESUME_QUEUE,
-        translation_key=PyLoadSwitchEntity.PAUSE_RESUME_QUEUE,
+        key=PyLoadSwitch.PAUSE_RESUME_QUEUE,
+        translation_key=PyLoadSwitch.PAUSE_RESUME_QUEUE,
         device_class=SwitchDeviceClass.SWITCH,
         turn_on_fn=lambda api: api.unpause(),
         turn_off_fn=lambda api: api.pause(),
         toggle_fn=lambda api: api.toggle_pause(),
     ),
     PyLoadSwitchEntityDescription(
-        key=PyLoadSwitchEntity.RECONNECT,
-        translation_key=PyLoadSwitchEntity.RECONNECT,
+        key=PyLoadSwitch.RECONNECT,
+        translation_key=PyLoadSwitch.RECONNECT,
         device_class=SwitchDeviceClass.SWITCH,
         turn_on_fn=lambda api: api.toggle_reconnect(),
         turn_off_fn=lambda api: api.toggle_reconnect(),
@@ -70,12 +70,12 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     async_add_entities(
-        PyLoadBinarySensor(coordinator, description)
+        PyLoadSwitchEntity(coordinator, description)
         for description in SENSOR_DESCRIPTIONS
     )
 
 
-class PyLoadBinarySensor(CoordinatorEntity[PyLoadCoordinator], SwitchEntity):
+class PyLoadSwitchEntity(CoordinatorEntity[PyLoadCoordinator], SwitchEntity):
     """Representation of a pyLoad sensor."""
 
     _attr_has_entity_name = True

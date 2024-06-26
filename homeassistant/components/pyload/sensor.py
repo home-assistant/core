@@ -181,7 +181,7 @@ class PyLoadSensor(CoordinatorEntity[PyLoadCoordinator], SensorEntity):
             f"{coordinator.config_entry.entry_id}_{entity_description.key}"
         )
         self.entity_description = entity_description
-        self.device_info = DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
             model=SERVICE_NAME,
