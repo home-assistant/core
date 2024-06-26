@@ -70,11 +70,11 @@ class LogbookView(HomeAssistantView):
         if entity_ids_str := request.query.get("entity"):
             try:
                 entity_ids = cv.entity_ids(entity_ids_str)
-            except vol.Invalid:
+            except vol.Invalid as ex:
                 raise InvalidEntityFormatError(
                     f"Invalid entity id(s) encountered: {entity_ids_str}. "
                     "Format should be <domain>.<object_id>"
-                ) from vol.Invalid
+                ) from ex
         else:
             entity_ids = None
 

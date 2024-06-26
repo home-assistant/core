@@ -21,7 +21,7 @@ from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
@@ -32,11 +32,11 @@ STORAGE_VERSION = 1
 VALID_SIZES = {256, 512}
 MAX_SIZE = 1024 * 1024 * 10
 
-CREATE_FIELDS = {
+CREATE_FIELDS: VolDictType = {
     vol.Required("file"): FileField,
 }
 
-UPDATE_FIELDS = {
+UPDATE_FIELDS: VolDictType = {
     vol.Optional("name"): vol.All(str, vol.Length(min=1)),
 }
 

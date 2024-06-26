@@ -7,6 +7,12 @@ import pytest
 
 from homeassistant.components.plugwise.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.const import (
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -20,11 +26,11 @@ async def test_adam_climate_switch_entities(
     """Test creation of climate related switch entities."""
     state = hass.states.get("switch.cv_pomp_relay")
     assert state
-    assert state.state == "on"
+    assert state.state == STATE_ON
 
     state = hass.states.get("switch.fibaro_hc2_relay")
     assert state
-    assert state.state == "on"
+    assert state.state == STATE_ON
 
 
 async def test_adam_climate_switch_negative_testing(
@@ -35,8 +41,8 @@ async def test_adam_climate_switch_negative_testing(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            "switch",
-            "turn_off",
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
             {"entity_id": "switch.cv_pomp_relay"},
             blocking=True,
         )
@@ -48,8 +54,8 @@ async def test_adam_climate_switch_negative_testing(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            "switch",
-            "turn_on",
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
             {"entity_id": "switch.fibaro_hc2_relay"},
             blocking=True,
         )
@@ -65,8 +71,8 @@ async def test_adam_climate_switch_changes(
 ) -> None:
     """Test changing of climate related switch entities."""
     await hass.services.async_call(
-        "switch",
-        "turn_off",
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
         {"entity_id": "switch.cv_pomp_relay"},
         blocking=True,
     )
@@ -77,8 +83,8 @@ async def test_adam_climate_switch_changes(
     )
 
     await hass.services.async_call(
-        "switch",
-        "toggle",
+        SWITCH_DOMAIN,
+        SERVICE_TOGGLE,
         {"entity_id": "switch.fibaro_hc2_relay"},
         blocking=True,
     )
@@ -89,8 +95,8 @@ async def test_adam_climate_switch_changes(
     )
 
     await hass.services.async_call(
-        "switch",
-        "turn_on",
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
         {"entity_id": "switch.fibaro_hc2_relay"},
         blocking=True,
     )
@@ -107,11 +113,11 @@ async def test_stretch_switch_entities(
     """Test creation of climate related switch entities."""
     state = hass.states.get("switch.koelkast_92c4a_relay")
     assert state
-    assert state.state == "on"
+    assert state.state == STATE_ON
 
     state = hass.states.get("switch.droger_52559_relay")
     assert state
-    assert state.state == "on"
+    assert state.state == STATE_ON
 
 
 async def test_stretch_switch_changes(
@@ -119,8 +125,8 @@ async def test_stretch_switch_changes(
 ) -> None:
     """Test changing of power related switch entities."""
     await hass.services.async_call(
-        "switch",
-        "turn_off",
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
         {"entity_id": "switch.koelkast_92c4a_relay"},
         blocking=True,
     )
@@ -130,8 +136,8 @@ async def test_stretch_switch_changes(
     )
 
     await hass.services.async_call(
-        "switch",
-        "toggle",
+        SWITCH_DOMAIN,
+        SERVICE_TOGGLE,
         {"entity_id": "switch.droger_52559_relay"},
         blocking=True,
     )
@@ -141,8 +147,8 @@ async def test_stretch_switch_changes(
     )
 
     await hass.services.async_call(
-        "switch",
-        "turn_on",
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
         {"entity_id": "switch.droger_52559_relay"},
         blocking=True,
     )

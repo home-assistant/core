@@ -23,8 +23,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TessieConfigEntry
 from .const import TessieCoverStates
-from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
+from .models import TessieVehicleData
 
 
 async def async_setup_entry(
@@ -53,9 +53,9 @@ class TessieWindowEntity(TessieEntity, CoverEntity):
     _attr_device_class = CoverDeviceClass.WINDOW
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
-    def __init__(self, coordinator: TessieStateUpdateCoordinator) -> None:
+    def __init__(self, vehicle: TessieVehicleData) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, "windows")
+        super().__init__(vehicle, "windows")
 
     @property
     def is_closed(self) -> bool | None:
@@ -94,9 +94,9 @@ class TessieChargePortEntity(TessieEntity, CoverEntity):
     _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
-    def __init__(self, coordinator: TessieStateUpdateCoordinator) -> None:
+    def __init__(self, vehicle: TessieVehicleData) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, "charge_state_charge_port_door_open")
+        super().__init__(vehicle, "charge_state_charge_port_door_open")
 
     @property
     def is_closed(self) -> bool | None:
@@ -120,9 +120,9 @@ class TessieFrontTrunkEntity(TessieEntity, CoverEntity):
     _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = CoverEntityFeature.OPEN
 
-    def __init__(self, coordinator: TessieStateUpdateCoordinator) -> None:
+    def __init__(self, vehicle: TessieVehicleData) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, "vehicle_state_ft")
+        super().__init__(vehicle, "vehicle_state_ft")
 
     @property
     def is_closed(self) -> bool | None:
@@ -141,9 +141,9 @@ class TessieRearTrunkEntity(TessieEntity, CoverEntity):
     _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
-    def __init__(self, coordinator: TessieStateUpdateCoordinator) -> None:
+    def __init__(self, vehicle: TessieVehicleData) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, "vehicle_state_rt")
+        super().__init__(vehicle, "vehicle_state_rt")
 
     @property
     def is_closed(self) -> bool | None:
