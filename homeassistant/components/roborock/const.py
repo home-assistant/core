@@ -11,7 +11,6 @@ CONF_USER_DATA = "user_data"
 
 # Option Flow steps
 DRAWABLES = "drawables"
-MAPS = "maps"
 
 DEFAULT_DRAWABLES = {
     Drawable.CHARGER: True,
