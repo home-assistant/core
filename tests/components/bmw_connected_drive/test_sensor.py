@@ -2,13 +2,17 @@
 
 from unittest.mock import patch
 
+from bimmer_connected.models import StrEnum
+from bimmer_connected.vehicle import fuel_and_battery
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
+from homeassistant.components.bmw_connected_drive.const import SCAN_INTERVALS
 from homeassistant.components.bmw_connected_drive.sensor import SENSOR_TYPES
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.translation import async_get_translations
@@ -20,7 +24,7 @@ from homeassistant.util.unit_system import (
 
 from . import setup_mocked_integration
 
-from tests.common import snapshot_platform
+from tests.common import async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.freeze_time("2023-06-22 10:30:00+00:00")
@@ -107,3 +111,39 @@ async def test_entity_option_translations(
     }
 
     assert sensor_options == translation_states
+
+
+@pytest.mark.usefixtures("bmw_fixture")
+async def test_enum_sensor_unknown(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test conversion handling of enum sensors."""
+
+    # Setup component
+    assert await setup_mocked_integration(hass)
+
+    entity_id = "sensor.i4_edrive40_charging_status"
+
+    # Check normal state
+    entity = hass.states.get(entity_id)
+    assert entity.state == "not_charging"
+
+    class ChargingStateUnkown(StrEnum):
+        """Charging state of electric vehicle."""
+
+        UNKNOWN = "UNKNOWN"
+
+    # Setup enum returning only UNKNOWN
+    monkeypatch.setattr(
+        fuel_and_battery,
+        "ChargingState",
+        ChargingStateUnkown,
+    )
+
+    freezer.tick(SCAN_INTERVALS["rest_of_world"])
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Check normal state
+    entity = hass.states.get("sensor.i4_edrive40_charging_status")
+    assert entity.state == STATE_UNAVAILABLE

@@ -8,7 +8,10 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.components.camera import (
+    PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
+    Camera,
+)
 from homeassistant.const import ATTR_ENTITY_ID, CONF_FILE_PATH, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
@@ -19,7 +22,7 @@ from .const import DATA_LOCAL_FILE, DEFAULT_NAME, DOMAIN, SERVICE_UPDATE_FILE_PA
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_FILE_PATH): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

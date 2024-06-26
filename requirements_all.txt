@@ -697,7 +697,7 @@ datadog==0.15.0
 datapoint==0.9.9
 
 # homeassistant.components.bluetooth
-dbus-fast==2.21.3
+dbus-fast==2.22.1
 
 # homeassistant.components.debugpy
 debugpy==1.8.1
@@ -1093,7 +1093,7 @@ hole==0.8.0
 holidays==0.51
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240610.1
+home-assistant-frontend==20240626.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.6.21
@@ -1470,9 +1470,6 @@ omnilogic==0.4.5
 # homeassistant.components.ondilo_ico
 ondilo==0.5.0
 
-# homeassistant.components.onkyo
-onkyo-eiscp==1.2.7
-
 # homeassistant.components.onvif
 onvif-zeep-async==3.1.12
 
@@ -1825,6 +1822,9 @@ pyefergy==22.5.0
 
 # homeassistant.components.energenie_power_sockets
 pyegps==0.2.5
+
+# homeassistant.components.onkyo
+pyeiscp==0.0.7
 
 # homeassistant.components.emoncms
 pyemoncms==0.0.7
@@ -2284,7 +2284,7 @@ python-kasa[speedups]==0.7.0.1
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==6.1.0
+python-matter-server==6.2.0b1
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12

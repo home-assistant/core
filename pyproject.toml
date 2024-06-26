@@ -811,6 +811,7 @@ ignore = [
 
 [tool.ruff.lint.flake8-import-conventions.extend-aliases]
 voluptuous = "vol"
+"homeassistant.components.notify.PLATFORM_SCHEMA" = "NOTIFY_PLATFORM_SCHEMA"
 "homeassistant.helpers.area_registry" = "ar"
 "homeassistant.helpers.category_registry" = "cr"
 "homeassistant.helpers.config_validation" = "cv"

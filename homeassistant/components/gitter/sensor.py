@@ -8,7 +8,10 @@ from gitterpy.client import GitterClient
 from gitterpy.errors import GitterRoomError, GitterTokenError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_ROOM
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -25,7 +28,7 @@ DEFAULT_NAME = "Gitter messages"
 DEFAULT_ROOM = "home-assistant/home-assistant"
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
