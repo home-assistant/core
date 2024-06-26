@@ -96,7 +96,7 @@ async def test_sensor_invalid_auth(
     await hass.async_block_till_done()
 
     assert (
-        "Authentication failed for username, check your login credentials"
+        "Authentication failed for username, verify your login credentials"
         in caplog.text
     )
 

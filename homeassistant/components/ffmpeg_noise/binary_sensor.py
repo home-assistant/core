@@ -8,7 +8,7 @@ import haffmpeg.sensor as ffmpeg_sensor
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
 )
 from homeassistant.components.ffmpeg import (
@@ -33,7 +33,7 @@ CONF_RESET = "reset"
 DEFAULT_NAME = "FFmpeg Noise"
 DEFAULT_INIT_STATE = True
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_INPUT): cv.string,
         vol.Optional(CONF_INITIAL_STATE, default=DEFAULT_INIT_STATE): cv.boolean,
