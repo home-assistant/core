@@ -83,10 +83,9 @@ DEFAULT_CONFIG = {
 
 
 @pytest.mark.parametrize("hass_config", [{mqtt.DOMAIN: {fan.DOMAIN: {"name": "test"}}}])
+@pytest.mark.usefixtures("hass")
 async def test_fail_setup_if_no_command_topic(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test if command fails with command topic."""
     assert await mqtt_mock_entry()
@@ -611,8 +610,7 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
     ],
 )
 async def test_sending_mqtt_commands_and_optimistic(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test optimistic mode without state topic."""
     mqtt_mock = await mqtt_mock_entry()
@@ -861,9 +859,7 @@ async def test_sending_mqtt_commands_with_alternate_speed_range(
     ],
 )
 async def test_sending_mqtt_commands_and_optimistic_no_legacy(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test optimistic mode without state topic without legacy speed command topic."""
     mqtt_mock = await mqtt_mock_entry()
@@ -1005,8 +1001,7 @@ async def test_sending_mqtt_commands_and_optimistic_no_legacy(
     ],
 )
 async def test_sending_mqtt_command_templates_(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test optimistic mode without state topic without legacy speed command topic."""
     mqtt_mock = await mqtt_mock_entry()
@@ -1166,8 +1161,7 @@ async def test_sending_mqtt_command_templates_(
     ],
 )
 async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test optimistic mode without state topic without percentage command topic."""
     mqtt_mock = await mqtt_mock_entry()
@@ -1237,8 +1231,7 @@ async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
     ],
 )
 async def test_sending_mqtt_commands_and_explicit_optimistic(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test optimistic mode with state topic and turn on attributes."""
     mqtt_mock = await mqtt_mock_entry()
@@ -1533,9 +1526,7 @@ async def test_encoding_subscribable_topics(
     ],
 )
 async def test_attributes(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test attributes."""
     await mqtt_mock_entry()
@@ -2215,8 +2206,7 @@ async def test_publishing_with_custom_encoding(
 
 
 async def test_reloadable(
-    hass: HomeAssistant,
-    mqtt_client_mock: MqttMockPahoClient,
+    hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = fan.DOMAIN
@@ -2239,8 +2229,7 @@ async def test_setup_manual_entity_from_yaml(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test unloading the config entry."""
     domain = fan.DOMAIN
