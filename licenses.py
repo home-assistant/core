@@ -234,17 +234,23 @@ def main():
     package_definitions = [PackageDefinition.from_dict(data) for data in raw_licenses]
     for package in package_definitions:
         approved = False
+        previous_unapproved_version = TODO.get(package.name)
         for approved_license in OSI_APPROVED_LICENSES:
             if approved_license in package.license:
                 approved = True
                 break
+        if previous_unapproved_version is not None:
+            if previous_unapproved_version < package.version:
+                if approved:
+                    print(f"Approved license detected for {package.name}@{package.version}: {package.license}")
+                    exit(0)
         if not approved and package.name not in EXCEPTIONS:
             if (previous_version := TODO.get(package.name)) is not None:
                 print(f"We could not detect an OSI-approved license for {package.name}@{package.version}: {package.license}")
                 exit(0)
             else:
                 if previous_version.version > package.version:
-                    pass
+
 
 
 if __name__ == "__main__":
