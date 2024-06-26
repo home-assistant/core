@@ -7,7 +7,6 @@ from dataclasses import dataclass
 
 # from genie_partner_sdk.client import AladdinConnectClient
 # from genie_partner_sdk.model import GarageDoor
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
