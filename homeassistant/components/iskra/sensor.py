@@ -34,7 +34,6 @@ from . import IskraDevice
 from .const import (
     ATTR_CONNECTED_DEVICES,
     ATTR_FREQUENCY,
-    ATTR_NON_RESETTABLE_COUNTER_NAME,
     ATTR_PHASE1_CURRENT,
     ATTR_PHASE1_POWER,
     ATTR_PHASE1_VOLTAGE,
@@ -245,10 +244,8 @@ async def async_setup_entry(
                     )
 
                 sensor_entity_description = IskraSensorEntityDescription(
-                    key=ATTR_NON_RESETTABLE_COUNTER_NAME[counter.counter_type.value],
-                    translation_key=ATTR_NON_RESETTABLE_COUNTER_NAME[
-                        counter.counter_type.value
-                    ],
+                    key=f"nresettable_counter{index+1}",
+                    translation_key=f"nresettable_counter{index+1}",
                     state_class=SensorStateClass.TOTAL_INCREASING,
                     # If counter is for active energy mark it as energy sensor otherwise dont set device clas.
                     # This is due to the fact that HA does not support reactive energy sensors.
@@ -267,7 +264,6 @@ async def async_setup_entry(
                     ),
                     value_func=non_resettable_value_func(device, index),
                 )
-
                 entities.append(
                     IskraSensor(
                         coordinator, root_device, entry, sensor_entity_description
