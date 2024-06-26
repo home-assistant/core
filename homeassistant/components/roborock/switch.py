@@ -32,7 +32,7 @@ class RoborockSwitchDescription(SwitchEntityDescription):
     # Gets the status of the switch
     cache_key: CacheableAttribute
     # Sets the status of the switch
-    update_value: Callable[[AttributeCache, bool], Coroutine[Any, Any, dict]]
+    update_value: Callable[[AttributeCache, bool], Coroutine[Any, Any, None]]
     # Attribute from cache
     attribute: str
 
@@ -167,9 +167,9 @@ class RoborockSwitch(RoborockEntity, SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
-        return (
-            self.get_cache(self.entity_description.cache_key).value.get(
-                self.entity_description.attribute
-            )
-            == 1
+        status = self.get_cache(self.entity_description.cache_key).value.get(
+            self.entity_description.attribute
         )
+        if status is None:
+            return status
+        return bool(status)

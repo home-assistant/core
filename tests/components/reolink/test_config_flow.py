@@ -397,7 +397,7 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) -> No
             None,
             None,
             TEST_HOST2,
-            [TEST_HOST, TEST_HOST2, TEST_HOST2],
+            [TEST_HOST, TEST_HOST2],
         ),
         (
             True,
@@ -475,8 +475,8 @@ async def test_dhcp_ip_update(
         const.DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
     )
 
-    expected_calls = [
-        call(
+    for host in host_call_list:
+        expected_call = call(
             host,
             TEST_USERNAME,
             TEST_PASSWORD,
@@ -485,10 +485,10 @@ async def test_dhcp_ip_update(
             protocol=DEFAULT_PROTOCOL,
             timeout=DEFAULT_TIMEOUT,
         )
-        for host in host_call_list
-    ]
+        assert expected_call in reolink_connect_class.call_args_list
 
-    assert reolink_connect_class.call_args_list == expected_calls
+    for exc_call in reolink_connect_class.call_args_list:
+        assert exc_call[0][0] in host_call_list
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

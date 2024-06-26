@@ -631,8 +631,8 @@ build.json @home-assistant/supervisor
 /tests/components/huum/ @frwickst
 /homeassistant/components/hvv_departures/ @vigonotion
 /tests/components/hvv_departures/ @vigonotion
-/homeassistant/components/hydrawise/ @dknowles2 @ptcryan
-/tests/components/hydrawise/ @dknowles2 @ptcryan
+/homeassistant/components/hydrawise/ @dknowles2 @thomaskistler @ptcryan
+/tests/components/hydrawise/ @dknowles2 @thomaskistler @ptcryan
 /homeassistant/components/hyperion/ @dermotduffy
 /tests/components/hyperion/ @dermotduffy
 /homeassistant/components/ialarm/ @RyuzakiKK
@@ -737,6 +737,8 @@ build.json @home-assistant/supervisor
 /tests/components/kitchen_sink/ @home-assistant/core
 /homeassistant/components/kmtronic/ @dgomes
 /tests/components/kmtronic/ @dgomes
+/homeassistant/components/knocki/ @joostlek @jgatto1
+/tests/components/knocki/ @joostlek @jgatto1
 /homeassistant/components/knx/ @Julius2342 @farmio @marvin-w
 /tests/components/knx/ @Julius2342 @farmio @marvin-w
 /homeassistant/components/kodi/ @OnFreund
@@ -839,6 +841,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/media_source/ @hunterjm
 /tests/components/media_source/ @hunterjm
 /homeassistant/components/mediaroom/ @dgomes
+/homeassistant/components/melcloud/ @erwindouna
+/tests/components/melcloud/ @erwindouna
 /homeassistant/components/melissa/ @kennedyshead
 /tests/components/melissa/ @kennedyshead
 /homeassistant/components/melnor/ @vanstinator
@@ -993,6 +997,7 @@ build.json @home-assistant/supervisor
 /tests/components/ondilo_ico/ @JeromeHXP
 /homeassistant/components/onewire/ @garbled1 @epenet
 /tests/components/onewire/ @garbled1 @epenet
+/homeassistant/components/onkyo/ @arturpragacz
 /homeassistant/components/onvif/ @hunterjm
 /tests/components/onvif/ @hunterjm
 /homeassistant/components/open_meteo/ @frenck
@@ -1181,8 +1186,8 @@ build.json @home-assistant/supervisor
 /tests/components/rituals_perfume_genie/ @milanmeu @frenck
 /homeassistant/components/rmvtransport/ @cgtobi
 /tests/components/rmvtransport/ @cgtobi
-/homeassistant/components/roborock/ @humbertogontijo @Lash-L
-/tests/components/roborock/ @humbertogontijo @Lash-L
+/homeassistant/components/roborock/ @Lash-L
+/tests/components/roborock/ @Lash-L
 /homeassistant/components/roku/ @ctalkington
 /tests/components/roku/ @ctalkington
 /homeassistant/components/romy/ @xeniter
@@ -1455,8 +1460,8 @@ build.json @home-assistant/supervisor
 /tests/components/tomorrowio/ @raman325 @lymanepp
 /homeassistant/components/totalconnect/ @austinmroczek
 /tests/components/totalconnect/ @austinmroczek
-/homeassistant/components/tplink/ @rytilahti @thegardenmonkey @bdraco @sdb9696
-/tests/components/tplink/ @rytilahti @thegardenmonkey @bdraco @sdb9696
+/homeassistant/components/tplink/ @rytilahti @bdraco @sdb9696
+/tests/components/tplink/ @rytilahti @bdraco @sdb9696
 /homeassistant/components/tplink_omada/ @MarkGodwin
 /tests/components/tplink_omada/ @MarkGodwin
 /homeassistant/components/traccar/ @ludeeus

@@ -836,6 +836,7 @@ async def test_timer_events(
         connections={(dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id)}
     )
 
+    total_seconds = (1 * 60 * 60) + (2 * 60) + 3
     await intent_helper.async_handle(
         hass,
         "test",
@@ -853,8 +854,32 @@ async def test_timer_events(
         VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_STARTED,
         ANY,
         "test timer",
-        3723,
-        3723,
+        total_seconds,
+        total_seconds,
+        True,
+    )
+
+    # Increase timer beyond original time and check total_seconds has increased
+    mock_client.send_voice_assistant_timer_event.reset_mock()
+
+    total_seconds += 5 * 60
+    await intent_helper.async_handle(
+        hass,
+        "test",
+        intent_helper.INTENT_INCREASE_TIMER,
+        {
+            "name": {"value": "test timer"},
+            "minutes": {"value": 5},
+        },
+        device_id=dev.id,
+    )
+
+    mock_client.send_voice_assistant_timer_event.assert_called_with(
+        VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_UPDATED,
+        ANY,
+        "test timer",
+        total_seconds,
+        ANY,
         True,
     )
 

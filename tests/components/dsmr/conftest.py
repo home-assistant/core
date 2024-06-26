@@ -15,10 +15,11 @@ from dsmr_parser.obis_references import (
 )
 from dsmr_parser.objects import CosemObject
 import pytest
+from typing_extensions import Generator
 
 
 @pytest.fixture
-async def dsmr_connection_fixture(hass):
+def dsmr_connection_fixture() -> Generator[tuple[MagicMock, MagicMock, MagicMock]]:
     """Fixture that mocks serial connection."""
 
     transport = MagicMock(spec=asyncio.Transport)
@@ -44,7 +45,9 @@ async def dsmr_connection_fixture(hass):
 
 
 @pytest.fixture
-async def rfxtrx_dsmr_connection_fixture(hass):
+def rfxtrx_dsmr_connection_fixture() -> (
+    Generator[tuple[MagicMock, MagicMock, MagicMock]]
+):
     """Fixture that mocks RFXtrx connection."""
 
     transport = MagicMock(spec=asyncio.Transport)
@@ -70,7 +73,9 @@ async def rfxtrx_dsmr_connection_fixture(hass):
 
 
 @pytest.fixture
-async def dsmr_connection_send_validate_fixture(hass):
+def dsmr_connection_send_validate_fixture() -> (
+    Generator[tuple[MagicMock, MagicMock, MagicMock]]
+):
     """Fixture that mocks serial connection."""
 
     transport = MagicMock(spec=asyncio.Transport)
@@ -151,7 +156,9 @@ async def dsmr_connection_send_validate_fixture(hass):
 
 
 @pytest.fixture
-async def rfxtrx_dsmr_connection_send_validate_fixture(hass):
+def rfxtrx_dsmr_connection_send_validate_fixture() -> (
+    Generator[tuple[MagicMock, MagicMock, MagicMock]]
+):
     """Fixture that mocks serial connection."""
 
     transport = MagicMock(spec=asyncio.Transport)

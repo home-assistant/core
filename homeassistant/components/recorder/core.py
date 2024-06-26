@@ -85,6 +85,7 @@ from .db_schema import (
 )
 from .executor import DBInterruptibleThreadPoolExecutor
 from .migration import (
+    BaseRunTimeMigration,
     EntityIDMigration,
     EventsContextIDMigration,
     EventTypeIDMigration,
@@ -805,6 +806,7 @@ class Recorder(threading.Thread):
                 for row in execute_stmt_lambda_element(session, get_migration_changes())
             }
 
+            migrator: BaseRunTimeMigration
             for migrator_cls in (StatesContextIDMigration, EventsContextIDMigration):
                 migrator = migrator_cls(session, schema_version, migration_changes)
                 if migrator.needs_migrate():

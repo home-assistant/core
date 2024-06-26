@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, PropertyMock, call, patch
 
 import pytest
 
-import homeassistant.components.media_player as mp
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.yamaha import media_player as yamaha
 from homeassistant.components.yamaha.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -52,7 +52,7 @@ def device_fixture(main_zone):
 
 async def test_setup_host(hass: HomeAssistant, device, main_zone) -> None:
     """Test set up integration with host."""
-    assert await async_setup_component(hass, mp.DOMAIN, CONFIG)
+    assert await async_setup_component(hass, MP_DOMAIN, CONFIG)
     await hass.async_block_till_done()
 
     state = hass.states.get("media_player.yamaha_receiver_main_zone")
@@ -65,7 +65,7 @@ async def test_setup_no_host(hass: HomeAssistant, device, main_zone) -> None:
     """Test set up integration without host."""
     with patch("rxv.find", return_value=[device]):
         assert await async_setup_component(
-            hass, mp.DOMAIN, {"media_player": {"platform": "yamaha"}}
+            hass, MP_DOMAIN, {"media_player": {"platform": "yamaha"}}
         )
         await hass.async_block_till_done()
 
@@ -84,7 +84,7 @@ async def test_setup_discovery(hass: HomeAssistant, device, main_zone) -> None:
         "description_url": "http://receiver/description",
     }
     await async_load_platform(
-        hass, mp.DOMAIN, "yamaha", discovery_info, {mp.DOMAIN: {}}
+        hass, MP_DOMAIN, "yamaha", discovery_info, {MP_DOMAIN: {}}
     )
     await hass.async_block_till_done()
 
@@ -98,7 +98,7 @@ async def test_setup_zone_ignore(hass: HomeAssistant, device, main_zone) -> None
     """Test set up integration without host."""
     assert await async_setup_component(
         hass,
-        mp.DOMAIN,
+        MP_DOMAIN,
         {
             "media_player": {
                 "platform": "yamaha",
@@ -116,7 +116,7 @@ async def test_setup_zone_ignore(hass: HomeAssistant, device, main_zone) -> None
 
 async def test_enable_output(hass: HomeAssistant, device, main_zone) -> None:
     """Test enable output service."""
-    assert await async_setup_component(hass, mp.DOMAIN, CONFIG)
+    assert await async_setup_component(hass, MP_DOMAIN, CONFIG)
     await hass.async_block_till_done()
 
     port = "hdmi1"
@@ -147,7 +147,7 @@ async def test_enable_output(hass: HomeAssistant, device, main_zone) -> None:
 @pytest.mark.usefixtures("device")
 async def test_menu_cursor(hass: HomeAssistant, main_zone, cursor, method) -> None:
     """Verify that the correct menu method is called for the menu_cursor service."""
-    assert await async_setup_component(hass, mp.DOMAIN, CONFIG)
+    assert await async_setup_component(hass, MP_DOMAIN, CONFIG)
     await hass.async_block_till_done()
 
     data = {
@@ -166,7 +166,7 @@ async def test_select_scene(
     scene_prop = PropertyMock(return_value=None)
     type(main_zone).scene = scene_prop
 
-    assert await async_setup_component(hass, mp.DOMAIN, CONFIG)
+    assert await async_setup_component(hass, MP_DOMAIN, CONFIG)
     await hass.async_block_till_done()
 
     scene = "TV Viewing"
