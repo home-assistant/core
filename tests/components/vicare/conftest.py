@@ -65,12 +65,6 @@ class MockViCareService:
         """Read a property from json dump."""
         return readFeature(self._test_data["data"], property_name)
 
-    def setProperty(self, property_name: str, action: str, data: str):
-        """Set a property to its internal data structure."""
-        self.setProperty_name = property_name
-        self.setProperty_action = action
-        self.setProperty_data = data
-
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
@@ -89,24 +83,6 @@ async def mock_vicare_gas_boiler(
 ) -> AsyncGenerator[MockConfigEntry]:
     """Return a mocked ViCare API representing a single gas boiler device."""
     fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
-    with patch(
-        f"{MODULE}.vicare_login",
-        return_value=MockPyViCare(fixtures),
-    ):
-        mock_config_entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        yield mock_config_entry
-
-
-@pytest.fixture
-async def mock_vicare_fan(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> AsyncGenerator[MockConfigEntry, None]:
-    """Return a mocked ViCare API representing a single ventilation device."""
-    fixtures: list[Fixture] = [Fixture({"type:ventilation"}, "vicare/ViAir300F.json")]
     with patch(
         f"{MODULE}.vicare_login",
         return_value=MockPyViCare(fixtures),
