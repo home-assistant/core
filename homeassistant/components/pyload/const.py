@@ -10,3 +10,5 @@ ISSUE_PLACEHOLDER = {"url": "/config/integrations/dashboard/add?domain=pyload"}
 
 MANUFACTURER = "pyLoad Team"
 SERVICE_NAME = "pyLoad"
+
+UNIT_DOWNLOADS = "downloads"
