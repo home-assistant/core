@@ -87,7 +87,7 @@ class VentilationMode(enum.StrEnum):
     def from_ha_mode(ha_mode: str) -> str | None:
         """Return the mapped ViCare ventilation mode for the Home Assistant mode."""
         for mode in VentilationMode:
-            if VICARE_TO_HA_PRESET_HEATING.get(VentilationMode(mode)) == ha_mode:
+            if VICARE_TO_HA_MODE_VENTILATION.get(VentilationMode(mode)) == ha_mode:
                 return mode
         return None
 
