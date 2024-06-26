@@ -7,6 +7,7 @@ from plugwise.exceptions import (
     ConnectionFailedError,
     InvalidAuthentication,
     InvalidXMLError,
+    PlugwiseError,
     ResponseError,
     UnsupportedDeviceError,
 )
@@ -83,6 +84,7 @@ async def test_load_unload_config_entry(
         (ConnectionFailedError, ConfigEntryState.SETUP_RETRY),
         (InvalidAuthentication, ConfigEntryState.SETUP_ERROR),
         (InvalidXMLError, ConfigEntryState.SETUP_RETRY),
+        (PlugwiseError, ConfigEntryState.SETUP_RETRY),
         (ResponseError, ConfigEntryState.SETUP_RETRY),
         (UnsupportedDeviceError, ConfigEntryState.SETUP_ERROR),
     ],
@@ -219,7 +221,7 @@ async def test_update_device(
                 entity_registry, mock_config_entry.entry_id
             )
         )
-        == 28
+        == 29
     )
     assert (
         len(
@@ -242,7 +244,7 @@ async def test_update_device(
                     entity_registry, mock_config_entry.entry_id
                 )
             )
-            == 33
+            == 34
         )
         assert (
             len(

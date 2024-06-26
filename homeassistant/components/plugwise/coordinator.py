@@ -7,6 +7,7 @@ from plugwise.exceptions import (
     ConnectionFailedError,
     InvalidAuthentication,
     InvalidXMLError,
+    PlugwiseError,
     ResponseError,
     UnsupportedDeviceError,
 )
@@ -64,22 +65,23 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
 
     async def _async_update_data(self) -> PlugwiseData:
         """Fetch data from Plugwise."""
-
+        data = PlugwiseData({}, {})
         try:
             if not self._connected:
                 await self._connect()
             data = await self.api.async_update()
+        except ConnectionFailedError as err:
+            raise UpdateFailed("Failed to connect") from err
         except InvalidAuthentication as err:
-            raise ConfigEntryError("Invalid username or Smile ID") from err
+            raise ConfigEntryError("Authentication failed") from err
         except (InvalidXMLError, ResponseError) as err:
             raise UpdateFailed(
-                "Invalid XML data, or error indication received for the Plugwise"
-                " Adam/Smile/Stretch"
+                "Invalid XML data, or error indication received from the Plugwise Adam/Smile/Stretch"
             ) from err
+        except PlugwiseError as err:
+            raise UpdateFailed("Data incomplete or missing") from err
         except UnsupportedDeviceError as err:
             raise ConfigEntryError("Device with unsupported firmware") from err
-        except ConnectionFailedError as err:
-            raise UpdateFailed("Failed to connect to the Plugwise Smile") from err
         else:
             self.new_devices = set(data.devices) - self._current_devices
             self._current_devices = set(data.devices)
