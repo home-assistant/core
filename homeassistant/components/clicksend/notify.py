@@ -34,19 +34,13 @@ TIMEOUT = 5
 HEADERS = {"Content-Type": CONTENT_TYPE_JSON}
 
 
-PLATFORM_SCHEMA = vol.Schema(
-    vol.All(
-        NOTIFY_PLATFORM_SCHEMA.extend(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_API_KEY): cv.string,
-                vol.Required(CONF_RECIPIENT, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
-                ),
-                vol.Optional(CONF_SENDER, default=DEFAULT_SENDER): cv.string,
-            }
-        )
-    )
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_RECIPIENT, default=[]): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_SENDER, default=DEFAULT_SENDER): cv.string,
+    }
 )
 
 
