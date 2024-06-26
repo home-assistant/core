@@ -119,11 +119,6 @@ def _install_requirements_if_missing(
     return installed, failures
 
 
-def _set_result_unless_done(future: asyncio.Future[None]) -> None:
-    if not future.done():
-        future.set_result(None)
-
-
 class RequirementsManager:
     """Manage requirements."""
 
