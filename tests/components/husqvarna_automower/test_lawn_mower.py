@@ -164,7 +164,7 @@ async def test_lawn_mower_service_commands(
             "start_in_workarea",
             123456,
             timedelta(days=40),
-            "override_schedule_workarea",
+            "override_schedule_work_area",
             {
                 "work_area_id": 123456,
                 "duration": {"days": 40},

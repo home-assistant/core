@@ -313,7 +313,7 @@
           "description": "[%key:component::husqvarna_automower::services::override_schedule::fields::duration::description%]"
         },
         "work_area_id": {
-          "name": "Workarea ID",
+          "name": "Work area ID",
           "description": "In which work area the mower should mow."
         }
       }
