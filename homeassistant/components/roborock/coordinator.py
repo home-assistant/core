@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
-import typing
 
 from roborock import HomeDataRoom
 from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, NetworkInfo
@@ -20,6 +19,7 @@ from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -142,8 +142,17 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                         self._home_data_rooms.get(room.iot_id, "Unknown")
                     )
 
+    @property
+    def duid(self) -> str:
+        """Get the unique id of the device as specified by Roborock."""
+        return self.roborock_device_info.device.duid
 
-class RoborockDataUpdateCoordinatorA01(DataUpdateCoordinator[dict]):
+
+class RoborockDataUpdateCoordinatorA01(
+    DataUpdateCoordinator[
+        dict[RoborockDyadDataProtocol | RoborockZeoProtocol, StateType]
+    ]
+):
     """Class to manage fetching data from the API for A01 devices."""
 
     def __init__(
@@ -173,9 +182,16 @@ class RoborockDataUpdateCoordinatorA01(DataUpdateCoordinator[dict]):
         ]
         self.roborock_device_info = RoborockA01HassDeviceInfo(device, product_info)
 
-    async def _async_update_data(self) -> dict[RoborockDyadDataProtocol, typing.Any]:
+    async def _async_update_data(
+        self,
+    ) -> dict[RoborockDyadDataProtocol | RoborockZeoProtocol, StateType]:
         return await self.api.update_values(self.request_protocols)
 
     async def release(self) -> None:
         """Disconnect from API."""
         await self.api.async_release()
+
+    @property
+    def duid(self) -> str:
+        """Get the unique id of the device as specified by Roborock."""
+        return self.roborock_device_info.device.duid

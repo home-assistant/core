@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
+from . import RoborockCoordinators
 from .const import DOMAIN
 from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntityV1
@@ -75,18 +76,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Roborock vacuum binary sensors."""
-    coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinators: RoborockCoordinators = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
         RoborockBinarySensorEntity(
-            f"{description.key}_{slugify(device_id)}",
             coordinator,
             description,
         )
-        for device_id, coordinator in coordinators.items()
+        for coordinator in coordinators.v1
         for description in BINARY_SENSOR_DESCRIPTIONS
-        if isinstance(coordinator, RoborockDataUpdateCoordinator)
         if description.value_fn(coordinator.roborock_device_info.props) is not None
     )
 
@@ -98,12 +95,14 @@ class RoborockBinarySensorEntity(RoborockCoordinatedEntityV1, BinarySensorEntity
 
     def __init__(
         self,
-        unique_id: str,
         coordinator: RoborockDataUpdateCoordinator,
         description: RoborockBinarySensorDescription,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(unique_id, coordinator)
+        super().__init__(
+            f"{description.key}_{slugify(coordinator.duid)}",
+            coordinator,
+        )
         self.entity_description = description
 
     @property

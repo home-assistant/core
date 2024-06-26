@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Coroutine
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any
@@ -26,6 +27,20 @@ from .coordinator import RoborockDataUpdateCoordinator, RoborockDataUpdateCoordi
 SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class RoborockCoordinators:
+    """Roborock coordinators type."""
+
+    v1: list[RoborockDataUpdateCoordinator]
+    a01: list[RoborockDataUpdateCoordinatorA01]
+
+    def values(
+        self,
+    ) -> list[RoborockDataUpdateCoordinator | RoborockDataUpdateCoordinatorA01]:
+        """Return all coordinators."""
+        return self.v1 + self.a01
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -67,25 +82,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return_exceptions=True,
     )
     # Valid coordinators are those where we had networking cached or we could get networking
-    valid_coordinators: list[
-        RoborockDataUpdateCoordinator | RoborockDataUpdateCoordinatorA01
-    ] = [
+    v1_coords = [
         coord
         for coord in coordinators
-        if isinstance(
-            coord, RoborockDataUpdateCoordinator | RoborockDataUpdateCoordinatorA01
-        )
+        if isinstance(coord, RoborockDataUpdateCoordinator)
     ]
-    if len(valid_coordinators) == 0:
+    a01_coords = [
+        coord
+        for coord in coordinators
+        if isinstance(coord, RoborockDataUpdateCoordinatorA01)
+    ]
+    if len(v1_coords) + len(a01_coords) == 0:
         raise ConfigEntryNotReady(
             "No devices were able to successfully setup",
             translation_domain=DOMAIN,
             translation_key="no_coordinators",
         )
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        coordinator.roborock_device_info.device.duid: coordinator
-        for coordinator in valid_coordinators
-    }
+    valid_coordinators = RoborockCoordinators(v1_coords, a01_coords)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = valid_coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

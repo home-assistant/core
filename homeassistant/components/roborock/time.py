@@ -19,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
+from . import RoborockCoordinators
 from .const import DOMAIN
 from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockEntityV1
@@ -118,16 +119,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Roborock time platform."""
-    coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinators: RoborockCoordinators = hass.data[DOMAIN][config_entry.entry_id]
     possible_entities: list[
         tuple[RoborockDataUpdateCoordinator, RoborockTimeDescription]
     ] = [
         (coordinator, description)
-        for coordinator in coordinators.values()
+        for coordinator in coordinators.v1
         for description in TIME_DESCRIPTIONS
-        if isinstance(coordinator, RoborockDataUpdateCoordinator)
     ]
     # We need to check if this function is supported by the device.
     results = await asyncio.gather(
@@ -146,7 +144,7 @@ async def async_setup_entry(
         else:
             valid_entities.append(
                 RoborockTimeEntity(
-                    f"{description.key}_{slugify(coordinator.roborock_device_info.device.duid)}",
+                    f"{description.key}_{slugify(coordinator.duid)}",
                     coordinator,
                     description,
                 )
