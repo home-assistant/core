@@ -14,6 +14,7 @@ CONF_SCA = "sca"
 CONF_TRACK_WIRED_CLIENTS = "track_wired_clients"
 CONF_UNAUTHENTICATED_MODE = "unauthenticated_mode"
 
+DEFAULT_BOX_TYPE = "mix_inbox"
 DEFAULT_DEVICE_NAME = "LTE"
 DEFAULT_MANUFACTURER = "Huawei Technologies Co., Ltd."
 DEFAULT_MESSAGES_CHUNK = 20
