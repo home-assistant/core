@@ -1797,7 +1797,7 @@ async def test_discovery_dispatcher_signal_type_messages(
     """Test discovery dispatcher messages."""
 
     domain_id_tuple = ("sensor", "very_unique")
-    test_data = {"name": "t]est", "state_topic": "test-topic"}
+    test_data = {"name": "test", "state_topic": "test-topic"}
     calls = []
 
     def _callback(*args) -> None:
