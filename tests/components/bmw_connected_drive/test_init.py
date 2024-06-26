@@ -1,5 +1,6 @@
 """Test Axis component setup process."""
 
+from copy import deepcopy
 from unittest.mock import patch
 
 import pytest
@@ -37,7 +38,7 @@ async def test_migrate_options(
 ) -> None:
     """Test successful migration of options."""
 
-    config_entry = FIXTURE_CONFIG_ENTRY.copy()
+    config_entry = deepcopy(FIXTURE_CONFIG_ENTRY)
     config_entry["options"] = options
 
     mock_config_entry = MockConfigEntry(**config_entry)
@@ -55,7 +56,7 @@ async def test_migrate_options(
 async def test_migrate_options_from_data(hass: HomeAssistant) -> None:
     """Test successful migration of options."""
 
-    config_entry = FIXTURE_CONFIG_ENTRY.copy()
+    config_entry = deepcopy(FIXTURE_CONFIG_ENTRY)
     config_entry["options"] = {}
     config_entry["data"].update({CONF_READ_ONLY: False})
 
@@ -107,7 +108,8 @@ async def test_migrate_unique_ids(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test successful migration of entity unique_ids."""
-    mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
+    confg_entry = deepcopy(FIXTURE_CONFIG_ENTRY)
+    mock_config_entry = MockConfigEntry(**confg_entry)
     mock_config_entry.add_to_hass(hass)
 
     entity: er.RegistryEntry = entity_registry.async_get_or_create(
@@ -153,7 +155,8 @@ async def test_dont_migrate_unique_ids(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test successful migration of entity unique_ids."""
-    mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
+    confg_entry = deepcopy(FIXTURE_CONFIG_ENTRY)
+    mock_config_entry = MockConfigEntry(**confg_entry)
     mock_config_entry.add_to_hass(hass)
 
     # create existing entry with new_unique_id
@@ -196,7 +199,8 @@ async def test_remove_stale_devices(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test remove stale device registry entries."""
-    mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
+    config_entry = deepcopy(FIXTURE_CONFIG_ENTRY)
+    mock_config_entry = MockConfigEntry(**config_entry)
     mock_config_entry.add_to_hass(hass)
 
     device_registry.async_get_or_create(
