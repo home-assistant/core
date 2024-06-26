@@ -480,7 +480,6 @@ omit =
     homeassistant/components/geniushub/__init__.py
     homeassistant/components/geniushub/binary_sensor.py
     homeassistant/components/geniushub/climate.py
-    homeassistant/components/geniushub/const.py
     homeassistant/components/geniushub/sensor.py
     homeassistant/components/geniushub/switch.py
     homeassistant/components/geniushub/water_heater.py

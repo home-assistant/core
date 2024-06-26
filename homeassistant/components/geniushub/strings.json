@@ -4,11 +4,11 @@
       "user": {
         "title": "Genius Hub Configuration",
         "menu_options": {
-          "v3_api": "Local (recommended): IP address and user credentials",
-          "v1_api": "Cloud: API token and MAC address"
+          "local_api": "Local (recommended): IP address and user credentials",
+          "cloud_api": "Cloud: API token and MAC address"
         }
       },
-      "v3_api": {
+      "local_api": {
         "title": "Genius Hub Local Configuration",
         "data": {
           "host": "[%key:common::config_flow::data::ip%]",
@@ -17,7 +17,7 @@
           "username": "[%key:common::config_flow::data::username%]"
         }
       },
-      "v1_api": {
+      "cloud_api": {
         "title": "Genius Hub Cloud Configuration",
         "data": {
           "token": "[%key:common::config_flow::data::access_token%]",

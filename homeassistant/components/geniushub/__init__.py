@@ -63,25 +63,25 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 MAC_ADDRESS_REGEXP = r"^([0-9A-F]{2}:){5}([0-9A-F]{2})$"
 
-V1_API_SCHEMA = vol.Schema(
+Cloud_API_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TOKEN): cv.string,
-        vol.Required(CONF_MAC): cv.string,  # vol.Match(MAC_ADDRESS_REGEXP),
+        vol.Required(CONF_MAC): vol.Match(MAC_ADDRESS_REGEXP),
     }
 )
 
 
-V3_API_SCHEMA = vol.Schema(
+Local_API_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_MAC): cv.string,  # vol.Match(MAC_ADDRESS_REGEXP),
+        vol.Optional(CONF_MAC): vol.Match(MAC_ADDRESS_REGEXP),
     }
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Any(V3_API_SCHEMA, V1_API_SCHEMA)}, extra=vol.ALLOW_EXTRA
+    {DOMAIN: vol.Any(Local_API_SCHEMA, Cloud_API_SCHEMA)}, extra=vol.ALLOW_EXTRA
 )
 
 ATTR_ZONE_MODE = "mode"
