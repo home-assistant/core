@@ -25,6 +25,8 @@ from .entity import AutomowerBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_WORK_AREA_ID_ASSIGNMENT = "work_area_id_assignment"
+
 ERROR_KEY_LIST = [
     "no_error",
     "alarm_mower_in_motion",
@@ -213,7 +215,7 @@ def _get_current_work_area_dict(data: MowerAttributes) -> Mapping[str, Any]:
     work_areas = {}
     for work_area_id in data.work_areas:
         work_areas[work_area_id] = data.work_areas[work_area_id].name
-    return {"work_area_id_assignment": work_areas}
+    return {ATTR_WORK_AREA_ID_ASSIGNMENT: work_areas}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -381,6 +383,7 @@ class AutomowerSensorEntity(AutomowerBaseEntity, SensorEntity):
     """Defining the Automower Sensors with AutomowerSensorEntityDescription."""
 
     entity_description: AutomowerSensorEntityDescription
+    _unrecorded_attributes = frozenset({ATTR_WORK_AREA_ID_ASSIGNMENT})
 
     def __init__(
         self,
