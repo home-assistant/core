@@ -261,6 +261,8 @@ class OllamaConversationEntity(
             if not llm_api:
                 break
 
+            _LOGGER.debug("Response: %s", response_message["content"])
+
             if response_message["content"].startswith(TOOL_ARGS):
                 tool_name = response_message["content"][len(TOOL_ARGS) :].strip()
                 if tools and tool_name in tools:
