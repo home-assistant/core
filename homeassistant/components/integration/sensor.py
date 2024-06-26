@@ -38,11 +38,8 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later, async_track_state_change_event
@@ -249,27 +246,10 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_SOURCE_SENSOR]
     )
 
-    source_entity = er.EntityRegistry.async_get(registry, source_entity_id)
-    dev_reg = dr.async_get(hass)
-    # Resolve source entity device
-    if (
-        (source_entity is not None)
-        and (source_entity.device_id is not None)
-        and (
-            (
-                device := dev_reg.async_get(
-                    device_id=source_entity.device_id,
-                )
-            )
-            is not None
-        )
-    ):
-        device_info = DeviceInfo(
-            identifiers=device.identifiers,
-            connections=device.connections,
-        )
-    else:
-        device_info = None
+    device_info = async_device_info_to_link_from_entity(
+        hass,
+        source_entity_id,
+    )
 
     if (unit_prefix := config_entry.options.get(CONF_UNIT_PREFIX)) == "none":
         # Before we had support for optional selectors, "none" was used for selecting nothing
