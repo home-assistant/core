@@ -11,7 +11,7 @@ from .const import DOMAIN, MANUFACTURER
 from .coordinator import DioChaconDataUpdateCoordinator
 
 
-class DioChaconEntity(CoordinatorEntity):
+class DioChaconEntity(CoordinatorEntity[DioChaconDataUpdateCoordinator]):
     """Implements a common class elements representing the Dio Chacon entity."""
 
     _attr_has_entity_name = True
@@ -22,14 +22,12 @@ class DioChaconEntity(CoordinatorEntity):
         target_id: str,
         name: str,
         model: str,
-        connected: bool,
     ) -> None:
         """Initialize Dio Chacon entity."""
         super().__init__(coordinator)
 
         self.dio_chacon_client: DIOChaconAPIClient = coordinator.dio_chacon_client
 
-        self._attr_available = connected
         self._target_id = target_id
         self._attr_unique_id = target_id
         self._attr_name = name
@@ -46,10 +44,3 @@ class DioChaconEntity(CoordinatorEntity):
         if self.coordinator.data and self.coordinator.data["id"] == self._target_id:
             return self.coordinator.data
         return None
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        if self.coordinator_data and self.coordinator_data["connected"]:
-            return self.coordinator_data["connected"]
-        return self._attr_available

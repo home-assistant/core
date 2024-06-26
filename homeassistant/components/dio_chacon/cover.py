@@ -39,9 +39,17 @@ async def async_setup_entry(
 class DioChaconCover(DioChaconEntity, CoverEntity):
     """Object for controlling a Dio Chacon cover."""
 
-    _attr_should_poll = False
-    _attr_assumed_state = True
+    # If true, the entity has the name twice.
     _attr_has_entity_name = False
+
+    _attr_device_class = CoverDeviceClass.SHUTTER
+
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.SET_POSITION
+    )
 
     def __init__(
         self,
@@ -50,36 +58,28 @@ class DioChaconCover(DioChaconEntity, CoverEntity):
     ) -> None:
         """Initialize the cover."""
 
-        target_id = device["id"]
-        name = device["name"]
-        openlevel = device["openlevel"]
-        movement = device["movement"]
-        connected = device["connected"]
-        model = device["model"]
-        device_class = CoverDeviceClass.SHUTTER
-
-        _LOGGER.info(
+        _LOGGER.debug(
             "Adding DIO Chacon SHUTTER Cover with id=%s, name=%s, openlevel=%s, movement=%s and connected=%s",
-            target_id,
-            name,
-            openlevel,
-            movement,
-            connected,
+            device["id"],
+            device["name"],
+            device["openlevel"],
+            device["movement"],
+            device["connected"],
         )
 
-        super().__init__(coordinator, target_id, name, model, connected)
+        super().__init__(coordinator, device["id"], device["name"], device["model"])
 
-        self._attr_current_cover_position = openlevel
-        self._attr_is_closing = movement == ShutterMoveEnum.DOWN.value
-        self._attr_is_opening = movement == ShutterMoveEnum.UP.value
-        self._attr_device_class = device_class
+        self._attr_available = device["connected"]
+        self._attr_current_cover_position = device["openlevel"]
+        self._attr_is_closing = device["movement"] == ShutterMoveEnum.DOWN.value
+        self._attr_is_opening = device["movement"] == ShutterMoveEnum.UP.value
 
-        self._attr_supported_features = (
-            CoverEntityFeature.OPEN
-            | CoverEntityFeature.CLOSE
-            | CoverEntityFeature.STOP
-            | CoverEntityFeature.SET_POSITION
-        )
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        if self.coordinator_data and self.coordinator_data["connected"]:
+            return self.coordinator_data["connected"]
+        return self._attr_available
 
     @property
     def current_cover_position(self) -> int | None:
@@ -130,7 +130,7 @@ class DioChaconCover(DioChaconEntity, CoverEntity):
                 self._target_id, ShutterMoveEnum.DOWN
             )
 
-        # Closed signal is managed via the callback that triggers async_set_updated_data on the coordinator
+        # Closed status is effective after the server callback that triggers async_set_updated_data on the coordinator
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
@@ -151,7 +151,7 @@ class DioChaconCover(DioChaconEntity, CoverEntity):
                 self._target_id, ShutterMoveEnum.UP
             )
 
-        # Opened signal is managed via the callback that triggers async_set_updated_data on the coordinator
+        # Opened status is effective after the server callback that triggers async_set_updated_data on the coordinator
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
@@ -176,4 +176,4 @@ class DioChaconCover(DioChaconEntity, CoverEntity):
 
         await self.dio_chacon_client.move_shutter_percentage(self._target_id, position)
 
-        # Movement signal is managed via the callback that triggers async_set_updated_data on the coordinator
+        # Movement status (closing or opening) is effective via the server callback that triggers async_set_updated_data on the coordinator

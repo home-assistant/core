@@ -9,35 +9,38 @@ from dio_chacon_wifi_api import DIOChaconAPIClient
 from dio_chacon_wifi_api.exceptions import DIOChaconAPIError, DIOChaconInvalidAuthError
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_UNIQUE_ID, CONF_USERNAME
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+    }
+)
 
-class DioChaconConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+
+class DioChaconConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for dio_chacon."""
-
-    _username: str
-    _password: str
-    _user_id: str
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        if user_input is not None:
-            self._username = user_input[CONF_USERNAME]
-            self._password = user_input[CONF_PASSWORD]
 
-            errors: dict[str, str] = {}
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
             try:
                 # Validate the user name and password and retrieve the technical user id.
-                client = DIOChaconAPIClient(self._username, self._password)
-                self._user_id = await client.get_user_id()
+                client = DIOChaconAPIClient(
+                    user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                )
+                _user_id: str = await client.get_user_id()
                 await client.disconnect()
             except DIOChaconAPIError:
                 errors["base"] = "cannot_connect"
@@ -47,33 +50,23 @@ class DioChaconConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
-            if errors:
-                return self._show_setup_form(errors)
+            else:
+                # Check if already configured
+                await self.async_set_unique_id(_user_id)
+                self._abort_if_unique_id_configured()
 
-            entry_id: str = "dio_chacon_" + self._user_id
+                return self.async_create_entry(
+                    title="Dio Chacon " + user_input[CONF_USERNAME],
+                    data={
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        CONF_UNIQUE_ID: _user_id,
+                    },
+                )
 
-            # Check if already configured
-            await self.async_set_unique_id(entry_id)
-            self._abort_if_unique_id_configured()
-
-            return self.async_create_entry(
-                title="Dio Chacon " + self._username,
-                data={
-                    CONF_USERNAME: self._username,
-                    CONF_PASSWORD: self._password,
-                    CONF_UNIQUE_ID: self._user_id,
-                },
-            )
-
-        # User input is None, show the form.
-        return self._show_setup_form()
-
-    def _show_setup_form(self, errors=None):
-        """Show the setup form to the user."""
+        # User input is None or an error happened, show the form to the user.
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
-            ),
+            data_schema=DATA_SCHEMA,
             errors=errors,
         )
