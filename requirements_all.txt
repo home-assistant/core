@@ -1470,9 +1470,6 @@ omnilogic==0.4.5
 # homeassistant.components.ondilo_ico
 ondilo==0.5.0
 
-# homeassistant.components.onkyo
-onkyo-eiscp==1.2.7
-
 # homeassistant.components.onvif
 onvif-zeep-async==3.1.12
 
@@ -1825,6 +1822,9 @@ pyefergy==22.5.0
 
 # homeassistant.components.energenie_power_sockets
 pyegps==0.2.5
+
+# homeassistant.components.onkyo
+pyeiscp==0.0.7
 
 # homeassistant.components.emoncms
 pyemoncms==0.0.7
