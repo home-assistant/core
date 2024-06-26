@@ -28,7 +28,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
 
-type RockorockConfigEntry = ConfigEntry[RoborockCoordinators]
+type RoborockConfigEntry = ConfigEntry[RoborockCoordinators]
 
 
 @dataclass
@@ -45,7 +45,7 @@ class RoborockCoordinators:
         return self.v1 + self.a01
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RockorockConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:
     """Set up roborock from a config entry."""
 
     _LOGGER.debug("Integration async setup entry: %s", entry.as_dict())
@@ -242,12 +242,12 @@ async def setup_device_a01(
     return coord
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: RockorockConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:
     """Handle removal of an entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def update_listener(hass: HomeAssistant, entry: RockorockConfigEntry) -> None:
+async def update_listener(hass: HomeAssistant, entry: RoborockConfigEntry) -> None:
     """Handle options update."""
     # Reload entry to update data
     await hass.config_entries.async_reload(entry.entry_id)

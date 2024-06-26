@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
-from . import RockorockConfigEntry
+from . import RoborockConfigEntry
 from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockEntityV1
 
@@ -63,7 +63,7 @@ CONSUMABLE_BUTTON_DESCRIPTIONS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: RockorockConfigEntry,
+    config_entry: RoborockConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Roborock button platform."""

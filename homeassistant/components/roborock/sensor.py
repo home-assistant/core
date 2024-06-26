@@ -32,7 +32,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import slugify
 
-from . import RockorockConfigEntry
+from . import RoborockConfigEntry
 from .coordinator import RoborockDataUpdateCoordinator, RoborockDataUpdateCoordinatorA01
 from .device import RoborockCoordinatedEntityA01, RoborockCoordinatedEntityV1
 
@@ -253,7 +253,7 @@ A01_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: RockorockConfigEntry,
+    config_entry: RoborockConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Roborock vacuum sensors."""

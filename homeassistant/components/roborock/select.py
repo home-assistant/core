@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
-from . import RockorockConfigEntry
+from . import RoborockConfigEntry
 from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntityV1
 
@@ -63,7 +63,7 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: RockorockConfigEntry,
+    config_entry: RoborockConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Roborock select platform."""

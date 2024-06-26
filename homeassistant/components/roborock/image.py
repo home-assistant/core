@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
-from . import RockorockConfigEntry
+from . import RoborockConfigEntry
 from .const import DEFAULT_DRAWABLES, DOMAIN, DRAWABLES, IMAGE_CACHE_INTERVAL, MAP_SLEEP
 from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntityV1
@@ -28,7 +28,7 @@ from .device import RoborockCoordinatedEntityV1
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: RockorockConfigEntry,
+    config_entry: RoborockConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Roborock image platform."""
