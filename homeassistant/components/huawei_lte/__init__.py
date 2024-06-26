@@ -29,10 +29,12 @@ from homeassistant.const import (
     ATTR_HW_VERSION,
     ATTR_MODEL,
     ATTR_SW_VERSION,
+    CONF_ID,
     CONF_MAC,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_RECIPIENT,
+    CONF_SENDER,
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
@@ -68,6 +70,7 @@ from .const import (
     ADMIN_SERVICES,
     ALL_KEYS,
     ATTR_CONFIG_ENTRY_ID,
+    CONF_DATETIME,
     CONF_MANUFACTURER,
     CONF_MAX_MESSAGES,
     CONF_PREFER_UNREAD,
@@ -95,8 +98,11 @@ from .const import (
     KEY_WLAN_WIFI_FEATURE_SWITCH,
     KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH,
     NOTIFY_SUPPRESS_TIMEOUT,
+    SERVICE_DELETE_MESSAGE,
     SERVICE_GET_MESSAGES,
+    SERVICE_READ_MESSAGE,
     SERVICE_RESUME_INTEGRATION,
+    SERVICE_SAVE_MESSAGE,
     SERVICE_SUSPEND_INTEGRATION,
     UPDATE_SIGNAL,
 )
@@ -106,14 +112,14 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
+VALIDATOR_PHONES = vol.All(cv.ensure_list, [cv.string], vol.Length(min=1))
+
 NOTIFY_SCHEMA = vol.Any(
     None,
     vol.Schema(
         {
             vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_RECIPIENT): vol.Any(
-                None, vol.All(cv.ensure_list, [cv.string])
-            ),
+            vol.Optional(CONF_RECIPIENT): vol.Any(None, VALIDATOR_PHONES),
         }
     ),
 )
@@ -145,6 +151,18 @@ SERVICE_GET_MESSAGES_SCHEMA = SERVICE_SCHEMA.extend(
         vol.Optional(CONF_PREFER_UNREAD, default=DEFAULT_PREFER_UNREAD): cv.boolean,
     }
 )
+
+SERVICE_SAVE_MESSAGE_SCHEMA = SERVICE_SCHEMA.extend(
+    {
+        vol.Required(CONF_SENDER): VALIDATOR_PHONES,
+        vol.Required(CONF_MESSAGE): cv.string,
+        vol.Optional(CONF_ID, default=-1): vol.All(int, vol.Range(min=-1)),
+        vol.Optional(CONF_SCA): vol.Any(None, cv.string),
+        vol.Optional(CONF_DATETIME): cv.datetime,
+    }
+)
+
+SERVICE_MESSAGE_SCHEMA = SERVICE_SCHEMA.extend({vol.Required(CONF_ID): cv.positive_int})
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -609,6 +627,62 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         supports_response=SupportsResponse.ONLY,
     )
 
+    def message_delete_handler(service: ServiceCall) -> None:
+        router = router_resolver(service)
+        sms_index = service.data[CONF_ID]
+        try:
+            router.client.sms.delete_sms(sms_index)
+        except ResponseErrorException as ex:
+            _LOGGER.error("Could delete message %s: %s", sms_index, ex)
+            raise HomeAssistantError from ex
+        else:
+            _LOGGER.debug("Deleted message %s: %s", sms_index, resp)
+
+    def message_read_handler(service: ServiceCall) -> None:
+        router = router_resolver(service)
+        sms_index = service.data[CONF_ID]
+        try:
+            router.client.sms.delete_sms(sms_index)
+        except ResponseErrorException as ex:
+            _LOGGER.error("Could not read message %s: %s", sms_index, ex)
+            raise HomeAssistantError from ex
+        else:
+            _LOGGER.debug("Read message %s: %s", sms_index, resp)
+
+    for service, handler in {
+        SERVICE_DELETE_MESSAGE: message_delete_handler,
+        SERVICE_READ_MESSAGE: message_read_handler,
+    }.items():
+        hass.services.async_register(
+            DOMAIN, service, handler, schema=SERVICE_MESSAGE_SCHEMA
+        )
+
+    def message_save_handler(service: ServiceCall) -> None:
+        router = router_resolver(service)
+        if not (message_dt := service.data.get(CONF_DATETIME)):
+            message_dt = datetime.now()
+        sms_index = service.data.get(CONF_INDEX, -1)
+        try:
+            router.client.sms.save_sms(
+                phone_numbers=service.data[CONF_SENDER],
+                message=service.data[CONF_MESSAGE],
+                sms_index=sms_index,
+                sca=service.data.get(CONF_SCA),
+                from_date=message_dt,
+            )
+        except ResponseErrorException as ex:
+            _LOGGER.error("Could not send to %s: %s", targets, ex)
+            raise HomeAssistantError from ex
+        else:
+            _LOGGER.debug("Saved message %s: %s", sms_index, resp)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SAVE_MESSAGE,
+        message_retrieval_handler,
+        schema=SERVICE_SAVE_MESSAGE_SCHEMA,
+    )
+    
     return True
 
 
