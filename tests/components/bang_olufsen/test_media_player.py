@@ -18,6 +18,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_DURATION,
     ATTR_MEDIA_EXTRA,
     ATTR_MEDIA_POSITION,
+    ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_TRACK,
@@ -70,12 +71,21 @@ async def test_initialization(
     """Test the integration is initialized properly in _initialize, async_added_to_hass and __init__."""
 
     # Setup entity
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    with patch(
+        "homeassistant.components.bang_olufsen.media_player._LOGGER.debug"
+    ) as mock_logger:
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Check state
+    mock_logger.assert_called_once_with(
+        "Connected to: %s %s running SW %s", "Beosound Balance", "11111111", "1.0.0"
+    )
+
+    # Check state (The initial state in this test does not contain all that much.
+    # States are tested using simulated WebSocket events.)
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert states.attributes[ATTR_INPUT_SOURCE_LIST] == TEST_SOURCES
+    assert states.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
 
     # Check API calls
     mock_mozart_client.get_softwareupdate_status.assert_called_once()
@@ -193,6 +203,8 @@ async def test_async_update_playback_progress(
     # Check state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert ATTR_MEDIA_POSITION not in states.attributes
+    old_updated_at = states.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
+    assert old_updated_at
 
     # Send the dispatch
     async_dispatcher_send(
@@ -204,6 +216,10 @@ async def test_async_update_playback_progress(
     # Check new state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert states.attributes[ATTR_MEDIA_POSITION] == TEST_PLAYBACK_PROGRESS.progress
+    new_updated_at = states.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
+    assert new_updated_at
+
+    assert old_updated_at != new_updated_at
 
 
 async def test_async_update_playback_state(
@@ -268,6 +284,7 @@ async def test_async_update_source_change_uri_streamer(
     # Check state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert ATTR_INPUT_SOURCE not in states.attributes
+    assert states.attributes[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
 
     # Send the dispatch
     async_dispatcher_send(
