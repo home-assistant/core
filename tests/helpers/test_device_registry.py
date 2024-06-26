@@ -171,7 +171,7 @@ async def test_multiple_config_entries(
     assert entry.id == entry2.id
     assert entry.id == entry3.id
     assert entry2.config_entries == {config_entry_1.entry_id, config_entry_2.entry_id}
-    assert entry2.primary_config_entry == config_entry_2.entry_id
+    assert entry2.primary_config_entry == config_entry_1.entry_id
     assert entry3.config_entries == {config_entry_1.entry_id, config_entry_2.entry_id}
     assert entry3.primary_config_entry == config_entry_1.entry_id
 
@@ -984,7 +984,6 @@ async def test_removing_config_entries(
         "device_id": entry.id,
         "changes": {
             "config_entries": {config_entry_1.entry_id},
-            "primary_config_entry": config_entry_1.entry_id,
         },
     }
     assert update_events[2].data == {
@@ -995,7 +994,8 @@ async def test_removing_config_entries(
         "action": "update",
         "device_id": entry.id,
         "changes": {
-            "config_entries": {config_entry_1.entry_id, config_entry_2.entry_id}
+            "config_entries": {config_entry_1.entry_id, config_entry_2.entry_id},
+            "primary_config_entry": config_entry_1.entry_id,
         },
     }
     assert update_events[4].data == {
@@ -1059,7 +1059,6 @@ async def test_deleted_device_removing_config_entries(
         "device_id": entry2.id,
         "changes": {
             "config_entries": {config_entry_1.entry_id},
-            "primary_config_entry": config_entry_1.entry_id,
         },
     }
     assert update_events[2].data == {
@@ -1692,7 +1691,6 @@ async def test_update_remove_config_entries(
         "device_id": entry2.id,
         "changes": {
             "config_entries": {config_entry_1.entry_id},
-            "primary_config_entry": config_entry_1.entry_id,
         },
     }
     assert update_events[2].data == {
@@ -1714,7 +1712,8 @@ async def test_update_remove_config_entries(
                 config_entry_1.entry_id,
                 config_entry_2.entry_id,
                 config_entry_3.entry_id,
-            }
+            },
+            "primary_config_entry": config_entry_1.entry_id,
         },
     }
     assert update_events[5].data == {
@@ -2137,7 +2136,6 @@ async def test_restore_shared_device(
         "changes": {
             "config_entries": {config_entry_1.entry_id},
             "identifiers": {("entry_123", "0123")},
-            "primary_config_entry": config_entry_1.entry_id,
         },
     }
     assert update_events[2].data == {
@@ -2162,7 +2160,6 @@ async def test_restore_shared_device(
         "changes": {
             "config_entries": {config_entry_2.entry_id},
             "identifiers": {("entry_234", "2345")},
-            "primary_config_entry": config_entry_2.entry_id,
         },
     }
 
@@ -2994,8 +2991,10 @@ async def test_primary_config_entry(
     mock_config_entry_1.add_to_hass(hass)
     mock_config_entry_2 = MockConfigEntry(title=None)
     mock_config_entry_2.add_to_hass(hass)
-    mock_config_entry_3 = MockConfigEntry(domain="matter", title=None)
+    mock_config_entry_3 = MockConfigEntry(title=None)
     mock_config_entry_3.add_to_hass(hass)
+    mock_config_entry_4 = MockConfigEntry(domain="matter", title=None)
+    mock_config_entry_4.add_to_hass(hass)
 
     # Create device without model name etc, config entry will not be marked primary
     device = device_registry.async_get_or_create(
@@ -3005,7 +3004,7 @@ async def test_primary_config_entry(
     )
     assert device.primary_config_entry is None
 
-    # Set model, config entry will be promoted to primary
+    # Set model, mqtt config entry will be promoted to primary
     device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry_1.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
@@ -3021,9 +3020,17 @@ async def test_primary_config_entry(
     )
     assert device.primary_config_entry == mock_config_entry_2.entry_id
 
-    # New matter config entry with model will not be promoted to primary
+    # New config entry with model will not be promoted to primary
     device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry_3.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        model="model 3",
+    )
+    assert device.primary_config_entry == mock_config_entry_2.entry_id
+
+    # New matter config entry with model will not be promoted to primary
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry_4.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         model="model 3",
     )
