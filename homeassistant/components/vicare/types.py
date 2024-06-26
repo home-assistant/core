@@ -67,11 +67,37 @@ VICARE_TO_HA_PRESET_HEATING = {
 class VentilationMode(enum.StrEnum):
     """ViCare ventilation modes."""
 
-    VENTILATION = "ventilation"  # activated by schedule
-    SENSOR_OVERRIDE = "sensorOverride"  # activated by sensor
-    SENSOR_DRIVEN = "sensorDriven"  # activated by schedule and sensor
     PERMANENT = "permanent"  # on, speed controlled by program (levelOne-levelFour)
+    VENTILATION = "ventilation"  # activated by schedule
+    SENSOR_DRIVEN = "sensorDriven"  # activated by schedule, override by sensor
+    SENSOR_OVERRIDE = "sensorOverride"  # activated by sensor
 
+    @staticmethod
+    def to_ha_mode(mode: str) -> str | None:
+        """Return the mapped Home Assistant mode for the ViCare ventilation mode."""
+
+        try:
+            ventilation_mode = VentilationMode(mode)
+        except ValueError:
+            # ignore unsupported / unmapped modes
+            return None
+        return VICARE_TO_HA_MODE_VENTILATION.get(ventilation_mode) if mode else None
+
+    @staticmethod
+    def from_ha_mode(ha_mode: str) -> str | None:
+        """Return the mapped ViCare ventilation mode for the Home Assistant mode."""
+        for mode in VentilationMode:
+            if VICARE_TO_HA_PRESET_HEATING.get(VentilationMode(mode)) == ha_mode:
+                return mode
+        return None
+
+
+VICARE_TO_HA_MODE_VENTILATION = {
+    VentilationMode.PERMANENT: "permanent",
+    VentilationMode.VENTILATION: "ventilation",
+    VentilationMode.SENSOR_DRIVEN: "sensor_driven",
+    VentilationMode.SENSOR_OVERRIDE: "sensor_override",
+}
 
 class VentilationProgram(enum.StrEnum):
     """ViCare preset ventilation programs.

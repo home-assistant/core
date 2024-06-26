@@ -98,7 +98,7 @@ class ViCareFan(ViCareEntity, FanEntity):
         """Update state of fan."""
         try:
             with suppress(PyViCareNotSupportedFeatureError):
-                self._attr_preset_mode = self._api.getActiveMode()
+                self._attr_preset_mode = VentilationMode.to_ha_mode(self._api.getActiveMode())
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attr_percentage = ordered_list_item_to_percentage(
                     ORDERED_NAMED_FAN_SPEEDS, self._api.getActiveProgram()
@@ -127,9 +127,9 @@ class ViCareFan(ViCareEntity, FanEntity):
 
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
-
-        if self._attr_preset_mode != str(VentilationMode.PERMANENT):
-            self.set_preset_mode(VentilationMode.PERMANENT)
+        if VentilationMode.from_ha_mode(self.get_preset_mode()) != str(VentilationMode.PERMANENT):
+            _LOGGER.debug("changing ventilation mode to %s", VentilationMode.PERMANENT)
+            self._api.setActiveMode(VentilationMode.PERMANENT)
 
         level = percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage)
         _LOGGER.debug("changing ventilation level to %s", level)
@@ -142,5 +142,6 @@ class ViCareFan(ViCareEntity, FanEntity):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        _LOGGER.debug("changing ventilation mode to %s", preset_mode)
-        self._api.setActiveMode(preset_mode)
+        target_mode = VentilationMode.from_ha_mode(self.get_preset_mode())
+        _LOGGER.debug("changing ventilation mode to %s", target_mode)
+        self._api.setActiveMode(target_mode)
