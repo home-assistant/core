@@ -41,8 +41,18 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Required(CONF_SSL, default=False): cv.boolean,
         vol.Required(CONF_VERIFY_SSL, default=True): bool,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                autocomplete="username",
+            ),
+        ),
+        vol.Required(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            ),
+        ),
     }
 )
 
