@@ -11,8 +11,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from .mock_data import HOME_DATA
+
 from tests.common import MockConfigEntry
-from tests.components.roborock.mock_data import HOME_DATA
 
 
 async def test_unload_entry(
