@@ -284,8 +284,11 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         # always be linked into one device.
         dev_reg = dr.async_get(hass)
         for device in dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id):
-            new_identifiers: set[tuple[str, str]] | None = None
-            if len(device.identifiers) > 1 and (
+            # Get only the tplink identifier, could be tapo or other integrations.
+            tplink_identifiers = [
+                ident[1] for ident in device.identifiers if ident[0] == DOMAIN
+            ]
+            if len(tplink_identifiers) > 1 and (
                 mac := next(
                     iter(
                         [
@@ -297,14 +300,21 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                     None,
                 )
             ):
-                for identifier in device.identifiers:
+                upper_mac = mac.upper()
+                tplink_identifier: tuple[str, str] | None = None
+                for identifier in tplink_identifiers:
                     # Previously only iot devices that use the MAC address as
                     # device_id had child devices so check for mac as the
                     # parent device.
-                    if identifier[0] == DOMAIN and identifier[1].upper() == mac.upper():
-                        new_identifiers = {identifier}
+                    if identifier.upper() == upper_mac:
+                        tplink_identifier = (DOMAIN, identifier)
                         break
-                if new_identifiers:
+                if tplink_identifier:
+                    # Retain any identifiers for other domains
+                    new_identifiers = {
+                        ident for ident in device.identifiers if ident[0] != DOMAIN
+                    }
+                    new_identifiers.add(tplink_identifier)
                     dev_reg.async_update_device(
                         device.id, new_identifiers=new_identifiers
                     )
