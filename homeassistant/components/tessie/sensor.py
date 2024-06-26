@@ -343,8 +343,8 @@ WALL_CONNECTOR_DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda x: TessieWallConnectorStates.get(cast(int, x)),
-        options=list(TessieWallConnectorStates.values()),
+        value_fn=lambda x: TessieWallConnectorStates(cast(int, x)).name.lower(),
+        options=[state.name.lower() for state in TessieWallConnectorStates],
     ),
     TessieSensorEntityDescription(
         key="wall_connector_power",
