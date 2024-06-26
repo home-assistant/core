@@ -34,8 +34,8 @@ from homeassistant.util.variance import ignore_variance
 
 from . import TessieConfigEntry
 from .const import TessieChargeStates
-from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
+from .models import TessieVehicleData
 
 
 @callback
@@ -280,11 +280,11 @@ class TessieSensorEntity(TessieEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: TessieStateUpdateCoordinator,
+        vehicle: TessieVehicleData,
         description: TessieSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, description.key)
+        super().__init__(vehicle, description.key)
         self.entity_description = description
 
     @property
