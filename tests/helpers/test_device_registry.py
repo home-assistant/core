@@ -2501,7 +2501,14 @@ def test_all() -> None:
     help_test_all(dr)
 
 
-@pytest.mark.parametrize(("enum"), list(dr.DeviceEntryDisabler))
+@pytest.mark.parametrize(
+    ("enum"),
+    [
+        enum
+        for enum in dr.DeviceEntryDisabler
+        if enum != dr.DeviceEntryDisabler.DUPLICATE
+    ],
+)
 def test_deprecated_constants(
     caplog: pytest.LogCaptureFixture,
     enum: dr.DeviceEntryDisabler,
@@ -2903,7 +2910,27 @@ async def test_device_registry_connections_collision(
 
     device3_refetched = device_registry.async_get(device3.id)
     device1_refetched = device_registry.async_get(device1.id)
-    assert not device1_refetched.connections.isdisjoint(device3_refetched.connections)
+
+    # One of the devices should now:
+    # - Be disabled
+    # - Have all its connections removed
+    # - Have a single identifier
+    if device1_refetched.disabled_by is dr.DeviceEntryDisabler.DUPLICATE:
+        main_device = device3_refetched
+        duplicate_device = device1_refetched
+    else:
+        main_device = device1_refetched
+        duplicate_device = device3_refetched
+
+    assert duplicate_device.disabled_by is dr.DeviceEntryDisabler.DUPLICATE
+    assert main_device.disabled_by is None
+    assert duplicate_device.connections == set()
+    assert duplicate_device.identifiers == {("homeassistant", duplicate_device.id)}
+    assert main_device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "ee:ee:ee:ee:ee:ee"),
+        (dr.CONNECTION_NETWORK_MAC, "none"),
+    }
+    assert main_device.identifiers == {("bridgeid", "0123")}
 
 
 async def test_device_registry_identifiers_collision(
@@ -2979,7 +3006,24 @@ async def test_device_registry_identifiers_collision(
 
     device3_refetched = device_registry.async_get(device3.id)
     device1_refetched = device_registry.async_get(device1.id)
-    assert not device1_refetched.identifiers.isdisjoint(device3_refetched.identifiers)
+
+    # One of the devices should now:
+    # - Be disabled
+    # - Have all its connections removed
+    # - Have a single identifier
+    if device1_refetched.disabled_by is dr.DeviceEntryDisabler.DUPLICATE:
+        main_device = device3_refetched
+        duplicate_device = device1_refetched
+    else:
+        main_device = device1_refetched
+        duplicate_device = device3_refetched
+
+    assert duplicate_device.disabled_by is dr.DeviceEntryDisabler.DUPLICATE
+    assert main_device.disabled_by is None
+    assert duplicate_device.connections == set()
+    assert duplicate_device.identifiers == {("homeassistant", duplicate_device.id)}
+    assert main_device.connections == set()
+    assert main_device.identifiers == {("bridgeid", "0123"), ("bridgeid", "4567")}
 
 
 async def test_primary_config_entry(
