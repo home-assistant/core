@@ -27,6 +27,22 @@
       "total": {
         "default": "mdi:cloud-alert"
       }
+    },
+    "switch": {
+      "download": {
+        "default": "mdi:play",
+        "state": {
+          "on": "mdi:play",
+          "off": "mdi:pause"
+        }
+      },
+      "reconnect": {
+        "default": "mdi:restart",
+        "state": {
+          "on": "mdi:restart",
+          "off": "mdi:restart-off"
+        }
+      }
     }
   }
 }

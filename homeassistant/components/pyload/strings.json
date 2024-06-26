@@ -79,6 +79,14 @@
       "free_space": {
         "name": "Free space"
       }
+    },
+    "switch": {
+      "download": {
+        "name": "Pause/Resume queue"
+      },
+      "reconnect": {
+        "name": "Auto-Reconnect"
+      }
     }
   },
   "issues": {
