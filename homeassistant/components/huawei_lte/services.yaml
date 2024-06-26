@@ -19,7 +19,7 @@ get_messages:
       selector:
         text:
     box_type:
-      example: "mix_type"
+      example: "mix_inbox"
       selector: 
         select: 
           options:
