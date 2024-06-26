@@ -1561,7 +1561,7 @@ async def test_setup_with_advanced_settings(
     }
 
 
-@pytest.mark.usesfixtures("mock_ssl_context", "mock_process_uploaded_file")
+@pytest.mark.usefixtures("mock_ssl_context", "mock_process_uploaded_file")
 async def test_change_websockets_transport_to_tcp(
     hass: HomeAssistant, mock_try_connection: MagicMock
 ) -> None:
