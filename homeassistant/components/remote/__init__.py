@@ -21,12 +21,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-    make_entity_service_schema,
-)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
     all_with_deprecated_constants,
@@ -40,6 +35,12 @@ from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN = "remote"
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=30)
+
 ATTR_ACTIVITY = "activity"
 ATTR_ACTIVITY_LIST = "activity_list"
 ATTR_CURRENT_ACTIVITY = "current_activity"
@@ -50,11 +51,6 @@ ATTR_DELAY_SECS = "delay_secs"
 ATTR_HOLD_SECS = "hold_secs"
 ATTR_ALTERNATIVE = "alternative"
 ATTR_TIMEOUT = "timeout"
-
-DOMAIN = "remote"
-SCAN_INTERVAL = timedelta(seconds=30)
-
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
@@ -89,7 +85,7 @@ _DEPRECATED_SUPPORT_ACTIVITY = DeprecatedConstantEnum(
 )
 
 
-REMOTE_SERVICE_ACTIVITY_SCHEMA = make_entity_service_schema(
+REMOTE_SERVICE_ACTIVITY_SCHEMA = cv.make_entity_service_schema(
     {vol.Optional(ATTR_ACTIVITY): cv.string}
 )
 
