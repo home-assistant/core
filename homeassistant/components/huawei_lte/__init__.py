@@ -14,7 +14,7 @@ from xml.parsers.expat import ExpatError
 
 from huawei_lte_api.Client import Client
 from huawei_lte_api.Connection import Connection
-from huawei_lte_api.enums.sms import BoxType
+from huawei_lte_api.enums.sms import BoxTypeEnum
 from huawei_lte_api.exceptions import (
     LoginErrorInvalidCredentialsException,
     ResponseErrorException,
