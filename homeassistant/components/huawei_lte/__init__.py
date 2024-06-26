@@ -14,6 +14,7 @@ from xml.parsers.expat import ExpatError
 
 from huawei_lte_api.Client import Client
 from huawei_lte_api.Connection import Connection
+from huawei_lte_api.enums.sms import BoxType
 from huawei_lte_api.exceptions import (
     LoginErrorInvalidCredentialsException,
     ResponseErrorException,
@@ -70,6 +71,7 @@ from .const import (
     ADMIN_SERVICES,
     ALL_KEYS,
     ATTR_CONFIG_ENTRY_ID,
+    CONF_BOX_TYPE,
     CONF_DATETIME,
     CONF_MANUFACTURER,
     CONF_MAX_MESSAGES,
@@ -78,6 +80,7 @@ from .const import (
     CONF_SCA,
     CONF_UNAUTHENTICATED_MODE,
     CONNECTION_TIMEOUT,
+    DEFAULT_BOX_TYPE,
     DEFAULT_DEVICE_NAME,
     DEFAULT_MESSAGES_CHUNK,
     DEFAULT_MANUFACTURER,
@@ -116,6 +119,17 @@ SCAN_INTERVAL = timedelta(seconds=10)
 
 VALIDATOR_PHONES = vol.All(cv.ensure_list, [cv.string], vol.Length(min=1))
 
+VALIDATOR_BOX_TYPE = vol.All(
+    vol.Any(
+        int,
+        vol.All(
+            cv.string,
+            lambda x: BoxTypeEnum[x.upper()],
+        ),
+    ),
+    vol.Coerce(BoxTypeEnum),
+)
+
 NOTIFY_SCHEMA = vol.Any(
     None,
     vol.Schema(
@@ -151,6 +165,7 @@ SERVICE_GET_MESSAGES_SCHEMA = SERVICE_SCHEMA.extend(
     {
         vol.Optional(CONF_MAX_MESSAGES): cv.positive_int,
         vol.Optional(CONF_PREFER_UNREAD, default=DEFAULT_PREFER_UNREAD): cv.boolean,
+        vol.Optional(CONF_BOX_TYPE, default=DEFAULT_BOX_TYPE): VALIDATOR_BOX_TYPE,
     }
 )
 
@@ -602,24 +617,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """
         router = router_resolver(service)
         if (limit := service.data.get(CONF_MAX_MESSAGES)) is None:
-            messages = router.client.sms.get_messages(
-                unread_preferred=service.data[CONF_PREFER_UNREAD]
-            )
+            read_count = DEFAULT_MESSAGES_CHUNK
         elif limit <= 0:
             _LOGGER.error("%s: limit must be a positive number", service.service)
             raise ServiceValidationError
         else:
-            read_count = min(limit, DEFAULT_MESSAGES_CHUNK)
-            messages = []
-            for _, message in zip(
-                range(limit),
-                router.client.sms.get_messages(
-                    unread_preferred=service.data[CONF_PREFER_UNREAD],
-                    read_count=read_count,
-                )
-            ):
-                messages.append(message)
-        return {"messages": [msg.to_dict() for msg in messages]}
+            read_chunk = min(limit, DEFAULT_MESSAGES_CHUNK)
+        messages = router.client.sms.get_messages(
+            unread_preferred=service.data[CONF_PREFER_UNREAD],
+            read_count=read_count,
+            box_type=service.data[CONF_BOX_TYPE],
+        )
+        if limit is None:
+            messages = map(lambda x: x[1], range(limit), messages)
+        try:
+            return {"messages": [msg.to_dict() for msg in messages]}
+        except ResponseErrorException as ex:
+            _LOGGER.error("Could delete message %s: %s", sms_index, ex)
+            raise HomeAssistantError from ex
         
     hass.services.async_register(
         DOMAIN,
