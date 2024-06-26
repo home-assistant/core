@@ -14,7 +14,8 @@ TOOLS_PROMPT = (
 To call the tool, start the response with TOOL_CALL followed by tool name and"""
     ' parameters in json format, example: TOOL_CALL {"name": "tool_name", "parameters":'
     """ {\"arg\": 42}}
-Respond with TOOL_ARGS followed by the tool name without quotes to get the available tool args in JSON object schema format.
+Respond with TOOL_ARGS followed by the tool name without quotes to get the available"""
+    """ tool args in JSON object schema format. Always do it before calling the tool.
 Available tools:"""
 )
 

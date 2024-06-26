@@ -272,6 +272,7 @@ class OllamaConversationEntity(
                             content=json.dumps(tools[tool_name]["parameters"]),
                         )
                     )
+                    tools[tool_name]["args_sent"] = True
                 else:
                     message_history.messages.append(
                         ollama.Message(
@@ -310,6 +311,15 @@ class OllamaConversationEntity(
                     tool_response = {"error": type(e).__name__}
                     if str(e):
                         tool_response["error_text"] = str(e)
+                    if (
+                        tools
+                        and tool_input.tool_name in tools
+                        and not tools[tool_input.tool_name].get("args_sent")
+                    ):
+                        tools[tool_input.tool_name]["args_sent"] = True
+                        tool_response["correct_tool_parameters"] = tools[
+                            tool_input.tool_name
+                        ]["parameters"]
 
                 _LOGGER.debug("Tool response: %s", tool_response)
                 message_history.messages.append(
