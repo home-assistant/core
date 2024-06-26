@@ -163,9 +163,9 @@ class InputTextStorageCollection(collection.DictStorageCollection):
 
     CREATE_UPDATE_SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, _cv_input_text))
 
-    async def _process_create_data(self, data: dict[str, Any]) -> vol.Schema:
+    async def _process_create_data(self, data: dict[str, Any]) -> dict[str, Any]:
         """Validate the config is valid."""
-        return self.CREATE_UPDATE_SCHEMA(data)
+        return self.CREATE_UPDATE_SCHEMA(data)  # type: ignore[no-any-return]
 
     @callback
     def _get_suggested_id(self, info: dict[str, Any]) -> str:
