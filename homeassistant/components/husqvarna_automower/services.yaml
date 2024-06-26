@@ -20,7 +20,7 @@ override_schedule:
             - "mow"
             - "park"
 
-override_schedule_workarea:
+override_schedule_work_area:
   target:
     entity:
       integration: "husqvarna_automower"

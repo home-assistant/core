@@ -256,7 +256,7 @@
         },
         "state_attributes": {
           "work_area_id_assignment": {
-            "name": "Workarea ID assignment"
+            "name": "Work area ID assignment"
           }
         }
       }
@@ -278,7 +278,7 @@
       "message": "This mower does not support work areas."
     },
     "work_area_not_existing": {
-      "message": "The selected workarea does not exist."
+      "message": "The selected work area does not exist."
     }
   },
   "selector": {
@@ -304,9 +304,9 @@
         }
       }
     },
-    "override_schedule_workarea": {
-      "name": "Override schedule workarea",
-      "description": "Override the schedule of the mower for a duration of time in the selected workarea.",
+    "override_schedule_work_area": {
+      "name": "Override schedule work area",
+      "description": "Override the schedule of the mower for a duration of time in the selected work area.",
       "fields": {
         "duration": {
           "name": "[%key:component::husqvarna_automower::services::override_schedule::fields::duration::name%]",
@@ -314,7 +314,7 @@
         },
         "work_area_id": {
           "name": "Workarea ID",
-          "description": "In which workarea the mower should mow."
+          "description": "In which work area the mower should mow."
         }
       }
     }

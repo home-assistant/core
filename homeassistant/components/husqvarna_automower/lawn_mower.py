@@ -95,7 +95,7 @@ async def async_setup_entry(
     for mower_id in coordinator.data:
         if coordinator.data[mower_id].capabilities.work_areas:
             platform.async_register_entity_service(
-                "override_schedule_workarea",
+                "override_schedule_work_area",
                 {
                     vol.Required("work_area_id"): vol.Coerce(int),
                     vol.Required("duration"): vol.All(
@@ -104,7 +104,7 @@ async def async_setup_entry(
                         vol.Range(min=timedelta(minutes=1), max=timedelta(days=42)),
                     ),
                 },
-                "async_override_schedule_workarea",
+                "async_override_schedule_work_area",
             )
             break
 
@@ -140,7 +140,7 @@ class AutomowerLawnMowerEntity(AutomowerAvailableEntity, LawnMowerEntity):
 
     @property
     def work_areas(self) -> dict[int, WorkArea] | None:
-        """Return the workareas of the mower."""
+        """Return the work areas of the mower."""
         return self.mower_attributes.work_areas
 
     @handle_sending_exception
@@ -169,10 +169,10 @@ class AutomowerLawnMowerEntity(AutomowerAvailableEntity, LawnMowerEntity):
             await self.coordinator.api.commands.park_for(self.mower_id, duration)
 
     @handle_sending_exception
-    async def async_override_schedule_workarea(
+    async def async_override_schedule_work_area(
         self, work_area_id: int, duration: timedelta
     ) -> None:
-        """Override the schedule with a certain workarea."""
+        """Override the schedule with a certain work area."""
         if not self.mower_attributes.capabilities.work_areas:
             raise ServiceValidationError(
                 translation_domain=DOMAIN, translation_key="work_areas_not_supported"

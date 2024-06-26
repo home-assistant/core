@@ -172,7 +172,7 @@ async def test_lawn_mower_service_commands(
         ),
     ],
 )
-async def test_lawn_mower_override_workarea_command(
+async def test_lawn_mower_override_work_area_command(
     hass: HomeAssistant,
     aioautomower_command: str,
     extra_data1: int,
@@ -182,7 +182,7 @@ async def test_lawn_mower_override_workarea_command(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test lawn_mower commands."""
+    """Test lawn_mower work area override commands."""
     await setup_integration(hass, mock_config_entry)
     mocked_method = AsyncMock()
     setattr(mock_automower_client.commands, aioautomower_command, mocked_method)
@@ -224,7 +224,7 @@ async def test_lawn_mower_override_workarea_command(
             MultipleInvalid,
         ),
         (
-            "override_schedule_workarea",
+            "override_schedule_work_area",
             {
                 "work_area_id": 123456,
                 "duration": {"days": 40},
@@ -233,7 +233,7 @@ async def test_lawn_mower_override_workarea_command(
             ServiceValidationError,
         ),
         (
-            "override_schedule_workarea",
+            "override_schedule_work_area",
             {
                 "work_area_id": 12345,
                 "duration": {"days": 40},
