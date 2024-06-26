@@ -28,8 +28,7 @@ def async_device_info_to_link_from_entity(
 ) -> dr.DeviceInfo | None:
     """DeviceInfo with information to link a device from an entity.
 
-    DeviceInfo will only return the information to categorize the config
-    entry as a link.
+    DeviceInfo will only return information to categorize as a link.
     """
 
     return async_device_info_to_link_from_device_id(
@@ -45,8 +44,7 @@ def async_device_info_to_link_from_device_id(
 ) -> dr.DeviceInfo | None:
     """DeviceInfo with information to link a device from a device id.
 
-    DeviceInfo will only return the information to categorize the config
-    entry as a link.
+    DeviceInfo will only return information to categorize as a link.
     """
 
     dev_reg = dr.async_get(hass)
