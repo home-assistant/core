@@ -22,6 +22,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -279,6 +280,42 @@ async def async_setup_platform(
             )
         ],
         update_before_add=True,
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Statistics sensor entry."""
+    sampling_size = entry.options.get(CONF_SAMPLES_MAX_BUFFER_SIZE)
+    if sampling_size:
+        sampling_size = int(sampling_size)
+
+    max_age = None
+    if max_age_input := entry.options.get(CONF_MAX_AGE):
+        max_age_parsed = max_age_input.split(":")
+        hour = int(max_age_parsed[0])
+        minute = int(max_age_parsed[1])
+
+        max_age = timedelta(hours=hour, minutes=minute)
+
+    async_add_entities(
+        [
+            StatisticsSensor(
+                source_entity_id=entry.options[CONF_ENTITY_ID],
+                name=entry.options[CONF_NAME],
+                unique_id=entry.entry_id,
+                state_characteristic=entry.options[CONF_STATE_CHARACTERISTIC],
+                samples_max_buffer_size=sampling_size,
+                samples_max_age=max_age,
+                samples_keep_last=entry.options[CONF_KEEP_LAST_SAMPLE],
+                precision=int(entry.options[CONF_PRECISION]),
+                percentile=int(entry.options[CONF_PERCENTILE]),
+            )
+        ],
+        True,
     )
 
 

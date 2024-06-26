@@ -23,6 +23,7 @@ from homeassistant.helpers.selector import (
     EntitySelectorConfig,
     NumberSelector,
     NumberSelectorConfig,
+    NumberSelectorMode,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -85,6 +86,8 @@ async def validate_options(
     ):
         raise SchemaFlowError("missing_keep_last_sample")
 
+    handler.parent_handler._async_abort_entries_match(user_input)  # noqa: SLF001
+
     return user_input
 
 
@@ -99,15 +102,15 @@ DATA_SCHEMA_SETUP = vol.Schema(
 DATA_SCHEMA_OPTIONS = vol.Schema(
     {
         vol.Optional(CONF_SAMPLES_MAX_BUFFER_SIZE): NumberSelector(
-            NumberSelectorConfig(min=0, step=1)
+            NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
         ),
         vol.Optional(CONF_MAX_AGE): TimeSelector(),
         vol.Optional(CONF_KEEP_LAST_SAMPLE, default=False): BooleanSelector(),
         vol.Optional(CONF_PERCENTILE, default=50): NumberSelector(
-            NumberSelectorConfig(min=1, max=99, step=1)
+            NumberSelectorConfig(min=1, max=99, step=1, mode=NumberSelectorMode.BOX)
         ),
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): NumberSelector(
-            NumberSelectorConfig(min=0, step=1)
+            NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
         ),
     }
 )
@@ -115,13 +118,13 @@ DATA_SCHEMA_OPTIONS = vol.Schema(
 CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
         schema=DATA_SCHEMA_SETUP,
-        next_step="state_characteristics",
+        next_step="state_characteristic",
     ),
-    "state_characteristics": SchemaFlowFormStep(
+    "state_characteristic": SchemaFlowFormStep(
         schema=get_state_characteristics, next_step="options"
     ),
     "options": SchemaFlowFormStep(
-        schema=DATA_SCHEMA_SETUP,
+        schema=DATA_SCHEMA_OPTIONS,
         validate_user_input=validate_options,
     ),
 }
