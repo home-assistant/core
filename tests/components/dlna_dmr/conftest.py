@@ -72,6 +72,7 @@ def domain_data_mock(hass: HomeAssistant) -> Iterable[Mock]:
             service_id="urn:upnp-org:serviceId:RenderingControl",
         ),
     }
+    upnp_device.all_services = list(upnp_device.services.values())
     seal(upnp_device)
     domain_data.upnp_factory.async_create_device.return_value = upnp_device
 

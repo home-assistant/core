@@ -2,17 +2,17 @@
 
 from unittest.mock import AsyncMock, patch
 
-from kasa import TimeoutException
+from kasa import TimeoutError
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.tplink import (
     DOMAIN,
-    AuthenticationException,
+    AuthenticationError,
     Credentials,
     DeviceConfig,
-    SmartDeviceException,
+    KasaException,
 )
 from homeassistant.components.tplink.const import CONF_DEVICE_CONFIG
 from homeassistant.config_entries import ConfigEntryState
@@ -40,7 +40,7 @@ from . import (
     MAC_ADDRESS,
     MAC_ADDRESS2,
     MODULE,
-    _mocked_bulb,
+    _mocked_device,
     _patch_connect,
     _patch_discovery,
     _patch_single_discovery,
@@ -120,7 +120,7 @@ async def test_discovery_auth(
 ) -> None:
     """Test authenticated discovery."""
 
-    mock_discovery["mock_device"].update.side_effect = AuthenticationException
+    mock_discovery["mock_device"].update.side_effect = AuthenticationError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -155,8 +155,8 @@ async def test_discovery_auth(
 @pytest.mark.parametrize(
     ("error_type", "errors_msg", "error_placement"),
     [
-        (AuthenticationException("auth_error_details"), "invalid_auth", CONF_PASSWORD),
-        (SmartDeviceException("smart_device_error_details"), "cannot_connect", "base"),
+        (AuthenticationError("auth_error_details"), "invalid_auth", CONF_PASSWORD),
+        (KasaException("smart_device_error_details"), "cannot_connect", "base"),
     ],
     ids=["invalid-auth", "unknown-error"],
 )
@@ -170,7 +170,7 @@ async def test_discovery_auth_errors(
     error_placement,
 ) -> None:
     """Test handling of discovery authentication errors."""
-    mock_discovery["mock_device"].update.side_effect = AuthenticationException
+    mock_discovery["mock_device"].update.side_effect = AuthenticationError
     default_connect_side_effect = mock_connect["connect"].side_effect
     mock_connect["connect"].side_effect = error_type
 
@@ -223,7 +223,7 @@ async def test_discovery_new_credentials(
     mock_init,
 ) -> None:
     """Test setting up discovery with new credentials."""
-    mock_discovery["mock_device"].update.side_effect = AuthenticationException
+    mock_discovery["mock_device"].update.side_effect = AuthenticationError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -272,10 +272,10 @@ async def test_discovery_new_credentials_invalid(
     mock_init,
 ) -> None:
     """Test setting up discovery with new invalid credentials."""
-    mock_discovery["mock_device"].update.side_effect = AuthenticationException
+    mock_discovery["mock_device"].update.side_effect = AuthenticationError
     default_connect_side_effect = mock_connect["connect"].side_effect
 
-    mock_connect["connect"].side_effect = AuthenticationException
+    mock_connect["connect"].side_effect = AuthenticationError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -514,7 +514,7 @@ async def test_manual_auth(
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    mock_discovery["mock_device"].update.side_effect = AuthenticationException
+    mock_discovery["mock_device"].update.side_effect = AuthenticationError
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_HOST: IP_ADDRESS}
@@ -544,8 +544,8 @@ async def test_manual_auth(
 @pytest.mark.parametrize(
     ("error_type", "errors_msg", "error_placement"),
     [
-        (AuthenticationException("auth_error_details"), "invalid_auth", CONF_PASSWORD),
-        (SmartDeviceException("smart_device_error_details"), "cannot_connect", "base"),
+        (AuthenticationError("auth_error_details"), "invalid_auth", CONF_PASSWORD),
+        (KasaException("smart_device_error_details"), "cannot_connect", "base"),
     ],
     ids=["invalid-auth", "unknown-error"],
 )
@@ -566,7 +566,7 @@ async def test_manual_auth_errors(
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    mock_discovery["mock_device"].update.side_effect = AuthenticationException
+    mock_discovery["mock_device"].update.side_effect = AuthenticationError
     default_connect_side_effect = mock_connect["connect"].side_effect
     mock_connect["connect"].side_effect = error_type
 
@@ -765,7 +765,7 @@ async def test_integration_discovery_with_ip_change(
     mock_connect: AsyncMock,
 ) -> None:
     """Test reauth flow."""
-    mock_connect["connect"].side_effect = SmartDeviceException()
+    mock_connect["connect"].side_effect = KasaException()
     mock_config_entry.add_to_hass(hass)
     with patch("homeassistant.components.tplink.Discover.discover", return_value={}):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -797,7 +797,7 @@ async def test_integration_discovery_with_ip_change(
     config = DeviceConfig.from_dict(DEVICE_CONFIG_DICT_AUTH)
 
     mock_connect["connect"].reset_mock(side_effect=True)
-    bulb = _mocked_bulb(
+    bulb = _mocked_device(
         device_config=config,
         mac=mock_config_entry.unique_id,
     )
@@ -818,7 +818,7 @@ async def test_dhcp_discovery_with_ip_change(
     mock_connect: AsyncMock,
 ) -> None:
     """Test dhcp discovery with an IP change."""
-    mock_connect["connect"].side_effect = SmartDeviceException()
+    mock_connect["connect"].side_effect = KasaException()
     mock_config_entry.add_to_hass(hass)
     with patch("homeassistant.components.tplink.Discover.discover", return_value={}):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -883,7 +883,7 @@ async def test_reauth_update_from_discovery(
     mock_connect: AsyncMock,
 ) -> None:
     """Test reauth flow."""
-    mock_connect["connect"].side_effect = AuthenticationException
+    mock_connect["connect"].side_effect = AuthenticationError
     mock_config_entry.add_to_hass(hass)
     with patch("homeassistant.components.tplink.Discover.discover", return_value={}):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -920,7 +920,7 @@ async def test_reauth_update_from_discovery_with_ip_change(
     mock_connect: AsyncMock,
 ) -> None:
     """Test reauth flow."""
-    mock_connect["connect"].side_effect = AuthenticationException()
+    mock_connect["connect"].side_effect = AuthenticationError()
     mock_config_entry.add_to_hass(hass)
     with patch("homeassistant.components.tplink.Discover.discover", return_value={}):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -957,7 +957,7 @@ async def test_reauth_no_update_if_config_and_ip_the_same(
     mock_connect: AsyncMock,
 ) -> None:
     """Test reauth discovery does not update when the host and config are the same."""
-    mock_connect["connect"].side_effect = AuthenticationException()
+    mock_connect["connect"].side_effect = AuthenticationError()
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         mock_config_entry,
@@ -996,8 +996,8 @@ async def test_reauth_no_update_if_config_and_ip_the_same(
 @pytest.mark.parametrize(
     ("error_type", "errors_msg", "error_placement"),
     [
-        (AuthenticationException("auth_error_details"), "invalid_auth", CONF_PASSWORD),
-        (SmartDeviceException("smart_device_error_details"), "cannot_connect", "base"),
+        (AuthenticationError("auth_error_details"), "invalid_auth", CONF_PASSWORD),
+        (KasaException("smart_device_error_details"), "cannot_connect", "base"),
     ],
     ids=["invalid-auth", "unknown-error"],
 )
@@ -1060,8 +1060,8 @@ async def test_reauth_errors(
 @pytest.mark.parametrize(
     ("error_type", "expected_flow"),
     [
-        (AuthenticationException, FlowResultType.FORM),
-        (SmartDeviceException, FlowResultType.ABORT),
+        (AuthenticationError, FlowResultType.FORM),
+        (KasaException, FlowResultType.ABORT),
     ],
     ids=["invalid-auth", "unknown-error"],
 )
@@ -1119,7 +1119,7 @@ async def test_discovery_timeout_connect(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    mock_discovery["discover_single"].side_effect = TimeoutException
+    mock_discovery["discover_single"].side_effect = TimeoutError
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -1149,7 +1149,7 @@ async def test_reauth_update_other_flows(
         unique_id=MAC_ADDRESS2,
     )
     default_side_effect = mock_connect["connect"].side_effect
-    mock_connect["connect"].side_effect = AuthenticationException()
+    mock_connect["connect"].side_effect = AuthenticationError()
     mock_config_entry.add_to_hass(hass)
     mock_config_entry2.add_to_hass(hass)
     with patch("homeassistant.components.tplink.Discover.discover", return_value={}):

@@ -31,5 +31,13 @@
         "invalid_code": "Invalid code, please try again."
       }
     }
+  },
+  "exceptions": {
+    "username_already_exists": {
+      "message": "Username \"{username}\" already exists"
+    },
+    "username_not_normalized": {
+      "message": "Username \"{new_username}\" is not normalized"
+    }
   }
 }

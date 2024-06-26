@@ -31,7 +31,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
 
@@ -247,7 +247,7 @@ VALID_BRIGHTNESS_STEP = vol.All(vol.Coerce(int), vol.Clamp(min=-255, max=255))
 VALID_BRIGHTNESS_STEP_PCT = vol.All(vol.Coerce(float), vol.Clamp(min=-100, max=100))
 VALID_FLASH = vol.In([FLASH_SHORT, FLASH_LONG])
 
-LIGHT_TURN_ON_SCHEMA = {
+LIGHT_TURN_ON_SCHEMA: VolDictType = {
     vol.Exclusive(ATTR_PROFILE, COLOR_GROUP): cv.string,
     ATTR_TRANSITION: VALID_TRANSITION,
     vol.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
@@ -286,7 +286,10 @@ LIGHT_TURN_ON_SCHEMA = {
     ATTR_EFFECT: cv.string,
 }
 
-LIGHT_TURN_OFF_SCHEMA = {ATTR_TRANSITION: VALID_TRANSITION, ATTR_FLASH: VALID_FLASH}
+LIGHT_TURN_OFF_SCHEMA: VolDictType = {
+    ATTR_TRANSITION: VALID_TRANSITION,
+    ATTR_FLASH: VALID_FLASH,
+}
 
 
 _LOGGER = logging.getLogger(__name__)
