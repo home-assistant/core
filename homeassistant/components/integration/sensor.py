@@ -27,6 +27,7 @@ from homeassistant.const import (
     CONF_METHOD,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    EVENT_STATE_CHANGED,
     EVENT_STATE_REPORTED,
     STATE_UNAVAILABLE,
     UnitOfTime,
@@ -34,6 +35,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
+    EventStateChangedData,
     EventStateReportedData,
     HomeAssistant,
     State,
@@ -437,6 +439,16 @@ class IntegrationSensor(RestoreSensor):
 
         self.async_on_remove(
             self.hass.bus.async_listen(
+                EVENT_STATE_CHANGED,
+                handle_state_change,
+                event_filter=callback(
+                    lambda event_data: event_data["entity_id"] == self._sensor_source_id
+                ),
+                run_immediately=True,
+            )
+        )
+        self.async_on_remove(
+            self.hass.bus.async_listen(
                 EVENT_STATE_REPORTED,
                 handle_state_change,
                 event_filter=callback(
@@ -448,7 +460,7 @@ class IntegrationSensor(RestoreSensor):
 
     @callback
     def _integrate_on_state_change_and_max_sub_interval(
-        self, event: Event[EventStateReportedData]
+        self, event: Event[EventStateChangedData] | Event[EventStateReportedData]
     ) -> None:
         """Integrate based on state change and time.
 
@@ -456,8 +468,17 @@ class IntegrationSensor(RestoreSensor):
         reschedules time based integration.
         """
         self._cancel_max_sub_interval_exceeded_callback()
-        old_last_reported = event.data.get("old_last_reported")
-        old_state = event.data.get("old_state")
+        if event.event_type == EVENT_STATE_CHANGED:
+            if TYPE_CHECKING:
+                assert type(event.data) is EventStateChangedData
+            old_last_reported = None
+            old_state = event.data["old_state"]
+        else:  # EVENT_STATE_REPORTED
+            if TYPE_CHECKING:
+                assert type(event.data) is EventStateReportedData
+            old_last_reported = event.data["old_last_reported"]
+            old_state = None
+
         new_state = event.data["new_state"]
         try:
             self._integrate_on_state_change(old_last_reported, old_state, new_state)
@@ -470,11 +491,19 @@ class IntegrationSensor(RestoreSensor):
 
     @callback
     def _integrate_on_state_change_callback(
-        self, event: Event[EventStateReportedData]
+        self, event: Event[EventStateChangedData] | Event[EventStateReportedData]
     ) -> None:
         """Handle the sensor state changes."""
-        old_last_reported = event.data.get("old_last_reported")
-        old_state = event.data.get("old_state")
+        if event.event_type == EVENT_STATE_CHANGED:
+            if TYPE_CHECKING:
+                assert type(event.data) is EventStateChangedData
+            old_last_reported = None
+            old_state = event.data["old_state"]
+        else:  # EVENT_STATE_REPORTED
+            if TYPE_CHECKING:
+                assert type(event.data) is EventStateReportedData
+            old_last_reported = event.data["old_last_reported"]
+            old_state = None
         new_state = event.data["new_state"]
         return self._integrate_on_state_change(old_last_reported, old_state, new_state)
 
