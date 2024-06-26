@@ -8,7 +8,10 @@ import os
 from file_read_backwards import FileReadBackwards
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_FILE_PATH,
@@ -26,7 +29,7 @@ from .const import DEFAULT_NAME, FILE_ICON
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_FILE_PATH): cv.isfile,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
