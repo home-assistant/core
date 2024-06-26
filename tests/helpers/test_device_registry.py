@@ -2829,17 +2829,19 @@ async def test_device_registry_connections_collision(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test connection collisions in the device registry."""
-    config_entry = MockConfigEntry()
-    config_entry.add_to_hass(hass)
+    config_entry_1 = MockConfigEntry()
+    config_entry_1.add_to_hass(hass)
+    config_entry_2 = MockConfigEntry()
+    config_entry_2.add_to_hass(hass)
 
     device1 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id=config_entry_1.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "none")},
         manufacturer="manufacturer",
         model="model",
     )
     device2 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id=config_entry_1.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "none")},
         manufacturer="manufacturer",
         model="model",
@@ -2848,7 +2850,7 @@ async def test_device_registry_connections_collision(
     assert device1.id == device2.id
 
     device3 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id=config_entry_2.entry_id,
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
@@ -2898,7 +2900,7 @@ async def test_device_registry_connections_collision(
     # Attempt to implicitly merge connection for device3 with the same
     # connection that already exists in device1
     device4 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id=config_entry_2.entry_id,
         identifiers={("bridgeid", "0123")},
         connections={
             (dr.CONNECTION_NETWORK_MAC, "EE:EE:EE:EE:EE:EE"),
@@ -2924,8 +2926,16 @@ async def test_device_registry_connections_collision(
 
     assert duplicate_device.disabled_by is dr.DeviceEntryDisabler.DUPLICATE
     assert main_device.disabled_by is None
+    assert duplicate_device.config_entries in (
+        {config_entry_1.entry_id},
+        {config_entry_2.entry_id},
+    )
     assert duplicate_device.connections == set()
     assert duplicate_device.identifiers == {("homeassistant", duplicate_device.id)}
+    assert main_device.config_entries == {
+        config_entry_1.entry_id,
+        config_entry_2.entry_id,
+    }
     assert main_device.connections == {
         (dr.CONNECTION_NETWORK_MAC, "ee:ee:ee:ee:ee:ee"),
         (dr.CONNECTION_NETWORK_MAC, "none"),
@@ -2937,17 +2947,19 @@ async def test_device_registry_identifiers_collision(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test identifiers collisions in the device registry."""
-    config_entry = MockConfigEntry()
-    config_entry.add_to_hass(hass)
+    config_entry_1 = MockConfigEntry()
+    config_entry_1.add_to_hass(hass)
+    config_entry_2 = MockConfigEntry()
+    config_entry_2.add_to_hass(hass)
 
     device1 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id=config_entry_1.entry_id,
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
     )
     device2 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id=config_entry_1.entry_id,
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
@@ -2956,7 +2968,7 @@ async def test_device_registry_identifiers_collision(
     assert device1.id == device2.id
 
     device3 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id=config_entry_2.entry_id,
         identifiers={("bridgeid", "4567")},
         manufacturer="manufacturer",
         model="model",
@@ -2998,7 +3010,7 @@ async def test_device_registry_identifiers_collision(
     # Attempt to implicitly merge identifiers for device3 with the same
     # connection that already exists in device1
     device4 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id=config_entry_2.entry_id,
         identifiers={("bridgeid", "4567"), ("bridgeid", "0123")},
     )
     assert len(device_registry.devices) == 2
@@ -3020,8 +3032,16 @@ async def test_device_registry_identifiers_collision(
 
     assert duplicate_device.disabled_by is dr.DeviceEntryDisabler.DUPLICATE
     assert main_device.disabled_by is None
+    assert duplicate_device.config_entries in (
+        {config_entry_1.entry_id},
+        {config_entry_2.entry_id},
+    )
     assert duplicate_device.connections == set()
     assert duplicate_device.identifiers == {("homeassistant", duplicate_device.id)}
+    assert main_device.config_entries == {
+        config_entry_1.entry_id,
+        config_entry_2.entry_id,
+    }
     assert main_device.connections == set()
     assert main_device.identifiers == {("bridgeid", "0123"), ("bridgeid", "4567")}
 

@@ -1146,12 +1146,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # device in the set
         main_device = self.devices[next(iter(device_ids))]
 
+        merged_config_entries = set()
         merged_connections = set()
         merged_identifiers = set()
 
         # Disable other devices, and clear their connections and identifiers
         for device_id in device_ids:
             device = self.devices[device_id]
+            merged_config_entries |= device.config_entries
             merged_connections |= device.connections
             merged_identifiers |= device.identifiers
 
@@ -1170,6 +1172,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             new_connections=merged_connections,
             new_identifiers=merged_identifiers,
         )
+        for config_entry_id in merged_config_entries:
+            self.async_update_device(
+                main_device.id,
+                add_config_entry_id=config_entry_id,
+            )
 
         return main_device
 
