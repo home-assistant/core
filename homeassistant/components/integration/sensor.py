@@ -446,7 +446,6 @@ class IntegrationSensor(RestoreSensor):
                 event_filter=callback(
                     lambda event_data: event_data["entity_id"] == self._sensor_source_id
                 ),
-                run_immediately=True,
             )
         )
         self.async_on_remove(
@@ -456,7 +455,6 @@ class IntegrationSensor(RestoreSensor):
                 event_filter=callback(
                     lambda event_data: event_data["entity_id"] == self._sensor_source_id
                 ),
-                run_immediately=True,
             )
         )
 
