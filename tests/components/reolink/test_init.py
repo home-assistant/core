@@ -42,7 +42,7 @@ pytestmark = pytest.mark.usefixtures("reolink_connect", "reolink_platforms")
 
 async def test_wait(*args, **key_args):
     """Ensure a mocked function takes a bit of time to be able to timeout in test."""
-    await asyncio.sleep(0.01)
+    await asyncio.sleep(0)
 
 
 @pytest.mark.parametrize(
