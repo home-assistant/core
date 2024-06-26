@@ -159,20 +159,19 @@ async def test_setup_integration_prevented_by_unavailable_client(
 ) -> None:
     """Test that setup throws ConfigEntryNotReady when the client is unavailable."""
     hass.config.units = US_CUSTOMARY_SYSTEM
-    with patch(
-        "evolutionhttp.BryantEvolutionLocalClient.get_client",
-        return_value=_FakeEvolutionClient(),
-    ) as p:
-        mock_evolution_entry = MockConfigEntry(
-            domain=DOMAIN,
-            data={CONF_FILENAME: "/dev/ttyUSB0", CONF_SYSTEM_ID: 1, CONF_ZONE_ID: 1},
-        )
-        client = p.return_value
-        client._mode = None
-        mock_evolution_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_evolution_entry.entry_id)
-        await hass.async_block_till_done()
-        assert mock_evolution_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_evolution_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            # This file does not exist.
+            CONF_FILENAME: "test_setup_integration_prevented_by_unavailable_client",
+            CONF_SYSTEM_ID: 1,
+            CONF_ZONE_ID: 1,
+        },
+    )
+    mock_evolution_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_evolution_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_evolution_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_integration_client_returns_none(hass: HomeAssistant) -> None:

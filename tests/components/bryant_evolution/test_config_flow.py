@@ -103,3 +103,24 @@ async def test_form_cannot_connect(
         CONF_ZONE_ID: 2,
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_cannot_connect_bad_file(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test we handle cannot connect error from a missing file."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            # This file does not exist.
+            CONF_FILENAME: "test_form_cannot_connect_bad_file",
+            CONF_SYSTEM_ID: 1,
+            CONF_ZONE_ID: 2,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
