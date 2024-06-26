@@ -22,9 +22,11 @@ from hatasmota.utils import (
 
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX, DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import async_fire_mqtt_message
+from tests.typing import WebSocketGenerator
 
 DEFAULT_CONFIG = {
     "ip": "192.168.15.10",
@@ -108,19 +110,17 @@ DEFAULT_SENSOR_CONFIG = {
 }
 
 
-async def remove_device(hass, ws_client, device_id, config_entry_id=None):
+async def remove_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_id: str,
+    config_entry_id: str | None = None,
+) -> None:
     """Remove config entry from a device."""
     if config_entry_id is None:
         config_entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
-    await ws_client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": config_entry_id,
-            "device_id": device_id,
-        }
-    )
-    response = await ws_client.receive_json()
+    ws_client = await hass_ws_client(hass)
+    response = await ws_client.remove_device(device_id, config_entry_id)
     assert response["success"]
 
 
@@ -693,7 +693,7 @@ async def help_test_entity_id_update_subscriptions(
     assert state is not None
     assert mqtt_mock.async_subscribe.call_count == len(topics)
     for topic in topics:
-        mqtt_mock.async_subscribe.assert_any_call(topic, ANY, ANY, ANY)
+        mqtt_mock.async_subscribe.assert_any_call(topic, ANY, ANY, ANY, ANY)
     mqtt_mock.async_subscribe.reset_mock()
 
     entity_reg.async_update_entity(
@@ -707,7 +707,7 @@ async def help_test_entity_id_update_subscriptions(
     state = hass.states.get(f"{domain}.milk")
     assert state is not None
     for topic in topics:
-        mqtt_mock.async_subscribe.assert_any_call(topic, ANY, ANY, ANY)
+        mqtt_mock.async_subscribe.assert_any_call(topic, ANY, ANY, ANY, ANY)
 
 
 async def help_test_entity_id_update_discovery_update(

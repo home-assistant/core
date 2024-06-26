@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -20,7 +20,7 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME, default="admin"): cv.string,
@@ -69,7 +69,7 @@ class XiaomiDeviceScanner(DeviceScanner):
                 self.mac2name = dict(mac2name_list)
             else:
                 # Error, handled in the _retrieve_list_with_retry
-                return
+                return None
         return self.mac2name.get(device.upper(), None)
 
     def _update_info(self):
@@ -117,34 +117,34 @@ def _retrieve_list(host, token, **kwargs):
         res = requests.get(url, timeout=10, **kwargs)
     except requests.exceptions.Timeout:
         _LOGGER.exception("Connection to the router timed out at URL %s", url)
-        return
+        return None
     if res.status_code != HTTPStatus.OK:
         _LOGGER.exception("Connection failed with http code %s", res.status_code)
-        return
+        return None
     try:
         result = res.json()
     except ValueError:
         # If json decoder could not parse the response
         _LOGGER.exception("Failed to parse response from mi router")
-        return
+        return None
     try:
         xiaomi_code = result["code"]
     except KeyError:
         _LOGGER.exception("No field code in response from mi router. %s", result)
-        return
+        return None
     if xiaomi_code == 0:
         try:
             return result["list"]
         except KeyError:
             _LOGGER.exception("No list in response from mi router. %s", result)
-            return
+            return None
     else:
         _LOGGER.info(
             "Receive wrong Xiaomi code %s, expected 0 in response %s",
             xiaomi_code,
             result,
         )
-        return
+        return None
 
 
 def _get_token(host, username, password):
@@ -155,14 +155,14 @@ def _get_token(host, username, password):
         res = requests.post(url, data=data, timeout=5)
     except requests.exceptions.Timeout:
         _LOGGER.exception("Connection to the router timed out")
-        return
+        return None
     if res.status_code == HTTPStatus.OK:
         try:
             result = res.json()
         except ValueError:
             # If JSON decoder could not parse the response
             _LOGGER.exception("Failed to parse response from mi router")
-            return
+            return None
         try:
             return result["token"]
         except KeyError:
@@ -171,7 +171,7 @@ def _get_token(host, username, password):
                 "url: [%s] \nwith parameter: [%s] \nwas: [%s]"
             )
             _LOGGER.exception(error_message, url, data, result)
-            return
+            return None
     else:
         _LOGGER.error(
             "Invalid response: [%s] at url: [%s] with data [%s]", res, url, data

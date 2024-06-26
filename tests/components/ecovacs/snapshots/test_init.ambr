@@ -23,6 +23,7 @@
     'model': 'DEEBOT OZMO 950 Series',
     'name': 'Ozmo 950',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': 'E1234567890000000001',
     'suggested_area': None,
     'sw_version': None,

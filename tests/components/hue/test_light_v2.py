@@ -412,6 +412,11 @@ async def test_grouped_lights(
         "Hue light with color and color temperature gradient",
         "Hue light with color and color temperature 2",
     }
+    assert test_entity.attributes["entity_id"] == {
+        "light.hue_light_with_color_and_color_temperature_gradient",
+        "light.hue_light_with_color_and_color_temperature_2",
+        "light.hue_light_with_color_and_color_temperature_1",
+    }
 
     # test light created for hue room
     test_entity = hass.states.get("light.test_room")
@@ -430,6 +435,10 @@ async def test_grouped_lights(
     assert test_entity.attributes["lights"] == {
         "Hue on/off light",
         "Hue light with color temperature only",
+    }
+    assert test_entity.attributes["entity_id"] == {
+        "light.hue_light_with_color_temperature_only",
+        "light.hue_on_off_light",
     }
 
     # Test calling the turn on service on a grouped light
@@ -455,11 +464,11 @@ async def test_grouped_lights(
     assert mock_bridge_v2.mock_requests[0]["json"]["dynamics"]["duration"] == 200
 
     # Now generate update events by emitting the json we've sent as incoming events
-    for light_id in [
+    for light_id in (
         "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1",
         "b3fe71ef-d0ef-48de-9355-d9e604377df0",
         "8015b17f-8336-415b-966a-b364bd082397",
-    ]:
+    ):
         event = {
             "id": light_id,
             "type": "light",

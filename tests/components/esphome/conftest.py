@@ -5,8 +5,9 @@ from __future__ import annotations
 import asyncio
 from asyncio import Event
 from collections.abc import Awaitable, Callable
+from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aioesphomeapi import (
     APIClient,
@@ -41,28 +42,28 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
-def mock_bluetooth(enable_bluetooth):
+def mock_bluetooth(enable_bluetooth: None) -> None:
     """Auto mock bluetooth."""
 
 
 @pytest.fixture(autouse=True)
-def esphome_mock_async_zeroconf(mock_async_zeroconf):
+def esphome_mock_async_zeroconf(mock_async_zeroconf: MagicMock) -> None:
     """Auto mock zeroconf."""
 
 
 @pytest.fixture(autouse=True)
-async def load_homeassistant(hass) -> None:
+async def load_homeassistant(hass: HomeAssistant) -> None:
     """Load the homeassistant integration."""
     assert await async_setup_component(hass, "homeassistant", {})
 
 
 @pytest.fixture(autouse=True)
-def mock_tts(mock_tts_cache_dir):
+def mock_tts(mock_tts_cache_dir: Path) -> None:
     """Auto mock the tts cache."""
 
 
 @pytest.fixture
-def mock_config_entry(hass) -> MockConfigEntry:
+def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return the default mocked config entry."""
     config_entry = MockConfigEntry(
         title="ESPHome Device",
@@ -262,6 +263,7 @@ async def _mock_generic_device_entry(
     mock_list_entities_services: tuple[list[EntityInfo], list[UserService]],
     states: list[EntityState],
     entry: MockConfigEntry | None = None,
+    hass_storage: dict[str, Any] | None = None,
 ) -> MockESPHomeDevice:
     if not entry:
         entry = MockConfigEntry(
@@ -284,6 +286,17 @@ async def _mock_generic_device_entry(
         "mac_address": "11:22:33:44:55:AA",
     }
     device_info = DeviceInfo(**(default_device_info | mock_device_info))
+
+    if hass_storage:
+        storage_key = f"{DOMAIN}.{entry.entry_id}"
+        hass_storage[storage_key] = {
+            "version": 1,
+            "minor_version": 1,
+            "key": storage_key,
+            "data": {
+                "device_info": device_info.to_dict(),
+            },
+        }
 
     mock_device = MockESPHomeDevice(entry, mock_client, device_info)
 
@@ -452,6 +465,7 @@ async def mock_bluetooth_entry_with_legacy_adv(
 @pytest.fixture
 async def mock_generic_device_entry(
     hass: HomeAssistant,
+    hass_storage: dict[str, Any],
 ) -> Callable[
     [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
     Awaitable[MockConfigEntry],
@@ -463,10 +477,17 @@ async def mock_generic_device_entry(
         entity_info: list[EntityInfo],
         user_service: list[UserService],
         states: list[EntityState],
+        mock_storage: bool = False,
     ) -> MockConfigEntry:
         return (
             await _mock_generic_device_entry(
-                hass, mock_client, {}, (entity_info, user_service), states
+                hass,
+                mock_client,
+                {},
+                (entity_info, user_service),
+                states,
+                None,
+                hass_storage if mock_storage else None,
             )
         ).entry
 
@@ -476,6 +497,7 @@ async def mock_generic_device_entry(
 @pytest.fixture
 async def mock_esphome_device(
     hass: HomeAssistant,
+    hass_storage: dict[str, Any],
 ) -> Callable[
     [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
     Awaitable[MockESPHomeDevice],
@@ -484,19 +506,21 @@ async def mock_esphome_device(
 
     async def _mock_device(
         mock_client: APIClient,
-        entity_info: list[EntityInfo],
-        user_service: list[UserService],
-        states: list[EntityState],
+        entity_info: list[EntityInfo] | None = None,
+        user_service: list[UserService] | None = None,
+        states: list[EntityState] | None = None,
         entry: MockConfigEntry | None = None,
         device_info: dict[str, Any] | None = None,
+        mock_storage: bool = False,
     ) -> MockESPHomeDevice:
         return await _mock_generic_device_entry(
             hass,
             mock_client,
             device_info or {},
-            (entity_info, user_service),
-            states,
+            (entity_info or [], user_service or []),
+            states or [],
             entry,
+            hass_storage if mock_storage else None,
         )
 
     return _mock_device
