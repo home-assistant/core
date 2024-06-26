@@ -771,9 +771,9 @@ class PrometheusMetrics:
         fan_direction = state.attributes.get(ATTR_DIRECTION)
         if fan_direction is not None:
             fan_direction_metric = self._metric(
-                "fan_direction",
+                "fan_direction_reversed",
                 prometheus_client.Gauge,
-                "Fan direction (0=forward, 1=reverse)",
+                "Fan direction reversed (bool)",
             )
             if fan_direction == DIRECTION_FORWARD:
                 fan_direction_metric.labels(**self._labels(state)).set(0)

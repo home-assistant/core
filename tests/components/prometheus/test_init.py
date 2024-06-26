@@ -35,6 +35,7 @@ from homeassistant.components.climate import (
     ATTR_FAN_MODES,
     ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
+    ATTR_HVAC_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
 )
@@ -44,6 +45,7 @@ from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
+    DIRECTION_FORWARD,
     DIRECTION_REVERSE,
 )
 from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES
@@ -611,9 +613,9 @@ async def test_fan(
     )
 
     assert (
-        'fan_direction{domain="fan",'
+        'fan_direction_reversed{domain="fan",'
         'entity="fan.fan_1",'
-        'friendly_name="Fan 1"} 1.0' in body
+        'friendly_name="Fan 1"} 0.0' in body
     )
 
     assert (
@@ -621,6 +623,12 @@ async def test_fan(
         'entity="fan.fan_1",'
         'friendly_name="Fan 1",'
         'mode="LO"} 1.0' in body
+    )
+
+    assert (
+        'fan_direction_reversed{domain="fan",'
+        'entity="fan.fan_2",'
+        'friendly_name="Reverse Fan"} 1.0' in body
     )
 
 
@@ -1421,6 +1429,7 @@ async def climate_fixture(
         ATTR_TARGET_TEMP_LOW: 21,
         ATTR_TARGET_TEMP_HIGH: 24,
         ATTR_HVAC_ACTION: climate.HVACAction.COOLING,
+        ATTR_HVAC_MODES: ["off", "heat", "cool", "heat_cool"],
         ATTR_PRESET_MODE: "away",
         ATTR_PRESET_MODES: ["away", "home", "sleep"],
         ATTR_FAN_MODE: "auto",
@@ -1868,7 +1877,7 @@ async def fan_fixture(
         original_name="Fan 1",
     )
     fan_1_attributes = {
-        ATTR_DIRECTION: DIRECTION_REVERSE,
+        ATTR_DIRECTION: DIRECTION_FORWARD,
         ATTR_OSCILLATING: True,
         ATTR_PERCENTAGE: 33,
         ATTR_PRESET_MODE: "LO",
@@ -1877,6 +1886,18 @@ async def fan_fixture(
     set_state_with_entry(hass, fan_1, STATE_ON, fan_1_attributes)
     data["fan_1"] = fan_1
     data["fan_1_attributes"] = fan_1_attributes
+
+    fan_2 = entity_registry.async_get_or_create(
+        domain=fan.DOMAIN,
+        platform="test",
+        unique_id="fan_2",
+        suggested_object_id="fan_2",
+        original_name="Reverse Fan",
+    )
+    fan_2_attributes = {ATTR_DIRECTION: DIRECTION_REVERSE}
+    set_state_with_entry(hass, fan_2, STATE_ON, fan_2_attributes)
+    data["fan_2"] = fan_2
+    data["fan_2_attributes"] = fan_2_attributes
 
     await hass.async_block_till_done()
     return data
