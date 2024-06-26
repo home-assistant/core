@@ -154,6 +154,11 @@
       "display_brightness": {
         "name": "[%key:component::airgradient::entity::number::display_brightness::name%]"
       }
+    },
+    "switch": {
+      "post_data_to_airgradient": {
+        "name": "Post data to Airgradient"
+      }
     }
   }
 }
