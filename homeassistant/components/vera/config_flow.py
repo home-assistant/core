@@ -22,6 +22,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, CONF_SOURCE
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.typing import VolDictType
 
 from .const import CONF_CONTROLLER, CONF_LEGACY_UNIQUE_ID, DOMAIN
 
@@ -49,9 +50,7 @@ def new_options(lights: list[int], exclude: list[int]) -> dict[str, list[int]]:
     return {CONF_LIGHTS: lights, CONF_EXCLUDE: exclude}
 
 
-def options_schema(
-    options: Mapping[str, Any] | None = None,
-) -> dict[vol.Optional, type[str]]:
+def options_schema(options: Mapping[str, Any] | None = None) -> VolDictType:
     """Return options schema."""
     options = options or {}
     return {

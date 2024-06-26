@@ -1,4 +1,4 @@
-"""Tests for the AirGradient button platform."""
+"""Tests for the AirGradient number platform."""
 
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch

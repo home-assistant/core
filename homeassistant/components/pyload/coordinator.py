@@ -20,7 +20,7 @@ SCAN_INTERVAL = timedelta(seconds=20)
 
 
 @dataclass(kw_only=True)
-class pyLoadData:
+class PyLoadData:
     """Data from pyLoad."""
 
     pause: bool
@@ -34,7 +34,7 @@ class pyLoadData:
     free_space: int
 
 
-class PyLoadCoordinator(DataUpdateCoordinator[pyLoadData]):
+class PyLoadCoordinator(DataUpdateCoordinator[PyLoadData]):
     """pyLoad coordinator."""
 
     config_entry: ConfigEntry
@@ -50,12 +50,12 @@ class PyLoadCoordinator(DataUpdateCoordinator[pyLoadData]):
         self.pyload = pyload
         self.version: str | None = None
 
-    async def _async_update_data(self) -> pyLoadData:
+    async def _async_update_data(self) -> PyLoadData:
         """Fetch data from API endpoint."""
         try:
             if not self.version:
                 self.version = await self.pyload.version()
-            return pyLoadData(
+            return PyLoadData(
                 **await self.pyload.get_status(),
                 free_space=await self.pyload.free_space(),
             )

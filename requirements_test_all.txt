@@ -128,7 +128,7 @@ adb-shell[async]==0.4.4
 adext==0.4.3
 
 # homeassistant.components.adguard
-adguardhome==0.6.3
+adguardhome==0.7.0
 
 # homeassistant.components.advantage_air
 advantage-air==0.4.4
@@ -764,9 +764,6 @@ gassist-text==0.0.11
 # homeassistant.components.google
 gcal-sync==6.0.4
 
-# homeassistant.components.aladdin_connect
-genie-partner-sdk==1.0.2
-
 # homeassistant.components.geocaching
 geocachingapi==0.2.1
 
@@ -901,7 +898,7 @@ holidays==0.51
 home-assistant-frontend==20240626.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.6.21
+home-assistant-intents==2024.6.26
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -2111,6 +2108,7 @@ temescal==0.5
 temperusb==1.6.1
 
 # homeassistant.components.teslemetry
+# homeassistant.components.tessie
 tesla-fleet-api==0.6.1
 
 # homeassistant.components.powerwall
@@ -2321,19 +2319,19 @@ zeroconf==0.132.2
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.116
+zha-quirks==0.0.117
 
 # homeassistant.components.zha
-zigpy-deconz==0.23.1
+zigpy-deconz==0.23.2
 
 # homeassistant.components.zha
 zigpy-xbee==0.20.1
 
 # homeassistant.components.zha
-zigpy-zigate==0.12.0
+zigpy-zigate==0.12.1
 
 # homeassistant.components.zha
-zigpy-znp==0.12.1
+zigpy-znp==0.12.2
 
 # homeassistant.components.zha
 zigpy==0.64.1
