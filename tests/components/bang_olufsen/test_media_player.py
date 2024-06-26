@@ -6,7 +6,7 @@ from homeassistant.components.bang_olufsen.const import (
     BANG_OLUFSEN_STATES,
     WebsocketNotification,
 )
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_ALBUM_ARTIST,
@@ -24,6 +24,7 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     MediaPlayerState,
+    MediaType,
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -51,6 +52,7 @@ from .const import (
     TEST_SERIAL_NUMBER,
     TEST_SOURCE_CHANGE,
     TEST_SOURCE_CHANGE_DEEZER,
+    TEST_SOURCE_CHANGE_URI_STREAMER,
     TEST_SOURCES,
     TEST_VIDEO_SOURCES,
     TEST_VOLUME,
@@ -252,6 +254,32 @@ async def test_async_update_source_change(
     # Check new state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert states.attributes[ATTR_INPUT_SOURCE] == TEST_SOURCE_CHANGE.name
+
+
+async def test_async_update_source_change_uri_streamer(
+    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+) -> None:
+    """Test _async_update_source_change switching to uri_streamer."""
+
+    # Setup entity
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # Check state
+    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert ATTR_INPUT_SOURCE not in states.attributes
+
+    # Send the dispatch
+    async_dispatcher_send(
+        hass,
+        f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.SOURCE_CHANGE}",
+        TEST_SOURCE_CHANGE_URI_STREAMER,
+    )
+
+    # Check new state
+    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert states.attributes[ATTR_INPUT_SOURCE] == TEST_SOURCE_CHANGE_URI_STREAMER.name
+    assert states.attributes[ATTR_MEDIA_CONTENT_TYPE] == MediaType.URL
 
 
 async def test_async_turn_off(
@@ -639,7 +667,9 @@ async def test_async_select_source_audio(
     )
 
     # Check API call
-    mock_mozart_client.set_active_source.assert_called_once_with(TEST_SOURCE_CHANGE.id)
+    mock_mozart_client.set_active_source.assert_called_once_with(
+        source_id=TEST_SOURCE_CHANGE.id
+    )
     mock_mozart_client.post_remote_trigger.assert_not_called()
 
 
@@ -1013,3 +1043,34 @@ async def test_async_play_media_invalid_deezer(
 
     # Check API call
     mock_mozart_client.start_deezer_flow.assert_called_once()
+
+
+async def test_async_play_media_url_m3u(
+    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+) -> None:
+    """Test async_play_media URL with the m3u extension."""
+
+    # Setup entity
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # Setup media source
+    await async_setup_component(hass, "media_source", {"media_source": {}})
+
+    # Send a service call
+    with patch(
+        "homeassistant.components.bang_olufsen.media_player.async_process_play_media_url",
+        return_value="https://test.com/test.m3u",
+    ):
+        await hass.services.async_call(
+            "media_player",
+            "play_media",
+            {
+                ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+                ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/doorbell.mp3",
+                ATTR_MEDIA_CONTENT_TYPE: "audio/mpeg",
+            },
+        )
+
+    # Check API call
+    mock_mozart_client.post_uri_source.assert_not_called()

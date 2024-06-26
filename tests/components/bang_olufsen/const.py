@@ -133,6 +133,13 @@ TEST_SOURCE_CHANGE = Source(
     name="Tidal Connect",
     type=SourceTypeEnum(value="tidalConnect"),
 )
+TEST_SOURCE_CHANGE_URI_STREAMER = Source(
+    id="uriStreamer",
+    is_enabled=True,
+    is_playable=True,
+    name="Audio Streamer",
+    type=SourceTypeEnum(value="uriStreamer"),
+)
 TEST_SOURCE_CHANGE_DEEZER = Source(
     id="deezer",
     is_enabled=True,
