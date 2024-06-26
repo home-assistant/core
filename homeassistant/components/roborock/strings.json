@@ -33,13 +33,6 @@
   },
   "options": {
     "step": {
-      "init": {
-        "description": "Configure Roborock options.",
-        "menu_options": {
-          "roborock": "Roborock",
-          "maps": "Maps"
-        }
-      },
       "drawables": {
         "description": "Specify which features to draw on the map.",
         "data": {
