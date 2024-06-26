@@ -74,7 +74,7 @@
         "name": "Downloads in queue"
       },
       "total": {
-        "name": "Total downlods"
+        "name": "Finished downloads"
       },
       "free_space": {
         "name": "Free space"
