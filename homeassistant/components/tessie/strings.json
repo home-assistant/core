@@ -73,12 +73,16 @@
       "charge_state_charging_state": {
         "name": "Charging",
         "state": {
-          "starting": "Starting",
+          "booting": "Booting",
           "charging": "Charging",
           "disconnected": "Disconnected",
-          "stopped": "Stopped",
-          "complete": "Complete",
-          "no_power": "No power"
+          "connected": "Connected",
+          "scheduled": "Scheduled",
+          "negotiating": "Negotiating",
+          "error": "Error",
+          "charging_finished": "Charging finished",
+          "waiting_car": "Waiting car",
+          "charging_reduced": "Charging reduced"
         }
       },
       "charge_state_usable_battery_level": {

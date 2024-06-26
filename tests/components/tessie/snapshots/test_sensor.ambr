@@ -341,53 +341,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[sensor.energy_site_none-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.energy_site_none',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'tessie',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'island_status',
-    'unique_id': '123456-island_status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.energy_site_none-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Energy Site None',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.energy_site_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_sensors[sensor.energy_site_percentage_charged-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2113,98 +2066,6 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[sensor.wall_connector_fault_state_code-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.wall_connector_fault_state_code',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Fault state code',
-    'platform': 'tessie',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'wall_connector_fault_state',
-    'unique_id': '123456-abd-123-wall_connector_fault_state',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.wall_connector_fault_state_code-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Wall Connector Fault state code',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.wall_connector_fault_state_code',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensors[sensor.wall_connector_fault_state_code_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.wall_connector_fault_state_code_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Fault state code',
-    'platform': 'tessie',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'wall_connector_fault_state',
-    'unique_id': '123456-bcd-234-wall_connector_fault_state',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.wall_connector_fault_state_code_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Wall Connector Fault state code',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.wall_connector_fault_state_code_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_sensors[sensor.wall_connector_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2324,7 +2185,20 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'booting',
+        'charging',
+        'disconnected',
+        'connected',
+        'scheduled',
+        'negotiating',
+        'error',
+        'charging_finished',
+        'waiting_car',
+        'charging_reduced',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -2357,6 +2231,18 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Wall Connector State code',
+      'options': list([
+        'booting',
+        'charging',
+        'disconnected',
+        'connected',
+        'scheduled',
+        'negotiating',
+        'error',
+        'charging_finished',
+        'waiting_car',
+        'charging_reduced',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_state_code',
@@ -2371,7 +2257,20 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'booting',
+        'charging',
+        'disconnected',
+        'connected',
+        'scheduled',
+        'negotiating',
+        'error',
+        'charging_finished',
+        'waiting_car',
+        'charging_reduced',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -2404,6 +2303,18 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Wall Connector State code',
+      'options': list([
+        'booting',
+        'charging',
+        'disconnected',
+        'connected',
+        'scheduled',
+        'negotiating',
+        'error',
+        'charging_finished',
+        'waiting_car',
+        'charging_reduced',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_state_code_2',
