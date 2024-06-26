@@ -83,12 +83,6 @@ class ViCareFan(ViCareEntity, FanEntity):
 
     _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
     _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
-    _attributes: dict[str, Any] = {
-        "active_vicare_mode": None,
-        "active_vicare_program": None,
-        "vicare_modes": None,
-        "vicare_programs": None,
-    }
 
     def __init__(
         self,
@@ -100,17 +94,15 @@ class ViCareFan(ViCareEntity, FanEntity):
         super().__init__(device_config, device, translation_key)
         self._attr_translation_key = translation_key
 
-        with suppress(PyViCareNotSupportedFeatureError):
-            self._attributes["vicare_modes"] = self._api.getAvailableModes()
-        self._attributes["vicare_programs"] = self._api.getAvailablePrograms()
-
     def update(self) -> None:
         """Update state of fan."""
         try:
             with suppress(PyViCareNotSupportedFeatureError):
-                self._attributes["active_vicare_mode"] = self._api.getActiveMode()
+                self._attr_preset_mode = self._api.getActiveMode()
             with suppress(PyViCareNotSupportedFeatureError):
-                self._attributes["active_vicare_program"] = self._api.getActiveProgram()
+                self._attr_percentage = ordered_list_item_to_percentage(
+                    ORDERED_NAMED_FAN_SPEEDS, self._api.getActiveProgram()
+                )
         except RequestConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
         except ValueError:
@@ -133,13 +125,6 @@ class ViCareFan(ViCareEntity, FanEntity):
         # Viessmann ventilation unit cannot be turned off
         return True
 
-    @property
-    def percentage(self) -> int | None:
-        """Return the current speed percentage."""
-        return ordered_list_item_to_percentage(
-            ORDERED_NAMED_FAN_SPEEDS, self._attributes["active_vicare_program"]
-        )
-
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
 
@@ -151,12 +136,6 @@ class ViCareFan(ViCareEntity, FanEntity):
         self._api.setPermanentLevel(level)
 
     @property
-    def preset_mode(self) -> str | None:
-        """Return the current preset mode, e.g., auto, smart, interval, favorite."""
-
-        return self._attributes["active_vicare_mode"]
-
-    @property
     def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
         return list[str](PRESET_MODES)
@@ -165,8 +144,3 @@ class ViCareFan(ViCareEntity, FanEntity):
         """Set new preset mode."""
         _LOGGER.debug("changing ventilation mode to %s", preset_mode)
         self._api.setActiveMode(preset_mode)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Show Device Attributes."""
-        return self._attributes
