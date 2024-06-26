@@ -18,11 +18,13 @@ from . import (
 )
 
 from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import WebSocketGenerator
+from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
 @pytest.fixture
-async def websocket_client(hass, hass_ws_client):
+async def websocket_client(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> MockHAClientWebSocket:
     """Create a websocket client."""
     return await hass_ws_client(hass)
 

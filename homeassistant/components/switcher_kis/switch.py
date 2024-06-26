@@ -21,6 +21,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -37,11 +38,11 @@ _LOGGER = logging.getLogger(__name__)
 API_CONTROL_DEVICE = "control_device"
 API_SET_AUTO_SHUTDOWN = "set_auto_shutdown"
 
-SERVICE_SET_AUTO_OFF_SCHEMA = {
+SERVICE_SET_AUTO_OFF_SCHEMA: VolDictType = {
     vol.Required(CONF_AUTO_OFF): cv.time_period_str,
 }
 
-SERVICE_TURN_ON_WITH_TIMER_SCHEMA = {
+SERVICE_TURN_ON_WITH_TIMER_SCHEMA: VolDictType = {
     vol.Required(CONF_TIMER_MINUTES): vol.All(
         cv.positive_int, vol.Range(min=1, max=150)
     ),

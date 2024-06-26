@@ -16,7 +16,9 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
-async def uploaded_file_dir(hass: HomeAssistant, hass_client) -> Path:
+async def uploaded_file_dir(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> Path:
     """Test uploading and using a file."""
     assert await async_setup_component(hass, "file_upload", {})
     client = await hass_client()

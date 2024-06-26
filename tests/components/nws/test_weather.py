@@ -122,7 +122,7 @@ async def test_data_caching_error_observation(
     freezer: FrozenDateTimeFactory,
     mock_simple_nws,
     no_sensor,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test caching of data with errors."""
     instance = mock_simple_nws.return_value
@@ -165,7 +165,7 @@ async def test_data_caching_error_observation(
 
 
 async def test_no_data_error_observation(
-    hass: HomeAssistant, mock_simple_nws, no_sensor, caplog
+    hass: HomeAssistant, mock_simple_nws, no_sensor, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test catching NwsNoDataDrror."""
     instance = mock_simple_nws.return_value
@@ -183,7 +183,7 @@ async def test_no_data_error_observation(
 
 
 async def test_no_data_error_forecast(
-    hass: HomeAssistant, mock_simple_nws, no_sensor, caplog
+    hass: HomeAssistant, mock_simple_nws, no_sensor, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test catching NwsNoDataDrror."""
     instance = mock_simple_nws.return_value
@@ -203,7 +203,7 @@ async def test_no_data_error_forecast(
 
 
 async def test_no_data_error_forecast_hourly(
-    hass: HomeAssistant, mock_simple_nws, no_sensor, caplog
+    hass: HomeAssistant, mock_simple_nws, no_sensor, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test catching NwsNoDataDrror."""
     instance = mock_simple_nws.return_value
@@ -315,10 +315,10 @@ async def test_error_observation(
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_new_config_entry(hass: HomeAssistant, no_sensor) -> None:
+async def test_new_config_entry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, no_sensor
+) -> None:
     """Test the expected entities are created."""
-    registry = er.async_get(hass)
-
     entry = MockConfigEntry(
         domain=nws.DOMAIN,
         data=NWS_CONFIG,
@@ -330,7 +330,7 @@ async def test_new_config_entry(hass: HomeAssistant, no_sensor) -> None:
 
     assert len(hass.states.async_entity_ids("weather")) == 1
     entry = hass.config_entries.async_entries()[0]
-    assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 1
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 1
 
 
 @pytest.mark.parametrize(
@@ -450,6 +450,7 @@ async def test_forecast_service(
 async def test_forecast_subscription(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     mock_simple_nws,
@@ -460,9 +461,8 @@ async def test_forecast_subscription(
     """Test multiple forecast."""
     client = await hass_ws_client(hass)
 
-    registry = er.async_get(hass)
     # Pre-create the hourly entity
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         WEATHER_DOMAIN,
         nws.DOMAIN,
         "35_-75_hourly",
@@ -517,6 +517,7 @@ async def test_forecast_subscription(
 async def test_forecast_subscription_with_failing_coordinator(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     mock_simple_nws_times_out,
@@ -527,9 +528,8 @@ async def test_forecast_subscription_with_failing_coordinator(
     """Test a forecast subscription when the coordinator is failing to update."""
     client = await hass_ws_client(hass)
 
-    registry = er.async_get(hass)
     # Pre-create the hourly entity
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         WEATHER_DOMAIN,
         nws.DOMAIN,
         "35_-75_hourly",

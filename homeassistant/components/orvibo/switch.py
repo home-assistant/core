@@ -8,7 +8,10 @@ from typing import Any
 from orvibo.s20 import S20, S20Exception, discover
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import (
     CONF_DISCOVERY,
     CONF_HOST,
@@ -26,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Orvibo S20 Switch"
 DEFAULT_DISCOVERY = True
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SWITCHES, default=[]): vol.All(
             cv.ensure_list,

@@ -7,20 +7,25 @@ from typing import Any
 from tesla_fleet_api.const import Scope
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import TeslemetryConfigEntry
 from .const import DOMAIN
 from .entity import TeslemetryVehicleEntity
+from .helpers import handle_vehicle_command
 from .models import TeslemetryVehicleData
 
 ENGAGED = "Engaged"
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Teslemetry lock platform from a config entry."""
 
@@ -50,7 +55,7 @@ class TeslemetryVehicleLockEntity(TeslemetryVehicleEntity, LockEntity):
         """Lock the doors."""
         self.raise_for_scope()
         await self.wake_up_if_asleep()
-        await self.handle_command(self.api.door_lock())
+        await handle_vehicle_command(self.api.door_lock())
         self._attr_is_locked = True
         self.async_write_ha_state()
 
@@ -58,7 +63,7 @@ class TeslemetryVehicleLockEntity(TeslemetryVehicleEntity, LockEntity):
         """Unlock the doors."""
         self.raise_for_scope()
         await self.wake_up_if_asleep()
-        await self.handle_command(self.api.door_unlock())
+        await handle_vehicle_command(self.api.door_unlock())
         self._attr_is_locked = False
         self.async_write_ha_state()
 
@@ -93,6 +98,6 @@ class TeslemetryCableLockEntity(TeslemetryVehicleEntity, LockEntity):
         """Unlock charge cable lock."""
         self.raise_for_scope()
         await self.wake_up_if_asleep()
-        await self.handle_command(self.api.charge_port_door_open())
+        await handle_vehicle_command(self.api.charge_port_door_open())
         self._attr_is_locked = False
         self.async_write_ha_state()

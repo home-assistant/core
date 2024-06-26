@@ -9,12 +9,15 @@ from typing import Any
 from tesla_fleet_api.const import Scope
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import TeslemetryConfigEntry
 from .entity import TeslemetryVehicleEntity
+from .helpers import handle_vehicle_command
 from .models import TeslemetryVehicleData
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -49,7 +52,9 @@ DESCRIPTIONS: tuple[TeslemetryButtonEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Teslemetry Button platform from a config entry."""
 
@@ -82,4 +87,4 @@ class TeslemetryButtonEntity(TeslemetryVehicleEntity, ButtonEntity):
         """Press the button."""
         await self.wake_up_if_asleep()
         if self.entity_description.func:
-            await self.handle_command(self.entity_description.func(self))
+            await handle_vehicle_command(self.entity_description.func(self))

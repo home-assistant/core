@@ -218,7 +218,7 @@
     'labels': set({
     }),
     'manufacturer': 'Elgato',
-    'model': 'Elgato Key Light',
+    'model': 'Elgato Light Strip',
     'name': 'Frenck',
     'name_by_user': None,
     'serial_number': 'CN11A1A00001',
@@ -333,7 +333,7 @@
     'labels': set({
     }),
     'manufacturer': 'Elgato',
-    'model': 'Elgato Key Light',
+    'model': 'Elgato Light Strip',
     'name': 'Frenck',
     'name_by_user': None,
     'serial_number': 'CN11A1A00001',

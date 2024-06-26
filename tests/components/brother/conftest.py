@@ -1,11 +1,11 @@
 """Test fixtures for brother."""
 
-from collections.abc import Generator
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 from brother import BrotherSensors
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.brother.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_TYPE
@@ -78,12 +78,21 @@ BROTHER_DATA = BrotherSensors(
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.brother.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_unload_entry() -> Generator[AsyncMock, None, None]:
+    """Override async_unload_entry."""
+    with patch(
+        "homeassistant.components.brother.async_unload_entry", return_value=True
+    ) as mock_unload_entry:
+        yield mock_unload_entry
 
 
 @pytest.fixture

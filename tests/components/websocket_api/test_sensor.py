@@ -1,8 +1,6 @@
 """Test cases for the API stream sensor."""
 
-from homeassistant.auth.providers.legacy_api_password import (
-    LegacyApiPasswordAuthProvider,
-)
+from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.websocket_api.auth import TYPE_AUTH_REQUIRED
 from homeassistant.components.websocket_api.http import URL
@@ -17,7 +15,7 @@ async def test_websocket_api(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     hass_access_token: str,
-    legacy_auth: LegacyApiPasswordAuthProvider,
+    local_auth: HassAuthProvider,
 ) -> None:
     """Test API streams."""
     await async_setup_component(

@@ -20,6 +20,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
+from tests.typing import WebSocketGenerator
+
 _NO_LOOPBACK_IPADDR = "192.168.1.5"
 _LOOPBACK_IPADDR = "127.0.0.1"
 
@@ -34,6 +36,7 @@ def _mock_cond_socket(sockname):
     class CondMockSock(MagicMock):
         def connect(self, addr):
             """Mock connect that stores addr."""
+            # pylint: disable-next=attribute-defined-outside-init
             self._addr = addr[0]
 
         def getsockname(self):
@@ -409,7 +412,9 @@ async def test_interfaces_configured_from_storage(
 
 
 async def test_interfaces_configured_from_storage_websocket_update(
-    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test settings from storage can be updated via websocket api."""
     hass_storage[STORAGE_KEY] = {

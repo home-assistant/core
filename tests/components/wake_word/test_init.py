@@ -1,13 +1,14 @@
 """Test wake_word component setup."""
 
 import asyncio
-from collections.abc import AsyncIterable, Generator
+from collections.abc import AsyncIterable
 from functools import partial
 from pathlib import Path
 from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components import wake_word
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
@@ -88,7 +89,7 @@ class WakeWordFlow(ConfigFlow):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -117,8 +118,8 @@ async def mock_config_entry_setup(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(
-            config_entry, wake_word.DOMAIN
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [wake_word.DOMAIN]
         )
         return True
 

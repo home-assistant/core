@@ -1,6 +1,5 @@
 """Test Ring diagnostics."""
 
-import requests_mock
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
@@ -14,7 +13,7 @@ async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
-    requests_mock: requests_mock.Mocker,
+    mock_ring_client,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test Ring diagnostics."""

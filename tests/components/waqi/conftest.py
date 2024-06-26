@@ -1,9 +1,9 @@
 """Common fixtures for the World Air Quality Index (WAQI) tests."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.waqi.const import CONF_STATION_NUMBER, DOMAIN
 from homeassistant.const import CONF_API_KEY
@@ -12,7 +12,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.waqi.async_setup_entry", return_value=True

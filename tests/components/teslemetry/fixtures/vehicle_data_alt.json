@@ -81,7 +81,7 @@
       "cabin_overheat_protection": "Off",
       "cabin_overheat_protection_actively_cooling": false,
       "climate_keeper_mode": "off",
-      "cop_activation_temperature": "High",
+      "cop_activation_temperature": "Low",
       "defrost_mode": 0,
       "driver_temp_setting": 22,
       "fan_status": 0,

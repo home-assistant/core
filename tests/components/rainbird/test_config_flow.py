@@ -1,11 +1,11 @@
 """Tests for the Rain Bird config flow."""
 
-from collections.abc import Generator
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from typing_extensions import AsyncGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.rainbird import DOMAIN
@@ -46,7 +46,7 @@ async def config_entry_data() -> None:
 
 
 @pytest.fixture(autouse=True)
-async def mock_setup() -> Generator[Mock, None, None]:
+async def mock_setup() -> AsyncGenerator[AsyncMock]:
     """Fixture for patching out integration setup."""
 
     with patch(
