@@ -34,7 +34,6 @@ async def test_adam_reboot_button(
         {ATTR_ENTITY_ID: "button.adam_reboot"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert mock_smile_adam.reboot_gateway.call_count == 1
     mock_smile_adam.reboot_gateway.assert_called_with()
