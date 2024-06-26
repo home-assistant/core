@@ -73,22 +73,24 @@ class VentilationMode(enum.StrEnum):
     SENSOR_OVERRIDE = "sensorOverride"  # activated by sensor
 
     @staticmethod
-    def to_ha_mode(mode: str) -> str | None:
+    def to_ha_mode(mode: str | None) -> str | None:
         """Return the mapped Home Assistant mode for the ViCare ventilation mode."""
-
-        try:
-            ventilation_mode = VentilationMode(mode)
-        except ValueError:
-            # ignore unsupported / unmapped modes
-            return None
-        return VICARE_TO_HA_MODE_VENTILATION.get(ventilation_mode) if mode else None
+        if mode:
+            try:
+                ventilation_mode = VentilationMode(mode)
+            except ValueError:
+                # ignore unsupported / unmapped modes
+                return None
+            return VICARE_TO_HA_MODE_VENTILATION.get(ventilation_mode) if mode else None
+        return None
 
     @staticmethod
-    def from_ha_mode(ha_mode: str) -> str | None:
+    def from_ha_mode(ha_mode: str | None) -> str | None:
         """Return the mapped ViCare ventilation mode for the Home Assistant mode."""
-        for mode in VentilationMode:
-            if VICARE_TO_HA_MODE_VENTILATION.get(VentilationMode(mode)) == ha_mode:
-                return mode
+        if ha_mode:
+            for mode in VentilationMode:
+                if VICARE_TO_HA_MODE_VENTILATION.get(VentilationMode(mode)) == ha_mode:
+                    return mode
         return None
 
 
