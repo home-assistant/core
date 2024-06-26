@@ -7,9 +7,10 @@ from typing import Any
 from aiohttp import ClientResponseError
 
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MODELS
+from .const import DOMAIN
 from .coordinator import (
     TessieEnergySiteInfoCoordinator,
     TessieEnergySiteLiveCoordinator,
@@ -66,30 +67,17 @@ class TessieEntity(TessieBaseEntity):
 
     def __init__(
         self,
-        coordinator: TessieStateUpdateCoordinator,
+        vehicle: TessieVehicleData,
         key: str,
     ) -> None:
         """Initialize common aspects of a Tessie vehicle entity."""
-        self.vin = coordinator.vin
-        self._session = coordinator.session
-        self._api_key = coordinator.api_key
-        self._attr_translation_key = key
+        self.vin = vehicle.vin
+        self._session = vehicle.data_coordinator.session
+        self._api_key = vehicle.data_coordinator.api_key
         self._attr_unique_id = f"{vehicle.vin}-{key}"
         self._attr_device_info = vehicle.device
-        car_type = coordinator.data["vehicle_config_car_type"]
 
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.vin)},
-            manufacturer="Tesla",
-            configuration_url="https://my.tessie.com/",
-            name=coordinator.data["display_name"],
-            model=MODELS.get(car_type, car_type),
-            sw_version=coordinator.data["vehicle_state_car_version"].split(" ")[0],
-            hw_version=coordinator.data["vehicle_config_driver_assist"],
-            serial_number=self.vin,
-        )
-
-        super().__init__(coordinator, key)
+        super().__init__(vehicle.data_coordinator, key)
 
     @property
     def _value(self) -> Any:

@@ -19,7 +19,7 @@ from .coordinator import (
 class TessieData:
     """Data for the Tessie integration."""
 
-    vehicles: list[TessieStateUpdateCoordinator]
+    vehicles: list[TessieVehicleData]
     energysites: list[TessieEnergyData]
 
 

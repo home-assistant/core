@@ -22,7 +22,7 @@ from .coordinator import (
     TessieEnergySiteLiveCoordinator,
     TessieStateUpdateCoordinator,
 )
-from .models import TessieData, TessieEnergyData
+from .models import TessieData, TessieEnergyData, TessieVehicleData
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,

@@ -35,7 +35,6 @@ from homeassistant.util.variance import ignore_variance
 
 from . import TessieConfigEntry
 from .const import TessieChargeStates, TessieWallConnectorStates
-from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEnergyEntity, TessieEntity, TessieWallConnectorEntity
 from .models import TessieEnergyData, TessieVehicleData
 
@@ -417,7 +416,7 @@ class TessieVehicleSensorEntity(TessieEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
-        super().__init__(coordinator, description.key)
+        super().__init__(vehicle, description.key)
 
     @property
     def native_value(self) -> StateType | datetime:
