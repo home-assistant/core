@@ -79,6 +79,65 @@ LED_BAR_ENTITIES: tuple[AirGradientSelectEntityDescription, ...] = (
     ),
 )
 
+LEARNING_TIME_OFFSET_OPTIONS = {
+    12: "12",
+    60: "60",
+    120: "120",
+    360: "360",
+    720: "720",
+}
+LEARNING_TIME_OFFSET_OPTIONS_INVERSE = {
+    v: k for k, v in LEARNING_TIME_OFFSET_OPTIONS.items()
+}
+ABC_DAYS = {
+    8: "8",
+    30: "30",
+    90: "90",
+    180: "180",
+    0: "off",
+}
+ABC_DAYS_INVERSE = {v: k for k, v in ABC_DAYS.items()}
+
+CONTROL_ENTITIES: tuple[AirGradientSelectEntityDescription, ...] = (
+    AirGradientSelectEntityDescription(
+        key="nox_index_learning_time_offset",
+        translation_key="nox_index_learning_time_offset",
+        options=list(LEARNING_TIME_OFFSET_OPTIONS_INVERSE),
+        entity_category=EntityCategory.CONFIG,
+        value_fn=lambda config: LEARNING_TIME_OFFSET_OPTIONS.get(
+            config.nox_learning_offset
+        ),
+        set_value_fn=lambda client, value: client.set_nox_learning_offset(
+            LEARNING_TIME_OFFSET_OPTIONS_INVERSE.get(value, 12)
+        ),
+    ),
+    AirGradientSelectEntityDescription(
+        key="voc_index_learning_time_offset",
+        translation_key="voc_index_learning_time_offset",
+        options=list(LEARNING_TIME_OFFSET_OPTIONS_INVERSE),
+        entity_category=EntityCategory.CONFIG,
+        value_fn=lambda config: LEARNING_TIME_OFFSET_OPTIONS.get(
+            config.nox_learning_offset
+        ),
+        set_value_fn=lambda client, value: client.set_tvoc_learning_offset(
+            LEARNING_TIME_OFFSET_OPTIONS_INVERSE.get(value, 12)
+        ),
+    ),
+    AirGradientSelectEntityDescription(
+        key="co2_automatic_baseline_calibration",
+        translation_key="co2_automatic_baseline_calibration",
+        options=list(ABC_DAYS_INVERSE),
+        entity_category=EntityCategory.CONFIG,
+        value_fn=lambda config: ABC_DAYS.get(
+            config.co2_automatic_baseline_calibration_days
+        ),
+        set_value_fn=lambda client,
+        value: client.set_co2_automatic_baseline_calibration(
+            ABC_DAYS_INVERSE.get(value, 0)
+        ),
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -104,7 +163,10 @@ async def async_setup_entry(
             coordinator.data.configuration_control is ConfigurationControl.LOCAL
             and not added_entities
         ):
-            entities: list[AirGradientSelect] = []
+            entities: list[AirGradientSelect] = [
+                AirGradientSelect(coordinator, description)
+                for description in CONTROL_ENTITIES
+            ]
             if "I" in model:
                 entities.extend(
                     AirGradientSelect(coordinator, description)
@@ -123,7 +185,9 @@ async def async_setup_entry(
             and added_entities
         ):
             entity_registry = er.async_get(hass)
-            for entity_description in DISPLAY_SELECT_TYPES + LED_BAR_ENTITIES:
+            for entity_description in (
+                DISPLAY_SELECT_TYPES + LED_BAR_ENTITIES + CONTROL_ENTITIES
+            ):
                 unique_id = f"{coordinator.serial_number}-{entity_description.key}"
                 if entity_id := entity_registry.async_get_entity_id(
                     SELECT_DOMAIN, DOMAIN, unique_id
