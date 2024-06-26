@@ -253,6 +253,11 @@
         "name": "Work area",
         "state": {
           "my_lawn": "My lawn"
+        },
+        "state_attributes": {
+          "work_area_id_assignment": {
+            "name": "Workarea ID assignment"
+          }
         }
       }
     },
