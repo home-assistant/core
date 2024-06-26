@@ -87,6 +87,8 @@ omit =
     homeassistant/components/aprilaire/climate.py
     homeassistant/components/aprilaire/coordinator.py
     homeassistant/components/aprilaire/entity.py
+    homeassistant/components/aprilaire/select.py
+    homeassistant/components/aprilaire/sensor.py
     homeassistant/components/apsystems/__init__.py
     homeassistant/components/apsystems/coordinator.py
     homeassistant/components/apsystems/entity.py
@@ -815,6 +817,7 @@ omit =
     homeassistant/components/motionblinds_ble/cover.py
     homeassistant/components/motionblinds_ble/entity.py
     homeassistant/components/motionblinds_ble/select.py
+    homeassistant/components/motionblinds_ble/sensor.py
     homeassistant/components/motionmount/__init__.py
     homeassistant/components/motionmount/binary_sensor.py
     homeassistant/components/motionmount/entity.py
@@ -1648,6 +1651,7 @@ omit =
     homeassistant/components/xiaomi_miio/remote.py
     homeassistant/components/xiaomi_miio/sensor.py
     homeassistant/components/xiaomi_miio/switch.py
+    homeassistant/components/xiaomi_miio/typing.py
     homeassistant/components/xiaomi_tv/media_player.py
     homeassistant/components/xmpp/notify.py
     homeassistant/components/xs1/*
@@ -1686,8 +1690,6 @@ omit =
     homeassistant/components/yolink/siren.py
     homeassistant/components/yolink/switch.py
     homeassistant/components/yolink/valve.py
-    homeassistant/components/youless/__init__.py
-    homeassistant/components/youless/sensor.py
     homeassistant/components/zabbix/*
     homeassistant/components/zamg/coordinator.py
     homeassistant/components/zengge/light.py

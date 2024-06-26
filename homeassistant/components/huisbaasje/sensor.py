@@ -50,14 +50,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
-class HuisbaasjeSensorEntityDescription(SensorEntityDescription):
+class EnergyFlipSensorEntityDescription(SensorEntityDescription):
     """Class describing Airly sensor entities."""
 
     sensor_type: str = SENSOR_TYPE_RATE
 
 
 SENSORS_INFO = [
-    HuisbaasjeSensorEntityDescription(
+    EnergyFlipSensorEntityDescription(
         translation_key="current_power",
         sensor_type=SENSOR_TYPE_RATE,
         device_class=SensorDeviceClass.POWER,
@@ -65,7 +65,7 @@ SENSORS_INFO = [
         key=SOURCE_TYPE_ELECTRICITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    HuisbaasjeSensorEntityDescription(
+    EnergyFlipSensorEntityDescription(
         translation_key="current_power_peak",
         sensor_type=SENSOR_TYPE_RATE,
         device_class=SensorDeviceClass.POWER,
@@ -73,7 +73,7 @@ SENSORS_INFO = [
         key=SOURCE_TYPE_ELECTRICITY_IN,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    HuisbaasjeSensorEntityDescription(
+    EnergyFlipSensorEntityDescription(
         translation_key="current_power_off_peak",
         sensor_type=SENSOR_TYPE_RATE,
         device_class=SensorDeviceClass.POWER,
@@ -81,7 +81,7 @@ SENSORS_INFO = [
         key=SOURCE_TYPE_ELECTRICITY_IN_LOW,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    HuisbaasjeSensorEntityDescription(
+    EnergyFlipSensorEntityDescription(
         translation_key="current_power_out_peak",
         sensor_type=SENSOR_TYPE_RATE,
         device_class=SensorDeviceClass.POWER,
@@ -89,7 +89,7 @@ SENSORS_INFO = [
         key=SOURCE_TYPE_ELECTRICITY_OUT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    HuisbaasjeSensorEntityDescription(
+    EnergyFlipSensorEntityDescription(
         translation_key="current_power_out_off_peak",
         sensor_type=SENSOR_TYPE_RATE,
         device_class=SensorDeviceClass.POWER,
@@ -97,7 +97,7 @@ SENSORS_INFO = [
         key=SOURCE_TYPE_ELECTRICITY_OUT_LOW,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    HuisbaasjeSensorEntityDescription(
+    EnergyFlipSensorEntityDescription(
         translation_key="energy_consumption_peak_today",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -106,7 +106,7 @@ SENSORS_INFO = [
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
     ),
-    HuisbaasjeSensorEntityDescription(
+    EnergyFlipSensorEntityDescription(
         translation_key="energy_consumption_off_peak_today",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -115,7 +115,7 @@ SENSORS_INFO = [
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
     ),
-    HuisbaasjeSensorEntityDescription(
+    EnergyFlipSensorEntityDescription(
         translation_key="energy_production_peak_today",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -124,7 +124,7 @@ SENSORS_INFO = [
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
     ),
-    HuisbaasjeSensorEntityDescription(
+    EnergyFlipSensorEntityDescription(
         translation_key="energy_production_off_peak_today",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -133,7 +133,7 @@ SENSORS_INFO = [
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
     ),
-    HuisbaasjeSensorEntityDescription(
+    EnergyFlipSensorEntityDescription(
         translation_key="energy_today",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -142,7 +142,7 @@ SENSORS_INFO = [
         sensor_type=SENSOR_TYPE_THIS_DAY,
         suggested_display_precision=1,
     ),
-    HuisbaasjeSensorEntityDescription(
+    EnergyFlipSensorEntityDescription(
         translation_key="energy_week",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -151,7 +151,7 @@ SENSORS_INFO = [
         sensor_type=SENSOR_TYPE_THIS_WEEK,
         suggested_display_precision=1,
     ),
-    HuisbaasjeSensorEntityDescription(
+    EnergyFlipSensorEntityDescription(
         translation_key="energy_month",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -160,7 +160,7 @@ SENSORS_INFO = [
         sensor_type=SENSOR_TYPE_THIS_MONTH,
         suggested_display_precision=1,
     ),
-    HuisbaasjeSensorEntityDescription(
+    EnergyFlipSensorEntityDescription(
         translation_key="energy_year",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -169,7 +169,7 @@ SENSORS_INFO = [
         sensor_type=SENSOR_TYPE_THIS_YEAR,
         suggested_display_precision=1,
     ),
-    HuisbaasjeSensorEntityDescription(
+    EnergyFlipSensorEntityDescription(
         translation_key="current_gas",
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         sensor_type=SENSOR_TYPE_RATE,
@@ -177,7 +177,7 @@ SENSORS_INFO = [
         key=SOURCE_TYPE_GAS,
         suggested_display_precision=2,
     ),
-    HuisbaasjeSensorEntityDescription(
+    EnergyFlipSensorEntityDescription(
         translation_key="gas_today",
         device_class=SensorDeviceClass.GAS,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
@@ -186,7 +186,7 @@ SENSORS_INFO = [
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
     ),
-    HuisbaasjeSensorEntityDescription(
+    EnergyFlipSensorEntityDescription(
         translation_key="gas_week",
         device_class=SensorDeviceClass.GAS,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
@@ -195,7 +195,7 @@ SENSORS_INFO = [
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
     ),
-    HuisbaasjeSensorEntityDescription(
+    EnergyFlipSensorEntityDescription(
         translation_key="gas_month",
         device_class=SensorDeviceClass.GAS,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
@@ -204,7 +204,7 @@ SENSORS_INFO = [
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
     ),
-    HuisbaasjeSensorEntityDescription(
+    EnergyFlipSensorEntityDescription(
         translation_key="gas_year",
         device_class=SensorDeviceClass.GAS,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
@@ -228,24 +228,24 @@ async def async_setup_entry(
     user_id = config_entry.data[CONF_ID]
 
     async_add_entities(
-        HuisbaasjeSensor(coordinator, user_id, description)
+        EnergyFlipSensor(coordinator, user_id, description)
         for description in SENSORS_INFO
     )
 
 
-class HuisbaasjeSensor(
+class EnergyFlipSensor(
     CoordinatorEntity[DataUpdateCoordinator[dict[str, dict[str, Any]]]], SensorEntity
 ):
-    """Defines a Huisbaasje sensor."""
+    """Defines a EnergyFlip sensor."""
 
-    entity_description: HuisbaasjeSensorEntityDescription
+    entity_description: EnergyFlipSensorEntityDescription
     _attr_has_entity_name = True
 
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
         user_id: str,
-        description: HuisbaasjeSensorEntityDescription,
+        description: EnergyFlipSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)

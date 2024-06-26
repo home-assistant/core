@@ -67,6 +67,25 @@
           "3": "High"
         }
       }
+    },
+    "sensor": {
+      "connection": {
+        "name": "Connection status",
+        "state": {
+          "connected": "Connected",
+          "disconnected": "Disconnected",
+          "connecting": "Connecting",
+          "disconnecting": "Disconnecting"
+        }
+      },
+      "calibration": {
+        "name": "Calibration status",
+        "state": {
+          "calibrated": "Calibrated",
+          "uncalibrated": "Uncalibrated",
+          "calibrating": "Calibration in progress"
+        }
+      }
     }
   }
 }

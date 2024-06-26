@@ -143,10 +143,9 @@ async def test_config_flow_device(
     hass: HomeAssistant,
     template_type: str,
     state_template: str,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test remove the device registry configuration entry when the device changes."""
-
-    device_registry = dr.async_get(hass)
 
     # Configure a device registry
     entry_device = MockConfigEntry()
@@ -960,10 +959,9 @@ async def test_options_flow_change_device(
     hass: HomeAssistant,
     template_type: str,
     state_template: str,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test remove the device registry configuration entry when the device changes."""
-
-    device_registry = dr.async_get(hass)
 
     # Configure a device registry
     entry_device1 = MockConfigEntry()

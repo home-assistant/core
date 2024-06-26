@@ -24,5 +24,10 @@
         "description": "Confirm the configuration of the {model}-{serial_number} @ {host}."
       }
     }
+  },
+  "exceptions": {
+    "m3u_invalid_format": {
+      "message": "Media sources with the .m3u extension are not supported."
+    }
   }
 }

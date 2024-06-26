@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pycfdns
 
@@ -80,25 +80,20 @@ async def init_integration(
     return entry
 
 
-def _get_mock_client(
-    zone: pycfdns.ZoneModel | UndefinedType = UNDEFINED,
-    records: list[pycfdns.RecordModel] | UndefinedType = UNDEFINED,
-):
-    client: pycfdns.Client = AsyncMock()
+def get_mock_client() -> Mock:
+    """Return of Mock of pycfdns.Client."""
+    client = Mock()
 
-    client.list_zones = AsyncMock(
-        return_value=[MOCK_ZONE if zone is UNDEFINED else zone]
-    )
-    client.list_dns_records = AsyncMock(
-        return_value=MOCK_ZONE_RECORDS if records is UNDEFINED else records
-    )
+    client.list_zones = AsyncMock(return_value=[MOCK_ZONE])
+    client.list_dns_records = AsyncMock(return_value=MOCK_ZONE_RECORDS)
     client.update_dns_record = AsyncMock(return_value=None)
 
     return client
 
 
-def _patch_async_setup_entry(return_value=True):
+def patch_async_setup_entry() -> AsyncMock:
+    """Patch the async_setup_entry method and return a mock."""
     return patch(
         "homeassistant.components.cloudflare.async_setup_entry",
-        return_value=return_value,
+        return_value=True,
     )
