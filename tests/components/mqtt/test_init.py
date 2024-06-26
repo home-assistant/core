@@ -2108,7 +2108,6 @@ async def test_handle_message_callback(
         }
     ],
 )
-@pytest.mark.usefixtures("hass")
 async def test_setup_manual_mqtt_with_platform_key(
     mqtt_mock_entry: MqttMockHAClientGenerator, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -2121,7 +2120,6 @@ async def test_setup_manual_mqtt_with_platform_key(
 
 
 @pytest.mark.parametrize("hass_config", [{mqtt.DOMAIN: {"light": {"name": "test"}}}])
-@pytest.mark.usefixtures("hass")
 async def test_setup_manual_mqtt_with_invalid_config(
     mqtt_mock_entry: MqttMockHAClientGenerator, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -2156,7 +2154,6 @@ async def test_setup_manual_mqtt_with_invalid_config(
         ),
     ],
 )
-@pytest.mark.usefixtures("hass")
 async def test_setup_mqtt_client_protocol(
     mqtt_mock_entry: MqttMockHAClientGenerator, protocol: int
 ) -> None:
@@ -2442,7 +2439,6 @@ async def test_delayed_birth_message(
     "mqtt_config_entry_data",
     [ENTRY_DEFAULT_BIRTH_MESSAGE],
 )
-@pytest.mark.usefixtures("hass")
 async def test_subscription_done_when_birth_message_is_sent(
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
@@ -2487,7 +2483,6 @@ async def test_custom_will_message(
     )
 
 
-@pytest.mark.usefixtures("hass")
 async def test_default_will_message(
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
@@ -4349,7 +4344,6 @@ async def test_loop_write_failure(
         "valid_subscribe_topic",
     ],
 )
-@pytest.mark.usefixtures("hass")
 async def test_mqtt_integration_level_imports(attr: str) -> None:
     """Test mqtt integration level public published imports are available."""
     assert hasattr(mqtt, attr)
