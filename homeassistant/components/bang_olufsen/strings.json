@@ -38,7 +38,7 @@
     "invalid_media_type": {
       "message": "{invalid_media_type} is an invalid type. Valid values are: {valid_media_types}."
     },
-    "bang_olufsen_media_error": {
+    "play_media_error": {
       "message": "An error occurred while attempting to play {media_type}: {error_message}."
     }
   }
