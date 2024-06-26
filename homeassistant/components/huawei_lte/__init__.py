@@ -29,7 +29,6 @@ from homeassistant.const import (
     ATTR_HW_VERSION,
     ATTR_MODEL,
     ATTR_SW_VERSION,
-    CONF_LIMIT,
     CONF_MAC,
     CONF_NAME,
     CONF_PASSWORD,
@@ -65,6 +64,7 @@ from .const import (
     ALL_KEYS,
     ATTR_CONFIG_ENTRY_ID,
     CONF_MANUFACTURER,
+    CONF_MAX_MESSAGES,
     CONF_PREFER_UNREAD,
     CONF_UNAUTHENTICATED_MODE,
     CONNECTION_TIMEOUT,
@@ -136,7 +136,7 @@ SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_URL): cv.url})
 
 SERVICE_GET_MESSAGES_SCHEMA = SERVICE_SCHEMA.extend(
     {
-        vol.Optional(CONF_LIMIT): cv.positive_int,
+        vol.Optional(CONF_MAX_MESSAGES): cv.positive_int,
         vol.Optional(CONF_PREFER_UNREAD, default=DEFAULT_PREFER_UNREAD): cv.boolean,
     }
 )
@@ -578,7 +578,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """
         if not (router := router_resolver(service)):
             return
-        if (limit := service.data.get(CONF_MESSAGE_LIMIT)) is None:
+        if (limit := service.data.get(CONF_MAX_MESSAGES)) is None:
             messages = router.client.sms.get_messages(
                 unread_preferred=service.data[CONF_UNREAD_PREFERRED]
             )
