@@ -8,14 +8,12 @@ from roborock.roborock_message import RoborockDataProtocol
 from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
-from . import RoborockCoordinators
-from .const import DOMAIN
+from . import RoborockConfigEntry
 from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntityV1
 
@@ -65,15 +63,14 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RoborockConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Roborock select platform."""
 
-    coordinators: RoborockCoordinators = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
         RoborockSelectEntity(coordinator, description, options)
-        for coordinator in coordinators.v1
+        for coordinator in config_entry.runtime_data.v1
         for description in SELECT_DESCRIPTIONS
         if (
             options := description.options_lambda(
