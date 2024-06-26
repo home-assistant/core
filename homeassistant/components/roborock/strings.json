@@ -40,32 +40,6 @@
           "maps": "Maps"
         }
       },
-      "roborock": {
-        "description": "Configure setting options for all Roborock devices.",
-        "data": {
-          "include_shared": "Include shared devices"
-        }
-      },
-      "maps": {
-        "description": "Configure setting options for all of your Roborock map's images.",
-        "menu_options": {
-          "drawables": "Items to draw",
-          "sizes": "Sizes"
-        }
-      },
-      "sizes": {
-        "description": "Configure setting options for all of your Roborock maps' sizes.",
-        "data": {
-          "charger_radius": "Charger radius",
-          "ignored_obstacle_radius": "Ignored obstacle radius",
-          "ignored_obstacle_with_photo_radius": "Ignored obstacle with photo radius",
-          "mop_path_width": "Mop path width",
-          "obstacle_radius": "Obstacle radius",
-          "obstacle_with_photo_radius": "Obstacle with photo radius",
-          "vacuum_radius": "Vacuum radius",
-          "path_width": "Path width"
-        }
-      },
       "drawables": {
         "description": "Specify which features to draw on the map.",
         "data": {

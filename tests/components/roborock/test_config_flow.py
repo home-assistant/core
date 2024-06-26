@@ -192,10 +192,6 @@ async def test_options_flow_drawables(
     """Test that the options flow works."""
     result = await hass.config_entries.options.async_init(setup_entry.entry_id)
 
-    # result = await hass.config_entries.options.async_configure(
-    #     result["flow_id"],
-    #     user_input={"next_step_id": DRAWABLES},
-    # )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == DRAWABLES
     with patch(
