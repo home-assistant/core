@@ -30,6 +30,7 @@ from .const import (
     DOMAIN,
     KEEP_ALIVE_FOREVER,
     MAX_HISTORY_SECONDS,
+    TOOL_ARGS,
     TOOL_CALL,
     TOOLS_PROMPT,
 )
@@ -109,7 +110,7 @@ class OllamaConversationEntity(
         model = settings[CONF_MODEL]
         intent_response = intent.IntentResponse(language=user_input.language)
         llm_api: llm.APIInstance | None = None
-        tools: list[dict[str, Any]] | None = None
+        tools: dict[str, dict[str, Any]] | None = None
         user_name: str | None = None
         llm_context = llm.LLMContext(
             platform=DOMAIN,
@@ -136,9 +137,10 @@ class OllamaConversationEntity(
                 return conversation.ConversationResult(
                     response=intent_response, conversation_id=user_input.conversation_id
                 )
-            tools = [
-                _format_tool(tool, llm_api.custom_serializer) for tool in llm_api.tools
-            ]
+            tools = {
+                tool.name: _format_tool(tool, llm_api.custom_serializer)
+                for tool in llm_api.tools
+            }
 
         if (
             user_input.context
@@ -185,7 +187,16 @@ class OllamaConversationEntity(
             if llm_api:
                 if tools:
                     prompt_parts.append(TOOLS_PROMPT)
-                    prompt_parts.append(json.dumps(tools))
+                    prompt_parts.append(
+                        ", ".join(
+                            [
+                                f"\"{tool_name}\" ({tool['description']})"
+                                if tool.get("description")
+                                else f'"{tool_name}"'
+                                for tool_name, tool in tools.items()
+                            ]
+                        )
+                    )
                 prompt_parts.append(llm_api.api_prompt)
 
             prompt = "\n".join(prompt_parts)
@@ -247,42 +258,66 @@ class OllamaConversationEntity(
                 )
             )
 
-            if not response_message["content"].startswith(TOOL_CALL) or not llm_api:
+            if not llm_api:
                 break
 
-            try:
-                tool_call = json.loads(response_message["content"][len(TOOL_CALL) :])
-                tool_input = llm.ToolInput(
-                    tool_name=tool_call["name"],
-                    tool_args=tool_call["parameters"],
+            if response_message["content"].startswith(TOOL_ARGS):
+                tool_name = response_message["content"][len(TOOL_ARGS) :].strip()
+                if tools and tool_name in tools:
+                    message_history.messages.append(
+                        ollama.Message(
+                            role=MessageRole.SYSTEM.value,
+                            content=json.dumps(tools[tool_name]["parameters"]),
+                        )
+                    )
+                else:
+                    message_history.messages.append(
+                        ollama.Message(
+                            role=MessageRole.SYSTEM.value,
+                            content=f"Cannot find tool {tool_name}",
+                        )
+                    )
+                continue
+
+            if response_message["content"].startswith(TOOL_CALL):
+                try:
+                    tool_call = json.loads(
+                        response_message["content"][len(TOOL_CALL) :]
+                    )
+                    tool_input = llm.ToolInput(
+                        tool_name=tool_call["name"],
+                        tool_args=tool_call["parameters"],
+                    )
+                except json.decoder.JSONDecodeError as err:
+                    _LOGGER.error("Unable to parse tools: %s", err)
+                    message_history.messages.append(
+                        ollama.Message(
+                            role=MessageRole.SYSTEM.value,
+                            content=f"Unable to parse tool parameters, please fix and try again, the error is {err}",
+                        )
+                    )
+                    continue
+
+                _LOGGER.debug(
+                    "Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args
                 )
-            except json.decoder.JSONDecodeError as err:
-                _LOGGER.error("Unable to parse tools: %s", err)
+
+                try:
+                    tool_response = await llm_api.async_call_tool(tool_input)
+                except (HomeAssistantError, vol.Invalid) as e:
+                    tool_response = {"error": type(e).__name__}
+                    if str(e):
+                        tool_response["error_text"] = str(e)
+
+                _LOGGER.debug("Tool response: %s", tool_response)
                 message_history.messages.append(
                     ollama.Message(
-                        role=MessageRole.SYSTEM.value,
-                        content=f"Unable to parse tool parameters, please fix and try again, the error is {err}",
+                        role=MessageRole.SYSTEM.value, content=json.dumps(tool_response)
                     )
                 )
                 continue
 
-            _LOGGER.debug(
-                "Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args
-            )
-
-            try:
-                tool_response = await llm_api.async_call_tool(tool_input)
-            except (HomeAssistantError, vol.Invalid) as e:
-                tool_response = {"error": type(e).__name__}
-                if str(e):
-                    tool_response["error_text"] = str(e)
-
-            _LOGGER.debug("Tool response: %s", tool_response)
-            message_history.messages.append(
-                ollama.Message(
-                    role=MessageRole.SYSTEM.value, content=json.dumps(tool_response)
-                )
-            )
+            break
 
         # Create intent response
         intent_response.async_set_speech(response_message["content"])

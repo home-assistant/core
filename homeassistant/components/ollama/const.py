@@ -6,6 +6,7 @@ CONF_MODEL = "model"
 CONF_PROMPT = "prompt"
 
 TOOL_CALL = "TOOL_CALL"
+TOOL_ARGS = "TOOL_ARGS"
 TOOLS_PROMPT = (
     "There are certain tools (functions) that you can call (execute)"
     " and get the result before answering to the user. You can either call a tool or"
@@ -13,7 +14,8 @@ TOOLS_PROMPT = (
 To call the tool, start the response with TOOL_CALL followed by tool name and"""
     ' parameters in json format, example: TOOL_CALL {"name": "tool_name", parameters:'
     """ {\"arg\": 42}}
-Available tools in JSON object schema format:"""
+Respond with TOOL_ARGS followed by the tool name without quotes to get the available tool args in JSON object schema format.
+Available tools:"""
 )
 
 KEEP_ALIVE_FOREVER = -1
