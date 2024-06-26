@@ -1182,7 +1182,7 @@ class SelectSelector(Selector[SelectSelectorConfig]):
                     for option in cast(Sequence[SelectOptionDict], config_options)
                 ]
 
-        parent_schema = vol.In(options)
+        parent_schema: vol.In | vol.Any = vol.In(options)
         if self.config["custom_value"]:
             parent_schema = vol.Any(parent_schema, str)
 

@@ -2174,7 +2174,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==3.4.0
+uiprotect==3.7.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2264,7 +2264,7 @@ wiffi==1.1.2
 wled==0.18.0
 
 # homeassistant.components.wolflink
-wolf-comm==0.0.8
+wolf-comm==0.0.9
 
 # homeassistant.components.wyoming
 wyoming==1.5.4
