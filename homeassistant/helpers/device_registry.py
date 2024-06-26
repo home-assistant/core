@@ -975,6 +975,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 new_values["identifiers"] = old_identifiers | merge_identifiers
                 old_values["identifiers"] = old_identifiers
 
+        if not new_connections and not new_identifiers:
+            raise HomeAssistantError(
+                "A device must have at least one of identifiers or connections"
+            )
+
         if new_connections is not UNDEFINED:
             new_values["connections"] = self._validate_connections(
                 device_id, new_connections, False
