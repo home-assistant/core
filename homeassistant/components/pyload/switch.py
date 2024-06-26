@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import PyLoadConfigEntry
-from .coordinator import pyLoadData
+from .coordinator import PyLoadData
 from .entity import BasePyLoadEntity
 
 
@@ -36,7 +36,7 @@ class PyLoadSwitchEntityDescription(SwitchEntityDescription):
     turn_on_fn: Callable[[PyLoadAPI], Awaitable[Any]]
     turn_off_fn: Callable[[PyLoadAPI], Awaitable[Any]]
     toggle_fn: Callable[[PyLoadAPI], Awaitable[Any]]
-    value_fn: Callable[[pyLoadData], bool]
+    value_fn: Callable[[PyLoadData], bool]
 
 
 SENSOR_DESCRIPTIONS: tuple[PyLoadSwitchEntityDescription, ...] = (
