@@ -2,12 +2,8 @@
 
 from unittest.mock import MagicMock
 
-from homeassistant.components.select import (
-    ATTR_OPTION,
-    DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
-)
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.select import ATTR_OPTION, SERVICE_SELECT_OPTION
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -29,7 +25,7 @@ async def test_adam_change_select_entity(
     """Test changing of select entities."""
 
     await hass.services.async_call(
-        SELECT_DOMAIN,
+        Platform.SELECT,
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: "select.zone_lisa_wk_thermostat_schedule",
@@ -61,7 +57,7 @@ async def test_adam_select_regulation_mode(
     assert state
     assert state.state == "cooling"
     await hass.services.async_call(
-        SELECT_DOMAIN,
+        Platform.SELECT,
         SERVICE_SELECT_OPTION,
         {
             "entity_id": "select.adam_regulation_mode",

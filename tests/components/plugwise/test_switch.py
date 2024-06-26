@@ -6,7 +6,7 @@ from plugwise.exceptions import PlugwiseException
 import pytest
 
 from homeassistant.components.plugwise.const import DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -35,7 +35,7 @@ async def test_adam_climate_switch_negative_testing(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            "switch",
+            Platform.SWITCH,
             "turn_off",
             {"entity_id": "switch.cv_pomp_relay"},
             blocking=True,
@@ -48,7 +48,7 @@ async def test_adam_climate_switch_negative_testing(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            "switch",
+            Platform.SWITCH,
             "turn_on",
             {"entity_id": "switch.fibaro_hc2_relay"},
             blocking=True,
@@ -65,7 +65,7 @@ async def test_adam_climate_switch_changes(
 ) -> None:
     """Test changing of climate related switch entities."""
     await hass.services.async_call(
-        "switch",
+        Platform.SWITCH,
         "turn_off",
         {"entity_id": "switch.cv_pomp_relay"},
         blocking=True,
@@ -77,7 +77,7 @@ async def test_adam_climate_switch_changes(
     )
 
     await hass.services.async_call(
-        "switch",
+        Platform.SWITCH,
         "toggle",
         {"entity_id": "switch.fibaro_hc2_relay"},
         blocking=True,
@@ -89,7 +89,7 @@ async def test_adam_climate_switch_changes(
     )
 
     await hass.services.async_call(
-        "switch",
+        Platform.SWITCH,
         "turn_on",
         {"entity_id": "switch.fibaro_hc2_relay"},
         blocking=True,
@@ -119,7 +119,7 @@ async def test_stretch_switch_changes(
 ) -> None:
     """Test changing of power related switch entities."""
     await hass.services.async_call(
-        "switch",
+        Platform.SWITCH,
         "turn_off",
         {"entity_id": "switch.koelkast_92c4a_relay"},
         blocking=True,
@@ -130,7 +130,7 @@ async def test_stretch_switch_changes(
     )
 
     await hass.services.async_call(
-        "switch",
+        Platform.SWITCH,
         "toggle",
         {"entity_id": "switch.droger_52559_relay"},
         blocking=True,
@@ -141,7 +141,7 @@ async def test_stretch_switch_changes(
     )
 
     await hass.services.async_call(
-        "switch",
+        Platform.SWITCH,
         "turn_on",
         {"entity_id": "switch.droger_52559_relay"},
         blocking=True,
@@ -163,7 +163,7 @@ async def test_unique_id_migration_plug_relay(
 
     # Entry to migrate
     entity_registry.async_get_or_create(
-        SWITCH_DOMAIN,
+        Platform.SWITCH,
         DOMAIN,
         "21f2b542c49845e6bb416884c55778d6-plug",
         config_entry=mock_config_entry,
@@ -172,7 +172,7 @@ async def test_unique_id_migration_plug_relay(
     )
     # Entry not needing migration
     entity_registry.async_get_or_create(
-        SWITCH_DOMAIN,
+        Platform.SWITCH,
         DOMAIN,
         "675416a629f343c495449970e2ca37b5-relay",
         config_entry=mock_config_entry,
