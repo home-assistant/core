@@ -169,7 +169,7 @@ async def async_setup_platform(
     )
 
     host = config.get(CONF_HOST)
-    name = config[CONF_NAME]
+    name = config.get(CONF_NAME)
     max_volume = config[CONF_MAX_VOLUME]
     receiver_max_volume = config[CONF_RECEIVER_MAX_VOLUME]
     sources = config[CONF_SOURCES]
@@ -220,6 +220,7 @@ async def async_setup_platform(
             for entity in entities[origin].values():
                 entity.backfill_state()
 
+        _LOGGER.debug("Creating receiver: %s (%s)", info.model_name, info.host)
         receiver = await pyeiscp.Connection.create(
             host=info.host,
             port=info.port,
@@ -230,8 +231,6 @@ async def async_setup_platform(
         receiver.model_name = info.model_name
         receiver.identifier = info.identifier
         receiver.name = name or info.model_name
-
-        KNOWN_HOSTS.append(receiver.host)
 
         # Store the receiver object and create a dictionary to store its entities.
         receivers[receiver.host] = receiver
@@ -262,6 +261,7 @@ async def async_setup_platform(
             info = ReceiverInfo(conn.host, conn.port, conn.name, conn.identifier)
             _LOGGER.debug("Receiver interviewed: %s (%s)", info.model_name, info.host)
             if info.host not in KNOWN_HOSTS:
+                KNOWN_HOSTS.append(info.host)
                 await async_setup_receiver(info, False, name)
 
         await pyeiscp.Connection.discover(
@@ -277,6 +277,7 @@ async def async_setup_platform(
             info = ReceiverInfo(conn.host, conn.port, conn.name, conn.identifier)
             _LOGGER.debug("Receiver discovered: %s (%s)", info.model_name, info.host)
             if info.host not in KNOWN_HOSTS:
+                KNOWN_HOSTS.append(info.host)
                 await async_setup_receiver(info, True, None)
 
         await pyeiscp.Connection.discover(
