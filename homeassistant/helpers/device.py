@@ -26,7 +26,11 @@ def async_device_info_to_link_from_entity(
     hass: HomeAssistant,
     entity_id_or_uuid: str,
 ) -> dr.DeviceInfo | None:
-    """DeviceInfo with information to link a device to a configuration entry in the link category from a entity id or entity uuid."""
+    """DeviceInfo with information to link a device from an entity.
+
+    DeviceInfo will only return the information to categorize the config
+    entry as a link.
+    """
 
     return async_device_info_to_link_from_device_id(
         hass,
@@ -39,7 +43,11 @@ def async_device_info_to_link_from_device_id(
     hass: HomeAssistant,
     device_id: str | None,
 ) -> dr.DeviceInfo | None:
-    """DeviceInfo with information to link a device to a configuration entry in the link category from a device id."""
+    """DeviceInfo with information to link a device from a device id.
+
+    DeviceInfo will only return the information to categorize the config
+    entry as a link.
+    """
 
     dev_reg = dr.async_get(hass)
 
@@ -58,7 +66,10 @@ def async_remove_stale_devices_links_keep_entity_device(
     entry_id: str,
     source_entity_id_or_uuid: str,
 ) -> None:
-    """Remove the link between stales devices and a configuration entry, keeping only the device that the informed entity is linked to."""
+    """Remove the link between stale devices and a configuration entry.
+
+    Keeping only the device that the informed entity is linked to.
+    """
 
     async_remove_stale_devices_links_keep_current_device(
         hass=hass,
@@ -73,9 +84,10 @@ def async_remove_stale_devices_links_keep_current_device(
     entry_id: str,
     current_device_id: str | None,
 ) -> None:
-    """Remove the link between stales devices and a configuration entry, keeping only the device informed.
+    """Remove the link between stale devices and a configuration entry.
 
-    Device passed in the current_device_id parameter will be kept linked to the configuration entry.
+    Only the device passed in the current_device_id parameter linked to
+    the configuration entry will be maintained.
     """
 
     dev_reg = dr.async_get(hass)
