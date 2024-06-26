@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, call, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.pyload.switch import PyLoadSwitchEntity
+from homeassistant.components.pyload.switch import PyLoadSwitch
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TOGGLE,
@@ -22,12 +22,12 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 # Maps entity to the mock calls to assert
 API_CALL = {
-    PyLoadSwitchEntity.PAUSE_RESUME_QUEUE: {
+    PyLoadSwitch.PAUSE_RESUME_QUEUE: {
         SERVICE_TURN_ON: call.unpause,
         SERVICE_TURN_OFF: call.pause,
         SERVICE_TOGGLE: call.toggle_pause,
     },
-    PyLoadSwitchEntity.RECONNECT: {
+    PyLoadSwitch.RECONNECT: {
         SERVICE_TURN_ON: call.toggle_reconnect,
         SERVICE_TURN_OFF: call.toggle_reconnect,
         SERVICE_TOGGLE: call.toggle_reconnect,
@@ -97,7 +97,6 @@ async def test_turn_on_off(
             {ATTR_ENTITY_ID: entity_entry.entity_id},
             blocking=True,
         )
-        await hass.async_block_till_done()
         assert (
             API_CALL[entity_entry.translation_key][service_call]
             in mock_pyloadapi.method_calls
