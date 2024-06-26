@@ -81,9 +81,9 @@ async def async_setup_entry(
 class ViCareFan(ViCareEntity, FanEntity):
     """Representation of the ViCare ventilation device."""
 
+    _attr_preset_modes = list[str](PRESET_MODES)
     _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
     _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
-    _attr_preset_modes = list[str](PRESET_MODES)
 
     def __init__(
         self,
@@ -130,7 +130,7 @@ class ViCareFan(ViCareEntity, FanEntity):
 
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
-        if VentilationMode.from_ha_mode(self.get_preset_mode()) != str(
+        if VentilationMode.from_ha_mode(self._attr_preset_mode) != str(
             VentilationMode.PERMANENT
         ):
             _LOGGER.debug("changing ventilation mode to %s", VentilationMode.PERMANENT)
@@ -142,6 +142,6 @@ class ViCareFan(ViCareEntity, FanEntity):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        target_mode = VentilationMode.from_ha_mode(self.get_preset_mode())
+        target_mode = VentilationMode.from_ha_mode(self._attr_preset_mode)
         _LOGGER.debug("changing ventilation mode to %s", target_mode)
         self._api.setActiveMode(target_mode)
