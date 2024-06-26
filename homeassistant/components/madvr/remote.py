@@ -27,7 +27,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the MadVR remote."""
-    coordinator: MadVRCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: MadVRCoordinator = entry.runtime_data
 
     madvr_client = coordinator.client
 
@@ -92,11 +92,6 @@ class MadvrRemote(CoordinatorEntity, RemoteEntity):
         return self.madvr_client.is_on
 
     @property
-    def should_poll(self) -> bool:
-        """Poll."""
-        return False
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra state attributes."""
         # Useful for making sensors
@@ -116,7 +111,10 @@ class MadvrRemote(CoordinatorEntity, RemoteEntity):
                     await self.madvr_client.send_command(command)
                 except ConnectionResetError:
                     _LOGGER.warning("Envy was turned off manually")
-                    await self.async_turn_off()
+                    # update state
+                    self._attr_is_on = False
+                    self.async_write_ha_state()
+                    await self.clear_state()
                 except AttributeError:
                     _LOGGER.warning("Issue sending command from queue")
                 except RetryExceededError:
@@ -137,38 +135,26 @@ class MadvrRemote(CoordinatorEntity, RemoteEntity):
         """Clear queue."""
         self.command_queue = asyncio.Queue()
 
+    async def clear_state(self) -> None:
+        """Clear state."""
+        self.stop_processing_commands.set()
+        await self.clear_queue()
+
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
         _LOGGER.debug("Turning off")
-        self.stop_processing_commands.set()
-        await self.clear_queue()
+        await self.clear_state()
         await self.madvr_client.power_off()
         self._attr_is_on = False
+        self.async_write_ha_state()
         _LOGGER.debug("self._state is now: %s", self._attr_is_on)
-
-        # Fire power state change event
-        event_data = {
-            "device_id": self.entry_id,
-            "type": "power_state_changed",
-            "new_state": "off",
-            "old_state": "on",
-        }
-        self.hass.bus.async_fire(f"{DOMAIN}_event", event_data)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
         _LOGGER.debug("Turning on device")
+        # power state will be captured once the connection is established
         await self.madvr_client.power_on()
         self.stop_processing_commands.clear()
-        _LOGGER.debug("Firing event to turn on")
-        # Fire power state change event
-        event_data = {
-            "device_id": self.entry_id,
-            "type": "power_state_changed",
-            "new_state": "on",
-            "old_state": "off",
-        }
-        self.hass.bus.async_fire(f"{DOMAIN}_event", event_data)
 
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
