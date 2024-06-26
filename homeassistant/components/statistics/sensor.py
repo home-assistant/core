@@ -295,11 +295,11 @@ async def async_setup_entry(
 
     max_age = None
     if max_age_input := entry.options.get(CONF_MAX_AGE):
-        max_age_parsed = max_age_input.split(":")
-        hour = int(max_age_parsed[0])
-        minute = int(max_age_parsed[1])
-
-        max_age = timedelta(hours=hour, minutes=minute)
+        max_age = timedelta(
+            hours=max_age_input["hours"],
+            minutes=max_age_input["minutes"],
+            seconds=max_age_input["seconds"],
+        )
 
     async_add_entities(
         [

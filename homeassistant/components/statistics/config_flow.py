@@ -19,6 +19,8 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 from homeassistant.helpers.selector import (
     BooleanSelector,
+    DurationSelector,
+    DurationSelectorConfig,
     EntitySelector,
     EntitySelectorConfig,
     NumberSelector,
@@ -28,7 +30,6 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
     TextSelector,
-    TimeSelector,
 )
 
 from . import DOMAIN
@@ -104,7 +105,9 @@ DATA_SCHEMA_OPTIONS = vol.Schema(
         vol.Optional(CONF_SAMPLES_MAX_BUFFER_SIZE): NumberSelector(
             NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
         ),
-        vol.Optional(CONF_MAX_AGE): TimeSelector(),
+        vol.Optional(CONF_MAX_AGE): DurationSelector(
+            DurationSelectorConfig(enable_day=False, allow_negative=False)
+        ),
         vol.Optional(CONF_KEEP_LAST_SAMPLE, default=False): BooleanSelector(),
         vol.Optional(CONF_PERCENTILE, default=50): NumberSelector(
             NumberSelectorConfig(min=1, max=99, step=1, mode=NumberSelectorMode.BOX)
