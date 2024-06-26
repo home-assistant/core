@@ -56,7 +56,7 @@
       "missing_keep_last_sample": "[%key:component::statistics::config::error::missing_keep_last_sample%]"
     },
     "step": {
-      "options": {
+      "init": {
         "description": "[%key:component::statistics::config::step::options::description%]",
         "data": {
           "sampling_size": "[%key:component::statistics::config::step::options::data::sampling_size%]",

@@ -87,7 +87,7 @@ async def validate_options(
     ):
         raise SchemaFlowError("missing_keep_last_sample")
 
-    handler.parent_handler._async_abort_entries_match(user_input)  # noqa: SLF001
+    handler.parent_handler._async_abort_entries_match({**handler.options, **user_input})  # noqa: SLF001
 
     return user_input
 
