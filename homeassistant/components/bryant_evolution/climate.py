@@ -14,7 +14,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -27,12 +27,6 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
-async def _can_reach_device(client: BryantEvolutionClient) -> bool:
-    """Return whether we can reach the device at the given client."""
-    # Verify that we can read S1Z1 to check that the client is valid.
-    return await client.read_hvac_mode() is not None
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BryantEvolutionConfigEntry,
@@ -40,8 +34,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up a config entry."""
     client = config_entry.runtime_data
-    if not await _can_reach_device(client):
-        raise ConfigEntryNotReady
     climate = BryantEvolutionClimate(
         # Suffix with -climate since we expect to add more entities later.
         f"{config_entry.entry_id}-climate",

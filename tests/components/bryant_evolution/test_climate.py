@@ -23,6 +23,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, CONF_FILENAME
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
@@ -151,6 +152,27 @@ async def test_setup_integration(
     assert state.attributes["fan_mode"] == "auto"
     assert state.attributes["current_temperature"] == 75
     assert state.attributes["temperature"] == 72
+
+
+async def test_setup_integration_prevented_by_unavailable_client(
+    hass: HomeAssistant,
+) -> None:
+    """Test that setup throws ConfigEntryNotReady when the client is unavailable."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    with patch(
+        "evolutionhttp.BryantEvolutionLocalClient.get_client",
+        return_value=_FakeEvolutionClient(),
+    ) as p:
+        mock_evolution_entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={CONF_FILENAME: "/dev/ttyUSB0", CONF_SYSTEM_ID: 1, CONF_ZONE_ID: 1},
+        )
+        client = p.return_value
+        client._mode = None
+        mock_evolution_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_evolution_entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_evolution_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_integration_client_returns_none(hass: HomeAssistant) -> None:
