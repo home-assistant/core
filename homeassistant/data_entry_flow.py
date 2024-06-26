@@ -386,7 +386,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
         ) is not None and user_input is not None:
             data_schema = cast(vol.Schema, data_schema)
             try:
-                user_input = data_schema(user_input)  # type: ignore[operator]
+                user_input = data_schema(user_input)
             except vol.Invalid as ex:
                 raised_errors = [ex]
                 if isinstance(ex, vol.MultipleInvalid):
