@@ -1651,6 +1651,7 @@ omit =
     homeassistant/components/xiaomi_miio/remote.py
     homeassistant/components/xiaomi_miio/sensor.py
     homeassistant/components/xiaomi_miio/switch.py
+    homeassistant/components/xiaomi_miio/typing.py
     homeassistant/components/xiaomi_tv/media_player.py
     homeassistant/components/xmpp/notify.py
     homeassistant/components/xs1/*
