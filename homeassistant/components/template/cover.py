@@ -12,7 +12,7 @@ from homeassistant.components.cover import (
     ATTR_TILT_POSITION,
     DEVICE_CLASSES_SCHEMA,
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
     CoverEntity,
     CoverEntityFeature,
 )
@@ -96,7 +96,7 @@ COVER_SCHEMA = vol.All(
     cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_COVERS): cv.schema_with_slug_keys(COVER_SCHEMA)}
 )
 
