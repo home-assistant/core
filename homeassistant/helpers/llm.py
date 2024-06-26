@@ -660,6 +660,7 @@ class ScriptTool(Tool):
                     description = config.get("description")
                     if not description:
                         description = config.get("name")
+                    key: vol.Marker
                     if config.get("required"):
                         key = vol.Required(field, description=description)
                     else:
