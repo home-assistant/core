@@ -169,6 +169,7 @@ async def test_toggle_while_locked(hass: HomeAssistant, fritz: Mock) -> None:
             DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
         )
 
+
 async def test_update(hass: HomeAssistant, fritz: Mock) -> None:
     """Test update without error."""
     device = FritzDeviceSwitchMock()
