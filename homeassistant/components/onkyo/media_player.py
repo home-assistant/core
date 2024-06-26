@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -34,7 +35,6 @@ CONF_SOURCES = "sources"
 CONF_MAX_VOLUME = "max_volume"
 CONF_RECEIVER_MAX_VOLUME = "receiver_max_volume"
 
-DEFAULT_NAME = "Onkyo Receiver"
 SUPPORTED_MAX_VOLUME = 100
 DEFAULT_RECEIVER_MAX_VOLUME = 80
 ZONES = {"zone2": "Zone 2", "zone3": "Zone 3", "zone4": "Zone 4"}
@@ -73,7 +73,7 @@ DEFAULT_PLAYABLE_SOURCES = ("fm", "am", "tuner")
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_MAX_VOLUME, default=SUPPORTED_MAX_VOLUME): vol.All(
             vol.Coerce(int), vol.Range(min=1, max=100)
         ),
@@ -169,43 +169,69 @@ async def async_setup_platform(
     )
 
     host = config.get(CONF_HOST)
-    name = config[CONF_NAME]
+    name = config.get(CONF_NAME)
     max_volume = config[CONF_MAX_VOLUME]
     receiver_max_volume = config[CONF_RECEIVER_MAX_VOLUME]
     sources = config[CONF_SOURCES]
 
-    @callback
-    def async_onkyo_update_callback(message: tuple[str, str, Any], origin: str) -> None:
-        """Process new message from receiver."""
-        receiver = receivers[origin]
-        _LOGGER.debug("Received update callback from %s: %s", receiver.name, message)
+    @dataclass
+    class ReceiverInfo:
+        host: str
+        port: int
+        model_name: str
+        identifier: str
 
-        zone, _, value = message
-        entity = entities[origin].get(zone)
-        if entity is not None:
-            if entity.enabled:
-                entity.process_update(message)
-        elif zone in ZONES and value != "N/A":
-            # When we receive the status for a zone, and the value is not "N/A",
-            # then zone is available on the receiver, so we create the entity for it.
-            _LOGGER.debug("Discovered %s on %s", ZONES[zone], receiver.name)
-            zone_entity = OnkyoMediaPlayer(
-                receiver, sources, zone, max_volume, receiver_max_volume
+    async def async_setup_receiver(
+        info: ReceiverInfo, discovered: bool, name: str | None
+    ) -> None:
+        @callback
+        def async_onkyo_update_callback(
+            message: tuple[str, str, Any], origin: str
+        ) -> None:
+            """Process new message from receiver."""
+            receiver = receivers[origin]
+            _LOGGER.debug(
+                "Received update callback from %s: %s", receiver.name, message
             )
-            entities[origin][zone] = zone_entity
-            async_add_entities([zone_entity])
 
-    @callback
-    def async_onkyo_connect_callback(origin: str) -> None:
-        """Receiver (re)connected."""
-        receiver = receivers[origin]
-        _LOGGER.debug("Receiver (re)connected: %s (%s)", receiver.name, receiver.host)
+            zone, _, value = message
+            entity = entities[origin].get(zone)
+            if entity is not None:
+                if entity.enabled:
+                    entity.process_update(message)
+            elif zone in ZONES and value != "N/A":
+                # When we receive the status for a zone, and the value is not "N/A",
+                # then zone is available on the receiver, so we create the entity for it.
+                _LOGGER.debug("Discovered %s on %s", ZONES[zone], receiver.name)
+                zone_entity = OnkyoMediaPlayer(
+                    receiver, sources, zone, max_volume, receiver_max_volume
+                )
+                entities[origin][zone] = zone_entity
+                async_add_entities([zone_entity])
 
-        for entity in entities[origin].values():
-            entity.backfill_state()
+        @callback
+        def async_onkyo_connect_callback(origin: str) -> None:
+            """Receiver (re)connected."""
+            receiver = receivers[origin]
+            _LOGGER.debug(
+                "Receiver (re)connected: %s (%s)", receiver.name, receiver.host
+            )
 
-    def setup_receiver(receiver: pyeiscp.Connection) -> None:
-        KNOWN_HOSTS.append(receiver.host)
+            for entity in entities[origin].values():
+                entity.backfill_state()
+
+        _LOGGER.debug("Creating receiver: %s (%s)", info.model_name, info.host)
+        receiver = await pyeiscp.Connection.create(
+            host=info.host,
+            port=info.port,
+            update_callback=async_onkyo_update_callback,
+            connect_callback=async_onkyo_connect_callback,
+        )
+
+        receiver.model_name = info.model_name
+        receiver.identifier = info.identifier
+        receiver.name = name or info.model_name
+        receiver.discovered = discovered
 
         # Store the receiver object and create a dictionary to store its entities.
         receivers[receiver.host] = receiver
@@ -224,34 +250,38 @@ async def async_setup_platform(
         entities[receiver.host]["main"] = main_entity
         async_add_entities([main_entity])
 
-    if host is not None and host not in KNOWN_HOSTS:
+    if host is not None:
+        if host in KNOWN_HOSTS:
+            return
+
         _LOGGER.debug("Manually creating receiver: %s (%s)", name, host)
-        receiver = await pyeiscp.Connection.create(
-            host=host,
-            update_callback=async_onkyo_update_callback,
-            connect_callback=async_onkyo_connect_callback,
-        )
-
-        # The library automatically adds a name and identifier only on discovered hosts,
-        # so manually add them here instead.
-        receiver.name = name
-        receiver.identifier = None
-
-        setup_receiver(receiver)
-    else:
 
         @callback
-        async def async_onkyo_discovery_callback(receiver: pyeiscp.Connection):
-            """Receiver discovered, connection not yet active."""
-            _LOGGER.debug("Receiver discovered: %s (%s)", receiver.name, receiver.host)
-            if receiver.host not in KNOWN_HOSTS:
-                await receiver.connect()
-                setup_receiver(receiver)
+        async def async_onkyo_interview_callback(conn: pyeiscp.Connection):
+            """Receiver interviewed, connection not yet active."""
+            info = ReceiverInfo(conn.host, conn.port, conn.name, conn.identifier)
+            _LOGGER.debug("Receiver interviewed: %s (%s)", info.model_name, info.host)
+            if info.host not in KNOWN_HOSTS:
+                KNOWN_HOSTS.append(info.host)
+                await async_setup_receiver(info, False, name)
 
-        _LOGGER.debug("Discovering receivers")
         await pyeiscp.Connection.discover(
-            update_callback=async_onkyo_update_callback,
-            connect_callback=async_onkyo_connect_callback,
+            host=host,
+            discovery_callback=async_onkyo_interview_callback,
+        )
+    else:
+        _LOGGER.debug("Discovering receivers")
+
+        @callback
+        async def async_onkyo_discovery_callback(conn: pyeiscp.Connection):
+            """Receiver discovered, connection not yet active."""
+            info = ReceiverInfo(conn.host, conn.port, conn.name, conn.identifier)
+            _LOGGER.debug("Receiver discovered: %s (%s)", info.model_name, info.host)
+            if info.host not in KNOWN_HOSTS:
+                KNOWN_HOSTS.append(info.host)
+                await async_setup_receiver(info, True, None)
+
+        await pyeiscp.Connection.discover(
             discovery_callback=async_onkyo_discovery_callback,
         )
 
@@ -286,15 +316,13 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         name = receiver.name
         self._attr_name = f"{name}{' ' + ZONES[zone] if zone != 'main' else ''}"
         identifier = receiver.identifier
-        if identifier is not None:
-            # discovered
+        if receiver.discovered:
             if zone == "main":
                 # keep legacy unique_id
                 self._attr_unique_id = f"{name}_{identifier}"
             else:
                 self._attr_unique_id = f"{identifier}_{zone}"
         else:
-            # not discovered
             self._attr_unique_id = None
 
         self._zone = zone
