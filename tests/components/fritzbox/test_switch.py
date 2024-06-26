@@ -144,8 +144,8 @@ async def test_turn_off(hass: HomeAssistant, fritz: Mock) -> None:
     assert device.set_switch_state_off.call_count == 1
 
 
-async def test_turn_off_lock(hass: HomeAssistant, fritz: Mock) -> None:
-    """Test if device locked."""
+async def test_toggle_while_locked(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test toggling while device is locked."""
     device = FritzDeviceSwitchMock()
     device.lock = True
 
@@ -155,30 +155,19 @@ async def test_turn_off_lock(hass: HomeAssistant, fritz: Mock) -> None:
 
     with pytest.raises(
         HomeAssistantError,
-        match="Can't change switch while manual switching via FRITZ!Box user interface, FRITZ!Fon, App or button is disabled",
+        match="Can't toggle switch while manual switching is disabled for the device.",
     ):
         await hass.services.async_call(
             DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
         )
 
-
-async def test_turn_on_lock(hass: HomeAssistant, fritz: Mock) -> None:
-    """Test if device locked."""
-    device = FritzDeviceSwitchMock()
-    device.lock = True
-
-    assert await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
-    )
-
     with pytest.raises(
         HomeAssistantError,
-        match="Can't change switch while manual switching via FRITZ!Box user interface, FRITZ!Fon, App or button is disabled",
+        match="Can't toggle switch while manual switching is disabled for the device.",
     ):
         await hass.services.async_call(
             DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
         )
-
 
 async def test_update(hass: HomeAssistant, fritz: Mock) -> None:
     """Test update without error."""
