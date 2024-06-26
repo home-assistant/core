@@ -108,6 +108,7 @@ from homeassistant.util.yaml.objects import NodeStrClass
 
 from . import script_variables as script_variables_helper, template as template_helper
 from .frame import get_integration_logger
+from .typing import VolDictType, VolSchemaType
 
 TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
 
@@ -980,8 +981,8 @@ def removed(
 
 def key_value_schemas(
     key: str,
-    value_schemas: dict[Hashable, vol.Schema],
-    default_schema: vol.Schema | None = None,
+    value_schemas: dict[Hashable, VolSchemaType],
+    default_schema: VolSchemaType | None = None,
     default_description: str | None = None,
 ) -> Callable[[Any], dict[Hashable, Any]]:
     """Create a validator that validates based on a value for specific key.
@@ -1355,7 +1356,7 @@ NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
     vol.All(str, entity_domain(["input_number", "number", "sensor", "zone"])),
 )
 
-CONDITION_BASE_SCHEMA = {
+CONDITION_BASE_SCHEMA: VolDictType = {
     vol.Optional(CONF_ALIAS): string,
     vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
 }
