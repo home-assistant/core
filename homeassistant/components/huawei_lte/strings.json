@@ -349,6 +349,24 @@
     }
   },
   "services": {
+    "get_messages": {
+      "name": "Get messages",
+      "description": "Retrieve messages stored on target device.",
+      "fields": {
+        "limit": {
+          "name": "[%key:common::config_flow::data::limit%]",
+          "description": "Limit the number of messages retrieved for a service call."
+        },
+        "prefer_unread": {
+          "name": "Prefer unread",
+          "description": "Prefer unread messages instead of gathering all messages."
+        },
+        "url": {
+          "name": "[%key:common::config_flow::data::url%]",
+          "description": "URL of router to retrieve messages for; optional when only one is configured."
+        }
+      }
+    },
     "resume_integration": {
       "name": "Resume integration",
       "description": "Resumes suspended integration.",
