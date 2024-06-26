@@ -48,11 +48,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
     all_with_deprecated_constants,
@@ -87,13 +83,15 @@ from .prefs import CameraPreferences, DynamicStreamSettings  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
+ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL: Final = timedelta(seconds=30)
+
 SERVICE_ENABLE_MOTION: Final = "enable_motion_detection"
 SERVICE_DISABLE_MOTION: Final = "disable_motion_detection"
 SERVICE_SNAPSHOT: Final = "snapshot"
 SERVICE_PLAY_STREAM: Final = "play_stream"
-
-SCAN_INTERVAL: Final = timedelta(seconds=30)
-ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 
 ATTR_FILENAME: Final = "filename"
 ATTR_MEDIA_PLAYER: Final = "media_player"
