@@ -689,7 +689,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             except ApiException as error:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
-                    translation_key="bang_olufsen_media_error",
+                    translation_key="play_media_error",
                     translation_placeholders={
                         "media_type": media_type,
                         "error_message": json.loads(error.body)["message"],
