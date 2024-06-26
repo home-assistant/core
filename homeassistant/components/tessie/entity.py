@@ -6,11 +6,11 @@ from typing import Any
 from aiohttp import ClientResponseError
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MODELS
+from .const import DOMAIN
 from .coordinator import TessieStateUpdateCoordinator
+from .models import TessieVehicleData
 
 
 class TessieEntity(CoordinatorEntity[TessieStateUpdateCoordinator]):
@@ -20,33 +20,22 @@ class TessieEntity(CoordinatorEntity[TessieStateUpdateCoordinator]):
 
     def __init__(
         self,
-        coordinator: TessieStateUpdateCoordinator,
+        vehicle: TessieVehicleData,
         key: str,
     ) -> None:
         """Initialize common aspects of a Tessie entity."""
-        super().__init__(coordinator)
-        self.vin = coordinator.vin
+        super().__init__(vehicle.data_coordinator)
+        self.vin = vehicle.vin
         self.key = key
 
-        car_type = coordinator.data["vehicle_config_car_type"]
-
         self._attr_translation_key = key
-        self._attr_unique_id = f"{self.vin}-{key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.vin)},
-            manufacturer="Tesla",
-            configuration_url="https://my.tessie.com/",
-            name=coordinator.data["display_name"],
-            model=MODELS.get(car_type, car_type),
-            sw_version=coordinator.data["vehicle_state_car_version"].split(" ")[0],
-            hw_version=coordinator.data["vehicle_config_driver_assist"],
-            serial_number=self.vin,
-        )
+        self._attr_unique_id = f"{vehicle.vin}-{key}"
+        self._attr_device_info = vehicle.device
 
     @property
     def _value(self) -> Any:
         """Return value from coordinator data."""
-        return self.coordinator.data[self.key]
+        return self.coordinator.data.get(self.key)
 
     def get(self, key: str | None = None, default: Any | None = None) -> Any:
         """Return a specific value from coordinator data."""

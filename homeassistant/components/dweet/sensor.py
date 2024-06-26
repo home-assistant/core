@@ -9,7 +9,10 @@ import logging
 import dweepy
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_NAME,
@@ -27,7 +30,7 @@ DEFAULT_NAME = "Dweet.io Sensor"
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_DEVICE): cv.string,
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,

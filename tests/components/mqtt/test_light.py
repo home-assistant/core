@@ -2516,17 +2516,11 @@ async def test_update_with_json_attrs_bad_json(
 
 
 async def test_discovery_update_attr(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        light.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -2561,9 +2555,7 @@ async def test_unique_id(
 
 
 async def test_discovery_removal_light(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered light."""
     data = (
@@ -2571,7 +2563,7 @@ async def test_discovery_removal_light(
         '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
-    await help_test_discovery_removal(hass, mqtt_mock_entry, caplog, light.DOMAIN, data)
+    await help_test_discovery_removal(hass, mqtt_mock_entry, light.DOMAIN, data)
 
 
 async def test_discovery_ignores_extra_keys(
@@ -2591,9 +2583,7 @@ async def test_discovery_ignores_extra_keys(
 
 
 async def test_discovery_update_light_topic_and_template(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered light."""
     config1 = {
@@ -2838,7 +2828,6 @@ async def test_discovery_update_light_topic_and_template(
     await help_test_discovery_update(
         hass,
         mqtt_mock_entry,
-        caplog,
         light.DOMAIN,
         config1,
         config2,
@@ -2848,9 +2837,7 @@ async def test_discovery_update_light_topic_and_template(
 
 
 async def test_discovery_update_light_template(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered light."""
     config1 = {
@@ -3053,7 +3040,6 @@ async def test_discovery_update_light_template(
     await help_test_discovery_update(
         hass,
         mqtt_mock_entry,
-        caplog,
         light.DOMAIN,
         config1,
         config2,
@@ -3063,9 +3049,7 @@ async def test_discovery_update_light_template(
 
 
 async def test_discovery_update_unchanged_light(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered light."""
     data1 = (
@@ -3077,20 +3061,13 @@ async def test_discovery_update_unchanged_light(
         "homeassistant.components.mqtt.light.schema_basic.MqttLight.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass,
-            mqtt_mock_entry,
-            caplog,
-            light.DOMAIN,
-            data1,
-            discovery_update,
+            hass, mqtt_mock_entry, light.DOMAIN, data1, discovery_update
         )
 
 
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
@@ -3099,9 +3076,7 @@ async def test_discovery_broken(
         '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
-    await help_test_discovery_broken(
-        hass, mqtt_mock_entry, caplog, light.DOMAIN, data1, data2
-    )
+    await help_test_discovery_broken(hass, mqtt_mock_entry, light.DOMAIN, data1, data2)
 
 
 async def test_entity_device_info_with_connection(

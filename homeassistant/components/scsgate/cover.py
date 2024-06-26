@@ -12,7 +12,10 @@ from scsgate.tasks import (
 )
 import voluptuous as vol
 
-from homeassistant.components.cover import PLATFORM_SCHEMA, CoverEntity
+from homeassistant.components.cover import (
+    PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
+    CoverEntity,
+)
 from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -21,7 +24,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import CONF_SCS_ID, DOMAIN, SCSGATE_SCHEMA
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_DEVICES): cv.schema_with_slug_keys(SCSGATE_SCHEMA)}
 )
 

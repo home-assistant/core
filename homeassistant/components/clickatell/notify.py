@@ -9,7 +9,10 @@ from typing import Any
 import requests
 import voluptuous as vol
 
-from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
+from homeassistant.components.notify import (
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 from homeassistant.const import CONF_API_KEY, CONF_RECIPIENT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -21,7 +24,7 @@ DEFAULT_NAME = "clickatell"
 
 BASE_API_URL = "https://platform.clickatell.com/messages/http/send"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_API_KEY): cv.string, vol.Required(CONF_RECIPIENT): cv.string}
 )
 
