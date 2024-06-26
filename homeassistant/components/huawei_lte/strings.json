@@ -353,8 +353,8 @@
       "name": "Get messages",
       "description": "Retrieve messages stored on target device.",
       "fields": {
-        "limit": {
-          "name": "[%key:common::config_flow::data::limit%]",
+        "max_mesaages": {
+          "name": "Max messages",
           "description": "Limit the number of messages retrieved for a service call."
         },
         "prefer_unread": {
