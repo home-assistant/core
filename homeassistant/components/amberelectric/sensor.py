@@ -114,13 +114,40 @@ class AmberPriceSensor(AmberSensor):
             data["range_min"] = format_cents_to_dollars(interval.range.min)
             data["range_max"] = format_cents_to_dollars(interval.range.max)
 
-        actual_intervals = self.coordinator.data["actuals"].get(self.channel_type)
-        if actual_intervals:
-            data["actuals"] = [
-                interval_to_datum(interval) for interval in actual_intervals
-            ]
-
         return data
+
+
+class AmberActualSensor(AmberSensor):
+    """Amber Actual Sensor."""
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the latest actual price in $/kWh."""
+        intervals = self.coordinator.data[self.entity_description.key].get(
+            self.channel_type
+        )
+        if not intervals:
+            return None
+        interval = intervals[-1]
+
+        if interval.channel_type == ChannelType.FEED_IN:
+            return format_cents_to_dollars(interval.per_kwh) * -1
+        return format_cents_to_dollars(interval.per_kwh)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return additional pieces of information about the price."""
+        intervals = self.coordinator.data[self.entity_description.key].get(
+            self.channel_type
+        )
+
+        if not intervals:
+            return None
+
+        return {
+            "actuals": list(map(interval_to_datum, intervals)),
+            "channel_type": intervals[0].channel_type.value,
+        }
 
 
 class AmberForecastSensor(AmberSensor):
@@ -206,6 +233,7 @@ async def async_setup_entry(
 
     current: dict[str, CurrentInterval] = coordinator.data["current"]
     forecasts: dict[str, list[ForecastInterval]] = coordinator.data["forecasts"]
+    actuals: dict[str, list[ActualInterval]] = coordinator.data["actuals"]
 
     entities: list[SensorEntity] = []
     for channel_type in current:
@@ -230,6 +258,16 @@ async def async_setup_entry(
         entities.append(
             AmberPriceDescriptorSensor(coordinator, description, channel_type)
         )
+
+    for channel_type in actuals:
+        description = SensorEntityDescription(
+            key="actuals",
+            name=f"{entry.title} - {friendly_channel_type(channel_type)} Actual",
+            native_unit_of_measurement=UNIT,
+            state_class=SensorStateClass.MEASUREMENT,
+            translation_key=channel_type,
+        )
+        entities.append(AmberActualSensor(coordinator, description, channel_type))
 
     for channel_type in forecasts:
         description = SensorEntityDescription(
