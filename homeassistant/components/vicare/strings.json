@@ -73,8 +73,8 @@
             "state": {
               "permanent": "permanent",
               "ventilation": "schedule",
-              "sensorDriven": "sensor",
-              "sensorOverride": "sensorOverride"
+              "sensorOverride": "schedule with sensor-override",
+              "sensorDriven": "sensor"
             }
           }
         }
