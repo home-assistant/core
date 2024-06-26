@@ -22,6 +22,7 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import aiohttp_client, selector
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.loader import async_get_issue_tracker
 from homeassistant.util.ssl import get_default_no_verify_context
 
@@ -181,7 +182,7 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_USERNAME], data=user_input
                 )
 
-        schema = {
+        schema: VolDictType = {
             vol.Required(CONF_USERNAME): selector.TextSelector(
                 selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
             ),

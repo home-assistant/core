@@ -69,6 +69,7 @@ dependencies    = [
     "urllib3>=1.26.5,<2",
     "voluptuous==0.13.1",
     "voluptuous-serialize==2.6.0",
+    "voluptuous-openapi==0.0.4",
     "yarl==1.9.4",
 ]
 
@@ -810,6 +811,7 @@ ignore = [
 
 [tool.ruff.lint.flake8-import-conventions.extend-aliases]
 voluptuous = "vol"
+"homeassistant.components.notify.PLATFORM_SCHEMA" = "NOTIFY_PLATFORM_SCHEMA"
 "homeassistant.helpers.area_registry" = "ar"
 "homeassistant.helpers.category_registry" = "cr"
 "homeassistant.helpers.config_validation" = "cv"

@@ -7,8 +7,9 @@ import logging
 from pyloadapi import CannotConnect, InvalidAuth, ParserError, PyLoadAPI
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -63,12 +64,14 @@ class PyLoadCoordinator(DataUpdateCoordinator[pyLoadData]):
             try:
                 await self.pyload.login()
             except InvalidAuth as exc:
-                raise ConfigEntryError(
-                    f"Authentication failed for {self.pyload.username}, check your login credentials",
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="setup_authentication_exception",
+                    translation_placeholders={CONF_USERNAME: self.pyload.username},
                 ) from exc
 
             raise UpdateFailed(
-                "Unable to retrieve data due to cookie expiration but re-authentication was successful."
+                "Unable to retrieve data due to cookie expiration"
             ) from e
         except CannotConnect as e:
             raise UpdateFailed(
