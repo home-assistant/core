@@ -1,0 +1,17 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'config_entry_data': dict({
+      'host': 'pyload.local',
+      'password': '**REDACTED**',
+      'port': 8000,
+      'ssl': True,
+      'username': '**REDACTED**',
+      'verify_ssl': False,
+    }),
+    'pyload_data': dict({
+      '__type': "<class 'homeassistant.components.pyload.coordinator.pyLoadData'>",
+      'repr': 'pyLoadData(pause=False, active=1, queue=6, total=37, speed=5405963.0, download=True, reconnect=False, captcha=False, free_space=99999999999)',
+    }),
+  })
+# ---

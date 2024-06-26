@@ -32,3 +32,12 @@ class TessieEnergyData:
     info_coordinator: TessieEnergySiteInfoCoordinator
     id: int
     device: DeviceInfo
+
+
+@dataclass
+class TessieVehicleData:
+    """Data for a Tessie vehicle."""
+
+    data_coordinator: TessieStateUpdateCoordinator
+    device: DeviceInfo
+    vin: str

@@ -12,8 +12,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TessieConfigEntry
 from .const import TessieUpdateStatus
-from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
+from .models import TessieVehicleData
 
 
 async def async_setup_entry(
@@ -34,10 +34,10 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
 
     def __init__(
         self,
-        coordinator: TessieStateUpdateCoordinator,
+        vehicle: TessieVehicleData,
     ) -> None:
         """Initialize the Update."""
-        super().__init__(coordinator, "update")
+        super().__init__(vehicle, "update")
 
     @property
     def supported_features(self) -> UpdateEntityFeature:

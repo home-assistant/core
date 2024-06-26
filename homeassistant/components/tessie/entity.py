@@ -7,7 +7,6 @@ from typing import Any
 from aiohttp import ClientResponseError
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MODELS
@@ -16,7 +15,7 @@ from .coordinator import (
     TessieEnergySiteLiveCoordinator,
     TessieStateUpdateCoordinator,
 )
-from .models import TessieEnergyData
+from .models import TessieEnergyData, TessieVehicleData
 
 
 class TessieBaseEntity(
@@ -74,7 +73,9 @@ class TessieEntity(TessieBaseEntity):
         self.vin = coordinator.vin
         self._session = coordinator.session
         self._api_key = coordinator.api_key
-        self._attr_unique_id = f"{self.vin}-{key}"
+        self._attr_translation_key = key
+        self._attr_unique_id = f"{vehicle.vin}-{key}"
+        self._attr_device_info = vehicle.device
         car_type = coordinator.data["vehicle_config_car_type"]
 
         self._attr_device_info = DeviceInfo(

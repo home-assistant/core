@@ -37,7 +37,7 @@ from . import TessieConfigEntry
 from .const import TessieChargeStates, TessieWallConnectorStates
 from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEnergyEntity, TessieEntity, TessieWallConnectorEntity
-from .models import TessieEnergyData
+from .models import TessieEnergyData, TessieVehicleData
 
 
 @callback
@@ -412,7 +412,7 @@ class TessieVehicleSensorEntity(TessieEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: TessieStateUpdateCoordinator,
+        vehicle: TessieVehicleData,
         description: TessieSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""

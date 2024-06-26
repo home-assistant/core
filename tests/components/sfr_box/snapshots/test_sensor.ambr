@@ -24,6 +24,7 @@
       'model': 'NB6VAC-FXC-r0',
       'name': 'SFR Box',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': 'NB6VAC-MAIN-R4.0.44k',

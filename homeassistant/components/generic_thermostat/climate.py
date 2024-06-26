@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     PRESET_ACTIVITY,
     PRESET_AWAY,
     PRESET_COMFORT,
@@ -125,7 +125,7 @@ PLATFORM_SCHEMA_COMMON = vol.Schema(
 )
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_COMMON.schema)
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_COMMON.schema)
 
 
 async def async_setup_entry(
