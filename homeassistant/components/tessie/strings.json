@@ -73,16 +73,12 @@
       "charge_state_charging_state": {
         "name": "Charging",
         "state": {
-          "booting": "Booting",
+          "starting": "Starting",
           "charging": "Charging",
           "disconnected": "Disconnected",
-          "connected": "Connected",
-          "scheduled": "Scheduled",
-          "negotiating": "Negotiating",
-          "error": "Error",
-          "charging_finished": "Charging finished",
-          "waiting_car": "Waiting car",
-          "charging_reduced": "Charging reduced"
+          "stopped": "Stopped",
+          "complete": "Complete",
+          "no_power": "No power"
         }
       },
       "charge_state_usable_battery_level": {
@@ -212,7 +208,19 @@
         "name": "Power"
       },
       "wall_connector_state": {
-        "name": "State code"
+        "name": "State",
+        "state": {
+          "booting": "Booting",
+          "charging": "Charging",
+          "disconnected": "Disconnected",
+          "connected": "Connected",
+          "scheduled": "Scheduled",
+          "negotiating": "Negotiating",
+          "error": "Error",
+          "charging_finished": "Charging finished",
+          "waiting_car": "Waiting car",
+          "charging_reduced": "Charging reduced"
+        }
       }
     },
     "cover": {

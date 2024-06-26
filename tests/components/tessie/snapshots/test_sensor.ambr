@@ -2180,7 +2180,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[sensor.wall_connector_state_code-entry]
+# name: test_sensors[sensor.wall_connector_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2205,7 +2205,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.wall_connector_state_code',
+    'entity_id': 'sensor.wall_connector_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2217,7 +2217,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'State code',
+    'original_name': 'State',
     'platform': 'tessie',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2226,11 +2226,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.wall_connector_state_code-state]
+# name: test_sensors[sensor.wall_connector_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Wall Connector State code',
+      'friendly_name': 'Wall Connector State',
       'options': list([
         'booting',
         'charging',
@@ -2245,14 +2245,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.wall_connector_state_code',
+    'entity_id': 'sensor.wall_connector_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[sensor.wall_connector_state_code_2-entry]
+# name: test_sensors[sensor.wall_connector_state_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2277,7 +2277,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.wall_connector_state_code_2',
+    'entity_id': 'sensor.wall_connector_state_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2289,7 +2289,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'State code',
+    'original_name': 'State',
     'platform': 'tessie',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2298,11 +2298,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.wall_connector_state_code_2-state]
+# name: test_sensors[sensor.wall_connector_state_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Wall Connector State code',
+      'friendly_name': 'Wall Connector State',
       'options': list([
         'booting',
         'charging',
@@ -2317,7 +2317,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.wall_connector_state_code_2',
+    'entity_id': 'sensor.wall_connector_state_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
