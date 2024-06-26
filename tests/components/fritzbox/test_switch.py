@@ -155,7 +155,7 @@ async def test_toggle_while_locked(hass: HomeAssistant, fritz: Mock) -> None:
 
     with pytest.raises(
         HomeAssistantError,
-        match="Can't toggle switch while manual switching is disabled for the device.",
+        match="Can't toggle switch while manual switching is disabled for the device",
     ):
         await hass.services.async_call(
             DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
@@ -163,7 +163,7 @@ async def test_toggle_while_locked(hass: HomeAssistant, fritz: Mock) -> None:
 
     with pytest.raises(
         HomeAssistantError,
-        match="Can't toggle switch while manual switching is disabled for the device.",
+        match="Can't toggle switch while manual switching is disabled for the device",
     ):
         await hass.services.async_call(
             DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
