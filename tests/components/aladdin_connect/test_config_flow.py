@@ -80,6 +80,7 @@ async def _oauth_actions(
     )
 
 
+@pytest.mark.skip(reason="Integration disabled")
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
@@ -105,6 +106,7 @@ async def test_full_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.skip(reason="Integration disabled")
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_duplicate_entry(
     hass: HomeAssistant,
@@ -125,6 +127,7 @@ async def test_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.skip(reason="Integration disabled")
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth(
     hass: HomeAssistant,
@@ -154,6 +157,7 @@ async def test_reauth(
     assert result["reason"] == "reauth_successful"
 
 
+@pytest.mark.skip(reason="Integration disabled")
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth_wrong_account(
     hass: HomeAssistant,
@@ -189,6 +193,7 @@ async def test_reauth_wrong_account(
     assert result["reason"] == "wrong_account"
 
 
+@pytest.mark.skip(reason="Integration disabled")
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth_old_account(
     hass: HomeAssistant,
