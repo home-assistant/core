@@ -21,9 +21,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
+from . import RoborockCoordinators
 from .const import DEFAULT_DRAWABLES, DOMAIN, DRAWABLES, IMAGE_CACHE_INTERVAL, MAP_SLEEP
 from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockCoordinatedEntity
+from .device import RoborockCoordinatedEntityV1
 
 
 async def async_setup_entry(
@@ -33,9 +34,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Roborock image platform."""
 
-    coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinators: RoborockCoordinators = hass.data[DOMAIN][config_entry.entry_id]
     drawables = [
         drawable
         for drawable, default_value in DEFAULT_DRAWABLES.items()
@@ -46,7 +45,7 @@ async def async_setup_entry(
             await asyncio.gather(
                 *(
                     create_coordinator_maps(coord, drawables)
-                    for coord in coordinators.values()
+                    for coord in coordinators.v1
                 )
             )
         )
@@ -54,7 +53,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
+class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
     """A class to let you visualize the map."""
 
     _attr_has_entity_name = True
@@ -70,7 +69,7 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         drawables: list[Drawable],
     ) -> None:
         """Initialize a Roborock map."""
-        RoborockCoordinatedEntity.__init__(self, unique_id, coordinator)
+        RoborockCoordinatedEntityV1.__init__(self, unique_id, coordinator)
         ImageEntity.__init__(self, coordinator.hass)
         self._attr_name = map_name
         self.parser = RoborockMapDataParser(
@@ -184,7 +183,7 @@ async def create_coordinator_maps(
         api_data: bytes = map_update[0] if isinstance(map_update[0], bytes) else b""
         entities.append(
             RoborockMap(
-                f"{slugify(coord.roborock_device_info.device.duid)}_map_{map_info.name}",
+                f"{slugify(coord.duid)}_map_{map_info.name}",
                 coord,
                 map_flag,
                 api_data,

@@ -95,6 +95,54 @@
       }
     },
     "sensor": {
+      "a01_error": {
+        "name": "Error",
+        "state": {
+          "none": "[%key:component::roborock::entity::sensor::vacuum_error::state::none%]",
+          "dirty_tank_full": "Dirty tank full",
+          "water_level_sensor_stuck": "Water level sensor stuck.",
+          "clean_tank_empty": "Clean tank empty",
+          "clean_head_entangled": "Cleaning head entangled",
+          "clean_head_too_hot": "Cleaning head too hot.",
+          "fan_protection_e5": "Fan protection",
+          "cleaning_head_blocked": "Cleaning head blocked",
+          "temperature_protection": "Temperature protection",
+          "fan_protection_e4": "[%key:component::roborock::entity::sensor::a01_error::state::fan_protection_e5%]",
+          "fan_protection_e9": "[%key:component::roborock::entity::sensor::a01_error::state::fan_protection_e5%]",
+          "battery_temperature_protection_e0": "[%key:component::roborock::entity::sensor::a01_error::state::temperature_protection%]",
+          "battery_temperature_protection": "Battery temperature protection",
+          "battery_temperature_protection_2": "[%key:component::roborock::entity::sensor::a01_error::state::battery_temperature_protection%]",
+          "power_adapter_error": "Power adapter error",
+          "dirty_charging_contacts": "Clean charging contacts",
+          "low_battery": "[%key:component::roborock::entity::sensor::vacuum_error::state::low_battery%]",
+          "battery_under_10": "Battery under 10%"
+        }
+      },
+      "a01_status": {
+        "name": "Status",
+        "state": {
+          "unknown": "[%key:component::roborock::entity::sensor::status::state::unknown%]",
+          "fetching": "Fetching",
+          "fetch_failed": "Fetch failed",
+          "updating": "[%key:component::roborock::entity::sensor::status::state::updating%]",
+          "washing": "Washing",
+          "ready": "Ready",
+          "charging": "[%key:component::roborock::entity::sensor::status::state::charging%]",
+          "mop_washing": "Washing mop",
+          "self_clean_cleaning": "Self clean cleaning",
+          "self_clean_deep_cleaning": "Self clean deep cleaning",
+          "self_clean_rinsing": "Self clean rinsing",
+          "self_clean_dehydrating": "Self clean drying",
+          "drying": "Drying",
+          "ventilating": "Ventilating",
+          "reserving": "Reserving",
+          "mop_washing_paused": "Mop washing paused",
+          "dusting_mode": "Dusting mode"
+        }
+      },
+      "brush_remaining": {
+        "name": "Roller left"
+      },
       "cleaning_area": {
         "name": "Cleaning area"
       },
