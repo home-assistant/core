@@ -91,7 +91,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_sensor_update_exceptions[CannotConnect][sensor.pyload_finished_downlods-entry]
+# name: test_sensor_update_exceptions[CannotConnect][sensor.pyload_finished_downloads-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -103,7 +103,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.pyload_finished_downlods',
+    'entity_id': 'sensor.pyload_finished_downloads',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -115,7 +115,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Finished downlods',
+    'original_name': 'Finished downloads',
     'platform': 'pyload',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -124,13 +124,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_update_exceptions[CannotConnect][sensor.pyload_finished_downlods-state]
+# name: test_sensor_update_exceptions[CannotConnect][sensor.pyload_finished_downloads-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'pyLoad Finished downlods',
+      'friendly_name': 'pyLoad Finished downloads',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.pyload_finished_downlods',
+    'entity_id': 'sensor.pyload_finished_downloads',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -337,7 +337,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_sensor_update_exceptions[InvalidAuth][sensor.pyload_finished_downlods-entry]
+# name: test_sensor_update_exceptions[InvalidAuth][sensor.pyload_finished_downloads-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -349,7 +349,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.pyload_finished_downlods',
+    'entity_id': 'sensor.pyload_finished_downloads',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -361,7 +361,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Finished downlods',
+    'original_name': 'Finished downloads',
     'platform': 'pyload',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -370,13 +370,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_update_exceptions[InvalidAuth][sensor.pyload_finished_downlods-state]
+# name: test_sensor_update_exceptions[InvalidAuth][sensor.pyload_finished_downloads-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'pyLoad Finished downlods',
+      'friendly_name': 'pyLoad Finished downloads',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.pyload_finished_downlods',
+    'entity_id': 'sensor.pyload_finished_downloads',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -583,7 +583,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_sensor_update_exceptions[ParserError][sensor.pyload_finished_downlods-entry]
+# name: test_sensor_update_exceptions[ParserError][sensor.pyload_finished_downloads-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -595,7 +595,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.pyload_finished_downlods',
+    'entity_id': 'sensor.pyload_finished_downloads',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -607,7 +607,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Finished downlods',
+    'original_name': 'Finished downloads',
     'platform': 'pyload',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -616,13 +616,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_update_exceptions[ParserError][sensor.pyload_finished_downlods-state]
+# name: test_sensor_update_exceptions[ParserError][sensor.pyload_finished_downloads-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'pyLoad Finished downlods',
+      'friendly_name': 'pyLoad Finished downloads',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.pyload_finished_downlods',
+    'entity_id': 'sensor.pyload_finished_downloads',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -829,7 +829,7 @@
     'state': '6',
   })
 # ---
-# name: test_setup[sensor.pyload_finished_downlods-entry]
+# name: test_setup[sensor.pyload_finished_downloads-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -841,7 +841,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.pyload_finished_downlods',
+    'entity_id': 'sensor.pyload_finished_downloads',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -853,7 +853,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Finished downlods',
+    'original_name': 'Finished downloads',
     'platform': 'pyload',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -862,13 +862,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[sensor.pyload_finished_downlods-state]
+# name: test_setup[sensor.pyload_finished_downloads-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'pyLoad Finished downlods',
+      'friendly_name': 'pyLoad Finished downloads',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.pyload_finished_downlods',
+    'entity_id': 'sensor.pyload_finished_downloads',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
