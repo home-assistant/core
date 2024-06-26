@@ -335,9 +335,6 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
     ),
-    TessieSensorEntityDescription(
-        key="island_status", device_class=SensorDeviceClass.ENUM
-    ),
 )
 
 WALL_CONNECTOR_DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
@@ -347,6 +344,7 @@ WALL_CONNECTOR_DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
         value_fn=lambda x: TessieWallConnectorStates.get(cast(int, x)),
+        options=list(TessieWallConnectorStates.values()),
     ),
     TessieSensorEntityDescription(
         key="wall_connector_power",
