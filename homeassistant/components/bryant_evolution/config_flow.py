@@ -28,8 +28,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 async def _can_reach_device(filename: str) -> bool:
     """Return whether we can reach the device at the given filename."""
     # Verify that we can read S1Z1 to check that the device is valid.
-    client = await BryantEvolutionLocalClient.get_client(1, 1, filename)
-    return await client.read_hvac_mode() is not None
+    try:
+        client = await BryantEvolutionLocalClient.get_client(1, 1, filename)
+        return await client.read_hvac_mode() is not None
+    except FileNotFoundError:
+        _LOGGER.error("Could not open %s: not found", filename)
+        return False
 
 
 class BryantConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

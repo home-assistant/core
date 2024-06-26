@@ -8,7 +8,7 @@ from homeassistant.components.bryant_evolution.const import (
     CONF_ZONE_ID,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_FILENAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -28,7 +28,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_HOST: "1.1.1.1",
+                CONF_FILENAME: "/dev/ttyUSB0",
                 CONF_SYSTEM_ID: 1,
                 CONF_ZONE_ID: 2,
             },
@@ -38,7 +38,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "System 1 Zone 2"
     assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
+        CONF_FILENAME: "/dev/ttyUSB0",
         CONF_SYSTEM_ID: 1,
         CONF_ZONE_ID: 2,
     }
@@ -54,13 +54,13 @@ async def test_form_cannot_connect(
     )
 
     with patch(
-        "evolutionhttp.BryantEvolutionClient.read_hvac_mode",
+        "evolutionhttp.BryantEvolutionLocalClient.read_hvac_mode",
         return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_HOST: "1.1.1.1",
+                CONF_FILENAME: "/dev/ttyUSB0",
                 CONF_SYSTEM_ID: 1,
                 CONF_ZONE_ID: 2,
             },
@@ -74,13 +74,13 @@ async def test_form_cannot_connect(
     # we can show the config flow is able to recover from an error.
 
     with patch(
-        "evolutionhttp.BryantEvolutionClient.read_hvac_mode",
+        "evolutionhttp.BryantEvolutionLocalClient.read_hvac_mode",
         return_value="COOL",
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_HOST: "1.1.1.1",
+                CONF_FILENAME: "/dev/null",
                 CONF_SYSTEM_ID: 1,
                 CONF_ZONE_ID: 2,
             },
@@ -90,7 +90,7 @@ async def test_form_cannot_connect(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "System 1 Zone 2"
     assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
+        CONF_FILENAME: "/dev/null",
         CONF_SYSTEM_ID: 1,
         CONF_ZONE_ID: 2,
     }

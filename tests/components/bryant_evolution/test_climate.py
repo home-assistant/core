@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from unittest.mock import patch
 
 from evolutionhttp import BryantEvolutionLocalClient
 import pytest
@@ -124,15 +125,18 @@ async def mock_evolution_entry(
 ) -> MockConfigEntry:
     """Configure and return a Bryant evolution integration."""
     hass.config.units = US_CUSTOMARY_SYSTEM
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_FILENAME: "/dev/ttyUSB0", CONF_SYSTEM_ID: 1, CONF_ZONE_ID: 1},
-    )
-    entry.runtime_data = _FakeEvolutionClient()
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    return entry
+    with patch(
+        "evolutionhttp.BryantEvolutionLocalClient.get_client",
+        return_value=_FakeEvolutionClient(),
+    ):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={CONF_FILENAME: "/dev/ttyUSB0", CONF_SYSTEM_ID: 1, CONF_ZONE_ID: 1},
+        )
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        return entry
 
 
 async def test_setup_integration(
