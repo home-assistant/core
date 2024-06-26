@@ -659,7 +659,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         router = router_resolver(service)
         sms_index = service.data[CONF_ID]
         try:
-            resp = router.client.sms.delete_sms(sms_index)
+            resp = router.client.sms.read_sms(sms_index)
         except ResponseErrorException as ex:
             _LOGGER.error("Could not read message %s: %s", sms_index, ex)
             raise HomeAssistantError from ex
