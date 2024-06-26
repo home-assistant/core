@@ -36,11 +36,14 @@ async def test_get_info(
     websocket_client,
 ) -> None:
     """Test async_get_info."""
+    extended_pan_id = "ABCD1234"
 
     with (
         patch(
             "python_otbr_api.OTBR.get_active_dataset",
-            return_value=python_otbr_api.ActiveDataSet(channel=16),
+            return_value=python_otbr_api.ActiveDataSet(
+                channel=16, extended_pan_id=extended_pan_id
+            ),
         ),
         patch(
             "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
@@ -58,15 +61,17 @@ async def test_get_info(
         msg = await websocket_client.receive_json()
 
     assert msg["success"]
-    assert msg["result"] == [
-        {
+    extended_address = TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex()
+    assert msg["result"] == {
+        extended_address: {
             "url": BASE_URL,
             "active_dataset_tlvs": DATASET_CH16.hex().lower(),
             "channel": 16,
             "border_agent_id": TEST_BORDER_AGENT_ID.hex(),
-            "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+            "extended_address": extended_address,
+            "extended_pan_id": extended_pan_id.lower(),
         }
-    ]
+    }
 
 
 async def test_get_info_no_entry(
