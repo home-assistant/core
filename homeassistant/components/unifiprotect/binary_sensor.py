@@ -437,9 +437,6 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_enabled="is_motion_detection_on",
         ufp_event_obj="last_motion_event",
     ),
-)
-
-SMART_EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
     ProtectBinaryEventEntityDescription(
         key="smart_obj_any",
         name="Object detected",
@@ -744,12 +741,6 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
             self._async_event_with_immediate_end()
 
 
-class ProtectSmartEventBinarySensor(ProtectEventBinarySensor):
-    """A UniFi Protect Device Binary Sensor for smart events."""
-
-    device: Camera
-
-
 MODEL_DESCRIPTIONS_WITH_CLASS = (
     (_MODEL_DESCRIPTIONS, ProtectDeviceBinarySensor),
     (_MOUNTABLE_MODEL_DESCRIPTIONS, MountableProtectDeviceBinarySensor),
@@ -763,11 +754,6 @@ def _async_event_entities(
 ) -> list[ProtectDeviceEntity]:
     entities: list[ProtectDeviceEntity] = []
     for device in data.get_cameras() if ufp_device is None else [ufp_device]:
-        entities.extend(
-            ProtectSmartEventBinarySensor(data, device, description)
-            for description in SMART_EVENT_SENSORS
-            if description.has_required(device)
-        )
         entities.extend(
             ProtectEventBinarySensor(data, device, description)
             for description in EVENT_SENSORS
