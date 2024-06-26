@@ -29,6 +29,7 @@ from homeassistant.const import (
     ATTR_HW_VERSION,
     ATTR_MODEL,
     ATTR_SW_VERSION,
+    CONF_LIMIT,
     CONF_MAC,
     CONF_NAME,
     CONF_PASSWORD,
@@ -39,7 +40,12 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
@@ -59,11 +65,14 @@ from .const import (
     ALL_KEYS,
     ATTR_CONFIG_ENTRY_ID,
     CONF_MANUFACTURER,
+    CONF_PREFER_UNREAD,
     CONF_UNAUTHENTICATED_MODE,
     CONNECTION_TIMEOUT,
     DEFAULT_DEVICE_NAME,
+    DEFAULT_MESSAGES_CHUNK,
     DEFAULT_MANUFACTURER,
     DEFAULT_NOTIFY_SERVICE_NAME,
+    DEFAULT_PREFER_UNREAD,
     DOMAIN,
     KEY_DEVICE_BASIC_INFORMATION,
     KEY_DEVICE_INFORMATION,
@@ -123,6 +132,14 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_URL): cv.url})
+
+SERVICE_GET_MESSAGES = "get_messages"
+SERVICE_GET_MESSAGES_SCHEMA = SERVICE_SCHEMA.extend(
+    {
+        vol.Optional(CONF_LIMIT): cv.positive_int,
+        vol.Optional(CONF_PREFER_UNREAD, default=DEFAULT_PREFER_UNREAD): cv.boolean,
+    }
+)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -501,8 +518,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = HuaweiLteData(hass_config=config, routers={})
 
-    def service_handler(service: ServiceCall) -> None:
-        """Apply a service.
+    def router_resolver(service: ServiceCall) -> None:
+        """Resolve router for a service.
 
         We key this using the router URL instead of its unique id / serial number,
         because the latter is not available anywhere in the UI.
@@ -527,7 +544,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if not router:
             _LOGGER.error("%s: router %s unavailable", service.service, url)
             return
+        return router
 
+    def admin_service_handler(service: ServiceCall) -> None:
+        """
+        Handle administrative service call.
+        """
+        if not (router := router_resolver(service)):
+            return
         if service.service == SERVICE_RESUME_INTEGRATION:
             # Login will be handled automatically on demand
             router.suspended = False
@@ -544,9 +568,43 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass,
             DOMAIN,
             service,
-            service_handler,
+            admin_service_handler,
             schema=SERVICE_SCHEMA,
         )
+
+    def message_retrieval_handler(service: ServiceCall) -> ServiceResponse:
+        """
+        Handle calls to retrieve SMS messages.
+        """
+        if not (router := router_resolver(service)):
+            return
+        if (limit := service.data.get(CONF_MESSAGE_LIMIT)) is None:
+            messages = router.client.sms.get_messages(
+                unread_preferred=service.data[CONF_UNREAD_PREFERRED]
+            )
+        elif limit <= 0:
+            _LOGGER.error("%s: limit must be a positive number", service.service)
+            return
+        else:
+            read_count = min(limit, DEFAULT_MESSAGES_CHUNK)
+            messages = []
+            for _, message in zip(
+                range(limit),
+                router.client.sms.get_messages(
+                    unread_preferred=service.data[CONF_UNREAD_PREFERRED],
+                    read_count=read_count,
+                )
+            ):
+                messages.append(message)
+        return {"messages": [msg.as_dict() for msg in messages]}
+        
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_MESSAGES,
+        message_retrieval_handler,
+        schema=SERVICE_GET_MESSAGES_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
 
     return True
 
