@@ -35,6 +35,8 @@ from .common import (
 )
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 WEB_REDIRECT_URL = "https://example.com/auth/external/callback"
 APP_REDIRECT_URL = "urn:ietf:wg:oauth:2.0:oob"
@@ -46,7 +48,7 @@ FAKE_DHCP_DATA = dhcp.DhcpServiceInfo(
 
 
 @pytest.fixture
-def nest_test_config(request) -> NestTestConfig:
+def nest_test_config() -> NestTestConfig:
     """Fixture with empty configuration and no existing config entry."""
     return TEST_CONFIGFLOW_APP_CREDS
 
@@ -189,7 +191,12 @@ class OAuthFixture:
 
 
 @pytest.fixture
-async def oauth(hass, hass_client_no_auth, aioclient_mock, current_request_with_host):
+async def oauth(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+) -> OAuthFixture:
     """Create the simulated oauth flow."""
     return OAuthFixture(hass, hass_client_no_auth, aioclient_mock)
 

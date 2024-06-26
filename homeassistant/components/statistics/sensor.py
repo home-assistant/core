@@ -17,7 +17,7 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.sensor import (
     DEVICE_CLASS_STATE_CLASSES,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
@@ -229,7 +229,7 @@ def valid_keep_last_sample(config: dict[str, Any]) -> dict[str, Any]:
     return config
 
 
-_PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend(
+_PLATFORM_SCHEMA_BASE = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

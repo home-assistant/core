@@ -17,6 +17,7 @@ FLOW_SMILE: Final = "smile (Adam/Anna/P1)"
 FLOW_STRETCH: Final = "stretch (Stretch)"
 FLOW_TYPE: Final = "flow_type"
 GATEWAY: Final = "gateway"
+LOCATION: Final = "location"
 PW_TYPE: Final = "plugwise_type"
 SMILE: Final = "smile"
 STRETCH: Final = "stretch"
@@ -37,19 +38,19 @@ ZEROCONF_MAP: Final[dict[str, str]] = {
     "stretch": "Stretch",
 }
 
-NumberType = Literal[
+type NumberType = Literal[
     "maximum_boiler_temperature",
     "max_dhw_temperature",
     "temperature_offset",
 ]
 
-SelectType = Literal[
+type SelectType = Literal[
     "select_dhw_mode",
     "select_gateway_mode",
     "select_regulation_mode",
     "select_schedule",
 ]
-SelectOptionsType = Literal[
+type SelectOptionsType = Literal[
     "dhw_modes",
     "gateway_modes",
     "regulation_modes",

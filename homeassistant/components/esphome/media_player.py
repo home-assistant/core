@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import partial
 from typing import Any
 
 from aioesphomeapi import (
@@ -14,6 +15,7 @@ from aioesphomeapi import (
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_ANNOUNCE,
     BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
@@ -22,9 +24,7 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import callback
 
 from .entity import (
     EsphomeEntity,
@@ -33,23 +33,6 @@ from .entity import (
     platform_async_setup_entry,
 )
 from .enum_mapper import EsphomeEnumMapper
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up esphome media players based on a config entry."""
-    await platform_async_setup_entry(
-        hass,
-        entry,
-        async_add_entities,
-        info_type=MediaPlayerInfo,
-        entity_type=EsphomeMediaPlayer,
-        state_type=MediaPlayerEntityState,
-    )
-
 
 _STATES: EsphomeEnumMapper[EspMediaPlayerState, MediaPlayerState] = EsphomeEnumMapper(
     {
@@ -77,6 +60,7 @@ class EsphomeMediaPlayer(
             | MediaPlayerEntityFeature.STOP
             | MediaPlayerEntityFeature.VOLUME_SET
             | MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
         )
         if self._static_info.supports_pause:
             flags |= MediaPlayerEntityFeature.PAUSE | MediaPlayerEntityFeature.PLAY
@@ -112,10 +96,10 @@ class EsphomeMediaPlayer(
             media_id = sourced_media.url
 
         media_id = async_process_play_media_url(self.hass, media_id)
+        announcement = kwargs.get(ATTR_MEDIA_ANNOUNCE)
 
         self._client.media_player_command(
-            self._key,
-            media_url=media_id,
+            self._key, media_url=media_id, announcement=announcement
         )
 
     async def async_browse_media(
@@ -157,3 +141,11 @@ class EsphomeMediaPlayer(
             self._key,
             command=MediaPlayerCommand.MUTE if mute else MediaPlayerCommand.UNMUTE,
         )
+
+
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=MediaPlayerInfo,
+    entity_type=EsphomeMediaPlayer,
+    state_type=MediaPlayerEntityState,
+)

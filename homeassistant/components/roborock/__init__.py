@@ -32,6 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up roborock from a config entry."""
 
     _LOGGER.debug("Integration async setup entry: %s", entry.as_dict())
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
     api_client = RoborockApiClient(entry.data[CONF_USERNAME], entry.data[CONF_BASE_URL])
@@ -51,8 +52,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             translation_key="home_data_fail",
         ) from err
     _LOGGER.debug("Got home data %s", home_data)
+    all_devices: list[HomeDataDevice] = home_data.devices + home_data.received_devices
     device_map: dict[str, HomeDataDevice] = {
-        device.duid: device for device in home_data.devices + home_data.received_devices
+        device.duid: device for device in all_devices
     }
     product_info: dict[str, HomeDataProduct] = {
         product.id: product for product in home_data.products
@@ -224,3 +226,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
         await asyncio.gather(*release_tasks)
     return unload_ok
+
+
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    # Reload entry to update data
+    await hass.config_entries.async_reload(entry.entry_id)

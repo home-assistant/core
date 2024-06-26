@@ -6,7 +6,10 @@ from datetime import tzinfo
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_NAME, CONF_TIME_ZONE
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -19,7 +22,7 @@ CONF_TIME_FORMAT = "time_format"
 DEFAULT_NAME = "Worldclock Sensor"
 DEFAULT_TIME_STR_FORMAT = "%H:%M"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_TIME_ZONE): cv.time_zone,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

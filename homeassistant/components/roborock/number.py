@@ -31,7 +31,7 @@ class RoborockNumberDescription(NumberEntityDescription):
     # Gets the status of the switch
     cache_key: CacheableAttribute
     # Sets the status of the switch
-    update_value: Callable[[AttributeCache, float], Coroutine[Any, Any, dict]]
+    update_value: Callable[[AttributeCache, float], Coroutine[Any, Any, None]]
 
 
 NUMBER_DESCRIPTIONS: list[RoborockNumberDescription] = [
@@ -108,7 +108,8 @@ class RoborockNumberEntity(RoborockEntityV1, NumberEntity):
     @property
     def native_value(self) -> float | None:
         """Get native value."""
-        return self.get_cache(self.entity_description.cache_key).value
+        val: float = self.get_cache(self.entity_description.cache_key).value
+        return val
 
     async def async_set_native_value(self, value: float) -> None:
         """Set number value."""

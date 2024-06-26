@@ -1,18 +1,21 @@
 """Test the bootstrapping."""
 
 import asyncio
-from collections.abc import Generator, Iterable
+from collections.abc import Iterable
+import contextlib
 import glob
+import logging
 import os
 import sys
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant import bootstrap, loader, runner
 import homeassistant.config as config_util
-from homeassistant.config_entries import HANDLERS, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEBUG, SIGNAL_BOOTSTRAP_INTEGRATIONS
 from homeassistant.core import CoreState, HomeAssistant, async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -27,11 +30,19 @@ from .common import (
     MockModule,
     MockPlatform,
     get_test_config_dir,
+    mock_config_flow,
     mock_integration,
     mock_platform,
 )
 
 VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
+
+
+@pytest.fixture(autouse=True)
+def disable_installed_check() -> Generator[None]:
+    """Disable package installed check."""
+    with patch("homeassistant.util.package.is_installed", return_value=True):
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -44,8 +55,13 @@ async def apply_stop_hass(stop_hass: None) -> None:
     """Make sure all hass are stopped."""
 
 
+@pytest.fixture(autouse=True)
+def disable_block_async_io(disable_block_async_io):
+    """Disable the loop protection from block_async_io after each test."""
+
+
 @pytest.fixture(scope="module", autouse=True)
-def mock_http_start_stop() -> Generator[None, None, None]:
+def mock_http_start_stop() -> Generator[None]:
     """Mock HTTP start and stop."""
     with (
         patch("homeassistant.components.http.start_http_server_and_save_config"),
@@ -123,8 +139,8 @@ async def test_config_does_not_turn_off_debug(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("hass_config", [{"frontend": {}}])
+@pytest.mark.usefixtures("mock_hass_config")
 async def test_asyncio_debug_on_turns_hass_debug_on(
-    mock_hass_config: None,
     mock_enable_logging: Mock,
     mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
@@ -573,7 +589,7 @@ async def test_setup_after_deps_not_present(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-def mock_is_virtual_env() -> Generator[Mock, None, None]:
+def mock_is_virtual_env() -> Generator[Mock]:
     """Mock is_virtual_env."""
     with patch(
         "homeassistant.bootstrap.is_virtual_env", return_value=False
@@ -582,14 +598,14 @@ def mock_is_virtual_env() -> Generator[Mock, None, None]:
 
 
 @pytest.fixture
-def mock_enable_logging() -> Generator[Mock, None, None]:
+def mock_enable_logging() -> Generator[Mock]:
     """Mock enable logging."""
     with patch("homeassistant.bootstrap.async_enable_logging") as enable_logging:
         yield enable_logging
 
 
 @pytest.fixture
-def mock_mount_local_lib_path() -> Generator[AsyncMock, None, None]:
+def mock_mount_local_lib_path() -> Generator[AsyncMock]:
     """Mock enable logging."""
     with patch(
         "homeassistant.bootstrap.async_mount_local_lib_path"
@@ -598,7 +614,7 @@ def mock_mount_local_lib_path() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_process_ha_config_upgrade() -> Generator[Mock, None, None]:
+def mock_process_ha_config_upgrade() -> Generator[Mock]:
     """Mock enable logging."""
     with patch(
         "homeassistant.config.process_ha_config_upgrade"
@@ -607,7 +623,7 @@ def mock_process_ha_config_upgrade() -> Generator[Mock, None, None]:
 
 
 @pytest.fixture
-def mock_ensure_config_exists() -> Generator[AsyncMock, None, None]:
+def mock_ensure_config_exists() -> Generator[AsyncMock]:
     """Mock enable logging."""
     with patch(
         "homeassistant.config.async_ensure_config_exists", return_value=True
@@ -616,8 +632,8 @@ def mock_ensure_config_exists() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.mark.parametrize("hass_config", [{"browser": {}, "frontend": {}}])
+@pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass(
-    mock_hass_config: None,
     mock_enable_logging: Mock,
     mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
@@ -669,8 +685,8 @@ async def test_setup_hass(
 
 
 @pytest.mark.parametrize("hass_config", [{"browser": {}, "frontend": {}}])
+@pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass_takes_longer_than_log_slow_startup(
-    mock_hass_config: None,
     mock_enable_logging: Mock,
     mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
@@ -685,11 +701,11 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
     log_no_color = Mock()
 
     async def _async_setup_that_blocks_startup(*args, **kwargs):
-        await asyncio.sleep(0.6)
+        await asyncio.sleep(0.2)
         return True
 
     with (
-        patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.3),
+        patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.1),
         patch.object(bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.05),
         patch(
             "homeassistant.components.frontend.async_setup",
@@ -799,8 +815,8 @@ async def test_setup_hass_recovery_mode(
     assert len(browser_setup.mock_calls) == 0
 
 
+@pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass_safe_mode(
-    mock_hass_config: None,
     mock_enable_logging: Mock,
     mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
@@ -834,8 +850,8 @@ async def test_setup_hass_safe_mode(
     assert "Starting in safe mode" in caplog.text
 
 
+@pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass_recovery_mode_and_safe_mode(
-    mock_hass_config: None,
     mock_enable_logging: Mock,
     mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
@@ -870,8 +886,8 @@ async def test_setup_hass_recovery_mode_and_safe_mode(
 
 
 @pytest.mark.parametrize("hass_config", [{"homeassistant": {"non-existing": 1}}])
+@pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass_invalid_core_config(
-    mock_hass_config: None,
     mock_enable_logging: Mock,
     mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
@@ -909,8 +925,8 @@ async def test_setup_hass_invalid_core_config(
         }
     ],
 )
+@pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_recovery_mode_if_no_frontend(
-    mock_hass_config: None,
     mock_enable_logging: Mock,
     mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
@@ -956,10 +972,10 @@ async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(
     def gen_domain_setup(domain):
         async def async_setup(hass, config):
             order.append(domain)
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.05)
 
             async def _background_task():
-                await asyncio.sleep(0.2)
+                await asyncio.sleep(0.1)
 
             await hass.async_create_task(_background_task())
             return True
@@ -991,7 +1007,7 @@ async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(
     async_dispatcher_connect(
         hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, _bootstrap_integrations
     )
-    with patch.object(bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.05):
+    with patch.object(bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.025):
         await bootstrap._async_set_up_integrations(
             hass, {"normal_integration": {}, "an_after_dep": {}}
         )
@@ -1011,13 +1027,16 @@ async def test_warning_logged_on_wrap_up_timeout(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we log a warning on bootstrap timeout."""
+    task: asyncio.Task | None = None
 
     def gen_domain_setup(domain):
         async def async_setup(hass, config):
-            async def _not_marked_background_task():
-                await asyncio.sleep(0.2)
+            nonlocal task
 
-            hass.async_create_task(_not_marked_background_task())
+            async def _not_marked_background_task():
+                await asyncio.sleep(2)
+
+            task = hass.async_create_task(_not_marked_background_task())
             return True
 
         return async_setup
@@ -1033,8 +1052,10 @@ async def test_warning_logged_on_wrap_up_timeout(
 
     with patch.object(bootstrap, "WRAP_UP_TIMEOUT", 0):
         await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
-        await hass.async_block_till_done()
 
+    task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await task
     assert "Setup timed out for bootstrap" in caplog.text
     assert "waiting on" in caplog.text
     assert "_not_marked_background_task" in caplog.text
@@ -1087,14 +1108,14 @@ async def test_tasks_logged_that_block_stage_2(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we log tasks that delay stage 2 startup."""
+    done_future = hass.loop.create_future()
 
     def gen_domain_setup(domain):
         async def async_setup(hass, config):
             async def _not_marked_background_task():
-                await asyncio.sleep(0.2)
+                await done_future
 
             hass.async_create_task(_not_marked_background_task())
-            await asyncio.sleep(0.1)
             return True
 
         return async_setup
@@ -1108,16 +1129,36 @@ async def test_tasks_logged_that_block_stage_2(
         ),
     )
 
+    wanted_messages = {
+        "Setup timed out for stage 2 waiting on",
+        "waiting on",
+        "_not_marked_background_task",
+    }
+
+    def on_message_logged(log_record: logging.LogRecord, *args):
+        for message in list(wanted_messages):
+            if message in log_record.message:
+                wanted_messages.remove(message)
+        if not done_future.done() and not wanted_messages:
+            done_future.set_result(None)
+            return
+
     with (
         patch.object(bootstrap, "STAGE_2_TIMEOUT", 0),
         patch.object(bootstrap, "COOLDOWN_TIME", 0),
+        patch.object(
+            caplog.handler,
+            "emit",
+            wraps=caplog.handler.emit,
+            side_effect=on_message_logged,
+        ),
     ):
         await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
+        async with asyncio.timeout(2):
+            await done_future
         await hass.async_block_till_done()
 
-    assert "Setup timed out for stage 2 waiting on" in caplog.text
-    assert "waiting on" in caplog.text
-    assert "_not_marked_background_task" in caplog.text
+    assert not wanted_messages
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -1135,31 +1176,24 @@ async def test_bootstrap_is_cancellation_safe(
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_bootstrap_empty_integrations(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_bootstrap_empty_integrations(hass: HomeAssistant) -> None:
     """Test setting up an empty integrations does not raise."""
     await bootstrap.async_setup_multi_components(hass, set(), {})
     await hass.async_block_till_done()
 
 
 @pytest.fixture(name="mock_mqtt_config_flow")
-def mock_mqtt_config_flow_fixture() -> Generator[None, None, None]:
+def mock_mqtt_config_flow_fixture() -> Generator[None]:
     """Mock MQTT config flow."""
-    original_mqtt = HANDLERS.get("mqtt")
 
-    @HANDLERS.register("mqtt")
     class MockConfigFlow:
         """Mock the MQTT config flow."""
 
         VERSION = 1
         MINOR_VERSION = 1
 
-    yield
-    if original_mqtt:
-        HANDLERS["mqtt"] = original_mqtt
-    else:
-        HANDLERS.pop("mqtt")
+    with mock_config_flow("mqtt", MockConfigFlow):
+        yield
 
 
 @pytest.mark.parametrize("integration", ["mqtt_eventstream", "mqtt_statestream"])
@@ -1338,10 +1372,9 @@ async def test_bootstrap_does_not_preload_stage_1_integrations() -> None:
 
 
 @pytest.mark.parametrize("load_registries", [False])
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_cancellation_does_not_leak_upward_from_async_setup(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test setting up an integration that raises asyncio.CancelledError."""
     await bootstrap.async_setup_multi_components(
@@ -1356,10 +1389,9 @@ async def test_cancellation_does_not_leak_upward_from_async_setup(
 
 
 @pytest.mark.parametrize("load_registries", [False])
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_cancellation_does_not_leak_upward_from_async_setup_entry(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test setting up an integration that raises asyncio.CancelledError."""
     entry = MockConfigEntry(
@@ -1457,7 +1489,7 @@ async def test_setup_does_base_platforms_first(hass: HomeAssistant) -> None:
     assert order[3:] == ["root", "first_dep", "second_dep"]
 
 
-def test_should_rollover_is_always_false():
+def test_should_rollover_is_always_false() -> None:
     """Test that shouldRollover always returns False."""
     assert (
         bootstrap._RotatingFileHandlerWithoutShouldRollOver(

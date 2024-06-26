@@ -31,6 +31,32 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
+  "options": {
+    "step": {
+      "drawables": {
+        "description": "Specify which features to draw on the map.",
+        "data": {
+          "charger": "Charger",
+          "cleaned_area": "Cleaned area",
+          "goto_path": "Go-to path",
+          "ignored_obstacles": "Ignored obstacles",
+          "ignored_obstacles_with_photo": "Ignored obstacles with photo",
+          "mop_path": "Mop path",
+          "no_carpet_zones": "No carpet zones",
+          "no_go_zones": "No-go zones",
+          "no_mopping_zones": "No mopping zones",
+          "obstacles": "Obstacles",
+          "obstacles_with_photo": "Obstacles with photo",
+          "path": "Path",
+          "predicted_path": "Predicted path",
+          "room_names": "Room names",
+          "vacuum_position": "Vacuum position",
+          "virtual_walls": "Virtual walls",
+          "zones": "Zones"
+        }
+      }
+    }
+  },
   "entity": {
     "binary_sensor": {
       "in_cleaning": {

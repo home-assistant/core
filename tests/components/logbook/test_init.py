@@ -61,16 +61,16 @@ EMPTY_CONFIG = logbook.CONFIG_SCHEMA({logbook.DOMAIN: {}})
 
 
 @pytest.fixture
-async def hass_(recorder_mock, hass):
+async def hass_(recorder_mock: Recorder, hass: HomeAssistant) -> HomeAssistant:
     """Set up things to be run when tests are started."""
     assert await async_setup_component(hass, logbook.DOMAIN, EMPTY_CONFIG)
     return hass
 
 
 @pytest.fixture
-def set_utc(hass):
+async def set_utc(hass):
     """Set timezone to UTC."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
 
 
 async def test_service_call_create_logbook_entry(hass_) -> None:

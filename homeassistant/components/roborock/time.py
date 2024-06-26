@@ -33,7 +33,7 @@ class RoborockTimeDescription(TimeEntityDescription):
     # Gets the status of the switch
     cache_key: CacheableAttribute
     # Sets the status of the switch
-    update_value: Callable[[AttributeCache, datetime.time], Coroutine[Any, Any, dict]]
+    update_value: Callable[[AttributeCache, datetime.time], Coroutine[Any, Any, None]]
     # Attribute from cache
     get_value: Callable[[AttributeCache], datetime.time]
 

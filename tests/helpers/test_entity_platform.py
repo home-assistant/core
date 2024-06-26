@@ -94,8 +94,10 @@ async def test_polling_check_works_if_entity_add_fails(
             return self.hass.data is not None
 
     working_poll_ent = MockEntityNeedsSelfHassInShouldPoll(should_poll=True)
+    # pylint: disable-next=attribute-defined-outside-init
     working_poll_ent.async_update = AsyncMock()
     broken_poll_ent = MockEntityNeedsSelfHassInShouldPoll(should_poll=True)
+    # pylint: disable-next=attribute-defined-outside-init
     broken_poll_ent.async_update = AsyncMock(side_effect=Exception("Broken"))
 
     await component.async_add_entities(
@@ -213,6 +215,7 @@ async def test_update_state_adds_entities_with_update_before_add_false(
     assert not ent.update.called
 
 
+@pytest.mark.usefixtures("disable_translations_once")
 async def test_set_scan_interval_via_platform(hass: HomeAssistant) -> None:
     """Test the setting of the scan interval via platform."""
 
@@ -225,7 +228,7 @@ async def test_set_scan_interval_via_platform(hass: HomeAssistant) -> None:
         """Test the platform setup."""
         add_entities([MockEntity(should_poll=True)])
 
-    platform = MockPlatform(platform_setup)
+    platform = MockPlatform(setup_platform=platform_setup)
     platform.SCAN_INTERVAL = timedelta(seconds=30)
 
     mock_platform(hass, "platform.test_domain", platform)
@@ -260,6 +263,7 @@ async def test_adding_entities_with_generator_and_thread_callback(
     await component.async_add_entities(create_entity(i) for i in range(2))
 
 
+@pytest.mark.usefixtures("disable_translations_once")
 async def test_platform_warn_slow_setup(hass: HomeAssistant) -> None:
     """Warn we log when platform setup takes a long time."""
     platform = MockPlatform()
@@ -611,7 +615,7 @@ async def test_async_remove_with_platform_update_finishes(hass: HomeAssistant) -
     # Add, remove, and make sure no updates
     # cause the entity to reappear after removal and
     # that we can add another entity with the same entity_id
-    for entity in [entity1, entity2]:
+    for entity in (entity1, entity2):
         update_called = asyncio.Event()
         update_done = asyncio.Event()
         await component.async_add_entities([entity])
@@ -1183,6 +1187,7 @@ async def test_device_info_called(
     assert device.manufacturer == "test-manuf"
     assert device.model == "test-model"
     assert device.name == "test-name"
+    assert device.primary_config_entry == config_entry.entry_id
     assert device.suggested_area == "Heliport"
     assert device.sw_version == "test-sw"
     assert device.hw_version == "test-hw"
@@ -1853,7 +1858,6 @@ async def test_cancellation_is_not_blocked(
 
     with pytest.raises(asyncio.CancelledError):
         assert await platform.async_setup_entry(config_entry)
-        await hass.async_block_till_done()
 
     full_name = f"{config_entry.domain}.{platform.domain}"
     assert full_name not in hass.config.components

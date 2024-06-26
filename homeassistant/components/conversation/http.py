@@ -94,9 +94,7 @@ async def websocket_prepare(
     agent = async_get_agent(hass, msg.get("agent_id"))
 
     if agent is None:
-        connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Agent not found"
-        )
+        connection.send_error(msg["id"], websocket_api.ERR_NOT_FOUND, "Agent not found")
         return
 
     await agent.async_prepare(msg.get("language"))
@@ -128,10 +126,14 @@ async def websocket_list_agents(
                 language, supported_languages, country
             )
 
+        name = entity.entity_id
+        if state := hass.states.get(entity.entity_id):
+            name = state.name
+
         agents.append(
             {
                 "id": entity.entity_id,
-                "name": entity.name or entity.entity_id,
+                "name": name,
                 "supported_languages": supported_languages,
             }
         )
@@ -184,6 +186,7 @@ async def websocket_hass_agent_debug(
                 conversation_id=None,
                 device_id=msg.get("device_id"),
                 language=msg.get("language", hass.config.language),
+                agent_id=None,
             )
         )
         for sentence in msg["sentences"]
@@ -311,9 +314,9 @@ def _get_debug_targets(
 
 def _get_unmatched_slots(
     result: RecognizeResult,
-) -> dict[str, str | int]:
+) -> dict[str, str | int | float]:
     """Return a dict of unmatched text/range slot entities."""
-    unmatched_slots: dict[str, str | int] = {}
+    unmatched_slots: dict[str, str | int | float] = {}
     for entity in result.unmatched_entities_list:
         if isinstance(entity, UnmatchedTextEntity):
             if entity.text == MISSING_ENTITY:

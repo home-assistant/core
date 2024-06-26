@@ -6,6 +6,6 @@
   "dependencies": ["websocket_api"],
   "documentation": "https://www.home-assistant.io/integrations/matter",
   "iot_class": "local_push",
-  "requirements": ["python-matter-server==5.10.0"],
+  "requirements": ["python-matter-server==6.2.0b1"],
   "zeroconf": ["_matter._tcp.local.", "_matterc._udp.local."]
 }

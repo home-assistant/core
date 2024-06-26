@@ -3,9 +3,12 @@
 from unittest.mock import patch
 
 import pytest
-import respx
 
-from homeassistant.components.bmw_connected_drive.const import DOMAIN as BMW_DOMAIN
+from homeassistant.components.bmw_connected_drive import DEFAULT_OPTIONS
+from homeassistant.components.bmw_connected_drive.const import (
+    CONF_READ_ONLY,
+    DOMAIN as BMW_DOMAIN,
+)
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -17,6 +20,56 @@ from tests.common import MockConfigEntry
 VIN = "WBYYYYYYYYYYYYYYY"
 VEHICLE_NAME = "i3 (+ REX)"
 VEHICLE_NAME_SLUG = "i3_rex"
+
+
+@pytest.mark.usefixtures("bmw_fixture")
+@pytest.mark.parametrize(
+    "options",
+    [
+        DEFAULT_OPTIONS,
+        {"other_value": 1, **DEFAULT_OPTIONS},
+        {},
+    ],
+)
+async def test_migrate_options(
+    hass: HomeAssistant,
+    options: dict,
+) -> None:
+    """Test successful migration of options."""
+
+    config_entry = FIXTURE_CONFIG_ENTRY.copy()
+    config_entry["options"] = options
+
+    mock_config_entry = MockConfigEntry(**config_entry)
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(
+        hass.config_entries.async_get_entry(mock_config_entry.entry_id).options
+    ) == len(DEFAULT_OPTIONS)
+
+
+@pytest.mark.usefixtures("bmw_fixture")
+async def test_migrate_options_from_data(hass: HomeAssistant) -> None:
+    """Test successful migration of options."""
+
+    config_entry = FIXTURE_CONFIG_ENTRY.copy()
+    config_entry["options"] = {}
+    config_entry["data"].update({CONF_READ_ONLY: False})
+
+    mock_config_entry = MockConfigEntry(**config_entry)
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    updated_config_entry = hass.config_entries.async_get_entry(
+        mock_config_entry.entry_id
+    )
+    assert len(updated_config_entry.options) == len(DEFAULT_OPTIONS)
+    assert CONF_READ_ONLY not in updated_config_entry.data
 
 
 @pytest.mark.parametrize(
@@ -137,10 +190,10 @@ async def test_dont_migrate_unique_ids(
     assert entity_migrated != entity_not_changed
 
 
+@pytest.mark.usefixtures("bmw_fixture")
 async def test_remove_stale_devices(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    bmw_fixture: respx.Router,
 ) -> None:
     """Test remove stale device registry entries."""
     mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)

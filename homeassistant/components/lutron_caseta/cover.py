@@ -96,7 +96,7 @@ class LutronCasetaTiltOnlyBlind(LutronCasetaDeviceUpdatableEntity, CoverEntity):
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the blind to a specific tilt."""
-        self._smartbridge.set_tilt(self.device_id, kwargs[ATTR_TILT_POSITION])
+        await self._smartbridge.set_tilt(self.device_id, kwargs[ATTR_TILT_POSITION])
 
 
 PYLUTRON_TYPE_TO_CLASSES = {

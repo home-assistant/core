@@ -13,10 +13,10 @@ from homeassistant.components.device_automation import (
     InvalidDeviceAutomationConfig,
     toggle_entity,
 )
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound
@@ -46,7 +46,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-def fake_integration(hass):
+def fake_integration(hass: HomeAssistant) -> None:
     """Set up a mock integration with device automation support."""
     DOMAIN = "fake_integration"
 
@@ -1385,14 +1385,14 @@ async def test_automation_with_bad_condition(
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
 async def test_automation_with_sub_condition(
     hass: HomeAssistant,
-    calls,
+    calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:

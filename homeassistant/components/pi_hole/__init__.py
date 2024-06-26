@@ -42,7 +42,7 @@ PLATFORMS = [
     Platform.UPDATE,
 ]
 
-PiHoleConfigEntry = ConfigEntry["PiHoleData"]
+type PiHoleConfigEntry = ConfigEntry[PiHoleData]
 
 
 @dataclass
@@ -60,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bo
     use_tls = entry.data[CONF_SSL]
     verify_tls = entry.data[CONF_VERIFY_SSL]
     location = entry.data[CONF_LOCATION]
-    api_key = entry.data.get(CONF_API_KEY)
+    api_key = entry.data.get(CONF_API_KEY, "")
 
     # remove obsolet CONF_STATISTICS_ONLY from entry.data
     if CONF_STATISTICS_ONLY in entry.data:

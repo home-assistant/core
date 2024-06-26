@@ -6,6 +6,7 @@ from typing import Any
 from aiounifi.models.client import ClientReconnectRequest, ClientRemoveRequest
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import device_registry as dr
@@ -49,13 +50,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
 
 
-@callback
-def async_unload_services(hass: HomeAssistant) -> None:
-    """Unload UniFi Network services."""
-    for service in SUPPORTED_SERVICES:
-        hass.services.async_remove(UNIFI_DOMAIN, service)
-
-
 async def async_reconnect_client(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
     """Try to get wireless client to reconnect to Wi-Fi."""
     device_registry = dr.async_get(hass)
@@ -73,9 +67,10 @@ async def async_reconnect_client(hass: HomeAssistant, data: Mapping[str, Any]) -
     if mac == "":
         return
 
-    for hub in hass.data[UNIFI_DOMAIN].values():
-        if (
-            not hub.available
+    for config_entry in hass.config_entries.async_entries(UNIFI_DOMAIN):
+        if config_entry.state is not ConfigEntryState.LOADED or (
+            (hub := config_entry.runtime_data)
+            and not hub.available
             or (client := hub.api.clients.get(mac)) is None
             or client.is_wired
         ):
@@ -91,8 +86,12 @@ async def async_remove_clients(hass: HomeAssistant, data: Mapping[str, Any]) -> 
     - Total time between first seen and last seen is less than 15 minutes.
     - Neither IP, hostname nor name is configured.
     """
-    for hub in hass.data[UNIFI_DOMAIN].values():
-        if not hub.available:
+    for config_entry in hass.config_entries.async_entries(UNIFI_DOMAIN):
+        if (
+            config_entry.state is not ConfigEntryState.LOADED
+            or (hub := config_entry.runtime_data)
+            and not hub.available
+        ):
             continue
 
         clients_to_remove = []

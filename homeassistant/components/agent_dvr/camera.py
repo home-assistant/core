@@ -7,7 +7,6 @@ from agent import AgentError
 
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
@@ -15,12 +14,8 @@ from homeassistant.helpers.entity_platform import (
     async_get_current_platform,
 )
 
-from .const import (
-    ATTRIBUTION,
-    CAMERA_SCAN_INTERVAL_SECS,
-    CONNECTION,
-    DOMAIN as AGENT_DOMAIN,
-)
+from . import AgentDVRConfigEntry
+from .const import ATTRIBUTION, CAMERA_SCAN_INTERVAL_SECS, DOMAIN as AGENT_DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=CAMERA_SCAN_INTERVAL_SECS)
 
@@ -43,14 +38,14 @@ CAMERA_SERVICES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AgentDVRConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Agent cameras."""
     filter_urllib3_logging()
     cameras = []
 
-    server = hass.data[AGENT_DOMAIN][config_entry.entry_id][CONNECTION]
+    server = config_entry.runtime_data
     if not server.devices:
         _LOGGER.warning("Could not fetch cameras from Agent server")
         return

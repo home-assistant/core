@@ -36,7 +36,7 @@ from homeassistant.components.media_player import (
     ATTR_SOUND_MODE_LIST,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
@@ -119,7 +119,7 @@ STATES_ORDER_IDLE = STATES_ORDER_LOOKUP[MediaPlayerState.IDLE]
 ATTRS_SCHEMA = cv.schema_with_slug_keys(cv.string)
 CMD_SCHEMA = cv.schema_with_slug_keys(cv.SERVICE_SCHEMA)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_CHILDREN, default=[]): cv.entity_ids,
@@ -248,7 +248,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     def _entity_lkp(self, entity_id, state_attr=None):
         """Look up an entity state."""
         if (state_obj := self.hass.states.get(entity_id)) is None:
-            return
+            return None
 
         if state_attr:
             return state_obj.attributes.get(state_attr)

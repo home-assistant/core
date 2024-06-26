@@ -27,6 +27,7 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_MAC, CONF_TYPE, 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import IntegrationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     CONF_BROWSE_UNFILTERED,
@@ -40,7 +41,7 @@ from .data import get_domain_data
 
 LOGGER = logging.getLogger(__name__)
 
-FlowInput = Mapping[str, Any] | None
+type FlowInput = Mapping[str, Any] | None
 
 
 class ConnectError(IntegrationError):
@@ -149,7 +150,7 @@ class DlnaDmrFlowHandler(ConfigFlow, domain=DOMAIN):
         # case the device doesn't have a static and unique UDN (breaking the
         # UPnP spec).
         for entry in self._async_current_entries(include_ignore=True):
-            if self._location == entry.data[CONF_URL]:
+            if self._location == entry.data.get(CONF_URL):
                 return self.async_abort(reason="already_configured")
             if self._mac and self._mac == entry.data.get(CONF_MAC):
                 return self.async_abort(reason="already_configured")
@@ -382,7 +383,7 @@ class DlnaDmrOptionsFlowHandler(OptionsFlow):
             if not errors:
                 return self.async_create_entry(title="", data=options)
 
-        fields = {}
+        fields: VolDictType = {}
 
         def _add_with_suggestion(key: str, validator: Callable | type[bool]) -> None:
             """Add a field to with a suggested value.
