@@ -125,20 +125,20 @@ class MadvrRemote(CoordinatorEntity, RemoteEntity):
                     self.command_queue.task_done()
 
             if self.stop_processing_commands.is_set():
-                await self.clear_queue()
+                self.clear_queue()
                 _LOGGER.debug("Stopped processing commands")
                 break
 
             await asyncio.sleep(0.1)
 
-    async def clear_queue(self):
+    def clear_queue(self):
         """Clear queue."""
         self.command_queue = asyncio.Queue()
 
     async def clear_state(self) -> None:
         """Clear state."""
         self.stop_processing_commands.set()
-        await self.clear_queue()
+        self.clear_queue()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
