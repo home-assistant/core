@@ -3,7 +3,6 @@
     "step": {
       "user": {
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
@@ -12,7 +11,6 @@
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
-          "name": "The name to use for your pyLoad instance in Home Assistant",
           "host": "The hostname or IP address of the device running your pyLoad instance.",
           "port": "pyLoad uses port 8000 by default."
         }
