@@ -4,6 +4,7 @@ DOMAIN = "huawei_lte"
 
 ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 
+CONF_DATETIME = "datetime"
 CONF_MANUFACTURER = "manufacturer"
 CONF_MAX_MESSAGES = "max_messages"
 CONF_PREFER_UNREAD = "prefer_unread"
@@ -23,8 +24,11 @@ UPDATE_SIGNAL = f"{DOMAIN}_update"
 CONNECTION_TIMEOUT = 10
 NOTIFY_SUPPRESS_TIMEOUT = 30
 
+SERVICE_DELETE_MESSAGE = "delete_message"
 SERVICE_GET_MESSAGES = "get_messages"
+SERVICE_READ_MESSAGE = "read_message'
 SERVICE_RESUME_INTEGRATION = "resume_integration"
+SERVICE_SAVE_MESSAGE = "save_message"
 SERVICE_SUSPEND_INTEGRATION = "suspend_integration"
 
 ADMIN_SERVICES = {
