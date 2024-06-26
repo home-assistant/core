@@ -629,7 +629,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             box_type=service.data[CONF_BOX_TYPE],
         )
         if limit is not None:
-            messages = map(lambda x: x[1], range(limit), messages)
+            messages = map(lambda x: x[1], zip(range(limit), messages))
         try:
             return {"messages": [msg.to_dict() for msg in messages]}
         except ResponseErrorException as ex:
