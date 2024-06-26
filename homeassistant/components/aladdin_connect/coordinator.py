@@ -1,5 +1,6 @@
 """Define an object to coordinate fetching Aladdin Connect data."""
 
+# mypy: ignore-errors
 from datetime import timedelta
 import logging
 

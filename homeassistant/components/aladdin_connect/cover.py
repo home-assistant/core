@@ -1,5 +1,6 @@
 """Cover Entity for Genie Garage Door."""
 
+# mypy: ignore-errors
 from typing import Any
 
 # from genie_partner_sdk.model import GarageDoor

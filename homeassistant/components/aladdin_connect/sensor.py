@@ -1,5 +1,6 @@
 """Support for Aladdin Connect Garage Door sensors."""
 
+# mypy: ignore-errors
 from __future__ import annotations
 
 from collections.abc import Callable

@@ -1,5 +1,6 @@
 """The Aladdin Connect Genie integration."""
 
+# mypy: ignore-errors
 from __future__ import annotations
 
 # from genie_partner_sdk.client import AladdinConnectClient

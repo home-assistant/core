@@ -1,5 +1,6 @@
 """API for Aladdin Connect Genie bound to Home Assistant OAuth."""
 
+# mypy: ignore-errors
 from typing import cast
 
 from aiohttp import ClientSession
