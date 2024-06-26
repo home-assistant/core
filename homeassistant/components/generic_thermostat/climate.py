@@ -61,7 +61,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolDictType
 
 from . import DOMAIN, PLATFORMS
 
@@ -96,6 +96,10 @@ CONF_PRESETS = {
     )
 }
 
+PRESETS_SCHEMA: VolDictType = {
+    vol.Optional(v): vol.Coerce(float) for v in CONF_PRESETS.values()
+}
+
 PLATFORM_SCHEMA_COMMON = vol.Schema(
     {
         vol.Required(CONF_HEATER): cv.entity_id,
@@ -120,7 +124,7 @@ PLATFORM_SCHEMA_COMMON = vol.Schema(
             vol.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE])
         ),
         vol.Optional(CONF_UNIQUE_ID): cv.string,
-        **{vol.Optional(v): vol.Coerce(float) for v in CONF_PRESETS.values()},
+        **PRESETS_SCHEMA,
     }
 )
 
