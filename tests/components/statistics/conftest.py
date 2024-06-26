@@ -76,16 +76,15 @@ async def load_integration(
 
     config_entry.add_to_hass(hass)
 
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
     for value in VALUES_NUMERIC:
         hass.states.async_set(
             "sensor.test_monitored",
             str(value),
             {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
         )
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     return config_entry
