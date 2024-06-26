@@ -1180,6 +1180,22 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         return main_device
 
+    @callback
+    def _find_collision(self) -> set[str] | None:
+        for device in self.devices.values():
+            for identifier in device.identifiers:
+                if len(device_ids := self.devices.get_entries({identifier}, None)) > 1:
+                    return device_ids
+            for connection in device.connections:
+                if len(device_ids := self.devices.get_entries({connection}, None)) > 1:
+                    return device_ids
+        return None
+
+    @callback
+    def _merge_collisions(self) -> None:
+        while collision := self._find_collision():
+            self._merge_devices(collision)
+
     async def async_load(self) -> None:
         """Load the device registry."""
         async_setup_cleanup(self.hass, self)
@@ -1239,6 +1255,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self.devices = devices
         self.deleted_devices = deleted_devices
         self._device_data = devices.data
+        self._merge_collisions()
 
     @callback
     def _data_to_save(self) -> dict[str, Any]:
