@@ -106,6 +106,5 @@ async def test_options_flow(hass: HomeAssistant, loaded_entry: MockConfigEntry) 
     # Check the entity was updated, no new entity was created
     assert len(hass.states.async_all()) == 2
 
-    # Check the state of the entity has changed as expected
     state = hass.states.get("sensor.statistical_characteristic")
     assert state is not None
