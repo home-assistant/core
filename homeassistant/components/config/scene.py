@@ -5,7 +5,10 @@ from __future__ import annotations
 from typing import Any
 import uuid
 
-from homeassistant.components.scene import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.scene import (
+    DOMAIN,
+    PLATFORM_SCHEMA as SCENE_PLATFORM_SCHEMA,
+)
 from homeassistant.config import SCENE_CONFIG_PATH
 from homeassistant.const import CONF_ID, SERVICE_RELOAD
 from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant, callback
@@ -40,7 +43,7 @@ def async_setup(hass: HomeAssistant) -> bool:
             "config",
             SCENE_CONFIG_PATH,
             cv.string,
-            PLATFORM_SCHEMA,
+            SCENE_PLATFORM_SCHEMA,
             post_write_hook=hook,
         )
     )
