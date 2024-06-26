@@ -65,10 +65,6 @@ def mock_mozart_client() -> Generator[AsyncMock]:
             "homeassistant.components.bang_olufsen.config_flow.MozartClient",
             new=mock_client,
         ),
-        patch(
-            "homeassistant.components.bang_olufsen.media_player.MozartClient",
-            new=mock_client,
-        ),
     ):
         client = mock_client.return_value
 
