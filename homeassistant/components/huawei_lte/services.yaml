@@ -11,3 +11,21 @@ suspend_integration:
       example: http://192.168.100.1/
       selector:
         text:
+
+get_messages:
+  fields:
+    url:
+      example: http://192.168.100.1/
+      selector:
+        text:
+    prefer_unread:
+      example: true
+      selector:
+        boolean:
+    limit:
+      example: 20
+      selector:
+        number:
+          min: 1
+          step: 1
+          mode: box
