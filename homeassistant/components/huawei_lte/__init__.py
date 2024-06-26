@@ -673,7 +673,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 from_date=message_dt,
             )
         except ResponseErrorException as ex:
-            _LOGGER.error("Could not send to %s: %s", targets, ex)
+            _LOGGER.error("Could not save message %s: %s", sms_index, ex)
             raise HomeAssistantError from ex
         else:
             _LOGGER.debug("Saved message %s: %s", sms_index, resp)
