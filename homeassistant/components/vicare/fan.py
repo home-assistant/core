@@ -83,6 +83,7 @@ class ViCareFan(ViCareEntity, FanEntity):
 
     _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
     _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+    _attr_preset_modes = list[str](PRESET_MODES)
 
     def __init__(
         self,
@@ -134,11 +135,6 @@ class ViCareFan(ViCareEntity, FanEntity):
         level = percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage)
         _LOGGER.debug("changing ventilation level to %s", level)
         self._api.setPermanentLevel(level)
-
-    @property
-    def preset_modes(self) -> list[str] | None:
-        """Return a list of available preset modes."""
-        return list[str](PRESET_MODES)
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
