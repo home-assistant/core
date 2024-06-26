@@ -687,7 +687,14 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
                     )
 
             except ApiException as error:
-                raise HomeAssistantError(json.loads(error.body)["message"]) from error
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="bang_olufsen_media_error",
+                    translation_placeholders={
+                        "media_type": media_type,
+                        "error_message": json.loads(error.body)["message"],
+                    },
+                ) from error
 
     async def async_browse_media(
         self,
