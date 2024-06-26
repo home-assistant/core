@@ -68,7 +68,8 @@ def async_remove_stale_devices_links_keep_entity_device(
 ) -> None:
     """Remove the link between stale devices and a configuration entry.
 
-    Keeping only the device that the informed entity is linked to.
+    Only the device passed in the source_entity_id_or_uuid parameter
+    linked to the configuration entry will be maintained.
     """
 
     async_remove_stale_devices_links_keep_current_device(
