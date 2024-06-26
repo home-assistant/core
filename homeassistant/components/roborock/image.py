@@ -1,6 +1,7 @@
 """Support for Roborock image."""
 
 import asyncio
+from datetime import datetime
 import io
 from itertools import chain
 
@@ -48,6 +49,7 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
     """A class to let you visualize the map."""
 
     _attr_has_entity_name = True
+    image_last_updated: datetime
 
     def __init__(
         self,
@@ -76,7 +78,7 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Determines if the entity is available."""
         return self.cached_map != b""
 
@@ -98,7 +100,7 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
             and bool(self.coordinator.roborock_device_info.props.status.in_cleaning)
         )
 
-    def _handle_coordinator_update(self):
+    def _handle_coordinator_update(self) -> None:
         # Bump last updated every third time the coordinator runs, so that async_image
         # will be called and we will evaluate on the new coordinator data if we should
         # update the cache.
