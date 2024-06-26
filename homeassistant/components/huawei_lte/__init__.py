@@ -622,7 +622,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.error("%s: limit must be a positive number", service.service)
             raise ServiceValidationError
         else:
-            read_chunk = min(limit, DEFAULT_MESSAGES_CHUNK)
+            read_count = min(limit, DEFAULT_MESSAGES_CHUNK)
         messages = router.client.sms.get_messages(
             unread_preferred=service.data[CONF_PREFER_UNREAD],
             read_count=read_count,
