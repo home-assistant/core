@@ -7,14 +7,14 @@ class PackageDefinition:
 
     license: str
     name: str
-    version: str
+    version: AwesomeVersion
 
     @classmethod
     def from_dict(cls, data: dict[str, str]) -> PackageDefinition:
         return cls(
             license=data["License"],
             name=data["Name"],
-            version=data["Version"],
+            version=AwesomeVersion(data["Version"]),
         )
 
 OSI_APPROVED_LICENSES = {
@@ -203,30 +203,30 @@ EXCEPTIONS = {
 }
 
 TODO = {
-    ("BlinkStick", AwesomeVersion("1.2.0")),  # Proprietary license https://github.com/arvydas/blinkstick-python
-    ("PyMVGLive", AwesomeVersion("asd")),  # No license and archived https://github.com/pc-coholic/PyMVGLive
-    ("aiocache", AwesomeVersion("asd")),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
-    ("aiohappyeyeballs", AwesomeVersion("asd")),  # Need to dive into this
-    ("asterisk_mbox", AwesomeVersion("asd")),  # I think we deprecated this
-    ("asyncarve", AwesomeVersion("asd")),  # No public repository
-    ("asyncio", AwesomeVersion("asd")),  # Python core
-    ("chacha20poly1305", AwesomeVersion("asd")),  # I think LGPLv2+
-    ("chacha20poly1305-reuseable", AwesomeVersion("asd")),  # has 2 licenses
-    ("concord232", AwesomeVersion("asd")),  # No license https://github.com/JasonCarter80/concord232/issues/19
-    ("dovado", AwesomeVersion("asd")),  # No license https://github.com/molobrakos/dovado/issues/4
-    ("genie_partner_sdk", AwesomeVersion("asd")),  # pain
-    ("iso4217", AwesomeVersion("asd")),  # Public domain?
-    ("mficlient", AwesomeVersion("asd")),  # No license https://github.com/kk7ds/mficlient/issues/4
-    ("panasonic_viera", AwesomeVersion("asd")),  # Has update available
-    ("pizzapi", AwesomeVersion("asd")),  # Has update available
-    ("pubnub", AwesomeVersion("asd")),  # Proprietary license https://github.com/pubnub/python/blob/master/LICENSE
-    ("pyElectra", AwesomeVersion("asd")),  # No License https://github.com/jafar-atili/pyElectra/issues/3
-    ("pyflic", AwesomeVersion("asd")),  # No OSI approved license (CC0-1.0 Universal)
-    ("pymitv", AwesomeVersion("asd")),  # Not sure why pip-licenses doesn't pick this up
-    ("refoss_ha", AwesomeVersion("asd")),  # No License https://github.com/ashionky/refoss_ha/issues/4
-    ("ttls", AwesomeVersion("asd")),  # Proprietary license https://github.com/jschlyter/ttls/issues/39
-    ("uvcclient", AwesomeVersion("asd")),  # No License https://github.com/kk7ds/uvcclient/issues/7
-    ("vincenty", AwesomeVersion("asd")),  # Public domain?
+    "BlinkStick": AwesomeVersion("1.2.0"),  # Proprietary license https://github.com/arvydas/blinkstick-python
+    "PyMVGLive": AwesomeVersion("1.1.4"),  # No license and archived https://github.com/pc-coholic/PyMVGLive
+    "aiocache": AwesomeVersion("0.12.2"),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
+    "aiohappyeyeballs": AwesomeVersion("2.3.2"),  # Need to dive into this
+    "asterisk_mbox": AwesomeVersion("0.5.0"),  # I think we deprecated this
+    "asyncarve": AwesomeVersion("0.0.9"),  # No public repository
+    "asyncio": AwesomeVersion("3.4.3"),  # Python core
+    "chacha20poly1305": AwesomeVersion("0.0.3"),  # I think LGPLv2+
+    "chacha20poly1305-reuseable": AwesomeVersion("0.12.1"),  # has 2 licenses
+    "concord232": AwesomeVersion("0.15"),  # No license https://github.com/JasonCarter80/concord232/issues/19
+    "dovado": AwesomeVersion("0.4.1"),  # No license https://github.com/molobrakos/dovado/issues/4
+    "genie_partner_sdk": AwesomeVersion("1.0.2"),  # pain
+    "iso4217": AwesomeVersion("1.11.20220401"),  # Public domain?
+    "mficlient": AwesomeVersion("0.3.0"),  # No license https://github.com/kk7ds/mficlient/issues/4
+    "panasonic_viera": AwesomeVersion("0.3.6"),  # Has update available
+    "pizzapi": AwesomeVersion("0.0.3"),  # Has update available
+    "pubnub": AwesomeVersion("7.4.3"),  # Proprietary license https://github.com/pubnub/python/blob/master/LICENSE
+    "pyElectra": AwesomeVersion("1.2.3"),  # No License https://github.com/jafar-atili/pyElectra/issues/3
+    "pyflic": AwesomeVersion("2.0.3"),  # No OSI approved license CC0-1.0 Universal)
+    "pymitv": AwesomeVersion("1.4.3"),  # Not sure why pip-licenses doesn't pick this up
+    "refoss_ha": AwesomeVersion("1.2.1"),  # No License https://github.com/ashionky/refoss_ha/issues/4
+    "ttls": AwesomeVersion("1.5.1"),  # Proprietary license https://github.com/jschlyter/ttls/issues/39
+    "uvcclient": AwesomeVersion("0.11.0"),  # No License https://github.com/kk7ds/uvcclient/issues/7
+    "vincenty": AwesomeVersion("0.1.4"),  # Public domain?
 }
 
 def main():
@@ -238,8 +238,14 @@ def main():
             if approved_license in package.license:
                 approved = True
                 break
-        if not approved:
-            print(f"{package.name} has a non-OSI-approved license: {package.license}")
+        if not approved and package.name not in EXCEPTIONS:
+            if (previous_version := TODO.get(package.name)) is not None:
+                print(f"We could not detect an OSI-approved license for {package.name}@{package.version}: {package.license}")
+                exit(0)
+            else:
+                if previous_version.version > package.version:
+                    pass
+
 
 if __name__ == "__main__":
     main()
