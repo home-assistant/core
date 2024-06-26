@@ -1,4 +1,4 @@
-"""Support for AtlanticDomesticHotWaterProductionMBLComponent."""
+"""Support for Atlantic Domestic Hot Water Production MBL Component."""
 
 from typing import Any, cast
 
