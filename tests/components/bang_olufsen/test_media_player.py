@@ -2,8 +2,11 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.bang_olufsen.const import (
     BANG_OLUFSEN_STATES,
+    DOMAIN,
     WebsocketNotification,
 )
 from homeassistant.components.media_player import (
@@ -29,6 +32,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
@@ -1075,9 +1079,12 @@ async def test_async_play_media_url_m3u(
     await async_setup_component(hass, "media_source", {"media_source": {}})
 
     # Send a service call
-    with patch(
-        "homeassistant.components.bang_olufsen.media_player.async_process_play_media_url",
-        return_value="https://test.com/test.m3u",
+    with (
+        pytest.raises(HomeAssistantError) as exc_info,
+        patch(
+            "homeassistant.components.bang_olufsen.media_player.async_process_play_media_url",
+            return_value="https://test.com/test.m3u",
+        ),
     ):
         await hass.services.async_call(
             "media_player",
@@ -1087,7 +1094,13 @@ async def test_async_play_media_url_m3u(
                 ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/doorbell.mp3",
                 ATTR_MEDIA_CONTENT_TYPE: "audio/mpeg",
             },
+            blocking=True,
         )
+
+    # Check exception
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "m3u_invalid_format"
+    assert exc_info.errisinstance(HomeAssistantError)
 
     # Check API call
     mock_mozart_client.post_uri_source.assert_not_called()
