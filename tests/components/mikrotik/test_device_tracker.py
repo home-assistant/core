@@ -31,9 +31,10 @@ from tests.common import MockConfigEntry, async_fire_time_changed, patch
 
 
 @pytest.fixture
-def mock_device_registry_devices(hass: HomeAssistant) -> None:
+def mock_device_registry_devices(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Create device registry devices so the device tracker entities are enabled."""
-    dev_reg = dr.async_get(hass)
     config_entry = MockConfigEntry(domain="something_else")
     config_entry.add_to_hass(hass)
 
@@ -45,7 +46,7 @@ def mock_device_registry_devices(hass: HomeAssistant) -> None:
             "00:00:00:00:00:04",
         )
     ):
-        dev_reg.async_get_or_create(
+        device_registry.async_get_or_create(
             name=f"Device {idx}",
             config_entry_id=config_entry.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, device)},

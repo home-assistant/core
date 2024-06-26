@@ -8,6 +8,7 @@ from aiohomekit.model.characteristics.const import ThreadNodeCapabilities, Threa
 from aiohomekit.model.services import ServicesTypes
 from aiohomekit.protocol.statuscodes import HapStatusCode
 from aiohomekit.testing import FakePairing
+import pytest
 
 from homeassistant.components.homekit_controller.sensor import (
     thread_node_capability_to_str,
@@ -381,11 +382,8 @@ def test_thread_status_to_str() -> None:
     assert thread_status_to_str(ThreadStatus.DISABLED) == "disabled"
 
 
-async def test_rssi_sensor(
-    hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
-    enable_bluetooth: None,
-) -> None:
+@pytest.mark.usefixtures("enable_bluetooth", "entity_registry_enabled_by_default")
+async def test_rssi_sensor(hass: HomeAssistant) -> None:
     """Test an rssi sensor."""
     inject_bluetooth_service_info(hass, TEST_DEVICE_SERVICE_INFO)
 
@@ -405,11 +403,9 @@ async def test_rssi_sensor(
         assert hass.states.get("sensor.testdevice_signal_strength").state == "-56"
 
 
+@pytest.mark.usefixtures("enable_bluetooth", "entity_registry_enabled_by_default")
 async def test_migrate_rssi_sensor_unique_id(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    entity_registry_enabled_by_default: None,
-    enable_bluetooth: None,
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test an rssi sensor unique id migration."""
     rssi_sensor = entity_registry.async_get_or_create(

@@ -20,6 +20,18 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Connection options",
+        "description": "The default disconnect time is 15 seconds, adjustable using the slider below. You may want to adjust this if you have larger blinds or other specific needs. You can also enable a permanent connection to the motor, which disables the disconnect time and automatically reconnects when the motor is disconnected for any reason.\n**WARNING**: Changing any of the below options may significantly reduce battery life of your motor!",
+        "data": {
+          "permanent_connection": "Permanent connection",
+          "disconnect_time": "Disconnect time (seconds)"
+        }
+      }
+    }
+  },
   "selector": {
     "blind_type": {
       "options": {
@@ -53,6 +65,25 @@
           "1": "Low",
           "2": "Medium",
           "3": "High"
+        }
+      }
+    },
+    "sensor": {
+      "connection": {
+        "name": "Connection status",
+        "state": {
+          "connected": "Connected",
+          "disconnected": "Disconnected",
+          "connecting": "Connecting",
+          "disconnecting": "Disconnecting"
+        }
+      },
+      "calibration": {
+        "name": "Calibration status",
+        "state": {
+          "calibrated": "Calibrated",
+          "uncalibrated": "Uncalibrated",
+          "calibrating": "Calibration in progress"
         }
       }
     }

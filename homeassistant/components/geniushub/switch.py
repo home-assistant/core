@@ -19,7 +19,7 @@ GH_ON_OFF_ZONE = "on / off"
 
 SVC_SET_SWITCH_OVERRIDE = "set_switch_override"
 
-SET_SWITCH_OVERRIDE_SCHEMA = {
+SET_SWITCH_OVERRIDE_SCHEMA: VolDictType = {
     vol.Optional(ATTR_DURATION): vol.All(
         cv.time_period,
         vol.Range(min=timedelta(minutes=5), max=timedelta(days=1)),

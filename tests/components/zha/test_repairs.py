@@ -12,7 +12,7 @@ from zigpy.application import ControllerApplication
 import zigpy.backups
 from zigpy.exceptions import NetworkSettingsInconsistent
 
-from homeassistant.components.homeassistant_sky_connect.const import (
+from homeassistant.components.homeassistant_sky_connect.const import (  # pylint: disable=hass-component-root-import
     DOMAIN as SKYCONNECT_DOMAIN,
 )
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN

@@ -19,9 +19,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
+from . import RoborockCoordinators
 from .const import DOMAIN
 from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockEntity
+from .device import RoborockEntityV1
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +34,7 @@ class RoborockTimeDescription(TimeEntityDescription):
     # Gets the status of the switch
     cache_key: CacheableAttribute
     # Sets the status of the switch
-    update_value: Callable[[AttributeCache, datetime.time], Coroutine[Any, Any, dict]]
+    update_value: Callable[[AttributeCache, datetime.time], Coroutine[Any, Any, None]]
     # Attribute from cache
     get_value: Callable[[AttributeCache], datetime.time]
 
@@ -118,14 +119,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Roborock time platform."""
-    coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinators: RoborockCoordinators = hass.data[DOMAIN][config_entry.entry_id]
     possible_entities: list[
         tuple[RoborockDataUpdateCoordinator, RoborockTimeDescription]
     ] = [
         (coordinator, description)
-        for coordinator in coordinators.values()
+        for coordinator in coordinators.v1
         for description in TIME_DESCRIPTIONS
     ]
     # We need to check if this function is supported by the device.
@@ -145,7 +144,7 @@ async def async_setup_entry(
         else:
             valid_entities.append(
                 RoborockTimeEntity(
-                    f"{description.key}_{slugify(coordinator.roborock_device_info.device.duid)}",
+                    f"{description.key}_{slugify(coordinator.duid)}",
                     coordinator,
                     description,
                 )
@@ -153,7 +152,7 @@ async def async_setup_entry(
     async_add_entities(valid_entities)
 
 
-class RoborockTimeEntity(RoborockEntity, TimeEntity):
+class RoborockTimeEntity(RoborockEntityV1, TimeEntity):
     """A class to let you set options on a Roborock vacuum where the potential options are fixed."""
 
     entity_description: RoborockTimeDescription

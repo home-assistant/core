@@ -53,6 +53,7 @@ from homeassistant.helpers.typing import (
     ConfigType,
     DiscoveryInfoType,
     UndefinedType,
+    VolSchemaType,
 )
 from homeassistant.util.json import json_loads
 from homeassistant.util.yaml import dump as yaml_dump
@@ -156,7 +157,7 @@ class SetupEntity(Protocol):
 
 @callback
 def async_handle_schema_error(
-    discovery_payload: MQTTDiscoveryPayload, err: vol.MultipleInvalid
+    discovery_payload: MQTTDiscoveryPayload, err: vol.Invalid
 ) -> None:
     """Help handling schema errors on MQTT discovery messages."""
     discovery_topic: str = discovery_payload.discovery_data[ATTR_DISCOVERY_TOPIC]
@@ -247,8 +248,8 @@ def async_setup_entity_entry_helper(
     entity_class: type[MqttEntity] | None,
     domain: str,
     async_add_entities: AddEntitiesCallback,
-    discovery_schema: vol.Schema,
-    platform_schema_modern: vol.Schema,
+    discovery_schema: VolSchemaType,
+    platform_schema_modern: VolSchemaType,
     schema_class_mapping: dict[str, type[MqttEntity]] | None = None,
 ) -> None:
     """Set up entity creation dynamically through MQTT discovery."""
@@ -647,7 +648,7 @@ async def async_remove_discovery_payload(
     after a restart of Home Assistant.
     """
     discovery_topic = discovery_data[ATTR_DISCOVERY_TOPIC]
-    await async_publish(hass, discovery_topic, "", retain=True)
+    await async_publish(hass, discovery_topic, None, retain=True)
 
 
 async def async_clear_discovery_topic_if_entity_removed(
@@ -823,105 +824,99 @@ class MqttDiscoveryUpdateMixin(Entity):
         """Subscribe to discovery updates."""
         await super().async_added_to_hass()
         self._removed_from_hass = False
-        discovery_hash: tuple[str, str] | None = (
-            self._discovery_data[ATTR_DISCOVERY_HASH] if self._discovery_data else None
+        if not self._discovery_data:
+            return
+        discovery_hash: tuple[str, str] = self._discovery_data[ATTR_DISCOVERY_HASH]
+        debug_info.add_entity_discovery_data(
+            self.hass, self._discovery_data, self.entity_id
+        )
+        # Set in case the entity has been removed and is re-added,
+        # for example when changing entity_id
+        set_discovery_hash(self.hass, discovery_hash)
+        self._remove_discovery_updated = async_dispatcher_connect(
+            self.hass,
+            MQTT_DISCOVERY_UPDATED.format(*discovery_hash),
+            self._async_discovery_callback,
         )
 
-        async def _async_remove_state_and_registry_entry(
-            self: MqttDiscoveryUpdateMixin,
-        ) -> None:
-            """Remove entity's state and entity registry entry.
+    async def _async_remove_state_and_registry_entry(
+        self: MqttDiscoveryUpdateMixin,
+    ) -> None:
+        """Remove entity's state and entity registry entry.
 
-            Remove entity from entity registry if it is registered,
-            this also removes the state. If the entity is not in the entity
-            registry, just remove the state.
-            """
-            entity_registry = er.async_get(self.hass)
-            if entity_entry := entity_registry.async_get(self.entity_id):
-                entity_registry.async_remove(self.entity_id)
-                await cleanup_device_registry(
-                    self.hass, entity_entry.device_id, entity_entry.config_entry_id
-                )
-            else:
-                await self.async_remove(force_remove=True)
+        Remove entity from entity registry if it is registered,
+        this also removes the state. If the entity is not in the entity
+        registry, just remove the state.
+        """
+        entity_registry = er.async_get(self.hass)
+        if entity_entry := entity_registry.async_get(self.entity_id):
+            entity_registry.async_remove(self.entity_id)
+            await cleanup_device_registry(
+                self.hass, entity_entry.device_id, entity_entry.config_entry_id
+            )
+        else:
+            await self.async_remove(force_remove=True)
 
-        async def _async_process_discovery_update(
-            payload: MQTTDiscoveryPayload,
-            discovery_update: Callable[
-                [MQTTDiscoveryPayload], Coroutine[Any, Any, None]
-            ],
-            discovery_data: DiscoveryInfoType,
-        ) -> None:
-            """Process discovery update."""
-            try:
-                await discovery_update(payload)
-            finally:
-                send_discovery_done(self.hass, discovery_data)
-
-        async def _async_process_discovery_update_and_remove(
-            payload: MQTTDiscoveryPayload, discovery_data: DiscoveryInfoType
-        ) -> None:
-            """Process discovery update and remove entity."""
-            self._cleanup_discovery_on_remove()
-            await _async_remove_state_and_registry_entry(self)
+    async def _async_process_discovery_update(
+        self,
+        payload: MQTTDiscoveryPayload,
+        discovery_update: Callable[[MQTTDiscoveryPayload], Coroutine[Any, Any, None]],
+        discovery_data: DiscoveryInfoType,
+    ) -> None:
+        """Process discovery update."""
+        try:
+            await discovery_update(payload)
+        finally:
             send_discovery_done(self.hass, discovery_data)
 
-        @callback
-        def discovery_callback(payload: MQTTDiscoveryPayload) -> None:
-            """Handle discovery update.
+    async def _async_process_discovery_update_and_remove(self) -> None:
+        """Process discovery update and remove entity."""
+        if TYPE_CHECKING:
+            assert self._discovery_data
+        self._cleanup_discovery_on_remove()
+        await self._async_remove_state_and_registry_entry()
+        send_discovery_done(self.hass, self._discovery_data)
 
-            If the payload has changed we will create a task to
-            do the discovery update.
+    @callback
+    def _async_discovery_callback(self, payload: MQTTDiscoveryPayload) -> None:
+        """Handle discovery update.
 
-            As this callback can fire when nothing has changed, this
-            is a normal function to avoid task creation until it is needed.
-            """
-            _LOGGER.debug(
-                "Got update for entity with hash: %s '%s'",
-                discovery_hash,
-                payload,
+        If the payload has changed we will create a task to
+        do the discovery update.
+
+        As this callback can fire when nothing has changed, this
+        is a normal function to avoid task creation until it is needed.
+        """
+        if TYPE_CHECKING:
+            assert self._discovery_data
+        discovery_hash: tuple[str, str] = self._discovery_data[ATTR_DISCOVERY_HASH]
+        _LOGGER.debug(
+            "Got update for entity with hash: %s '%s'",
+            discovery_hash,
+            payload,
+        )
+        old_payload: DiscoveryInfoType
+        old_payload = self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
+        debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
+        if not payload:
+            # Empty payload: Remove component
+            _LOGGER.info("Removing component: %s", self.entity_id)
+            self.hass.async_create_task(
+                self._async_process_discovery_update_and_remove()
             )
-            if TYPE_CHECKING:
-                assert self._discovery_data
-            old_payload: DiscoveryInfoType
-            old_payload = self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
-            debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
-            if not payload:
-                # Empty payload: Remove component
-                _LOGGER.info("Removing component: %s", self.entity_id)
+        elif self._discovery_update:
+            if old_payload != payload:
+                # Non-empty, changed payload: Notify component
+                _LOGGER.info("Updating component: %s", self.entity_id)
                 self.hass.async_create_task(
-                    _async_process_discovery_update_and_remove(
-                        payload, self._discovery_data
+                    self._async_process_discovery_update(
+                        payload, self._discovery_update, self._discovery_data
                     )
                 )
-            elif self._discovery_update:
-                if old_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]:
-                    # Non-empty, changed payload: Notify component
-                    _LOGGER.info("Updating component: %s", self.entity_id)
-                    self.hass.async_create_task(
-                        _async_process_discovery_update(
-                            payload, self._discovery_update, self._discovery_data
-                        )
-                    )
-                else:
-                    # Non-empty, unchanged payload: Ignore to avoid changing states
-                    _LOGGER.debug("Ignoring unchanged update for: %s", self.entity_id)
-                    send_discovery_done(self.hass, self._discovery_data)
-
-        if discovery_hash:
-            if TYPE_CHECKING:
-                assert self._discovery_data is not None
-            debug_info.add_entity_discovery_data(
-                self.hass, self._discovery_data, self.entity_id
-            )
-            # Set in case the entity has been removed and is re-added,
-            # for example when changing entity_id
-            set_discovery_hash(self.hass, discovery_hash)
-            self._remove_discovery_updated = async_dispatcher_connect(
-                self.hass,
-                MQTT_DISCOVERY_UPDATED.format(*discovery_hash),
-                discovery_callback,
-            )
+            else:
+                # Non-empty, unchanged payload: Ignore to avoid changing states
+                _LOGGER.debug("Ignoring unchanged update for: %s", self.entity_id)
+                send_discovery_done(self.hass, self._discovery_data)
 
     async def async_removed_from_registry(self) -> None:
         """Clear retained discovery topic in broker."""
@@ -1193,7 +1188,7 @@ class MqttEntity(
 
     @staticmethod
     @abstractmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
 
     def _set_entity_name(self, config: ConfigType) -> None:

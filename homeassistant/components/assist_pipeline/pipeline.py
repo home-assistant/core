@@ -5,7 +5,7 @@ from __future__ import annotations
 import array
 import asyncio
 from collections import defaultdict, deque
-from collections.abc import AsyncGenerator, AsyncIterable, Callable, Iterable
+from collections.abc import AsyncIterable, Callable, Iterable
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 import logging
@@ -16,6 +16,7 @@ import time
 from typing import TYPE_CHECKING, Any, Final, Literal, cast
 import wave
 
+from typing_extensions import AsyncGenerator
 import voluptuous as vol
 
 if TYPE_CHECKING:
@@ -44,7 +45,7 @@ from homeassistant.helpers.collection import (
 )
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType, VolDictType
 from homeassistant.util import (
     dt as dt_util,
     language as language_util,
@@ -93,7 +94,7 @@ def validate_language(data: dict[str, Any]) -> Any:
     return data
 
 
-PIPELINE_FIELDS = {
+PIPELINE_FIELDS: VolDictType = {
     vol.Required("conversation_engine"): str,
     vol.Required("conversation_language"): str,
     vol.Required("language"): str,
@@ -922,7 +923,7 @@ class PipelineRun:
         stt_vad: VoiceCommandSegmenter | None,
         sample_rate: int = 16000,
         sample_width: int = 2,
-    ) -> AsyncGenerator[bytes, None]:
+    ) -> AsyncGenerator[bytes]:
         """Yield audio chunks until VAD detects silence or speech-to-text completes."""
         chunk_seconds = AUDIO_PROCESSOR_SAMPLES / sample_rate
         sent_vad_start = False
@@ -1185,7 +1186,7 @@ class PipelineRun:
         audio_stream: AsyncIterable[bytes],
         sample_rate: int = 16000,
         sample_width: int = 2,
-    ) -> AsyncGenerator[ProcessedAudioChunk, None]:
+    ) -> AsyncGenerator[ProcessedAudioChunk]:
         """Apply volume transformation only (no VAD/audio enhancements) with optional chunking."""
         ms_per_sample = sample_rate // 1000
         ms_per_chunk = (AUDIO_PROCESSOR_SAMPLES // sample_width) // ms_per_sample
@@ -1220,7 +1221,7 @@ class PipelineRun:
         audio_stream: AsyncIterable[bytes],
         sample_rate: int = 16000,
         sample_width: int = 2,
-    ) -> AsyncGenerator[ProcessedAudioChunk, None]:
+    ) -> AsyncGenerator[ProcessedAudioChunk]:
         """Split audio into 10 ms chunks and apply VAD/noise suppression/auto gain/volume transformation."""
         assert self.audio_processor is not None
 
@@ -1386,7 +1387,7 @@ class PipelineInput:
                     # Send audio in the buffer first to speech-to-text, then move on to stt_stream.
                     # This is basically an async itertools.chain.
                     async def buffer_then_audio_stream() -> (
-                        AsyncGenerator[ProcessedAudioChunk, None]
+                        AsyncGenerator[ProcessedAudioChunk]
                     ):
                         # Buffered audio
                         for chunk in stt_audio_buffer:
@@ -1604,15 +1605,9 @@ class PipelineStorageCollectionWebsocket(
     """Class to expose storage collection management over websocket."""
 
     @callback
-    def async_setup(
-        self,
-        hass: HomeAssistant,
-        *,
-        create_list: bool = True,
-        create_create: bool = True,
-    ) -> None:
+    def async_setup(self, hass: HomeAssistant) -> None:
         """Set up the websocket commands."""
-        super().async_setup(hass, create_list=create_list, create_create=create_create)
+        super().async_setup(hass)
 
         websocket_api.async_register_command(
             hass,
@@ -1647,9 +1642,7 @@ class PipelineStorageCollectionWebsocket(
         try:
             await super().ws_delete_item(hass, connection, msg)
         except PipelinePreferred as exc:
-            connection.send_error(
-                msg["id"], websocket_api.const.ERR_NOT_ALLOWED, str(exc)
-            )
+            connection.send_error(msg["id"], websocket_api.ERR_NOT_ALLOWED, str(exc))
 
     @callback
     def ws_get_item(
@@ -1663,7 +1656,7 @@ class PipelineStorageCollectionWebsocket(
         if item_id not in self.storage_collection.data:
             connection.send_error(
                 msg["id"],
-                websocket_api.const.ERR_NOT_FOUND,
+                websocket_api.ERR_NOT_FOUND,
                 f"Unable to find {self.item_id_key} {item_id}",
             )
             return
@@ -1694,7 +1687,7 @@ class PipelineStorageCollectionWebsocket(
             self.storage_collection.async_set_preferred_item(msg[self.item_id_key])
         except ItemNotFound:
             connection.send_error(
-                msg["id"], websocket_api.const.ERR_NOT_FOUND, "unknown item"
+                msg["id"], websocket_api.ERR_NOT_FOUND, "unknown item"
             )
             return
         connection.send_result(msg["id"])

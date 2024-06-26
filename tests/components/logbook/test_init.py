@@ -61,7 +61,7 @@ EMPTY_CONFIG = logbook.CONFIG_SCHEMA({logbook.DOMAIN: {}})
 
 
 @pytest.fixture
-async def hass_(recorder_mock, hass):
+async def hass_(recorder_mock: Recorder, hass: HomeAssistant) -> HomeAssistant:
     """Set up things to be run when tests are started."""
     assert await async_setup_component(hass, logbook.DOMAIN, EMPTY_CONFIG)
     return hass
