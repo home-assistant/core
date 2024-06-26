@@ -10,7 +10,7 @@ from requests import RequestException
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -49,7 +49,7 @@ SUPPORT_LGTV = (
     | MediaPlayerEntityFeature.STOP
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
         vol.Required(CONF_HOST): cv.string,
