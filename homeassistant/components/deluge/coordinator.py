@@ -4,11 +4,10 @@ from __future__ import annotations
 
 from datetime import timedelta
 from ssl import SSLError
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from deluge_client.client import DelugeRPCClient, FailedToReconnectException
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -16,16 +15,19 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DATA_KEYS, LOGGER
 
+if TYPE_CHECKING:
+    from . import DelugeConfigEntry
+
 
 class DelugeDataUpdateCoordinator(
     DataUpdateCoordinator[dict[Platform, dict[str, Any]]]
 ):
     """Data update coordinator for the Deluge integration."""
 
-    config_entry: ConfigEntry
+    config_entry: DelugeConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, api: DelugeRPCClient, entry: ConfigEntry
+        self, hass: HomeAssistant, api: DelugeRPCClient, entry: DelugeConfigEntry
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(

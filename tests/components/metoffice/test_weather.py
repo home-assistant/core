@@ -14,7 +14,6 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.metoffice.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
-    LEGACY_SERVICE_GET_FORECAST,
     SERVICE_GET_FORECASTS,
 )
 from homeassistant.const import STATE_UNAVAILABLE
@@ -94,8 +93,8 @@ async def test_site_cannot_connect(
 
     assert hass.states.get("weather.met_office_wavertree_3hourly") is None
     assert hass.states.get("weather.met_office_wavertree_daily") is None
-    for sensor_id in WAVERTREE_SENSOR_RESULTS:
-        sensor_name, _ = WAVERTREE_SENSOR_RESULTS[sensor_id]
+    for sensor in WAVERTREE_SENSOR_RESULTS.values():
+        sensor_name = sensor[0]
         sensor = hass.states.get(f"sensor.wavertree_{sensor_name}")
         assert sensor is None
 
@@ -254,10 +253,7 @@ async def test_new_config_entry(
 @pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
 @pytest.mark.parametrize(
     ("service"),
-    [
-        SERVICE_GET_FORECASTS,
-        LEGACY_SERVICE_GET_FORECAST,
-    ],
+    [SERVICE_GET_FORECASTS],
 )
 async def test_forecast_service(
     hass: HomeAssistant,

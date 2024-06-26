@@ -54,6 +54,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "backflush_enabled": {
+        "name": "Backflush active"
+      },
       "brew_active": {
         "name": "Brewing active"
       },
@@ -68,7 +71,7 @@
     },
     "calendar": {
       "auto_on_off_schedule": {
-        "name": "Auto on/off schedule"
+        "name": "Auto on/off schedule ({id})"
       }
     },
     "number": {
@@ -140,7 +143,7 @@
     },
     "switch": {
       "auto_on_off": {
-        "name": "Auto on/off"
+        "name": "Auto on/off ({id})"
       },
       "steam_boiler": {
         "name": "Steam boiler"
@@ -153,6 +156,12 @@
       "gateway_firmware": {
         "name": "Gateway firmware"
       }
+    }
+  },
+  "issues": {
+    "unsupported_gateway_firmware": {
+      "title": "Unsupported gateway firmware",
+      "description": "Gateway firmware {gateway_version} is no longer supported by this integration, please update."
     }
   }
 }

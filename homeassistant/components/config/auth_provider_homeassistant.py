@@ -19,6 +19,7 @@ def async_setup(hass: HomeAssistant) -> bool:
     websocket_api.async_register_command(hass, websocket_delete)
     websocket_api.async_register_command(hass, websocket_change_password)
     websocket_api.async_register_command(hass, websocket_admin_change_password)
+    websocket_api.async_register_command(hass, websocket_admin_change_username)
     return True
 
 
@@ -194,3 +195,44 @@ async def websocket_admin_change_password(
             msg["id"], "credentials_not_found", "Credentials not found"
         )
         return
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required(
+            "type"
+        ): "config/auth_provider/homeassistant/admin_change_username",
+        vol.Required("user_id"): str,
+        vol.Required("username"): str,
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_admin_change_username(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Change the username for any user."""
+    if not connection.user.is_owner:
+        raise Unauthorized(context=connection.context(msg))
+
+    if (user := await hass.auth.async_get_user(msg["user_id"])) is None:
+        connection.send_error(msg["id"], "user_not_found", "User not found")
+        return
+
+    provider = auth_ha.async_get_provider(hass)
+    found_credential = None
+    for credential in user.credentials:
+        if credential.auth_provider_type == provider.type:
+            found_credential = credential
+            break
+
+    if found_credential is None:
+        connection.send_error(
+            msg["id"], "credentials_not_found", "Credentials not found"
+        )
+        return
+
+    await provider.async_change_username(found_credential, msg["username"])
+    connection.send_result(msg["id"])

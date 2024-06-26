@@ -33,6 +33,7 @@ from . import (
     entity_registry,
     floor_registry,
 )
+from .typing import VolSchemaType
 
 _LOGGER = logging.getLogger(__name__)
 type _SlotsType = dict[str, Any]
@@ -140,6 +141,7 @@ async def async_handle(
     except IntentError:
         raise  # bubble up intent related errors
     except Exception as err:
+        _LOGGER.exception("Error handling %s", intent_type)
         raise IntentUnexpectedError(f"Error handling {intent_type}") from err
     return result
 
@@ -351,7 +353,7 @@ class MatchTargetsCandidate:
     matched_name: str | None = None
 
 
-def _find_areas(
+def find_areas(
     name: str, areas: area_registry.AreaRegistry
 ) -> Iterable[area_registry.AreaEntry]:
     """Find all areas matching a name (including aliases)."""
@@ -371,7 +373,7 @@ def _find_areas(
                 break
 
 
-def _find_floors(
+def find_floors(
     name: str, floors: floor_registry.FloorRegistry
 ) -> Iterable[floor_registry.FloorEntry]:
     """Find all floors matching a name (including aliases)."""
@@ -529,7 +531,7 @@ def async_match_targets(  # noqa: C901
         if not states:
             return MatchTargetsResult(False, MatchFailedReason.STATE)
 
-    # Exit early so we can to avoid registry lookups
+    # Exit early so we can avoid registry lookups
     if not (
         constraints.name
         or constraints.features
@@ -579,7 +581,7 @@ def async_match_targets(  # noqa: C901
         if constraints.floor_name:
             # Filter by areas associated with floor
             fr = floor_registry.async_get(hass)
-            targeted_floors = list(_find_floors(constraints.floor_name, fr))
+            targeted_floors = list(find_floors(constraints.floor_name, fr))
             if not targeted_floors:
                 return MatchTargetsResult(
                     False,
@@ -608,7 +610,7 @@ def async_match_targets(  # noqa: C901
             possible_area_ids = {area.id for area in ar.async_list_areas()}
 
         if constraints.area_name:
-            targeted_areas = list(_find_areas(constraints.area_name, ar))
+            targeted_areas = list(find_areas(constraints.area_name, ar))
             if not targeted_areas:
                 return MatchTargetsResult(
                     False,
@@ -806,8 +808,8 @@ class DynamicServiceIntentHandler(IntentHandler):
         self,
         intent_type: str,
         speech: str | None = None,
-        required_slots: dict[str | tuple[str, str], vol.Schema] | None = None,
-        optional_slots: dict[str | tuple[str, str], vol.Schema] | None = None,
+        required_slots: dict[str | tuple[str, str], VolSchemaType] | None = None,
+        optional_slots: dict[str | tuple[str, str], VolSchemaType] | None = None,
         required_domains: set[str] | None = None,
         required_features: int | None = None,
         required_states: set[str] | None = None,
@@ -823,7 +825,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         self.description = description
         self.platforms = platforms
 
-        self.required_slots: dict[tuple[str, str], vol.Schema] = {}
+        self.required_slots: dict[tuple[str, str], VolSchemaType] = {}
         if required_slots:
             for key, value_schema in required_slots.items():
                 if isinstance(key, str):
@@ -832,7 +834,7 @@ class DynamicServiceIntentHandler(IntentHandler):
 
                 self.required_slots[key] = value_schema
 
-        self.optional_slots: dict[tuple[str, str], vol.Schema] = {}
+        self.optional_slots: dict[tuple[str, str], VolSchemaType] = {}
         if optional_slots:
             for key, value_schema in optional_slots.items():
                 if isinstance(key, str):
@@ -1106,8 +1108,8 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
         domain: str,
         service: str,
         speech: str | None = None,
-        required_slots: dict[str | tuple[str, str], vol.Schema] | None = None,
-        optional_slots: dict[str | tuple[str, str], vol.Schema] | None = None,
+        required_slots: dict[str | tuple[str, str], VolSchemaType] | None = None,
+        optional_slots: dict[str | tuple[str, str], VolSchemaType] | None = None,
         required_domains: set[str] | None = None,
         required_features: int | None = None,
         required_states: set[str] | None = None,
@@ -1362,6 +1364,8 @@ class IntentResponse:
 
         if self.reprompt:
             response_dict["reprompt"] = self.reprompt
+        if self.speech_slots:
+            response_dict["speech_slots"] = self.speech_slots
 
         response_data: dict[str, Any] = {}
 

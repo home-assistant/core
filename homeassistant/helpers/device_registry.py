@@ -185,6 +185,35 @@ class DeviceInfoError(HomeAssistantError):
         self.domain = domain
 
 
+class DeviceCollisionError(HomeAssistantError):
+    """Raised when a device collision is detected."""
+
+
+class DeviceIdentifierCollisionError(DeviceCollisionError):
+    """Raised when a device identifier collision is detected."""
+
+    def __init__(
+        self, identifiers: set[tuple[str, str]], existing_device: DeviceEntry
+    ) -> None:
+        """Initialize error."""
+        super().__init__(
+            f"Identifiers {identifiers} already registered with {existing_device}"
+        )
+
+
+class DeviceConnectionCollisionError(DeviceCollisionError):
+    """Raised when a device connection collision is detected."""
+
+    def __init__(
+        self, normalized_connections: set[tuple[str, str]], existing_device: DeviceEntry
+    ) -> None:
+        """Initialize error."""
+        super().__init__(
+            f"Connections {normalized_connections} "
+            f"already registered with {existing_device}"
+        )
+
+
 def _validate_device_info(
     config_entry: ConfigEntry,
     device_info: DeviceInfo,
@@ -244,7 +273,7 @@ class DeviceEntry:
     """Device Registry Entry."""
 
     area_id: str | None = attr.ib(default=None)
-    config_entries: set[str] = attr.ib(converter=set, factory=set)
+    config_entries: list[str] = attr.ib(factory=list)
     configuration_url: str | None = attr.ib(default=None)
     connections: set[tuple[str, str]] = attr.ib(converter=set, factory=set)
     disabled_by: DeviceEntryDisabler | None = attr.ib(default=None)
@@ -278,7 +307,7 @@ class DeviceEntry:
         return {
             "area_id": self.area_id,
             "configuration_url": self.configuration_url,
-            "config_entries": list(self.config_entries),
+            "config_entries": self.config_entries,
             "connections": list(self.connections),
             "disabled_by": self.disabled_by,
             "entry_type": self.entry_type,
@@ -318,7 +347,7 @@ class DeviceEntry:
             json_bytes(
                 {
                     "area_id": self.area_id,
-                    "config_entries": list(self.config_entries),
+                    "config_entries": self.config_entries,
                     "configuration_url": self.configuration_url,
                     "connections": list(self.connections),
                     "disabled_by": self.disabled_by,
@@ -343,7 +372,7 @@ class DeviceEntry:
 class DeletedDeviceEntry:
     """Deleted Device Registry Entry."""
 
-    config_entries: set[str] = attr.ib()
+    config_entries: list[str] = attr.ib()
     connections: set[tuple[str, str]] = attr.ib()
     identifiers: set[tuple[str, str]] = attr.ib()
     id: str = attr.ib()
@@ -358,7 +387,7 @@ class DeletedDeviceEntry:
         """Create DeviceEntry from DeletedDeviceEntry."""
         return DeviceEntry(
             # type ignores: likely https://github.com/python/mypy/issues/8625
-            config_entries={config_entry_id},  # type: ignore[arg-type]
+            config_entries=[config_entry_id],
             connections=self.connections & connections,  # type: ignore[arg-type]
             identifiers=self.identifiers & identifiers,  # type: ignore[arg-type]
             id=self.id,
@@ -371,7 +400,7 @@ class DeletedDeviceEntry:
         return json_fragment(
             json_bytes(
                 {
-                    "config_entries": list(self.config_entries),
+                    "config_entries": self.config_entries,
                     "connections": list(self.connections),
                     "identifiers": list(self.identifiers),
                     "id": self.id,
@@ -759,8 +788,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         device = self.async_update_device(
             device.id,
+            allow_collisions=True,
             add_config_entry_id=config_entry_id,
             configuration_url=configuration_url,
+            device_info_type=device_info_type,
             disabled_by=disabled_by,
             entry_type=entry_type,
             hw_version=hw_version,
@@ -781,13 +812,17 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         return device
 
     @callback
-    def async_update_device(
+    def async_update_device(  # noqa: C901
         self,
         device_id: str,
         *,
         add_config_entry_id: str | UndefinedType = UNDEFINED,
+        # Temporary flag so we don't blow up when collisions are implicitly introduced
+        # by calls to async_get_or_create. Must not be set by integrations.
+        allow_collisions: bool = False,
         area_id: str | None | UndefinedType = UNDEFINED,
         configuration_url: str | URL | None | UndefinedType = UNDEFINED,
+        device_info_type: str | UndefinedType = UNDEFINED,
         disabled_by: DeviceEntryDisabler | None | UndefinedType = UNDEFINED,
         entry_type: DeviceEntryType | None | UndefinedType = UNDEFINED,
         hw_version: str | None | UndefinedType = UNDEFINED,
@@ -851,21 +886,32 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             area = ar.async_get(self.hass).async_get_or_create(suggested_area)
             area_id = area.id
 
-        if (
-            add_config_entry_id is not UNDEFINED
-            and add_config_entry_id not in old.config_entries
-        ):
-            config_entries = old.config_entries | {add_config_entry_id}
+        if add_config_entry_id is not UNDEFINED:
+            # primary ones have to be at the start.
+            if device_info_type == "primary":
+                # Move entry to first spot
+                if not config_entries or config_entries[0] != add_config_entry_id:
+                    config_entries = [add_config_entry_id] + [
+                        entry
+                        for entry in config_entries
+                        if entry != add_config_entry_id
+                    ]
+
+            # Not primary, append
+            elif add_config_entry_id not in config_entries:
+                config_entries = [*config_entries, add_config_entry_id]
 
         if (
             remove_config_entry_id is not UNDEFINED
             and remove_config_entry_id in config_entries
         ):
-            if config_entries == {remove_config_entry_id}:
+            if config_entries == [remove_config_entry_id]:
                 self.async_remove_device(device_id)
                 return None
 
-            config_entries = config_entries - {remove_config_entry_id}
+            config_entries = [
+                entry for entry in config_entries if entry != remove_config_entry_id
+            ]
 
         if config_entries != old.config_entries:
             new_values["config_entries"] = config_entries
@@ -881,12 +927,36 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 new_values[attr_name] = old_value | setvalue
                 old_values[attr_name] = old_value
 
+        if merge_connections is not UNDEFINED:
+            normalized_connections = self._validate_connections(
+                device_id,
+                merge_connections,
+                allow_collisions,
+            )
+            old_connections = old.connections
+            if not normalized_connections.issubset(old_connections):
+                new_values["connections"] = old_connections | normalized_connections
+                old_values["connections"] = old_connections
+
+        if merge_identifiers is not UNDEFINED:
+            merge_identifiers = self._validate_identifiers(
+                device_id, merge_identifiers, allow_collisions
+            )
+            old_identifiers = old.identifiers
+            if not merge_identifiers.issubset(old_identifiers):
+                new_values["identifiers"] = old_identifiers | merge_identifiers
+                old_values["identifiers"] = old_identifiers
+
         if new_connections is not UNDEFINED:
-            new_values["connections"] = _normalize_connections(new_connections)
+            new_values["connections"] = self._validate_connections(
+                device_id, new_connections, False
+            )
             old_values["connections"] = old.connections
 
         if new_identifiers is not UNDEFINED:
-            new_values["identifiers"] = new_identifiers
+            new_values["identifiers"] = self._validate_identifiers(
+                device_id, new_identifiers, False
+            )
             old_values["identifiers"] = old.identifiers
 
         if configuration_url is not UNDEFINED:
@@ -943,6 +1013,53 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         return new
 
     @callback
+    def _validate_connections(
+        self,
+        device_id: str,
+        connections: set[tuple[str, str]],
+        allow_collisions: bool,
+    ) -> set[tuple[str, str]]:
+        """Normalize and validate connections, raise on collision with other devices."""
+        normalized_connections = _normalize_connections(connections)
+        if allow_collisions:
+            return normalized_connections
+
+        for connection in normalized_connections:
+            # We need to iterate over each connection because if there is a
+            # conflict, the index will only see the last one and we will not
+            # be able to tell which one caused the conflict
+            if (
+                existing_device := self.async_get_device(connections={connection})
+            ) and existing_device.id != device_id:
+                raise DeviceConnectionCollisionError(
+                    normalized_connections, existing_device
+                )
+
+        return normalized_connections
+
+    @callback
+    def _validate_identifiers(
+        self,
+        device_id: str,
+        identifiers: set[tuple[str, str]],
+        allow_collisions: bool,
+    ) -> set[tuple[str, str]]:
+        """Validate identifiers, raise on collision with other devices."""
+        if allow_collisions:
+            return identifiers
+
+        for identifier in identifiers:
+            # We need to iterate over each identifier because if there is a
+            # conflict, the index will only see the last one and we will not
+            # be able to tell which one caused the conflict
+            if (
+                existing_device := self.async_get_device(identifiers={identifier})
+            ) and existing_device.id != device_id:
+                raise DeviceIdentifierCollisionError(identifiers, existing_device)
+
+        return identifiers
+
+    @callback
     def async_remove_device(self, device_id: str) -> None:
         """Remove a device from the device registry."""
         self.hass.verify_event_loop_thread("device_registry.async_remove_device")
@@ -978,7 +1095,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             for device in data["devices"]:
                 devices[device["id"]] = DeviceEntry(
                     area_id=device["area_id"],
-                    config_entries=set(device["config_entries"]),
+                    config_entries=device["config_entries"],
                     configuration_url=device["configuration_url"],
                     # type ignores (if tuple arg was cast): likely https://github.com/python/mypy/issues/8625
                     connections={
@@ -1013,7 +1130,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             # Introduced in 0.111
             for device in data["deleted_devices"]:
                 deleted_devices[device["id"]] = DeletedDeviceEntry(
-                    config_entries=set(device["config_entries"]),
+                    config_entries=device["config_entries"],
                     connections={tuple(conn) for conn in device["connections"]},
                     identifiers={tuple(iden) for iden in device["identifiers"]},
                     id=device["id"],
@@ -1044,13 +1161,15 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             config_entries = deleted_device.config_entries
             if config_entry_id not in config_entries:
                 continue
-            if config_entries == {config_entry_id}:
+            if config_entries == [config_entry_id]:
                 # Add a time stamp when the deleted device became orphaned
                 self.deleted_devices[deleted_device.id] = attr.evolve(
-                    deleted_device, orphaned_timestamp=now_time, config_entries=set()
+                    deleted_device, orphaned_timestamp=now_time, config_entries=[]
                 )
             else:
-                config_entries = config_entries - {config_entry_id}
+                config_entries = [
+                    entry for entry in config_entries if entry != config_entry_id
+                ]
                 # No need to reindex here since we currently
                 # do not have a lookup by config entry
                 self.deleted_devices[deleted_device.id] = attr.evolve(
@@ -1156,8 +1275,8 @@ def async_config_entry_disabled_by_changed(
         if device.disabled:
             # Device already disabled, do not overwrite
             continue
-        if len(device.config_entries) > 1 and device.config_entries.intersection(
-            enabled_config_entries
+        if len(device.config_entries) > 1 and any(
+            entry_id in enabled_config_entries for entry_id in device.config_entries
         ):
             continue
         registry.async_update_device(

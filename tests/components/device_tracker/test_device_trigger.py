@@ -43,7 +43,7 @@ def calls(hass: HomeAssistant) -> list[ServiceCall]:
 
 
 @pytest.fixture(autouse=True)
-def setup_zone(hass):
+def setup_zone(hass: HomeAssistant) -> None:
     """Create test zone."""
     hass.loop.run_until_complete(
         async_setup_component(
@@ -85,7 +85,7 @@ async def test_get_triggers(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
-        for trigger in ["leaves", "enters"]
+        for trigger in ("leaves", "enters")
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
@@ -133,7 +133,7 @@ async def test_get_triggers_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for trigger in ["leaves", "enters"]
+        for trigger in ("leaves", "enters")
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id

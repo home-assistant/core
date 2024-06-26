@@ -69,7 +69,7 @@ async def test_entry_setup_unload(
 
     assert matter_client.connect.call_count == 1
     assert entry.state is ConfigEntryState.LOADED
-    entity_state = hass.states.get("light.mock_onoff_light")
+    entity_state = hass.states.get("light.mock_onoff_light_light")
     assert entity_state
     assert entity_state.state != STATE_UNAVAILABLE
 
@@ -77,7 +77,7 @@ async def test_entry_setup_unload(
 
     assert matter_client.disconnect.call_count == 1
     assert entry.state is ConfigEntryState.NOT_LOADED
-    entity_state = hass.states.get("light.mock_onoff_light")
+    entity_state = hass.states.get("light.mock_onoff_light_light")
     assert entity_state
     assert entity_state.state == STATE_UNAVAILABLE
 
@@ -625,7 +625,7 @@ async def test_remove_config_entry_device(
     device_entry = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     )[0]
-    entity_id = "light.m5stamp_lighting_app"
+    entity_id = "light.m5stamp_lighting_app_light"
 
     assert device_entry
     assert entity_registry.async_get(entity_id)

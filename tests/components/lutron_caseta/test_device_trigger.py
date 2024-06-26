@@ -148,7 +148,7 @@ async def test_get_triggers(hass: HomeAssistant) -> None:
             CONF_TYPE: "press",
             "metadata": {},
         }
-        for subtype in ["on", "stop", "off", "raise", "lower"]
+        for subtype in ("on", "stop", "off", "raise", "lower")
     ]
     expected_triggers += [
         {
@@ -159,7 +159,7 @@ async def test_get_triggers(hass: HomeAssistant) -> None:
             CONF_TYPE: "release",
             "metadata": {},
         }
-        for subtype in ["on", "stop", "off", "raise", "lower"]
+        for subtype in ("on", "stop", "off", "raise", "lower")
     ]
 
     triggers = await async_get_device_automations(

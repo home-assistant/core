@@ -31,7 +31,7 @@ class RoborockNumberDescription(NumberEntityDescription):
     # Gets the status of the switch
     cache_key: CacheableAttribute
     # Sets the status of the switch
-    update_value: Callable[[AttributeCache, float], Coroutine[Any, Any, dict]]
+    update_value: Callable[[AttributeCache, float], Coroutine[Any, Any, None]]
 
 
 NUMBER_DESCRIPTIONS: list[RoborockNumberDescription] = [

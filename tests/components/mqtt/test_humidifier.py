@@ -106,7 +106,7 @@ async def async_set_mode(
     """Set mode for all or specified humidifier."""
     data = {
         key: value
-        for key, value in [(ATTR_ENTITY_ID, entity_id), (ATTR_MODE, mode)]
+        for key, value in ((ATTR_ENTITY_ID, entity_id), (ATTR_MODE, mode))
         if value is not None
     }
 
@@ -119,7 +119,7 @@ async def async_set_humidity(
     """Set target humidity for all or specified humidifier."""
     data = {
         key: value
-        for key, value in [(ATTR_ENTITY_ID, entity_id), (ATTR_HUMIDITY, humidity)]
+        for key, value in ((ATTR_ENTITY_ID, entity_id), (ATTR_HUMIDITY, humidity))
         if value is not None
     }
 
@@ -1276,17 +1276,11 @@ async def test_update_with_json_attrs_bad_json(
 
 
 async def test_discovery_update_attr(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        humidifier.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, humidifier.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -1323,21 +1317,15 @@ async def test_unique_id(
 
 
 async def test_discovery_removal_humidifier(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered humidifier."""
     data = '{ "name": "test", "command_topic": "test_topic", "target_humidity_command_topic": "test-topic2" }'
-    await help_test_discovery_removal(
-        hass, mqtt_mock_entry, caplog, humidifier.DOMAIN, data
-    )
+    await help_test_discovery_removal(hass, mqtt_mock_entry, humidifier.DOMAIN, data)
 
 
 async def test_discovery_update_humidifier(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered humidifier."""
     config1 = {
@@ -1351,19 +1339,12 @@ async def test_discovery_update_humidifier(
         "target_humidity_command_topic": "test-topic2",
     }
     await help_test_discovery_update(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        humidifier.DOMAIN,
-        config1,
-        config2,
+        hass, mqtt_mock_entry, humidifier.DOMAIN, config1, config2
     )
 
 
 async def test_discovery_update_unchanged_humidifier(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered humidifier."""
     data1 = '{ "name": "Beer", "command_topic": "test_topic", "target_humidity_command_topic": "test-topic2" }'
@@ -1371,26 +1352,19 @@ async def test_discovery_update_unchanged_humidifier(
         "homeassistant.components.mqtt.fan.MqttFan.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass,
-            mqtt_mock_entry,
-            caplog,
-            humidifier.DOMAIN,
-            data1,
-            discovery_update,
+            hass, mqtt_mock_entry, humidifier.DOMAIN, data1, discovery_update
         )
 
 
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
     data2 = '{ "name": "Milk", "command_topic": "test_topic", "target_humidity_command_topic": "test-topic2" }'
     await help_test_discovery_broken(
-        hass, mqtt_mock_entry, caplog, humidifier.DOMAIN, data1, data2
+        hass, mqtt_mock_entry, humidifier.DOMAIN, data1, data2
     )
 
 

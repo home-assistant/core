@@ -5,49 +5,30 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from aioautomower.exceptions import ApiException
-from aioautomower.model import (
-    MowerActivities,
-    MowerStates,
-    RestrictedReasons,
-    StayOutZones,
-    Zone,
-)
+from aioautomower.model import MowerModes, StayOutZones, Zone
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, EXECUTION_TIME_DELAY
+from . import AutomowerConfigEntry
+from .const import EXECUTION_TIME_DELAY
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerControlEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-ERROR_ACTIVITIES = (
-    MowerActivities.STOPPED_IN_GARDEN,
-    MowerActivities.UNKNOWN,
-    MowerActivities.NOT_APPLICABLE,
-)
-ERROR_STATES = [
-    MowerStates.FATAL_ERROR,
-    MowerStates.ERROR,
-    MowerStates.ERROR_AT_POWER_UP,
-    MowerStates.NOT_APPLICABLE,
-    MowerStates.UNKNOWN,
-    MowerStates.STOPPED,
-    MowerStates.OFF,
-]
-
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AutomowerConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switch platform."""
-    coordinator: AutomowerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     entities: list[SwitchEntity] = []
     entities.extend(
         AutomowerScheduleSwitchEntity(mower_id, coordinator)
@@ -84,19 +65,7 @@ class AutomowerScheduleSwitchEntity(AutomowerControlEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the switch."""
-        attributes = self.mower_attributes
-        return not (
-            attributes.mower.state == MowerStates.RESTRICTED
-            and attributes.planner.restricted_reason == RestrictedReasons.NOT_APPLICABLE
-        )
-
-    @property
-    def available(self) -> bool:
-        """Return True if the device is available."""
-        return super().available and (
-            self.mower_attributes.mower.state not in ERROR_STATES
-            or self.mower_attributes.mower.activity not in ERROR_ACTIVITIES
-        )
+        return self.mower_attributes.mower.mode != MowerModes.HOME
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
@@ -196,7 +165,7 @@ class AutomowerStayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
 def async_remove_entities(
     hass: HomeAssistant,
     coordinator: AutomowerDataUpdateCoordinator,
-    config_entry: ConfigEntry,
+    entry: AutomowerConfigEntry,
     mower_id: str,
 ) -> None:
     """Remove deleted stay-out-zones from Home Assistant."""
@@ -207,9 +176,7 @@ def async_remove_entities(
         for zones_uid in _zones.zones:
             uid = f"{mower_id}_{zones_uid}_stay_out_zones"
             active_zones.add(uid)
-    for entity_entry in er.async_entries_for_config_entry(
-        entity_reg, config_entry.entry_id
-    ):
+    for entity_entry in er.async_entries_for_config_entry(entity_reg, entry.entry_id):
         if (
             entity_entry.domain == Platform.SWITCH
             and (split := entity_entry.unique_id.split("_"))[0] == mower_id

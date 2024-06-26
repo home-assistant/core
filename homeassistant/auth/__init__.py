@@ -53,7 +53,7 @@ async def auth_manager_from_config(
 ) -> AuthManager:
     """Initialize an auth manager from config.
 
-    CORE_CONFIG_SCHEMA will make sure do duplicated auth providers or
+    CORE_CONFIG_SCHEMA will make sure no duplicated auth providers or
     mfa modules exist in configs.
     """
     store = auth_store.AuthStore(hass)
@@ -373,6 +373,13 @@ class AuthManager:
                 await self.async_deactivate_user(user)
 
         self.hass.bus.async_fire(EVENT_USER_UPDATED, {"user_id": user.id})
+
+    @callback
+    def async_update_user_credentials_data(
+        self, credentials: models.Credentials, data: dict[str, Any]
+    ) -> None:
+        """Update credentials data."""
+        self._store.async_update_user_credentials_data(credentials, data=data)
 
     async def async_activate_user(self, user: models.User) -> None:
         """Activate a user."""

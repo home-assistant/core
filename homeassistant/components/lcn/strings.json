@@ -6,6 +6,12 @@
       "fingerprint": "Fingerprint code received",
       "codelock": "Code lock code received",
       "send_keys": "Send keys received"
+    },
+    "extra_fields": {
+      "action": "Action",
+      "code": "Code",
+      "key": "Key",
+      "level": "Level"
     }
   },
   "services": {

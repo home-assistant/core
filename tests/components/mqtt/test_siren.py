@@ -61,8 +61,8 @@ DEFAULT_CONFIG = {
 
 async def async_turn_on(
     hass: HomeAssistant,
-    entity_id: str = ENTITY_MATCH_ALL,
-    parameters: dict[str, Any] = {},
+    entity_id: str,
+    parameters: dict[str, Any],
 ) -> None:
     """Turn all or specified siren on."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
@@ -144,7 +144,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await async_turn_on(hass, entity_id="siren.test")
+    await async_turn_on(hass, entity_id="siren.test", parameters={})
 
     mqtt_mock.async_publish.assert_called_once_with(
         "command-topic", '{"state":"beer on"}', 2, False
@@ -642,17 +642,11 @@ async def test_update_with_json_attrs_bad_json(
 
 
 async def test_discovery_update_attr(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        siren.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, siren.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -687,9 +681,7 @@ async def test_unique_id(
 
 
 async def test_discovery_removal_siren(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered siren."""
     data = (
@@ -697,13 +689,11 @@ async def test_discovery_removal_siren(
         '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
-    await help_test_discovery_removal(hass, mqtt_mock_entry, caplog, siren.DOMAIN, data)
+    await help_test_discovery_removal(hass, mqtt_mock_entry, siren.DOMAIN, data)
 
 
 async def test_discovery_update_siren_topic_template(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered siren."""
     config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][siren.DOMAIN])
@@ -730,7 +720,6 @@ async def test_discovery_update_siren_topic_template(
     await help_test_discovery_update(
         hass,
         mqtt_mock_entry,
-        caplog,
         siren.DOMAIN,
         config1,
         config2,
@@ -740,9 +729,7 @@ async def test_discovery_update_siren_topic_template(
 
 
 async def test_discovery_update_siren_template(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered siren."""
     config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][siren.DOMAIN])
@@ -767,7 +754,6 @@ async def test_discovery_update_siren_template(
     await help_test_discovery_update(
         hass,
         mqtt_mock_entry,
-        caplog,
         siren.DOMAIN,
         config1,
         config2,
@@ -867,9 +853,7 @@ async def test_command_templates(
 
 
 async def test_discovery_update_unchanged_siren(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered siren."""
     data1 = (
@@ -884,7 +868,6 @@ async def test_discovery_update_unchanged_siren(
         await help_test_discovery_update_unchanged(
             hass,
             mqtt_mock_entry,
-            caplog,
             siren.DOMAIN,
             data1,
             discovery_update,
@@ -893,9 +876,7 @@ async def test_discovery_update_unchanged_siren(
 
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
@@ -904,9 +885,7 @@ async def test_discovery_broken(
         '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
-    await help_test_discovery_broken(
-        hass, mqtt_mock_entry, caplog, siren.DOMAIN, data1, data2
-    )
+    await help_test_discovery_broken(hass, mqtt_mock_entry, siren.DOMAIN, data1, data2)
 
 
 async def test_entity_device_info_with_connection(
