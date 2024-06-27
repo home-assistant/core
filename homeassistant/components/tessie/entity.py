@@ -132,6 +132,7 @@ class TessieEnergyEntity(TessieBaseEntity):
         self._attr_device_info = data.device
 
         super().__init__(coordinator, key)
+        self._async_update_attrs()
 
 
 class TessieWallConnectorEntity(TessieBaseEntity):
