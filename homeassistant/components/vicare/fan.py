@@ -74,12 +74,14 @@ async def async_setup_entry(
 class ViCareFan(ViCareEntity, FanEntity):
     """Representation of the ViCare ventilation device."""
 
-    _attr_preset_modes = list[str]([
-        VentilationMode.PERMANENT,
-        VentilationMode.VENTILATION,
-        VentilationMode.SENSOR_DRIVEN,
-        VentilationMode.SENSOR_OVERRIDE,
-    ])
+    _attr_preset_modes = list[str](
+        [
+            VentilationMode.PERMANENT,
+            VentilationMode.VENTILATION,
+            VentilationMode.SENSOR_DRIVEN,
+            VentilationMode.SENSOR_OVERRIDE,
+        ]
+    )
     _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
     _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
 
