@@ -211,13 +211,13 @@ class Remote:
             await self._on_action.async_run(context=context)
             await self.async_update()
         elif self.state != STATE_ON:
-            await self.async_send_key(Keys.power)
+            await self.async_send_key(Keys.POWER)
             await self.async_update()
 
     async def async_turn_off(self):
         """Turn off the TV."""
         if self.state != STATE_OFF:
-            await self.async_send_key(Keys.power)
+            await self.async_send_key(Keys.POWER)
             self.state = STATE_OFF
             await self.async_update()
 
