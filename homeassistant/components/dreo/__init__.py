@@ -13,16 +13,16 @@ from hscloud.hscloudexception import HsCloudException, HsCloudBusinessException
 
 _LOGGER = logging.getLogger(__name__)
 
-type MyConfigEntry = ConfigEntry[MyData]
+type DreoConfigEntry = ConfigEntry[DreoData]
 
 
 @dataclass
-class MyData:
+class DreoData:
     client: HsCloud
     devices: []
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: DreoConfigEntry):
     """Set up Dreo from as config entry."""
     username = config_entry.data[CONF_USERNAME]
     password = config_entry.data[CONF_PASSWORD]
@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry):
     manager = HsCloud(username, password)
     try:
         await hass.async_add_executor_job(manager.login)
-        config_entry.runtime_data = MyData(manager, await hass.async_add_executor_job(manager.get_devices))
+        config_entry.runtime_data = DreoData(manager, await hass.async_add_executor_job(manager.get_devices))
 
     except HsCloudException as ex:
         _LOGGER.exception("unable to connect")
