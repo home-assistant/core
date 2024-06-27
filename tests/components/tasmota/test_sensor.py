@@ -209,10 +209,12 @@ TEMPERATURE_SENSOR_CONFIG = {
             [
                 "sensor.tasmota_energy_totaltariff_0",
                 "sensor.tasmota_energy_totaltariff_1",
+                "sensor.tasmota_energy_exporttariff_0",
+                "sensor.tasmota_energy_exporttariff_1",
             ],
             (
-                '{"ENERGY":{"TotalTariff":[1.2,3.4]}}',
-                '{"StatusSNS":{"ENERGY":{"TotalTariff":[5.6,7.8]}}}',
+                '{"ENERGY":{"ExportTariff":[5.6,7.8],"TotalTariff":[1.2,3.4]}}',
+                '{"StatusSNS":{"ENERGY":{"ExportTariff":[1.2,3.4],"TotalTariff":[5.6,7.8]}}}',
             ),
         ),
         (
