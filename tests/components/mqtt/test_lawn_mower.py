@@ -91,8 +91,7 @@ DEFAULT_CONFIG = {
     ],
 )
 async def test_run_lawn_mower_setup_and_state_updates(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test that it sets up correctly fetches the given payload."""
     await mqtt_mock_entry()
@@ -511,8 +510,7 @@ async def test_discovery_removal_lawn_mower(
 
 
 async def test_discovery_update_lawn_mower(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered lawn_mower."""
     config1 = {
