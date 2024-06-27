@@ -19,7 +19,7 @@ DONT_IGNORE = (
     "recorder.py",
     "scene.py",
 )
-FORCE_COVERAGE = ("gold", "platinum")
+FORCE_COVERAGE = ("internal", "gold", "platinum")
 
 CORE_PREFIX = """# Sorted by hassfest.
 #
