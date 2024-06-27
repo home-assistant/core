@@ -81,6 +81,7 @@ async def test_initialization(
         mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
+    # Ensure that the logger has been called with the debug message
     mock_logger.assert_called_once_with(
         "Connected to: %s %s running SW %s", "Beosound Balance", "11111111", "1.0.0"
     )
@@ -104,11 +105,9 @@ async def test_async_update_sources_audio_only(
     """Test sources are correctly handled in _async_update_sources."""
     mock_mozart_client.get_remote_menu.return_value = {}
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Check state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert states.attributes[ATTR_INPUT_SOURCE_LIST] == TEST_AUDIO_SOURCES
 
@@ -119,13 +118,10 @@ async def test_async_update_sources_outdated_api(
     """Test fallback sources are correctly handled in _async_update_sources."""
     mock_mozart_client.get_available_sources.side_effect = ValueError()
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Get state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
-    # Check sources
     assert (
         states.attributes[ATTR_INPUT_SOURCE_LIST]
         == TEST_FALLBACK_SOURCES + TEST_VIDEO_SOURCES
@@ -137,13 +133,10 @@ async def test_async_update_playback_metadata(
 ) -> None:
     """Test _async_update_playback_metadata."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Check states
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
-
     assert ATTR_MEDIA_DURATION not in states.attributes
     assert ATTR_MEDIA_TITLE not in states.attributes
     assert ATTR_MEDIA_ALBUM_NAME not in states.attributes
@@ -151,15 +144,14 @@ async def test_async_update_playback_metadata(
     assert ATTR_MEDIA_TRACK not in states.attributes
     assert ATTR_MEDIA_CHANNEL not in states.attributes
 
-    # Send the dispatch
+    # Send the WebSocket event dispatch
     async_dispatcher_send(
         hass,
         f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.PLAYBACK_METADATA}",
         TEST_PLAYBACK_METADATA,
     )
-    # Check new state
-    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
 
+    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert (
         states.attributes[ATTR_MEDIA_DURATION]
         == TEST_PLAYBACK_METADATA.total_duration_seconds
@@ -178,11 +170,9 @@ async def test_async_update_playback_error(
 ) -> None:
     """Test _async_update_playback_error."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Send the dispatch
     with patch(
         "homeassistant.components.bang_olufsen.media_player._LOGGER.error"
     ) as mock_logger:
@@ -191,7 +181,6 @@ async def test_async_update_playback_error(
             f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.PLAYBACK_ERROR}",
             TEST_PLAYBACK_ERROR,
         )
-        # Ensure that the logger has been called with the error message
         mock_logger.assert_called_once_with(TEST_PLAYBACK_ERROR.error)
 
 
@@ -200,29 +189,24 @@ async def test_async_update_playback_progress(
 ) -> None:
     """Test _async_update_playback_progress."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Check state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert ATTR_MEDIA_POSITION not in states.attributes
     old_updated_at = states.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
     assert old_updated_at
 
-    # Send the dispatch
     async_dispatcher_send(
         hass,
         f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.PLAYBACK_PROGRESS}",
         TEST_PLAYBACK_PROGRESS,
     )
 
-    # Check new state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert states.attributes[ATTR_MEDIA_POSITION] == TEST_PLAYBACK_PROGRESS.progress
     new_updated_at = states.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
     assert new_updated_at
-
     assert old_updated_at != new_updated_at
 
 
@@ -231,22 +215,18 @@ async def test_async_update_playback_state(
 ) -> None:
     """Test _async_update_playback_state."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Check state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert states.state == MediaPlayerState.PLAYING
 
-    # Send the dispatch
     async_dispatcher_send(
         hass,
         f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.PLAYBACK_STATE}",
         TEST_PLAYBACK_STATE_PAUSED,
     )
 
-    # Check new state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert states.state == TEST_PLAYBACK_STATE_PAUSED.value
 
@@ -256,22 +236,18 @@ async def test_async_update_source_change(
 ) -> None:
     """Test _async_update_source_change."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Check state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert ATTR_INPUT_SOURCE not in states.attributes
 
-    # Send the dispatch
     async_dispatcher_send(
         hass,
         f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.SOURCE_CHANGE}",
         TEST_SOURCE_CHANGE,
     )
 
-    # Check new state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert states.attributes[ATTR_INPUT_SOURCE] == TEST_SOURCE_CHANGE.name
 
@@ -281,23 +257,19 @@ async def test_async_update_source_change_uri_streamer(
 ) -> None:
     """Test _async_update_source_change switching to uri_streamer."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Check state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert ATTR_INPUT_SOURCE not in states.attributes
     assert states.attributes[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
 
-    # Send the dispatch
     async_dispatcher_send(
         hass,
         f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.SOURCE_CHANGE}",
         TEST_SOURCE_CHANGE_URI_STREAMER,
     )
 
-    # Check new state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert states.attributes[ATTR_INPUT_SOURCE] == TEST_SOURCE_CHANGE_URI_STREAMER.name
     assert states.attributes[ATTR_MEDIA_CONTENT_TYPE] == MediaType.URL
@@ -308,25 +280,21 @@ async def test_async_turn_off(
 ) -> None:
     """Test async_turn_off."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Send a service call
     await hass.services.async_call(
         "media_player",
         "turn_off",
         {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
     )
 
-    # The service call will trigger a WebSocket notification
     async_dispatcher_send(
         hass,
         f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.PLAYBACK_STATE}",
         TEST_PLAYBACK_STATE_TURN_OFF,
     )
 
-    # Check state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert states.state == BANG_OLUFSEN_STATES[TEST_PLAYBACK_STATE_TURN_OFF.value]
 
@@ -339,15 +307,12 @@ async def test_async_set_volume_level(
 ) -> None:
     """Test async_set_volume_level and _async_update_volume by proxy."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Check state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert ATTR_MEDIA_VOLUME_LEVEL not in states.attributes
 
-    # Send a service call
     await hass.services.async_call(
         "media_player",
         "volume_set",
@@ -364,13 +329,11 @@ async def test_async_set_volume_level(
         TEST_VOLUME,
     )
 
-    # Check new state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert (
         states.attributes[ATTR_MEDIA_VOLUME_LEVEL] == TEST_VOLUME_HOME_ASSISTANT_FORMAT
     )
 
-    # Check API call
     mock_mozart_client.set_current_volume_level.assert_called_once_with(
         volume_level=TEST_VOLUME.level
     )
@@ -381,15 +344,12 @@ async def test_async_mute_volume(
 ) -> None:
     """Test async_mute_volume."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Check state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert ATTR_MEDIA_VOLUME_MUTED not in states.attributes
 
-    # Send a service call
     await hass.services.async_call(
         "media_player",
         "volume_mute",
@@ -406,14 +366,12 @@ async def test_async_mute_volume(
         TEST_VOLUME_MUTED,
     )
 
-    # Check new state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert (
         states.attributes[ATTR_MEDIA_VOLUME_MUTED]
         == TEST_VOLUME_MUTED_HOME_ASSISTANT_FORMAT
     )
 
-    # Check API call
     mock_mozart_client.set_volume_mute.assert_called_once_with(
         volume_mute=TEST_VOLUME_MUTED.muted
     )
@@ -424,7 +382,6 @@ async def test_async_media_play_pause_pause(
 ) -> None:
     """Test async_media_play_pause pausing."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
@@ -435,18 +392,15 @@ async def test_async_media_play_pause_pause(
         TEST_PLAYBACK_STATE_PLAYING,
     )
 
-    # Check state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert states.state == BANG_OLUFSEN_STATES[TEST_PLAYBACK_STATE_PLAYING.value]
 
-    # Send a service call
     await hass.services.async_call(
         "media_player",
         "media_play_pause",
         {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
     )
 
-    # Check API call
     mock_mozart_client.post_playback_command.assert_called_once_with(command="pause")
 
 
@@ -455,7 +409,6 @@ async def test_async_media_play_pause_play(
 ) -> None:
     """Test async_media_play_pause playing."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
@@ -466,18 +419,15 @@ async def test_async_media_play_pause_play(
         TEST_PLAYBACK_STATE_PAUSED,
     )
 
-    # Check state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert states.state == BANG_OLUFSEN_STATES[TEST_PLAYBACK_STATE_PAUSED.value]
 
-    # Send a service call
     await hass.services.async_call(
         "media_player",
         "media_play_pause",
         {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
     )
 
-    # Check API call
     mock_mozart_client.post_playback_command.assert_called_once_with(command="play")
 
 
@@ -486,7 +436,6 @@ async def test_async_media_stop(
 ) -> None:
     """Test async_media_stop."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
@@ -497,11 +446,9 @@ async def test_async_media_stop(
         TEST_PLAYBACK_STATE_PLAYING,
     )
 
-    # Check state
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert states.state == BANG_OLUFSEN_STATES[TEST_PLAYBACK_STATE_PLAYING.value]
 
-    # Send a service call
     await hass.services.async_call(
         "media_player",
         "media_stop",
@@ -517,18 +464,15 @@ async def test_async_media_next_track(
 ) -> None:
     """Test async_media_next_track."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Send a service call
     await hass.services.async_call(
         "media_player",
         "media_next_track",
         {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
     )
 
-    # Check API call
     mock_mozart_client.post_playback_command.assert_called_once_with(command="skip")
 
 
@@ -537,18 +481,16 @@ async def test_async_media_seek_not_deezer(
 ) -> None:
     """Test async_media_seek for a source other than Deezer."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Set the source to a Tidal Connect
+    # Set the source to Tidal Connect
     async_dispatcher_send(
         hass,
         f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.SOURCE_CHANGE}",
         TEST_SOURCE_CHANGE,
     )
 
-    # Send a service call
     with patch(
         "homeassistant.components.bang_olufsen.media_player._LOGGER.error"
     ) as mock_logger:
@@ -560,7 +502,6 @@ async def test_async_media_seek_not_deezer(
                 ATTR_MEDIA_SEEK_POSITION: TEST_SEEK_POSITION_HOME_ASSISTANT_FORMAT,
             },
         )
-        # Ensure that the logger has been called with the error message
         mock_logger.assert_called_once_with(
             "Seeking is currently only supported when using Deezer"
         )
@@ -574,18 +515,16 @@ async def test_async_media_seek_deezer(
 ) -> None:
     """Test async_media_seek for Deezer as source."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Set the source to a Deezer
+    # Set the source to Deezer
     async_dispatcher_send(
         hass,
         f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.SOURCE_CHANGE}",
         TEST_SOURCE_CHANGE_DEEZER,
     )
 
-    # Send a service call
     await hass.services.async_call(
         "media_player",
         "media_seek",
@@ -595,7 +534,6 @@ async def test_async_media_seek_deezer(
         },
     )
 
-    # Check API call
     mock_mozart_client.seek_to_position.assert_called_once_with(position_ms=10000)
 
 
@@ -604,18 +542,15 @@ async def test_async_media_previous_track(
 ) -> None:
     """Test async_media_previous_track."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Send a service call
     await hass.services.async_call(
         "media_player",
         "media_previous_track",
         {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
     )
 
-    # Check API call
     mock_mozart_client.post_playback_command.assert_called_once_with(command="prev")
 
 
@@ -624,18 +559,15 @@ async def test_async_clear_playlist(
 ) -> None:
     """Test async_clear_playlist."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Send a service call
     await hass.services.async_call(
         "media_player",
         "clear_playlist",
         {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
     )
 
-    # Check API call
     mock_mozart_client.post_clear_queue.assert_called_once()
 
 
@@ -644,11 +576,9 @@ async def test_async_select_source_invalid(
 ) -> None:
     """Test async_select_source with an invalid source."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Send a service call
     with patch(
         "homeassistant.components.bang_olufsen.media_player._LOGGER.error"
     ) as mock_logger:
@@ -657,13 +587,11 @@ async def test_async_select_source_invalid(
             "select_source",
             {
                 ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-                ATTR_INPUT_SOURCE: TEST_SOURCE_CHANGE_DEEZER.name,
+                ATTR_INPUT_SOURCE: "Test source",
             },
         )
-        # Ensure that the logger has been called with the error message
-        mock_logger.assert_called_once()
+        mock_logger.assert_called_once_with()
 
-    # Check API call
     mock_mozart_client.set_active_source.assert_not_called()
     mock_mozart_client.post_remote_trigger.assert_not_called()
 
@@ -673,11 +601,9 @@ async def test_async_select_source_audio(
 ) -> None:
     """Test async_select_source with a valid audio source."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Send a service call
     await hass.services.async_call(
         "media_player",
         "select_source",
@@ -687,7 +613,6 @@ async def test_async_select_source_audio(
         },
     )
 
-    # Check API call
     mock_mozart_client.set_active_source.assert_called_once_with(
         source_id=TEST_SOURCE_CHANGE.id
     )
@@ -699,11 +624,9 @@ async def test_async_select_source_video(
 ) -> None:
     """Test async_select_source with a valid video source."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Send a service call
     await hass.services.async_call(
         "media_player",
         "select_source",
@@ -713,7 +636,6 @@ async def test_async_select_source_video(
         },
     )
 
-    # Check API call
     mock_mozart_client.set_active_source.assert_not_called()
     mock_mozart_client.post_remote_trigger.assert_called_once()
 
@@ -723,15 +645,12 @@ async def test_async_play_media_invalid_type(
 ) -> None:
     """Test async_play_media only accepts valid media types."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Send a service call
     with patch(
         "homeassistant.components.bang_olufsen.media_player._LOGGER.error"
     ) as mock_logger:
-        # Send a service call
         await hass.services.async_call(
             "media_player",
             "play_media",
@@ -742,7 +661,6 @@ async def test_async_play_media_invalid_type(
             },
         )
 
-        # Ensure that the logger has been called with the error message
         mock_logger.assert_called_once()
 
 
@@ -751,14 +669,12 @@ async def test_async_play_media_url(
 ) -> None:
     """Test async_play_media URL."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     # Setup media source
     await async_setup_component(hass, "media_source", {"media_source": {}})
 
-    # Send a service call
     await hass.services.async_call(
         "media_player",
         "play_media",
@@ -769,7 +685,6 @@ async def test_async_play_media_url(
         },
     )
 
-    # Check API call
     mock_mozart_client.post_uri_source.assert_called_once()
 
 
@@ -778,14 +693,11 @@ async def test_async_play_media_overlay_absolute_volume_uri(
 ) -> None:
     """Test async_play_media overlay with Home Assistant local URI and absolute volume."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Setup media source
     await async_setup_component(hass, "media_source", {"media_source": {}})
 
-    # Send a service call
     await hass.services.async_call(
         "media_player",
         "play_media",
@@ -798,7 +710,6 @@ async def test_async_play_media_overlay_absolute_volume_uri(
         },
     )
 
-    # Check API call
     mock_mozart_client.post_overlay_play.assert_called_once()
 
     # Check that the API call was as expected
@@ -812,11 +723,9 @@ async def test_async_play_media_overlay_invalid_offset_volume_tts(
 ) -> None:
     """Test async_play_media with Home Assistant invalid offset volume and B&O tts."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Send a service call
     with patch(
         "homeassistant.components.bang_olufsen.media_player._LOGGER.warning"
     ) as mock_logger:
@@ -834,10 +743,8 @@ async def test_async_play_media_overlay_invalid_offset_volume_tts(
                 },
             },
         )
-        # Ensure that the logger has been called with the error message
         mock_logger.assert_called_once_with("Error setting volume")
 
-    # Check API call
     mock_mozart_client.post_overlay_play.assert_called_once_with(
         TEST_OVERLAY_INVALID_OFFSET_VOLUME_TTS
     )
@@ -848,7 +755,6 @@ async def test_async_play_media_overlay_offset_volume_tts(
 ) -> None:
     """Test async_play_media with Home Assistant invalid offset volume and B&O tts."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
@@ -859,7 +765,6 @@ async def test_async_play_media_overlay_offset_volume_tts(
         TEST_VOLUME,
     )
 
-    # Send a service call
     await hass.services.async_call(
         "media_player",
         "play_media",
@@ -872,7 +777,6 @@ async def test_async_play_media_overlay_offset_volume_tts(
         },
     )
 
-    # Check API call
     mock_mozart_client.post_overlay_play.assert_called_once_with(
         TEST_OVERLAY_OFFSET_VOLUME_TTS
     )
@@ -883,14 +787,11 @@ async def test_async_play_media_tts(
 ) -> None:
     """Test async_play_media with Home Assistant tts."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Setup media source
     await async_setup_component(hass, "media_source", {"media_source": {}})
 
-    # Send a service call
     await hass.services.async_call(
         "media_player",
         "play_media",
@@ -901,7 +802,6 @@ async def test_async_play_media_tts(
         },
     )
 
-    # Check API call
     mock_mozart_client.post_overlay_play.assert_called_once()
 
 
@@ -910,11 +810,9 @@ async def test_async_play_media_radio(
 ) -> None:
     """Test async_play_media with B&O radio."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Send a service call
     await hass.services.async_call(
         "media_player",
         "play_media",
@@ -925,7 +823,6 @@ async def test_async_play_media_radio(
         },
     )
 
-    # Check API call
     mock_mozart_client.run_provided_scene.assert_called_once_with(
         scene_properties=TEST_RADIO_STATION
     )
@@ -936,11 +833,9 @@ async def test_async_play_media_favourite(
 ) -> None:
     """Test async_play_media with B&O favourite."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Send a service call
     await hass.services.async_call(
         "media_player",
         "play_media",
@@ -951,7 +846,6 @@ async def test_async_play_media_favourite(
         },
     )
 
-    # Check API call
     mock_mozart_client.activate_preset.assert_called_once_with(id=int("1"))
 
 
@@ -960,7 +854,6 @@ async def test_async_play_media_deezer_flow(
 ) -> None:
     """Test async_play_media with Deezer flow."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
@@ -976,7 +869,6 @@ async def test_async_play_media_deezer_flow(
         },
     )
 
-    # Check API call
     mock_mozart_client.start_deezer_flow.assert_called_once_with(
         user_flow=TEST_DEEZER_FLOW
     )
@@ -987,11 +879,9 @@ async def test_async_play_media_deezer_playlist(
 ) -> None:
     """Test async_play_media with Deezer playlist."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Send a service call
     await hass.services.async_call(
         "media_player",
         "play_media",
@@ -1003,7 +893,6 @@ async def test_async_play_media_deezer_playlist(
         },
     )
 
-    # Check API call
     mock_mozart_client.add_to_queue.assert_called_once_with(
         play_queue_item=TEST_DEEZER_PLAYLIST
     )
@@ -1014,11 +903,9 @@ async def test_async_play_media_deezer_track(
 ) -> None:
     """Test async_play_media with Deezer track."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Send a service call
     await hass.services.async_call(
         "media_player",
         "play_media",
@@ -1029,7 +916,6 @@ async def test_async_play_media_deezer_track(
         },
     )
 
-    # Check API call
     mock_mozart_client.add_to_queue.assert_called_once_with(
         play_queue_item=TEST_DEEZER_TRACK
     )
@@ -1042,11 +928,9 @@ async def test_async_play_media_invalid_deezer(
 
     mock_mozart_client.start_deezer_flow.side_effect = TEST_DEEZER_INVALID_FLOW
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Send a service call
     with patch(
         "homeassistant.components.bang_olufsen.media_player._LOGGER.error"
     ) as mock_logger:
@@ -1059,10 +943,8 @@ async def test_async_play_media_invalid_deezer(
                 ATTR_MEDIA_CONTENT_TYPE: "deezer",
             },
         )
-        # Ensure that the logger has been called with the error message
         mock_logger.assert_called_once()
 
-    # Check API call
     mock_mozart_client.start_deezer_flow.assert_called_once()
 
 
@@ -1071,14 +953,11 @@ async def test_async_play_media_url_m3u(
 ) -> None:
     """Test async_play_media URL with the m3u extension."""
 
-    # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Setup media source
     await async_setup_component(hass, "media_source", {"media_source": {}})
 
-    # Send a service call
     with (
         pytest.raises(HomeAssistantError) as exc_info,
         patch(
@@ -1102,5 +981,4 @@ async def test_async_play_media_url_m3u(
     assert exc_info.value.translation_key == "m3u_invalid_format"
     assert exc_info.errisinstance(HomeAssistantError)
 
-    # Check API call
     mock_mozart_client.post_uri_source.assert_not_called()
