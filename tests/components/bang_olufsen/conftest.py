@@ -235,6 +235,8 @@ def mock_mozart_client() -> Generator[AsyncMock]:
         client.activate_preset = AsyncMock()
         client.start_deezer_flow = AsyncMock()
         client.add_to_queue = AsyncMock()
+        client.post_remote_trigger = AsyncMock()
+        client.set_active_source = AsyncMock()
 
         # Non-REST API client methods
         client.check_device_connection = AsyncMock()
