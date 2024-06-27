@@ -32,21 +32,20 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    ATTR_FEEDID,
-    ATTR_FEEDNAME,
-    ATTR_LASTUPDATETIME,
-    ATTR_LASTUPDATETIMESTR,
-    ATTR_SIZE,
-    ATTR_TAG,
-    ATTR_USERID,
-    CONF_EXCLUDE_FEEDID,
-    CONF_ONLY_INCLUDE_FEEDID,
-    CONF_SENSOR_NAMES,
-    DECIMALS,
-    ONLY_INCL_EXCL_NONE,
-)
 from .coordinator import EmoncmsCoordinator
+
+ATTR_FEEDID = "FeedId"
+ATTR_FEEDNAME = "FeedName"
+ATTR_LASTUPDATETIME = "LastUpdated"
+ATTR_LASTUPDATETIMESTR = "LastUpdatedStr"
+ATTR_SIZE = "Size"
+ATTR_TAG = "Tag"
+ATTR_USERID = "UserId"
+CONF_EXCLUDE_FEEDID = "exclude_feed_id"
+CONF_ONLY_INCLUDE_FEEDID = "include_only_feed_id"
+CONF_SENSOR_NAMES = "sensor_names"
+DECIMALS = 2
+ONLY_INCL_EXCL_NONE = "only_include_exclude_or_none"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
