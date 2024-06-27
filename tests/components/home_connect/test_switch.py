@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant.components.home_connect.const import (
     BSH_ACTIVE_PROGRAM,
+    BSH_CHILD_LOCK_STATE,
     BSH_OPERATION_STATE,
     BSH_POWER_OFF,
     BSH_POWER_ON,
@@ -99,6 +100,18 @@ async def test_switches(
             SERVICE_TURN_OFF,
             STATE_OFF,
         ),
+        (
+            "switch.washer_childlock",
+            {BSH_CHILD_LOCK_STATE: {"value": True}},
+            SERVICE_TURN_ON,
+            STATE_ON,
+        ),
+        (
+            "switch.washer_childlock",
+            {BSH_CHILD_LOCK_STATE: {"value": False}},
+            SERVICE_TURN_OFF,
+            STATE_OFF,
+        ),
     ],
 )
 async def test_switch_functionality(
@@ -154,6 +167,18 @@ async def test_switch_functionality(
         (
             "switch.washer_power",
             {BSH_POWER_STATE: {"value": ""}},
+            SERVICE_TURN_OFF,
+            "set_setting",
+        ),
+        (
+            "switch.washer_childlock",
+            {BSH_CHILD_LOCK_STATE: {"value": ""}},
+            SERVICE_TURN_ON,
+            "set_setting",
+        ),
+        (
+            "switch.washer_childlock",
+            {BSH_CHILD_LOCK_STATE: {"value": ""}},
             SERVICE_TURN_OFF,
             "set_setting",
         ),
