@@ -1528,7 +1528,7 @@ paho-mqtt==1.6.1
 panacotta==0.2
 
 # homeassistant.components.panasonic_viera
-panasonic-viera==0.3.6
+panasonic-viera==0.4.2
 
 # homeassistant.components.dunehd
 pdunehd==1.3.2
