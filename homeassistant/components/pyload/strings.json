@@ -98,6 +98,36 @@
     },
     "setup_authentication_exception": {
       "message": "Authentication failed for {username}, verify your login credentials"
+    },
+    "press_abort_downloads_exception": {
+      "message": "Unable to abort running downloads, try again later"
+    },
+    "press_restart_failed_exception": {
+      "message": "Unable to restart failed downloads, try again later"
+    },
+    "press_delete_finished_exception": {
+      "message": "Unable to delete finished downloads, try again later"
+    },
+    "press_restart_exception": {
+      "message": "Unable to restart pyLoad, try again later"
+    },
+    "turn_on_download_exception": {
+      "message": "Unable to resume download queue, try again later"
+    },
+    "turn_off_download_exception": {
+      "message": "Unable to pause download queue, try again later"
+    },
+    "toggle_download_failed_exception": {
+      "message": "Unable to pause/resume download queue, try again later"
+    },
+    "turn_on_reconnect_exception": {
+      "message": "Unable to turn on auto-reconnect, try again later"
+    },
+    "turn_off_reconnect_exception": {
+      "message": "Unable to turn off auto-reconnect, try again later"
+    },
+    "toggle_reconnect_failed_exception": {
+      "message": "Unable to toggle auto-reconnect, try again later"
     }
   },
   "issues": {

@@ -7,7 +7,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from pyloadapi.api import PyLoadAPI
+from aiohttp import ClientConnectorError
+from pyloadapi.api import CannotConnect, InvalidAuth, PyLoadAPI
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -15,9 +16,11 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import PyLoadConfigEntry
+from .const import DOMAIN
 from .coordinator import PyLoadData
 from .entity import BasePyLoadEntity
 
@@ -90,15 +93,36 @@ class PyLoadSwitchEntity(BasePyLoadEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self.entity_description.turn_on_fn(self.coordinator.pyload)
+        try:
+            await self.entity_description.turn_on_fn(self.coordinator.pyload)
+        except (CannotConnect, InvalidAuth, ClientConnectorError) as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key=f"turn_on_{self.entity_description.key}_exception",
+            ) from e
+
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self.entity_description.turn_off_fn(self.coordinator.pyload)
+        try:
+            await self.entity_description.turn_off_fn(self.coordinator.pyload)
+        except (CannotConnect, InvalidAuth, OSError, ClientConnectorError) as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key=f"turn_off_{self.entity_description.key}_exception",
+            ) from e
+
         await self.coordinator.async_refresh()
 
     async def async_toggle(self, **kwargs: Any) -> None:
         """Toggle the entity."""
-        await self.entity_description.toggle_fn(self.coordinator.pyload)
+        try:
+            await self.entity_description.toggle_fn(self.coordinator.pyload)
+        except (CannotConnect, InvalidAuth) as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key=f"toggle_{self.entity_description.key}_exception",
+            ) from e
+
         await self.coordinator.async_refresh()
