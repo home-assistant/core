@@ -266,7 +266,7 @@ TODO = {
 
 def main():
     """Run the main script."""
-    raw_licenses = json.load(open("../licenses.json"))
+    raw_licenses = json.load(open("licenses.json"))
     package_definitions = [PackageDefinition.from_dict(data) for data in raw_licenses]
     for package in package_definitions:
         previous_unapproved_version = TODO.get(package.name)
