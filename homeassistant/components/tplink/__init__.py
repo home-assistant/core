@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
 from datetime import timedelta
 import logging
 from typing import Any
@@ -282,6 +283,28 @@ def mac_alias(mac: str) -> str:
     return mac.replace(":", "")[-4:].upper()
 
 
+def _mac_connection_or_none(device: dr.DeviceEntry) -> str | None:
+    return next(
+        (
+            conn
+            for type_, conn in device.connections
+            if type_ == dr.CONNECTION_NETWORK_MAC
+        ),
+        None,
+    )
+
+
+def _device_id_is_mac_or_none(mac: str, device_ids: Iterable[str]) -> str | None:
+    # Previously only iot devices had child devices and iot devices use
+    # the upper and lcase MAC addresses as device_id so match on case
+    # insensitive mac address as the parent device.
+    upper_mac = mac.upper()
+    return next(
+        (device_id for device_id in device_ids if device_id.upper() == upper_mac),
+        None,
+    )
+
+
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     version = config_entry.version
@@ -298,49 +321,48 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         # always be linked into one device.
         dev_reg = dr.async_get(hass)
         for device in dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id):
-            new_identifiers: set[tuple[str, str]] | None = None
-            if len(device.identifiers) > 1 and (
-                mac := next(
-                    iter(
-                        [
-                            conn[1]
-                            for conn in device.connections
-                            if conn[0] == dr.CONNECTION_NETWORK_MAC
-                        ]
-                    ),
-                    None,
+            original_identifiers = device.identifiers
+            # Get only the tplink identifier, could be tapo or other integrations.
+            tplink_identifiers = [
+                ident[1] for ident in original_identifiers if ident[0] == DOMAIN
+            ]
+            # Nothing to fix if there's only one identifier. mac connection
+            # should never be none but if it is there's no problem.
+            if len(tplink_identifiers) <= 1 or not (
+                mac := _mac_connection_or_none(device)
+            ):
+                continue
+            if not (
+                tplink_parent_device_id := _device_id_is_mac_or_none(
+                    mac, tplink_identifiers
                 )
             ):
-                for identifier in device.identifiers:
-                    # Previously only iot devices that use the MAC address as
-                    # device_id had child devices so check for mac as the
-                    # parent device.
-                    if identifier[0] == DOMAIN and identifier[1].upper() == mac.upper():
-                        new_identifiers = {identifier}
-                        break
-                if new_identifiers:
-                    dev_reg.async_update_device(
-                        device.id, new_identifiers=new_identifiers
-                    )
-                    _LOGGER.debug(
-                        "Replaced identifiers for device %s (%s): %s with: %s",
-                        device.name,
-                        device.model,
-                        device.identifiers,
-                        new_identifiers,
-                    )
-                else:
-                    # No match on mac so raise an error.
-                    _LOGGER.error(
-                        "Unable to replace identifiers for device %s (%s): %s",
-                        device.name,
-                        device.model,
-                        device.identifiers,
-                    )
+                # No match on mac so raise an error.
+                _LOGGER.error(
+                    "Unable to replace identifiers for device %s (%s): %s",
+                    device.name,
+                    device.model,
+                    device.identifiers,
+                )
+                continue
+            # Retain any identifiers for other domains
+            new_identifiers = {
+                ident for ident in device.identifiers if ident[0] != DOMAIN
+            }
+            new_identifiers.add((DOMAIN, tplink_parent_device_id))
+            dev_reg.async_update_device(device.id, new_identifiers=new_identifiers)
+            _LOGGER.debug(
+                "Replaced identifiers for device %s (%s): %s with: %s",
+                device.name,
+                device.model,
+                original_identifiers,
+                new_identifiers,
+            )
 
         minor_version = 3
         hass.config_entries.async_update_entry(config_entry, minor_version=3)
-        _LOGGER.debug("Migration to version %s.%s successful", version, minor_version)
+
+        _LOGGER.debug("Migration to version %s.%s complete", version, minor_version)
 
     if version == 1 and minor_version == 3:
         # credentials_hash stored in the device_config should be moved to data.

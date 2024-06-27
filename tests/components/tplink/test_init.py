@@ -36,6 +36,8 @@ from . import (
     CREATE_ENTRY_DATA_AUTH,
     CREATE_ENTRY_DATA_LEGACY,
     DEVICE_CONFIG_AUTH,
+    DEVICE_ID,
+    DEVICE_ID_MAC,
     IP_ADDRESS,
     MAC_ADDRESS,
     _mocked_device,
@@ -404,19 +406,48 @@ async def test_feature_no_category(
 
 
 @pytest.mark.parametrize(
-    ("identifier_base", "expected_message", "expected_count"),
+    ("device_id", "id_count", "domains", "expected_message"),
     [
-        pytest.param("C0:06:C3:42:54:2B", "Replaced", 1, id="success"),
-        pytest.param("123456789", "Unable to replace", 3, id="failure"),
+        pytest.param(DEVICE_ID_MAC, 1, [DOMAIN], None, id="mac-id-no-children"),
+        pytest.param(DEVICE_ID_MAC, 3, [DOMAIN], "Replaced", id="mac-id-children"),
+        pytest.param(
+            DEVICE_ID_MAC,
+            1,
+            [DOMAIN, "other"],
+            None,
+            id="mac-id-no-children-other-domain",
+        ),
+        pytest.param(
+            DEVICE_ID_MAC,
+            3,
+            [DOMAIN, "other"],
+            "Replaced",
+            id="mac-id-children-other-domain",
+        ),
+        pytest.param(DEVICE_ID, 1, [DOMAIN], None, id="not-mac-id-no-children"),
+        pytest.param(
+            DEVICE_ID, 3, [DOMAIN], "Unable to replace", id="not-mac-children"
+        ),
+        pytest.param(
+            DEVICE_ID, 1, [DOMAIN, "other"], None, id="not-mac-no-children-other-domain"
+        ),
+        pytest.param(
+            DEVICE_ID,
+            3,
+            [DOMAIN, "other"],
+            "Unable to replace",
+            id="not-mac-children-other-domain",
+        ),
     ],
 )
 async def test_unlink_devices(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
-    identifier_base,
+    device_id,
+    id_count,
+    domains,
     expected_message,
-    expected_count,
 ) -> None:
     """Test for unlinking child device ids."""
     entry = MockConfigEntry(
@@ -429,43 +460,54 @@ async def test_unlink_devices(
     )
     entry.add_to_hass(hass)
 
-    # Setup initial device registry, with linkages
-    mac = "C0:06:C3:42:54:2B"
-    identifiers = [
-        (DOMAIN, identifier_base),
-        (DOMAIN, f"{identifier_base}_0001"),
-        (DOMAIN, f"{identifier_base}_0002"),
+    # Generate list of test identifiers
+    test_identifiers = [
+        (domain, f"{device_id}{"" if i == 0 else f"_000{i}"}")
+        for i in range(id_count)
+        for domain in domains
     ]
+    update_msg_fragment = "identifiers for device dummy (hs300):"
+    update_msg = f"{expected_message} {update_msg_fragment}" if expected_message else ""
+
+    # Expected identifiers should include all other domains or all the newer non-mac device ids
+    # or just the parent mac device id
+    expected_identifiers = [
+        (domain, device_id)
+        for domain, device_id in test_identifiers
+        if domain != DOMAIN
+        or device_id.startswith(DEVICE_ID)
+        or device_id == DEVICE_ID_MAC
+    ]
+
     device_registry.async_get_or_create(
         config_entry_id="123456",
         connections={
-            (dr.CONNECTION_NETWORK_MAC, mac.lower()),
+            (dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS),
         },
-        identifiers=set(identifiers),
+        identifiers=set(test_identifiers),
         model="hs300",
         name="dummy",
     )
     device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
 
     assert device_entries[0].connections == {
-        (dr.CONNECTION_NETWORK_MAC, mac.lower()),
+        (dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS),
     }
-    assert device_entries[0].identifiers == set(identifiers)
+    assert device_entries[0].identifiers == set(test_identifiers)
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
 
-    assert device_entries[0].connections == {(dr.CONNECTION_NETWORK_MAC, mac.lower())}
-    # If expected count is 1 will be the first identifier only
-    expected_identifiers = identifiers[:expected_count]
+    assert device_entries[0].connections == {(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)}
+
     assert device_entries[0].identifiers == set(expected_identifiers)
     assert entry.version == 1
     assert entry.minor_version == 4
 
-    msg = f"{expected_message} identifiers for device dummy (hs300): {set(identifiers)}"
-    assert msg in caplog.text
+    assert update_msg in caplog.text
+    assert "Migration to version 1.3 complete" in caplog.text
 
 
 async def test_move_credentials_hash(
