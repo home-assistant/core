@@ -22,6 +22,7 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.components.tplink import (
     CONF_ALIAS,
+    CONF_CREDENTIALS_HASH,
     CONF_DEVICE_CONFIG,
     CONF_HOST,
     CONF_MODEL,
@@ -53,9 +54,7 @@ MAC_ADDRESS2 = "11:22:33:44:55:66"
 DEFAULT_ENTRY_TITLE = f"{ALIAS} {MODEL}"
 CREDENTIALS_HASH_LEGACY = ""
 DEVICE_CONFIG_LEGACY = DeviceConfig(IP_ADDRESS)
-DEVICE_CONFIG_DICT_LEGACY = DEVICE_CONFIG_LEGACY.to_dict(
-    credentials_hash=CREDENTIALS_HASH_LEGACY, exclude_credentials=True
-)
+DEVICE_CONFIG_DICT_LEGACY = DEVICE_CONFIG_LEGACY.to_dict(exclude_credentials=True)
 CREDENTIALS = Credentials("foo", "bar")
 CREDENTIALS_HASH_AUTH = "abcdefghijklmnopqrstuv=="
 DEVICE_CONFIG_AUTH = DeviceConfig(
@@ -74,12 +73,8 @@ DEVICE_CONFIG_AUTH2 = DeviceConfig(
     ),
     uses_http=True,
 )
-DEVICE_CONFIG_DICT_AUTH = DEVICE_CONFIG_AUTH.to_dict(
-    credentials_hash=CREDENTIALS_HASH_AUTH, exclude_credentials=True
-)
-DEVICE_CONFIG_DICT_AUTH2 = DEVICE_CONFIG_AUTH2.to_dict(
-    credentials_hash=CREDENTIALS_HASH_AUTH, exclude_credentials=True
-)
+DEVICE_CONFIG_DICT_AUTH = DEVICE_CONFIG_AUTH.to_dict(exclude_credentials=True)
+DEVICE_CONFIG_DICT_AUTH2 = DEVICE_CONFIG_AUTH2.to_dict(exclude_credentials=True)
 
 CREATE_ENTRY_DATA_LEGACY = {
     CONF_HOST: IP_ADDRESS,
@@ -92,14 +87,20 @@ CREATE_ENTRY_DATA_AUTH = {
     CONF_HOST: IP_ADDRESS,
     CONF_ALIAS: ALIAS,
     CONF_MODEL: MODEL,
+    CONF_CREDENTIALS_HASH: CREDENTIALS_HASH_AUTH,
     CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_AUTH,
 }
 CREATE_ENTRY_DATA_AUTH2 = {
     CONF_HOST: IP_ADDRESS2,
     CONF_ALIAS: ALIAS,
     CONF_MODEL: MODEL,
+    CONF_CREDENTIALS_HASH: CREDENTIALS_HASH_AUTH,
     CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_AUTH2,
 }
+NEW_CONNECTION_TYPE = DeviceConnectionParameters(
+    DeviceFamily.IotSmartPlugSwitch, DeviceEncryptionType.Aes
+)
+NEW_CONNECTION_TYPE_DICT = NEW_CONNECTION_TYPE.to_dict()
 
 
 def _load_feature_fixtures():
@@ -437,16 +438,20 @@ def _patch_connect(device=None, no_device=False):
 
 
 async def initialize_config_entry_for_device(
-    hass: HomeAssistant, dev: Device
+    hass: HomeAssistant, dev: Device, *, config_entry: MockConfigEntry | None = None
 ) -> MockConfigEntry:
     """Create a mocked configuration entry for the given device.
 
     Note, the rest of the tests should probably be converted over to use this
     instead of repeating the initialization routine for each test separately
     """
-    config_entry = MockConfigEntry(
-        title="TP-Link", domain=DOMAIN, unique_id=dev.mac, data={CONF_HOST: dev.host}
-    )
+    if not config_entry:
+        config_entry = MockConfigEntry(
+            title="TP-Link",
+            domain=DOMAIN,
+            unique_id=dev.mac,
+            data={CONF_HOST: dev.host},
+        )
     config_entry.add_to_hass(hass)
 
     with (
@@ -455,6 +460,6 @@ async def initialize_config_entry_for_device(
         _patch_connect(device=dev),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     return config_entry

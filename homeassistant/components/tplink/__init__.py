@@ -72,18 +72,10 @@ def create_async_tplink_clientsession(hass: HomeAssistant) -> ClientSession:
 def async_trigger_discovery(
     hass: HomeAssistant,
     discovered_devices: dict[str, Device],
-    have_credentials: bool,
 ) -> None:
     """Trigger config flows for discovered devices."""
 
     for formatted_mac, device in discovered_devices.items():
-        # Only include the credentials_hash if discovery was triggered with credentials
-        # otherwise the hash is useless and could be invalid
-        if device.credentials_hash and have_credentials:
-            credentials_hash = device.credentials_hash
-        else:
-            credentials_hash = None
-
         discovery_flow.async_create_flow(
             hass,
             DOMAIN,
@@ -93,18 +85,16 @@ def async_trigger_discovery(
                 CONF_HOST: device.host,
                 CONF_MAC: formatted_mac,
                 CONF_DEVICE_CONFIG: device.config.to_dict(
-                    credentials_hash=credentials_hash,
                     exclude_credentials=True,
                 ),
             },
         )
 
 
-async def async_discover_devices(
-    hass: HomeAssistant, credentials: Credentials | None
-) -> dict[str, Device]:
+async def async_discover_devices(hass: HomeAssistant) -> dict[str, Device]:
     """Discover TPLink devices on configured network interfaces."""
 
+    credentials = await get_credentials(hass)
     broadcast_addresses = await network.async_get_ipv4_broadcast_addresses(hass)
     tasks = [
         Discover.discover(
@@ -127,11 +117,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     async def _async_discovery(*_: Any) -> None:
-        credentials = await get_credentials(hass)
-        if discovered := await async_discover_devices(hass, credentials):
-            async_trigger_discovery(
-                hass, discovered, have_credentials=bool(credentials)
-            )
+        if discovered := await async_discover_devices(hass):
+            async_trigger_discovery(hass, discovered)
 
     hass.async_create_background_task(
         _async_discovery(), "tplink first discovery", eager_start=True
@@ -147,6 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
     """Set up TPLink from a config entry."""
     host: str = entry.data[CONF_HOST]
     credentials = await get_credentials(hass)
+    entry_credentials_hash = entry.data.get(CONF_CREDENTIALS_HASH)
 
     config: DeviceConfig | None = None
     if config_dict := entry.data.get(CONF_DEVICE_CONFIG):
@@ -156,7 +144,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
             _LOGGER.warning(
                 "Invalid connection type dict for %s: %s", host, config_dict
             )
-    entry_credentials_hash = entry.data.get(CONF_CREDENTIALS_HASH)
 
     if not config:
         config = DeviceConfig(host)
@@ -176,6 +163,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
     try:
         device: Device = await Device.connect(config=config)
     except AuthenticationError as ex:
+        # If the stored credentials_hash was used but doesn't work remove it
+        if not credentials and entry_credentials_hash:
+            data = {k: v for k, v in entry.data.items() if k != CONF_CREDENTIALS_HASH}
+            hass.config_entries.async_update_entry(entry, data=data)
         raise ConfigEntryAuthFailed from ex
     except KasaException as ex:
         raise ConfigEntryNotReady from ex
@@ -347,7 +338,25 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
         minor_version = 3
         hass.config_entries.async_update_entry(config_entry, minor_version=3)
-
         _LOGGER.debug("Migration to version %s.%s successful", version, minor_version)
+
+    if version == 1 and minor_version == 3:
+        # credentials_hash stored in the device_config should be moved to data.
+        updates: dict[str, Any] = {}
+        if config_dict := config_entry.data.get(CONF_DEVICE_CONFIG):
+            assert isinstance(config_dict, dict)
+            if credentials_hash := config_dict.pop(CONF_CREDENTIALS_HASH, None):
+                updates[CONF_CREDENTIALS_HASH] = credentials_hash
+                updates[CONF_DEVICE_CONFIG] = config_dict
+        minor_version = 4
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data={
+                **config_entry.data,
+                **updates,
+            },
+            minor_version=minor_version,
+        )
+        _LOGGER.debug("Migration to version %s.%s complete", version, minor_version)
 
     return True
