@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 
 from . import MODULE
 
-from tests.components.vicare.conftest import Fixture, MockPyViCare, mock_config_entry
+from .conftest import Fixture, MockPyViCare, mock_config_entry
 
 
 async def test_v1_v1_1_migration(
