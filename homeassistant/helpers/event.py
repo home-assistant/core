@@ -27,6 +27,7 @@ from homeassistant.core import (
     Event,
     # Explicit reexport of 'EventStateChangedData' for backwards compatibility
     EventStateChangedData as EventStateChangedData,  # noqa: PLC0414
+    EventStateEventData,
     EventStateReportedData,
     HassJob,
     HassJobType,
@@ -89,6 +90,7 @@ RANDOM_MICROSECOND_MIN = 50000
 RANDOM_MICROSECOND_MAX = 500000
 
 _TypedDictT = TypeVar("_TypedDictT", bound=Mapping[str, Any])
+_StateEventDataT = TypeVar("_StateEventDataT", bound=EventStateEventData)
 
 
 @dataclass(slots=True, frozen=True)
@@ -329,8 +331,8 @@ def async_track_state_change_event(
 @callback
 def _async_dispatch_entity_id_event(
     hass: HomeAssistant,
-    callbacks: dict[str, list[HassJob[[Event[_TypedDictT]], Any]]],
-    event: Event[_TypedDictT],
+    callbacks: dict[str, list[HassJob[[Event[_StateEventDataT]], Any]]],
+    event: Event[_StateEventDataT],
 ) -> None:
     """Dispatch to listeners."""
     if not (callbacks_list := callbacks.get(event.data["entity_id"])):
@@ -349,8 +351,8 @@ def _async_dispatch_entity_id_event(
 @callback
 def _async_state_filter(
     hass: HomeAssistant,
-    callbacks: dict[str, list[HassJob[[Event[_TypedDictT]], Any]]],
-    event_data: _TypedDictT,
+    callbacks: dict[str, list[HassJob[[Event[_StateEventDataT]], Any]]],
+    event_data: _StateEventDataT,
 ) -> bool:
     """Filter state changes by entity_id."""
     return event_data["entity_id"] in callbacks
