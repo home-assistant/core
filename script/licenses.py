@@ -1,11 +1,17 @@
 """Tool to check the licenses."""
+
 from __future__ import annotations
+
+from dataclasses import dataclass
 import json
 import logging
-from dataclasses import dataclass
+import sys
+
 from awesomeversion import AwesomeVersion
 
 LOGGER = logging.getLogger(__name__)
+
+
 @dataclass
 class PackageDefinition:
     """Package definition."""
@@ -22,6 +28,7 @@ class PackageDefinition:
             name=data["Name"],
             version=AwesomeVersion(data["Version"]),
         )
+
 
 OSI_APPROVED_LICENSES = {
     "Academic Free License (AFL)",
@@ -91,7 +98,6 @@ OSI_APPROVED_LICENSES = {
     "Zero-Clause BSD (0BSD)",
     "Zope Public License",
     "zlib/libpng License",
-
     "Apache License",
     "MIT",
     "apache-2.0",
@@ -111,7 +117,7 @@ OSI_APPROVED_LICENSES = {
     "GNU General Public License v3",
     "Unlicense",
     "Apache-2",
-    "GPLv2"
+    "GPLv2",
 }
 
 EXCEPTIONS = {
@@ -191,7 +197,7 @@ EXCEPTIONS = {
     "pyxeoma",  # https://github.com/jeradM/pyxeoma/pull/11
     "repoze.lru",  #
     "ring-doorbell",  # https://github.com/tchellomello/python-ring-doorbell/pull/386
-    "russound",  # https://github.com/laf/russound/pull/14
+    "russound",  # https://github.com/laf/russound/pull/14   # codespell:ignore laf
     "ruuvitag-ble",  # https://github.com/Bluetooth-Devices/ruuvitag-ble/pull/10
     "sense-energy",  # https://github.com/scottbonline/sense/pull/67
     "sensirion-ble",  # https://github.com/akx/sensirion-ble/pull/9
@@ -209,31 +215,54 @@ EXCEPTIONS = {
 }
 
 TODO = {
-    "BlinkStick": AwesomeVersion("1.2.0"),  # Proprietary license https://github.com/arvydas/blinkstick-python
-    "PyMVGLive": AwesomeVersion("1.1.4"),  # No license and archived https://github.com/pc-coholic/PyMVGLive
-    "aiocache": AwesomeVersion("0.12.2"),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
+    "BlinkStick": AwesomeVersion(
+        "1.2.0"
+    ),  # Proprietary license https://github.com/arvydas/blinkstick-python
+    "PyMVGLive": AwesomeVersion(
+        "1.1.4"
+    ),  # No license and archived https://github.com/pc-coholic/PyMVGLive
+    "aiocache": AwesomeVersion(
+        "0.12.2"
+    ),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
     "aiohappyeyeballs": AwesomeVersion("2.3.2"),  # Need to dive into this
     "asterisk_mbox": AwesomeVersion("0.5.0"),  # I think we deprecated this
     "asyncarve": AwesomeVersion("0.0.9"),  # No public repository
     "asyncio": AwesomeVersion("3.4.3"),  # Python core
     "chacha20poly1305": AwesomeVersion("0.0.3"),  # I think LGPLv2+
     "chacha20poly1305-reuseable": AwesomeVersion("0.12.1"),  # has 2 licenses
-    "concord232": AwesomeVersion("0.15"),  # No license https://github.com/JasonCarter80/concord232/issues/19
-    "dovado": AwesomeVersion("0.4.1"),  # No license https://github.com/molobrakos/dovado/issues/4
+    "concord232": AwesomeVersion(
+        "0.15"
+    ),  # No license https://github.com/JasonCarter80/concord232/issues/19
+    "dovado": AwesomeVersion(
+        "0.4.1"
+    ),  # No license https://github.com/molobrakos/dovado/issues/4
     "genie_partner_sdk": AwesomeVersion("1.0.2"),  # pain
     "iso4217": AwesomeVersion("1.11.20220401"),  # Public domain?
-    "mficlient": AwesomeVersion("0.3.0"),  # No license https://github.com/kk7ds/mficlient/issues/4
+    "mficlient": AwesomeVersion(
+        "0.3.0"
+    ),  # No license https://github.com/kk7ds/mficlient/issues/4
     "panasonic_viera": AwesomeVersion("0.3.6"),  # Has update available
     "pizzapi": AwesomeVersion("0.0.3"),  # Has update available
-    "pubnub": AwesomeVersion("7.4.3"),  # Proprietary license https://github.com/pubnub/python/blob/master/LICENSE
-    "pyElectra": AwesomeVersion("1.2.3"),  # No License https://github.com/jafar-atili/pyElectra/issues/3
+    "pubnub": AwesomeVersion(
+        "7.4.3"
+    ),  # Proprietary license https://github.com/pubnub/python/blob/master/LICENSE
+    "pyElectra": AwesomeVersion(
+        "1.2.3"
+    ),  # No License https://github.com/jafar-atili/pyElectra/issues/3
     "pyflic": AwesomeVersion("2.0.3"),  # No OSI approved license CC0-1.0 Universal)
     "pymitv": AwesomeVersion("1.4.3"),  # Not sure why pip-licenses doesn't pick this up
-    "refoss_ha": AwesomeVersion("1.2.1"),  # No License https://github.com/ashionky/refoss_ha/issues/4
-    "ttls": AwesomeVersion("1.5.1"),  # Proprietary license https://github.com/jschlyter/ttls/issues/39
-    "uvcclient": AwesomeVersion("0.11.0"),  # No License https://github.com/kk7ds/uvcclient/issues/7
+    "refoss_ha": AwesomeVersion(
+        "1.2.1"
+    ),  # No License https://github.com/ashionky/refoss_ha/issues/4
+    "ttls": AwesomeVersion(
+        "1.5.1"
+    ),  # Proprietary license https://github.com/jschlyter/ttls/issues/39
+    "uvcclient": AwesomeVersion(
+        "0.11.0"
+    ),  # No License https://github.com/kk7ds/uvcclient/issues/7
     "vincenty": AwesomeVersion("0.1.4"),  # Public domain?
 }
+
 
 def main():
     """Run the main script."""
@@ -249,17 +278,31 @@ def main():
         if previous_unapproved_version is not None:
             if previous_unapproved_version < package.version:
                 if approved:
-                    LOGGER.info(f"Approved license detected for {package.name}@{package.version}: {package.license}")
+                    LOGGER.info(
+                        "Approved license detected for %s@%s: %s",
+                        package.name,
+                        package.version,
+                        package.license,
+                    )
                     LOGGER.info("Please remove the package from the TODO list.")
-                    exit(0)
+                    sys.exit(0)
                 else:
-                    LOGGER.info(f"We could not detect an OSI-approved license for {package.name}@{package.version}: {package.license}")
-                    exit(0)
+                    LOGGER.info(
+                        "We could not detect an OSI-approved license for %s@%s: %s",
+                        package.name,
+                        package.version,
+                        package.license,
+                    )
+                    sys.exit(0)
         if not approved and package.name not in EXCEPTIONS:
-            LOGGER.info(f"We could not detect an OSI-approved license for {package.name}@{package.version}: {package.license}")
-            exit(0)
+            LOGGER.info(
+                "We could not detect an OSI-approved license for %s@%s: %s",
+                package.name,
+                package.version,
+                package.license,
+            )
+            sys.exit(0)
     LOGGER.info("All packages have an OSI-approved license.")
-
 
 
 if __name__ == "__main__":
