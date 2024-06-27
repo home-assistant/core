@@ -33,7 +33,7 @@ class AccuWeatherData:
     coordinator_daily_forecast: AccuWeatherDailyForecastDataUpdateCoordinator
 
 
-AccuWeatherConfigEntry = ConfigEntry[AccuWeatherData]
+type AccuWeatherConfigEntry = ConfigEntry[AccuWeatherData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AccuWeatherConfigEntry) -> bool:

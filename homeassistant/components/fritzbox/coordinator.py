@@ -18,7 +18,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER
 
-FritzboxConfigEntry = ConfigEntry["FritzboxDataUpdateCoordinator"]
+type FritzboxConfigEntry = ConfigEntry[FritzboxDataUpdateCoordinator]
 
 
 @dataclass

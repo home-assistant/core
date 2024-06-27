@@ -1,0 +1,22 @@
+[
+  {
+    "id": "test1",
+    "name": "Test Garage 1",
+    "subdevices": ["GDO", "Light"]
+  },
+  {
+    "id": "test2",
+    "name": "Test Garage 2",
+    "subdevices": ["GDO", "Light"]
+  },
+  {
+    "id": "test3",
+    "name": "Test Garage 3",
+    "subdevices": ["GDO", "Light"]
+  },
+  {
+    "id": "test4",
+    "name": "Test Garage 4",
+    "subdevices": ["GDO", "Light"]
+  }
+]

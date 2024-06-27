@@ -299,17 +299,22 @@ class AmbientNetworkSensor(AmbientNetworkEntity, SensorEntity):
         mac_address: str,
     ) -> None:
         """Initialize a sensor object."""
-
         super().__init__(coordinator, description, mac_address)
 
     def _update_attrs(self) -> None:
         """Update sensor attributes."""
-
         value = self.coordinator.data.get(self.entity_description.key)
 
         # Treatments for special units.
         if value is not None and self.device_class == SensorDeviceClass.TIMESTAMP:
-            value = datetime.fromtimestamp(value / 1000, tz=dt_util.DEFAULT_TIME_ZONE)
+            value = datetime.fromtimestamp(
+                value / 1000, tz=dt_util.get_default_time_zone()
+            )
 
         self._attr_available = value is not None
         self._attr_native_value = value
+
+        if self.coordinator.last_measured is not None:
+            self._attr_extra_state_attributes = {
+                "last_measured": self.coordinator.last_measured
+            }

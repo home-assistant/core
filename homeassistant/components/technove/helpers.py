@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from technove import TechnoVEConnectionError, TechnoVEError
 
@@ -11,11 +11,8 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .entity import TechnoVEEntity
 
-_TechnoVEEntityT = TypeVar("_TechnoVEEntityT", bound=TechnoVEEntity)
-_P = ParamSpec("_P")
 
-
-def technove_exception_handler(
+def technove_exception_handler[_TechnoVEEntityT: TechnoVEEntity, **_P](
     func: Callable[Concatenate[_TechnoVEEntityT, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_TechnoVEEntityT, _P], Coroutine[Any, Any, None]]:
     """Decorate TechnoVE calls to handle TechnoVE exceptions.

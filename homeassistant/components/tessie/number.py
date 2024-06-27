@@ -13,7 +13,6 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     PRECISION_WHOLE,
@@ -23,9 +22,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import TessieStateUpdateCoordinator
+from . import TessieConfigEntry
 from .entity import TessieEntity
+from .models import TessieVehicleData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -81,16 +80,17 @@ DESCRIPTIONS: tuple[TessieNumberEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TessieConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Tessie sensor platform from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     async_add_entities(
-        TessieNumberEntity(vehicle.state_coordinator, description)
-        for vehicle in data
+        TessieNumberEntity(vehicle, description)
+        for vehicle in data.vehicles
         for description in DESCRIPTIONS
-        if description.key in vehicle.state_coordinator.data
     )
 
 
@@ -101,11 +101,11 @@ class TessieNumberEntity(TessieEntity, NumberEntity):
 
     def __init__(
         self,
-        coordinator: TessieStateUpdateCoordinator,
+        vehicle: TessieVehicleData,
         description: TessieNumberEntityDescription,
     ) -> None:
         """Initialize the Number entity."""
-        super().__init__(coordinator, description.key)
+        super().__init__(vehicle, description.key)
         self.entity_description = description
 
     @property

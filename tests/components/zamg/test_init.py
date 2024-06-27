@@ -1,7 +1,5 @@
 """Test Zamg component init."""
 
-from unittest.mock import MagicMock
-
 import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -62,9 +60,10 @@ from tests.common import MockConfigEntry
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_zamg_coordinator")
 async def test_migrate_unique_ids(
     hass: HomeAssistant,
-    mock_zamg_coordinator: MagicMock,
+    entity_registry: er.EntityRegistry,
     entitydata: dict,
     old_unique_id: str,
     new_unique_id: str,
@@ -75,7 +74,6 @@ async def test_migrate_unique_ids(
     mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
     mock_config_entry.add_to_hass(hass)
 
-    entity_registry = er.async_get(hass)
     entity: er.RegistryEntry = entity_registry.async_get_or_create(
         **entitydata,
         config_entry=mock_config_entry,
@@ -108,9 +106,10 @@ async def test_migrate_unique_ids(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_zamg_coordinator")
 async def test_dont_migrate_unique_ids(
     hass: HomeAssistant,
-    mock_zamg_coordinator: MagicMock,
+    entity_registry: er.EntityRegistry,
     entitydata: dict,
     old_unique_id: str,
     new_unique_id: str,
@@ -120,8 +119,6 @@ async def test_dont_migrate_unique_ids(
     FIXTURE_CONFIG_ENTRY["data"][CONF_STATION_ID] = station_id
     mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
     mock_config_entry.add_to_hass(hass)
-
-    entity_registry = er.async_get(hass)
 
     # create existing entry with new_unique_id
     existing_entity = entity_registry.async_get_or_create(
@@ -168,17 +165,16 @@ async def test_dont_migrate_unique_ids(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_zamg_coordinator")
 async def test_unload_entry(
     hass: HomeAssistant,
-    mock_zamg_coordinator: MagicMock,
+    entity_registry: er.EntityRegistry,
     entitydata: dict,
     unique_id: str,
 ) -> None:
     """Test unload entity unique_ids."""
     mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
     mock_config_entry.add_to_hass(hass)
-
-    entity_registry = er.async_get(hass)
 
     entity_registry.async_get_or_create(
         WEATHER_DOMAIN,

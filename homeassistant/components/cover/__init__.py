@@ -8,7 +8,7 @@ from enum import IntFlag, StrEnum
 import functools as ft
 from functools import cached_property
 import logging
-from typing import Any, ParamSpec, TypeVar, final
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -30,10 +30,7 @@ from homeassistant.const import (
     STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
     all_with_deprecated_constants,
@@ -45,17 +42,14 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from . import group as group_pre_import  # noqa: F401
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=15)
-
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
-_P = ParamSpec("_P")
-_R = TypeVar("_R")
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=15)
 
 
 class CoverDeviceClass(StrEnum):
@@ -477,7 +471,7 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         else:
             await self.async_close_cover_tilt(**kwargs)
 
-    def _get_toggle_function(
+    def _get_toggle_function[**_P, _R](
         self, fns: dict[str, Callable[_P, _R]]
     ) -> Callable[_P, _R]:
         # If we are opening or closing and we support stopping, then we should stop

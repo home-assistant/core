@@ -1,7 +1,5 @@
 """The test validating and repairing schema."""
 
-from unittest.mock import patch
-
 import pytest
 from sqlalchemy import text
 
@@ -28,17 +26,15 @@ async def test_validate_db_schema(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    db_engine,
+    db_engine: str,
+    recorder_dialect_name: None,
 ) -> None:
     """Test validating DB schema with MySQL and PostgreSQL.
 
     Note: The test uses SQLite, the purpose is only to exercise the code.
     """
-    with patch(
-        "homeassistant.components.recorder.core.Recorder.dialect_name", db_engine
-    ):
-        await async_setup_recorder_instance(hass)
-        await async_wait_recording_done(hass)
+    await async_setup_recorder_instance(hass)
+    await async_wait_recording_done(hass)
     assert "Schema validation failed" not in caplog.text
     assert "Detected statistics schema errors" not in caplog.text
     assert "Database is about to correct DB schema errors" not in caplog.text

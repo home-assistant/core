@@ -1,10 +1,10 @@
 """Common fixtures for the Arve tests."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from asyncarve import ArveCustomer, ArveDevices, ArveSensPro, ArveSensProData
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.arve.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.arve.async_setup_entry", return_value=True

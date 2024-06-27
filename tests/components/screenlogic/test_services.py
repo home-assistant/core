@@ -6,6 +6,7 @@ from unittest.mock import DEFAULT, AsyncMock, patch
 import pytest
 from screenlogicpy import ScreenLogicGateway
 from screenlogicpy.device_const.system import COLOR_MODE
+from typing_extensions import AsyncGenerator
 
 from homeassistant.components.screenlogic import DOMAIN
 from homeassistant.components.screenlogic.const import (
@@ -49,10 +50,10 @@ def dataset_fixture():
 @pytest.fixture(name="service_fixture")
 async def setup_screenlogic_services_fixture(
     hass: HomeAssistant,
-    request,
+    request: pytest.FixtureRequest,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
-):
+) -> AsyncGenerator[dict[str, Any]]:
     """Define the setup for a patched screenlogic integration."""
     data = (
         marker.args[0]
@@ -473,7 +474,7 @@ async def test_service_config_entry_not_loaded(
         assert hass.services.has_service(DOMAIN, SERVICE_SET_COLOR_MODE)
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-        await mock_config_entry.async_unload(hass)
+        await hass.config_entries.async_unload(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 

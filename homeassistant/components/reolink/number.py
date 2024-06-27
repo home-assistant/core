@@ -117,6 +117,18 @@ NUMBER_ENTITIES = (
         method=lambda api, ch, value: api.set_md_sensitivity(ch, int(value)),
     ),
     ReolinkNumberEntityDescription(
+        key="pir_sensitivity",
+        cmd_key="GetPirInfo",
+        translation_key="pir_sensitivity",
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_min_value=1,
+        native_max_value=100,
+        supported=lambda api, ch: api.supported(ch, "PIR"),
+        value=lambda api, ch: api.pir_sensitivity(ch),
+        method=lambda api, ch, value: api.set_pir(ch, sensitivity=int(value)),
+    ),
+    ReolinkNumberEntityDescription(
         key="ai_face_sensititvity",
         cmd_key="GetAiAlarm",
         translation_key="ai_face_sensitivity",

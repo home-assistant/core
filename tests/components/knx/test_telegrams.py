@@ -51,8 +51,8 @@ MOCK_TELEGRAMS = [
 def assert_telegram_history(telegrams: list[TelegramDict]) -> bool:
     """Assert that the mock telegrams are equal to the given telegrams. Omitting timestamp."""
     assert len(telegrams) == len(MOCK_TELEGRAMS)
-    for index in range(len(telegrams)):
-        test_telegram = copy(telegrams[index])  # don't modify the original
+    for index, value in enumerate(telegrams):
+        test_telegram = copy(value)  # don't modify the original
         comp_telegram = MOCK_TELEGRAMS[index]
         assert datetime.fromisoformat(test_telegram["timestamp"])
         if isinstance(test_telegram["payload"], tuple):
@@ -66,7 +66,7 @@ async def test_store_telegam_history(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_storage: dict[str, Any],
-):
+) -> None:
     """Test storing telegram history."""
     await knx.setup_integration({})
 
@@ -89,7 +89,7 @@ async def test_load_telegam_history(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_storage: dict[str, Any],
-):
+) -> None:
     """Test telegram history restoration."""
     hass_storage["knx/telegrams_history.json"] = {"version": 1, "data": MOCK_TELEGRAMS}
     await knx.setup_integration({})
@@ -103,7 +103,7 @@ async def test_remove_telegam_history(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_storage: dict[str, Any],
-):
+) -> None:
     """Test telegram history removal when configured to size 0."""
     hass_storage["knx/telegrams_history.json"] = {"version": 1, "data": MOCK_TELEGRAMS}
     knx.mock_config_entry.add_to_hass(hass)

@@ -8,6 +8,7 @@ from homeassistant import config_entries
 from homeassistant.components.derivative.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import selector
 
 from tests.common import MockConfigEntry
 
@@ -71,7 +72,7 @@ def get_suggested(schema, key):
                 return None
             return k.description["suggested_value"]
     # Wanted key absent from schema
-    raise Exception
+    raise KeyError("Wanted key absent from schema")
 
 
 @pytest.mark.parametrize("platform", ["sensor"])
@@ -95,6 +96,10 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    hass.states.async_set("sensor.input", 10, {"unit_of_measurement": "dog"})
+    hass.states.async_set("sensor.valid", 10, {"unit_of_measurement": "dog"})
+    hass.states.async_set("sensor.invalid", 10, {"unit_of_measurement": "cat"})
+
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
@@ -104,9 +109,17 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     assert get_suggested(schema, "unit_prefix") == "k"
     assert get_suggested(schema, "unit_time") == "min"
 
+    source = schema["source"]
+    assert isinstance(source, selector.EntitySelector)
+    assert source.config["include_entities"] == [
+        "sensor.input",
+        "sensor.valid",
+    ]
+
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
+            "source": "sensor.valid",
             "round": 2.0,
             "time_window": {"seconds": 10.0},
             "unit_time": "h",
@@ -116,7 +129,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     assert result["data"] == {
         "name": "My derivative",
         "round": 2.0,
-        "source": "sensor.input",
+        "source": "sensor.valid",
         "time_window": {"seconds": 10.0},
         "unit_time": "h",
     }
@@ -124,7 +137,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     assert config_entry.options == {
         "name": "My derivative",
         "round": 2.0,
-        "source": "sensor.input",
+        "source": "sensor.valid",
         "time_window": {"seconds": 10.0},
         "unit_time": "h",
     }
@@ -134,11 +147,11 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     await hass.async_block_till_done()
 
     # Check the entity was updated, no new entity was created
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all()) == 4
 
     # Check the state of the entity has changed as expected
-    hass.states.async_set("sensor.input", 10, {"unit_of_measurement": "cat"})
-    hass.states.async_set("sensor.input", 11, {"unit_of_measurement": "cat"})
+    hass.states.async_set("sensor.valid", 10, {"unit_of_measurement": "cat"})
+    hass.states.async_set("sensor.valid", 11, {"unit_of_measurement": "cat"})
     await hass.async_block_till_done()
     state = hass.states.get(f"{platform}.my_derivative")
     assert state.attributes["unit_of_measurement"] == "cat/h"
