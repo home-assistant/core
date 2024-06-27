@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import MadVRCoordinator
 
 PLATFORMS: list[Platform] = [Platform.REMOTE]
@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: MadVRConfigEntry) -> bool:
     """Set up the integration from a config entry."""
-    name = entry.data[CONF_NAME]
+    name = entry.data.get(CONF_NAME, DEFAULT_NAME)
     madVRClient = Madvr(
         host=entry.data[CONF_HOST],
         logger=_LOGGER,

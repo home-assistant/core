@@ -4,13 +4,15 @@ import logging
 
 from madvr.madvr import Madvr
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import MadVRConfigEntry
 from .utils import cancel_tasks
 
 _LOGGER = logging.getLogger(__name__)
+
+type MadVRConfigEntry = ConfigEntry[MadVRCoordinator]
 
 
 class MadVRCoordinator(DataUpdateCoordinator[dict]):

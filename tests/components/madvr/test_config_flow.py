@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.madvr import DOMAIN
+from homeassistant.components.madvr import DEFAULT_NAME, DOMAIN
 from homeassistant.components.madvr.config_flow import CannotConnect
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -36,7 +36,6 @@ async def test_user_form(hass: HomeAssistant, mock_madvr) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "name": "Test MadVR",
                 "host": "192.168.1.100",
                 "mac": "00:11:22:33:44:55",
                 "port": 44077,
@@ -46,9 +45,8 @@ async def test_user_form(hass: HomeAssistant, mock_madvr) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Test MadVR"
+    assert result2["title"] == DEFAULT_NAME
     assert result2["data"] == {
-        "name": "Test MadVR",
         "host": "192.168.1.100",
         "mac": "00:11:22:33:44:55",
         "port": 44077,
@@ -71,7 +69,6 @@ async def test_user_form_cannot_connect(hass: HomeAssistant, mock_madvr) -> None
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "name": "Test MadVR",
                 "host": "192.168.1.100",
                 "mac": "00:11:22:33:44:55",
                 "port": 44077,
@@ -94,7 +91,6 @@ async def test_user_form_cannot_connect(hass: HomeAssistant, mock_madvr) -> None
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
-                "name": "Test MadVR",
                 "host": "192.168.1.100",
                 "mac": "00:11:22:33:44:55",
                 "port": 44077,
@@ -103,9 +99,8 @@ async def test_user_form_cannot_connect(hass: HomeAssistant, mock_madvr) -> None
         )
 
     assert result3["type"] == FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "Test MadVR"
+    assert result3["title"] == DEFAULT_NAME
     assert result3["data"] == {
-        "name": "Test MadVR",
         "host": "192.168.1.100",
         "mac": "00:11:22:33:44:55",
         "port": 44077,

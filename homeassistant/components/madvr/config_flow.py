@@ -59,13 +59,13 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
             keep_power_on = user_input[CONF_POWER_ON]
             try:
                 await self._test_connection(host, port, mac, keep_power_on)
+                return self.async_create_entry(
+                    title=user_input.pop(CONF_NAME, DEFAULT_NAME),
+                    data=user_input,
+                )
             except CannotConnect:
                 _LOGGER.error("CannotConnect error caught")
                 errors["base"] = "cannot_connect"
-            return self.async_create_entry(
-                title=user_input.pop(CONF_NAME, DEFAULT_NAME),
-                data=user_input,
-            )
         # Whether it's the first attempt or a retry, show the form
         return self.async_show_form(
             step_id="user",
