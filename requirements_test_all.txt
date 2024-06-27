@@ -183,7 +183,7 @@ aioaseko==0.1.1
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.6.1
+aioautomower==2024.6.3
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.1.1
@@ -673,7 +673,7 @@ energyzero==2.1.0
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env-canada==0.6.3
+env-canada==0.7.1
 
 # homeassistant.components.season
 ephem==4.1.5
@@ -895,7 +895,7 @@ hole==0.8.0
 holidays==0.51
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240626.2
+home-assistant-frontend==20240627.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.6.26
@@ -2148,7 +2148,7 @@ tplink-omada-client==1.3.12
 transmission-rpc==7.0.3
 
 # homeassistant.components.twinkly
-ttls==1.5.1
+ttls==1.8.3
 
 # homeassistant.components.thethingsnetwork
 ttn_client==1.0.0
@@ -2169,19 +2169,19 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==4.0.0
+uiprotect==4.2.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
 
 # homeassistant.components.unifiprotect
-unifi-discovery==1.1.8
+unifi-discovery==1.2.0
 
 # homeassistant.components.zha
 universal-silabs-flasher==0.0.20
 
 # homeassistant.components.upb
-upb-lib==0.5.6
+upb-lib==0.5.7
 
 # homeassistant.components.upcloud
 upcloud-api==2.5.1
