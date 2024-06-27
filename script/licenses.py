@@ -123,56 +123,38 @@ EXCEPTIONS = {
     "PyXiaomiGateway",  # https://github.com/Danielhiversen/PyXiaomiGateway/pull/201
     "aioautomower",  # https://github.com/Thomas55555/aioautomower/issues/356
     "aiocomelit",  # https://github.com/chemelli74/aiocomelit/pull/138
-    "aiodhcpwatcher",  # https://github.com/bdraco/aiodhcpwatcher/pull/21
     "aioecowitt",  # https://github.com/home-assistant-libs/aioecowitt/pull/180
     "aiohttp-fast-url-dispatcher",  # https://github.com/bdraco/aiohttp-fast-url-dispatcher/pull/10
-    "aiohttp-fast-zlib",  # https://github.com/bdraco/aiohttp-fast-zlib/pull/4
     "aiohttp-isal",  # https://github.com/bdraco/aiohttp-isal/pull/5
     "aiohttp-zlib-ng",  # https://github.com/bdraco/aiohttp-zlib-ng/pull/9
-    "aionut",  # https://github.com/bdraco/aionut/pull/19
     "aioopenexchangerates",  # https://github.com/MartinHjelmare/aioopenexchangerates/pull/94
     "aiooui",  # https://github.com/Bluetooth-Devices/aiooui/pull/8
     "aioruuvigateway",  # https://github.com/akx/aioruuvigateway/pull/6
-    "aiosteamist",  # https://github.com/bdraco/aiosteamist/pull/11
     "aiovodafone",  # https://github.com/chemelli74/aiovodafone/pull/131
     "aiowebostv",  # https://github.com/home-assistant-libs/aiowebostv/pull/327
     "aioymaps",  # https://github.com/devbis/aioymaps/pull/3
-    "aiozoneinfo",  # https://github.com/Bluetooth-Devices/aiozoneinfo/pull/3
     "airthings-ble",  # https://github.com/Airthings/airthings-ble/pull/42
     "airtouch5py",  # https://github.com/danzel/airtouch5py/pull/3
     "amberelectric",  # https://github.com/madpilot/amberelectric.py/pull/11
     "apple_weatherkit",  # https://github.com/tjhorner/python-weatherkit/pull/3
     "apsystems-ez1",  # https://github.com/SonnenladenGmbH/APsystems-EZ1-API/pull/26
     "async-interrupt",  # https://github.com/bdraco/async_interrupt/pull/4
-    "bluetooth-adapters",  # https://github.com/Bluetooth-Devices/bluetooth-adapters/pull/141
-    "bluetooth-data-tools",  # https://github.com/Bluetooth-Devices/bluetooth-data-tools/pull/42
-    "bluetooth-sensor-state-data",  # https://github.com/Bluetooth-Devices/bluetooth-sensor-state-data/pull/20
     "commentjson",  # https://github.com/vaidik/commentjson/pull/55
     "crownstone-cloud",  # https://github.com/crownstone/crownstone-lib-python-cloud/pull/5
     "crownstone-core",  # https://github.com/crownstone/crownstone-lib-python-core/pull/6
     "crownstone-sse",  # https://github.com/crownstone/crownstone-lib-python-sse/pull/2
     "crownstone-uart",  # https://github.com/crownstone/crownstone-lib-python-uart/pull/12
-    "discovery30303",  # https://github.com/bdraco/discovery30303/pull/3
     "eliqonline",  # https://github.com/molobrakos/eliqonline/pull/17
     "enocean",  # https://github.com/kipe/enocean/pull/142
-    "eq3btsmart",  # https://github.com/EuleMitKeule/eq3btsmart/pull/3
-    "evohome-async",  # https://github.com/zxdavb/evohome-async/pull/18
     "gardena-bluetooth",  # https://github.com/elupus/gardena-bluetooth/pull/11
-    "govee-ble",  # https://github.com/Bluetooth-Devices/govee-ble/pull/86
     "govee-local-api",  # https://github.com/Galorhallen/govee-local-api/pull/35
-    "habluetooth",  # https://github.com/Bluetooth-Devices/habluetooth/pull/49
     "heatmiserV3",  # https://github.com/andylockran/heatmiserV3/pull/94
-    "home-assistant-bluetooth",  # https://github.com/home-assistant-libs/home-assistant-bluetooth/pull/40
     "huum",  # https://github.com/frwickst/pyhuum/pull/8
     "imutils",  # https://github.com/PyImageSearch/imutils/pull/292
-    "justnimbus",  # https://github.com/kvanzuijlen/justnimbus/pull/6
-    "kasa-crypt",  # https://github.com/python-kasa/kasa-crypt/pull/11
     "kiwiki_client",  # https://github.com/c7h/kiwiki_client/pull/6
     "krakenex",  # https://github.com/veox/python3-krakenex/pull/145
     "ld2410-ble",  # https://github.com/930913/ld2410-ble/pull/7
-    "led-ble",  # https://github.com/Bluetooth-Devices/led-ble/pull/41
     "maxcube-api",  # https://github.com/uebelack/python-maxcube-api/pull/48
-    "moehlenhoff-alpha2",  # https://github.com/j-a-n/python-moehlenhoff-alpha2/pull/3
     "nessclient",  # https://github.com/nickw444/nessclient/pull/65
     "neurio",  # https://github.com/jordanh/neurio-python/pull/13
     "nextcloudmonitor",  # https://github.com/meichthys/nextcloud_monitor/pull/9
@@ -181,16 +163,13 @@ EXCEPTIONS = {
     "pyEmby",  # https://github.com/mezz64/pyEmby/pull/12
     "pyTibber",  # https://github.com/Danielhiversen/pyTibber/pull/294
     "pyaprilaire",  # https://github.com/chamberlain2007/pyaprilaire/pull/16
-    "pybalboa",  # https://github.com/garbled1/pybalboa/pull/69
     "pybbox",  # https://github.com/HydrelioxGitHub/pybbox/pull/5
     "pyeconet",  # https://github.com/w1ll1am23/pyeconet/pull/41
     "pylutron-caseta",  # https://github.com/gurumitts/pylutron-caseta/pull/168
     "pynx584",  # https://github.com/kk7ds/pynx584/pull/87
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
     "pySwitchbee",  # https://github.com/jafar-atili/pySwitchbee/pull/5
-    "python-fullykiosk",  # https://github.com/cgarwood/python-fullykiosk/pull/23
     "pyvera",  # https://github.com/maximvelichko/pyvera/pull/164
-    "pywaze",  # https://github.com/eifinger/pywaze/pull/34
     "pyxeoma",  # https://github.com/jeradM/pyxeoma/pull/11
     "repoze.lru",  #
     "ring-doorbell",  # https://github.com/tchellomello/python-ring-doorbell/pull/386
@@ -205,9 +184,7 @@ EXCEPTIONS = {
     "tellsticknet",  # https://github.com/molobrakos/tellsticknet/pull/33
     "unifi-discovery",  # https://github.com/uilibs/unifi-discovery/pull/37
     "webrtc_noise_gain",  # https://github.com/rhasspy/webrtc-noise-gain/pull/24
-    "wolf_comm",  # https://github.com/janrothkegel/wolf-comm/pull/4
     "xiaomi-ble",  # https://github.com/Bluetooth-Devices/xiaomi-ble/pull/81
-    "yalexs-ble",  # https://github.com/bdraco/yalexs-ble/pull/163
     "zeversolar",  # https://github.com/kvanzuijlen/zeversolar/pull/46
 }
 
@@ -241,7 +218,7 @@ TODO = {
     "panasonic_viera": AwesomeVersion("0.3.6"),  # Has update available
     "pizzapi": AwesomeVersion("0.0.3"),  # Has update available
     "pubnub": AwesomeVersion(
-        "7.4.3"
+        "8.0.0"
     ),  # Proprietary license https://github.com/pubnub/python/blob/master/LICENSE
     "pyElectra": AwesomeVersion(
         "1.2.3"
@@ -298,6 +275,11 @@ def main() -> int:
                 f"Approved license detected for {package.name}@{package.version}: {package.license}"
             )
             print(f"Please remove the package from the EXCEPTIONS list: {package.name}")
+            exit_code = 1
+        elif not approved:
+            print(
+                f"We could not detect an OSI-approved license for {package.name}@{package.version}: {package.license}",
+            )
             exit_code = 1
     return exit_code
 
