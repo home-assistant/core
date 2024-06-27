@@ -778,7 +778,9 @@ jobs:
   audit-licenses:
     name: Audit licenses
     runs-on: ubuntu-22.04
-    needs: info
+    needs:
+      - info
+      - base
     if: |
       needs.info.outputs.requirements == 'true'
     steps:
