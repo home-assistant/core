@@ -273,9 +273,9 @@ def main() -> int:
             if approved_license in package.license:
                 approved = True
                 break
-        print(f"Checking {package.name}@{package.version}: {package.license}")
-        print(f"Approved: {approved}")
-        print(f"Previous unapproved version: {previous_unapproved_version}")
+        # print(f"Checking {package.name}@{package.version}: {package.license}")
+        # print(f"Approved: {approved}")
+        # print(f"Previous unapproved version: {previous_unapproved_version}")
         if previous_unapproved_version is not None:
             if previous_unapproved_version < package.version:
                 if approved:
