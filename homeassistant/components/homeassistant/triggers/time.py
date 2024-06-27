@@ -119,7 +119,7 @@ async def async_attach_trigger(
                     hour,
                     minute,
                     second,
-                    tzinfo=dt_util.DEFAULT_TIME_ZONE,
+                    tzinfo=dt_util.get_default_time_zone(),
                 )
                 # Only set up listener if time is now or in the future.
                 if trigger_dt >= dt_util.now():

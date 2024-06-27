@@ -14,6 +14,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -28,9 +29,9 @@ from tests.components.light.common import MockLight
 
 
 @pytest.fixture(autouse=True)
-def set_utc(hass):
+async def set_utc(hass):
     """Set timezone to UTC."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
 
 
 async def test_valid_config(hass: HomeAssistant) -> None:
@@ -50,6 +51,31 @@ async def test_valid_config(hass: HomeAssistant) -> None:
     state = hass.states.get("switch.flux")
     assert state
     assert state.state == "off"
+
+
+async def test_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test configuration with unique ID."""
+    assert await async_setup_component(
+        hass,
+        "switch",
+        {
+            "switch": {
+                "platform": "flux",
+                "name": "flux",
+                "lights": ["light.desk", "light.lamp"],
+                "unique_id": "zaphotbeeblebrox",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("switch.flux")
+    assert state
+    assert state.state == "off"
+
+    assert len(entity_registry.entities) == 1
+    assert entity_registry.async_get_entity_id("switch", "flux", "zaphotbeeblebrox")
 
 
 async def test_restore_state_last_on(hass: HomeAssistant) -> None:

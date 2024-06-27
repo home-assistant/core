@@ -9,6 +9,7 @@ from freezegun import freeze_time
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.orm.session import Session
+from typing_extensions import Generator
 from voluptuous.error import MultipleInvalid
 
 from homeassistant.components import recorder
@@ -58,7 +59,7 @@ TEST_EVENT_TYPES = (
 
 
 @pytest.fixture(name="use_sqlite")
-def mock_use_sqlite(request):
+def mock_use_sqlite(request: pytest.FixtureRequest) -> Generator[None]:
     """Pytest fixture to switch purge method."""
     with patch(
         "homeassistant.components.recorder.core.Recorder.dialect_name",

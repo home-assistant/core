@@ -1,11 +1,11 @@
 {
   "domain": "onkyo",
   "name": "Onkyo",
-  "codeowners": ["@nebula83"],
+  "codeowners": ["@arturpragacz", "@nebula83"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/onkyo",
-  "integration_type": "device",
-  "iot_class": "local_polling",
-  "loggers": ["eiscp"],
-  "requirements": ["onkyo-eiscp==1.2.7"]
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "loggers": ["pyeiscp"],
+  "requirements": ["pyeiscp==0.0.7"]
 }

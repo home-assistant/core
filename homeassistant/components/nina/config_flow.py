@@ -14,12 +14,9 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_registry import (
-    async_entries_for_config_entry,
-    async_get,
-)
 
 from .const import (
     _LOGGER,
@@ -213,9 +210,9 @@ class OptionsFlowHandler(OptionsFlow):
                     user_input, self._all_region_codes_sorted
                 )
 
-                entity_registry = async_get(self.hass)
+                entity_registry = er.async_get(self.hass)
 
-                entries = async_entries_for_config_entry(
+                entries = er.async_entries_for_config_entry(
                     entity_registry, self.config_entry.entry_id
                 )
 

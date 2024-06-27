@@ -1,6 +1,6 @@
 """Tests for cloud tts."""
 
-from collections.abc import AsyncGenerator, Callable, Coroutine
+from collections.abc import Callable, Coroutine
 from copy import deepcopy
 from http import HTTPStatus
 from typing import Any
@@ -8,10 +8,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from hass_nabucasa.voice import TTS_VOICES, VoiceError, VoiceTokenError
 import pytest
+from typing_extensions import AsyncGenerator
 import voluptuous as vol
 
 from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY
-from homeassistant.components.cloud import DOMAIN, const, tts
+from homeassistant.components.cloud.const import DEFAULT_TTS_DEFAULT_VOICE, DOMAIN
+from homeassistant.components.cloud.tts import PLATFORM_SCHEMA, SUPPORT_LANGUAGES, Voice
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as DOMAIN_MP,
@@ -27,8 +29,8 @@ from homeassistant.components.tts.helper import get_engine_instance
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_registry import EntityRegistry
-from homeassistant.helpers.issue_registry import IssueRegistry, IssueSeverity
 from homeassistant.setup import async_setup_component
 
 from . import PIPELINE_DATA
@@ -39,7 +41,7 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
-async def delay_save_fixture() -> AsyncGenerator[None, None]:
+async def delay_save_fixture() -> AsyncGenerator[None]:
     """Load the homeassistant integration."""
     with patch("homeassistant.helpers.collection.SAVE_DELAY", new=0):
         yield
@@ -56,33 +58,30 @@ async def internal_url_mock(hass: HomeAssistant) -> None:
 
 def test_default_exists() -> None:
     """Test our default language exists."""
-    assert const.DEFAULT_TTS_DEFAULT_VOICE[0] in TTS_VOICES
-    assert (
-        const.DEFAULT_TTS_DEFAULT_VOICE[1]
-        in TTS_VOICES[const.DEFAULT_TTS_DEFAULT_VOICE[0]]
-    )
+    assert DEFAULT_TTS_DEFAULT_VOICE[0] in TTS_VOICES
+    assert DEFAULT_TTS_DEFAULT_VOICE[1] in TTS_VOICES[DEFAULT_TTS_DEFAULT_VOICE[0]]
 
 
 def test_schema() -> None:
     """Test schema."""
-    assert "nl-NL" in tts.SUPPORT_LANGUAGES
+    assert "nl-NL" in SUPPORT_LANGUAGES
 
-    processed = tts.PLATFORM_SCHEMA({"platform": "cloud", "language": "nl-NL"})
+    processed = PLATFORM_SCHEMA({"platform": "cloud", "language": "nl-NL"})
     assert processed["gender"] == "female"
 
     with pytest.raises(vol.Invalid):
-        tts.PLATFORM_SCHEMA(
+        PLATFORM_SCHEMA(
             {"platform": "cloud", "language": "non-existing", "gender": "female"}
         )
 
     with pytest.raises(vol.Invalid):
-        tts.PLATFORM_SCHEMA(
+        PLATFORM_SCHEMA(
             {"platform": "cloud", "language": "nl-NL", "gender": "not-supported"}
         )
 
     # Should not raise
-    tts.PLATFORM_SCHEMA({"platform": "cloud", "language": "nl-NL", "gender": "female"})
-    tts.PLATFORM_SCHEMA({"platform": "cloud"})
+    PLATFORM_SCHEMA({"platform": "cloud", "language": "nl-NL", "gender": "female"})
+    PLATFORM_SCHEMA({"platform": "cloud"})
 
 
 @pytest.mark.parametrize(
@@ -143,7 +142,7 @@ async def test_prefs_default_voice(
 
 async def test_deprecated_platform_config(
     hass: HomeAssistant,
-    issue_registry: IssueRegistry,
+    issue_registry: ir.IssueRegistry,
     cloud: MagicMock,
 ) -> None:
     """Test cloud provider uses the preferences."""
@@ -157,7 +156,7 @@ async def test_deprecated_platform_config(
     assert issue.breaks_in_ha_version == "2024.9.0"
     assert issue.is_fixable is False
     assert issue.is_persistent is False
-    assert issue.severity == IssueSeverity.WARNING
+    assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_key == "deprecated_tts_platform_config"
 
 
@@ -187,7 +186,7 @@ async def test_provider_properties(
     assert "nl-NL" in engine.supported_languages
     supported_voices = engine.async_get_supported_voices("nl-NL")
     assert supported_voices is not None
-    assert tts.Voice("ColetteNeural", "ColetteNeural") in supported_voices
+    assert Voice("ColetteNeural", "ColetteNeural") in supported_voices
     supported_voices = engine.async_get_supported_voices("missing_language")
     assert supported_voices is None
 
@@ -463,7 +462,7 @@ async def test_migrating_pipelines(
 )
 async def test_deprecated_voice(
     hass: HomeAssistant,
-    issue_registry: IssueRegistry,
+    issue_registry: ir.IssueRegistry,
     cloud: MagicMock,
     hass_client: ClientSessionGenerator,
     data: dict[str, Any],
@@ -555,7 +554,7 @@ async def test_deprecated_voice(
     assert issue.breaks_in_ha_version == "2024.8.0"
     assert issue.is_fixable is True
     assert issue.is_persistent is True
-    assert issue.severity == IssueSeverity.WARNING
+    assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_key == "deprecated_voice"
     assert issue.translation_placeholders == {
         "deprecated_voice": deprecated_voice,
@@ -613,7 +612,7 @@ async def test_deprecated_voice(
 )
 async def test_deprecated_gender(
     hass: HomeAssistant,
-    issue_registry: IssueRegistry,
+    issue_registry: ir.IssueRegistry,
     cloud: MagicMock,
     hass_client: ClientSessionGenerator,
     data: dict[str, Any],
@@ -700,7 +699,7 @@ async def test_deprecated_gender(
     assert issue.breaks_in_ha_version == "2024.10.0"
     assert issue.is_fixable is True
     assert issue.is_persistent is True
-    assert issue.severity == IssueSeverity.WARNING
+    assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_key == "deprecated_gender"
     assert issue.translation_placeholders == {
         "integration_name": "Home Assistant Cloud",

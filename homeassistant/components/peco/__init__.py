@@ -49,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Outage Counter Setup
     county: str = entry.data[CONF_COUNTY]
 
-    async def async_update_outage_data() -> OutageResults:
+    async def async_update_outage_data() -> PECOCoordinatorData:
         """Fetch data from API."""
         try:
             outages: OutageResults = (
@@ -65,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise UpdateFailed(f"Error parsing data: {err}") from err
         return data
 
-    coordinator = DataUpdateCoordinator(
+    outage_coordinator = DataUpdateCoordinator(
         hass,
         LOGGER,
         name="PECO Outage Count",
@@ -73,9 +73,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=timedelta(minutes=OUTAGE_SCAN_INTERVAL),
     )
 
-    await coordinator.async_config_entry_first_refresh()
+    await outage_coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"outage_count": coordinator}
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        "outage_count": outage_coordinator
+    }
 
     if phone_number := entry.data.get(CONF_PHONE_NUMBER):
         # Smart Meter Setup]
@@ -92,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 raise UpdateFailed(f"Error parsing data: {err}") from err
             return data
 
-        coordinator = DataUpdateCoordinator(
+        meter_coordinator = DataUpdateCoordinator(
             hass,
             LOGGER,
             name="PECO Smart Meter",
@@ -100,9 +102,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             update_interval=timedelta(minutes=SMART_METER_SCAN_INTERVAL),
         )
 
-        await coordinator.async_config_entry_first_refresh()
+        await meter_coordinator.async_config_entry_first_refresh()
 
-        hass.data[DOMAIN][entry.entry_id]["smart_meter"] = coordinator
+        hass.data[DOMAIN][entry.entry_id]["smart_meter"] = meter_coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

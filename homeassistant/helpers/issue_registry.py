@@ -18,6 +18,7 @@ from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
 
 from .registry import BaseRegistry
+from .singleton import singleton
 from .storage import Store
 
 DATA_REGISTRY: HassKey[IssueRegistry] = HassKey("issue_registry")
@@ -108,18 +109,16 @@ class IssueRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
 class IssueRegistry(BaseRegistry):
     """Class to hold a registry of issues."""
 
-    def __init__(self, hass: HomeAssistant, *, read_only: bool = False) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the issue registry."""
         self.hass = hass
         self.issues: dict[tuple[str, str], IssueEntry] = {}
-        self._read_only = read_only
         self._store = IssueRegistryStore(
             hass,
             STORAGE_VERSION_MAJOR,
             STORAGE_KEY,
             atomic_writes=True,
             minor_version=STORAGE_VERSION_MINOR,
-            read_only=read_only,
         )
 
     @callback
@@ -244,6 +243,14 @@ class IssueRegistry(BaseRegistry):
 
         return issue
 
+    @callback
+    def make_read_only(self) -> None:
+        """Make the registry read-only.
+
+        This method is irreversible.
+        """
+        self._store.make_read_only()
+
     async def async_load(self) -> None:
         """Load the issue registry."""
         data = await self._store.async_load()
@@ -301,16 +308,18 @@ class IssueRegistry(BaseRegistry):
 
 
 @callback
+@singleton(DATA_REGISTRY)
 def async_get(hass: HomeAssistant) -> IssueRegistry:
     """Get issue registry."""
-    return hass.data[DATA_REGISTRY]
+    return IssueRegistry(hass)
 
 
 async def async_load(hass: HomeAssistant, *, read_only: bool = False) -> None:
     """Load issue registry."""
-    assert DATA_REGISTRY not in hass.data
-    hass.data[DATA_REGISTRY] = IssueRegistry(hass, read_only=read_only)
-    await hass.data[DATA_REGISTRY].async_load()
+    ir = async_get(hass)
+    if read_only:  # only used in for check config script
+        ir.make_read_only()
+    return await ir.async_load()
 
 
 @callback

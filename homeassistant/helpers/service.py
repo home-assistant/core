@@ -9,7 +9,7 @@ from enum import Enum
 from functools import cache, partial
 import logging
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeGuard, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypedDict, TypeGuard, cast
 
 import voluptuous as vol
 
@@ -63,7 +63,7 @@ from . import (
 )
 from .group import expand_entity_ids
 from .selector import TargetSelector
-from .typing import ConfigType, TemplateVarsType
+from .typing import ConfigType, TemplateVarsType, VolSchemaType
 
 if TYPE_CHECKING:
     from .entity import Entity
@@ -78,8 +78,6 @@ SERVICE_DESCRIPTION_CACHE: HassKey[dict[tuple[str, str], dict[str, Any] | None]]
 ALL_SERVICE_DESCRIPTIONS_CACHE: HassKey[
     tuple[set[tuple[str, str]], dict[str, dict[str, Any]]]
 ] = HassKey("all_service_descriptions_cache")
-
-_T = TypeVar("_T")
 
 
 @cache
@@ -181,15 +179,37 @@ _FIELD_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-_SERVICE_SCHEMA = vol.Schema(
+_SECTION_SCHEMA = vol.Schema(
     {
-        vol.Optional("target"): vol.Any(TargetSelector.CONFIG_SCHEMA, None),
-        vol.Optional("fields"): vol.Schema({str: _FIELD_SCHEMA}),
+        vol.Required("fields"): vol.Schema({str: _FIELD_SCHEMA}),
     },
     extra=vol.ALLOW_EXTRA,
 )
 
-_SERVICES_SCHEMA = vol.Schema({cv.slug: vol.Any(None, _SERVICE_SCHEMA)})
+_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Optional("target"): vol.Any(TargetSelector.CONFIG_SCHEMA, None),
+        vol.Optional("fields"): vol.Schema(
+            {str: vol.Any(_SECTION_SCHEMA, _FIELD_SCHEMA)}
+        ),
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+
+def starts_with_dot(key: str) -> str:
+    """Check if key starts with dot."""
+    if not key.startswith("."):
+        raise vol.Invalid("Key does not start with .")
+    return key
+
+
+_SERVICES_SCHEMA = vol.Schema(
+    {
+        vol.Remove(vol.All(str, starts_with_dot)): object,
+        cv.slug: vol.Any(None, _SERVICE_SCHEMA),
+    }
+)
 
 
 class ServiceParams(TypedDict):
@@ -657,6 +677,14 @@ def _load_services_files(
     return [_load_services_file(hass, integration) for integration in integrations]
 
 
+@callback
+def async_get_cached_service_description(
+    hass: HomeAssistant, domain: str, service: str
+) -> dict[str, Any] | None:
+    """Return the cached description for a service."""
+    return hass.data.get(SERVICE_DESCRIPTION_CACHE, {}).get((domain, service))
+
+
 @bind_hass
 async def async_get_all_descriptions(
     hass: HomeAssistant,
@@ -671,15 +699,11 @@ async def async_get_all_descriptions(
 
     # See if there are new services not seen before.
     # Any service that we saw before already has an entry in description_cache.
-    domains_with_missing_services: set[str] = set()
-    all_services: set[tuple[str, str]] = set()
-    for domain, services_by_domain in services.items():
-        for service_name in services_by_domain:
-            cache_key = (domain, service_name)
-            all_services.add(cache_key)
-            if cache_key not in descriptions_cache:
-                domains_with_missing_services.add(domain)
-
+    all_services = {
+        (domain, service_name)
+        for domain, services_by_domain in services.items()
+        for service_name in services_by_domain
+    }
     # If we have a complete cache, check if it is still valid
     all_cache: tuple[set[tuple[str, str]], dict[str, dict[str, Any]]] | None
     if all_cache := hass.data.get(ALL_SERVICE_DESCRIPTIONS_CACHE):
@@ -696,7 +720,9 @@ async def async_get_all_descriptions(
     # add the new ones to the cache without their descriptions
     services = {domain: service.copy() for domain, service in services.items()}
 
-    if domains_with_missing_services:
+    if domains_with_missing_services := {
+        domain for domain, _ in all_services.difference(descriptions_cache)
+    }:
         ints_or_excs = await async_get_integrations(hass, domains_with_missing_services)
         integrations: list[Integration] = []
         for domain, int_or_exc in ints_or_excs.items():
@@ -837,7 +863,7 @@ def async_set_service_schema(
 def _get_permissible_entity_candidates(
     call: ServiceCall,
     entities: dict[str, Entity],
-    entity_perms: None | (Callable[[str, str], bool]),
+    entity_perms: Callable[[str, str], bool] | None,
     target_all_entities: bool,
     all_referenced: set[str] | None,
 ) -> list[Entity]:
@@ -893,7 +919,7 @@ async def entity_service_call(
 
     Calls all platforms simultaneously.
     """
-    entity_perms: None | (Callable[[str, str], bool]) = None
+    entity_perms: Callable[[str, str], bool] | None = None
     return_response = call.return_response
 
     if call.context.user_id:
@@ -1083,7 +1109,7 @@ def async_register_admin_service(
     domain: str,
     service: str,
     service_func: Callable[[ServiceCall], Awaitable[None] | None],
-    schema: vol.Schema = vol.Schema({}, extra=vol.PREVENT_EXTRA),
+    schema: VolSchemaType = vol.Schema({}, extra=vol.PREVENT_EXTRA),
 ) -> None:
     """Register a service that requires admin access."""
     hass.services.async_register(
@@ -1153,7 +1179,7 @@ def verify_domain_control(
     return decorator
 
 
-class ReloadServiceHelper(Generic[_T]):
+class ReloadServiceHelper[_T]:
     """Helper for reload services.
 
     The helper has the following purposes:
