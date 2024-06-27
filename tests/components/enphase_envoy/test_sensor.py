@@ -39,12 +39,12 @@ async def setup_enphase_envoy_sensor_fixture(
         yield
 
 
-@pytest.mark.usefixtures("setup_enphase_envoy_sensor")
 async def test_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
+    setup_enphase_envoy_sensor: None,
 ) -> None:
     """Test enphase_envoy sensor entities."""
     # compare registered entities against snapshot of prior run
