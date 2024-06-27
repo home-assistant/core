@@ -775,16 +775,41 @@ jobs:
           name: pytest_buckets
           path: pytest_buckets.txt
           overwrite: true
-  check-licenses:
-    name: Check licenses
+  audit-licenses:
+    name: Audit licenses
     runs-on: ubuntu-22.04
     needs: info
-    #    if: |
-    #      needs.info.outputs.requirements
+    if: |
+      needs.info.outputs.requirements == 'true'
     steps:
-      - name: Test
+      - name: Check out code from GitHub
+        uses: actions/checkout@v4.1.7
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        id: python
+        uses: actions/setup-python@v5.1.0
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+          check-latest: true
+      - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
+        id: cache-venv
+        uses: actions/cache/restore@v4.0.2
+        with:
+          path: venv
+          fail-on-cache-miss: true
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
+      - name: Install pip-licenses
         run: |
-          echo "${{ needs.info.outputs.requirements }}"
+          . venv/bin/activate
+          pip install pip-licenses
+      - name: Run pip-licenses
+        run: |
+          . venv/bin/activate
+          pip-licenses --format=json >> licenses.json
+      - name: Process licenses
+        run: |
+          python script/licenses.py
 
   pytest-full:
     runs-on: ubuntu-22.04
