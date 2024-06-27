@@ -3052,3 +3052,22 @@ async def test_primary_config_entry(
         model="model",
     )
     assert device.primary_config_entry == mock_config_entry_1.entry_id
+
+
+async def test_update_device_no_connections_or_identifiers(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test updating a device clearing connections and identifiers."""
+    mock_config_entry = MockConfigEntry(domain="mqtt", title=None)
+    mock_config_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+    )
+    with pytest.raises(HomeAssistantError):
+        device_registry.async_update_device(
+            device.id, new_connections=set(), new_identifiers=set()
+        )
