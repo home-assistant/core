@@ -5,10 +5,10 @@ import logging
 
 from madvr.madvr import Madvr
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from . import MadVRConfigEntry
 from .utils import cancel_tasks
 
 _LOGGER = logging.getLogger(__name__)
@@ -17,11 +17,12 @@ _LOGGER = logging.getLogger(__name__)
 class MadVRCoordinator(DataUpdateCoordinator[dict]):
     """My custom coordinator for push-based API."""
 
-    config_entry: ConfigEntry
+    config_entry: MadVRConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: MadVRConfigEntry,
         client: Madvr,
         name: str,
     ) -> None:
@@ -31,7 +32,7 @@ class MadVRCoordinator(DataUpdateCoordinator[dict]):
             _LOGGER,
             name="Madvr Coordinator",
         )
-        self.entry_id = self.config_entry.entry_id
+        self.entry_id = config_entry.entry_id
         self.client = client
         self.name = name
         self.client.set_update_callback(self.handle_push_data)
