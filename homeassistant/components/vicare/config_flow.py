@@ -62,8 +62,8 @@ OPTIONS_SCHEMA = vol.Schema(
 class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ViCare."""
 
-    VERSION = 2
-    entry: ConfigEntry | None
+    VERSION = 1
+    MINOR_VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

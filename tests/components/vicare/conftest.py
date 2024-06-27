@@ -76,6 +76,7 @@ def mock_v1_config_entry() -> MockConfigEntry:
         data=ENTRY_CONFIG,
         options={},
         version=1,
+        minor_version=0,
     )
 
 
@@ -88,7 +89,8 @@ def mock_config_entry() -> MockConfigEntry:
         entry_id="1234",
         data=ENTRY_CONFIG,
         options=ENTRY_OPTIONS,
-        version=2,
+        version=1,
+        minor_version=1,
     )
 
 

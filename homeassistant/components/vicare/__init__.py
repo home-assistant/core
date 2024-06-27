@@ -39,13 +39,23 @@ _TOKEN_FILENAME = "vicare_token.save"
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     if entry.version == 1:
-        _LOGGER.debug("Migrating from version %s", entry.version)
-        entry.version = 2
-        hass.config_entries.async_update_entry(
-            entry, options={**entry.options, CONF_EXTENDED_API: False}
-        )
-        _LOGGER.debug("Migration to version %s successful", entry.version)
-    return True
+        if entry.minor_version == 0:
+            _LOGGER.debug(
+                "Migrating from version %s.%s",
+                entry.version,
+                entry.minor_version,
+            )
+            entry.minor_version = 1
+            hass.config_entries.async_update_entry(
+                entry, options={**entry.options, CONF_EXTENDED_API: False}
+            )
+            _LOGGER.debug(
+                "Migration to version %s.%s successful",
+                entry.version,
+                entry.minor_version,
+            )
+        return True
+    return False
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
