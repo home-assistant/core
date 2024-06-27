@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.switch import (
     DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchEntity,
 )
 from homeassistant.const import (
@@ -64,7 +64,7 @@ DEFAULT_VERIFY_SSL = True
 
 SUPPORT_REST_METHODS = ["post", "put", "patch"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         **TEMPLATE_ENTITY_BASE_SCHEMA.schema,
         vol.Required(CONF_RESOURCE): cv.url,

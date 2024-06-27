@@ -426,20 +426,15 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.OCCUPANCY,
         icon="mdi:doorbell-video",
         ufp_required_field="feature_flags.is_doorbell",
-        ufp_value="is_ringing",
         ufp_event_obj="last_ring_event",
     ),
     ProtectBinaryEventEntityDescription(
         key="motion",
         name="Motion",
         device_class=BinarySensorDeviceClass.MOTION,
-        ufp_value="is_motion_currently_detected",
         ufp_enabled="is_motion_detection_on",
         ufp_event_obj="last_motion_event",
     ),
-)
-
-SMART_EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
     ProtectBinaryEventEntityDescription(
         key="smart_obj_any",
         name="Object detected",
@@ -712,26 +707,6 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
     _state_attrs = ("_attr_available", "_attr_is_on", "_attr_extra_state_attributes")
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        super()._async_update_device_from_protect(device)
-        description = self.entity_description
-        event = self.entity_description.get_event_obj(device)
-        if is_on := bool(description.get_ufp_value(device)):
-            if event:
-                self._set_event_attrs(event)
-        else:
-            self._attr_extra_state_attributes = {}
-        self._attr_is_on = is_on
-
-
-class ProtectSmartEventBinarySensor(EventEntityMixin, BinarySensorEntity):
-    """A UniFi Protect Device Binary Sensor for smart events."""
-
-    device: Camera
-    entity_description: ProtectBinaryEventEntityDescription
-    _state_attrs = ("_attr_available", "_attr_is_on", "_attr_extra_state_attributes")
-
-    @callback
     def _set_event_done(self) -> None:
         self._attr_is_on = False
         self._attr_extra_state_attributes = {}
@@ -749,7 +724,10 @@ class ProtectSmartEventBinarySensor(EventEntityMixin, BinarySensorEntity):
 
         if not (
             event
-            and description.has_matching_smart(event)
+            and (
+                description.ufp_obj_type is None
+                or description.has_matching_smart(event)
+            )
             and not self._event_already_ended(prev_event, prev_event_end)
         ):
             self._set_event_done()
@@ -774,11 +752,6 @@ def _async_event_entities(
 ) -> list[ProtectDeviceEntity]:
     entities: list[ProtectDeviceEntity] = []
     for device in data.get_cameras() if ufp_device is None else [ufp_device]:
-        entities.extend(
-            ProtectSmartEventBinarySensor(data, device, description)
-            for description in SMART_EVENT_SENSORS
-            if description.has_required(device)
-        )
         entities.extend(
             ProtectEventBinarySensor(data, device, description)
             for description in EVENT_SENSORS

@@ -13,7 +13,7 @@ from solaredge_local import SolarEdge
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -193,7 +193,7 @@ SENSOR_TYPES_ENERGY_EXPORT: tuple[SolarEdgeLocalSensorEntityDescription, ...] = 
     ),
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_IP_ADDRESS): cv.string,
         vol.Optional(CONF_NAME, default="SolarEdge"): cv.string,

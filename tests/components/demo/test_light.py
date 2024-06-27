@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.demo import DOMAIN
 from homeassistant.components.light import (
@@ -27,7 +28,7 @@ ENTITY_LIGHT = "light.bed_light"
 
 
 @pytest.fixture
-async def light_only() -> None:
+def light_only() -> Generator[None]:
     """Enable only the light platform."""
     with patch(
         "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
@@ -37,7 +38,7 @@ async def light_only() -> None:
 
 
 @pytest.fixture(autouse=True)
-async def setup_comp(hass, light_only):
+async def setup_comp(hass: HomeAssistant, light_only: None) -> None:
     """Set up demo component."""
     assert await async_setup_component(
         hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: {"platform": DOMAIN}}
