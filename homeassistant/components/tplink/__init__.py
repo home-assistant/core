@@ -173,6 +173,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
 
     device_credentials_hash = device.credentials_hash
     device_config_dict = device.config.to_dict(exclude_credentials=True)
+    # Do not store the credentials hash inside the device_config
+    device_config_dict.pop(CONF_CREDENTIALS_HASH, None)
     updates: dict[str, Any] = {}
     if device_credentials_hash and device_credentials_hash != entry_credentials_hash:
         updates[CONF_CREDENTIALS_HASH] = device_credentials_hash

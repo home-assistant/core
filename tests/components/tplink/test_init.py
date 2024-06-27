@@ -495,9 +495,13 @@ async def test_move_credentials_hash(
     )
     assert entry.data[CONF_DEVICE_CONFIG][CONF_CREDENTIALS_HASH] == "theHash"
     entry.add_to_hass(hass)
-    device = _mocked_device(credentials_hash="theNewHash")
+
+    async def _connect(config):
+        config.credentials_hash = "theNewHash"
+        return _mocked_device(device_config=config, credentials_hash="theNewHash")
+
     with (
-        patch("homeassistant.components.tplink.Device.connect", return_value=device),
+        patch("homeassistant.components.tplink.Device.connect", new=_connect),
         patch("homeassistant.components.tplink.PLATFORMS", []),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -615,23 +619,22 @@ async def test_credentials_hash(
         unique_id=MAC_ADDRESS,
     )
 
-    device = _mocked_device()
+    async def _connect(config):
+        config.credentials_hash = "theHash"
+        return _mocked_device(device_config=config, credentials_hash="theHash")
+
     with (
         patch("homeassistant.components.tplink.PLATFORMS", []),
-        patch(
-            "homeassistant.components.tplink.Device.connect", return_value=device
-        ) as connect_mock,
+        patch("homeassistant.components.tplink.Device.connect", new=_connect),
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    expected_config = DeviceConfig.from_dict(
-        DEVICE_CONFIG_AUTH.to_dict(exclude_credentials=True, credentials_hash="theHash")
-    )
-    connect_mock.assert_called_with(config=expected_config)
     assert entry.state is ConfigEntryState.LOADED
+    assert CONF_CREDENTIALS_HASH not in entry.data[CONF_DEVICE_CONFIG]
     assert CONF_CREDENTIALS_HASH in entry.data
+    assert entry.data[CONF_DEVICE_CONFIG] == device_config
     assert entry.data[CONF_CREDENTIALS_HASH] == "theHash"
 
 
