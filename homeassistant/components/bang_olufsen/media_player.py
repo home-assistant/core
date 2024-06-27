@@ -366,7 +366,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     @property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        if self._volume.level and self._volume.level.level:
+        if self._volume.level and self._volume.level.level is not None:
             return float(self._volume.level.level / 100)
         return None
 
