@@ -90,6 +90,10 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    def __init__(self) -> None:
+        """Initialize."""
+        self.entry: ConfigEntry | None = None
+
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
