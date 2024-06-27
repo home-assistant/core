@@ -13,6 +13,7 @@ from hatasmota.utils import (
     get_topic_tele_will,
 )
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant import config_entries
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
@@ -485,6 +486,7 @@ async def test_controlling_state_via_mqtt(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mqtt_mock: MqttMockHAClient,
+    snapshot: SnapshotAssertion,
     setup_tasmota,
     sensor_config,
     entity_ids,
@@ -513,11 +515,13 @@ async def test_controlling_state_via_mqtt(
         state = hass.states.get(entity_id)
         assert state.state == "unavailable"
         assert not state.attributes.get(ATTR_ASSUMED_STATE)
+        assert state == snapshot
 
         entry = entity_registry.async_get(entity_id)
         assert entry.disabled is False
         assert entry.disabled_by is None
         assert entry.entity_category is None
+        assert entry == snapshot
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
