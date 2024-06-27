@@ -277,6 +277,7 @@ def main() -> int:
         # print(f"Approved: {approved}")
         # print(f"Previous unapproved version: {previous_unapproved_version}")
         if previous_unapproved_version is not None:
+            print(f"{previous_unapproved_version} < {package.version}")
             if previous_unapproved_version < package.version:
                 if approved:
                     print(
