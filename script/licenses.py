@@ -275,6 +275,14 @@ def main():
             if approved_license in package.license:
                 approved = True
                 break
+        LOGGER.info(
+            "Checking %s@%s: %s",
+            package.name,
+            package.version,
+            package.license,
+        )
+        LOGGER.info("Approved: %s", approved)
+        LOGGER.info("Previous unapproved version: %s", previous_unapproved_version)
         if previous_unapproved_version is not None:
             if previous_unapproved_version < package.version:
                 if approved:
