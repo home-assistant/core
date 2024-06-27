@@ -46,4 +46,4 @@ set_profile:
         number:
           min: 1
           max: 65535
-          unit_of_measurement: "min"
+          unit_of_measurement: "minutes"
