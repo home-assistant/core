@@ -4,12 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
-import logging
 import sys
 
 from awesomeversion import AwesomeVersion
-
-LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -275,42 +272,29 @@ def main():
             if approved_license in package.license:
                 approved = True
                 break
-        LOGGER.info(
-            "Checking %s@%s: %s",
-            package.name,
-            package.version,
-            package.license,
-        )
-        LOGGER.info("Approved: %s", approved)
-        LOGGER.info("Previous unapproved version: %s", previous_unapproved_version)
+        print(f"Checking {package.name}@{package.version}: {package.license}")
+        print(f"Approved: {approved}")
+        print(f"Previous unapproved version: {previous_unapproved_version}")
         if previous_unapproved_version is not None:
             if previous_unapproved_version < package.version:
                 if approved:
-                    LOGGER.info(
-                        "Approved license detected for %s@%s: %s",
-                        package.name,
-                        package.version,
-                        package.license,
+                    print(
+                        f"Approved license detected for {package.name}@{package.version}: {package.license}"
                     )
-                    LOGGER.info("Please remove the package from the TODO list.")
+                    print("Please remove the package from the TODO list.")
                     sys.exit(0)
                 else:
-                    LOGGER.info(
-                        "We could not detect an OSI-approved license for %s@%s: %s",
-                        package.name,
-                        package.version,
-                        package.license,
+                    print(
+                        f"We could not detect an OSI-approved license for {package.name}@{package.version}: {package.license}",
                     )
                     sys.exit(0)
         if not approved and package.name not in EXCEPTIONS:
-            LOGGER.info(
-                "We could not detect an OSI-approved license for %s@%s: %s",
-                package.name,
-                package.version,
-                package.license,
+            print(
+                f"We could not detect an OSI-approved license for {package.name}@{package.version}: {package.license}",
             )
             sys.exit(0)
-    LOGGER.info("All packages have an OSI-approved license.")
+    print("All packages have an OSI-approved license.")
+    sys.exit(1)
 
 
 if __name__ == "__main__":
