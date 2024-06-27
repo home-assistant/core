@@ -40,7 +40,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_state_change_filtered,
     async_track_state_removed_domain,
-    async_track_state_reported_event,
+    async_track_state_report_event,
     async_track_sunrise,
     async_track_sunset,
     async_track_template,
@@ -4916,8 +4916,8 @@ async def test_track_point_in_time_repr(
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
-async def test_async_track_state_reported_event(hass: HomeAssistant) -> None:
-    """Test async_track_state_reported_event."""
+async def test_async_track_state_report_event(hass: HomeAssistant) -> None:
+    """Test async_track_state_report_event."""
     tracker_called: list[ha.State] = []
 
     @ha.callback
@@ -4925,7 +4925,7 @@ async def test_async_track_state_reported_event(hass: HomeAssistant) -> None:
         new_state = event.data["new_state"]
         tracker_called.append(new_state)
 
-    unsub = async_track_state_reported_event(
+    unsub = async_track_state_report_event(
         hass, ["light.bowl", "light.top"], single_run_callback
     )
     hass.states.async_set("light.bowl", "on")
