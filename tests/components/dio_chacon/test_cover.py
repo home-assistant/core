@@ -28,6 +28,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_UNIQUE_ID,
     CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -138,7 +139,7 @@ async def test_cover(hass: HomeAssistant, entity_registry: er.EntityRegistry) ->
 
     # Server side callback tests
     client: DIOChaconAPIClient = entry.runtime_data.dio_chacon_client
-    client._callback_device_state(
+    client._callback_device_state_by_device["L4HActuator_idmock1"](
         {
             "id": "L4HActuator_idmock1",
             "connected": True,
@@ -152,7 +153,7 @@ async def test_cover(hass: HomeAssistant, entity_registry: er.EntityRegistry) ->
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 79
     assert state.state == STATE_OPEN
 
-    client._callback_device_state(
+    client._callback_device_state_by_device["L4HActuator_idmock1"](
         {
             "id": "L4HActuator_idmock1",
             "connected": True,
@@ -166,7 +167,7 @@ async def test_cover(hass: HomeAssistant, entity_registry: er.EntityRegistry) ->
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 90
     assert state.state == STATE_OPENING
 
-    client._callback_device_state(
+    client._callback_device_state_by_device["L4HActuator_idmock1"](
         {
             "id": "L4HActuator_idmock1",
             "connected": True,
@@ -185,6 +186,39 @@ async def test_cover(hass: HomeAssistant, entity_registry: er.EntityRegistry) ->
         "dio_chacon_wifi_api.DIOChaconAPIClient.disconnect",
     ):
         await hass.config_entries.async_unload(entry.entry_id)
+
+    # pytest.fail("Fails to display logs of tests")
+
+
+async def test_cover_shutdown_event(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test the creation and values of the Dio Chacon covers."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="test_entry_unique_id",
+        data={
+            CONF_USERNAME: "dummylogin",
+            CONF_PASSWORD: "dummypass",
+            CONF_UNIQUE_ID: "dummy-user-id",
+        },
+    )
+
+    entry.add_to_hass(hass)
+
+    with patch(
+        "dio_chacon_wifi_api.DIOChaconAPIClient.search_all_devices",
+        return_value=MOCK_COVER_DEVICE,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Tests coverage for stop action.
+    with patch(
+        "dio_chacon_wifi_api.DIOChaconAPIClient.disconnect",
+    ):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
 
     # pytest.fail("Fails to display logs of tests")
 

@@ -3,6 +3,7 @@
 import logging
 from typing import Any
 
+from dio_chacon_wifi_api import DIOChaconAPIClient
 from dio_chacon_wifi_api.const import DeviceTypeEnum, ShutterMoveEnum
 
 from homeassistant.components.cover import (
@@ -15,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import DioChaconDataUpdateCoordinator
+from . import DioChaconData
 from .entity import DioChaconEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,19 +28,25 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Defer sensor setup to the shared sensor module."""
-    coordinator = config_entry.runtime_data
+    dio_chacon_data: DioChaconData = config_entry.runtime_data
 
-    async_add_entities(
-        DioChaconCover(coordinator, device)
-        for device in coordinator.list_devices
-        if device["type"] == DeviceTypeEnum.SHUTTER.value
-    )
+    entities: list[DioChaconCover] = []
+    for device in dio_chacon_data.list_devices:
+        if device["type"] == DeviceTypeEnum.SHUTTER.value:
+            cover = DioChaconCover(dio_chacon_data.dio_chacon_client, device)
+            # Registers a callback to update the device state when the server sends an event
+            dio_chacon_data.dio_chacon_client.set_callback_device_state_by_device(
+                cover.target_id, cover.callback_device_state
+            )
+            entities.append(cover)
+
+    async_add_entities(entities)
 
 
 class DioChaconCover(DioChaconEntity, CoverEntity):
     """Object for controlling a Dio Chacon cover."""
 
-    # If true, the entity has the name twice.
+    # To avoid having name twice
     _attr_has_entity_name = False
 
     _attr_device_class = CoverDeviceClass.SHUTTER
@@ -53,7 +60,7 @@ class DioChaconCover(DioChaconEntity, CoverEntity):
 
     def __init__(
         self,
-        coordinator: DioChaconDataUpdateCoordinator,
+        dio_chacon_client: DIOChaconAPIClient,
         device: dict[str, Any],
     ) -> None:
         """Initialize the cover."""
@@ -67,56 +74,34 @@ class DioChaconCover(DioChaconEntity, CoverEntity):
             device["connected"],
         )
 
-        super().__init__(coordinator, device["id"], device["name"], device["model"])
+        super().__init__(
+            dio_chacon_client, device["id"], device["name"], device["model"]
+        )
 
         self._attr_available = device["connected"]
         self._attr_current_cover_position = device["openlevel"]
         self._attr_is_closing = device["movement"] == ShutterMoveEnum.DOWN.value
         self._attr_is_opening = device["movement"] == ShutterMoveEnum.UP.value
+        self._attr_is_closed = self._attr_current_cover_position == 0
 
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        if self.coordinator_data and self.coordinator_data["connected"]:
-            return self.coordinator_data["connected"]
-        return self._attr_available
+    # callback coroutine for device state notification pushed from the server
+    def callback_device_state(self, data: dict[str, Any]) -> None:
+        """Receive callback for device state notification pushed from the server."""
 
-    @property
-    def current_cover_position(self) -> int | None:
-        """Return The openlevel of the cover un percentage."""
-        if self.coordinator_data and self.coordinator_data["openlevel"]:
-            self._attr_current_cover_position = self.coordinator_data["openlevel"]
-        return self._attr_current_cover_position
-
-    @property
-    def is_closed(self) -> bool | None:
-        """Return if the cover is closed."""
-        return self.current_cover_position == 0
-
-    @property
-    def is_closing(self) -> bool | None:
-        """Return if the cover is closing."""
-        if self.coordinator_data and self.coordinator_data["movement"]:
-            self._attr_is_closing = (
-                self.coordinator_data["movement"] == ShutterMoveEnum.DOWN.value
-            )
-        return self._attr_is_closing
-
-    @property
-    def is_opening(self) -> bool | None:
-        """Return if the cover is opening."""
-        if self.coordinator_data and self.coordinator_data["movement"]:
-            self._attr_is_opening = (
-                self.coordinator_data["movement"] == ShutterMoveEnum.UP.value
-            )
-        return self._attr_is_opening
+        _LOGGER.debug("Data received from server %s", data)
+        self._attr_available = data["connected"]
+        self._attr_current_cover_position = data["openlevel"]
+        self._attr_is_closing = data["movement"] == ShutterMoveEnum.DOWN.value
+        self._attr_is_opening = data["movement"] == ShutterMoveEnum.UP.value
+        self._attr_is_closed = self._attr_current_cover_position == 0
+        self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
 
         _LOGGER.debug(
             "Close cover %s , %s, %s",
-            self._target_id,
+            self.target_id,
             self._attr_name,
             self.is_closed,
         )
@@ -127,7 +112,7 @@ class DioChaconCover(DioChaconEntity, CoverEntity):
             self.async_write_ha_state()
 
             await self.dio_chacon_client.move_shutter_direction(
-                self._target_id, ShutterMoveEnum.DOWN
+                self.target_id, ShutterMoveEnum.DOWN
             )
 
         # Closed status is effective after the server callback that triggers async_set_updated_data on the coordinator
@@ -137,7 +122,7 @@ class DioChaconCover(DioChaconEntity, CoverEntity):
 
         _LOGGER.debug(
             "Open cover %s , %s, %s",
-            self._target_id,
+            self.target_id,
             self._attr_name,
             self.current_cover_position,
         )
@@ -148,7 +133,7 @@ class DioChaconCover(DioChaconEntity, CoverEntity):
             self.async_write_ha_state()
 
             await self.dio_chacon_client.move_shutter_direction(
-                self._target_id, ShutterMoveEnum.UP
+                self.target_id, ShutterMoveEnum.UP
             )
 
         # Opened status is effective after the server callback that triggers async_set_updated_data on the coordinator
@@ -156,14 +141,14 @@ class DioChaconCover(DioChaconEntity, CoverEntity):
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
 
-        _LOGGER.debug("Stop cover %s , %s", self._target_id, self._attr_name)
+        _LOGGER.debug("Stop cover %s , %s", self.target_id, self._attr_name)
 
         self._attr_is_opening = False
         self._attr_is_closing = False
         self.async_write_ha_state()
 
         await self.dio_chacon_client.move_shutter_direction(
-            self._target_id, ShutterMoveEnum.STOP
+            self.target_id, ShutterMoveEnum.STOP
         )
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
@@ -171,9 +156,9 @@ class DioChaconCover(DioChaconEntity, CoverEntity):
         position: int = kwargs[ATTR_POSITION]
 
         _LOGGER.debug(
-            "Set cover position %i, %s , %s", position, self._target_id, self._attr_name
+            "Set cover position %i, %s , %s", position, self.target_id, self._attr_name
         )
 
-        await self.dio_chacon_client.move_shutter_percentage(self._target_id, position)
+        await self.dio_chacon_client.move_shutter_percentage(self.target_id, position)
 
         # Movement status (closing or opening) is effective via the server callback that triggers async_set_updated_data on the coordinator
