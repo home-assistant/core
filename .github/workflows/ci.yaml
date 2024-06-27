@@ -778,6 +778,7 @@ jobs:
   check-licenses:
     name: Check licenses
     runs-on: ubuntu-22.04
+    needs: info
     #    if: |
     #      needs.info.outputs.requirements
     steps:
