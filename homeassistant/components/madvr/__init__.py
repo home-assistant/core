@@ -12,7 +12,6 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 from .coordinator import MadVRCoordinator
-from .utils import cancel_tasks
 
 PLATFORMS: list[Platform] = [Platform.REMOTE]
 
@@ -56,7 +55,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: MadVRConfigEntry) -> bo
     if unload_ok:
         coordinator: MadVRCoordinator = entry.runtime_data
         if coordinator:
-            await cancel_tasks(coordinator.client)
+            await coordinator.async_handle_unload()
 
     return unload_ok
 
