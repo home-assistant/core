@@ -1,6 +1,6 @@
 """Defines a base Aladdin Connect entity."""
-
-from genie_partner_sdk.model import GarageDoor
+# mypy: ignore-errors
+# from genie_partner_sdk.model import GarageDoor
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity

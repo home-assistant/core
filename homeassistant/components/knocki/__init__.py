@@ -2,27 +2,18 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
-from knocki import KnockiClient, KnockiConnectionError, Trigger
+from knocki import Event, EventType, KnockiClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+from .coordinator import KnockiCoordinator
 
 PLATFORMS: list[Platform] = [Platform.EVENT]
 
-type KnockiConfigEntry = ConfigEntry[KnockiData]
-
-
-@dataclass
-class KnockiData:
-    """Knocki data."""
-
-    client: KnockiClient
-    triggers: list[Trigger]
+type KnockiConfigEntry = ConfigEntry[KnockiCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: KnockiConfigEntry) -> bool:
@@ -31,12 +22,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: KnockiConfigEntry) -> bo
         session=async_get_clientsession(hass), token=entry.data[CONF_TOKEN]
     )
 
-    try:
-        triggers = await client.get_triggers()
-    except KnockiConnectionError as exc:
-        raise ConfigEntryNotReady from exc
+    coordinator = KnockiCoordinator(hass, client)
 
-    entry.runtime_data = KnockiData(client=client, triggers=triggers)
+    await coordinator.async_config_entry_first_refresh()
+
+    entry.async_on_unload(
+        client.register_listener(EventType.CREATED, coordinator.add_trigger)
+    )
+
+    async def _refresh_coordinator(_: Event) -> None:
+        await coordinator.async_refresh()
+
+    entry.async_on_unload(
+        client.register_listener(EventType.DELETED, _refresh_coordinator)
+    )
+
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

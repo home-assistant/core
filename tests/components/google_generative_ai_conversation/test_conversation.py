@@ -75,10 +75,6 @@ async def test_default_prompt(
             "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI._async_get_api_prompt",
             return_value="<api_prompt>",
         ),
-        patch(
-            "homeassistant.components.google_generative_ai_conversation.conversation.llm.async_render_no_api_prompt",
-            return_value="<no_api_prompt>",
-        ),
     ):
         mock_chat = AsyncMock()
         mock_model.return_value.start_chat.return_value = mock_chat

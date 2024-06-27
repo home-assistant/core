@@ -1,4 +1,67 @@
 # serializer version: 1
+# name: test_all_entities[indoor][select.airgradient_co2_automatic_baseline_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '1',
+        '8',
+        '30',
+        '90',
+        '180',
+        '0',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.airgradient_co2_automatic_baseline_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CO2 automatic baseline duration',
+    'platform': 'airgradient',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'co2_automatic_baseline_calibration',
+    'unique_id': '84fce612f5b8-co2_automatic_baseline_calibration',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[indoor][select.airgradient_co2_automatic_baseline_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Airgradient CO2 automatic baseline duration',
+      'options': list([
+        '1',
+        '8',
+        '30',
+        '90',
+        '180',
+        '0',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.airgradient_co2_automatic_baseline_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8',
+  })
+# ---
 # name: test_all_entities[indoor][select.airgradient_configuration_source-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -221,6 +284,191 @@
     'state': 'co2',
   })
 # ---
+# name: test_all_entities[indoor][select.airgradient_nox_index_learning_offset-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '12',
+        '60',
+        '120',
+        '360',
+        '720',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.airgradient_nox_index_learning_offset',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'NOx index learning offset',
+    'platform': 'airgradient',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nox_index_learning_time_offset',
+    'unique_id': '84fce612f5b8-nox_index_learning_time_offset',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[indoor][select.airgradient_nox_index_learning_offset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Airgradient NOx index learning offset',
+      'options': list([
+        '12',
+        '60',
+        '120',
+        '360',
+        '720',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.airgradient_nox_index_learning_offset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12',
+  })
+# ---
+# name: test_all_entities[indoor][select.airgradient_voc_index_learning_offset-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '12',
+        '60',
+        '120',
+        '360',
+        '720',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.airgradient_voc_index_learning_offset',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'VOC index learning offset',
+    'platform': 'airgradient',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'voc_index_learning_time_offset',
+    'unique_id': '84fce612f5b8-voc_index_learning_time_offset',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[indoor][select.airgradient_voc_index_learning_offset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Airgradient VOC index learning offset',
+      'options': list([
+        '12',
+        '60',
+        '120',
+        '360',
+        '720',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.airgradient_voc_index_learning_offset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12',
+  })
+# ---
+# name: test_all_entities[outdoor][select.airgradient_co2_automatic_baseline_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '1',
+        '8',
+        '30',
+        '90',
+        '180',
+        '0',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.airgradient_co2_automatic_baseline_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CO2 automatic baseline duration',
+    'platform': 'airgradient',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'co2_automatic_baseline_calibration',
+    'unique_id': '84fce612f5b8-co2_automatic_baseline_calibration',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[outdoor][select.airgradient_co2_automatic_baseline_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Airgradient CO2 automatic baseline duration',
+      'options': list([
+        '1',
+        '8',
+        '30',
+        '90',
+        '180',
+        '0',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.airgradient_co2_automatic_baseline_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8',
+  })
+# ---
 # name: test_all_entities[outdoor][select.airgradient_configuration_source-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -274,5 +522,127 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'local',
+  })
+# ---
+# name: test_all_entities[outdoor][select.airgradient_nox_index_learning_offset-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '12',
+        '60',
+        '120',
+        '360',
+        '720',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.airgradient_nox_index_learning_offset',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'NOx index learning offset',
+    'platform': 'airgradient',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nox_index_learning_time_offset',
+    'unique_id': '84fce612f5b8-nox_index_learning_time_offset',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[outdoor][select.airgradient_nox_index_learning_offset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Airgradient NOx index learning offset',
+      'options': list([
+        '12',
+        '60',
+        '120',
+        '360',
+        '720',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.airgradient_nox_index_learning_offset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12',
+  })
+# ---
+# name: test_all_entities[outdoor][select.airgradient_voc_index_learning_offset-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '12',
+        '60',
+        '120',
+        '360',
+        '720',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.airgradient_voc_index_learning_offset',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'VOC index learning offset',
+    'platform': 'airgradient',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'voc_index_learning_time_offset',
+    'unique_id': '84fce612f5b8-voc_index_learning_time_offset',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[outdoor][select.airgradient_voc_index_learning_offset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Airgradient VOC index learning offset',
+      'options': list([
+        '12',
+        '60',
+        '120',
+        '360',
+        '720',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.airgradient_voc_index_learning_offset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12',
   })
 # ---
