@@ -14,8 +14,12 @@ from homeassistant.components.tplink import (
     DeviceConfig,
     KasaException,
 )
-from homeassistant.components.tplink.const import CONF_DEVICE_CONFIG
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.tplink.const import (
+    CONF_CONNECTION_TYPE,
+    CONF_CREDENTIALS_HASH,
+    CONF_DEVICE_CONFIG,
+)
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     CONF_ALIAS,
     CONF_DEVICE,
@@ -32,6 +36,7 @@ from . import (
     CREATE_ENTRY_DATA_AUTH,
     CREATE_ENTRY_DATA_AUTH2,
     CREATE_ENTRY_DATA_LEGACY,
+    CREDENTIALS_HASH_AUTH,
     DEFAULT_ENTRY_TITLE,
     DEVICE_CONFIG_DICT_AUTH,
     DEVICE_CONFIG_DICT_LEGACY,
@@ -40,6 +45,7 @@ from . import (
     MAC_ADDRESS,
     MAC_ADDRESS2,
     MODULE,
+    NEW_CONNECTION_TYPE_DICT,
     _mocked_device,
     _patch_connect,
     _patch_discovery,
@@ -808,6 +814,77 @@ async def test_integration_discovery_with_ip_change(
     # Check that init set the new host correctly before calling connect
     assert config.host == "127.0.0.1"
     config.host = "127.0.0.2"
+    mock_connect["connect"].assert_awaited_once_with(config=config)
+
+
+async def test_integration_discovery_with_connection_change(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
+) -> None:
+    """Test that config entry is updated with new device config.
+
+    And that connection_hash is removed as it will be invalid.
+    """
+    mock_connect["connect"].side_effect = KasaException()
+
+    mock_config_entry = MockConfigEntry(
+        title="TPLink",
+        domain=DOMAIN,
+        data=CREATE_ENTRY_DATA_AUTH,
+        unique_id=MAC_ADDRESS,
+    )
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.tplink.Discover.discover", return_value={}):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        len(
+            hass.config_entries.flow.async_progress_by_handler(
+                DOMAIN, match_context={"source": SOURCE_REAUTH}
+            )
+        )
+        == 0
+    )
+    assert mock_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_AUTH
+    assert mock_config_entry.data[CONF_DEVICE_CONFIG].get(CONF_HOST) == "127.0.0.1"
+    assert mock_config_entry.data[CONF_CREDENTIALS_HASH] == CREDENTIALS_HASH_AUTH
+
+    NEW_DEVICE_CONFIG = {
+        **DEVICE_CONFIG_DICT_AUTH,
+        CONF_CONNECTION_TYPE: NEW_CONNECTION_TYPE_DICT,
+    }
+    config = DeviceConfig.from_dict(NEW_DEVICE_CONFIG)
+    # Reset the connect mock so when the config flow reloads the entry it succeeds
+    mock_connect["connect"].reset_mock(side_effect=True)
+    bulb = _mocked_device(
+        device_config=config,
+        mac=mock_config_entry.unique_id,
+    )
+    mock_connect["connect"].return_value = bulb
+
+    discovery_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_MAC: MAC_ADDRESS,
+            CONF_ALIAS: ALIAS,
+            CONF_DEVICE_CONFIG: NEW_DEVICE_CONFIG,
+        },
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert discovery_result["type"] is FlowResultType.ABORT
+    assert discovery_result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_DEVICE_CONFIG] == NEW_DEVICE_CONFIG
+    assert mock_config_entry.data[CONF_HOST] == "127.0.0.1"
+    assert CREDENTIALS_HASH_AUTH not in mock_config_entry.data
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
     mock_connect["connect"].assert_awaited_once_with(config=config)
 
 

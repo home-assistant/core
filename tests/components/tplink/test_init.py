@@ -7,12 +7,16 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from kasa import AuthenticationError, Feature, KasaException, Module
+from kasa import AuthenticationError, DeviceConfig, Feature, KasaException, Module
 import pytest
 
 from homeassistant import setup
 from homeassistant.components import tplink
-from homeassistant.components.tplink.const import CONF_DEVICE_CONFIG, DOMAIN
+from homeassistant.components.tplink.const import (
+    CONF_CREDENTIALS_HASH,
+    CONF_DEVICE_CONFIG,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     CONF_AUTHENTICATION,
@@ -458,7 +462,214 @@ async def test_unlink_devices(
     expected_identifiers = identifiers[:expected_count]
     assert device_entries[0].identifiers == set(expected_identifiers)
     assert entry.version == 1
-    assert entry.minor_version == 3
+    assert entry.minor_version == 4
 
     msg = f"{expected_message} identifiers for device dummy (hs300): {set(identifiers)}"
     assert msg in caplog.text
+
+
+async def test_move_credentials_hash(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test credentials hash moved to parent.
+
+    As async_setup_entry will succeed the hash on the parent is updated
+    from the device.
+    """
+    device_config = {
+        **DEVICE_CONFIG_AUTH.to_dict(
+            exclude_credentials=True, credentials_hash="theHash"
+        )
+    }
+    entry_data = {**CREATE_ENTRY_DATA_AUTH, CONF_DEVICE_CONFIG: device_config}
+
+    entry = MockConfigEntry(
+        title="TPLink",
+        domain=DOMAIN,
+        data=entry_data,
+        entry_id="123456",
+        unique_id=MAC_ADDRESS,
+        version=1,
+        minor_version=3,
+    )
+    assert entry.data[CONF_DEVICE_CONFIG][CONF_CREDENTIALS_HASH] == "theHash"
+    entry.add_to_hass(hass)
+
+    async def _connect(config):
+        config.credentials_hash = "theNewHash"
+        return _mocked_device(device_config=config, credentials_hash="theNewHash")
+
+    with (
+        patch("homeassistant.components.tplink.Device.connect", new=_connect),
+        patch("homeassistant.components.tplink.PLATFORMS", []),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.minor_version == 4
+    assert entry.state is ConfigEntryState.LOADED
+    assert CONF_CREDENTIALS_HASH not in entry.data[CONF_DEVICE_CONFIG]
+    assert CONF_CREDENTIALS_HASH in entry.data
+    # Gets the new hash from the successful connection.
+    assert entry.data[CONF_CREDENTIALS_HASH] == "theNewHash"
+    assert "Migration to version 1.4 complete" in caplog.text
+
+
+async def test_move_credentials_hash_auth_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test credentials hash moved to parent.
+
+    If there is an auth error it should be deleted after migration
+    in async_setup_entry.
+    """
+    device_config = {
+        **DEVICE_CONFIG_AUTH.to_dict(
+            exclude_credentials=True, credentials_hash="theHash"
+        )
+    }
+    entry_data = {**CREATE_ENTRY_DATA_AUTH, CONF_DEVICE_CONFIG: device_config}
+
+    entry = MockConfigEntry(
+        title="TPLink",
+        domain=DOMAIN,
+        data=entry_data,
+        unique_id=MAC_ADDRESS,
+        version=1,
+        minor_version=3,
+    )
+    assert entry.data[CONF_DEVICE_CONFIG][CONF_CREDENTIALS_HASH] == "theHash"
+
+    with (
+        patch(
+            "homeassistant.components.tplink.Device.connect",
+            side_effect=AuthenticationError,
+        ),
+        patch("homeassistant.components.tplink.PLATFORMS", []),
+    ):
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.minor_version == 4
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert CONF_CREDENTIALS_HASH not in entry.data[CONF_DEVICE_CONFIG]
+    # Auth failure deletes the hash
+    assert CONF_CREDENTIALS_HASH not in entry.data
+
+
+async def test_move_credentials_hash_other_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test credentials hash moved to parent.
+
+    When there is a KasaException the same hash should still be on the parent
+    at the end of the test.
+    """
+    device_config = {
+        **DEVICE_CONFIG_AUTH.to_dict(
+            exclude_credentials=True, credentials_hash="theHash"
+        )
+    }
+    entry_data = {**CREATE_ENTRY_DATA_AUTH, CONF_DEVICE_CONFIG: device_config}
+
+    entry = MockConfigEntry(
+        title="TPLink",
+        domain=DOMAIN,
+        data=entry_data,
+        unique_id=MAC_ADDRESS,
+        version=1,
+        minor_version=3,
+    )
+    assert entry.data[CONF_DEVICE_CONFIG][CONF_CREDENTIALS_HASH] == "theHash"
+
+    with (
+        patch(
+            "homeassistant.components.tplink.Device.connect", side_effect=KasaException
+        ),
+        patch("homeassistant.components.tplink.PLATFORMS", []),
+    ):
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.minor_version == 4
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert CONF_CREDENTIALS_HASH not in entry.data[CONF_DEVICE_CONFIG]
+    assert CONF_CREDENTIALS_HASH in entry.data
+    assert entry.data[CONF_CREDENTIALS_HASH] == "theHash"
+
+
+async def test_credentials_hash(
+    hass: HomeAssistant,
+) -> None:
+    """Test credentials_hash used to call connect."""
+    device_config = {**DEVICE_CONFIG_AUTH.to_dict(exclude_credentials=True)}
+    entry_data = {
+        **CREATE_ENTRY_DATA_AUTH,
+        CONF_DEVICE_CONFIG: device_config,
+        CONF_CREDENTIALS_HASH: "theHash",
+    }
+
+    entry = MockConfigEntry(
+        title="TPLink",
+        domain=DOMAIN,
+        data=entry_data,
+        unique_id=MAC_ADDRESS,
+    )
+
+    async def _connect(config):
+        config.credentials_hash = "theHash"
+        return _mocked_device(device_config=config, credentials_hash="theHash")
+
+    with (
+        patch("homeassistant.components.tplink.PLATFORMS", []),
+        patch("homeassistant.components.tplink.Device.connect", new=_connect),
+    ):
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert CONF_CREDENTIALS_HASH not in entry.data[CONF_DEVICE_CONFIG]
+    assert CONF_CREDENTIALS_HASH in entry.data
+    assert entry.data[CONF_DEVICE_CONFIG] == device_config
+    assert entry.data[CONF_CREDENTIALS_HASH] == "theHash"
+
+
+async def test_credentials_hash_auth_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test credentials_hash is deleted after an auth failure."""
+    device_config = {**DEVICE_CONFIG_AUTH.to_dict(exclude_credentials=True)}
+    entry_data = {
+        **CREATE_ENTRY_DATA_AUTH,
+        CONF_DEVICE_CONFIG: device_config,
+        CONF_CREDENTIALS_HASH: "theHash",
+    }
+
+    entry = MockConfigEntry(
+        title="TPLink",
+        domain=DOMAIN,
+        data=entry_data,
+        unique_id=MAC_ADDRESS,
+    )
+
+    with (
+        patch("homeassistant.components.tplink.PLATFORMS", []),
+        patch(
+            "homeassistant.components.tplink.Device.connect",
+            side_effect=AuthenticationError,
+        ) as connect_mock,
+    ):
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    expected_config = DeviceConfig.from_dict(
+        DEVICE_CONFIG_AUTH.to_dict(exclude_credentials=True, credentials_hash="theHash")
+    )
+    connect_mock.assert_called_with(config=expected_config)
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert CONF_CREDENTIALS_HASH not in entry.data
