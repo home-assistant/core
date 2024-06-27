@@ -158,26 +158,29 @@ class ConfigSource(enum.StrEnum):
     YAML = "yaml"
 
 
-class EventStateChangedData(TypedDict):
+class EventStateEventData(TypedDict):
+    """Base class for EVENT_STATE_CHANGED and EVENT_STATE_CHANGED data."""
+
+    entity_id: str
+    new_state: State | None
+
+
+class EventStateChangedData(EventStateEventData):
     """EVENT_STATE_CHANGED data.
 
     A state changed event is fired when on state write when the state is changed.
     """
 
-    entity_id: str
     old_state: State | None
-    new_state: State | None
 
 
-class EventStateReportedData(TypedDict):
+class EventStateReportedData(EventStateEventData):
     """EVENT_STATE_REPORTED data.
 
     A state reported event is fired when on state write when the state is unchanged.
     """
 
-    entity_id: str
     old_last_reported: datetime.datetime
-    new_state: State | None
 
 
 # SOURCE_* are deprecated as of Home Assistant 2022.2, use ConfigSource instead

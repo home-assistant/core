@@ -190,6 +190,10 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         DEVICE_CLASS: SensorDeviceClass.ENERGY,
         STATE_CLASS: SensorStateClass.TOTAL,
     },
+    hc.SENSOR_TOTAL_TARIFF: {
+        DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        STATE_CLASS: SensorStateClass.TOTAL,
+    },
     hc.SENSOR_TOTAL_START_TIME: {ICON: "mdi:progress-clock"},
     hc.SENSOR_TVOC: {ICON: "mdi:air-filter"},
     hc.SENSOR_VOLTAGE: {

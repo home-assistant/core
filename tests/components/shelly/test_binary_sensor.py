@@ -7,7 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.shelly.const import SLEEP_PERIOD_MULTIPLIER
+from homeassistant.components.shelly.const import UPDATE_PERIOD_MULTIPLIER
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -122,7 +122,7 @@ async def test_block_rest_binary_sensor_connected_battery_devices(
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # Verify update on slow intervals
-    await mock_rest_update(hass, freezer, seconds=SLEEP_PERIOD_MULTIPLIER * 3600)
+    await mock_rest_update(hass, freezer, seconds=UPDATE_PERIOD_MULTIPLIER * 3600)
     assert hass.states.get(entity_id).state == STATE_ON
 
     entry = entity_registry.async_get(entity_id)

@@ -36,7 +36,7 @@ env:
   CACHE_VERSION: 9
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 8
-  HA_SHORT_VERSION: "2024.7"
+  HA_SHORT_VERSION: "2024.8"
   DEFAULT_PYTHON: "3.12"
   ALL_PYTHON_VERSIONS: "['3.12']"
   # 10.3 is the oldest supported version
@@ -522,6 +522,12 @@ jobs:
       - info
       - base
     steps:
+      - name: Install additional OS dependencies
+        run: |
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
+          sudo apt-get update
+          sudo apt-get -y install \
+            libturbojpeg
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}

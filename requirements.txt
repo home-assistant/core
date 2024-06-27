@@ -13,7 +13,7 @@ astral==2.2
 async-interrupt==1.1.2
 attrs==23.2.0
 atomicwrites-homeassistant==1.4.1
-awesomeversion==24.2.0
+awesomeversion==24.6.0
 bcrypt==4.1.2
 certifi>=2021.5.30
 ciso8601==2.3.1

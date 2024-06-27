@@ -1460,8 +1460,8 @@ build.json @home-assistant/supervisor
 /tests/components/tomorrowio/ @raman325 @lymanepp
 /homeassistant/components/totalconnect/ @austinmroczek
 /tests/components/totalconnect/ @austinmroczek
-/homeassistant/components/tplink/ @rytilahti @thegardenmonkey @bdraco @sdb9696
-/tests/components/tplink/ @rytilahti @thegardenmonkey @bdraco @sdb9696
+/homeassistant/components/tplink/ @rytilahti @bdraco @sdb9696
+/tests/components/tplink/ @rytilahti @bdraco @sdb9696
 /homeassistant/components/tplink_omada/ @MarkGodwin
 /tests/components/tplink_omada/ @MarkGodwin
 /homeassistant/components/traccar/ @ludeeus
