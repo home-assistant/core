@@ -811,6 +811,11 @@ jobs:
         run: |
           . venv/bin/activate
           python script/licenses.py
+      - name: Upload licenses
+        uses: actions/upload-artifact@v4.3.3
+        with:
+          name: licenses
+          path: licenses.json
 
   pytest-full:
     runs-on: ubuntu-22.04
