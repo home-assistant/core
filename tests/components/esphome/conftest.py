@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from asyncio import Event
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Coroutine
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -19,6 +19,7 @@ from aioesphomeapi import (
     HomeassistantServiceCall,
     ReconnectLogic,
     UserService,
+    VoiceAssistantAudioSettings,
     VoiceAssistantFeature,
 )
 import pytest
@@ -196,6 +197,20 @@ class MockESPHomeDevice:
         self.home_assistant_state_subscription_callback: Callable[
             [str, str | None], None
         ]
+        self.voice_assistant_handle_start_callback: Callable[
+            [str, int, VoiceAssistantAudioSettings, str | None],
+            Coroutine[Any, Any, int | None],
+        ]
+        self.voice_assistant_handle_stop_callback: Callable[
+            [], Coroutine[Any, Any, None]
+        ]
+        self.voice_assistant_handle_audio_callback: (
+            Callable[
+                [bytes],
+                Coroutine[Any, Any, None],
+            ]
+            | None
+        )
         self.device_info = device_info
 
     def set_state_callback(self, state_callback: Callable[[EntityState], None]) -> None:
@@ -254,6 +269,47 @@ class MockESPHomeDevice:
     ) -> None:
         """Mock a state subscription."""
         self.home_assistant_state_subscription_callback(entity_id, attribute)
+
+    def set_subscribe_voice_assistant_callbacks(
+        self,
+        handle_start: Callable[
+            [str, int, VoiceAssistantAudioSettings, str | None],
+            Coroutine[Any, Any, int | None],
+        ],
+        handle_stop: Callable[[], Coroutine[Any, Any, None]],
+        handle_audio: (
+            Callable[
+                [bytes],
+                Coroutine[Any, Any, None],
+            ]
+            | None
+        ) = None,
+    ) -> None:
+        """Set the voice assistant subscription callbacks."""
+        self.voice_assistant_handle_start_callback = handle_start
+        self.voice_assistant_handle_stop_callback = handle_stop
+        self.voice_assistant_handle_audio_callback = handle_audio
+
+    async def mock_voice_assistant_handle_start(
+        self,
+        conversation_id: str,
+        flags: int,
+        settings: VoiceAssistantAudioSettings,
+        wake_word_phrase: str | None,
+    ) -> int | None:
+        """Mock voice assistant handle start."""
+        return await self.voice_assistant_handle_start_callback(
+            conversation_id, flags, settings, wake_word_phrase
+        )
+
+    async def mock_voice_assistant_handle_stop(self) -> None:
+        """Mock voice assistant handle stop."""
+        await self.voice_assistant_handle_stop_callback()
+
+    async def mock_voice_assistant_handle_audio(self, audio: bytes) -> None:
+        """Mock voice assistant handle audio."""
+        assert self.voice_assistant_handle_audio_callback is not None
+        await self.voice_assistant_handle_audio_callback(audio)
 
 
 async def _mock_generic_device_entry(
@@ -318,8 +374,33 @@ async def _mock_generic_device_entry(
         """Subscribe to home assistant states."""
         mock_device.set_home_assistant_state_subscription_callback(on_state_sub)
 
+    def _subscribe_voice_assistant(
+        *,
+        handle_start: Callable[
+            [str, int, VoiceAssistantAudioSettings, str | None],
+            Coroutine[Any, Any, int | None],
+        ],
+        handle_stop: Callable[[], Coroutine[Any, Any, None]],
+        handle_audio: (
+            Callable[
+                [bytes],
+                Coroutine[Any, Any, None],
+            ]
+            | None
+        ) = None,
+    ) -> Callable[[], None]:
+        """Subscribe to voice assistant."""
+        mock_device.set_subscribe_voice_assistant_callbacks(
+            handle_start, handle_stop, handle_audio
+        )
+
+        def unsub():
+            pass
+
+        return unsub
+
     mock_client.device_info = AsyncMock(return_value=mock_device.device_info)
-    mock_client.subscribe_voice_assistant = Mock()
+    mock_client.subscribe_voice_assistant = _subscribe_voice_assistant
     mock_client.list_entities_services = AsyncMock(
         return_value=mock_list_entities_services
     )
