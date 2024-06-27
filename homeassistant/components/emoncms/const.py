@@ -15,4 +15,4 @@ CONF_SENSOR_NAMES = "sensor_names"
 DECIMALS = 2
 ONLY_INCL_EXCL_NONE = "only_include_exclude_or_none"
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__package__)
