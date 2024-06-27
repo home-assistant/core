@@ -807,9 +807,7 @@ async def test_discovery_with_invalid_integration_info(
 ) -> None:
     """Test sending in correct JSON."""
     await mqtt_mock_entry()
-    async_fire_mqtt_message(
-        hass, discovery_topic, config_message
-    )
+    async_fire_mqtt_message(hass, discovery_topic, config_message)
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.beer")
