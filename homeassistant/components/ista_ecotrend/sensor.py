@@ -210,7 +210,26 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
 
     async def update_statistics(self) -> None:
         """Import ista EcoTrend historical statistics."""
-        statistic_id = f"{DOMAIN}:{self.entity_id.removeprefix("sensor.")}"
+        if TYPE_CHECKING:
+            assert self.coordinator.config_entry
+
+        # Remember the statistic_id that was initially created
+        # so in case the entity gets renamed, because we cannot
+        # change the statistic_id
+        name = self.coordinator.config_entry.options.get(
+            f"lts_{self.entity_description.key}_{self.consumption_unit}"
+        )
+        if not name:
+            name = self.entity_id.removeprefix("sensor.")
+            self.hass.config_entries.async_update_entry(
+                entry=self.coordinator.config_entry,
+                options={
+                    **self.coordinator.config_entry.options,
+                    f"lts_{self.entity_description.key}_{self.consumption_unit}": name,
+                },
+            )
+
+        statistic_id = f"{DOMAIN}:{name}"
         statistics_sum = 0.0
         statistics_since = None
 

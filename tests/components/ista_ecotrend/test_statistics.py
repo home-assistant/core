@@ -14,7 +14,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import extend_statistics
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 from tests.components.recorder.common import async_wait_recording_done
 
 
@@ -52,7 +52,7 @@ async def test_statistics_import(
             None,
             {"state", "sum"},
         )
-        assert stats[statistic_id] == snapshot
+        assert stats[statistic_id] == snapshot(name=f"{statistic_id}_2months")
         assert len(stats[statistic_id]) == 2
 
     # Add another monthly consumption and forward
@@ -61,8 +61,8 @@ async def test_statistics_import(
     mock_ista.get_consumption_data = extend_statistics
 
     freezer.tick(datetime.timedelta(days=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+    freezer.tick(datetime.timedelta(days=1))
     await async_wait_recording_done(hass)
 
     for entity in entities:
@@ -77,5 +77,6 @@ async def test_statistics_import(
             None,
             {"state", "sum"},
         )
-        assert stats[statistic_id] == snapshot
+        assert stats[statistic_id] == snapshot(name=f"{statistic_id}_3months")
+
         assert len(stats[statistic_id]) == 3
