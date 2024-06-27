@@ -159,7 +159,7 @@ class ConfigSource(enum.StrEnum):
 
 
 class EventStateEventData(TypedDict):
-    """Base class for EVENT_STATE_CHANGED and EVENT_STATE_CHANGED data."""
+    """Base class for EVENT_STATE_CHANGED and EVENT_STATE_REPORTED data."""
 
     entity_id: str
     new_state: State | None
