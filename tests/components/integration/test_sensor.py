@@ -294,7 +294,24 @@ async def test_restore_state_failed(hass: HomeAssistant, extra_attributes) -> No
     assert state.state == STATE_UNKNOWN
 
 
-async def test_trapezoidal(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("force_update", [False, True])
+@pytest.mark.parametrize(
+    "sequence",
+    [
+        (
+            (20, 10, 1.67),
+            (30, 30, 5.0),
+            (40, 5, 7.92),
+            (50, 5, 8.75),
+            (60, 0, 9.17),
+        ),
+    ],
+)
+async def test_trapezoidal(
+    hass: HomeAssistant,
+    sequence: tuple[tuple[float, float, float], ...],
+    force_update: bool,
+) -> None:
     """Test integration sensor state."""
     config = {
         "sensor": {
@@ -314,32 +331,39 @@ async def test_trapezoidal(hass: HomeAssistant) -> None:
     start_time = dt_util.utcnow()
     with freeze_time(start_time) as freezer:
         # Testing a power sensor with non-monotonic intervals and values
-        for time, value, expected in (
-            (20, 10, 1.67),
-            (30, 30, 5.0),
-            (40, 5, 7.92),
-            (50, 0, 8.33),
-        ):
+        for time, value, expected in sequence:
             freezer.move_to(start_time + timedelta(minutes=time))
             hass.states.async_set(
                 entity_id,
                 value,
                 {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT},
-                force_update=True,
+                force_update=force_update,
             )
             await hass.async_block_till_done()
             state = hass.states.get("sensor.integration")
             assert round(float(state.state), config["sensor"]["round"]) == expected
 
-    state = hass.states.get("sensor.integration")
-    assert state is not None
-
-    assert round(float(state.state), config["sensor"]["round"]) == 8.33
-
     assert state.attributes.get("unit_of_measurement") == UnitOfEnergy.KILO_WATT_HOUR
 
 
-async def test_left(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("force_update", [False, True])
+@pytest.mark.parametrize(
+    "sequence",
+    [
+        (
+            (20, 10, 0.0),
+            (30, 30, 1.67),
+            (40, 5, 6.67),
+            (50, 5, 7.5),
+            (60, 0, 8.33),
+        ),
+    ],
+)
+async def test_left(
+    hass: HomeAssistant,
+    sequence: tuple[tuple[float, float, float], ...],
+    force_update: bool,
+) -> None:
     """Test integration sensor state with left reimann method."""
     config = {
         "sensor": {
@@ -362,32 +386,39 @@ async def test_left(hass: HomeAssistant) -> None:
     # Testing a power sensor with non-monotonic intervals and values
     start_time = dt_util.utcnow()
     with freeze_time(start_time) as freezer:
-        for time, value, expected in (
-            (20, 10, 0.0),
-            (30, 30, 1.67),
-            (40, 5, 6.67),
-            (50, 0, 7.5),
-        ):
+        for time, value, expected in sequence:
             freezer.move_to(start_time + timedelta(minutes=time))
             hass.states.async_set(
                 entity_id,
                 value,
                 {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT},
-                force_update=True,
+                force_update=force_update,
             )
             await hass.async_block_till_done()
             state = hass.states.get("sensor.integration")
             assert round(float(state.state), config["sensor"]["round"]) == expected
 
-    state = hass.states.get("sensor.integration")
-    assert state is not None
-
-    assert round(float(state.state), config["sensor"]["round"]) == 7.5
-
     assert state.attributes.get("unit_of_measurement") == UnitOfEnergy.KILO_WATT_HOUR
 
 
-async def test_right(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("force_update", [False, True])
+@pytest.mark.parametrize(
+    "sequence",
+    [
+        (
+            (20, 10, 3.33),
+            (30, 30, 8.33),
+            (40, 5, 9.17),
+            (50, 5, 10.0),
+            (60, 0, 10.0),
+        ),
+    ],
+)
+async def test_right(
+    hass: HomeAssistant,
+    sequence: tuple[tuple[float, float, float], ...],
+    force_update: bool,
+) -> None:
     """Test integration sensor state with left reimann method."""
     config = {
         "sensor": {
@@ -410,27 +441,17 @@ async def test_right(hass: HomeAssistant) -> None:
     # Testing a power sensor with non-monotonic intervals and values
     start_time = dt_util.utcnow()
     with freeze_time(start_time) as freezer:
-        for time, value, expected in (
-            (20, 10, 3.33),
-            (30, 30, 8.33),
-            (40, 5, 9.17),
-            (50, 0, 9.17),
-        ):
+        for time, value, expected in sequence:
             freezer.move_to(start_time + timedelta(minutes=time))
             hass.states.async_set(
                 entity_id,
                 value,
                 {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT},
-                force_update=True,
+                force_update=force_update,
             )
             await hass.async_block_till_done()
             state = hass.states.get("sensor.integration")
             assert round(float(state.state), config["sensor"]["round"]) == expected
-
-    state = hass.states.get("sensor.integration")
-    assert state is not None
-
-    assert round(float(state.state), config["sensor"]["round"]) == 9.17
 
     assert state.attributes.get("unit_of_measurement") == UnitOfEnergy.KILO_WATT_HOUR
 

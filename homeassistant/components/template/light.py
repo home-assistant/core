@@ -17,6 +17,7 @@ from homeassistant.components.light import (
     ATTR_RGBWW_COLOR,
     ATTR_TRANSITION,
     ENTITY_ID_FORMAT,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -33,8 +34,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
@@ -115,7 +115,7 @@ PLATFORM_SCHEMA = vol.All(
     # CONF_WHITE_VALUE_* is deprecated, support will be removed in release 2022.9
     cv.removed(CONF_WHITE_VALUE_ACTION),
     cv.removed(CONF_WHITE_VALUE_TEMPLATE),
-    PLATFORM_SCHEMA.extend(
+    LIGHT_PLATFORM_SCHEMA.extend(
         {vol.Required(CONF_LIGHTS): cv.schema_with_slug_keys(LIGHT_SCHEMA)}
     ),
 )

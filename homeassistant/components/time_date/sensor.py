@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 TIME_STR_FORMAT = "%H:%M"
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_DISPLAY_OPTIONS, default=["time"]): vol.All(
             cv.ensure_list, [vol.In(OPTION_TYPES)]

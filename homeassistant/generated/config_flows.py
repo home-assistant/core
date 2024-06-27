@@ -12,6 +12,7 @@ FLOWS = {
         "integration",
         "min_max",
         "random",
+        "statistics",
         "switch_as_x",
         "template",
         "threshold",

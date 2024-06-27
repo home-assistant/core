@@ -15,7 +15,13 @@ import pytest
 
 from homeassistant.const import MATCH_ALL
 import homeassistant.core as ha
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    EventStateReportedData,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
@@ -34,6 +40,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_state_change_filtered,
     async_track_state_removed_domain,
+    async_track_state_report_event,
     async_track_sunrise,
     async_track_sunset,
     async_track_template,
@@ -4907,3 +4914,26 @@ async def test_track_point_in_time_repr(
     assert "Exception in callback _TrackPointUTCTime" in caplog.text
     assert "._raise_exception" in caplog.text
     await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def test_async_track_state_report_event(hass: HomeAssistant) -> None:
+    """Test async_track_state_report_event."""
+    tracker_called: list[ha.State] = []
+
+    @ha.callback
+    def single_run_callback(event: Event[EventStateReportedData]) -> None:
+        new_state = event.data["new_state"]
+        tracker_called.append(new_state)
+
+    unsub = async_track_state_report_event(
+        hass, ["light.bowl", "light.top"], single_run_callback
+    )
+    hass.states.async_set("light.bowl", "on")
+    hass.states.async_set("light.top", "on")
+    await hass.async_block_till_done()
+    assert len(tracker_called) == 0
+    hass.states.async_set("light.bowl", "on")
+    hass.states.async_set("light.top", "on")
+    await hass.async_block_till_done()
+    assert len(tracker_called) == 2
+    unsub()
