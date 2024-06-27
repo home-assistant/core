@@ -6,7 +6,6 @@ from homeassistant.components.vicare.const import CONF_EXTENDED_API
 from homeassistant.core import HomeAssistant
 
 from . import MODULE
-
 from .conftest import Fixture, MockPyViCare, mock_config_entry
 
 
