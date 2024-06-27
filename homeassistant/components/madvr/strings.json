@@ -5,7 +5,6 @@
         "title": "Setup MadVR Envy",
         "description": "Your device will be turned on so we can test the connection. ",
         "data": {
-          "name": "Name",
           "host": "Host or IP Address",
           "mac": "MAC Address",
           "port": "Port",
@@ -27,7 +26,6 @@
         "title": "MadVR Options",
         "description": "Update the configuration options for MadVR.",
         "data": {
-          "name": "Name",
           "host": "Host or IP Address",
           "mac": "MAC Address",
           "port": "Port"

@@ -8,8 +8,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .utils import cancel_tasks
-
 _LOGGER = logging.getLogger(__name__)
 
 type MadVRConfigEntry = ConfigEntry[MadVRCoordinator]
@@ -51,7 +49,7 @@ class MadVRCoordinator(DataUpdateCoordinator[dict]):
     async def async_handle_unload(self):
         """Handle unload."""
         _LOGGER.debug("Coordinator unloading")
-        await cancel_tasks(self.client)
+        await self.client.async_cancel_tasks()
         self.client.stop()
         _LOGGER.debug("Coordinator closing connection")
         await self.client.close_connection()

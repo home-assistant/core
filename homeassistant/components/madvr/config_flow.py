@@ -19,7 +19,7 @@ from homeassistant.core import callback
 
 from .const import CONF_POWER_ON, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 from .coordinator import MadVRCoordinator
-from .utils import CannotConnect, cancel_tasks
+from .utils import CannotConnect
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,22 +99,15 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Error connecting to MadVR: %s", err)
             raise CannotConnect from err
 
-        # don't need tasks running
-        await asyncio.sleep(2)  # let them run once
-        await cancel_tasks(madvr_client)
-
         # check if we are connected
         if not madvr_client.connected():
             raise CannotConnect("Connection failed")
 
         _LOGGER.debug("Connection test successful")
         if not keep_power_on:
-            _LOGGER.debug("Turning off device")
+            _LOGGER.debug("Turning off device during setup")
             await madvr_client.power_off()
-        else:
-            # remote will open a new connection, so close this one
-            _LOGGER.debug("Closing connection")
-            await madvr_client.close_connection()
+
         _LOGGER.debug("Finished testing connection")
 
     @staticmethod

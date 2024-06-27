@@ -64,13 +64,16 @@ class MadvrRemote(CoordinatorEntity, RemoteEntity):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
         # inform the client to start tasks
+        _LOGGER.debug("Adding to hass")
+        _LOGGER.debug("Using loop: %s", self.madvr_client.loop)
         await self.madvr_client.async_add_tasks()
+        _LOGGER.debug("Added %s tasks to client", len(self.madvr_client.tasks))
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when removed."""
         _LOGGER.debug("Removing from hass")
         # inform the client to cancel all tasks
-        await self.madvr_client.async_cancel_tasks()
+        await self.coordinator.async_handle_unload()
 
     @property
     def is_on(self) -> bool:
