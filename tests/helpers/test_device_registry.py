@@ -3052,3 +3052,39 @@ async def test_primary_config_entry(
         model="model",
     )
     assert device.primary_config_entry == mock_config_entry_1.entry_id
+
+
+@pytest.mark.parametrize("disabled_by", list(dr.DeviceEntryDisabler))
+async def test_add_config_entry_to_disabled_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    disabled_by: dr.DeviceEntryDisabler,
+) -> None:
+    """Test adding config entry to a disabled device."""
+    mock_config_entry_1 = MockConfigEntry(title=None)
+    mock_config_entry_1.add_to_hass(hass)
+    mock_config_entry_2 = MockConfigEntry(
+        disabled_by=config_entries.ConfigEntryDisabler.USER, title=None
+    )
+    mock_config_entry_2.add_to_hass(hass)
+    mock_config_entry_3 = MockConfigEntry(title=None)
+    mock_config_entry_3.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry_1.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        disabled_by=disabled_by,
+    )
+    assert device.disabled_by == disabled_by
+
+    device = device_registry.async_update_device(
+        device.id, add_config_entry_id=mock_config_entry_2.entry_id
+    )
+    assert device
+    assert device.disabled_by == disabled_by
+
+    device = device_registry.async_update_device(
+        device.id, add_config_entry_id=mock_config_entry_3.entry_id
+    )
+    assert device
+    assert device.disabled_by is None

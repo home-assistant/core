@@ -926,6 +926,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
             if add_config_entry.entry_id not in old.config_entries:
                 config_entries = old.config_entries | {add_config_entry.entry_id}
+                if (
+                    old.disabled_by
+                    and not add_config_entry.disabled_by
+                    and disabled_by is UNDEFINED
+                ):
+                    disabled_by = None
 
         if (
             remove_config_entry_id is not UNDEFINED
