@@ -144,6 +144,7 @@ EXCEPTIONS = {
     "crownstone-core",  # https://github.com/crownstone/crownstone-lib-python-core/pull/6
     "crownstone-sse",  # https://github.com/crownstone/crownstone-lib-python-sse/pull/2
     "crownstone-uart",  # https://github.com/crownstone/crownstone-lib-python-uart/pull/12
+    "DTLSSocket",  # https://git.fslab.de/jkonra2m/tinydtls-cython/-/blob/master/LICENSE?ref_type=heads
     "eliqonline",  # https://github.com/molobrakos/eliqonline/pull/17
     "enocean",  # https://github.com/kipe/enocean/pull/142
     "gardena-bluetooth",  # https://github.com/elupus/gardena-bluetooth/pull/11
@@ -168,7 +169,7 @@ EXCEPTIONS = {
     "pylutron-caseta",  # https://github.com/gurumitts/pylutron-caseta/pull/168
     "pynx584",  # https://github.com/kk7ds/pynx584/pull/87
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
-    "pySwitchbee",  # https://github.com/jafar-atili/pySwitchbee/pull/5
+    "pyswitchbee",  # https://github.com/jafar-atili/pySwitchbee/pull/5
     "pyvera",  # https://github.com/maximvelichko/pyvera/pull/164
     "pyxeoma",  # https://github.com/jeradM/pyxeoma/pull/11
     "repoze.lru",  #
