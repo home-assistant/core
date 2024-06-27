@@ -1,4 +1,4 @@
-"""Component providing binary sensors for UniFi Protect."""
+"""Platform providing event entities for UniFi Protect."""
 
 from __future__ import annotations
 
