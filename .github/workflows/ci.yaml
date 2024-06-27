@@ -825,7 +825,7 @@ jobs:
       - name: Process licenses
         run: |
           . venv/bin/activate
-          python script/licenses.py
+          python -m script.licenses
 
   pytest-full:
     runs-on: ubuntu-22.04
