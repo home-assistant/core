@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_statistics_import
+# name: test_statistics_import[ista_ecotrend:bahnhofsstr_1a_heating_2months]
   list([
     dict({
       'end': 1714546800.0,
@@ -15,119 +15,7 @@
     }),
   ])
 # ---
-# name: test_statistics_import.1
-  list([
-    dict({
-      'end': 1714546800.0,
-      'start': 1711954800.0,
-      'state': 104.0,
-      'sum': 104.0,
-    }),
-    dict({
-      'end': 1717225200.0,
-      'start': 1714546800.0,
-      'state': 35.0,
-      'sum': 139.0,
-    }),
-  ])
-# ---
-# name: test_statistics_import.10
-  list([
-    dict({
-      'end': 1714546800.0,
-      'start': 1711954800.0,
-      'state': 7.0,
-      'sum': 7.0,
-    }),
-    dict({
-      'end': 1717225200.0,
-      'start': 1714546800.0,
-      'state': 7.0,
-      'sum': 14.0,
-    }),
-  ])
-# ---
-# name: test_statistics_import.11
-  list([
-    dict({
-      'end': 1714546800.0,
-      'start': 1711954800.0,
-      'state': 7.0,
-      'sum': 7.0,
-    }),
-    dict({
-      'end': 1717225200.0,
-      'start': 1714546800.0,
-      'state': 7.0,
-      'sum': 14.0,
-    }),
-  ])
-# ---
-# name: test_statistics_import.12
-  list([
-    dict({
-      'end': 1714546800.0,
-      'start': 1711954800.0,
-      'state': 6.8,
-      'sum': 6.8,
-    }),
-    dict({
-      'end': 1717225200.0,
-      'start': 1714546800.0,
-      'state': 5.0,
-      'sum': 11.8,
-    }),
-  ])
-# ---
-# name: test_statistics_import.13
-  list([
-    dict({
-      'end': 1714546800.0,
-      'start': 1711954800.0,
-      'state': 6.8,
-      'sum': 6.8,
-    }),
-    dict({
-      'end': 1717225200.0,
-      'start': 1714546800.0,
-      'state': 5.0,
-      'sum': 11.8,
-    }),
-  ])
-# ---
-# name: test_statistics_import.14
-  list([
-    dict({
-      'end': 1714546800.0,
-      'start': 1711954800.0,
-      'state': 2.0,
-      'sum': 2.0,
-    }),
-    dict({
-      'end': 1717225200.0,
-      'start': 1714546800.0,
-      'state': 3.0,
-      'sum': 5.0,
-    }),
-  ])
-# ---
-# name: test_statistics_import.15
-  list([
-    dict({
-      'end': 1714546800.0,
-      'start': 1711954800.0,
-      'state': 2.0,
-      'sum': 2.0,
-    }),
-    dict({
-      'end': 1717225200.0,
-      'start': 1714546800.0,
-      'state': 3.0,
-      'sum': 5.0,
-    }),
-  ])
-# ---
-# name: test_statistics_import.16
+# name: test_statistics_import[ista_ecotrend:bahnhofsstr_1a_heating_3months]
   list([
     dict({
       'end': 1714546800.0,
@@ -149,7 +37,289 @@
     }),
   ])
 # ---
-# name: test_statistics_import.17
+# name: test_statistics_import[ista_ecotrend:bahnhofsstr_1a_heating_cost_2months]
+  list([
+    dict({
+      'end': 1714546800.0,
+      'start': 1711954800.0,
+      'state': 62.0,
+      'sum': 62.0,
+    }),
+    dict({
+      'end': 1717225200.0,
+      'start': 1714546800.0,
+      'state': 21.0,
+      'sum': 83.0,
+    }),
+  ])
+# ---
+# name: test_statistics_import[ista_ecotrend:bahnhofsstr_1a_heating_cost_3months]
+  list([
+    dict({
+      'end': 1714546800.0,
+      'start': 1711954800.0,
+      'state': 62.0,
+      'sum': 62.0,
+    }),
+    dict({
+      'end': 1717225200.0,
+      'start': 1714546800.0,
+      'state': 21.0,
+      'sum': 83.0,
+    }),
+    dict({
+      'end': 1719817200.0,
+      'start': 1717225200.0,
+      'state': 9000.0,
+      'sum': 9083.0,
+    }),
+  ])
+# ---
+# name: test_statistics_import[ista_ecotrend:bahnhofsstr_1a_heating_energy_2months]
+  list([
+    dict({
+      'end': 1714546800.0,
+      'start': 1711954800.0,
+      'state': 113.0,
+      'sum': 113.0,
+    }),
+    dict({
+      'end': 1717225200.0,
+      'start': 1714546800.0,
+      'state': 38.0,
+      'sum': 151.0,
+    }),
+  ])
+# ---
+# name: test_statistics_import[ista_ecotrend:bahnhofsstr_1a_heating_energy_3months]
+  list([
+    dict({
+      'end': 1714546800.0,
+      'start': 1711954800.0,
+      'state': 113.0,
+      'sum': 113.0,
+    }),
+    dict({
+      'end': 1717225200.0,
+      'start': 1714546800.0,
+      'state': 38.0,
+      'sum': 151.0,
+    }),
+    dict({
+      'end': 1719817200.0,
+      'start': 1717225200.0,
+      'state': 9000.0,
+      'sum': 9151.0,
+    }),
+  ])
+# ---
+# name: test_statistics_import[ista_ecotrend:bahnhofsstr_1a_hot_water_2months]
+  list([
+    dict({
+      'end': 1714546800.0,
+      'start': 1711954800.0,
+      'state': 1.1,
+      'sum': 1.1,
+    }),
+    dict({
+      'end': 1717225200.0,
+      'start': 1714546800.0,
+      'state': 1.0,
+      'sum': 2.1,
+    }),
+  ])
+# ---
+# name: test_statistics_import[ista_ecotrend:bahnhofsstr_1a_hot_water_3months]
+  list([
+    dict({
+      'end': 1714546800.0,
+      'start': 1711954800.0,
+      'state': 1.1,
+      'sum': 1.1,
+    }),
+    dict({
+      'end': 1717225200.0,
+      'start': 1714546800.0,
+      'state': 1.0,
+      'sum': 2.1,
+    }),
+    dict({
+      'end': 1719817200.0,
+      'start': 1717225200.0,
+      'state': 9999.0,
+      'sum': 10001.1,
+    }),
+  ])
+# ---
+# name: test_statistics_import[ista_ecotrend:bahnhofsstr_1a_hot_water_cost_2months]
+  list([
+    dict({
+      'end': 1714546800.0,
+      'start': 1711954800.0,
+      'state': 7.0,
+      'sum': 7.0,
+    }),
+    dict({
+      'end': 1717225200.0,
+      'start': 1714546800.0,
+      'state': 7.0,
+      'sum': 14.0,
+    }),
+  ])
+# ---
+# name: test_statistics_import[ista_ecotrend:bahnhofsstr_1a_hot_water_cost_3months]
+  list([
+    dict({
+      'end': 1714546800.0,
+      'start': 1711954800.0,
+      'state': 7.0,
+      'sum': 7.0,
+    }),
+    dict({
+      'end': 1717225200.0,
+      'start': 1714546800.0,
+      'state': 7.0,
+      'sum': 14.0,
+    }),
+    dict({
+      'end': 1719817200.0,
+      'start': 1717225200.0,
+      'state': 9000.0,
+      'sum': 9014.0,
+    }),
+  ])
+# ---
+# name: test_statistics_import[ista_ecotrend:bahnhofsstr_1a_hot_water_energy_2months]
+  list([
+    dict({
+      'end': 1714546800.0,
+      'start': 1711954800.0,
+      'state': 61.1,
+      'sum': 61.1,
+    }),
+    dict({
+      'end': 1717225200.0,
+      'start': 1714546800.0,
+      'state': 57.0,
+      'sum': 118.1,
+    }),
+  ])
+# ---
+# name: test_statistics_import[ista_ecotrend:bahnhofsstr_1a_hot_water_energy_3months]
+  list([
+    dict({
+      'end': 1714546800.0,
+      'start': 1711954800.0,
+      'state': 61.1,
+      'sum': 61.1,
+    }),
+    dict({
+      'end': 1717225200.0,
+      'start': 1714546800.0,
+      'state': 57.0,
+      'sum': 118.1,
+    }),
+    dict({
+      'end': 1719817200.0,
+      'start': 1717225200.0,
+      'state': 90000.0,
+      'sum': 90118.1,
+    }),
+  ])
+# ---
+# name: test_statistics_import[ista_ecotrend:bahnhofsstr_1a_water_2months]
+  list([
+    dict({
+      'end': 1714546800.0,
+      'start': 1711954800.0,
+      'state': 6.8,
+      'sum': 6.8,
+    }),
+    dict({
+      'end': 1717225200.0,
+      'start': 1714546800.0,
+      'state': 5.0,
+      'sum': 11.8,
+    }),
+  ])
+# ---
+# name: test_statistics_import[ista_ecotrend:bahnhofsstr_1a_water_3months]
+  list([
+    dict({
+      'end': 1714546800.0,
+      'start': 1711954800.0,
+      'state': 6.8,
+      'sum': 6.8,
+    }),
+    dict({
+      'end': 1717225200.0,
+      'start': 1714546800.0,
+      'state': 5.0,
+      'sum': 11.8,
+    }),
+    dict({
+      'end': 1719817200.0,
+      'start': 1717225200.0,
+      'state': 9000.0,
+      'sum': 9011.8,
+    }),
+  ])
+# ---
+# name: test_statistics_import[ista_ecotrend:bahnhofsstr_1a_water_cost_2months]
+  list([
+    dict({
+      'end': 1714546800.0,
+      'start': 1711954800.0,
+      'state': 2.0,
+      'sum': 2.0,
+    }),
+    dict({
+      'end': 1717225200.0,
+      'start': 1714546800.0,
+      'state': 3.0,
+      'sum': 5.0,
+    }),
+  ])
+# ---
+# name: test_statistics_import[ista_ecotrend:bahnhofsstr_1a_water_cost_3months]
+  list([
+    dict({
+      'end': 1714546800.0,
+      'start': 1711954800.0,
+      'state': 2.0,
+      'sum': 2.0,
+    }),
+    dict({
+      'end': 1717225200.0,
+      'start': 1714546800.0,
+      'state': 3.0,
+      'sum': 5.0,
+    }),
+    dict({
+      'end': 1719817200.0,
+      'start': 1717225200.0,
+      'state': 9000.0,
+      'sum': 9005.0,
+    }),
+  ])
+# ---
+# name: test_statistics_import[ista_ecotrend:luxemburger_str_1_heating_2months]
+  list([
+    dict({
+      'end': 1714546800.0,
+      'start': 1711954800.0,
+      'state': 104.0,
+      'sum': 104.0,
+    }),
+    dict({
+      'end': 1717225200.0,
+      'start': 1714546800.0,
+      'state': 35.0,
+      'sum': 139.0,
+    }),
+  ])
+# ---
+# name: test_statistics_import[ista_ecotrend:luxemburger_str_1_heating_3months]
   list([
     dict({
       'end': 1714546800.0,
@@ -171,67 +341,23 @@
     }),
   ])
 # ---
-# name: test_statistics_import.18
+# name: test_statistics_import[ista_ecotrend:luxemburger_str_1_heating_cost_2months]
   list([
     dict({
       'end': 1714546800.0,
       'start': 1711954800.0,
-      'state': 113.0,
-      'sum': 113.0,
+      'state': 62.0,
+      'sum': 62.0,
     }),
     dict({
       'end': 1717225200.0,
       'start': 1714546800.0,
-      'state': 38.0,
-      'sum': 151.0,
-    }),
-    dict({
-      'end': 1719817200.0,
-      'start': 1717225200.0,
-      'state': 9000.0,
-      'sum': 9151.0,
+      'state': 21.0,
+      'sum': 83.0,
     }),
   ])
 # ---
-# name: test_statistics_import.19
-  list([
-    dict({
-      'end': 1714546800.0,
-      'start': 1711954800.0,
-      'state': 113.0,
-      'sum': 113.0,
-    }),
-    dict({
-      'end': 1717225200.0,
-      'start': 1714546800.0,
-      'state': 38.0,
-      'sum': 151.0,
-    }),
-    dict({
-      'end': 1719817200.0,
-      'start': 1717225200.0,
-      'state': 9000.0,
-      'sum': 9151.0,
-    }),
-  ])
-# ---
-# name: test_statistics_import.2
-  list([
-    dict({
-      'end': 1714546800.0,
-      'start': 1711954800.0,
-      'state': 113.0,
-      'sum': 113.0,
-    }),
-    dict({
-      'end': 1717225200.0,
-      'start': 1714546800.0,
-      'state': 38.0,
-      'sum': 151.0,
-    }),
-  ])
-# ---
-# name: test_statistics_import.20
+# name: test_statistics_import[ista_ecotrend:luxemburger_str_1_heating_cost_3months]
   list([
     dict({
       'end': 1714546800.0,
@@ -253,205 +379,7 @@
     }),
   ])
 # ---
-# name: test_statistics_import.21
-  list([
-    dict({
-      'end': 1714546800.0,
-      'start': 1711954800.0,
-      'state': 62.0,
-      'sum': 62.0,
-    }),
-    dict({
-      'end': 1717225200.0,
-      'start': 1714546800.0,
-      'state': 21.0,
-      'sum': 83.0,
-    }),
-    dict({
-      'end': 1719817200.0,
-      'start': 1717225200.0,
-      'state': 9000.0,
-      'sum': 9083.0,
-    }),
-  ])
-# ---
-# name: test_statistics_import.22
-  list([
-    dict({
-      'end': 1714546800.0,
-      'start': 1711954800.0,
-      'state': 1.1,
-      'sum': 1.1,
-    }),
-    dict({
-      'end': 1717225200.0,
-      'start': 1714546800.0,
-      'state': 1.0,
-      'sum': 2.1,
-    }),
-    dict({
-      'end': 1719817200.0,
-      'start': 1717225200.0,
-      'state': 9999.0,
-      'sum': 10001.1,
-    }),
-  ])
-# ---
-# name: test_statistics_import.23
-  list([
-    dict({
-      'end': 1714546800.0,
-      'start': 1711954800.0,
-      'state': 1.1,
-      'sum': 1.1,
-    }),
-    dict({
-      'end': 1717225200.0,
-      'start': 1714546800.0,
-      'state': 1.0,
-      'sum': 2.1,
-    }),
-    dict({
-      'end': 1719817200.0,
-      'start': 1717225200.0,
-      'state': 9999.0,
-      'sum': 10001.1,
-    }),
-  ])
-# ---
-# name: test_statistics_import.24
-  list([
-    dict({
-      'end': 1714546800.0,
-      'start': 1711954800.0,
-      'state': 61.1,
-      'sum': 61.1,
-    }),
-    dict({
-      'end': 1717225200.0,
-      'start': 1714546800.0,
-      'state': 57.0,
-      'sum': 118.1,
-    }),
-    dict({
-      'end': 1719817200.0,
-      'start': 1717225200.0,
-      'state': 90000.0,
-      'sum': 90118.1,
-    }),
-  ])
-# ---
-# name: test_statistics_import.25
-  list([
-    dict({
-      'end': 1714546800.0,
-      'start': 1711954800.0,
-      'state': 61.1,
-      'sum': 61.1,
-    }),
-    dict({
-      'end': 1717225200.0,
-      'start': 1714546800.0,
-      'state': 57.0,
-      'sum': 118.1,
-    }),
-    dict({
-      'end': 1719817200.0,
-      'start': 1717225200.0,
-      'state': 90000.0,
-      'sum': 90118.1,
-    }),
-  ])
-# ---
-# name: test_statistics_import.26
-  list([
-    dict({
-      'end': 1714546800.0,
-      'start': 1711954800.0,
-      'state': 7.0,
-      'sum': 7.0,
-    }),
-    dict({
-      'end': 1717225200.0,
-      'start': 1714546800.0,
-      'state': 7.0,
-      'sum': 14.0,
-    }),
-    dict({
-      'end': 1719817200.0,
-      'start': 1717225200.0,
-      'state': 9000.0,
-      'sum': 9014.0,
-    }),
-  ])
-# ---
-# name: test_statistics_import.27
-  list([
-    dict({
-      'end': 1714546800.0,
-      'start': 1711954800.0,
-      'state': 7.0,
-      'sum': 7.0,
-    }),
-    dict({
-      'end': 1717225200.0,
-      'start': 1714546800.0,
-      'state': 7.0,
-      'sum': 14.0,
-    }),
-    dict({
-      'end': 1719817200.0,
-      'start': 1717225200.0,
-      'state': 9000.0,
-      'sum': 9014.0,
-    }),
-  ])
-# ---
-# name: test_statistics_import.28
-  list([
-    dict({
-      'end': 1714546800.0,
-      'start': 1711954800.0,
-      'state': 6.8,
-      'sum': 6.8,
-    }),
-    dict({
-      'end': 1717225200.0,
-      'start': 1714546800.0,
-      'state': 5.0,
-      'sum': 11.8,
-    }),
-    dict({
-      'end': 1719817200.0,
-      'start': 1717225200.0,
-      'state': 9000.0,
-      'sum': 9011.8,
-    }),
-  ])
-# ---
-# name: test_statistics_import.29
-  list([
-    dict({
-      'end': 1714546800.0,
-      'start': 1711954800.0,
-      'state': 6.8,
-      'sum': 6.8,
-    }),
-    dict({
-      'end': 1717225200.0,
-      'start': 1714546800.0,
-      'state': 5.0,
-      'sum': 11.8,
-    }),
-    dict({
-      'end': 1719817200.0,
-      'start': 1717225200.0,
-      'state': 9000.0,
-      'sum': 9011.8,
-    }),
-  ])
-# ---
-# name: test_statistics_import.3
+# name: test_statistics_import[ista_ecotrend:luxemburger_str_1_heating_energy_2months]
   list([
     dict({
       'end': 1714546800.0,
@@ -467,7 +395,197 @@
     }),
   ])
 # ---
-# name: test_statistics_import.30
+# name: test_statistics_import[ista_ecotrend:luxemburger_str_1_heating_energy_3months]
+  list([
+    dict({
+      'end': 1714546800.0,
+      'start': 1711954800.0,
+      'state': 113.0,
+      'sum': 113.0,
+    }),
+    dict({
+      'end': 1717225200.0,
+      'start': 1714546800.0,
+      'state': 38.0,
+      'sum': 151.0,
+    }),
+    dict({
+      'end': 1719817200.0,
+      'start': 1717225200.0,
+      'state': 9000.0,
+      'sum': 9151.0,
+    }),
+  ])
+# ---
+# name: test_statistics_import[ista_ecotrend:luxemburger_str_1_hot_water_2months]
+  list([
+    dict({
+      'end': 1714546800.0,
+      'start': 1711954800.0,
+      'state': 1.1,
+      'sum': 1.1,
+    }),
+    dict({
+      'end': 1717225200.0,
+      'start': 1714546800.0,
+      'state': 1.0,
+      'sum': 2.1,
+    }),
+  ])
+# ---
+# name: test_statistics_import[ista_ecotrend:luxemburger_str_1_hot_water_3months]
+  list([
+    dict({
+      'end': 1714546800.0,
+      'start': 1711954800.0,
+      'state': 1.1,
+      'sum': 1.1,
+    }),
+    dict({
+      'end': 1717225200.0,
+      'start': 1714546800.0,
+      'state': 1.0,
+      'sum': 2.1,
+    }),
+    dict({
+      'end': 1719817200.0,
+      'start': 1717225200.0,
+      'state': 9999.0,
+      'sum': 10001.1,
+    }),
+  ])
+# ---
+# name: test_statistics_import[ista_ecotrend:luxemburger_str_1_hot_water_cost_2months]
+  list([
+    dict({
+      'end': 1714546800.0,
+      'start': 1711954800.0,
+      'state': 7.0,
+      'sum': 7.0,
+    }),
+    dict({
+      'end': 1717225200.0,
+      'start': 1714546800.0,
+      'state': 7.0,
+      'sum': 14.0,
+    }),
+  ])
+# ---
+# name: test_statistics_import[ista_ecotrend:luxemburger_str_1_hot_water_cost_3months]
+  list([
+    dict({
+      'end': 1714546800.0,
+      'start': 1711954800.0,
+      'state': 7.0,
+      'sum': 7.0,
+    }),
+    dict({
+      'end': 1717225200.0,
+      'start': 1714546800.0,
+      'state': 7.0,
+      'sum': 14.0,
+    }),
+    dict({
+      'end': 1719817200.0,
+      'start': 1717225200.0,
+      'state': 9000.0,
+      'sum': 9014.0,
+    }),
+  ])
+# ---
+# name: test_statistics_import[ista_ecotrend:luxemburger_str_1_hot_water_energy_2months]
+  list([
+    dict({
+      'end': 1714546800.0,
+      'start': 1711954800.0,
+      'state': 61.1,
+      'sum': 61.1,
+    }),
+    dict({
+      'end': 1717225200.0,
+      'start': 1714546800.0,
+      'state': 57.0,
+      'sum': 118.1,
+    }),
+  ])
+# ---
+# name: test_statistics_import[ista_ecotrend:luxemburger_str_1_hot_water_energy_3months]
+  list([
+    dict({
+      'end': 1714546800.0,
+      'start': 1711954800.0,
+      'state': 61.1,
+      'sum': 61.1,
+    }),
+    dict({
+      'end': 1717225200.0,
+      'start': 1714546800.0,
+      'state': 57.0,
+      'sum': 118.1,
+    }),
+    dict({
+      'end': 1719817200.0,
+      'start': 1717225200.0,
+      'state': 90000.0,
+      'sum': 90118.1,
+    }),
+  ])
+# ---
+# name: test_statistics_import[ista_ecotrend:luxemburger_str_1_water_2months]
+  list([
+    dict({
+      'end': 1714546800.0,
+      'start': 1711954800.0,
+      'state': 6.8,
+      'sum': 6.8,
+    }),
+    dict({
+      'end': 1717225200.0,
+      'start': 1714546800.0,
+      'state': 5.0,
+      'sum': 11.8,
+    }),
+  ])
+# ---
+# name: test_statistics_import[ista_ecotrend:luxemburger_str_1_water_3months]
+  list([
+    dict({
+      'end': 1714546800.0,
+      'start': 1711954800.0,
+      'state': 6.8,
+      'sum': 6.8,
+    }),
+    dict({
+      'end': 1717225200.0,
+      'start': 1714546800.0,
+      'state': 5.0,
+      'sum': 11.8,
+    }),
+    dict({
+      'end': 1719817200.0,
+      'start': 1717225200.0,
+      'state': 9000.0,
+      'sum': 9011.8,
+    }),
+  ])
+# ---
+# name: test_statistics_import[ista_ecotrend:luxemburger_str_1_water_cost_2months]
+  list([
+    dict({
+      'end': 1714546800.0,
+      'start': 1711954800.0,
+      'state': 2.0,
+      'sum': 2.0,
+    }),
+    dict({
+      'end': 1717225200.0,
+      'start': 1714546800.0,
+      'state': 3.0,
+      'sum': 5.0,
+    }),
+  ])
+# ---
+# name: test_statistics_import[ista_ecotrend:luxemburger_str_1_water_cost_3months]
   list([
     dict({
       'end': 1714546800.0,
@@ -486,124 +604,6 @@
       'start': 1717225200.0,
       'state': 9000.0,
       'sum': 9005.0,
-    }),
-  ])
-# ---
-# name: test_statistics_import.31
-  list([
-    dict({
-      'end': 1714546800.0,
-      'start': 1711954800.0,
-      'state': 2.0,
-      'sum': 2.0,
-    }),
-    dict({
-      'end': 1717225200.0,
-      'start': 1714546800.0,
-      'state': 3.0,
-      'sum': 5.0,
-    }),
-    dict({
-      'end': 1719817200.0,
-      'start': 1717225200.0,
-      'state': 9000.0,
-      'sum': 9005.0,
-    }),
-  ])
-# ---
-# name: test_statistics_import.4
-  list([
-    dict({
-      'end': 1714546800.0,
-      'start': 1711954800.0,
-      'state': 62.0,
-      'sum': 62.0,
-    }),
-    dict({
-      'end': 1717225200.0,
-      'start': 1714546800.0,
-      'state': 21.0,
-      'sum': 83.0,
-    }),
-  ])
-# ---
-# name: test_statistics_import.5
-  list([
-    dict({
-      'end': 1714546800.0,
-      'start': 1711954800.0,
-      'state': 62.0,
-      'sum': 62.0,
-    }),
-    dict({
-      'end': 1717225200.0,
-      'start': 1714546800.0,
-      'state': 21.0,
-      'sum': 83.0,
-    }),
-  ])
-# ---
-# name: test_statistics_import.6
-  list([
-    dict({
-      'end': 1714546800.0,
-      'start': 1711954800.0,
-      'state': 1.1,
-      'sum': 1.1,
-    }),
-    dict({
-      'end': 1717225200.0,
-      'start': 1714546800.0,
-      'state': 1.0,
-      'sum': 2.1,
-    }),
-  ])
-# ---
-# name: test_statistics_import.7
-  list([
-    dict({
-      'end': 1714546800.0,
-      'start': 1711954800.0,
-      'state': 1.1,
-      'sum': 1.1,
-    }),
-    dict({
-      'end': 1717225200.0,
-      'start': 1714546800.0,
-      'state': 1.0,
-      'sum': 2.1,
-    }),
-  ])
-# ---
-# name: test_statistics_import.8
-  list([
-    dict({
-      'end': 1714546800.0,
-      'start': 1711954800.0,
-      'state': 61.1,
-      'sum': 61.1,
-    }),
-    dict({
-      'end': 1717225200.0,
-      'start': 1714546800.0,
-      'state': 57.0,
-      'sum': 118.1,
-    }),
-  ])
-# ---
-# name: test_statistics_import.9
-  list([
-    dict({
-      'end': 1714546800.0,
-      'start': 1711954800.0,
-      'state': 61.1,
-      'sum': 61.1,
-    }),
-    dict({
-      'end': 1717225200.0,
-      'start': 1714546800.0,
-      'state': 57.0,
-      'sum': 118.1,
     }),
   ])
 # ---
