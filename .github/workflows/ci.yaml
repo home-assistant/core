@@ -778,7 +778,12 @@ jobs:
   check-licenses:
     name: Check licenses
     runs-on: ubuntu-22.04
-
+    #    if: |
+    #      needs.info.outputs.requirements
+    steps:
+      - name: Test
+        run: |
+          echo "${{ needs.info.outputs.requirements }}"
 
   pytest-full:
     runs-on: ubuntu-22.04
