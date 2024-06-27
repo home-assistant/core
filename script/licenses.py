@@ -261,10 +261,11 @@ TODO = {
 }
 
 
-def main():
+def main() -> int:
     """Run the main script."""
     raw_licenses = json.load(open("licenses.json"))
     package_definitions = [PackageDefinition.from_dict(data) for data in raw_licenses]
+    exit_code = 0
     for package in package_definitions:
         previous_unapproved_version = TODO.get(package.name)
         approved = False
@@ -282,20 +283,21 @@ def main():
                         f"Approved license detected for {package.name}@{package.version}: {package.license}"
                     )
                     print("Please remove the package from the TODO list.")
-                    sys.exit(0)
                 else:
                     print(
                         f"We could not detect an OSI-approved license for {package.name}@{package.version}: {package.license}",
                     )
-                    sys.exit(0)
+                exit_code = 1
         if not approved and package.name not in EXCEPTIONS:
             print(
                 f"We could not detect an OSI-approved license for {package.name}@{package.version}: {package.license}",
             )
-            sys.exit(0)
-    print("All packages have an OSI-approved license.")
-    sys.exit(1)
+            exit_code = 1
+    return exit_code
 
 
 if __name__ == "__main__":
-    main()
+    exit_code = main()
+    if exit_code == 0:
+        print("All licenses are approved!")
+    sys.exit(exit_code)
