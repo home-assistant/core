@@ -13,7 +13,7 @@ from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import ATTR_SERVICE
@@ -23,7 +23,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 CONF_SERVICES = "services"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SERVICES): vol.All(
             cv.ensure_list,

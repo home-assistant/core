@@ -14,7 +14,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     DOMAIN as BINARY_SENSOR_DOMAIN,
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -131,7 +131,7 @@ def rewrite_legacy_to_modern_conf(cfg: dict[str, dict]) -> list[dict]:
     return sensors
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(
             LEGACY_BINARY_SENSOR_SCHEMA

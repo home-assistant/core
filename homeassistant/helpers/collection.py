@@ -26,7 +26,7 @@ from . import entity_registry
 from .entity import Entity
 from .entity_component import EntityComponent
 from .storage import Store
-from .typing import ConfigType
+from .typing import ConfigType, VolDictType
 
 STORAGE_VERSION = 1
 SAVE_DELAY = 10
@@ -515,8 +515,8 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
         storage_collection: _StorageCollectionT,
         api_prefix: str,
         model_name: str,
-        create_schema: dict,
-        update_schema: dict,
+        create_schema: VolDictType,
+        update_schema: VolDictType,
     ) -> None:
         """Initialize a websocket CRUD."""
         self.storage_collection = storage_collection

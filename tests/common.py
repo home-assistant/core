@@ -379,7 +379,7 @@ def async_mock_service(
     calls = []
 
     @callback
-    def mock_service_log(call):  # pylint: disable=unnecessary-lambda
+    def mock_service_log(call):
         """Mock service call."""
         calls.append(call)
         if raise_exception is not None:

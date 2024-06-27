@@ -83,6 +83,7 @@
     'model': 'iQ3',
     'name': 'Tailwind iQ3',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': '10.10',

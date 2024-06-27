@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -22,7 +22,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 DEFAULT_NAME = "Random binary sensor"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,

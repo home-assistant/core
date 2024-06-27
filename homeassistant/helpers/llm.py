@@ -355,7 +355,7 @@ class AssistAPI(API):
         if not llm_context.device_id or not async_device_supports_timers(
             self.hass, llm_context.device_id
         ):
-            prompt.append("This device does not support timers.")
+            prompt.append("This device is not able to start timers.")
 
         if exposed_entities:
             prompt.append(
@@ -660,6 +660,7 @@ class ScriptTool(Tool):
                     description = config.get("description")
                     if not description:
                         description = config.get("name")
+                    key: vol.Marker
                     if config.get("required"):
                         key = vol.Required(field, description=description)
                     else:

@@ -19,7 +19,7 @@ DoorBirdPy==2.1.0
 HAP-python==4.9.1
 
 # homeassistant.components.tasmota
-HATasmota==0.8.0
+HATasmota==0.9.1
 
 # homeassistant.components.doods
 # homeassistant.components.generic
@@ -128,7 +128,7 @@ adb-shell[async]==0.4.4
 adext==0.4.3
 
 # homeassistant.components.adguard
-adguardhome==0.6.3
+adguardhome==0.7.0
 
 # homeassistant.components.advantage_air
 advantage-air==0.4.4
@@ -413,7 +413,7 @@ androidtv[async]==0.0.73
 androidtvremote2==0.1.1
 
 # homeassistant.components.anova
-anova-wifi==0.12.0
+anova-wifi==0.14.0
 
 # homeassistant.components.anthemav
 anthemav==1.4.1
@@ -584,7 +584,7 @@ datadog==0.15.0
 datapoint==0.9.9
 
 # homeassistant.components.bluetooth
-dbus-fast==2.21.3
+dbus-fast==2.22.1
 
 # homeassistant.components.debugpy
 debugpy==1.8.1
@@ -764,9 +764,6 @@ gassist-text==0.0.11
 # homeassistant.components.google
 gcal-sync==6.0.4
 
-# homeassistant.components.aladdin_connect
-genie-partner-sdk==1.0.2
-
 # homeassistant.components.geocaching
 geocachingapi==0.2.1
 
@@ -898,10 +895,10 @@ hole==0.8.0
 holidays==0.51
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240610.1
+home-assistant-frontend==20240626.2
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.6.21
+home-assistant-intents==2024.6.26
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -984,7 +981,7 @@ justnimbus==0.7.4
 kegtron-ble==0.4.0
 
 # homeassistant.components.knocki
-knocki==0.1.5
+knocki==0.2.0
 
 # homeassistant.components.knx
 knx-frontend==2024.1.20.105944
@@ -1498,7 +1495,7 @@ pyialarm==2.2.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.6.1
+pyinsteon==1.6.3
 
 # homeassistant.components.ipma
 pyipma==3.0.7
@@ -1778,10 +1775,10 @@ python-izone==1.2.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.6.2.1
+python-kasa[speedups]==0.7.0.1
 
 # homeassistant.components.matter
-python-matter-server==6.1.0
+python-matter-server==6.2.0b1
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -1809,7 +1806,7 @@ python-picnic-api==1.1.0
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==2.3.0
+python-roborock==2.5.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
@@ -2111,6 +2108,7 @@ temescal==0.5
 temperusb==1.6.1
 
 # homeassistant.components.teslemetry
+# homeassistant.components.tessie
 tesla-fleet-api==0.6.1
 
 # homeassistant.components.powerwall
@@ -2171,7 +2169,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==3.3.1
+uiprotect==4.0.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2261,7 +2259,7 @@ wiffi==1.1.2
 wled==0.18.0
 
 # homeassistant.components.wolflink
-wolf-comm==0.0.8
+wolf-comm==0.0.9
 
 # homeassistant.components.wyoming
 wyoming==1.5.4
@@ -2321,19 +2319,19 @@ zeroconf==0.132.2
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.116
+zha-quirks==0.0.117
 
 # homeassistant.components.zha
-zigpy-deconz==0.23.1
+zigpy-deconz==0.23.2
 
 # homeassistant.components.zha
 zigpy-xbee==0.20.1
 
 # homeassistant.components.zha
-zigpy-zigate==0.12.0
+zigpy-zigate==0.12.1
 
 # homeassistant.components.zha
-zigpy-znp==0.12.1
+zigpy-znp==0.12.2
 
 # homeassistant.components.zha
 zigpy==0.64.1
