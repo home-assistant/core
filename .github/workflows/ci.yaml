@@ -809,6 +809,7 @@ jobs:
           pip-licenses --format=json >> licenses.json
       - name: Process licenses
         run: |
+          . venv/bin/activate
           python script/licenses.py
 
   pytest-full:
