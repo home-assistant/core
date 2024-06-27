@@ -22,6 +22,7 @@ from aioesphomeapi import (
     VoiceAssistantFeature,
 )
 import pytest
+from typing_extensions import AsyncGenerator
 from zeroconf import Zeroconf
 
 from homeassistant.components.esphome import dashboard
@@ -166,7 +167,7 @@ def mock_client(mock_device_info) -> APIClient:
 
 
 @pytest.fixture
-async def mock_dashboard(hass):
+async def mock_dashboard(hass: HomeAssistant) -> AsyncGenerator[dict[str, Any]]:
     """Mock dashboard."""
     data = {"configured": [], "importable": []}
     with patch(
