@@ -52,19 +52,14 @@ from homeassistant.const import (  # noqa: F401
     STATE_STANDBY,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from . import group as group_pre_import  # noqa: F401
 from .browse_media import BrowseMedia, async_process_play_media_url  # noqa: F401
 from .const import (  # noqa: F401
     ATTR_APP_ID,
@@ -138,14 +133,15 @@ from .errors import BrowseError
 _LOGGER = logging.getLogger(__name__)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = dt.timedelta(seconds=10)
 
 CACHE_IMAGES: Final = "images"
 CACHE_MAXSIZE: Final = "maxsize"
 CACHE_LOCK: Final = "lock"
 CACHE_URL: Final = "url"
 CACHE_CONTENT: Final = "content"
-
-SCAN_INTERVAL = dt.timedelta(seconds=10)
 
 
 class MediaPlayerEnqueue(StrEnum):

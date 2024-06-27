@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Self, TypeVar
+from typing import Any, Self
 
 import voluptuous as vol
 
@@ -26,10 +26,9 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 import homeassistant.util.dt as dt_util
 
-_T = TypeVar("_T")
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "timer"
@@ -67,7 +66,7 @@ SERVICE_FINISH = "finish"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
-STORAGE_FIELDS = {
+STORAGE_FIELDS: VolDictType = {
     vol.Required(CONF_NAME): cv.string,
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_DURATION, default=DEFAULT_DURATION): cv.time_period,
@@ -82,7 +81,7 @@ def _format_timedelta(delta: timedelta) -> str:
     return f"{int(hours)}:{int(minutes):02}:{int(seconds):02}"
 
 
-def _none_to_empty_dict(value: _T | None) -> _T | dict[Any, Any]:
+def _none_to_empty_dict[_T](value: _T | None) -> _T | dict[Any, Any]:
     if value is None:
         return {}
     return value

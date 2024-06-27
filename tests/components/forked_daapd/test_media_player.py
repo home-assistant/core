@@ -347,7 +347,7 @@ async def test_unload_config_entry(
     """Test the player is set unavailable when the config entry is unloaded."""
     assert hass.states.get(TEST_MASTER_ENTITY_NAME)
     assert hass.states.get(TEST_ZONE_ENTITY_NAMES[0])
-    await config_entry.async_unload(hass)
+    await hass.config_entries.async_unload(config_entry.entry_id)
     assert hass.states.get(TEST_MASTER_ENTITY_NAME).state == STATE_UNAVAILABLE
     assert hass.states.get(TEST_ZONE_ENTITY_NAMES[0]).state == STATE_UNAVAILABLE
 

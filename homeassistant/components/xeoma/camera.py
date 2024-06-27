@@ -7,7 +7,10 @@ import logging
 from pyxeoma.xeoma import Xeoma, XeomaError
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.components.camera import (
+    PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
+    Camera,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -32,7 +35,7 @@ CAMERAS_SCHEMA = vol.Schema(
     required=False,
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_CAMERAS): vol.Schema(

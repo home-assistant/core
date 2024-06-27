@@ -200,7 +200,7 @@ class MeteoFranceWeather(
                     break
                 forecast_data.append(
                     {
-                        ATTR_FORECAST_TIME: self.coordinator.data.timestamp_to_locale_time(
+                        ATTR_FORECAST_TIME: dt_util.utc_from_timestamp(
                             forecast["dt"]
                         ).isoformat(),
                         ATTR_FORECAST_CONDITION: format_condition(

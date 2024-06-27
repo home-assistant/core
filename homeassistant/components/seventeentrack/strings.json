@@ -18,6 +18,14 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     }
   },
+  "exceptions": {
+    "invalid_config_entry": {
+      "message": "Invalid config entry provided. Got {config_entry_id}"
+    },
+    "unloaded_config_entry": {
+      "message": "Invalid config entry provided. {config_entry_id} is not loaded."
+    }
+  },
   "options": {
     "step": {
       "init": {

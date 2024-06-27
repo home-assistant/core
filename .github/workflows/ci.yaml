@@ -33,10 +33,10 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 8
+  CACHE_VERSION: 9
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 8
-  HA_SHORT_VERSION: "2024.6"
+  HA_SHORT_VERSION: "2024.8"
   DEFAULT_PYTHON: "3.12"
   ALL_PYTHON_VERSIONS: "['3.12']"
   # 10.3 is the oldest supported version
@@ -89,7 +89,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.4
+        uses: actions/checkout@v4.1.7
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
         run: |
@@ -226,7 +226,7 @@ jobs:
       - info
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.4
+        uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -272,7 +272,7 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.4
+        uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v5.1.0
         id: python
@@ -312,7 +312,7 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.4
+        uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v5.1.0
         id: python
@@ -351,7 +351,7 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.4
+        uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v5.1.0
         id: python
@@ -445,7 +445,7 @@ jobs:
         python-version: ${{ fromJSON(needs.info.outputs.python_versions) }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.4
+        uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -488,6 +488,7 @@ jobs:
           sudo apt-get -y install \
             bluez \
             ffmpeg \
+            libturbojpeg \
             libavcodec-dev \
             libavdevice-dev \
             libavfilter-dev \
@@ -521,8 +522,14 @@ jobs:
       - info
       - base
     steps:
+      - name: Install additional OS dependencies
+        run: |
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
+          sudo apt-get update
+          sudo apt-get -y install \
+            libturbojpeg
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.4
+        uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -554,7 +561,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.4
+        uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -587,7 +594,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.4
+        uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -611,14 +618,59 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          pylint --ignore-missing-annotations=y --ignore-wrong-coordinator-module=y homeassistant
+          pylint --ignore-missing-annotations=y homeassistant
       - name: Run pylint (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
         run: |
           . venv/bin/activate
           python --version
-          pylint --ignore-missing-annotations=y --ignore-wrong-coordinator-module=y homeassistant/components/${{ needs.info.outputs.integrations_glob }}
+          pylint --ignore-missing-annotations=y homeassistant/components/${{ needs.info.outputs.integrations_glob }}
+
+  pylint-tests:
+    name: Check pylint on tests
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    if: |
+      (github.event.inputs.mypy-only != 'true' || github.event.inputs.pylint-only == 'true')
+      && (needs.info.outputs.tests_glob || needs.info.outputs.test_full_suite == 'true')
+    needs:
+      - info
+      - base
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v4.1.7
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        id: python
+        uses: actions/setup-python@v5.1.0
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+          check-latest: true
+      - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
+        id: cache-venv
+        uses: actions/cache/restore@v4.0.2
+        with:
+          path: venv
+          fail-on-cache-miss: true
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
+      - name: Register pylint problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/pylint.json"
+      - name: Run pylint (fully)
+        if: needs.info.outputs.test_full_suite == 'true'
+        run: |
+          . venv/bin/activate
+          python --version
+          pylint --ignore-missing-annotations=y tests
+      - name: Run pylint (partially)
+        if: needs.info.outputs.test_full_suite == 'false'
+        shell: bash
+        run: |
+          . venv/bin/activate
+          python --version
+          pylint --ignore-missing-annotations=y tests/components/${{ needs.info.outputs.tests_glob }}
 
   mypy:
     name: Check mypy
@@ -631,7 +683,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.4
+        uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -702,9 +754,10 @@ jobs:
           sudo apt-get -y install \
             bluez \
             ffmpeg \
+            libturbojpeg \
             libgammu-dev
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.4
+        uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -746,6 +799,7 @@ jobs:
       - hassfest
       - lint-other
       - lint-ruff
+      - lint-ruff-format
       - mypy
       - prepare-pytest-full
     strategy:
@@ -763,9 +817,10 @@ jobs:
           sudo apt-get -y install \
             bluez \
             ffmpeg \
+            libturbojpeg \
             libgammu-dev
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.4
+        uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -863,6 +918,7 @@ jobs:
       - hassfest
       - lint-other
       - lint-ruff
+      - lint-ruff-format
       - mypy
     strategy:
       fail-fast: false
@@ -879,9 +935,10 @@ jobs:
           sudo apt-get -y install \
             bluez \
             ffmpeg \
+            libturbojpeg \
             libmariadb-dev-compat
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.4
+        uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -986,6 +1043,7 @@ jobs:
       - hassfest
       - lint-other
       - lint-ruff
+      - lint-ruff-format
       - mypy
     strategy:
       fail-fast: false
@@ -1002,9 +1060,10 @@ jobs:
           sudo apt-get -y install \
             bluez \
             ffmpeg \
+            libturbojpeg \
             postgresql-server-dev-14
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.4
+        uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -1099,18 +1158,19 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.4
+        uses: actions/checkout@v4.1.7
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v4.1.7
         with:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@v4.3.1
+        uses: codecov/codecov-action@v4.5.0
         with:
           fail_ci_if_error: true
           flags: full-suite
           token: ${{ secrets.CODECOV_TOKEN }}
+          version: v0.6.0
 
   pytest-partial:
     runs-on: ubuntu-22.04
@@ -1128,6 +1188,7 @@ jobs:
       - hassfest
       - lint-other
       - lint-ruff
+      - lint-ruff-format
       - mypy
     strategy:
       fail-fast: false
@@ -1144,9 +1205,10 @@ jobs:
           sudo apt-get -y install \
             bluez \
             ffmpeg \
+            libturbojpeg \
             libgammu-dev
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.4
+        uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.1.0
@@ -1233,14 +1295,15 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.4
+        uses: actions/checkout@v4.1.7
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v4.1.7
         with:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@v4.3.1
+        uses: codecov/codecov-action@v4.5.0
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
+          version: v0.6.0

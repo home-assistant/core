@@ -23,6 +23,7 @@
     'model': 'LM1200',
     'name': 'Netgear LM1200',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': 'FFFFFFFFFFFFF',
     'suggested_area': None,
     'sw_version': 'EC25AFFDR07A09M4G',

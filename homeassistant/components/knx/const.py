@@ -83,11 +83,9 @@ DATA_HASS_CONFIG: Final = "knx_hass_config"
 ATTR_COUNTER: Final = "counter"
 ATTR_SOURCE: Final = "source"
 
-# dispatcher signal for KNX interface device triggers
-SIGNAL_KNX_TELEGRAM_DICT: Final = "knx_telegram_dict"
 
-AsyncMessageCallbackType = Callable[[Telegram], Awaitable[None]]
-MessageCallbackType = Callable[[Telegram], None]
+type AsyncMessageCallbackType = Callable[[Telegram], Awaitable[None]]
+type MessageCallbackType = Callable[[Telegram], None]
 
 SERVICE_KNX_SEND: Final = "send"
 SERVICE_KNX_ATTR_PAYLOAD: Final = "payload"

@@ -34,7 +34,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_SSL,
-    CONF_TIMEOUT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
@@ -42,7 +41,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.helpers.typing import DiscoveryInfoType, VolDictType
 from homeassistant.util.network import is_ip_address as is_ip
 
 from .const import (
@@ -80,7 +79,7 @@ def _reauth_schema() -> vol.Schema:
 
 
 def _user_schema_with_defaults(user_input: dict[str, Any]) -> vol.Schema:
-    user_schema = {
+    user_schema: VolDictType = {
         vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
     }
     user_schema.update(_ordered_shared_schema(user_input))
@@ -88,9 +87,7 @@ def _user_schema_with_defaults(user_input: dict[str, Any]) -> vol.Schema:
     return vol.Schema(user_schema)
 
 
-def _ordered_shared_schema(
-    schema_input: dict[str, Any],
-) -> dict[vol.Required | vol.Optional, Any]:
+def _ordered_shared_schema(schema_input: dict[str, Any]) -> VolDictType:
     return {
         vol.Required(CONF_USERNAME, default=schema_input.get(CONF_USERNAME, "")): str,
         vol.Required(CONF_PASSWORD, default=schema_input.get(CONF_PASSWORD, "")): str,
@@ -141,7 +138,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             user_input = {}
 
         description_placeholders = {}
-        data_schema = {}
+        data_schema = None
 
         if step_id == "link":
             user_input.update(self.discovered_conf)
@@ -179,7 +176,9 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
                 port = DEFAULT_PORT
 
         session = async_get_clientsession(self.hass, verify_ssl)
-        api = SynologyDSM(session, host, port, username, password, use_ssl, timeout=30)
+        api = SynologyDSM(
+            session, host, port, username, password, use_ssl, timeout=DEFAULT_TIMEOUT
+        )
 
         errors = {}
         try:
@@ -390,12 +389,6 @@ class SynologyDSMOptionsFlowHandler(OptionsFlow):
                     CONF_SCAN_INTERVAL,
                     default=self.config_entry.options.get(
                         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                    ),
-                ): cv.positive_int,
-                vol.Required(
-                    CONF_TIMEOUT,
-                    default=self.config_entry.options.get(
-                        CONF_TIMEOUT, DEFAULT_TIMEOUT
                     ),
                 ): cv.positive_int,
                 vol.Required(

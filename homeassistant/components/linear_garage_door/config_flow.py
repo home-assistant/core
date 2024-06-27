@@ -75,9 +75,7 @@ class LinearGarageDoorConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        data_schema = STEP_USER_DATA_SCHEMA
-
-        data_schema = vol.Schema(data_schema)
+        data_schema = vol.Schema(STEP_USER_DATA_SCHEMA)
 
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=data_schema)
@@ -88,7 +86,7 @@ class LinearGarageDoorConfigFlow(ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:

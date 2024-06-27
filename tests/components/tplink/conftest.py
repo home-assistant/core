@@ -1,10 +1,10 @@
 """tplink conftest."""
 
-from collections.abc import Generator
 import copy
 from unittest.mock import DEFAULT, AsyncMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.tplink import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -17,7 +17,7 @@ from . import (
     IP_ADDRESS2,
     MAC_ADDRESS,
     MAC_ADDRESS2,
-    _mocked_bulb,
+    _mocked_device,
 )
 
 from tests.common import MockConfigEntry, mock_device_registry, mock_registry
@@ -31,13 +31,13 @@ def mock_discovery():
         discover=DEFAULT,
         discover_single=DEFAULT,
     ) as mock_discovery:
-        device = _mocked_bulb(
+        device = _mocked_device(
             device_config=copy.deepcopy(DEVICE_CONFIG_AUTH),
             credentials_hash=CREDENTIALS_HASH_AUTH,
             alias=None,
         )
         devices = {
-            "127.0.0.1": _mocked_bulb(
+            "127.0.0.1": _mocked_device(
                 device_config=copy.deepcopy(DEVICE_CONFIG_AUTH),
                 credentials_hash=CREDENTIALS_HASH_AUTH,
                 alias=None,
@@ -52,12 +52,12 @@ def mock_discovery():
 @pytest.fixture
 def mock_connect():
     """Mock python-kasa connect."""
-    with patch("homeassistant.components.tplink.SmartDevice.connect") as mock_connect:
+    with patch("homeassistant.components.tplink.Device.connect") as mock_connect:
         devices = {
-            IP_ADDRESS: _mocked_bulb(
+            IP_ADDRESS: _mocked_device(
                 device_config=DEVICE_CONFIG_AUTH, credentials_hash=CREDENTIALS_HASH_AUTH
             ),
-            IP_ADDRESS2: _mocked_bulb(
+            IP_ADDRESS2: _mocked_device(
                 device_config=DEVICE_CONFIG_AUTH,
                 credentials_hash=CREDENTIALS_HASH_AUTH,
                 mac=MAC_ADDRESS2,
@@ -84,13 +84,8 @@ def entity_reg_fixture(hass):
     return mock_registry(hass)
 
 
-@pytest.fixture(autouse=True)
-def tplink_mock_get_source_ip(mock_get_source_ip):
-    """Mock network util's async_get_source_ip."""
-
-
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch.multiple(
         async_setup=DEFAULT,
@@ -102,7 +97,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_init() -> Generator[AsyncMock, None, None]:
+def mock_init() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch.multiple(
         "homeassistant.components.tplink",

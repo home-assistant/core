@@ -3,6 +3,7 @@
 from collections.abc import Generator
 import copy
 import json
+import logging
 from typing import Any
 from unittest.mock import patch
 
@@ -91,10 +92,14 @@ def _test_run_select_setup_params(
 async def test_run_select_setup(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
     topic: str,
 ) -> None:
     """Test that it fetches the given payload."""
     await mqtt_mock_entry()
+
+    state = hass.states.get("select.test_select")
+    assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, topic, "milk")
 
@@ -106,6 +111,15 @@ async def test_run_select_setup(
     async_fire_mqtt_message(hass, topic, "beer")
 
     await hass.async_block_till_done()
+
+    state = hass.states.get("select.test_select")
+    assert state.state == "beer"
+
+    if caplog.at_level(logging.DEBUG):
+        async_fire_mqtt_message(hass, topic, "")
+        await hass.async_block_till_done()
+
+        assert "Ignoring empty payload" in caplog.text
 
     state = hass.states.get("select.test_select")
     assert state.state == "beer"
@@ -417,17 +431,11 @@ async def test_update_with_json_attrs_bad_json(
 
 
 async def test_discovery_update_attr(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        select.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, select.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -464,21 +472,15 @@ async def test_unique_id(
 
 
 async def test_discovery_removal_select(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered select."""
     data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][select.DOMAIN])
-    await help_test_discovery_removal(
-        hass, mqtt_mock_entry, caplog, select.DOMAIN, data
-    )
+    await help_test_discovery_removal(hass, mqtt_mock_entry, select.DOMAIN, data)
 
 
 async def test_discovery_update_select(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered select."""
     config1 = {
@@ -495,14 +497,12 @@ async def test_discovery_update_select(
     }
 
     await help_test_discovery_update(
-        hass, mqtt_mock_entry, caplog, select.DOMAIN, config1, config2
+        hass, mqtt_mock_entry, select.DOMAIN, config1, config2
     )
 
 
 async def test_discovery_update_unchanged_select(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered select."""
     data1 = '{ "name": "Beer", "state_topic": "test-topic", "command_topic": "test-topic", "options": ["milk", "beer"]}'
@@ -510,28 +510,19 @@ async def test_discovery_update_unchanged_select(
         "homeassistant.components.mqtt.select.MqttSelect.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass,
-            mqtt_mock_entry,
-            caplog,
-            select.DOMAIN,
-            data1,
-            discovery_update,
+            hass, mqtt_mock_entry, select.DOMAIN, data1, discovery_update
         )
 
 
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
     data2 = '{ "name": "Milk", "state_topic": "test-topic", "command_topic": "test-topic", "options": ["milk", "beer"]}'
 
-    await help_test_discovery_broken(
-        hass, mqtt_mock_entry, caplog, select.DOMAIN, data1, data2
-    )
+    await help_test_discovery_broken(hass, mqtt_mock_entry, select.DOMAIN, data1, data2)
 
 
 async def test_entity_device_info_with_connection(

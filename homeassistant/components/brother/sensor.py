@@ -16,7 +16,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -25,8 +24,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import BrotherDataUpdateCoordinator
-from .const import DATA_CONFIG_ENTRY, DOMAIN
+from . import BrotherConfigEntry, BrotherDataUpdateCoordinator
+from .const import DOMAIN
 
 ATTR_COUNTER = "counter"
 ATTR_REMAINING_PAGES = "remaining_pages"
@@ -318,11 +317,12 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: BrotherConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add Brother entities from a config_entry."""
-    coordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id]
-
+    coordinator = entry.runtime_data
     # Due to the change of the attribute name of one sensor, it is necessary to migrate
     # the unique_id to the new one.
     entity_registry = er.async_get(hass)

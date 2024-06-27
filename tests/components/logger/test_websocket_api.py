@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from homeassistant import loader
 from homeassistant.components.logger.helpers import async_get_domain_config
-from homeassistant.components.websocket_api import const
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -28,7 +28,7 @@ async def test_integration_log_info(
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 7
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert {"domain": "http", "level": logging.DEBUG} in msg["result"]
     assert {"domain": "websocket_api", "level": logging.DEBUG} in msg["result"]
@@ -51,7 +51,7 @@ async def test_integration_log_level_logger_not_loaded(
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 7
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert not msg["success"]
 
 
@@ -74,7 +74,7 @@ async def test_integration_log_level(
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 7
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
     assert async_get_domain_config(hass).overrides == {
@@ -124,7 +124,7 @@ async def test_custom_integration_log_level(
 
         msg = await websocket_client.receive_json()
         assert msg["id"] == 7
-        assert msg["type"] == const.TYPE_RESULT
+        assert msg["type"] == TYPE_RESULT
         assert msg["success"]
 
         assert async_get_domain_config(hass).overrides == {
@@ -153,7 +153,7 @@ async def test_integration_log_level_unknown_integration(
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 7
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert not msg["success"]
 
 
@@ -180,7 +180,7 @@ async def test_module_log_level(
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 7
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
     assert async_get_domain_config(hass).overrides == {
@@ -216,7 +216,7 @@ async def test_module_log_level_override(
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
     assert async_get_domain_config(hass).overrides == {
@@ -235,7 +235,7 @@ async def test_module_log_level_override(
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 7
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
     assert async_get_domain_config(hass).overrides == {
@@ -254,7 +254,7 @@ async def test_module_log_level_override(
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 8
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
     assert async_get_domain_config(hass).overrides == {

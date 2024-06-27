@@ -11,7 +11,6 @@ from homeassistant.const import (
     ATTR_MODEL,
     ATTR_VIA_DEVICE,
 )
-from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -33,24 +32,15 @@ class TelldusLiveEntity(Entity):
         """Initialize the entity."""
         self._id = device_id
         self._client = client
-        self._async_unsub_dispatcher_connect = None
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         _LOGGER.debug("Created device %s", self)
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_ENTITY, self._update_callback
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_UPDATE_ENTITY, self.async_write_ha_state
+            )
         )
-
-    async def async_will_remove_from_hass(self):
-        """Disconnect dispatcher listener when removed."""
-        if self._async_unsub_dispatcher_connect:
-            self._async_unsub_dispatcher_connect()
-
-    @callback
-    def _update_callback(self):
-        """Return the property of the device might have changed."""
-        self.async_write_ha_state()
 
     @property
     def device_id(self):

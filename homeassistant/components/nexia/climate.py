@@ -37,6 +37,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     ATTR_AIRCLEANER_MODE,
@@ -55,11 +56,11 @@ SERVICE_SET_AIRCLEANER_MODE = "set_aircleaner_mode"
 SERVICE_SET_HUMIDIFY_SETPOINT = "set_humidify_setpoint"
 SERVICE_SET_HVAC_RUN_MODE = "set_hvac_run_mode"
 
-SET_AIRCLEANER_SCHEMA = {
+SET_AIRCLEANER_SCHEMA: VolDictType = {
     vol.Required(ATTR_AIRCLEANER_MODE): cv.string,
 }
 
-SET_HUMIDITY_SCHEMA = {
+SET_HUMIDITY_SCHEMA: VolDictType = {
     vol.Required(ATTR_HUMIDITY): vol.All(vol.Coerce(int), vol.Range(min=35, max=65)),
 }
 
@@ -388,12 +389,12 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
 
     async def async_turn_off(self) -> None:
         """Turn off the zone."""
-        await self.async_set_hvac_mode(OPERATION_MODE_OFF)
+        await self.async_set_hvac_mode(HVACMode.OFF)
         self._signal_zone_update()
 
     async def async_turn_on(self) -> None:
         """Turn on the zone."""
-        await self.async_set_hvac_mode(OPERATION_MODE_AUTO)
+        await self.async_set_hvac_mode(HVACMode.AUTO)
         self._signal_zone_update()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:

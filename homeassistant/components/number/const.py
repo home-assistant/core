@@ -18,6 +18,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfApparentPower,
+    UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -118,6 +119,12 @@ class NumberDeviceClass(StrEnum):
     """Carbon Dioxide gas concentration.
 
     Unit of measurement: `ppm` (parts per million)
+    """
+
+    CONDUCTIVITY = "conductivity"
+    """Conductivity.
+
+    Unit of measurement: `S/cm`, `mS/cm`, `µS/cm`
     """
 
     CURRENT = "current"
@@ -424,6 +431,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.BATTERY: {PERCENTAGE},
     NumberDeviceClass.CO: {CONCENTRATION_PARTS_PER_MILLION},
     NumberDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
+    NumberDeviceClass.CONDUCTIVITY: set(UnitOfConductivity),
     NumberDeviceClass.CURRENT: set(UnitOfElectricCurrent),
     NumberDeviceClass.DATA_RATE: set(UnitOfDataRate),
     NumberDeviceClass.DATA_SIZE: set(UnitOfInformation),

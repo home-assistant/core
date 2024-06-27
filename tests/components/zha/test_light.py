@@ -1,6 +1,8 @@
 """Test ZHA light."""
 
+from collections.abc import Callable
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, call, patch, sentinel
 
 import pytest
@@ -454,6 +456,7 @@ async def test_light_initialization(
 
     assert entity_id is not None
 
+    # pylint: disable-next=fixme
     # TODO ensure hue and saturation are properly set on startup
 
 
@@ -1463,7 +1466,11 @@ async def async_test_off_from_hass(hass, cluster, entity_id):
 
 
 async def async_test_level_on_off_from_hass(
-    hass, on_off_cluster, level_cluster, entity_id, expected_default_transition: int = 0
+    hass: HomeAssistant,
+    on_off_cluster,
+    level_cluster,
+    entity_id,
+    expected_default_transition: int = 0,
 ):
     """Test on off functionality from hass."""
 
@@ -1601,7 +1608,12 @@ async def async_test_flash_from_hass(hass, cluster, entity_id, flash):
     new=0,
 )
 async def test_zha_group_light_entity(
-    hass: HomeAssistant, device_light_1, device_light_2, device_light_3, coordinator
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_light_1,
+    device_light_2,
+    device_light_3,
+    coordinator,
 ) -> None:
     """Test the light entity for a ZHA group."""
     zha_gateway = get_zha_gateway(hass)
@@ -1782,7 +1794,6 @@ async def test_zha_group_light_entity(
     assert device_3_entity_id not in zha_group.member_entity_ids
 
     # make sure the entity registry entry is still there
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_get(group_entity_id) is not None
 
     # add a member back and ensure that the group entity was created again
@@ -1829,6 +1840,7 @@ async def test_zha_group_light_entity(
 )
 async def test_group_member_assume_state(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     zigpy_device_mock,
     zha_device_joined,
     coordinator,
@@ -1916,7 +1928,6 @@ async def test_group_member_assume_state(
         assert hass.states.get(group_entity_id).state == STATE_OFF
 
         # remove the group and ensure that there is no entity and that the entity registry is cleaned up
-        entity_registry = er.async_get(hass)
         assert entity_registry.async_get(group_entity_id) is not None
         await zha_gateway.async_remove_zigpy_group(zha_group.group_id)
         assert hass.states.get(group_entity_id) is None
@@ -1957,10 +1968,10 @@ async def test_group_member_assume_state(
 async def test_restore_light_state(
     hass: HomeAssistant,
     zigpy_device_mock,
-    core_rs,
+    core_rs: Callable[[str, Any, dict[str, Any]], None],
     zha_device_restored,
-    restored_state,
-    expected_state,
+    restored_state: str,
+    expected_state: dict[str, Any],
 ) -> None:
     """Test ZHA light restores without throwing an error when attributes are None."""
 

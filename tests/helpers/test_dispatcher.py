@@ -188,6 +188,7 @@ async def test_callback_exception_gets_logged(
     @callback
     def bad_handler(*args):
         """Record calls."""
+        # pylint: disable-next=broad-exception-raised
         raise Exception("This is a bad message callback")
 
     # wrap in partial to test message logging.
@@ -208,6 +209,7 @@ async def test_coro_exception_gets_logged(
 
     async def bad_async_handler(*args):
         """Record calls."""
+        # pylint: disable-next=broad-exception-raised
         raise Exception("This is a bad message in a coro")
 
     # wrap in partial to test message logging.
@@ -243,7 +245,6 @@ async def test_dispatcher_add_dispatcher(hass: HomeAssistant) -> None:
 
 async def test_thread_safety_checks(hass: HomeAssistant) -> None:
     """Test dispatcher thread safety checks."""
-    hass.config.debug = True
     calls = []
 
     @callback

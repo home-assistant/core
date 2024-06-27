@@ -174,7 +174,7 @@ class Gateway:
         """Get the model of the modem."""
         model = await self._worker.get_model_async()
         if not model or not model[0]:
-            return
+            return None
         display = model[0]  # Identification model
         if model[1]:  # Real model
             display = f"{display} ({model[1]})"
@@ -184,7 +184,7 @@ class Gateway:
         """Get the firmware information of the modem."""
         firmware = await self._worker.get_firmware_async()
         if not firmware or not firmware[0]:
-            return
+            return None
         display = firmware[0]  # Version
         if firmware[1]:  # Date
             display = f"{display} ({firmware[1]})"

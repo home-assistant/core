@@ -52,6 +52,7 @@ from .const import (
     CONF_NAME,
     CONF_PACKAGES,
     CONF_PLATFORM,
+    CONF_RADIUS,
     CONF_TEMPERATURE_UNIT,
     CONF_TIME_ZONE,
     CONF_TYPE,
@@ -69,6 +70,7 @@ from .helpers.typing import ConfigType
 from .loader import ComponentProtocol, Integration, IntegrationNotFound
 from .requirements import RequirementsNotFound, async_get_integration_with_requirements
 from .util.async_ import create_eager_task
+from .util.hass_dict import HassKey
 from .util.package import is_docker_env
 from .util.unit_system import get_unit_system, validate_unit_system
 from .util.yaml import SECRET_YAML, Secrets, YamlTypeError, load_yaml_dict
@@ -81,7 +83,7 @@ RE_ASCII = re.compile(r"\033\[[^m]*m")
 YAML_CONFIG_FILE = "configuration.yaml"
 VERSION_FILE = ".HA_VERSION"
 CONFIG_DIR_NAME = ".homeassistant"
-DATA_CUSTOMIZE = "hass_customize"
+DATA_CUSTOMIZE: HassKey[EntityValues] = HassKey("hass_customize")
 
 AUTOMATION_CONFIG_PATH = "automations.yaml"
 SCRIPT_CONFIG_PATH = "scripts.yaml"
@@ -290,41 +292,6 @@ def _raise_issue_if_no_country(hass: HomeAssistant, country: str | None) -> None
     )
 
 
-def _raise_issue_if_legacy_templates(
-    hass: HomeAssistant, legacy_templates: bool | None
-) -> None:
-    # legacy_templates can have the following values:
-    # - None: Using default value (False) -> Delete repair issues
-    # - True: Create repair to adopt templates to new syntax
-    # - False: Create repair to tell user to remove config key
-    if legacy_templates:
-        ir.async_create_issue(
-            hass,
-            HA_DOMAIN,
-            "legacy_templates_true",
-            is_fixable=False,
-            breaks_in_ha_version="2024.7.0",
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="legacy_templates_true",
-        )
-        return
-
-    ir.async_delete_issue(hass, HA_DOMAIN, "legacy_templates_true")
-
-    if legacy_templates is False:
-        ir.async_create_issue(
-            hass,
-            HA_DOMAIN,
-            "legacy_templates_false",
-            is_fixable=False,
-            breaks_in_ha_version="2024.7.0",
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="legacy_templates_false",
-        )
-    else:
-        ir.async_delete_issue(hass, HA_DOMAIN, "legacy_templates_false")
-
-
 def _validate_currency(data: Any) -> Any:
     try:
         return cv.currency(data)
@@ -341,6 +308,7 @@ CORE_CONFIG_SCHEMA = vol.All(
             CONF_LATITUDE: cv.latitude,
             CONF_LONGITUDE: cv.longitude,
             CONF_ELEVATION: vol.Coerce(int),
+            CONF_RADIUS: cv.positive_int,
             vol.Remove(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
             CONF_UNIT_SYSTEM: validate_unit_system,
             CONF_TIME_ZONE: cv.time_zone,
@@ -388,7 +356,7 @@ CORE_CONFIG_SCHEMA = vol.All(
                 _no_duplicate_auth_mfa_module,
             ),
             vol.Optional(CONF_MEDIA_DIRS): cv.schema_with_slug_keys(vol.IsDir()),
-            vol.Optional(CONF_LEGACY_TEMPLATES): cv.boolean,
+            vol.Remove(CONF_LEGACY_TEMPLATES): cv.boolean,
             vol.Optional(CONF_CURRENCY): _validate_currency,
             vol.Optional(CONF_COUNTRY): cv.country,
             vol.Optional(CONF_LANGUAGE): cv.language,
@@ -646,7 +614,7 @@ def _get_annotation(item: Any) -> tuple[str, int | str] | None:
     return (getattr(item, "__config_file__"), getattr(item, "__line__", "?"))
 
 
-def _get_by_path(data: dict | list, items: list[str | int]) -> Any:
+def _get_by_path(data: dict | list, items: list[Hashable]) -> Any:
     """Access a nested object in root by item sequence.
 
     Returns None in case of error.
@@ -658,7 +626,7 @@ def _get_by_path(data: dict | list, items: list[str | int]) -> Any:
 
 
 def find_annotation(
-    config: dict | list, path: list[str | int]
+    config: dict | list, path: list[Hashable]
 ) -> tuple[str, int | str] | None:
     """Find file/line annotation for a node in config pointed to by path.
 
@@ -668,7 +636,7 @@ def find_annotation(
     """
 
     def find_annotation_for_key(
-        item: dict, path: list[str | int], tail: str | int
+        item: dict, path: list[Hashable], tail: Hashable
     ) -> tuple[str, int | str] | None:
         for key in item:
             if key == tail:
@@ -678,7 +646,7 @@ def find_annotation(
         return None
 
     def find_annotation_rec(
-        config: dict | list, path: list[str | int], tail: str | int | None
+        config: dict | list, path: list[Hashable], tail: Hashable | None
     ) -> tuple[str, int | str] | None:
         item = _get_by_path(config, path)
         if isinstance(item, dict) and tail is not None:
@@ -881,6 +849,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             CONF_CURRENCY,
             CONF_COUNTRY,
             CONF_LANGUAGE,
+            CONF_RADIUS,
         )
     ):
         hac.config_source = ConfigSource.YAML
@@ -893,10 +862,10 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
         (CONF_INTERNAL_URL, "internal_url"),
         (CONF_EXTERNAL_URL, "external_url"),
         (CONF_MEDIA_DIRS, "media_dirs"),
-        (CONF_LEGACY_TEMPLATES, "legacy_templates"),
         (CONF_CURRENCY, "currency"),
         (CONF_COUNTRY, "country"),
         (CONF_LANGUAGE, "language"),
+        (CONF_RADIUS, "radius"),
     ):
         if key in config:
             setattr(hac, attr, config[key])
@@ -904,12 +873,11 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
     if config.get(CONF_DEBUG):
         hac.debug = True
 
-    _raise_issue_if_legacy_templates(hass, config.get(CONF_LEGACY_TEMPLATES))
     _raise_issue_if_historic_currency(hass, hass.config.currency)
     _raise_issue_if_no_country(hass, hass.config.country)
 
     if CONF_TIME_ZONE in config:
-        hac.set_time_zone(config[CONF_TIME_ZONE])
+        await hac.async_set_time_zone(config[CONF_TIME_ZONE])
 
     if CONF_MEDIA_DIRS not in config:
         if is_docker_env():
@@ -995,7 +963,7 @@ def _identify_config_schema(module: ComponentProtocol) -> str | None:
         key = next(k for k in schema if k == module.DOMAIN)
     except (TypeError, AttributeError, StopIteration):
         return None
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Unexpected error identifying config schema")
         return None
 
@@ -1078,7 +1046,7 @@ async def merge_packages_config(
                 pack_name,
                 None,
                 config,
-                f"Invalid package definition '{pack_name}': {str(exc)}. Package "
+                f"Invalid package definition '{pack_name}': {exc!s}. Package "
                 f"will not be initialized",
             )
             invalid_packages.append(pack_name)
@@ -1106,7 +1074,7 @@ async def merge_packages_config(
                     pack_name,
                     comp_name,
                     config,
-                    f"Integration {comp_name} caused error: {str(exc)}",
+                    f"Integration {comp_name} caused error: {exc!s}",
                 )
                 continue
             except INTEGRATION_LOAD_EXCEPTIONS as exc:
@@ -1465,7 +1433,7 @@ async def _async_load_and_validate_platform_integration(
             p_integration.integration.documentation,
         )
         config_exceptions.append(exc_info)
-    except Exception as exc:  # pylint: disable=broad-except
+    except Exception as exc:  # noqa: BLE001
         exc_info = ConfigExceptionInfo(
             exc,
             ConfigErrorTranslationKey.PLATFORM_SCHEMA_VALIDATOR_ERR,
@@ -1549,7 +1517,7 @@ async def async_process_component_config(
             )
             config_exceptions.append(exc_info)
             return IntegrationConfigInfo(None, config_exceptions)
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception as exc:  # noqa: BLE001
             exc_info = ConfigExceptionInfo(
                 exc,
                 ConfigErrorTranslationKey.CONFIG_VALIDATOR_UNKNOWN_ERR,
@@ -1574,7 +1542,7 @@ async def async_process_component_config(
             )
             config_exceptions.append(exc_info)
             return IntegrationConfigInfo(None, config_exceptions)
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception as exc:  # noqa: BLE001
             exc_info = ConfigExceptionInfo(
                 exc,
                 ConfigErrorTranslationKey.CONFIG_SCHEMA_UNKNOWN_ERR,
@@ -1609,7 +1577,7 @@ async def async_process_component_config(
             )
             config_exceptions.append(exc_info)
             continue
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception as exc:  # noqa: BLE001
             exc_info = ConfigExceptionInfo(
                 exc,
                 ConfigErrorTranslationKey.PLATFORM_SCHEMA_VALIDATOR_ERR,
@@ -1672,7 +1640,9 @@ async def async_process_component_config(
             validated_config
             for validated_config in await asyncio.gather(
                 *(
-                    create_eager_task(async_load_and_validate(p_integration))
+                    create_eager_task(
+                        async_load_and_validate(p_integration), loop=hass.loop
+                    )
                     for p_integration in platform_integrations_to_load
                 )
             )

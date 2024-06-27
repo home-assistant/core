@@ -1,7 +1,9 @@
 """Tests for the diagnostics data provided by the ESPHome integration."""
 
+from typing import Any
 from unittest.mock import ANY
 
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components import bluetooth
@@ -14,12 +16,12 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
-    enable_bluetooth: None,
-    mock_dashboard,
+    mock_dashboard: dict[str, Any],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics for config entry."""

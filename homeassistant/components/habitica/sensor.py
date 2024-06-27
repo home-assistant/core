@@ -4,13 +4,9 @@ from __future__ import annotations
 
 from collections import namedtuple
 from dataclasses import dataclass
-from datetime import timedelta
 from enum import StrEnum
-from http import HTTPStatus
 import logging
-from typing import TYPE_CHECKING, Any
-
-from aiohttp import ClientResponseError
+from typing import TYPE_CHECKING, cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -22,13 +18,14 @@ from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import Throttle
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import HabiticaConfigEntry
 from .const import DOMAIN, MANUFACTURER, NAME
+from .coordinator import HabiticaDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -122,14 +119,14 @@ SENSOR_DESCRIPTIONS: dict[str, HabitipySensorEntityDescription] = {
 SensorType = namedtuple("SensorType", ["name", "icon", "unit", "path"])
 TASKS_TYPES = {
     "habits": SensorType(
-        "Habits", "mdi:clipboard-list-outline", "n_of_tasks", ["habits"]
+        "Habits", "mdi:clipboard-list-outline", "n_of_tasks", ["habit"]
     ),
     "dailys": SensorType(
-        "Dailys", "mdi:clipboard-list-outline", "n_of_tasks", ["dailys"]
+        "Dailys", "mdi:clipboard-list-outline", "n_of_tasks", ["daily"]
     ),
-    "todos": SensorType("TODOs", "mdi:clipboard-list-outline", "n_of_tasks", ["todos"]),
+    "todos": SensorType("TODOs", "mdi:clipboard-list-outline", "n_of_tasks", ["todo"]),
     "rewards": SensorType(
-        "Rewards", "mdi:clipboard-list-outline", "n_of_tasks", ["rewards"]
+        "Rewards", "mdi:clipboard-list-outline", "n_of_tasks", ["reward"]
     ),
 }
 
@@ -163,79 +160,26 @@ TASKS_MAP = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HabiticaConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the habitica sensors."""
 
     name = config_entry.data[CONF_NAME]
-    sensor_data = HabitipyData(hass.data[DOMAIN][config_entry.entry_id])
-    await sensor_data.update()
+    coordinator = config_entry.runtime_data
 
     entities: list[SensorEntity] = [
-        HabitipySensor(sensor_data, description, config_entry)
+        HabitipySensor(coordinator, description, config_entry)
         for description in SENSOR_DESCRIPTIONS.values()
     ]
     entities.extend(
-        HabitipyTaskSensor(name, task_type, sensor_data, config_entry)
+        HabitipyTaskSensor(name, task_type, coordinator, config_entry)
         for task_type in TASKS_TYPES
     )
     async_add_entities(entities, True)
 
 
-class HabitipyData:
-    """Habitica API user data cache."""
-
-    tasks: dict[str, Any]
-
-    def __init__(self, api) -> None:
-        """Habitica API user data cache."""
-        self.api = api
-        self.data = None
-        self.tasks = {}
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def update(self):
-        """Get a new fix from Habitica servers."""
-        try:
-            self.data = await self.api.user.get()
-        except ClientResponseError as error:
-            if error.status == HTTPStatus.TOO_MANY_REQUESTS:
-                _LOGGER.warning(
-                    (
-                        "Sensor data update for %s has too many API requests;"
-                        " Skipping the update"
-                    ),
-                    DOMAIN,
-                )
-            else:
-                _LOGGER.error(
-                    "Count not update sensor data for %s (%s)",
-                    DOMAIN,
-                    error,
-                )
-
-        for task_type in TASKS_TYPES:
-            try:
-                self.tasks[task_type] = await self.api.tasks.user.get(type=task_type)
-            except ClientResponseError as error:
-                if error.status == HTTPStatus.TOO_MANY_REQUESTS:
-                    _LOGGER.warning(
-                        (
-                            "Sensor data update for %s has too many API requests;"
-                            " Skipping the update"
-                        ),
-                        DOMAIN,
-                    )
-                else:
-                    _LOGGER.error(
-                        "Count not update sensor data for %s (%s)",
-                        DOMAIN,
-                        error,
-                    )
-
-
-class HabitipySensor(SensorEntity):
+class HabitipySensor(CoordinatorEntity[HabiticaDataUpdateCoordinator], SensorEntity):
     """A generic Habitica sensor."""
 
     _attr_has_entity_name = True
@@ -243,15 +187,14 @@ class HabitipySensor(SensorEntity):
 
     def __init__(
         self,
-        coordinator,
+        coordinator: HabiticaDataUpdateCoordinator,
         entity_description: HabitipySensorEntityDescription,
         entry: ConfigEntry,
     ) -> None:
         """Initialize a generic Habitica sensor."""
-        super().__init__()
+        super().__init__(coordinator, context=entity_description.value_path[0])
         if TYPE_CHECKING:
             assert entry.unique_id
-        self.coordinator = coordinator
         self.entity_description = entity_description
         self._attr_unique_id = f"{entry.unique_id}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
@@ -263,25 +206,27 @@ class HabitipySensor(SensorEntity):
             identifiers={(DOMAIN, entry.unique_id)},
         )
 
-    async def async_update(self) -> None:
-        """Update Sensor state."""
-        await self.coordinator.update()
-        data = self.coordinator.data
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the device."""
+        data = self.coordinator.data.user
         for element in self.entity_description.value_path:
             data = data[element]
-        self._attr_native_value = data
+        return cast(StateType, data)
 
 
-class HabitipyTaskSensor(SensorEntity):
+class HabitipyTaskSensor(
+    CoordinatorEntity[HabiticaDataUpdateCoordinator], SensorEntity
+):
     """A Habitica task sensor."""
 
-    def __init__(self, name, task_name, updater, entry):
+    def __init__(self, name, task_name, coordinator, entry):
         """Initialize a generic Habitica task."""
+        super().__init__(coordinator)
         self._name = name
         self._task_name = task_name
         self._task_type = TASKS_TYPES[task_name]
         self._state = None
-        self._updater = updater
         self._attr_unique_id = f"{entry.unique_id}_{task_name}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
@@ -291,14 +236,6 @@ class HabitipyTaskSensor(SensorEntity):
             configuration_url=entry.data[CONF_URL],
             identifiers={(DOMAIN, entry.unique_id)},
         )
-
-    async def async_update(self) -> None:
-        """Update Condition and Forecast."""
-        await self._updater.update()
-        all_tasks = self._updater.tasks
-        for element in self._task_type.path:
-            tasks_length = len(all_tasks[element])
-        self._state = tasks_length
 
     @property
     def icon(self):
@@ -313,26 +250,29 @@ class HabitipyTaskSensor(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the device."""
-        return self._state
+        return len(
+            [
+                task
+                for task in self.coordinator.data.tasks
+                if task.get("type") in self._task_type.path
+            ]
+        )
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes of all user tasks."""
-        if self._updater.tasks is not None:
-            all_received_tasks = self._updater.tasks
-            for element in self._task_type.path:
-                received_tasks = all_received_tasks[element]
-            attrs = {}
+        attrs = {}
 
-            # Map tasks to TASKS_MAP
-            for received_task in received_tasks:
+        # Map tasks to TASKS_MAP
+        for received_task in self.coordinator.data.tasks:
+            if received_task.get("type") in self._task_type.path:
                 task_id = received_task[TASKS_MAP_ID]
                 task = {}
                 for map_key, map_value in TASKS_MAP.items():
                     if value := received_task.get(map_value):
                         task[map_key] = value
                 attrs[task_id] = task
-            return attrs
+        return attrs
 
     @property
     def native_unit_of_measurement(self):

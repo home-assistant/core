@@ -9,7 +9,6 @@ import pytest
 import zigpy.backups
 import zigpy.state
 
-from homeassistant.components import zha
 from homeassistant.components.zha import api
 from homeassistant.components.zha.core.const import RadioType
 from homeassistant.components.zha.core.helpers import get_zha_gateway
@@ -43,7 +42,7 @@ async def test_async_get_network_settings_inactive(
     await setup_zha()
 
     gateway = get_zha_gateway(hass)
-    await zha.async_unload_entry(hass, gateway.config_entry)
+    await hass.config_entries.async_unload(gateway.config_entry.entry_id)
 
     backup = zigpy.backups.NetworkBackup()
     backup.network_info.channel = 20
@@ -70,7 +69,7 @@ async def test_async_get_network_settings_missing(
     await setup_zha()
 
     gateway = get_zha_gateway(hass)
-    await gateway.config_entry.async_unload(hass)
+    await hass.config_entries.async_unload(gateway.config_entry.entry_id)
 
     # Network settings were never loaded for whatever reason
     zigpy_app_controller.state.network_info = zigpy.state.NetworkInfo()

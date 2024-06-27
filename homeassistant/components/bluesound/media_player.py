@@ -7,7 +7,7 @@ from asyncio import CancelledError, timeout
 from datetime import timedelta
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, NamedTuple
 from urllib import parse
 
 import aiohttp
@@ -18,7 +18,7 @@ import xmltodict
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -70,7 +70,7 @@ UPDATE_CAPTURE_INTERVAL = timedelta(minutes=30)
 UPDATE_PRESETS_INTERVAL = timedelta(minutes=30)
 UPDATE_SERVICES_INTERVAL = timedelta(minutes=30)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOSTS): vol.All(
             cv.ensure_list,
@@ -85,15 +85,27 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+
+class ServiceMethodDetails(NamedTuple):
+    """Details for SERVICE_TO_METHOD mapping."""
+
+    method: str
+    schema: vol.Schema
+
+
 BS_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 
 BS_JOIN_SCHEMA = BS_SCHEMA.extend({vol.Required(ATTR_MASTER): cv.entity_id})
 
 SERVICE_TO_METHOD = {
-    SERVICE_JOIN: {"method": "async_join", "schema": BS_JOIN_SCHEMA},
-    SERVICE_UNJOIN: {"method": "async_unjoin", "schema": BS_SCHEMA},
-    SERVICE_SET_TIMER: {"method": "async_increase_timer", "schema": BS_SCHEMA},
-    SERVICE_CLEAR_TIMER: {"method": "async_clear_timer", "schema": BS_SCHEMA},
+    SERVICE_JOIN: ServiceMethodDetails(method="async_join", schema=BS_JOIN_SCHEMA),
+    SERVICE_UNJOIN: ServiceMethodDetails(method="async_unjoin", schema=BS_SCHEMA),
+    SERVICE_SET_TIMER: ServiceMethodDetails(
+        method="async_increase_timer", schema=BS_SCHEMA
+    ),
+    SERVICE_CLEAR_TIMER: ServiceMethodDetails(
+        method="async_clear_timer", schema=BS_SCHEMA
+    ),
 }
 
 
@@ -188,12 +200,11 @@ async def async_setup_platform(
             target_players = hass.data[DATA_BLUESOUND]
 
         for player in target_players:
-            await getattr(player, method["method"])(**params)
+            await getattr(player, method.method)(**params)
 
     for service, method in SERVICE_TO_METHOD.items():
-        schema = method["schema"]
         hass.services.async_register(
-            DOMAIN, service, async_service_handler, schema=schema
+            DOMAIN, service, async_service_handler, schema=method.schema
         )
 
 
@@ -344,7 +355,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     ):
         """Send command to the player."""
         if not self._is_online and not allow_offline:
-            return
+            return None
 
         if method[0] == "/":
             method = method[1:]
@@ -468,7 +479,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         """Update Capture sources."""
         resp = await self.send_bluesound_command("RadioBrowse?service=Capture")
         if not resp:
-            return
+            return None
         self._capture_items = []
 
         def _create_capture_item(item):
@@ -496,7 +507,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         """Update Presets."""
         resp = await self.send_bluesound_command("Presets")
         if not resp:
-            return
+            return None
         self._preset_items = []
 
         def _create_preset_item(item):
@@ -526,7 +537,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         """Update Services."""
         resp = await self.send_bluesound_command("Services")
         if not resp:
-            return
+            return None
         self._services_items = []
 
         def _create_service_item(item):
@@ -603,7 +614,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             return None
 
         if not (url := self._status.get("image")):
-            return
+            return None
         if url[0] == "/":
             url = f"http://{self.host}:{self.port}{url}"
 
@@ -937,14 +948,14 @@ class BluesoundPlayer(MediaPlayerEntity):
         if selected_source.get("is_raw_url"):
             url = selected_source["url"]
 
-        return await self.send_bluesound_command(url)
+        await self.send_bluesound_command(url)
 
     async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
         if self.is_grouped and not self.is_master:
             return
 
-        return await self.send_bluesound_command("Clear")
+        await self.send_bluesound_command("Clear")
 
     async def async_media_next_track(self) -> None:
         """Send media_next command to media player."""
@@ -957,7 +968,7 @@ class BluesoundPlayer(MediaPlayerEntity):
                 if "@name" in action and "@url" in action and action["@name"] == "skip":
                     cmd = action["@url"]
 
-        return await self.send_bluesound_command(cmd)
+        await self.send_bluesound_command(cmd)
 
     async def async_media_previous_track(self) -> None:
         """Send media_previous command to media player."""
@@ -970,35 +981,35 @@ class BluesoundPlayer(MediaPlayerEntity):
                 if "@name" in action and "@url" in action and action["@name"] == "back":
                     cmd = action["@url"]
 
-        return await self.send_bluesound_command(cmd)
+        await self.send_bluesound_command(cmd)
 
     async def async_media_play(self) -> None:
         """Send media_play command to media player."""
         if self.is_grouped and not self.is_master:
             return
 
-        return await self.send_bluesound_command("Play")
+        await self.send_bluesound_command("Play")
 
     async def async_media_pause(self) -> None:
         """Send media_pause command to media player."""
         if self.is_grouped and not self.is_master:
             return
 
-        return await self.send_bluesound_command("Pause")
+        await self.send_bluesound_command("Pause")
 
     async def async_media_stop(self) -> None:
         """Send stop command."""
         if self.is_grouped and not self.is_master:
             return
 
-        return await self.send_bluesound_command("Pause")
+        await self.send_bluesound_command("Pause")
 
     async def async_media_seek(self, position: float) -> None:
         """Send media_seek command to media player."""
         if self.is_grouped and not self.is_master:
             return
 
-        return await self.send_bluesound_command(f"Play?seek={float(position)}")
+        await self.send_bluesound_command(f"Play?seek={float(position)}")
 
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
@@ -1017,21 +1028,21 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         url = f"Play?url={media_id}"
 
-        return await self.send_bluesound_command(url)
+        await self.send_bluesound_command(url)
 
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
         current_vol = self.volume_level
         if not current_vol or current_vol >= 1:
             return
-        return await self.async_set_volume_level(current_vol + 0.01)
+        await self.async_set_volume_level(current_vol + 0.01)
 
     async def async_volume_down(self) -> None:
         """Volume down the media player."""
         current_vol = self.volume_level
         if not current_vol or current_vol <= 0:
             return
-        return await self.async_set_volume_level(current_vol - 0.01)
+        await self.async_set_volume_level(current_vol - 0.01)
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Send volume_up command to media player."""
@@ -1039,13 +1050,13 @@ class BluesoundPlayer(MediaPlayerEntity):
             volume = 0
         elif volume > 1:
             volume = 1
-        return await self.send_bluesound_command(f"Volume?level={float(volume) * 100}")
+        await self.send_bluesound_command(f"Volume?level={float(volume) * 100}")
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command to media player."""
         if mute:
-            return await self.send_bluesound_command("Volume?mute=1")
-        return await self.send_bluesound_command("Volume?mute=0")
+            await self.send_bluesound_command("Volume?mute=1")
+        await self.send_bluesound_command("Volume?mute=0")
 
     async def async_browse_media(
         self,

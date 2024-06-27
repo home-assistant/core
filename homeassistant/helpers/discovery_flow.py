@@ -10,9 +10,12 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import gather_with_limited_concurrency
+from homeassistant.util.hass_dict import HassKey
 
 FLOW_INIT_LIMIT = 20
-DISCOVERY_FLOW_DISPATCHER = "discovery_flow_dispatcher"
+DISCOVERY_FLOW_DISPATCHER: HassKey[FlowDispatcher] = HassKey(
+    "discovery_flow_dispatcher"
+)
 
 
 @bind_hass
@@ -35,7 +38,7 @@ def async_create_flow(
             )
         return
 
-    return dispatcher.async_create(domain, context, data)
+    dispatcher.async_create(domain, context, data)
 
 
 @callback

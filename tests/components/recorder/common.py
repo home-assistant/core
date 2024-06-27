@@ -138,7 +138,7 @@ async def async_recorder_block_till_done(hass: HomeAssistant) -> None:
 
 def corrupt_db_file(test_db_file):
     """Corrupt an sqlite3 database file."""
-    with open(test_db_file, "w+") as fhandle:
+    with open(test_db_file, "w+", encoding="utf8") as fhandle:
         fhandle.seek(200)
         fhandle.write("I am a corrupt db" * 100)
 
@@ -255,6 +255,11 @@ def assert_dict_of_states_equal_without_context_and_last_changed(
         assert_multiple_states_equal_without_context_and_last_changed(
             state, others[entity_id]
         )
+
+
+async def async_record_states(hass: HomeAssistant):
+    """Record some test states."""
+    return await hass.async_add_executor_job(record_states, hass)
 
 
 def record_states(hass):

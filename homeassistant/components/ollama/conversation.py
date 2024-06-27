@@ -9,6 +9,7 @@ from typing import Literal
 import ollama
 
 from homeassistant.components import assist_pipeline, conversation
+from homeassistant.components.conversation import trace
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
@@ -45,7 +46,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up conversation entities."""
-    agent = OllamaConversationEntity(hass, config_entry)
+    agent = OllamaConversationEntity(config_entry)
     async_add_entities([agent])
 
 
@@ -56,9 +57,8 @@ class OllamaConversationEntity(
 
     _attr_has_entity_name = True
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the agent."""
-        self.hass = hass
         self.entry = entry
 
         # conversation id -> message history
@@ -137,6 +137,11 @@ class OllamaConversationEntity(
         # Add new user message
         message_history.messages.append(
             ollama.Message(role=MessageRole.USER.value, content=user_input.text)
+        )
+
+        trace.async_conversation_trace_append(
+            trace.ConversationTraceEventType.AGENT_DETAIL,
+            {"messages": message_history.messages},
         )
 
         # Get response
@@ -223,21 +228,21 @@ class OllamaConversationEntity(
         ]
 
         for state in exposed_states:
-            entity = entity_registry.async_get(state.entity_id)
+            entity_entry = entity_registry.async_get(state.entity_id)
             names = [state.name]
             area_names = []
 
-            if entity is not None:
+            if entity_entry is not None:
                 # Add aliases
-                names.extend(entity.aliases)
-                if entity.area_id and (
-                    area := area_registry.async_get_area(entity.area_id)
+                names.extend(entity_entry.aliases)
+                if entity_entry.area_id and (
+                    area := area_registry.async_get_area(entity_entry.area_id)
                 ):
                     # Entity is in area
                     area_names.append(area.name)
                     area_names.extend(area.aliases)
-                elif entity.device_id and (
-                    device := device_registry.async_get(entity.device_id)
+                elif entity_entry.device_id and (
+                    device := device_registry.async_get(entity_entry.device_id)
                 ):
                     # Check device area
                     if device.area_id and (

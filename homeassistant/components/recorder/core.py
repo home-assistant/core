@@ -7,12 +7,13 @@ from collections.abc import Callable, Iterable
 from concurrent.futures import CancelledError
 import contextlib
 from datetime import datetime, timedelta
+from functools import cached_property
 import logging
 import queue
 import sqlite3
 import threading
 import time
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import psutil_home_assistant as ha_psutil
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select, update
@@ -84,6 +85,7 @@ from .db_schema import (
 )
 from .executor import DBInterruptibleThreadPoolExecutor
 from .migration import (
+    BaseRunTimeMigration,
     EntityIDMigration,
     EventsContextIDMigration,
     EventTypeIDMigration,
@@ -138,8 +140,6 @@ from .util import (
 
 _LOGGER = logging.getLogger(__name__)
 
-T = TypeVar("T")
-
 DEFAULT_URL = "sqlite:///{hass_config_path}"
 
 # Controls how often we clean up
@@ -179,7 +179,7 @@ class Recorder(threading.Thread):
         uri: str,
         db_max_retries: int,
         db_retry_wait: int,
-        entity_filter: Callable[[str], bool],
+        entity_filter: Callable[[str], bool] | None,
         exclude_event_types: set[EventType[Any] | str],
     ) -> None:
         """Initialize the recorder."""
@@ -187,6 +187,7 @@ class Recorder(threading.Thread):
 
         self.hass = hass
         self.thread_id: int | None = None
+        self.recorder_and_worker_thread_ids: set[int] = set()
         self.auto_purge = auto_purge
         self.auto_repack = auto_repack
         self.keep_days = keep_days
@@ -259,7 +260,7 @@ class Recorder(threading.Thread):
         """Return the number of items in the recorder backlog."""
         return self._queue.qsize()
 
-    @property
+    @cached_property
     def dialect_name(self) -> SupportedDialect | None:
         """Return the dialect the recorder uses."""
         return self._dialect_name
@@ -294,6 +295,7 @@ class Recorder(threading.Thread):
     def async_start_executor(self) -> None:
         """Start the executor."""
         self._db_executor = DBInterruptibleThreadPoolExecutor(
+            self.recorder_and_worker_thread_ids,
             thread_name_prefix=DB_WORKER_PREFIX,
             max_workers=MAX_DB_EXECUTOR_WORKERS,
             shutdown_hook=self._shutdown_pool,
@@ -317,7 +319,10 @@ class Recorder(threading.Thread):
             if event.event_type in exclude_event_types:
                 return
 
-            if (entity_id := event.data.get(ATTR_ENTITY_ID)) is None:
+            if (
+                entity_filter is None
+                or (entity_id := event.data.get(ATTR_ENTITY_ID)) is None
+            ):
                 queue_put(event)
                 return
 
@@ -364,9 +369,9 @@ class Recorder(threading.Thread):
             self.queue_task(COMMIT_TASK)
 
     @callback
-    def async_add_executor_job(
-        self, target: Callable[..., T], *args: Any
-    ) -> asyncio.Future[T]:
+    def async_add_executor_job[_T](
+        self, target: Callable[..., _T], *args: Any
+    ) -> asyncio.Future[_T]:
         """Add an executor job from within the event loop."""
         return self.hass.loop.run_in_executor(self._db_executor, target, *args)
 
@@ -700,7 +705,7 @@ class Recorder(threading.Thread):
         self.is_running = True
         try:
             self._run()
-        except Exception:  # pylint: disable=broad-exception-caught
+        except Exception:
             _LOGGER.exception(
                 "Recorder._run threw unexpected exception, recorder shutting down"
             )
@@ -717,7 +722,10 @@ class Recorder(threading.Thread):
 
     def _run(self) -> None:
         """Start processing events to save."""
-        self.thread_id = threading.get_ident()
+        thread_id = threading.get_ident()
+        self.thread_id = thread_id
+        self.recorder_and_worker_thread_ids.add(thread_id)
+
         setup_result = self._setup_recorder()
 
         if not setup_result:
@@ -798,6 +806,7 @@ class Recorder(threading.Thread):
                 for row in execute_stmt_lambda_element(session, get_migration_changes())
             }
 
+            migrator: BaseRunTimeMigration
             for migrator_cls in (StatesContextIDMigration, EventsContextIDMigration):
                 migrator = migrator_cls(session, schema_version, migration_changes)
                 if migrator.needs_migrate():
@@ -900,7 +909,7 @@ class Recorder(threading.Thread):
         _LOGGER.debug("Processing task: %s", task)
         try:
             self._process_one_task_or_event_or_recover(task)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error while processing event %s", task)
 
     def _process_one_task_or_event_or_recover(self, task: RecorderTask | Event) -> None:
@@ -919,13 +928,15 @@ class Recorder(threading.Thread):
                 assert isinstance(task, RecorderTask)
             if task.commit_before:
                 self._commit_event_session_or_retry()
-            return task.run(self)
+            task.run(self)
         except exc.DatabaseError as err:
             if self._handle_database_error(err):
                 return
             _LOGGER.exception("Unhandled database error while processing task %s", task)
         except SQLAlchemyError:
             _LOGGER.exception("SQLAlchemyError error processing task %s", task)
+        else:
+            return
 
         # Reset the session if an SQLAlchemyError (including DatabaseError)
         # happens to rollback and recover
@@ -941,7 +952,7 @@ class Recorder(threading.Thread):
                 return migration.initialize_database(self.get_session)
             except UnsupportedDialect:
                 break
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception(
                     "Error during connection setup: (retrying in %s seconds)",
                     self.db_retry_wait,
@@ -985,7 +996,7 @@ class Recorder(threading.Thread):
                 return True
             _LOGGER.exception("Database error during schema migration")
             return False
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error during schema migration")
             return False
         else:
@@ -1411,6 +1422,9 @@ class Recorder(threading.Thread):
             kwargs["pool_reset_on_return"] = None
         elif self.db_url.startswith(SQLITE_URL_PREFIX):
             kwargs["poolclass"] = RecorderPool
+            kwargs["recorder_and_worker_thread_ids"] = (
+                self.recorder_and_worker_thread_ids
+            )
         elif self.db_url.startswith(
             (
                 MARIADB_URL_PREFIX,
@@ -1438,6 +1452,7 @@ class Recorder(threading.Thread):
 
         self.engine = create_engine(self.db_url, **kwargs, future=True)
         self._dialect_name = try_parse_enum(SupportedDialect, self.engine.dialect.name)
+        self.__dict__.pop("dialect_name", None)
         sqlalchemy_event.listen(self.engine, "connect", self._setup_recorder_connection)
 
         Base.metadata.create_all(self.engine)
@@ -1473,7 +1488,7 @@ class Recorder(threading.Thread):
             self.recorder_runs_manager.end(self.event_session)
         try:
             self._commit_event_session_or_retry()
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error saving the event session during shutdown")
 
         self.event_session.close()

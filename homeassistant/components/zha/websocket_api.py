@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple, cast
 
 import voluptuous as vol
 import zigpy.backups
@@ -21,6 +21,7 @@ from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.typing import VolDictType, VolSchemaType
 
 from .api import (
     async_change_channel,
@@ -118,18 +119,15 @@ IEEE_SERVICE = "ieee_based_service"
 
 IEEE_SCHEMA = vol.All(cv.string, EUI64.convert)
 
-# typing typevar
-_T = TypeVar("_T")
 
-
-def _ensure_list_if_present(value: _T | None) -> list[_T] | list[Any] | None:
+def _ensure_list_if_present[_T](value: _T | None) -> list[_T] | list[Any] | None:
     """Wrap value in list if it is provided and not one."""
     if value is None:
         return None
     return cast("list[_T]", value) if isinstance(value, list) else [value]
 
 
-SERVICE_PERMIT_PARAMS = {
+SERVICE_PERMIT_PARAMS: VolDictType = {
     vol.Optional(ATTR_IEEE): IEEE_SCHEMA,
     vol.Optional(ATTR_DURATION, default=60): vol.All(
         vol.Coerce(int), vol.Range(0, 254)
@@ -141,7 +139,7 @@ SERVICE_PERMIT_PARAMS = {
     vol.Exclusive(ATTR_QR_CODE, "install_code"): vol.All(cv.string, qr_to_install_code),
 }
 
-SERVICE_SCHEMAS = {
+SERVICE_SCHEMAS: dict[str, VolSchemaType] = {
     SERVICE_PERMIT: vol.Schema(
         vol.All(
             cv.deprecated(ATTR_IEEE_ADDRESS, replacement_key=ATTR_IEEE),
@@ -446,7 +444,7 @@ async def websocket_get_device(
     if not (zha_device := zha_gateway.devices.get(ieee)):
         connection.send_message(
             websocket_api.error_message(
-                msg[ID], websocket_api.const.ERR_NOT_FOUND, "ZHA Device not found"
+                msg[ID], websocket_api.ERR_NOT_FOUND, "ZHA Device not found"
             )
         )
         return
@@ -473,7 +471,7 @@ async def websocket_get_group(
     if not (zha_group := zha_gateway.groups.get(group_id)):
         connection.send_message(
             websocket_api.error_message(
-                msg[ID], websocket_api.const.ERR_NOT_FOUND, "ZHA Group not found"
+                msg[ID], websocket_api.ERR_NOT_FOUND, "ZHA Group not found"
             )
         )
         return
@@ -551,7 +549,7 @@ async def websocket_add_group_members(
     if not (zha_group := zha_gateway.groups.get(group_id)):
         connection.send_message(
             websocket_api.error_message(
-                msg[ID], websocket_api.const.ERR_NOT_FOUND, "ZHA Group not found"
+                msg[ID], websocket_api.ERR_NOT_FOUND, "ZHA Group not found"
             )
         )
         return
@@ -581,7 +579,7 @@ async def websocket_remove_group_members(
     if not (zha_group := zha_gateway.groups.get(group_id)):
         connection.send_message(
             websocket_api.error_message(
-                msg[ID], websocket_api.const.ERR_NOT_FOUND, "ZHA Group not found"
+                msg[ID], websocket_api.ERR_NOT_FOUND, "ZHA Group not found"
             )
         )
         return
@@ -1217,7 +1215,7 @@ async def websocket_restore_network_backup(
     try:
         await application_controller.backups.restore_backup(backup)
     except ValueError as err:
-        connection.send_error(msg[ID], websocket_api.const.ERR_INVALID_FORMAT, str(err))
+        connection.send_error(msg[ID], websocket_api.ERR_INVALID_FORMAT, str(err))
     else:
         connection.send_result(msg[ID])
 
@@ -1314,7 +1312,7 @@ def async_load_api(hass: HomeAssistant) -> None:
                 manufacturer=manufacturer,
             )
         else:
-            raise ValueError(f"Device with IEEE {str(ieee)} not found")
+            raise ValueError(f"Device with IEEE {ieee!s} not found")
 
         _LOGGER.debug(
             (
@@ -1394,7 +1392,7 @@ def async_load_api(hass: HomeAssistant) -> None:
                 manufacturer,
             )
         else:
-            raise ValueError(f"Device with IEEE {str(ieee)} not found")
+            raise ValueError(f"Device with IEEE {ieee!s} not found")
 
     async_register_admin_service(
         hass,

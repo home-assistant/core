@@ -21,7 +21,7 @@ from .coordinator import AirNowDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 
-AirNowConfigEntry = ConfigEntry[AirNowDataUpdateCoordinator]
+type AirNowConfigEntry = ConfigEntry[AirNowDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AirNowConfigEntry) -> bool:

@@ -31,7 +31,6 @@ DOMAIN: Final = "shelly"
 
 LOGGER: Logger = getLogger(__package__)
 
-DATA_CONFIG_ENTRY: Final = "config_entry"
 CONF_COAP_PORT: Final = "coap_port"
 FIRMWARE_PATTERN: Final = re.compile(r"^(\d{8})")
 
@@ -44,6 +43,11 @@ RPC_MIN_TRANSITION_TIME_SEC = 0.5
 RGBW_MODELS: Final = (
     MODEL_BULB,
     MODEL_RGBW2,
+)
+
+MOTION_MODELS: Final = (
+    MODEL_MOTION,
+    MODEL_MOTION_2,
 )
 
 MODELS_SUPPORTING_LIGHT_TRANSITION: Final = (
@@ -79,11 +83,9 @@ REST_SENSORS_UPDATE_INTERVAL: Final = 60
 # Refresh interval for RPC polling sensors
 RPC_SENSORS_POLLING_INTERVAL: Final = 60
 
-# Multiplier used to calculate the "update_interval" for sleeping devices.
-SLEEP_PERIOD_MULTIPLIER: Final = 1.2
 CONF_SLEEP_PERIOD: Final = "sleep_period"
 
-# Multiplier used to calculate the "update_interval" for non-sleeping devices.
+# Multiplier used to calculate the "update_interval" for shelly devices.
 UPDATE_PERIOD_MULTIPLIER: Final = 2.2
 
 # Reconnect interval for GEN2 devices
