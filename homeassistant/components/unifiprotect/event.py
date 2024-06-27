@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 import dataclasses
-from enum import StrEnum
 
-from uiprotect.data import Camera, ProtectAdoptableDeviceModel, ProtectModelWithId
+from uiprotect.data import (
+    Camera,
+    EventType,
+    ProtectAdoptableDeviceModel,
+    ProtectModelWithId,
+)
 
 from homeassistant.components.event import (
     EventDeviceClass,
@@ -26,12 +30,6 @@ class ProtectEventEntityDescription(ProtectEventMixin, EventEntityDescription):
     """Describes UniFi Protect event entity."""
 
 
-class UFPDoorbellEvents(StrEnum):
-    """Doorbell events."""
-
-    RING = "ring"
-
-
 EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ProtectEventEntityDescription(
         key="doorbell",
@@ -40,7 +38,7 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
         icon="mdi:doorbell-video",
         ufp_required_field="feature_flags.is_doorbell",
         ufp_event_obj="last_ring_event",
-        event_types=[UFPDoorbellEvents.RING],
+        event_types=[EventType.RING],
     ),
 )
 
@@ -61,8 +59,13 @@ class ProtectDeviceEventEntity(EventEntityMixin, ProtectDeviceEntity, EventEntit
             self._event = event
             self._event_end = event.end if event else None
 
-        if event and not self._event_already_ended(prev_event, prev_event_end):
-            self._trigger_event(UFPDoorbellEvents.RING, {ATTR_EVENT_ID: event.id})
+        if (
+            event
+            and not self._event_already_ended(prev_event, prev_event_end)
+            and (event_types := description.event_types)
+            and (event_type := event.type) in event_types
+        ):
+            self._trigger_event(event_type, {ATTR_EVENT_ID: event.id})
             self.async_write_ha_state()
 
 
