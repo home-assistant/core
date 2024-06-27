@@ -18,6 +18,7 @@ from nextdns import (
     Settings,
 )
 from nextdns.model import NextDnsData
+from tenacity import RetryError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -62,7 +63,7 @@ class NextDnsUpdateCoordinator(DataUpdateCoordinator[CoordinatorDataT]):
             ApiError,
             ClientConnectorError,
             InvalidApiKeyError,
-            TimeoutError,
+            RetryError,
         ) as err:
             raise UpdateFailed(err) from err
 
