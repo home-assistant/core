@@ -299,12 +299,10 @@ class AmbientNetworkSensor(AmbientNetworkEntity, SensorEntity):
         mac_address: str,
     ) -> None:
         """Initialize a sensor object."""
-
         super().__init__(coordinator, description, mac_address)
 
     def _update_attrs(self) -> None:
         """Update sensor attributes."""
-
         value = self.coordinator.data.get(self.entity_description.key)
 
         # Treatments for special units.
@@ -315,3 +313,8 @@ class AmbientNetworkSensor(AmbientNetworkEntity, SensorEntity):
 
         self._attr_available = value is not None
         self._attr_native_value = value
+
+        if self.coordinator.last_measured is not None:
+            self._attr_extra_state_attributes = {
+                "last_measured": self.coordinator.last_measured
+            }

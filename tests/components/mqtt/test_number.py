@@ -581,17 +581,11 @@ async def test_update_with_json_attrs_bad_json(
 
 
 async def test_discovery_update_attr(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        number.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, number.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -626,21 +620,15 @@ async def test_unique_id(
 
 
 async def test_discovery_removal_number(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered number."""
     data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][number.DOMAIN])
-    await help_test_discovery_removal(
-        hass, mqtt_mock_entry, caplog, number.DOMAIN, data
-    )
+    await help_test_discovery_removal(hass, mqtt_mock_entry, number.DOMAIN, data)
 
 
 async def test_discovery_update_number(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered number."""
     config1 = {
@@ -655,14 +643,12 @@ async def test_discovery_update_number(
     }
 
     await help_test_discovery_update(
-        hass, mqtt_mock_entry, caplog, number.DOMAIN, config1, config2
+        hass, mqtt_mock_entry, number.DOMAIN, config1, config2
     )
 
 
 async def test_discovery_update_unchanged_number(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered number."""
     data1 = (
@@ -672,20 +658,13 @@ async def test_discovery_update_unchanged_number(
         "homeassistant.components.mqtt.number.MqttNumber.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass,
-            mqtt_mock_entry,
-            caplog,
-            number.DOMAIN,
-            data1,
-            discovery_update,
+            hass, mqtt_mock_entry, number.DOMAIN, data1, discovery_update
         )
 
 
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
@@ -693,9 +672,7 @@ async def test_discovery_broken(
         '{ "name": "Milk", "state_topic": "test-topic", "command_topic": "test-topic"}'
     )
 
-    await help_test_discovery_broken(
-        hass, mqtt_mock_entry, caplog, number.DOMAIN, data1, data2
-    )
+    await help_test_discovery_broken(hass, mqtt_mock_entry, number.DOMAIN, data1, data2)
 
 
 async def test_entity_device_info_with_connection(
