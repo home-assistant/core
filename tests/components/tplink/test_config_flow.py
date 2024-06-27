@@ -823,7 +823,10 @@ async def test_integration_discovery_with_connection_change(
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
 ) -> None:
-    """Test that config entry is updated with new device config and that connection_hash is removed.."""
+    """Test that config entry is updated with new device config.
+
+    And that connection_hash is removed as it will be invalid.
+    """
     mock_connect["connect"].side_effect = KasaException()
 
     mock_config_entry = MockConfigEntry(

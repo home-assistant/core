@@ -300,7 +300,6 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the step to pick discovered device."""
-        credentials = await get_credentials(self.hass)
         if user_input is not None:
             mac = user_input[CONF_DEVICE]
             await self.async_set_unique_id(mac, raise_on_progress=False)
@@ -308,6 +307,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             host = self._discovered_device.host
 
             self.context[CONF_HOST] = host
+            credentials = await get_credentials(self.hass)
 
             try:
                 device = await self._async_try_connect(

@@ -438,20 +438,16 @@ def _patch_connect(device=None, no_device=False):
 
 
 async def initialize_config_entry_for_device(
-    hass: HomeAssistant, dev: Device, *, config_entry: MockConfigEntry | None = None
+    hass: HomeAssistant, dev: Device
 ) -> MockConfigEntry:
     """Create a mocked configuration entry for the given device.
 
     Note, the rest of the tests should probably be converted over to use this
     instead of repeating the initialization routine for each test separately
     """
-    if not config_entry:
-        config_entry = MockConfigEntry(
-            title="TP-Link",
-            domain=DOMAIN,
-            unique_id=dev.mac,
-            data={CONF_HOST: dev.host},
-        )
+    config_entry = MockConfigEntry(
+        title="TP-Link", domain=DOMAIN, unique_id=dev.mac, data={CONF_HOST: dev.host}
+    )
     config_entry.add_to_hass(hass)
 
     with (
@@ -460,6 +456,6 @@ async def initialize_config_entry_for_device(
         _patch_connect(device=dev),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
+        await hass.async_block_till_done()
 
     return config_entry

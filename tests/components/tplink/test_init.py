@@ -472,7 +472,11 @@ async def test_move_credentials_hash(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test credentials hash moved to parent."""
+    """Test credentials hash moved to parent.
+
+    As async_setup_entry will succeed the hash on the parent is updated
+    from the device.
+    """
     device_config = {
         **DEVICE_CONFIG_AUTH.to_dict(
             exclude_credentials=True, credentials_hash="theHash"
@@ -511,7 +515,11 @@ async def test_move_credentials_hash(
 async def test_move_credentials_hash_auth_error(
     hass: HomeAssistant,
 ) -> None:
-    """Test credentials hash moved to parent."""
+    """Test credentials hash moved to parent.
+
+    If there is an auth error it should be deleted after migration
+    in async_setup_entry.
+    """
     device_config = {
         **DEVICE_CONFIG_AUTH.to_dict(
             exclude_credentials=True, credentials_hash="theHash"
@@ -550,7 +558,11 @@ async def test_move_credentials_hash_auth_error(
 async def test_move_credentials_hash_other_error(
     hass: HomeAssistant,
 ) -> None:
-    """Test credentials hash moved to parent."""
+    """Test credentials hash moved to parent.
+
+    When there is a KasaException the same hash should still be on the parent
+    at the end of the test.
+    """
     device_config = {
         **DEVICE_CONFIG_AUTH.to_dict(
             exclude_credentials=True, credentials_hash="theHash"
@@ -588,7 +600,7 @@ async def test_move_credentials_hash_other_error(
 async def test_credentials_hash(
     hass: HomeAssistant,
 ) -> None:
-    """Test credentials hash used to call connect."""
+    """Test credentials_hash used to call connect."""
     device_config = {**DEVICE_CONFIG_AUTH.to_dict(exclude_credentials=True)}
     entry_data = {
         **CREATE_ENTRY_DATA_AUTH,
@@ -626,7 +638,7 @@ async def test_credentials_hash(
 async def test_credentials_hash_auth_error(
     hass: HomeAssistant,
 ) -> None:
-    """Test credentials hash moved to parent."""
+    """Test credentials_hash is deleted after an auth failure."""
     device_config = {**DEVICE_CONFIG_AUTH.to_dict(exclude_credentials=True)}
     entry_data = {
         **CREATE_ENTRY_DATA_AUTH,
