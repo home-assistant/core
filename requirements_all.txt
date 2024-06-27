@@ -816,7 +816,7 @@ enocean==0.50
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env-canada==0.6.3
+env-canada==0.7.0
 
 # homeassistant.components.season
 ephem==4.1.5
@@ -2789,7 +2789,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==4.0.0
+uiprotect==4.2.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2807,7 +2807,7 @@ unifiled==0.11
 universal-silabs-flasher==0.0.20
 
 # homeassistant.components.upb
-upb-lib==0.5.6
+upb-lib==0.5.7
 
 # homeassistant.components.upcloud
 upcloud-api==2.5.1
