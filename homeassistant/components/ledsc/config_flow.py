@@ -53,10 +53,13 @@ class LedSCConfigFlow(ConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
             except WebSClientError:
                 errors["base"] = "cannot_connect"
+            except Exception as e:
+                _LOGGER.exception("Unexpected exception: {}", e)
+                errors["base"] = str(e)
             else:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(title=info["title"], data=user_input)  # noqa
 
-        return self.async_show_form(
+        return self.async_show_form(  # noqa
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=DATA_SCHEMA,
