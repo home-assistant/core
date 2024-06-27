@@ -15,3 +15,8 @@
     'username': 'foo@bar.com',
   })
 # ---
+# name: test_user_options
+  dict({
+    'extended_api': True,
+  })
+# ---
