@@ -1,9 +1,14 @@
+"""Tool to check the licenses."""
 from __future__ import annotations
 import json
+import logging
 from dataclasses import dataclass
 from awesomeversion import AwesomeVersion
+
+LOGGER = logging.getLogger(__name__)
 @dataclass
 class PackageDefinition:
+    """Package definition."""
 
     license: str
     name: str
@@ -11,6 +16,7 @@ class PackageDefinition:
 
     @classmethod
     def from_dict(cls, data: dict[str, str]) -> PackageDefinition:
+        """Create a package definition from a dictionary."""
         return cls(
             license=data["License"],
             name=data["Name"],
@@ -230,11 +236,12 @@ TODO = {
 }
 
 def main():
-    raw_licenses = json.load(open("licenses.json"))
+    """Run the main script."""
+    raw_licenses = json.load(open("../licenses.json"))
     package_definitions = [PackageDefinition.from_dict(data) for data in raw_licenses]
     for package in package_definitions:
-        approved = False
         previous_unapproved_version = TODO.get(package.name)
+        approved = False
         for approved_license in OSI_APPROVED_LICENSES:
             if approved_license in package.license:
                 approved = True
@@ -242,14 +249,16 @@ def main():
         if previous_unapproved_version is not None:
             if previous_unapproved_version < package.version:
                 if approved:
-                    print(f"Approved license detected for {package.name}@{package.version}: {package.license}")
+                    LOGGER.info(f"Approved license detected for {package.name}@{package.version}: {package.license}")
+                    LOGGER.info("Please remove the package from the TODO list.")
+                    exit(0)
+                else:
+                    LOGGER.info(f"We could not detect an OSI-approved license for {package.name}@{package.version}: {package.license}")
                     exit(0)
         if not approved and package.name not in EXCEPTIONS:
-            if (previous_version := TODO.get(package.name)) is not None:
-                print(f"We could not detect an OSI-approved license for {package.name}@{package.version}: {package.license}")
-                exit(0)
-            else:
-                if previous_version.version > package.version:
+            LOGGER.info(f"We could not detect an OSI-approved license for {package.name}@{package.version}: {package.license}")
+            exit(0)
+    LOGGER.info("All packages have an OSI-approved license.")
 
 
 

@@ -775,6 +775,10 @@ jobs:
           name: pytest_buckets
           path: pytest_buckets.txt
           overwrite: true
+  check-licenses:
+    name: Check licenses
+    runs-on: ubuntu-22.04
+
 
   pytest-full:
     runs-on: ubuntu-22.04
