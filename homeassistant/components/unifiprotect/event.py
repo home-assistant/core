@@ -68,13 +68,14 @@ def _async_event_entities(
     data: ProtectData,
     ufp_device: ProtectAdoptableDeviceModel | None = None,
 ) -> list[ProtectDeviceEntity]:
+    entities: list[ProtectDeviceEntity] = []
     for device in data.get_cameras() if ufp_device is None else [ufp_device]:
-        return [
+        entities.extend(
             ProtectDeviceEventEntity(data, device, description)
             for description in EVENT_DESCRIPTIONS
             if description.has_required(device)
-        ]
-    return []
+        )
+    return entities
 
 
 async def async_setup_entry(
