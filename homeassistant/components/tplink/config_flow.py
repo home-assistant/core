@@ -44,7 +44,13 @@ from . import (
     mac_alias,
     set_credentials,
 )
-from .const import CONF_DEVICE_CONFIG, CONNECT_TIMEOUT, DOMAIN
+from .const import (
+    CONF_CONNECTION_TYPE,
+    CONF_CREDENTIALS_HASH,
+    CONF_DEVICE_CONFIG,
+    CONNECT_TIMEOUT,
+    DOMAIN,
+)
 
 STEP_AUTH_DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
@@ -55,7 +61,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for tplink."""
 
     VERSION = 1
-    MINOR_VERSION = 3
+    MINOR_VERSION = 4
     reauth_entry: ConfigEntry | None = None
 
     def __init__(self) -> None:
@@ -95,9 +101,18 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         entry_config_dict = entry_data.get(CONF_DEVICE_CONFIG)
         if entry_config_dict == config and entry_data[CONF_HOST] == host:
             return None
+        updates = {**entry.data, CONF_DEVICE_CONFIG: config, CONF_HOST: host}
+        # If the connection parameters have changed the credentials_hash will be invalid.
+        if (
+            entry_config_dict
+            and isinstance(entry_config_dict, dict)
+            and entry_config_dict.get(CONF_CONNECTION_TYPE)
+            != config.get(CONF_CONNECTION_TYPE)
+        ):
+            updates.pop(CONF_CREDENTIALS_HASH, None)
         return self.async_update_reload_and_abort(
             entry,
-            data={**entry.data, CONF_DEVICE_CONFIG: config, CONF_HOST: host},
+            data=updates,
             reason="already_configured",
         )
 
@@ -345,18 +360,22 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_create_entry_from_device(self, device: Device) -> ConfigFlowResult:
         """Create a config entry from a smart device."""
+        # This is only ever called after a successful device update so we know that
+        # the credential_hash is correct and should be saved.
         self._abort_if_unique_id_configured(updates={CONF_HOST: device.host})
+        data = {
+            CONF_HOST: device.host,
+            CONF_ALIAS: device.alias,
+            CONF_MODEL: device.model,
+            CONF_DEVICE_CONFIG: device.config.to_dict(
+                exclude_credentials=True,
+            ),
+        }
+        if device.credentials_hash:
+            data[CONF_CREDENTIALS_HASH] = device.credentials_hash
         return self.async_create_entry(
             title=f"{device.alias} {device.model}",
-            data={
-                CONF_HOST: device.host,
-                CONF_ALIAS: device.alias,
-                CONF_MODEL: device.model,
-                CONF_DEVICE_CONFIG: device.config.to_dict(
-                    credentials_hash=device.credentials_hash,
-                    exclude_credentials=True,
-                ),
-            },
+            data=data,
         )
 
     async def _async_try_discover_and_update(
