@@ -383,7 +383,7 @@ aiowebostv==0.4.0
 aiowithings==3.0.1
 
 # homeassistant.components.yandex_transport
-aioymaps==1.2.2
+aioymaps==1.2.4
 
 # homeassistant.components.airgradient
 airgradient==0.6.0
