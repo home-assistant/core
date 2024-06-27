@@ -121,7 +121,6 @@ EXCEPTIONS = {
     "PyMicroBot",  # https://github.com/spycle/pyMicroBot/pull/3
     "PySwitchmate",  # https://github.com/Danielhiversen/pySwitchmate/pull/16
     "PyXiaomiGateway",  # https://github.com/Danielhiversen/PyXiaomiGateway/pull/201
-    "aioautomower",  # https://github.com/Thomas55555/aioautomower/issues/356
     "aiocomelit",  # https://github.com/chemelli74/aiocomelit/pull/138
     "aioecowitt",  # https://github.com/home-assistant-libs/aioecowitt/pull/180
     "aiohttp-fast-url-dispatcher",  # https://github.com/bdraco/aiohttp-fast-url-dispatcher/pull/10
@@ -182,7 +181,6 @@ EXCEPTIONS = {
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
     "tellduslive",  # https://github.com/molobrakos/tellduslive/pull/24
     "tellsticknet",  # https://github.com/molobrakos/tellsticknet/pull/33
-    "unifi-discovery",  # https://github.com/uilibs/unifi-discovery/pull/37
     "webrtc_noise_gain",  # https://github.com/rhasspy/webrtc-noise-gain/pull/24
     "xiaomi-ble",  # https://github.com/Bluetooth-Devices/xiaomi-ble/pull/81
     "zeversolar",  # https://github.com/kvanzuijlen/zeversolar/pull/46
@@ -228,9 +226,6 @@ TODO = {
     "refoss_ha": AwesomeVersion(
         "1.2.1"
     ),  # No License https://github.com/ashionky/refoss_ha/issues/4
-    "ttls": AwesomeVersion(
-        "1.5.1"
-    ),  # Proprietary license https://github.com/jschlyter/ttls/issues/39
     "uvcclient": AwesomeVersion(
         "0.11.0"
     ),  # No License https://github.com/kk7ds/uvcclient/issues/7
