@@ -421,11 +421,6 @@ class MpdDevice(MediaPlayerEntity):
         """Name of the current input source."""
         return self._current_playlist
 
-    @property
-    def source_list(self):
-        """Return the list of available input sources."""
-        return self._playlists
-
     async def async_select_source(self, source: str) -> None:
         """Choose a different available playlist and play it."""
         await self.async_play_media(MediaType.PLAYLIST, source)
