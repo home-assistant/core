@@ -250,9 +250,6 @@ def main() -> int:
             if approved_license in package.license:
                 approved = True
                 break
-        # print(f"Checking {package.name}@{package.version}: {package.license}")
-        # print(f"Approved: {approved}")
-        # print(f"Previous unapproved version: {previous_unapproved_version}")
         if previous_unapproved_version is not None:
             if previous_unapproved_version < package.version:
                 if approved:
@@ -260,26 +257,25 @@ def main() -> int:
                         f"Approved license detected for {package.name}@{package.version}: {package.license}"
                     )
                     print("Please remove the package from the TODO list.")
+                    print("")
                 else:
                     print(
-                        f"We could not detect an OSI-approved license for {package.name}@{package.version}: {package.license}",
+                        f"We could not detect an OSI-approved license for {package.name}@{package.version}: {package.license}"
                     )
+                    print("")
                 exit_code = 1
         elif not approved and package.name not in EXCEPTIONS:
             print(
-                f"We could not detect an OSI-approved license for {package.name}@{package.version}: {package.license}",
+                f"We could not detect an OSI-approved license for {package.name}@{package.version}: {package.license}"
             )
+            print("")
             exit_code = 1
         elif approved and package.name in EXCEPTIONS:
             print(
                 f"Approved license detected for {package.name}@{package.version}: {package.license}"
             )
             print(f"Please remove the package from the EXCEPTIONS list: {package.name}")
-            exit_code = 1
-        elif not approved:
-            print(
-                f"We could not detect an OSI-approved license for {package.name}@{package.version}: {package.license}",
-            )
+            print("")
             exit_code = 1
     return exit_code
 
