@@ -21,7 +21,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     PERCENTAGE,
@@ -33,8 +32,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import slugify
 
-from . import RoborockCoordinators
-from .const import DOMAIN
+from . import RoborockConfigEntry
 from .coordinator import RoborockDataUpdateCoordinator, RoborockDataUpdateCoordinatorA01
 from .device import RoborockCoordinatedEntityA01, RoborockCoordinatedEntityV1
 
@@ -255,11 +253,11 @@ A01_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RoborockConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Roborock vacuum sensors."""
-    coordinators: RoborockCoordinators = hass.data[DOMAIN][config_entry.entry_id]
+    coordinators = config_entry.runtime_data
     async_add_entities(
         RoborockSensorEntity(
             coordinator,

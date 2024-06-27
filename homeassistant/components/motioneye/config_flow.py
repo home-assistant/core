@@ -24,6 +24,7 @@ from homeassistant.const import CONF_SOURCE, CONF_URL, CONF_WEBHOOK_ID
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import VolDictType
 
 from . import create_motioneye_client
 from .const import (
@@ -55,7 +56,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input: dict[str, Any], errors: dict[str, str] | None = None
         ) -> ConfigFlowResult:
             """Show the form to the user."""
-            url_schema: dict[vol.Required, type[str]] = {}
+            url_schema: VolDictType = {}
             if not self._hassio_discovery:
                 # Only ask for URL when not discovered
                 url_schema[
