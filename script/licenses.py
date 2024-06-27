@@ -177,7 +177,6 @@ EXCEPTIONS = {
     "ruuvitag-ble",  # https://github.com/Bluetooth-Devices/ruuvitag-ble/pull/10
     "sense-energy",  # https://github.com/scottbonline/sense/pull/67
     "sensirion-ble",  # https://github.com/akx/sensirion-ble/pull/9
-    "sensor-state-data",  # https://github.com/Bluetooth-Devices/sensor-state-data/pull/61
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
     "tellduslive",  # https://github.com/molobrakos/tellduslive/pull/24
