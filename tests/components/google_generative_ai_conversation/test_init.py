@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from google.api_core.exceptions import ClientError, DeadlineExceeded
-from google.rpc.error_details_pb2 import ErrorInfo
+from google.rpc.error_details_pb2 import ErrorInfo  # pylint: disable=no-name-in-module
 import pytest
 from syrupy.assertion import SnapshotAssertion
 

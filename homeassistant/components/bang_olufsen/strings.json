@@ -24,5 +24,22 @@
         "description": "Confirm the configuration of the {model}-{serial_number} @ {host}."
       }
     }
+  },
+  "exceptions": {
+    "m3u_invalid_format": {
+      "message": "Media sources with the .m3u extension are not supported."
+    },
+    "non_deezer_seeking": {
+      "message": "Seeking is currently only supported when using Deezer"
+    },
+    "invalid_source": {
+      "message": "Invalid source: {invalid_source}. Valid sources are: {valid_sources}"
+    },
+    "invalid_media_type": {
+      "message": "{invalid_media_type} is an invalid type. Valid values are: {valid_media_types}."
+    },
+    "play_media_error": {
+      "message": "An error occurred while attempting to play {media_type}: {error_message}."
+    }
   }
 }

@@ -59,35 +59,151 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "humidity_warning": {
+        "name": "Humidity warning"
+      },
+      "temperature_warning": {
+        "name": "Temperature warning"
+      },
+      "overheated": {
+        "name": "Overheated"
+      },
+      "battery_low": {
+        "name": "Battery low"
+      },
+      "cloud_connection": {
+        "name": "Cloud connection"
+      },
+      "update_available": {
+        "name": "[%key:component::binary_sensor::entity_component::update::name%]",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::update::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::update::state::on%]"
+        }
+      },
+      "is_open": {
+        "name": "[%key:component::binary_sensor::entity_component::door::name%]",
+        "state": {
+          "off": "[%key:common::state::closed%]",
+          "on": "[%key:common::state::open%]"
+        }
+      },
+      "water_alert": {
+        "name": "[%key:component::binary_sensor::entity_component::moisture::name%]",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::moisture::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::moisture::state::on%]"
+        }
+      }
+    },
+    "button": {
+      "test_alarm": {
+        "name": "Test alarm"
+      },
+      "stop_alarm": {
+        "name": "Stop alarm"
+      }
+    },
+    "select": {
+      "light_preset": {
+        "name": "Light preset"
+      },
+      "alarm_sound": {
+        "name": "Alarm sound"
+      },
+      "alarm_volume": {
+        "name": "Alarm volume"
+      }
+    },
     "sensor": {
       "current_consumption": {
         "name": "Current consumption"
       },
-      "total_consumption": {
+      "consumption_total": {
         "name": "Total consumption"
       },
-      "today_consumption": {
+      "consumption_today": {
         "name": "Today's consumption"
       },
-      "current_consumption_child": {
-        "name": "{device_name} current consumption"
+      "consumption_this_month": {
+        "name": "This month's consumption"
       },
-      "total_consumption_child": {
-        "name": "{device_name} total consumption"
+      "on_since": {
+        "name": "On since"
       },
-      "today_consumption_child": {
-        "name": "{device_name} today's consumption"
+      "ssid": {
+        "name": "SSID"
       },
-      "current_child": {
-        "name": "{device_name} current"
+      "signal_level": {
+        "name": "Signal level"
       },
-      "voltage_child": {
-        "name": "{device_name} voltage"
+      "current_firmware_version": {
+        "name": "Current firmware version"
+      },
+      "available_firmware_version": {
+        "name": "Available firmware version"
+      },
+      "battery_level": {
+        "name": "Battery level"
+      },
+      "temperature": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      },
+      "voltage": {
+        "name": "[%key:component::sensor::entity_component::voltage::name%]"
+      },
+      "current": {
+        "name": "[%key:component::sensor::entity_component::current::name%]"
+      },
+      "humidity": {
+        "name": "[%key:component::sensor::entity_component::humidity::name%]"
+      },
+      "device_time": {
+        "name": "Device time"
+      },
+      "auto_off_at": {
+        "name": "Auto off at"
+      },
+      "report_interval": {
+        "name": "Report interval"
+      },
+      "alarm_source": {
+        "name": "Alarm source"
+      },
+      "rssi": {
+        "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
       }
     },
     "switch": {
       "led": {
         "name": "LED"
+      },
+      "auto_update_enabled": {
+        "name": "Auto update enabled"
+      },
+      "auto_off_enabled": {
+        "name": "Auto off enabled"
+      },
+      "smooth_transitions": {
+        "name": "Smooth transitions"
+      },
+      "fan_sleep_mode": {
+        "name": "Fan sleep mode"
+      }
+    },
+    "number": {
+      "smooth_transition_on": {
+        "name": "Smooth on"
+      },
+      "smooth_transition_off": {
+        "name": "Smooth off"
+      },
+      "auto_off_minutes": {
+        "name": "Turn off in"
+      },
+      "temperature_offset": {
+        "name": "Temperature offset"
       }
     }
   },

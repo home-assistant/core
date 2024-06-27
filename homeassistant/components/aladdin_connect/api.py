@@ -1,10 +1,11 @@
 """API for Aladdin Connect Genie bound to Home Assistant OAuth."""
 
+# mypy: ignore-errors
 from typing import cast
 
 from aiohttp import ClientSession
-from genie_partner_sdk.auth import Auth
 
+# from genie_partner_sdk.auth import Auth
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 
 API_URL = "https://twdvzuefzh.execute-api.us-east-2.amazonaws.com/v1"
