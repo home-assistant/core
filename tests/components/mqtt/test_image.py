@@ -499,7 +499,7 @@ async def test_image_from_url_fails(
         ),
     ],
 )
-@pytest.mark.usesfixtures("hass", "hass_client_no_auth")
+@pytest.mark.usefixtures("hass", "hass_client_no_auth")
 async def test_image_config_fails(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
