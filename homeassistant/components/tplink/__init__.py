@@ -43,6 +43,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_CREDENTIALS_HASH,
     CONF_DEVICE_CONFIG,
     CONNECT_TIMEOUT,
     DISCOVERY_TIMEOUT,
@@ -73,6 +74,7 @@ def async_trigger_discovery(
     discovered_devices: dict[str, Device],
 ) -> None:
     """Trigger config flows for discovered devices."""
+
     for formatted_mac, device in discovered_devices.items():
         discovery_flow.async_create_flow(
             hass,
@@ -83,7 +85,6 @@ def async_trigger_discovery(
                 CONF_HOST: device.host,
                 CONF_MAC: formatted_mac,
                 CONF_DEVICE_CONFIG: device.config.to_dict(
-                    credentials_hash=device.credentials_hash,
                     exclude_credentials=True,
                 ),
             },
@@ -133,6 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
     """Set up TPLink from a config entry."""
     host: str = entry.data[CONF_HOST]
     credentials = await get_credentials(hass)
+    entry_credentials_hash = entry.data.get(CONF_CREDENTIALS_HASH)
 
     config: DeviceConfig | None = None
     if config_dict := entry.data.get(CONF_DEVICE_CONFIG):
@@ -151,19 +153,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
     config.timeout = CONNECT_TIMEOUT
     if config.uses_http is True:
         config.http_client = create_async_tplink_clientsession(hass)
+
+    # If we have in memory credentials use them otherwise check for credentials_hash
     if credentials:
         config.credentials = credentials
+    elif entry_credentials_hash:
+        config.credentials_hash = entry_credentials_hash
+
     try:
         device: Device = await Device.connect(config=config)
     except AuthenticationError as ex:
+        # If the stored credentials_hash was used but doesn't work remove it
+        if not credentials and entry_credentials_hash:
+            data = {k: v for k, v in entry.data.items() if k != CONF_CREDENTIALS_HASH}
+            hass.config_entries.async_update_entry(entry, data=data)
         raise ConfigEntryAuthFailed from ex
     except KasaException as ex:
         raise ConfigEntryNotReady from ex
 
-    device_config_dict = device.config.to_dict(
-        credentials_hash=device.credentials_hash, exclude_credentials=True
-    )
+    device_credentials_hash = device.credentials_hash
+    device_config_dict = device.config.to_dict(exclude_credentials=True)
+    # Do not store the credentials hash inside the device_config
+    device_config_dict.pop(CONF_CREDENTIALS_HASH, None)
     updates: dict[str, Any] = {}
+    if device_credentials_hash and device_credentials_hash != entry_credentials_hash:
+        updates[CONF_CREDENTIALS_HASH] = device_credentials_hash
     if device_config_dict != config_dict:
         updates[CONF_DEVICE_CONFIG] = device_config_dict
     if entry.data.get(CONF_ALIAS) != device.alias:
@@ -326,7 +340,25 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
         minor_version = 3
         hass.config_entries.async_update_entry(config_entry, minor_version=3)
-
         _LOGGER.debug("Migration to version %s.%s successful", version, minor_version)
+
+    if version == 1 and minor_version == 3:
+        # credentials_hash stored in the device_config should be moved to data.
+        updates: dict[str, Any] = {}
+        if config_dict := config_entry.data.get(CONF_DEVICE_CONFIG):
+            assert isinstance(config_dict, dict)
+            if credentials_hash := config_dict.pop(CONF_CREDENTIALS_HASH, None):
+                updates[CONF_CREDENTIALS_HASH] = credentials_hash
+                updates[CONF_DEVICE_CONFIG] = config_dict
+        minor_version = 4
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data={
+                **config_entry.data,
+                **updates,
+            },
+            minor_version=minor_version,
+        )
+        _LOGGER.debug("Migration to version %s.%s complete", version, minor_version)
 
     return True
