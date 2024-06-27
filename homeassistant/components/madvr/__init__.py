@@ -29,6 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MadVRConfigEntry) -> boo
         port=entry.data[CONF_PORT],
         mac=entry.data[CONF_MAC],
         connect_timeout=10,
+        loop=hass.loop,
     )
     coordinator = MadVRCoordinator(
         hass,
