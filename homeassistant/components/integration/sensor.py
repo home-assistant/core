@@ -46,7 +46,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_call_later,
     async_track_state_change_event,
-    async_track_state_reported_event,
+    async_track_state_report_event,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -449,7 +449,7 @@ class IntegrationSensor(RestoreSensor):
             )
         )
         self.async_on_remove(
-            async_track_state_reported_event(
+            async_track_state_report_event(
                 self.hass,
                 self._sensor_source_id,
                 handle_state_report,
