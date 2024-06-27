@@ -37,14 +37,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent as intent_helper
 import homeassistant.helpers.device_registry as dr
 
-from .conftest import MockESPHomeDevice
+from .conftest import _ONE_SECOND, MockESPHomeDevice
 
 _TEST_INPUT_TEXT = "This is an input test"
 _TEST_OUTPUT_TEXT = "This is an output test"
 _TEST_OUTPUT_URL = "output.mp3"
 _TEST_MEDIA_ID = "12345"
-
-_ONE_SECOND = 16000 * 2  # 16Khz 16-bit
 
 
 @pytest.fixture
