@@ -25,6 +25,7 @@ from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     _LOGGER,
@@ -53,7 +54,7 @@ LIFX_STATE_SETTLE_DELAY = 0.3
 
 SERVICE_LIFX_SET_STATE = "set_state"
 
-LIFX_SET_STATE_SCHEMA = {
+LIFX_SET_STATE_SCHEMA: VolDictType = {
     **LIGHT_TURN_ON_SCHEMA,
     ATTR_INFRARED: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
     ATTR_ZONES: vol.All(cv.ensure_list, [cv.positive_int]),
@@ -63,7 +64,7 @@ LIFX_SET_STATE_SCHEMA = {
 
 SERVICE_LIFX_SET_HEV_CYCLE_STATE = "set_hev_cycle_state"
 
-LIFX_SET_HEV_CYCLE_STATE_SCHEMA = {
+LIFX_SET_HEV_CYCLE_STATE_SCHEMA: VolDictType = {
     ATTR_POWER: vol.Required(cv.boolean),
     ATTR_DURATION: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=86400)),
 }

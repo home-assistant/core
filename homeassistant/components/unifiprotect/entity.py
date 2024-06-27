@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
+from datetime import datetime
 from functools import partial
 import logging
 from operator import attrgetter
@@ -261,9 +262,7 @@ class BaseProtectEntity(Entity):
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            self.data.async_subscribe_device_id(
-                self.device.mac, self._async_updated_event
-            )
+            self.data.async_subscribe(self.device.mac, self._async_updated_event)
         )
 
 
@@ -305,15 +304,45 @@ class EventEntityMixin(ProtectDeviceEntity):
     entity_description: ProtectEventMixin
     _unrecorded_attributes = frozenset({ATTR_EVENT_ID, ATTR_EVENT_SCORE})
     _event: Event | None = None
+    _event_end: datetime | None = None
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        if (event := self.entity_description.get_event_obj(device)) is None:
-            self._attr_extra_state_attributes = {}
-        else:
-            self._attr_extra_state_attributes = {
-                ATTR_EVENT_ID: event.id,
-                ATTR_EVENT_SCORE: event.score,
-            }
-        self._event = event
-        super()._async_update_device_from_protect(device)
+    def _set_event_done(self) -> None:
+        """Clear the event and state."""
+
+    @callback
+    def _set_event_attrs(self, event: Event) -> None:
+        """Set event attrs."""
+        self._attr_extra_state_attributes = {
+            ATTR_EVENT_ID: event.id,
+            ATTR_EVENT_SCORE: event.score,
+        }
+
+    @callback
+    def _async_event_with_immediate_end(self) -> None:
+        # If the event is so short that the detection is received
+        # in the same message as the end of the event we need to write
+        # state and than clear the event and write state again.
+        self.async_write_ha_state()
+        self._set_event_done()
+        self.async_write_ha_state()
+
+    @callback
+    def _event_already_ended(
+        self, prev_event: Event | None, prev_event_end: datetime | None
+    ) -> bool:
+        """Determine if the event has already ended.
+
+        The event_end time is passed because the prev_event and event object
+        may be the same object, and the uiprotect code will mutate the
+        event object so we need to check the datetime object that was
+        saved from the last time the entity was updated.
+        """
+        event = self._event
+        return bool(
+            event
+            and event.end
+            and prev_event
+            and prev_event_end
+            and prev_event.id == event.id
+        )

@@ -11,8 +11,14 @@
       },
       "program": {
         "climates": [
-          { "name": "Climate1", "climateRef": "c1" },
-          { "name": "Climate2", "climateRef": "c2" }
+          {
+            "name": "Climate1",
+            "climateRef": "c1"
+          },
+          {
+            "name": "Climate2",
+            "climateRef": "c2"
+          }
         ],
         "currentClimateRef": "c1"
       },
@@ -39,6 +45,7 @@
         "isVentilatorTimerOn": false,
         "hasHumidifier": true,
         "humidifierMode": "manual",
+        "hasHeatPump": false,
         "humidity": "30"
       },
       "equipmentStatus": "fan",
@@ -82,8 +89,14 @@
       "modelNumber": "athenaSmart",
       "program": {
         "climates": [
-          { "name": "Climate1", "climateRef": "c1" },
-          { "name": "Climate2", "climateRef": "c2" }
+          {
+            "name": "Climate1",
+            "climateRef": "c1"
+          },
+          {
+            "name": "Climate2",
+            "climateRef": "c2"
+          }
         ],
         "currentClimateRef": "c1"
       },
@@ -109,6 +122,7 @@
         "isVentilatorTimerOn": false,
         "hasHumidifier": true,
         "humidifierMode": "manual",
+        "hasHeatPump": true,
         "humidity": "30"
       },
       "equipmentStatus": "fan",
@@ -184,6 +198,7 @@
         "isVentilatorTimerOn": false,
         "hasHumidifier": true,
         "humidifierMode": "manual",
+        "hasHeatPump": false,
         "humidity": "30"
       },
       "equipmentStatus": "fan",

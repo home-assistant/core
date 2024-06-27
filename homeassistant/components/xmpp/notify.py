@@ -24,7 +24,7 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import (
@@ -56,7 +56,7 @@ DEFAULT_CONTENT_TYPE = "application/octet-stream"
 DEFAULT_RESOURCE = "home-assistant"
 XEP_0363_TIMEOUT = 10
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SENDER): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,

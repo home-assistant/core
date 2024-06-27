@@ -11,7 +11,12 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant.components import webhook
-from homeassistant.components.camera import DOMAIN, PLATFORM_SCHEMA, STATE_IDLE, Camera
+from homeassistant.components.camera import (
+    DOMAIN,
+    PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
+    STATE_IDLE,
+    Camera,
+)
 from homeassistant.const import CONF_NAME, CONF_TIMEOUT, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -32,7 +37,7 @@ ATTR_LAST_TRIP = "last_trip"
 
 PUSH_CAMERA_DATA = "push_camera"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_BUFFER_SIZE, default=1): cv.positive_int,
