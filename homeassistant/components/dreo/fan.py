@@ -38,6 +38,7 @@ async def async_setup_entry(
 class DreoFanHA(DreoEntity, FanEntity):
     """Dreo fan."""
 
+    _attr_has_entity_name = True
     _attr_supported_features = (FanEntityFeature.PRESET_MODE
                                 | FanEntityFeature.SET_SPEED
                                 | FanEntityFeature.OSCILLATE)
