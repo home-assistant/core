@@ -151,7 +151,7 @@ class FritzDeviceSwitchMock(FritzEntityBaseMock):
     has_thermostat = False
     has_blind = False
     switch_state = "fake_state"
-    lock = "fake_locked"
+    lock = False
     power = 5678
     present = True
     temperature = 1.23

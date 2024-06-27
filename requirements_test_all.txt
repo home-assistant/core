@@ -128,7 +128,7 @@ adb-shell[async]==0.4.4
 adext==0.4.3
 
 # homeassistant.components.adguard
-adguardhome==0.6.3
+adguardhome==0.7.0
 
 # homeassistant.components.advantage_air
 advantage-air==0.4.4
@@ -413,7 +413,7 @@ androidtv[async]==0.0.73
 androidtvremote2==0.1.1
 
 # homeassistant.components.anova
-anova-wifi==0.12.0
+anova-wifi==0.14.0
 
 # homeassistant.components.anthemav
 anthemav==1.4.1
@@ -898,7 +898,7 @@ hole==0.8.0
 holidays==0.51
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240626.0
+home-assistant-frontend==20240626.2
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.6.26
@@ -2172,7 +2172,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==3.7.0
+uiprotect==4.0.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7

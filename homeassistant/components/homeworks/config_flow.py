@@ -29,6 +29,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaOptionsFlowHandler,
 )
 from homeassistant.helpers.selector import TextSelector
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.util import slugify
 
 from . import DEFAULT_FADE_RATE, calculate_unique_id
@@ -62,7 +63,7 @@ CONTROLLER_EDIT = {
     ),
 }
 
-LIGHT_EDIT = {
+LIGHT_EDIT: VolDictType = {
     vol.Optional(CONF_RATE, default=DEFAULT_FADE_RATE): selector.NumberSelector(
         selector.NumberSelectorConfig(
             min=0,
@@ -73,7 +74,7 @@ LIGHT_EDIT = {
     ),
 }
 
-BUTTON_EDIT = {
+BUTTON_EDIT: VolDictType = {
     vol.Optional(CONF_LED, default=False): selector.BooleanSelector(),
     vol.Optional(CONF_RELEASE_DELAY, default=0): selector.NumberSelector(
         selector.NumberSelectorConfig(

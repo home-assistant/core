@@ -28,6 +28,8 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
 
+type RoborockConfigEntry = ConfigEntry[RoborockCoordinators]
+
 
 @dataclass
 class RoborockCoordinators:
@@ -43,7 +45,7 @@ class RoborockCoordinators:
         return self.v1 + self.a01
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:
     """Set up roborock from a config entry."""
 
     _LOGGER.debug("Integration async setup entry: %s", entry.as_dict())
@@ -99,7 +101,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             translation_key="no_coordinators",
         )
     valid_coordinators = RoborockCoordinators(v1_coords, a01_coords)
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = valid_coordinators
+
+    async def on_unload() -> None:
+        release_tasks = set()
+        for coordinator in valid_coordinators.values():
+            release_tasks.add(coordinator.release())
+        await asyncio.gather(*release_tasks)
+
+    entry.async_on_unload(on_unload)
+    entry.runtime_data = valid_coordinators
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -231,18 +242,12 @@ async def setup_device_a01(
     return coord
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:
     """Handle removal of an entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        release_tasks = set()
-        for coordinator in hass.data[DOMAIN][entry.entry_id].values():
-            release_tasks.add(coordinator.release())
-        hass.data[DOMAIN].pop(entry.entry_id)
-        await asyncio.gather(*release_tasks)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def update_listener(hass: HomeAssistant, entry: RoborockConfigEntry) -> None:
     """Handle options update."""
     # Reload entry to update data
     await hass.config_entries.async_reload(entry.entry_id)

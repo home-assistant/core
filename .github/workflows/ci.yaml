@@ -522,6 +522,12 @@ jobs:
       - info
       - base
     steps:
+      - name: Install additional OS dependencies
+        run: |
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
+          sudo apt-get update
+          sudo apt-get -y install \
+            libturbojpeg
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
