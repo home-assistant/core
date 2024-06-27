@@ -10,6 +10,7 @@ import pytest
 from typing_extensions import Generator
 
 from homeassistant.components.freedompro.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from .const import DEVICES, DEVICES_STATE
 
@@ -45,7 +46,7 @@ def mock_freedompro():
 
 
 @pytest.fixture
-async def init_integration(hass) -> MockConfigEntry:
+async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the Freedompro integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -64,7 +65,7 @@ async def init_integration(hass) -> MockConfigEntry:
 
 
 @pytest.fixture
-async def init_integration_no_state(hass) -> MockConfigEntry:
+async def init_integration_no_state(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the Freedompro integration in Home Assistant without state."""
     entry = MockConfigEntry(
         domain=DOMAIN,

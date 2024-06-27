@@ -16,7 +16,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfConductivity,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -105,7 +110,8 @@ SENSORS: Final[list[FytaSensorEntityDescription]] = [
     FytaSensorEntityDescription(
         key="salinity",
         translation_key="salinity",
-        native_unit_of_measurement="mS/cm",
+        native_unit_of_measurement=UnitOfConductivity.MILLISIEMENS,
+        device_class=SensorDeviceClass.CONDUCTIVITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     FytaSensorEntityDescription(

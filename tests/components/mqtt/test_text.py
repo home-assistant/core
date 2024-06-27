@@ -529,17 +529,11 @@ async def test_update_with_json_attrs_bad_json(
 
 
 async def test_discovery_update_attr(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        text.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, text.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -574,9 +568,7 @@ async def test_unique_id(
 
 
 async def test_discovery_removal_text(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered text entity."""
     data = (
@@ -584,13 +576,11 @@ async def test_discovery_removal_text(
         '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
-    await help_test_discovery_removal(hass, mqtt_mock_entry, caplog, text.DOMAIN, data)
+    await help_test_discovery_removal(hass, mqtt_mock_entry, text.DOMAIN, data)
 
 
 async def test_discovery_text_update(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered text entity."""
     config1 = {
@@ -605,14 +595,12 @@ async def test_discovery_text_update(
     }
 
     await help_test_discovery_update(
-        hass, mqtt_mock_entry, caplog, text.DOMAIN, config1, config2
+        hass, mqtt_mock_entry, text.DOMAIN, config1, config2
     )
 
 
 async def test_discovery_update_unchanged_update(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered update."""
     data1 = '{ "name": "Beer", "state_topic": "text-topic", "command_topic": "command-topic"}'
@@ -620,32 +608,23 @@ async def test_discovery_update_unchanged_update(
         "homeassistant.components.mqtt.text.MqttTextEntity.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass,
-            mqtt_mock_entry,
-            caplog,
-            text.DOMAIN,
-            data1,
-            discovery_update,
+            hass, mqtt_mock_entry, text.DOMAIN, data1, discovery_update
         )
 
 
 async def test_discovery_update_text(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered text entity."""
     config1 = {"name": "Beer", "command_topic": "cmd-topic1"}
     config2 = {"name": "Milk", "command_topic": "cmd-topic2"}
     await help_test_discovery_update(
-        hass, mqtt_mock_entry, caplog, text.DOMAIN, config1, config2
+        hass, mqtt_mock_entry, text.DOMAIN, config1, config2
     )
 
 
 async def test_discovery_update_unchanged_climate(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered text entity."""
     data1 = '{ "name": "Beer", "command_topic": "cmd-topic" }'
@@ -653,20 +632,13 @@ async def test_discovery_update_unchanged_climate(
         "homeassistant.components.mqtt.text.MqttTextEntity.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass,
-            mqtt_mock_entry,
-            caplog,
-            text.DOMAIN,
-            data1,
-            discovery_update,
+            hass, mqtt_mock_entry, text.DOMAIN, data1, discovery_update
         )
 
 
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
@@ -675,9 +647,7 @@ async def test_discovery_broken(
         '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
-    await help_test_discovery_broken(
-        hass, mqtt_mock_entry, caplog, text.DOMAIN, data1, data2
-    )
+    await help_test_discovery_broken(hass, mqtt_mock_entry, text.DOMAIN, data1, data2)
 
 
 async def test_entity_device_info_with_connection(

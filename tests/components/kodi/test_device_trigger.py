@@ -61,7 +61,7 @@ async def test_get_triggers(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
-        for trigger in ["turn_off", "turn_on"]
+        for trigger in ("turn_off", "turn_on")
     ]
 
     # Test triggers are either kodi specific triggers or media_player entity triggers

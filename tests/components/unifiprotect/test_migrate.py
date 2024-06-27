@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from pyunifiprotect.data import Camera
+from uiprotect.data import Camera
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.repairs.issue_handler import (

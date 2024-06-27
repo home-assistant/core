@@ -59,7 +59,7 @@ async def test_get_triggers(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
-        for trigger in ["turned_off", "turned_on", "changed_states"]
+        for trigger in ("turned_off", "turned_on", "changed_states")
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
@@ -107,7 +107,7 @@ async def test_get_triggers_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for trigger in ["turned_off", "turned_on", "changed_states"]
+        for trigger in ("turned_off", "turned_on", "changed_states")
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id

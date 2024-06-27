@@ -93,13 +93,13 @@ class FakeSubscriber(GoogleNestSubscriber):
 
     stop_calls = 0
 
-    def __init__(self):
+    def __init__(self):  # pylint: disable=super-init-not-called
         """Initialize Fake Subscriber."""
         self._device_manager = DeviceManager()
 
-    def set_update_callback(self, callback: Callable[[EventMessage], Awaitable[None]]):
+    def set_update_callback(self, target: Callable[[EventMessage], Awaitable[None]]):
         """Capture the callback set by Home Assistant."""
-        self._device_manager.set_update_callback(callback)
+        self._device_manager.set_update_callback(target)
 
     async def create_subscription(self):
         """Create the subscription."""

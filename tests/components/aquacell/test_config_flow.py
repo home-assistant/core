@@ -11,8 +11,9 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import TEST_CONFIG_ENTRY, TEST_USER_INPUT
+
 from tests.common import MockConfigEntry
-from tests.components.aquacell import TEST_CONFIG_ENTRY, TEST_USER_INPUT
 
 
 async def test_config_flow_already_configured(hass: HomeAssistant) -> None:

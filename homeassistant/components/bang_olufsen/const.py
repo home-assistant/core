@@ -54,6 +54,7 @@ class BangOlufsenMediaType(StrEnum):
     FAVOURITE = "favourite"
     DEEZER = "deezer"
     RADIO = "radio"
+    TIDAL = "tidal"
     TTS = "provider"
     OVERLAY_TTS = "overlay_tts"
 
@@ -118,6 +119,7 @@ VALID_MEDIA_TYPES: Final[tuple] = (
     BangOlufsenMediaType.DEEZER,
     BangOlufsenMediaType.RADIO,
     BangOlufsenMediaType.TTS,
+    BangOlufsenMediaType.TIDAL,
     BangOlufsenMediaType.OVERLAY_TTS,
     MediaType.MUSIC,
     MediaType.URL,

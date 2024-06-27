@@ -266,13 +266,11 @@ async def test_if_fires_on_event_legacy(
     ("platform", "camera_type", "event_type", "sub_type"),
     [
         ("climate", "Smart Valve", trigger, subtype)
-        for trigger in SUBTYPES
-        for subtype in SUBTYPES[trigger]
+        for trigger, subtype in SUBTYPES.items()
     ]
     + [
         ("climate", "Smart Thermostat", trigger, subtype)
-        for trigger in SUBTYPES
-        for subtype in SUBTYPES[trigger]
+        for trigger, subtype in SUBTYPES.items()
     ],
 )
 async def test_if_fires_on_event_with_subtype(

@@ -103,7 +103,6 @@ async def setup_lock_platform_test_entity(
         )
         return True
 
-    MockPlatform(hass, f"{TEST_DOMAIN}.config_flow")
     mock_integration(
         hass,
         MockModule(

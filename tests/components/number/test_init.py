@@ -43,6 +43,8 @@ from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
+from . import common
+
 from tests.common import (
     MockConfigEntry,
     MockModule,
@@ -54,7 +56,6 @@ from tests.common import (
     mock_restore_cache_with_extra_data,
     setup_test_component_platform,
 )
-from tests.components.number import common
 
 TEST_DOMAIN = "test"
 
@@ -845,13 +846,10 @@ def test_device_classes_aligned() -> None:
         assert hasattr(NumberDeviceClass, device_class.name)
         assert getattr(NumberDeviceClass, device_class.name).value == device_class.value
 
-    for device_class in SENSOR_DEVICE_CLASS_UNITS:
+    for device_class, unit in SENSOR_DEVICE_CLASS_UNITS.items():
         if device_class in NON_NUMERIC_DEVICE_CLASSES:
             continue
-        assert (
-            SENSOR_DEVICE_CLASS_UNITS[device_class]
-            == NUMBER_DEVICE_CLASS_UNITS[device_class]
-        )
+        assert unit == NUMBER_DEVICE_CLASS_UNITS[device_class]
 
 
 class MockFlow(ConfigFlow):

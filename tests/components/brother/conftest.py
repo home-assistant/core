@@ -87,7 +87,16 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_brother_client() -> Generator[AsyncMock]:
+def mock_unload_entry() -> Generator[AsyncMock, None, None]:
+    """Override async_unload_entry."""
+    with patch(
+        "homeassistant.components.brother.async_unload_entry", return_value=True
+    ) as mock_unload_entry:
+        yield mock_unload_entry
+
+
+@pytest.fixture
+def mock_brother_client() -> Generator[AsyncMock, None, None]:
     """Mock Brother client."""
     with (
         patch("homeassistant.components.brother.Brother", autospec=True) as mock_client,

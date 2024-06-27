@@ -77,6 +77,18 @@
       },
       "profile": {
         "name": "Profile local"
+      },
+      "temperature_top": {
+        "name": "Temperature top"
+      },
+      "temperature_mid": {
+        "name": "Temperature middle"
+      },
+      "temperature_low": {
+        "name": "Temperature bottom"
+      },
+      "temperature_one": {
+        "name": "Temperature one"
       }
     }
   }

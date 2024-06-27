@@ -55,6 +55,11 @@ async def apply_stop_hass(stop_hass: None) -> None:
     """Make sure all hass are stopped."""
 
 
+@pytest.fixture(autouse=True)
+def disable_block_async_io(disable_block_async_io):
+    """Disable the loop protection from block_async_io after each test."""
+
+
 @pytest.fixture(scope="module", autouse=True)
 def mock_http_start_stop() -> Generator[None]:
     """Mock HTTP start and stop."""
@@ -134,8 +139,8 @@ async def test_config_does_not_turn_off_debug(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("hass_config", [{"frontend": {}}])
+@pytest.mark.usefixtures("mock_hass_config")
 async def test_asyncio_debug_on_turns_hass_debug_on(
-    mock_hass_config: None,
     mock_enable_logging: Mock,
     mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
@@ -627,8 +632,8 @@ def mock_ensure_config_exists() -> Generator[AsyncMock]:
 
 
 @pytest.mark.parametrize("hass_config", [{"browser": {}, "frontend": {}}])
+@pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass(
-    mock_hass_config: None,
     mock_enable_logging: Mock,
     mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
@@ -680,8 +685,8 @@ async def test_setup_hass(
 
 
 @pytest.mark.parametrize("hass_config", [{"browser": {}, "frontend": {}}])
+@pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass_takes_longer_than_log_slow_startup(
-    mock_hass_config: None,
     mock_enable_logging: Mock,
     mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
@@ -810,8 +815,8 @@ async def test_setup_hass_recovery_mode(
     assert len(browser_setup.mock_calls) == 0
 
 
+@pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass_safe_mode(
-    mock_hass_config: None,
     mock_enable_logging: Mock,
     mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
@@ -845,8 +850,8 @@ async def test_setup_hass_safe_mode(
     assert "Starting in safe mode" in caplog.text
 
 
+@pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass_recovery_mode_and_safe_mode(
-    mock_hass_config: None,
     mock_enable_logging: Mock,
     mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
@@ -881,8 +886,8 @@ async def test_setup_hass_recovery_mode_and_safe_mode(
 
 
 @pytest.mark.parametrize("hass_config", [{"homeassistant": {"non-existing": 1}}])
+@pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass_invalid_core_config(
-    mock_hass_config: None,
     mock_enable_logging: Mock,
     mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
@@ -920,8 +925,8 @@ async def test_setup_hass_invalid_core_config(
         }
     ],
 )
+@pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_recovery_mode_if_no_frontend(
-    mock_hass_config: None,
     mock_enable_logging: Mock,
     mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
@@ -1367,10 +1372,9 @@ async def test_bootstrap_does_not_preload_stage_1_integrations() -> None:
 
 
 @pytest.mark.parametrize("load_registries", [False])
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_cancellation_does_not_leak_upward_from_async_setup(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test setting up an integration that raises asyncio.CancelledError."""
     await bootstrap.async_setup_multi_components(
@@ -1385,10 +1389,9 @@ async def test_cancellation_does_not_leak_upward_from_async_setup(
 
 
 @pytest.mark.parametrize("load_registries", [False])
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_cancellation_does_not_leak_upward_from_async_setup_entry(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test setting up an integration that raises asyncio.CancelledError."""
     entry = MockConfigEntry(
@@ -1486,7 +1489,7 @@ async def test_setup_does_base_platforms_first(hass: HomeAssistant) -> None:
     assert order[3:] == ["root", "first_dep", "second_dep"]
 
 
-def test_should_rollover_is_always_false():
+def test_should_rollover_is_always_false() -> None:
     """Test that shouldRollover always returns False."""
     assert (
         bootstrap._RotatingFileHandlerWithoutShouldRollOver(

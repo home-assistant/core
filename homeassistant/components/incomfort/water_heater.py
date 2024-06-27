@@ -39,6 +39,7 @@ class IncomfortWaterHeater(IncomfortBoilerEntity, WaterHeaterEntity):
     _attr_max_temp = 80.0
     _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = "boiler"
 
     def __init__(
         self, coordinator: InComfortDataCoordinator, heater: InComfortHeater
@@ -46,11 +47,6 @@ class IncomfortWaterHeater(IncomfortBoilerEntity, WaterHeaterEntity):
         """Initialize the water_heater device."""
         super().__init__(coordinator, heater)
         self._attr_unique_id = heater.serial_no
-
-    @property
-    def icon(self) -> str:
-        """Return the icon of the water_heater device."""
-        return "mdi:thermometer-lines"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -67,9 +63,6 @@ class IncomfortWaterHeater(IncomfortBoilerEntity, WaterHeaterEntity):
         return max(self._heater.heater_temp, self._heater.tap_temp)
 
     @property
-    def current_operation(self) -> str:
+    def current_operation(self) -> str | None:
         """Return the current operation mode."""
-        if self._heater.is_failed:
-            return f"Fault code: {self._heater.fault_code}"
-
         return self._heater.display_text

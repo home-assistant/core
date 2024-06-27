@@ -111,10 +111,10 @@ def config_entry_options_fixture() -> MappingProxyType[str, Any]:
 
 @pytest.fixture(name="mock_vapix_requests")
 def default_request_fixture(
-    respx_mock: respx,
+    respx_mock: respx.MockRouter,
     port_management_payload: dict[str, Any],
-    param_properties_payload: dict[str, Any],
-    param_ports_payload: dict[str, Any],
+    param_properties_payload: str,
+    param_ports_payload: str,
     mqtt_status_code: int,
 ) -> Callable[[str], None]:
     """Mock default Vapix requests responses."""
@@ -230,19 +230,19 @@ def io_port_management_data_fixture() -> dict[str, Any]:
 
 
 @pytest.fixture(name="param_properties_payload")
-def param_properties_data_fixture() -> dict[str, Any]:
+def param_properties_data_fixture() -> str:
     """Property parameter data."""
     return PROPERTIES_RESPONSE
 
 
 @pytest.fixture(name="param_ports_payload")
-def param_ports_data_fixture() -> dict[str, Any]:
+def param_ports_data_fixture() -> str:
     """Property parameter data."""
     return PORTS_RESPONSE
 
 
 @pytest.fixture(name="mqtt_status_code")
-def mqtt_status_code_fixture():
+def mqtt_status_code_fixture() -> int:
     """Property parameter data."""
     return 200
 

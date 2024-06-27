@@ -155,7 +155,6 @@ async def test_siren_errors_when_turned_on(
             {"entity_id": "siren.downstairs_siren", "tone": "motion"},
             blocking=True,
         )
-        await hass.async_block_till_done()
     downstairs_chime_mock.test_sound.assert_called_once_with(kind="motion")
     assert (
         any(

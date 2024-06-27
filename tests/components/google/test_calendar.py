@@ -485,7 +485,7 @@ async def test_http_api_event(
     assert response.status == HTTPStatus.OK
     events = await response.json()
     assert len(events) == 1
-    assert {k: events[0].get(k) for k in ["summary", "start", "end"]} == {
+    assert {k: events[0].get(k) for k in ("summary", "start", "end")} == {
         "summary": TEST_EVENT["summary"],
         "start": {"dateTime": "2022-03-27T15:05:00+03:00"},
         "end": {"dateTime": "2022-03-27T15:10:00+03:00"},
@@ -513,7 +513,7 @@ async def test_http_api_all_day_event(
     assert response.status == HTTPStatus.OK
     events = await response.json()
     assert len(events) == 1
-    assert {k: events[0].get(k) for k in ["summary", "start", "end"]} == {
+    assert {k: events[0].get(k) for k in ("summary", "start", "end")} == {
         "summary": TEST_EVENT["summary"],
         "start": {"date": "2022-03-27"},
         "end": {"date": "2022-03-28"},

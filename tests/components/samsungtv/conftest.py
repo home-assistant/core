@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from datetime import datetime
-from socket import AddressFamily
+from socket import AddressFamily  # pylint: disable=no-name-in-module
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 

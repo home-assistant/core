@@ -31,6 +31,7 @@ COMMAND_ERRORS = (COMMAND_REASON, COMMAND_NOREASON, COMMAND_ERROR, COMMAND_NOERR
 RESPONSE_OK = {"response": {}, "error": None}
 
 METADATA = {
+    "uid": "abc-123",
     "region": "NA",
     "scopes": [
         "openid",
@@ -44,6 +45,7 @@ METADATA = {
     ],
 }
 METADATA_NOSCOPE = {
+    "uid": "abc-123",
     "region": "NA",
     "scopes": ["openid", "offline_access", "vehicle_device_data"],
 }

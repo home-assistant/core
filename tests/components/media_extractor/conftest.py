@@ -10,9 +10,10 @@ from homeassistant.components.media_extractor import DOMAIN
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
+from . import MockYoutubeDL
+from .const import AUDIO_QUERY
+
 from tests.common import async_mock_service
-from tests.components.media_extractor import MockYoutubeDL
-from tests.components.media_extractor.const import AUDIO_QUERY
 
 
 @pytest.fixture(autouse=True)

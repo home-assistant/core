@@ -335,7 +335,7 @@ async def test_default_entity_and_device_name(
 
     # Assert that no issues ware registered
     assert len(events) == 0
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     # Assert that no issues ware registered
     assert len(events) == 0
 
