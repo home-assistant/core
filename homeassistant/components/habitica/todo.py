@@ -17,7 +17,7 @@ from homeassistant.components.todo import (
 )
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -98,7 +98,7 @@ class BaseHabiticaListEntity(
             try:
                 await self.coordinator.api.tasks[taskId].delete()
             except ClientResponseError as e:
-                raise HomeAssistantError(
+                raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key=f"delete_{self.idx}_failed",
                 ) from e
@@ -126,7 +126,7 @@ class BaseHabiticaListEntity(
             await self.coordinator.api.tasks[uid].move.to[str(pos)].post()
 
         except ClientResponseError as e:
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key=f"move_{self.idx}_item_failed",
                 translation_placeholders={"pos": str(pos)},
@@ -156,7 +156,7 @@ class BaseHabiticaListEntity(
                 date=date,
             )
         except ClientResponseError as e:
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key=f"update_{self.idx}_item_failed",
                 translation_placeholders={"name": item.summary or ""},
@@ -182,7 +182,7 @@ class BaseHabiticaListEntity(
                 score_result = None
 
         except ClientResponseError as e:
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key=f"score_{self.idx}_item_failed",
                 translation_placeholders={"name": item.summary or ""},
@@ -253,7 +253,7 @@ class HabiticaTodosListEntity(BaseHabiticaListEntity):
                 date=item.due.isoformat() if item.due else None,
             )
         except ClientResponseError as e:
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key=f"create_{self.idx}_item_failed",
                 translation_placeholders={"name": item.summary or ""},
