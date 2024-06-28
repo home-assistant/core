@@ -132,7 +132,6 @@ EXCEPTIONS = {
     "aiowebostv",  # https://github.com/home-assistant-libs/aiowebostv/pull/327
     "aioymaps",  # https://github.com/devbis/aioymaps/pull/3
     "airthings-ble",  # https://github.com/Airthings/airthings-ble/pull/42
-    "airtouch5py",  # https://github.com/danzel/airtouch5py/pull/3
     "amberelectric",  # https://github.com/madpilot/amberelectric.py/pull/11
     "apple_weatherkit",  # https://github.com/tjhorner/python-weatherkit/pull/3
     "asyncio",  # Python core
@@ -198,7 +197,6 @@ TODO = {
     "asterisk_mbox": AwesomeVersion(
         "0.5.0"
     ),  # No license, integration is deprecated and scheduled for removal in 2024.9.0
-    "asyncarve": AwesomeVersion("0.0.9"),  # No public repository
     "chacha20poly1305-reuseable": AwesomeVersion("0.12.1"),  # has 2 licenses
     "concord232": AwesomeVersion(
         "0.15"
@@ -209,7 +207,6 @@ TODO = {
     "mficlient": AwesomeVersion(
         "0.3.0"
     ),  # No license https://github.com/kk7ds/mficlient/issues/4
-    "panasonic_viera": AwesomeVersion("0.3.6"),  # Has update available
     "pizzapi": AwesomeVersion("0.0.3"),  # Has update available
     "pubnub": AwesomeVersion(
         "8.0.0"
@@ -268,14 +265,7 @@ def main() -> int:
             print("")
             exit_code = 1
     current_packages = {package.name for package in package_definitions}
-    for package in TODO:
-        if package not in current_packages:
-            print(
-                f"Package {package} is tracked, but not used. Please remove from the licenses.py file."
-            )
-            print("")
-            exit_code = 1
-    for package in EXCEPTIONS:
+    for package in [*TODO.keys(), *EXCEPTIONS]:
         if package not in current_packages:
             print(
                 f"Package {package} is tracked, but not used. Please remove from the licenses.py file."
