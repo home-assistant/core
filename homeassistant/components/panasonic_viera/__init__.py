@@ -196,10 +196,10 @@ class Remote:
         self.muted = self._control.get_mute()
         self.volume = self._control.get_volume() / 100
 
-    async def async_send_key(self, key):
+    async def async_send_key(self, key: Keys | str) -> None:
         """Send a key to the TV and handle exceptions."""
         try:
-            key = getattr(Keys, key)
+            key = getattr(Keys, key.upper())
         except (AttributeError, TypeError):
             key = getattr(key, "value", key)
 
