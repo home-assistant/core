@@ -185,7 +185,6 @@ class JsonValidator:
     "hass_config", [{mqtt.DOMAIN: {light.DOMAIN: {"schema": "json", "name": "test"}}}]
 )
 async def test_fail_setup_if_no_command_topic(
-    hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -204,7 +203,6 @@ async def test_fail_setup_if_no_command_topic(
     ],
 )
 async def test_fail_setup_if_color_mode_deprecated(
-    hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -233,7 +231,6 @@ async def test_fail_setup_if_color_mode_deprecated(
     ids=["color_temp", "hs", "rgb", "xy", "color_temp, rgb"],
 )
 async def test_warning_if_color_mode_flags_are_used(
-    hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
     color_modes: tuple[str, ...],
@@ -316,7 +313,6 @@ async def test_warning_on_discovery_if_color_mode_flags_are_used(
     ids=["color_temp"],
 )
 async def test_warning_if_color_mode_option_flag_is_used(
-    hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -393,7 +389,6 @@ async def test_warning_on_discovery_if_color_mode_option_flag_is_used(
     ],
 )
 async def test_fail_setup_if_color_modes_invalid(
-    hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
     error: str,
@@ -421,8 +416,7 @@ async def test_fail_setup_if_color_modes_invalid(
     ],
 )
 async def test_single_color_mode(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test setup with single color_mode."""
     await mqtt_mock_entry()
@@ -448,8 +442,7 @@ async def test_single_color_mode(
 
 @pytest.mark.parametrize("hass_config", [COLOR_MODES_CONFIG])
 async def test_turn_on_with_unknown_color_mode_optimistic(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test setup and turn with unknown color_mode in optimistic mode."""
     await mqtt_mock_entry()
@@ -486,8 +479,7 @@ async def test_turn_on_with_unknown_color_mode_optimistic(
     ],
 )
 async def test_controlling_state_with_unknown_color_mode(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test setup and turn with unknown color_mode in optimistic mode."""
     await mqtt_mock_entry()
@@ -2658,8 +2650,7 @@ async def test_publishing_with_custom_encoding(
 
 
 async def test_reloadable(
-    hass: HomeAssistant,
-    mqtt_client_mock: MqttMockPahoClient,
+    hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = light.DOMAIN
