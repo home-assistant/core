@@ -892,7 +892,7 @@ def fail_on_log_exception(
         return
 
     def log_exception(format_err, *args):
-        raise  # pylint: disable=misplaced-bare-raise
+        raise  # noqa: PLE0704
 
     monkeypatch.setattr("homeassistant.util.logging.log_exception", log_exception)
 

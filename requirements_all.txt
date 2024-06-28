@@ -410,7 +410,7 @@ aiowebostv==0.4.0
 aiowithings==3.0.1
 
 # homeassistant.components.yandex_transport
-aioymaps==1.2.2
+aioymaps==1.2.4
 
 # homeassistant.components.airgradient
 airgradient==0.6.0
@@ -771,7 +771,7 @@ dynalite-panel==0.0.4
 eagle100==0.1.1
 
 # homeassistant.components.easyenergy
-easyenergy==2.1.1
+easyenergy==2.1.2
 
 # homeassistant.components.ebusd
 ebusdpy==0.0.17
@@ -995,7 +995,7 @@ gotailwind==0.2.3
 govee-ble==0.31.3
 
 # homeassistant.components.govee_light_local
-govee-local-api==1.5.0
+govee-local-api==1.5.1
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -1519,7 +1519,7 @@ ourgroceries==1.5.4
 ovoenergy==2.0.0
 
 # homeassistant.components.p1_monitor
-p1monitor==3.0.0
+p1monitor==3.0.1
 
 # homeassistant.components.mqtt
 paho-mqtt==1.6.1
@@ -2539,7 +2539,7 @@ sendgrid==6.8.2
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense-energy==0.12.2
+sense-energy==0.12.4
 
 # homeassistant.components.sensirion_ble
 sensirion-ble==0.1.1
@@ -2906,7 +2906,7 @@ wyoming==1.5.4
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.30.0
+xiaomi-ble==0.30.1
 
 # homeassistant.components.knx
 xknx==2.12.2
