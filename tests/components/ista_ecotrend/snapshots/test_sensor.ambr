@@ -94,7 +94,7 @@
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HEATING: 'heating'>,
     'unique_id': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762_heating',
-    'unit_of_measurement': 'Units',
+    'unit_of_measurement': 'units',
   })
 # ---
 # name: test_setup[sensor.bahnhofsstr_1a_heating-state]
@@ -102,7 +102,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Bahnhofsstr. 1A Heating',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'Units',
+      'unit_of_measurement': 'units',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bahnhofsstr_1a_heating',
@@ -525,7 +525,7 @@
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HEATING: 'heating'>,
     'unique_id': '26e93f1a-c828-11ea-87d0-0242ac130003_heating',
-    'unit_of_measurement': 'Units',
+    'unit_of_measurement': 'units',
   })
 # ---
 # name: test_setup[sensor.luxemburger_str_1_heating-state]
@@ -533,7 +533,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Luxemburger Str. 1 Heating',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'Units',
+      'unit_of_measurement': 'units',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.luxemburger_str_1_heating',
