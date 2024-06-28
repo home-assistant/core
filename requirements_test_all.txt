@@ -380,7 +380,7 @@ aiowatttime==0.1.1
 aiowebostv==0.4.0
 
 # homeassistant.components.withings
-aiowithings==3.0.1
+aiowithings==3.0.2
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.4
