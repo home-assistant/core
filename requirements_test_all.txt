@@ -401,7 +401,7 @@ airthings-cloud==0.2.0
 airtouch4pyapi==1.0.5
 
 # homeassistant.components.airtouch5
-airtouch5py==0.2.8
+airtouch5py==0.2.10
 
 # homeassistant.components.amberelectric
 amberelectric==1.1.0
@@ -448,7 +448,7 @@ asterisk_mbox==0.5.0
 async-upnp-client==0.39.0
 
 # homeassistant.components.arve
-asyncarve==0.0.9
+asyncarve==0.1.1
 
 # homeassistant.components.sleepiq
 asyncsleepiq==1.5.2
@@ -1228,7 +1228,7 @@ p1monitor==3.0.0
 paho-mqtt==1.6.1
 
 # homeassistant.components.panasonic_viera
-panasonic-viera==0.3.6
+panasonic-viera==0.4.2
 
 # homeassistant.components.dunehd
 pdunehd==1.3.2
@@ -1918,7 +1918,7 @@ refoss-ha==1.2.1
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.2.3
+renault-api==0.2.4
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.1
@@ -2109,7 +2109,7 @@ temperusb==1.6.1
 
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==0.6.1
+tesla-fleet-api==0.6.2
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2

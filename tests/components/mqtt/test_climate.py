@@ -179,14 +179,14 @@ async def test_get_hvac_modes(
 
     state = hass.states.get(ENTITY_CLIMATE)
     modes = state.attributes.get("hvac_modes")
-    assert [
+    assert modes == [
         HVACMode.AUTO,
         HVACMode.OFF,
         HVACMode.COOL,
         HVACMode.HEAT,
         HVACMode.DRY,
         HVACMode.FAN_ONLY,
-    ] == modes
+    ]
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
