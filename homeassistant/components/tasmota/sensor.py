@@ -302,6 +302,15 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
         self._attr_native_unit_of_measurement = SENSOR_UNIT_MAP.get(
             self._tasmota_entity.unit, self._tasmota_entity.unit
         )
+        if (
+            self._attr_device_class is None
+            and self._attr_state_class is None
+            and self._attr_native_unit_of_measurement is None
+        ):
+            # If the sensor has a numeric value, but we couldn't detect what it is,
+            # set state class to measurement.
+            if self._tasmota_entity.discovered_as_numeric:
+                self._attr_state_class = SensorStateClass.MEASUREMENT
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
