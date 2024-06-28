@@ -285,61 +285,25 @@ async def test_remove_clients(
     assert hass.states.get("device_tracker.wd_client_1")
 
 
-@pytest.mark.parametrize(
-    "client_payload",
-    [
-        [
-            {
-                "essid": "ssid",
-                "hostname": "client",
-                "is_wired": False,
-                "last_seen": 1562600145,
-                "mac": "00:00:00:00:00:01",
-            }
-        ]
-    ],
-)
-@pytest.mark.parametrize(
-    "device_payload",
-    [
-        [
-            {
-                "board_rev": 3,
-                "device_id": "mock-id",
-                "has_fan": True,
-                "fan_level": 0,
-                "ip": "10.0.1.1",
-                "last_seen": 1562600145,
-                "mac": "00:00:00:00:01:01",
-                "model": "US16P150",
-                "name": "Device",
-                "next_interval": 20,
-                "overheating": True,
-                "state": 1,
-                "type": "usw",
-                "upgradable": True,
-                "version": "4.0.42.10433",
-            }
-        ]
-    ],
-)
+@pytest.mark.parametrize("client_payload", [[WIRELESS_CLIENT_1]])
+@pytest.mark.parametrize("device_payload", [[SWITCH_1]])
 @pytest.mark.usefixtures("config_entry_setup")
 @pytest.mark.usefixtures("mock_device_registry")
 async def test_hub_state_change(hass: HomeAssistant, mock_websocket_state) -> None:
     """Verify entities state reflect on hub connection becoming unavailable."""
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
-    assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
-    assert hass.states.get("device_tracker.device").state == STATE_HOME
+    assert hass.states.get("device_tracker.ws_client_1").state == STATE_NOT_HOME
+    assert hass.states.get("device_tracker.switch_1").state == STATE_HOME
 
     # Controller unavailable
     await mock_websocket_state.disconnect()
-    assert hass.states.get("device_tracker.client").state == STATE_UNAVAILABLE
-    assert hass.states.get("device_tracker.device").state == STATE_UNAVAILABLE
+    assert hass.states.get("device_tracker.ws_client_1").state == STATE_UNAVAILABLE
+    assert hass.states.get("device_tracker.switch_1").state == STATE_UNAVAILABLE
 
     # Controller available
     await mock_websocket_state.reconnect()
-    assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
-    assert hass.states.get("device_tracker.device").state == STATE_HOME
+    assert hass.states.get("device_tracker.ws_client_1").state == STATE_NOT_HOME
+    assert hass.states.get("device_tracker.switch_1").state == STATE_HOME
 
 
 @pytest.mark.usefixtures("mock_device_registry")
