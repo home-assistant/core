@@ -319,13 +319,7 @@ async def test_option_ssid_filter(
     Client on SSID2 will be removed on change of options.
     """
     client_payload += [
-        {
-            "essid": "ssid",
-            "hostname": "client",
-            "is_wired": False,
-            "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
-            "mac": "00:00:00:00:00:01",
-        },
+        WIRELESS_CLIENT_1 | {"last_seen": dt_util.as_timestamp(dt_util.utcnow())},
         {
             "essid": "ssid2",
             "hostname": "client_on_ssid2",
@@ -337,7 +331,7 @@ async def test_option_ssid_filter(
     config_entry = await config_entry_factory()
 
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
-    assert hass.states.get("device_tracker.client").state == STATE_HOME
+    assert hass.states.get("device_tracker.ws_client_1").state == STATE_HOME
     assert hass.states.get("device_tracker.client_on_ssid2").state == STATE_NOT_HOME
 
     # Setting SSID filter will remove clients outside of filter
@@ -347,33 +341,29 @@ async def test_option_ssid_filter(
     await hass.async_block_till_done()
 
     # Not affected by SSID filter
-    assert hass.states.get("device_tracker.client").state == STATE_HOME
+    assert hass.states.get("device_tracker.ws_client_1").state == STATE_HOME
 
     # Removed due to SSID filter
     assert not hass.states.get("device_tracker.client_on_ssid2")
 
     # Roams to SSID outside of filter
-    client = client_payload[0]
-    client["essid"] = "other_ssid"
-    mock_websocket_message(message=MessageKey.CLIENT, data=client)
+    ws_client_1 = client_payload[0] | {"essid": "other_ssid"}
+    mock_websocket_message(message=MessageKey.CLIENT, data=ws_client_1)
 
     # Data update while SSID filter is in effect shouldn't create the client
-    client_on_ssid2 = client_payload[1]
-    client_on_ssid2["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
+    client_on_ssid2 = client_payload[1] | {
+        "last_seen": dt_util.as_timestamp(dt_util.utcnow())
+    }
     mock_websocket_message(message=MessageKey.CLIENT, data=client_on_ssid2)
     await hass.async_block_till_done()
 
-    new_time = dt_util.utcnow() + timedelta(
-        seconds=(
-            config_entry.options.get(CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME) + 1
-        )
-    )
+    new_time = dt_util.utcnow() + timedelta(seconds=(DEFAULT_DETECTION_TIME + 1))
     with freeze_time(new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
 
     # SSID filter marks client as away
-    assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
+    assert hass.states.get("device_tracker.ws_client_1").state == STATE_NOT_HOME
 
     # SSID still outside of filter
     assert not hass.states.get("device_tracker.client_on_ssid2")
@@ -382,25 +372,23 @@ async def test_option_ssid_filter(
     hass.config_entries.async_update_entry(config_entry, options={CONF_SSID_FILTER: []})
     await hass.async_block_till_done()
 
-    client["last_seen"] += 1
+    ws_client_1["last_seen"] += 1
     client_on_ssid2["last_seen"] += 1
-    mock_websocket_message(message=MessageKey.CLIENT, data=[client, client_on_ssid2])
+    mock_websocket_message(
+        message=MessageKey.CLIENT, data=[ws_client_1, client_on_ssid2]
+    )
     await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.client").state == STATE_HOME
+    assert hass.states.get("device_tracker.ws_client_1").state == STATE_HOME
     assert hass.states.get("device_tracker.client_on_ssid2").state == STATE_HOME
 
     # Time pass to mark client as away
-    new_time += timedelta(
-        seconds=(
-            config_entry.options.get(CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME) + 1
-        )
-    )
+    new_time += timedelta(seconds=(DEFAULT_DETECTION_TIME + 1))
     with freeze_time(new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
+    assert hass.states.get("device_tracker.ws_client_1").state == STATE_NOT_HOME
 
     client_on_ssid2["last_seen"] += 1
     mock_websocket_message(message=MessageKey.CLIENT, data=client_on_ssid2)
@@ -414,9 +402,7 @@ async def test_option_ssid_filter(
     mock_websocket_message(message=MessageKey.CLIENT, data=client_on_ssid2)
     await hass.async_block_till_done()
 
-    new_time += timedelta(
-        seconds=(config_entry.options.get(CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME))
-    )
+    new_time += timedelta(seconds=DEFAULT_DETECTION_TIME)
     with freeze_time(new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
