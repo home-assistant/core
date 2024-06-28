@@ -3,7 +3,7 @@
 from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, call, patch
 
-from pyloadapi import CannotConnect
+from pyloadapi import CannotConnect, InvalidAuth
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -114,12 +114,17 @@ async def test_turn_on_off(
         SERVICE_TOGGLE,
     ],
 )
+@pytest.mark.parametrize(
+    ("side_effect"),
+    [CannotConnect, InvalidAuth],
+)
 async def test_turn_on_off_errors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_pyloadapi: AsyncMock,
     service_call: str,
     entity_registry: er.EntityRegistry,
+    side_effect: Exception,
 ) -> None:
     """Test switch turn on/off, toggle method."""
 
@@ -132,10 +137,10 @@ async def test_turn_on_off_errors(
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry.entry_id
     )
-    mock_pyloadapi.unpause.side_effect = CannotConnect
-    mock_pyloadapi.pause.side_effect = CannotConnect
-    mock_pyloadapi.toggle_pause.side_effect = CannotConnect
-    mock_pyloadapi.toggle_reconnect.side_effect = CannotConnect
+    mock_pyloadapi.unpause.side_effect = side_effect
+    mock_pyloadapi.pause.side_effect = side_effect
+    mock_pyloadapi.toggle_pause.side_effect = side_effect
+    mock_pyloadapi.toggle_reconnect.side_effect = side_effect
 
     for entity_entry in entity_entries:
         with pytest.raises(ServiceValidationError):

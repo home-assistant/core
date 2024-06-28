@@ -3,7 +3,7 @@
 from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, call, patch
 
-from pyloadapi import CannotConnect
+from pyloadapi import CannotConnect, InvalidAuth
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -84,12 +84,17 @@ async def test_button_press(
         mock_pyloadapi.reset_mock()
 
 
+@pytest.mark.parametrize(
+    ("side_effect"),
+    [CannotConnect, InvalidAuth],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_button_press_errors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_pyloadapi: AsyncMock,
     entity_registry: er.EntityRegistry,
+    side_effect: Exception,
 ) -> None:
     """Test button press method."""
 
@@ -102,10 +107,10 @@ async def test_button_press_errors(
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry.entry_id
     )
-    mock_pyloadapi.stop_all_downloads.side_effect = CannotConnect
-    mock_pyloadapi.restart_failed.side_effect = CannotConnect
-    mock_pyloadapi.delete_finished.side_effect = CannotConnect
-    mock_pyloadapi.restart.side_effect = CannotConnect
+    mock_pyloadapi.stop_all_downloads.side_effect = side_effect
+    mock_pyloadapi.restart_failed.side_effect = side_effect
+    mock_pyloadapi.delete_finished.side_effect = side_effect
+    mock_pyloadapi.restart.side_effect = side_effect
 
     for entity_entry in entity_entries:
         with pytest.raises(ServiceValidationError):
