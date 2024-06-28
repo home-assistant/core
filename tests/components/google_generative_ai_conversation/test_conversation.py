@@ -172,6 +172,7 @@ async def test_function_call(
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
     mock_init_component,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test function calling."""
     agent_id = mock_config_entry_with_assist.entry_id
@@ -256,6 +257,7 @@ async def test_function_call(
             device_id="test_device",
         ),
     )
+    assert [tuple(mock_call) for mock_call in mock_model.mock_calls] == snapshot
 
     # Test conversating tracing
     traces = trace.async_get_traces()
@@ -270,6 +272,87 @@ async def test_function_call(
     # AGENT_DETAIL event contains the raw prompt passed to the model
     detail_event = trace_events[1]
     assert "Answer in plain text" in detail_event["data"]["prompt"]
+
+
+@patch(
+    "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI._async_get_tools"
+)
+async def test_function_call_without_parameters(
+    mock_get_tools,
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test function calling without parameters."""
+    agent_id = mock_config_entry_with_assist.entry_id
+    context = Context()
+
+    mock_tool = AsyncMock()
+    mock_tool.name = "test_tool"
+    mock_tool.description = "Test function"
+    mock_tool.parameters = vol.Schema({})
+
+    mock_get_tools.return_value = [mock_tool]
+
+    with patch("google.generativeai.GenerativeModel") as mock_model:
+        mock_chat = AsyncMock()
+        mock_model.return_value.start_chat.return_value = mock_chat
+        chat_response = MagicMock()
+        mock_chat.send_message_async.return_value = chat_response
+        mock_part = MagicMock()
+        mock_part.function_call = FunctionCall(name="test_tool", args={})
+
+        def tool_call(hass, tool_input, tool_context):
+            mock_part.function_call = None
+            mock_part.text = "Hi there!"
+            return {"result": "Test response"}
+
+        mock_tool.async_call.side_effect = tool_call
+        chat_response.parts = [mock_part]
+        result = await conversation.async_converse(
+            hass,
+            "Please call the test function",
+            None,
+            context,
+            agent_id=agent_id,
+            device_id="test_device",
+        )
+
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.as_dict()["speech"]["plain"]["speech"] == "Hi there!"
+    mock_tool_call = mock_chat.send_message_async.mock_calls[1][1][0]
+    mock_tool_call = type(mock_tool_call).to_dict(mock_tool_call)
+    assert mock_tool_call == {
+        "parts": [
+            {
+                "function_response": {
+                    "name": "test_tool",
+                    "response": {
+                        "result": "Test response",
+                    },
+                },
+            },
+        ],
+        "role": "",
+    }
+
+    mock_tool.async_call.assert_awaited_once_with(
+        hass,
+        llm.ToolInput(
+            tool_name="test_tool",
+            tool_args={},
+        ),
+        llm.LLMContext(
+            platform="google_generative_ai_conversation",
+            context=context,
+            user_prompt="Please call the test function",
+            language="en",
+            assistant="conversation",
+            device_id="test_device",
+        ),
+    )
+    assert [tuple(mock_call) for mock_call in mock_model.mock_calls] == snapshot
 
 
 @patch(

@@ -12,7 +12,7 @@ from homeassistant.components.humidifier import (
     ATTR_HUMIDITY,
     MODE_AWAY,
     MODE_NORMAL,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as HUMIDIFIER_PLATFORM_SCHEMA,
     HumidifierAction,
     HumidifierDeviceClass,
     HumidifierEntity,
@@ -72,7 +72,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_SAVED_HUMIDITY = "saved_humidity"
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(HYGROSTAT_SCHEMA.schema)
+PLATFORM_SCHEMA = HUMIDIFIER_PLATFORM_SCHEMA.extend(HYGROSTAT_SCHEMA.schema)
 
 
 async def async_setup_platform(

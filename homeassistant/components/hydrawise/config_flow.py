@@ -37,8 +37,8 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
         # Verify that the provided credentials work."""
         api = client.Hydrawise(auth.Auth(username, password))
         try:
-            # Skip fetching zones to save on metered API calls.
-            user = await api.get_user()
+            # Don't fetch zones because we don't need them yet.
+            user = await api.get_user(fetch_zones=False)
         except NotAuthorizedError:
             return on_failure("invalid_auth")
         except TimeoutError:

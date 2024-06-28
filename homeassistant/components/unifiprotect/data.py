@@ -342,7 +342,7 @@ class ProtectData:
 
 @callback
 def async_ufp_instance_for_config_entry_ids(
-    hass: HomeAssistant, config_entry_ids: list[str]
+    hass: HomeAssistant, config_entry_ids: set[str]
 ) -> ProtectApiClient | None:
     """Find the UFP instance for the config entry ids."""
     return next(

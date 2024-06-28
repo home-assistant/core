@@ -28,6 +28,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 
 from . import TadoConnector
 from .const import (
@@ -80,7 +81,7 @@ SERVICE_CLIMATE_TIMER = "set_climate_timer"
 ATTR_TIME_PERIOD = "time_period"
 ATTR_REQUESTED_OVERLAY = "requested_overlay"
 
-CLIMATE_TIMER_SCHEMA = {
+CLIMATE_TIMER_SCHEMA: VolDictType = {
     vol.Required(ATTR_TEMPERATURE): vol.Coerce(float),
     vol.Exclusive(ATTR_TIME_PERIOD, CONST_EXCLUSIVE_OVERLAY_GROUP): vol.All(
         cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds()
@@ -93,7 +94,7 @@ CLIMATE_TIMER_SCHEMA = {
 SERVICE_TEMP_OFFSET = "set_climate_temperature_offset"
 ATTR_OFFSET = "offset"
 
-CLIMATE_TEMP_OFFSET_SCHEMA = {
+CLIMATE_TEMP_OFFSET_SCHEMA: VolDictType = {
     vol.Required(ATTR_OFFSET, default=0): vol.Coerce(float),
 }
 

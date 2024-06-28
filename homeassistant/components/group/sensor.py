@@ -17,7 +17,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
     UNIT_CONVERTERS,
     SensorDeviceClass,
@@ -93,7 +93,7 @@ SENSOR_TYPE_TO_ATTR = {v: k for k, v in SENSOR_TYPES.items()}
 # No limit on parallel updates to enable a group calling another group
 PARALLEL_UPDATES = 0
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITIES): cv.entities_domain(
             [DOMAIN, NUMBER_DOMAIN, INPUT_NUMBER_DOMAIN]
