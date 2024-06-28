@@ -1739,7 +1739,7 @@ def cleanup_legacy_states_event_ids(instance: Recorder) -> bool:
         # ex all NULL
         assert instance.engine is not None, "engine should never be None"
         if instance.dialect_name == SupportedDialect.SQLITE:
-            rebuild_sqlite_table_schema(session_maker, instance.engine, States)
+            rebuild_sqlite_table(session_maker, instance.engine, States)
         else:
             # SQLite does not support dropping foreign key constraints
             # so we can't drop the index at this time but we can avoid
@@ -1898,21 +1898,16 @@ def _mark_migration_done(
     )
 
 
-def rebuild_sqlite_table_schema(
+def rebuild_sqlite_table(
     session_maker: Callable[[], Session], engine: Engine, table: type[Base]
 ) -> None:
-    """Rebuild the SQLite schema for a table.
+    """Rebuild an SQLite table.
 
     This must only be called after all migrations are complete
-    and the database is in a consistent state since it will
-    replace the schema for the table with the current schema.
+    and the database is in a consistent state.
 
     If the table is not migrated to the current schema this
-    will fail with an integrity error.
-
-    If the schema has been manually altered in an incompatible
-    way this will fail with an integrity error, or it may not
-    fail but the database will be in an inconsistent state.
+    will likely fail.
     """
     table_table = cast(Table, table.__table__)
     table_name = table_table.name
