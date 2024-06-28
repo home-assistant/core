@@ -95,6 +95,7 @@ async def async_setup_platform(
         value_template.hass = hass
 
     emoncms_client = EmoncmsClient(url, apikey, session=async_get_clientsession(hass))
+    uuid = await emoncms_client.async_get_uuid()
     coordinator = EmoncmsCoordinator(hass, emoncms_client, scan_interval)
     await coordinator.async_refresh()
     elems = coordinator.data
@@ -122,6 +123,7 @@ async def async_setup_platform(
         sensors.append(
             EmonCmsSensor(
                 coordinator,
+                uuid,
                 name,
                 value_template,
                 unit_of_measurement,
@@ -138,6 +140,7 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
     def __init__(
         self,
         coordinator: EmoncmsCoordinator,
+        uuid: str | None,
         name: str | None,
         value_template: template.Template | None,
         unit_of_measurement: str | None,
@@ -163,6 +166,9 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
         self._value_template = value_template
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._sensorid = sensorid
+        if uuid is not None:
+            self._attr_unique_id = f'{uuid}-{elem["id"]}'
+            self._attr_name = f"Emoncms{id_for_name}|{elem['tag']}|{elem['name']}"
 
         if unit_of_measurement in ("kWh", "Wh"):
             self._attr_device_class = SensorDeviceClass.ENERGY
