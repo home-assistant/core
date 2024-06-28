@@ -12,8 +12,8 @@ import paho.mqtt.client as paho_mqtt
 import pytest
 
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt.const import SUPPORTED_COMPONENTS
 from homeassistant.components.mqtt.client import RECONNECT_INTERVAL_SECONDS
+from homeassistant.components.mqtt.const import SUPPORTED_COMPONENTS
 from homeassistant.components.mqtt.models import MessageCallbackType, ReceiveMessage
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import (
