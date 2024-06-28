@@ -1912,6 +1912,12 @@ def rebuild_sqlite_table(
     table_table = cast(Table, table.__table__)
     orig_name = table_table.name
     temp_name = f"{table_table.name}_temp_{int(time())}"
+
+    _LOGGER.warning(
+        "Rebuilding SQLite table %s; This will take a while; Please be patient!",
+        orig_name,
+    )
+
     try:
         # 12 step SQLite table rebuild
         # https://www.sqlite.org/draft/lang_altertable.html
