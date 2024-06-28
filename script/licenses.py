@@ -123,6 +123,7 @@ EXCEPTIONS = {
     "PyXiaomiGateway",  # https://github.com/Danielhiversen/PyXiaomiGateway/pull/201
     "aiocomelit",  # https://github.com/chemelli74/aiocomelit/pull/138
     "aioecowitt",  # https://github.com/home-assistant-libs/aioecowitt/pull/180
+    "aiohappyeyeballs",  # PSF-2.0 license
     "aiohttp-fast-url-dispatcher",  # https://github.com/bdraco/aiohttp-fast-url-dispatcher/pull/10
     "aiohttp-isal",  # https://github.com/bdraco/aiohttp-isal/pull/5
     "aiohttp-zlib-ng",  # https://github.com/bdraco/aiohttp-zlib-ng/pull/9
@@ -137,7 +138,9 @@ EXCEPTIONS = {
     "amberelectric",  # https://github.com/madpilot/amberelectric.py/pull/11
     "apple_weatherkit",  # https://github.com/tjhorner/python-weatherkit/pull/3
     "apsystems-ez1",  # https://github.com/SonnenladenGmbH/APsystems-EZ1-API/pull/26
+    "asyncio",  # Python core
     "async-interrupt",  # https://github.com/bdraco/async_interrupt/pull/4
+    "chacha20poly1305",  # LGPL
     "commentjson",  # https://github.com/vaidik/commentjson/pull/55
     "crownstone-cloud",  # https://github.com/crownstone/crownstone-lib-python-cloud/pull/5
     "crownstone-core",  # https://github.com/crownstone/crownstone-lib-python-core/pull/6
@@ -151,6 +154,7 @@ EXCEPTIONS = {
     "heatmiserV3",  # https://github.com/andylockran/heatmiserV3/pull/94
     "huum",  # https://github.com/frwickst/pyhuum/pull/8
     "imutils",  # https://github.com/PyImageSearch/imutils/pull/292
+    "iso4217",  # Public domain
     "kiwiki_client",  # https://github.com/c7h/kiwiki_client/pull/6
     "krakenex",  # https://github.com/veox/python3-krakenex/pull/145
     "ld2410-ble",  # https://github.com/930913/ld2410-ble/pull/7
@@ -182,6 +186,7 @@ EXCEPTIONS = {
     "tellduslive",  # https://github.com/molobrakos/tellduslive/pull/24
     "tellsticknet",  # https://github.com/molobrakos/tellsticknet/pull/33
     "webrtc_noise_gain",  # https://github.com/rhasspy/webrtc-noise-gain/pull/24
+    "vincenty",  # Public domain
     "xiaomi-ble",  # https://github.com/Bluetooth-Devices/xiaomi-ble/pull/81
     "zeversolar",  # https://github.com/kvanzuijlen/zeversolar/pull/46
 }
@@ -196,11 +201,10 @@ TODO = {
     "aiocache": AwesomeVersion(
         "0.12.2"
     ),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
-    "aiohappyeyeballs": AwesomeVersion("2.3.2"),  # Need to dive into this
-    "asterisk_mbox": AwesomeVersion("0.5.0"),  # I think we deprecated this
+    "asterisk_mbox": AwesomeVersion(
+        "0.5.0"
+    ),  # No license, integration is deprecated and scheduled for removal in 2024.9.0
     "asyncarve": AwesomeVersion("0.0.9"),  # No public repository
-    "asyncio": AwesomeVersion("3.4.3"),  # Python core
-    "chacha20poly1305": AwesomeVersion("0.0.3"),  # I think LGPLv2+
     "chacha20poly1305-reuseable": AwesomeVersion("0.12.1"),  # has 2 licenses
     "concord232": AwesomeVersion(
         "0.15"
@@ -209,7 +213,6 @@ TODO = {
         "0.4.1"
     ),  # No license https://github.com/molobrakos/dovado/issues/4
     "genie_partner_sdk": AwesomeVersion("1.0.2"),  # pain
-    "iso4217": AwesomeVersion("1.11.20220401"),  # Public domain?
     "mficlient": AwesomeVersion(
         "0.3.0"
     ),  # No license https://github.com/kk7ds/mficlient/issues/4
@@ -229,7 +232,6 @@ TODO = {
     "uvcclient": AwesomeVersion(
         "0.11.0"
     ),  # No License https://github.com/kk7ds/uvcclient/issues/7
-    "vincenty": AwesomeVersion("0.1.4"),  # Public domain?
 }
 
 
