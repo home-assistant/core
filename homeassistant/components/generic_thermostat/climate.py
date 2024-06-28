@@ -74,12 +74,12 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Generic Thermostat"
 
+CONF_INITIAL_HVAC_MODE = "initial_hvac_mode"
+CONF_KEEP_ALIVE = "keep_alive"
 CONF_MIN_TEMP = "min_temp"
 CONF_MAX_TEMP = "max_temp"
-CONF_TARGET_TEMP = "target_temp"
-CONF_KEEP_ALIVE = "keep_alive"
-CONF_INITIAL_HVAC_MODE = "initial_hvac_mode"
 CONF_PRECISION = "precision"
+CONF_TARGET_TEMP = "target_temp"
 CONF_TEMP_STEP = "target_temp_step"
 
 
