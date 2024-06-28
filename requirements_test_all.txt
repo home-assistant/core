@@ -1228,7 +1228,7 @@ p1monitor==3.0.0
 paho-mqtt==1.6.1
 
 # homeassistant.components.panasonic_viera
-panasonic-viera==0.3.6
+panasonic-viera==0.4.2
 
 # homeassistant.components.dunehd
 pdunehd==1.3.2
@@ -2109,7 +2109,7 @@ temperusb==1.6.1
 
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==0.6.1
+tesla-fleet-api==0.6.2
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
