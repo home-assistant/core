@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
-from typing import TYPE_CHECKING, Any
-from unittest.mock import MagicMock
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from unittest.mock import MagicMock, Mock
 
 from aiohttp import ClientWebSocketResponse
 from aiohttp.test_utils import TestClient
@@ -13,6 +13,16 @@ if TYPE_CHECKING:
     # Local import to avoid processing recorder module when running a
     # testcase which does not use the recorder.
     from homeassistant.components.recorder import Recorder
+
+_T = TypeVar("_T")
+
+
+class MockOf(Mock, Generic[_T]):
+    """Add ability to set underlying type for Mock."""
+
+
+class MockConstructorOf(MagicMock, Generic[_T]):
+    """Add ability to set underlying type for MagicMock."""
 
 
 class MockHAClientWebSocket(ClientWebSocketResponse):

@@ -2,18 +2,20 @@
 
 from asyncio import Event
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from govee_local_api import GoveeLightCapability
 import pytest
 
 from homeassistant.components.govee_light_local.coordinator import GoveeController
 
+from tests.typing import MockOf
+
 
 @pytest.fixture(name="mock_govee_api")
-def fixture_mock_govee_api():
+def fixture_mock_govee_api() -> MockOf[GoveeController]:
     """Set up Govee Local API fixture."""
-    mock_api = AsyncMock(spec=GoveeController)
+    mock_api = Mock(spec=GoveeController)
     mock_api.start = AsyncMock()
     mock_api.cleanup = MagicMock(return_value=Event())
     mock_api.cleanup.return_value.set()
