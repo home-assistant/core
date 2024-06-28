@@ -20,7 +20,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import IstaConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, HEATING_UNIT
 from .coordinator import IstaCoordinator
 from .util import IstaConsumptionType, IstaValueType, get_native_value
 
@@ -56,6 +56,8 @@ SENSOR_DESCRIPTIONS: tuple[IstaSensorEntityDescription, ...] = (
         translation_key=IstaSensorEntity.HEATING,
         suggested_display_precision=0,
         consumption_type=IstaConsumptionType.HEATING,
+        native_unit_of_measurement=HEATING_UNIT,
+        state_class=SensorStateClass.TOTAL,
     ),
     IstaSensorEntityDescription(
         key=IstaSensorEntity.HEATING_ENERGY,
