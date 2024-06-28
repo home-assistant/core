@@ -98,7 +98,7 @@ class PyLoadSwitchEntity(BasePyLoadEntity, SwitchEntity):
         except (CannotConnect, InvalidAuth, ClientConnectorError) as e:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key=f"turn_on_{self.entity_description.key}_exception",
+                translation_key="service_call_exception",
             ) from e
 
         await self.coordinator.async_refresh()
@@ -110,7 +110,7 @@ class PyLoadSwitchEntity(BasePyLoadEntity, SwitchEntity):
         except (CannotConnect, InvalidAuth, OSError, ClientConnectorError) as e:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key=f"turn_off_{self.entity_description.key}_exception",
+                translation_key="service_call_exception",
             ) from e
 
         await self.coordinator.async_refresh()
@@ -122,7 +122,7 @@ class PyLoadSwitchEntity(BasePyLoadEntity, SwitchEntity):
         except (CannotConnect, InvalidAuth) as e:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key=f"toggle_{self.entity_description.key}_exception",
+                translation_key="service_call_exception",
             ) from e
 
         await self.coordinator.async_refresh()

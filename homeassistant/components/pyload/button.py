@@ -88,5 +88,5 @@ class PyLoadBinarySensor(BasePyLoadEntity, ButtonEntity):
         except (CannotConnect, InvalidAuth, OSError, ClientConnectorError) as e:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key=f"press_{self.entity_description.key}_exception",
+                translation_key="service_call_exception",
             ) from e
