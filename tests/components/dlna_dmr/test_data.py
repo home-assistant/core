@@ -2,23 +2,21 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from unittest.mock import ANY, Mock, patch
 
 from async_upnp_client.aiohttp import AiohttpNotifyServer
 from async_upnp_client.event_handler import UpnpEventHandler
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.dlna_dmr.const import DOMAIN
 from homeassistant.components.dlna_dmr.data import EventListenAddr, get_domain_data
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 
-from tests.typing import MockConstructorOf
-
 
 @pytest.fixture
-def aiohttp_notify_servers_mock() -> Generator[MockConstructorOf[AiohttpNotifyServer]]:
+def aiohttp_notify_servers_mock() -> Iterable[Mock]:
     """Construct mock AiohttpNotifyServer on demand, eliminating network use.
 
     This fixture provides a list of the constructed servers.
@@ -55,8 +53,7 @@ async def test_get_domain_data(hass: HomeAssistant) -> None:
 
 
 async def test_event_notifier(
-    hass: HomeAssistant,
-    aiohttp_notify_servers_mock: MockConstructorOf[AiohttpNotifyServer],
+    hass: HomeAssistant, aiohttp_notify_servers_mock: Mock
 ) -> None:
     """Test getting and releasing event notifiers."""
     domain_data = get_domain_data(hass)
@@ -113,8 +110,9 @@ async def test_event_notifier(
     assert domain_data.stop_listener_remove is None
 
 
-@pytest.mark.usefixtures("aiohttp_notify_servers_mock")
-async def test_cleanup_event_notifiers(hass: HomeAssistant) -> None:
+async def test_cleanup_event_notifiers(
+    hass: HomeAssistant, aiohttp_notify_servers_mock: Mock
+) -> None:
     """Test cleanup function clears all event notifiers."""
     domain_data = get_domain_data(hass)
     await domain_data.async_get_event_notifier(EventListenAddr(None, 0, None), hass)

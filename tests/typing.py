@@ -21,10 +21,6 @@ class MockOf(Mock, Generic[_T]):
     """Add ability to set underlying type for Mock."""
 
 
-class MockConstructorOf(MagicMock, Generic[_T]):
-    """Add ability to set underlying type for MagicMock."""
-
-
 class MockHAClientWebSocket(ClientWebSocketResponse):
     """Protocol for a wrapped ClientWebSocketResponse."""
 
