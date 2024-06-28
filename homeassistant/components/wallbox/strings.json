@@ -86,5 +86,31 @@
         "name": "Pause/resume"
       }
     }
+  },
+  "services": {
+    "get_schedules": {
+      "name": "Get Wallbox charge schedules",
+      "description": "Gets Wallbox charging schedules",
+      "fields": {
+        "charger_id": {
+          "name": "Charger id",
+          "description": "Wallbox charger serial number"
+        }
+      }
+    },
+    "set_schedules": {
+      "name": "Set Wallbox charge schedules",
+      "description": "sets Wallbox charging schedules",
+      "fields": {
+        "charger_id": {
+          "name": "Charger id",
+          "description": "Wallbox charger serial number"
+        },
+        "schedules": {
+          "name": "Input schedule data",
+          "description": "Schedule input data as an array"
+        }
+      }
+    }
   }
 }

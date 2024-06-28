@@ -2241,7 +2241,7 @@ vultr==0.1.2
 wakeonlan==2.1.0
 
 # homeassistant.components.wallbox
-wallbox==0.6.0
+wallbox==0.7.0
 
 # homeassistant.components.folder_watcher
 watchdog==2.3.1

@@ -23,5 +23,9 @@
         "default": "mdi:ev-station"
       }
     }
+  },
+  "services": {
+    "get_schedules": "mdi:calendar-clock",
+    "set_schedules": "mdi:calendar-clock"
   }
 }

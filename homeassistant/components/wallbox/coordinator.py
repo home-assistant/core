@@ -28,6 +28,7 @@ from .const import (
     UPDATE_INTERVAL,
     ChargerStatus,
 )
+from .helpers import map_ha_item_to_schedule, map_schedule_item_to_ha
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -202,6 +203,43 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Set wallbox to pause or resume."""
         await self.hass.async_add_executor_job(self._pause_charger, pause)
         await self.async_request_refresh()
+
+    @_require_authentication
+    def _get_schedules(self) -> dict[str, Any]:
+        """Get wallbox schedules."""
+        result = self._wallbox.getChargerSchedules(self._station)
+
+        new_record: dict = {"schedules": []}
+        items = result["schedules"]
+        for item in items:
+            item = map_schedule_item_to_ha(item)
+            new_record["schedules"].append(item)
+
+        return new_record
+
+    async def async_get_schedules(self) -> dict[str, Any]:
+        """Get wallbox schedules."""
+        return await self.hass.async_add_executor_job(self._get_schedules)
+
+    @_require_authentication
+    def _set_schedules(self, data: dict[str, Any]) -> None:
+        """Set wallbox schedules."""
+        schedules = {"schedules": data["schedules"]}
+
+        # update charger id
+        for schedule in schedules["schedules"]:
+            schedule["chargerId"] = self._station
+
+        self._wallbox.setChargerSchedules(self._station, schedules)
+
+    async def async_set_schedules(self, data: dict[str, Any]) -> None:
+        """Set wallbox schedules."""
+        new_record: dict = {"schedules": []}
+        items = data["schedules"]
+        for item in items:
+            item = map_ha_item_to_schedule(item)
+            new_record["schedules"].append(item)
+        await self.hass.async_add_executor_job(self._set_schedules, new_record)
 
 
 class InvalidAuth(HomeAssistantError):

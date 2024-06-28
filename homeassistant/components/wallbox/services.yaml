@@ -1,0 +1,43 @@
+get_schedules:
+  fields:
+    charger_id:
+      required: true
+      selector:
+        device:
+          integration: wallbox
+      example: >-
+        1234567
+
+set_schedules:
+  fields:
+    charger_id:
+      required: true
+      selector:
+        device:
+          integration: wallbox
+      example: >-
+        1234567
+    schedules:
+      required: true
+      selector:
+        object:
+      example: >-
+        [
+          {
+            'id': 0,
+            'enable': True,
+            'start': "21:00",
+            'stop': "22:00",
+            'days': {
+              'monday': True,
+              'tuesday': True,
+              'wednesday': True,
+              'thursday': True,
+              'friday': True,
+              'saturday': True,
+              'sunday': True
+            },
+            'max_current': 1,
+            'max_energy': 0
+          }
+        ]

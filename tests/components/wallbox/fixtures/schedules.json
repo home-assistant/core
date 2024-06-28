@@ -1,0 +1,27 @@
+{
+  "schedules": [
+    {
+      "uid": "01234567890123456789012345",
+      "id": 0,
+      "enable": true,
+      "start": "2100",
+      "stop": "2200",
+      "days": {
+        "monday": true,
+        "tuesday": true,
+        "wednesday": true,
+        "thursday": true,
+        "friday": true,
+        "saturday": true,
+        "sunday": true
+      },
+      "max_current": 1,
+      "max_energy": 0,
+      "name": null,
+      "type": 0,
+      "created_at": 1719136123,
+      "user_uid": "01234567890123456789012345"
+    }
+  ],
+  "lastSchedule": 1719136123
+}
