@@ -44,6 +44,7 @@ class MatterAdapter:
         self.hass = hass
         self.config_entry = config_entry
         self.platform_handlers: dict[Platform, AddEntitiesCallback] = {}
+        self.node_in_removal: set[int] = set()
 
     def register_platform_handler(
         self, platform: Platform, add_entities: AddEntitiesCallback
@@ -102,6 +103,12 @@ class MatterAdapter:
 
         def node_removed_callback(event: EventType, node_id: int) -> None:
             """Handle node removed event."""
+            if node_id in self.node_in_removal:
+                # There is no need to remove this device as this is handled by
+                # the Core when removed via async_remove_config_entry_device.
+                self.node_in_removal.remove(node_id)
+                return
+
             try:
                 node = self.matter_client.get_node(node_id)
             except KeyError:

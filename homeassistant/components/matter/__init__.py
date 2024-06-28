@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import suppress
 from functools import cache
 
 from matter_server.client import MatterClient
@@ -247,9 +246,19 @@ async def async_remove_config_entry_device(
                 )
 
     matter = get_matter(hass)
-    with suppress(NodeNotExists):
-        # ignore if the server has already removed the node.
+
+    # If it was the only config entry of the device, the device will be removed from the device registry.
+    # Make sure the Matter specific callbacks know about this and don't remove the device from the
+    # device registry.
+    matter.node_in_removal.add(node.node_id)
+
+    try:
         await matter.matter_client.remove_node(node.node_id)
+    except NodeNotExists:
+        # Ignore if the server has already removed the node.
+        LOGGER.info("Node %s didn't exist on the Matter server", node.node_id)
+    finally:
+        matter.node_in_removal.discard(node.node_id)
 
     return True
 
