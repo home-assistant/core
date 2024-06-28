@@ -619,9 +619,7 @@ def _test_options_attributes_options_config(
     _test_options_attributes_options_config((["milk", "beer"], ["milk"], [])),
 )
 async def test_options_attributes(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    options: list[str],
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator, options: list[str]
 ) -> None:
     """Test options attribute."""
     await mqtt_mock_entry()
@@ -705,8 +703,7 @@ async def test_publishing_with_custom_encoding(
 
 
 async def test_reloadable(
-    hass: HomeAssistant,
-    mqtt_client_mock: MqttMockPahoClient,
+    hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = select.DOMAIN
@@ -759,8 +756,7 @@ async def test_setup_manual_entity_from_yaml(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test unloading the config entry."""
     domain = select.DOMAIN
