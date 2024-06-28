@@ -387,6 +387,7 @@ async def test_update_error(
         await hass.async_block_till_done()
         # Ensure coordinator update completes
         await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     # Entity is marked uanvailable due to API failure
     state = hass.states.get(TEST_ENTITY)
@@ -417,6 +418,7 @@ async def test_update_error(
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
         # Ensure coordinator update completes
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
 
     # State updated with new API response
@@ -611,6 +613,7 @@ async def test_future_event_update_behavior(
     async_fire_time_changed(hass, now)
     await hass.async_block_till_done()
     # Ensure coordinator update completes
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     # Event has started
