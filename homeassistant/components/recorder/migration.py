@@ -1919,7 +1919,7 @@ def rebuild_sqlite_table(
 
     try:
         # 12 step SQLite table rebuild
-        # https://www.sqlite.org/draft/lang_altertable.html
+        # https://www.sqlite.org/lang_altertable.html
         with session_scope(session=session_maker()) as session:
             # Step 1 - Disable foreign keys
             session.connection().execute(text("PRAGMA foreign_keys=OFF"))
