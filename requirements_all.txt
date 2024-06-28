@@ -407,7 +407,7 @@ aiowatttime==0.1.1
 aiowebostv==0.4.0
 
 # homeassistant.components.withings
-aiowithings==3.0.1
+aiowithings==3.0.2
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.4
@@ -2864,7 +2864,7 @@ vultr==0.1.2
 wakeonlan==2.1.0
 
 # homeassistant.components.wallbox
-wallbox==0.6.0
+wallbox==0.7.0
 
 # homeassistant.components.folder_watcher
 watchdog==2.3.1
