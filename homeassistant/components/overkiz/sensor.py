@@ -415,7 +415,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_REMAINING_HOT_WATER,
-        name="Warm Water Remaining",
+        name="Warm water remaining",
         device_class=SensorDeviceClass.VOLUME,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfVolume.LITERS,
