@@ -1739,7 +1739,7 @@ async def test_integration_multiple_entity_platforms_with_reload_and_restart(
         cancel_coordinator()
         unregister_binary_sensor_processor()
         unregister_sensor_processor()
-        await hass.async_stop()
+        await test_hass.async_stop()
 
 
 NAMING_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
