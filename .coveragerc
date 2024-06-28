@@ -87,6 +87,7 @@ omit =
     homeassistant/components/aprilaire/climate.py
     homeassistant/components/aprilaire/coordinator.py
     homeassistant/components/aprilaire/entity.py
+    homeassistant/components/aprilaire/humidifier.py
     homeassistant/components/aprilaire/select.py
     homeassistant/components/aprilaire/sensor.py
     homeassistant/components/apsystems/__init__.py
