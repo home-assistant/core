@@ -125,8 +125,6 @@ EXCEPTIONS = {
     "aioecowitt",  # https://github.com/home-assistant-libs/aioecowitt/pull/180
     "aiohappyeyeballs",  # PSF-2.0 license
     "aiohttp-fast-url-dispatcher",  # https://github.com/bdraco/aiohttp-fast-url-dispatcher/pull/10
-    "aiohttp-isal",  # https://github.com/bdraco/aiohttp-isal/pull/5
-    "aiohttp-zlib-ng",  # https://github.com/bdraco/aiohttp-zlib-ng/pull/9
     "aioopenexchangerates",  # https://github.com/MartinHjelmare/aioopenexchangerates/pull/94
     "aiooui",  # https://github.com/Bluetooth-Devices/aiooui/pull/8
     "aioruuvigateway",  # https://github.com/akx/aioruuvigateway/pull/6
@@ -137,16 +135,13 @@ EXCEPTIONS = {
     "airtouch5py",  # https://github.com/danzel/airtouch5py/pull/3
     "amberelectric",  # https://github.com/madpilot/amberelectric.py/pull/11
     "apple_weatherkit",  # https://github.com/tjhorner/python-weatherkit/pull/3
-    "apsystems-ez1",  # https://github.com/SonnenladenGmbH/APsystems-EZ1-API/pull/26
     "asyncio",  # Python core
-    "async-interrupt",  # https://github.com/bdraco/async_interrupt/pull/4
     "chacha20poly1305",  # LGPL
     "commentjson",  # https://github.com/vaidik/commentjson/pull/55
     "crownstone-cloud",  # https://github.com/crownstone/crownstone-lib-python-cloud/pull/5
     "crownstone-core",  # https://github.com/crownstone/crownstone-lib-python-core/pull/6
     "crownstone-sse",  # https://github.com/crownstone/crownstone-lib-python-sse/pull/2
     "crownstone-uart",  # https://github.com/crownstone/crownstone-lib-python-uart/pull/12
-    "DTLSSocket",  # https://git.fslab.de/jkonra2m/tinydtls-cython/-/blob/master/LICENSE?ref_type=heads
     "eliqonline",  # https://github.com/molobrakos/eliqonline/pull/17
     "enocean",  # https://github.com/kipe/enocean/pull/142
     "gardena-bluetooth",  # https://github.com/elupus/gardena-bluetooth/pull/11
@@ -176,7 +171,6 @@ EXCEPTIONS = {
     "pyvera",  # https://github.com/maximvelichko/pyvera/pull/164
     "pyxeoma",  # https://github.com/jeradM/pyxeoma/pull/11
     "repoze.lru",  #
-    "ring-doorbell",  # https://github.com/tchellomello/python-ring-doorbell/pull/386
     "russound",  # https://github.com/laf/russound/pull/14   # codespell:ignore laf
     "ruuvitag-ble",  # https://github.com/Bluetooth-Devices/ruuvitag-ble/pull/10
     "sense-energy",  # https://github.com/scottbonline/sense/pull/67
@@ -212,7 +206,6 @@ TODO = {
     "dovado": AwesomeVersion(
         "0.4.1"
     ),  # No license https://github.com/molobrakos/dovado/issues/4
-    "genie_partner_sdk": AwesomeVersion("1.0.2"),  # pain
     "mficlient": AwesomeVersion(
         "0.3.0"
     ),  # No license https://github.com/kk7ds/mficlient/issues/4
