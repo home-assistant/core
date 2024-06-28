@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from aiohttp import ClientConnectorError
 from pyloadapi.api import CannotConnect, InvalidAuth, PyLoadAPI
 
 from homeassistant.components.switch import (
@@ -95,10 +94,15 @@ class PyLoadSwitchEntity(BasePyLoadEntity, SwitchEntity):
         """Turn the entity on."""
         try:
             await self.entity_description.turn_on_fn(self.coordinator.pyload)
-        except (CannotConnect, InvalidAuth, ClientConnectorError) as e:
+        except CannotConnect as e:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="service_call_exception",
+            ) from e
+        except InvalidAuth as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="service_call_auth_exception",
             ) from e
 
         await self.coordinator.async_refresh()
@@ -107,10 +111,15 @@ class PyLoadSwitchEntity(BasePyLoadEntity, SwitchEntity):
         """Turn the entity on."""
         try:
             await self.entity_description.turn_off_fn(self.coordinator.pyload)
-        except (CannotConnect, InvalidAuth, OSError, ClientConnectorError) as e:
+        except CannotConnect as e:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="service_call_exception",
+            ) from e
+        except InvalidAuth as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="service_call_auth_exception",
             ) from e
 
         await self.coordinator.async_refresh()
@@ -119,10 +128,15 @@ class PyLoadSwitchEntity(BasePyLoadEntity, SwitchEntity):
         """Toggle the entity."""
         try:
             await self.entity_description.toggle_fn(self.coordinator.pyload)
-        except (CannotConnect, InvalidAuth) as e:
+        except CannotConnect as e:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="service_call_exception",
+            ) from e
+        except InvalidAuth as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="service_call_auth_exception",
             ) from e
 
         await self.coordinator.async_refresh()

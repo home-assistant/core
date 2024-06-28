@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from aiohttp import ClientConnectorError
 from pyloadapi.api import CannotConnect, InvalidAuth, PyLoadAPI
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -85,8 +84,13 @@ class PyLoadBinarySensor(BasePyLoadEntity, ButtonEntity):
         """Handle the button press."""
         try:
             await self.entity_description.press_fn(self.coordinator.pyload)
-        except (CannotConnect, InvalidAuth, OSError, ClientConnectorError) as e:
+        except CannotConnect as e:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="service_call_exception",
+            ) from e
+        except InvalidAuth as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="service_call_auth_exception",
             ) from e
