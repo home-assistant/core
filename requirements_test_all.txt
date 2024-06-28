@@ -2268,7 +2268,7 @@ wyoming==1.5.4
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.30.0
+xiaomi-ble==0.30.1
 
 # homeassistant.components.knx
 xknx==2.12.2
