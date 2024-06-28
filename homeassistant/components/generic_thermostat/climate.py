@@ -62,7 +62,6 @@ from .const import (
     CONF_AC_MODE,
     CONF_COLD_TOLERANCE,
     CONF_HEATER,
-    CONF_HEATER,
     CONF_HOT_TOLERANCE,
     CONF_MIN_DUR,
     CONF_PRESETS,

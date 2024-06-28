@@ -6,7 +6,7 @@ from homeassistant.helpers.device import (
     async_remove_stale_devices_links_keep_entity_device,
 )
 
-from .const import CONF_HEATER, PLATFORM
+from .const import CONF_HEATER, PLATFORMS
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
