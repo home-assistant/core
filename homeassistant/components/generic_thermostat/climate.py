@@ -48,6 +48,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import ConditionError
 from homeassistant.helpers import condition, config_validation as cv
+from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_state_change_event,
@@ -60,6 +61,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolDictT
 from .const import (
     CONF_AC_MODE,
     CONF_COLD_TOLERANCE,
+    CONF_HEATER,
     CONF_HEATER,
     CONF_HOT_TOLERANCE,
     CONF_MIN_DUR,
@@ -177,6 +179,7 @@ async def _async_setup_config(
     async_add_entities(
         [
             GenericThermostat(
+                hass,
                 name,
                 heater_entity_id,
                 sensor_entity_id,
@@ -207,6 +210,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         name: str,
         heater_entity_id: str,
         sensor_entity_id: str,
@@ -229,6 +233,10 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self._attr_name = name
         self.heater_entity_id = heater_entity_id
         self.sensor_entity_id = sensor_entity_id
+        self._attr_device_info = async_device_info_to_link_from_entity(
+            hass,
+            heater_entity_id,
+        )
         self.ac_mode = ac_mode
         self.min_cycle_duration = min_cycle_duration
         self._cold_tolerance = cold_tolerance

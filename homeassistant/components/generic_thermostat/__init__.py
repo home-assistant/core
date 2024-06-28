@@ -2,12 +2,21 @@
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device import (
+    async_remove_stale_devices_links_keep_entity_device,
+)
 
-from .const import PLATFORMS
+from .const import CONF_HEATER, PLATFORM
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
+
+    async_remove_stale_devices_links_keep_entity_device(
+        hass,
+        entry.entry_id,
+        entry.options[CONF_HEATER],
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
     return True
