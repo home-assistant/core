@@ -53,12 +53,17 @@ async def test_doorbell_ring(
     assert_entity_counts(hass, Platform.EVENT, 1, 1)
     events: list[HAEvent] = []
 
+    @callback
+    def _capture_event(event: HAEvent) -> None:
+        events.append(event)
+
     doorbell.smart_detect_settings.object_types.append(SmartDetectObjectType.PACKAGE)
 
     _, entity_id = ids_from_device_description(
         Platform.EVENT, doorbell, EVENT_DESCRIPTIONS[0]
     )
-    async_track_state_change_event(hass, entity_id, callback(events.append))
+
+    unsub = async_track_state_change_event(hass, entity_id, _capture_event)
     event = Event(
         model=ModelType.EVENT,
         id="test_event_id",
@@ -148,3 +153,4 @@ async def test_doorbell_ring(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == timestamp
+    unsub()
