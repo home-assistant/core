@@ -142,6 +142,6 @@ class ViCareFan(ViCareEntity, FanEntity):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        target_mode = VentilationMode.from_ha_mode(self._attr_preset_mode)
+        target_mode = VentilationMode.from_ha_mode(preset_mode)
         _LOGGER.debug("changing ventilation mode to %s", target_mode)
         self._api.setActiveMode(target_mode)
