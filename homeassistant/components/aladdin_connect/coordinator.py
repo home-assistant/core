@@ -1,11 +1,11 @@
 """Define an object to coordinate fetching Aladdin Connect data."""
 
+# mypy: ignore-errors
 from datetime import timedelta
 import logging
 
-from genie_partner_sdk.client import AladdinConnectClient
-from genie_partner_sdk.model import GarageDoor
-
+# from genie_partner_sdk.client import AladdinConnectClient
+# from genie_partner_sdk.model import GarageDoor
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 

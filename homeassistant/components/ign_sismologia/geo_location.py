@@ -13,7 +13,10 @@ from georss_ign_sismologia_client import (
 )
 import voluptuous as vol
 
-from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
+from homeassistant.components.geo_location import (
+    PLATFORM_SCHEMA as GEO_LOCATION_PLATFORM_SCHEMA,
+    GeolocationEvent,
+)
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -47,7 +50,7 @@ SCAN_INTERVAL = timedelta(minutes=5)
 
 SOURCE = "ign_sismologia"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = GEO_LOCATION_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_LATITUDE): cv.latitude,
         vol.Optional(CONF_LONGITUDE): cv.longitude,

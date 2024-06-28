@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import UnitOfTime
-from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -36,7 +35,6 @@ class SwissPublicTransportSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[DataConnection], StateType | datetime]
 
     index: int = 0
-    has_legacy_attributes: bool = False
 
 
 SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
@@ -45,7 +43,6 @@ SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
             key=f"departure{i or ''}",
             translation_key=f"departure{i}",
             device_class=SensorDeviceClass.TIMESTAMP,
-            has_legacy_attributes=i == 0,
             value_fn=lambda data_connection: data_connection["departure"],
             index=i,
         )
@@ -127,28 +124,3 @@ class SwissPublicTransportSensor(
         return self.entity_description.value_fn(
             self.coordinator.data[self.entity_description.index]
         )
-
-    async def async_added_to_hass(self) -> None:
-        """Prepare the extra attributes at start."""
-        if self.entity_description.has_legacy_attributes:
-            self._async_update_attrs()
-        await super().async_added_to_hass()
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle the state update and prepare the extra state attributes."""
-        if self.entity_description.has_legacy_attributes:
-            self._async_update_attrs()
-        return super()._handle_coordinator_update()
-
-    @callback
-    def _async_update_attrs(self) -> None:
-        """Update the extra state attributes based on the coordinator data."""
-        if self.entity_description.has_legacy_attributes:
-            self._attr_extra_state_attributes = {
-                key: value
-                for key, value in self.coordinator.data[
-                    self.entity_description.index
-                ].items()
-                if key not in {"departure"}
-            }

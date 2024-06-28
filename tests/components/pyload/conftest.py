@@ -41,6 +41,19 @@ YAML_INPUT = {
     CONF_SSL: True,
     CONF_USERNAME: "test-username",
 }
+REAUTH_INPUT = {
+    CONF_PASSWORD: "new-password",
+    CONF_USERNAME: "new-username",
+}
+
+NEW_INPUT = {
+    CONF_HOST: "pyload.local",
+    CONF_PASSWORD: "new-password",
+    CONF_PORT: 8000,
+    CONF_SSL: True,
+    CONF_USERNAME: "new-username",
+    CONF_VERIFY_SSL: False,
+}
 
 
 @pytest.fixture
@@ -66,12 +79,10 @@ def mock_pyloadapi() -> Generator[AsyncMock, None, None]:
             "homeassistant.components.pyload.PyLoadAPI", autospec=True
         ) as mock_client,
         patch("homeassistant.components.pyload.config_flow.PyLoadAPI", new=mock_client),
-        patch("homeassistant.components.pyload.sensor.PyLoadAPI", new=mock_client),
     ):
         client = mock_client.return_value
         client.username = "username"
         client.api_url = "https://pyload.local:8000/"
-
         client.login.return_value = LoginResponse(
             {
                 "_permanent": True,
@@ -97,7 +108,7 @@ def mock_pyloadapi() -> Generator[AsyncMock, None, None]:
                 "captcha": False,
             }
         )
-
+        client.version.return_value = "0.5.0"
         client.free_space.return_value = 99999999999
         yield client
 

@@ -467,7 +467,7 @@ def test_throttle(values: list[State]) -> None:
         new_state = filt.filter_state(state)
         if not filt.skip_processing:
             filtered.append(new_state)
-    assert [20, 21] == [f.state for f in filtered]
+    assert [f.state for f in filtered] == [20, 21]
 
 
 def test_time_throttle(values: list[State]) -> None:
@@ -480,7 +480,7 @@ def test_time_throttle(values: list[State]) -> None:
         new_state = filt.filter_state(state)
         if not filt.skip_processing:
             filtered.append(new_state)
-    assert [20, 18, 22] == [f.state for f in filtered]
+    assert [f.state for f in filtered] == [20, 18, 22]
 
 
 def test_time_sma(values: list[State]) -> None:

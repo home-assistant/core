@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import AutomowerConfigEntry
 from .const import DOMAIN
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import AutomowerControlEntity
+from .entity import AutomowerAvailableEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ async def async_setup_entry(
     )
 
 
-class AutomowerButtonEntity(AutomowerControlEntity, ButtonEntity):
+class AutomowerButtonEntity(AutomowerAvailableEntity, ButtonEntity):
     """Defining the AutomowerButtonEntity."""
 
     _attr_translation_key = "confirm_error"

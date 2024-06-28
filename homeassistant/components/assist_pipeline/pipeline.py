@@ -45,7 +45,7 @@ from homeassistant.helpers.collection import (
 )
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType, VolDictType
 from homeassistant.util import (
     dt as dt_util,
     language as language_util,
@@ -94,7 +94,7 @@ def validate_language(data: dict[str, Any]) -> Any:
     return data
 
 
-PIPELINE_FIELDS = {
+PIPELINE_FIELDS: VolDictType = {
     vol.Required("conversation_engine"): str,
     vol.Required("conversation_language"): str,
     vol.Required("language"): str,
@@ -1605,14 +1605,9 @@ class PipelineStorageCollectionWebsocket(
     """Class to expose storage collection management over websocket."""
 
     @callback
-    def async_setup(
-        self,
-        hass: HomeAssistant,
-        *,
-        create_create: bool = True,
-    ) -> None:
+    def async_setup(self, hass: HomeAssistant) -> None:
         """Set up the websocket commands."""
-        super().async_setup(hass, create_create=create_create)
+        super().async_setup(hass)
 
         websocket_api.async_register_command(
             hass,

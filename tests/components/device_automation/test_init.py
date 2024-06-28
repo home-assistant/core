@@ -46,7 +46,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-def fake_integration(hass):
+def fake_integration(hass: HomeAssistant) -> None:
     """Set up a mock integration with device automation support."""
     DOMAIN = "fake_integration"
 

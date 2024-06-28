@@ -112,7 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     entry.runtime_data = coordinator
 
     gateway_version = coordinator.device.firmware[FirmwareType.GATEWAY].current_version
-    if version.parse(gateway_version) < version.parse("v3.5-rc5"):
+    if version.parse(gateway_version) < version.parse("v3.4-rc5"):
         # incompatible gateway firmware, create an issue
         ir.async_create_issue(
             hass,
