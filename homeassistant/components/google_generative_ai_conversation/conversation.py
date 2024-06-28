@@ -95,9 +95,12 @@ def _format_tool(
 ) -> dict[str, Any]:
     """Format tool specification."""
 
-    parameters = _format_schema(
-        convert(tool.parameters, custom_serializer=custom_serializer)
-    )
+    if tool.parameters.schema:
+        parameters = _format_schema(
+            convert(tool.parameters, custom_serializer=custom_serializer)
+        )
+    else:
+        parameters = None
 
     return protos.Tool(
         {
