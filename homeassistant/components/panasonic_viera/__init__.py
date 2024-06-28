@@ -196,10 +196,10 @@ class Remote:
         self.muted = self._control.get_mute()
         self.volume = self._control.get_volume() / 100
 
-    async def async_send_key(self, key):
+    async def async_send_key(self, key: Keys | str) -> None:
         """Send a key to the TV and handle exceptions."""
         try:
-            key = getattr(Keys, key)
+            key = getattr(Keys, key.upper())
         except (AttributeError, TypeError):
             key = getattr(key, "value", key)
 
@@ -211,13 +211,13 @@ class Remote:
             await self._on_action.async_run(context=context)
             await self.async_update()
         elif self.state != STATE_ON:
-            await self.async_send_key(Keys.power)
+            await self.async_send_key(Keys.POWER)
             await self.async_update()
 
     async def async_turn_off(self):
         """Turn off the TV."""
         if self.state != STATE_OFF:
-            await self.async_send_key(Keys.power)
+            await self.async_send_key(Keys.POWER)
             self.state = STATE_OFF
             await self.async_update()
 
