@@ -363,15 +363,15 @@ class AuthManager:
         local_only: bool | None = None,
     ) -> None:
         """Update a user."""
-        kwargs: dict[str, Any] = {}
-
-        for attr_name, value in (
-            ("name", name),
-            ("group_ids", group_ids),
-            ("local_only", local_only),
-        ):
-            if value is not None:
-                kwargs[attr_name] = value
+        kwargs: dict[str, Any] = {
+            attr_name: value
+            for attr_name, value in (
+                ("name", name),
+                ("group_ids", group_ids),
+                ("local_only", local_only),
+            )
+            if value is not None
+        }
         await self._store.async_update_user(user, **kwargs)
 
         if is_active is not None:
