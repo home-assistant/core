@@ -1915,26 +1915,42 @@ def rebuild_sqlite_table_schema(
     fail but the database will be in an inconsistent state.
     """
     table_table = cast(Table, table.__table__)
+    table_name = table_table.name
+    temp_table_name = f"{table_table.name}_temp_{int(time())}"
     try:
+        # 12 step SQLite table rebuild
+        # https://www.sqlite.org/draft/lang_altertable.html
         with session_scope(session=session_maker()) as session:
-            session.execute(text("PRAGMA foreign_keys=OFF"))
-            original_version = int(
-                str(session.execute(text("PRAGMA schema_version")).scalar())
-            )
-            new_version = original_version + 1
+            # Step 1 - Disable foreign keys
+            session.connection().execute(text("PRAGMA foreign_keys=OFF"))
+            # Step 2 - already in a transaction
+            # Step 3 - we know all the indexes, triggers, and views associated with table X
             new_sql = str(CreateTable(table_table).compile(engine)).strip("\n") + ";"
-            session.execute(text("PRAGMA writable_schema=ON"))
-            session.execute(
-                text(
-                    "UPDATE sqlite_schema set sql=:sql where name=:name and type='table';"
-                ),
-                params={"name": table_table.name, "sql": new_sql},
+            new_sql = new_sql.replace(
+                f"CREATE TABLE {table_name}", f"CREATE TABLE {temp_table_name}"
             )
-            session.execute(text(f"PRAGMA schema_version={new_version}"))
-            session.execute(text("PRAGMA writable_schema=OFF"))
-            session.execute(text("PRAGMA integrity_check"))
-            session.execute(text("PRAGMA foreign_keys=ON"))
+            # Step 4 - Create temp table
+            session.execute(text(new_sql))
+            column_names = ",".join([column.name for column in table_table.columns])
+            # Step 5 - Transfer content
+            sql = f"INSERT INTO {temp_table_name} SELECT {column_names} FROM {table_name};"  # noqa: S608
+            session.execute(text(sql))
+            # Step 6 - Drop the original table
+            session.execute(text(f"DROP TABLE {table_name}"))
+            # Step 7 - Rename the temp table
+            session.execute(
+                text(f"ALTER TABLE {temp_table_name} RENAME TO {table_name}")
+            )
+            # Step 8 - Recreate indexes
+            for index in table_table.indexes:
+                index.create(session.connection())
+            # Step 9 - Recreate views (there are none)
+            # Step 10 - Check foreign keys
+            session.execute(text("PRAGMA foreign_key_check"))
+            # Step 11 - Commit transaction
             session.commit()
-    except sqlalchemy.SQLAlchemyError:
+            # Step 12 - Re-enable foreign keys
+            session.connection().execute(text("PRAGMA foreign_keys=ON"))
+    except SQLAlchemyError:
         _LOGGER.exception("Error recreating SQLite table %s", table_table.name)
         # Swallow the exception since we do not want to crash the recorder
