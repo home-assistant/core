@@ -16,8 +16,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TessieConfigEntry
 from .const import TessieState
-from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
+from .models import TessieVehicleData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -170,7 +170,6 @@ async def async_setup_entry(
         TessieBinarySensorEntity(vehicle, description)
         for vehicle in data.vehicles
         for description in DESCRIPTIONS
-        if description.key in vehicle.data
     )
 
 
@@ -181,11 +180,11 @@ class TessieBinarySensorEntity(TessieEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        coordinator: TessieStateUpdateCoordinator,
+        vehicle: TessieVehicleData,
         description: TessieBinarySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, description.key)
+        super().__init__(vehicle, description.key)
         self.entity_description = description
 
     @property

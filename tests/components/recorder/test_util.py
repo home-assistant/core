@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 from sqlalchemy import lambda_stmt, text
 from sqlalchemy.engine.result import ChunkedIteratorResult
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.sql.elements import TextClause
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 
@@ -73,7 +73,6 @@ async def test_session_scope_not_setup(
 
 async def test_recorder_bad_execute(hass: HomeAssistant, setup_recorder: None) -> None:
     """Bad execute, retry 3 times."""
-    from sqlalchemy.exc import SQLAlchemyError
 
     def to_native(validate_entity_id=True):
         """Raise exception."""
@@ -854,7 +853,6 @@ async def test_write_lock_db(
     tmp_path: Path,
 ) -> None:
     """Test database write lock."""
-    from sqlalchemy.exc import OperationalError
 
     # Use file DB, in memory DB cannot do write locks.
     config = {

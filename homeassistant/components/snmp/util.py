@@ -25,6 +25,14 @@ DATA_SNMP_ENGINE = "snmp_engine"
 
 _LOGGER = logging.getLogger(__name__)
 
+type CommandArgsType = tuple[
+    SnmpEngine,
+    UsmUserData | CommunityData,
+    UdpTransportTarget | Udp6TransportTarget,
+    ContextData,
+]
+
+
 type RequestArgsType = tuple[
     SnmpEngine,
     UsmUserData | CommunityData,
@@ -34,20 +42,34 @@ type RequestArgsType = tuple[
 ]
 
 
+async def async_create_command_cmd_args(
+    hass: HomeAssistant,
+    auth_data: UsmUserData | CommunityData,
+    target: UdpTransportTarget | Udp6TransportTarget,
+) -> CommandArgsType:
+    """Create command arguments.
+
+    The ObjectType needs to be created dynamically by the caller.
+    """
+    engine = await async_get_snmp_engine(hass)
+    return (engine, auth_data, target, ContextData())
+
+
 async def async_create_request_cmd_args(
     hass: HomeAssistant,
     auth_data: UsmUserData | CommunityData,
     target: UdpTransportTarget | Udp6TransportTarget,
     object_id: str,
 ) -> RequestArgsType:
-    """Create request arguments."""
-    return (
-        await async_get_snmp_engine(hass),
-        auth_data,
-        target,
-        ContextData(),
-        ObjectType(ObjectIdentity(object_id)),
+    """Create request arguments.
+
+    The same ObjectType is used for all requests.
+    """
+    engine, auth_data, target, context_data = await async_create_command_cmd_args(
+        hass, auth_data, target
     )
+    object_type = ObjectType(ObjectIdentity(object_id))
+    return (engine, auth_data, target, context_data, object_type)
 
 
 @singleton(DATA_SNMP_ENGINE)

@@ -154,7 +154,7 @@ async def test_rest_command_methods(
     setup_component: ComponentSetup,
     aioclient_mock: AiohttpClientMocker,
     method: str,
-):
+) -> None:
     """Test various http methods."""
     await setup_component()
 
@@ -215,7 +215,7 @@ async def test_rest_command_headers(
     # provide post request data
     aioclient_mock.post(TEST_URL, content=b"success")
 
-    for test_service in [
+    for test_service in (
         "no_headers_test",
         "content_type_test",
         "headers_test",
@@ -223,7 +223,7 @@ async def test_rest_command_headers(
         "headers_and_content_type_override_test",
         "headers_template_test",
         "headers_and_content_type_override_template_test",
-    ]:
+    ):
         await hass.services.async_call(DOMAIN, test_service, {}, blocking=True)
 
     await hass.async_block_till_done()

@@ -878,6 +878,6 @@ async def test_supervisor_issues_detached_addon_missing(
         placeholders={
             "reference": "test",
             "addon": "test",
-            "addon_url": "https://github.com/home-assistant/addons/test",
+            "addon_url": "/hassio/addon/test",
         },
     )

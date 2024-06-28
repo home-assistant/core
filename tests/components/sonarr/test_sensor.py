@@ -22,12 +22,12 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 UPCOMING_ENTITY_ID = f"{SENSOR_DOMAIN}.sonarr_upcoming"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_sonarr: MagicMock,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test the creation and values of the sensors."""
     sensors = {

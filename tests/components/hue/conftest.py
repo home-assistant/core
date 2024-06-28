@@ -15,8 +15,11 @@ import pytest
 from homeassistant.components import hue
 from homeassistant.components.hue.v1 import sensor_base as hue_sensor_base
 from homeassistant.components.hue.v2.device import async_setup_devices
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
+
+from .const import FAKE_BRIDGE, FAKE_BRIDGE_DEVICE
 
 from tests.common import (
     MockConfigEntry,
@@ -24,7 +27,6 @@ from tests.common import (
     load_fixture,
     mock_device_registry,
 )
-from tests.components.hue.const import FAKE_BRIDGE, FAKE_BRIDGE_DEVICE
 
 
 @pytest.fixture(autouse=True)
@@ -275,8 +277,8 @@ async def setup_platform(
     assert await async_setup_component(hass, hue.DOMAIN, {}) is True
     await hass.async_block_till_done()
 
-    for platform in platforms:
-        await hass.config_entries.async_forward_entry_setup(config_entry, platform)
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    await hass.config_entries.async_forward_entry_setups(config_entry, platforms)
 
     # and make sure it completes before going further
     await hass.async_block_till_done()

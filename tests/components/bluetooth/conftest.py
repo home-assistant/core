@@ -6,6 +6,7 @@ from bleak_retry_connector import bleak_manager
 from dbus_fast.aio import message_bus
 import habluetooth.util as habluetooth_utils
 import pytest
+from typing_extensions import Generator
 
 
 @pytest.fixture(name="disable_bluez_manager_socket", autouse=True, scope="package")
@@ -74,7 +75,7 @@ def mock_operating_system_90():
 
 
 @pytest.fixture(name="macos_adapter")
-def macos_adapter():
+def macos_adapter() -> Generator[None]:
     """Fixture that mocks the macos adapter."""
     with (
         patch("bleak.get_platform_scanner_backend_type"),
@@ -109,7 +110,7 @@ def windows_adapter():
 
 
 @pytest.fixture(name="no_adapters")
-def no_adapter_fixture():
+def no_adapter_fixture() -> Generator[None]:
     """Fixture that mocks no adapters on Linux."""
     with (
         patch(
@@ -137,7 +138,7 @@ def no_adapter_fixture():
 
 
 @pytest.fixture(name="one_adapter")
-def one_adapter_fixture():
+def one_adapter_fixture() -> Generator[None]:
     """Fixture that mocks one adapter on Linux."""
     with (
         patch(
@@ -176,7 +177,7 @@ def one_adapter_fixture():
 
 
 @pytest.fixture(name="two_adapters")
-def two_adapters_fixture():
+def two_adapters_fixture() -> Generator[None]:
     """Fixture that mocks two adapters on Linux."""
     with (
         patch(

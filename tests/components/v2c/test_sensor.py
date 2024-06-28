@@ -2,8 +2,10 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.v2c.sensor import _METER_ERROR_OPTIONS
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -13,31 +15,29 @@ from . import init_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     mock_v2c_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test states of the sensor."""
     with patch("homeassistant.components.v2c.PLATFORMS", [Platform.SENSOR]):
         await init_integration(hass, mock_config_entry)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    from homeassistant.components.v2c.sensor import _SLAVE_ERROR_OPTIONS
-
-    assert [
+    assert _METER_ERROR_OPTIONS == [
         "no_error",
         "communication",
         "reading",
-        "slave",
+        "meter",
         "waiting_wifi",
         "waiting_communication",
         "wrong_ip",
-        "slave_not_found",
-        "wrong_slave",
+        "meter_not_found",
+        "wrong_meter",
         "no_response",
         "clamp_not_connected",
         "illegal_function",
@@ -64,4 +64,4 @@ async def test_sensor(
         "tcp_head_mismatch",
         "empty_message",
         "undefined_error",
-    ] == _SLAVE_ERROR_OPTIONS
+    ]

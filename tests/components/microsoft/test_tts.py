@@ -1,6 +1,7 @@
 """Tests for Microsoft text-to-speech."""
 
 from http import HTTPStatus
+from pathlib import Path
 from unittest.mock import patch
 
 from pycsspeechtts import pycsspeechtts
@@ -24,7 +25,7 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
-def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir: Path) -> Path:
     """Mock the TTS cache dir with empty dir."""
     return mock_tts_cache_dir
 
@@ -301,17 +302,17 @@ async def test_service_say_fa_ir_service(
 
 def test_supported_languages() -> None:
     """Test list of supported languages."""
-    for lang in ["en-us", "fa-ir", "en-gb"]:
+    for lang in ("en-us", "fa-ir", "en-gb"):
         assert lang in SUPPORTED_LANGUAGES
     assert "en-US" not in SUPPORTED_LANGUAGES
-    for lang in [
+    for lang in (
         "en",
         "en-uk",
         "english",
         "english (united states)",
         "jennyneural",
         "en-us-jennyneural",
-    ]:
+    ):
         assert lang not in {s.lower() for s in SUPPORTED_LANGUAGES}
     assert len(SUPPORTED_LANGUAGES) > 100
 

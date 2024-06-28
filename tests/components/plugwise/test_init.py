@@ -7,6 +7,7 @@ from plugwise.exceptions import (
     ConnectionFailedError,
     InvalidAuthentication,
     InvalidXMLError,
+    PlugwiseError,
     ResponseError,
     UnsupportedDeviceError,
 )
@@ -38,7 +39,7 @@ TOM = {
         "hardware": "1",
         "location": "f871b8c4d63549319221e294e4f88074",
         "model": "Tom/Floor",
-        "name": "Tom Badkamer",
+        "name": "Tom Zolder",
         "sensors": {
             "battery": 99,
             "temperature": 18.6,
@@ -83,6 +84,7 @@ async def test_load_unload_config_entry(
         (ConnectionFailedError, ConfigEntryState.SETUP_RETRY),
         (InvalidAuthentication, ConfigEntryState.SETUP_ERROR),
         (InvalidXMLError, ConfigEntryState.SETUP_RETRY),
+        (PlugwiseError, ConfigEntryState.SETUP_RETRY),
         (ResponseError, ConfigEntryState.SETUP_RETRY),
         (UnsupportedDeviceError, ConfigEntryState.SETUP_ERROR),
     ],
@@ -219,7 +221,7 @@ async def test_update_device(
                 entity_registry, mock_config_entry.entry_id
             )
         )
-        == 28
+        == 29
     )
     assert (
         len(
@@ -242,7 +244,7 @@ async def test_update_device(
                     entity_registry, mock_config_entry.entry_id
                 )
             )
-            == 33
+            == 34
         )
         assert (
             len(
@@ -256,3 +258,30 @@ async def test_update_device(
         for device_entry in list(device_registry.devices.values()):
             item_list.extend(x[1] for x in device_entry.identifiers)
         assert "01234567890abcdefghijklmnopqrstu" in item_list
+
+    # Remove the existing Tom/Floor
+    data.devices.pop("1772a4ea304041adb83f357b751341ff")
+    with patch(HA_PLUGWISE_SMILE_ASYNC_UPDATE, return_value=data):
+        async_fire_time_changed(hass, utcnow + timedelta(minutes=1))
+        await hass.async_block_till_done()
+
+        assert (
+            len(
+                er.async_entries_for_config_entry(
+                    entity_registry, mock_config_entry.entry_id
+                )
+            )
+            == 29
+        )
+        assert (
+            len(
+                dr.async_entries_for_config_entry(
+                    device_registry, mock_config_entry.entry_id
+                )
+            )
+            == 6
+        )
+        item_list: list[str] = []
+        for device_entry in list(device_registry.devices.values()):
+            item_list.extend(x[1] for x in device_entry.identifiers)
+        assert "1772a4ea304041adb83f357b751341ff" not in item_list

@@ -8,7 +8,6 @@ mode (e.g. yaml, ConfigEntry, etc) however some tests override and just run in
 relevant modes.
 """
 
-from collections.abc import Generator
 import logging
 from typing import Any
 from unittest.mock import patch
@@ -20,6 +19,7 @@ from google_nest_sdm.exceptions import (
     SubscriberException,
 )
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.nest import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -51,7 +51,7 @@ def platforms() -> list[str]:
 @pytest.fixture
 def error_caplog(
     caplog: pytest.LogCaptureFixture,
-) -> Generator[pytest.LogCaptureFixture, None, None]:
+) -> Generator[pytest.LogCaptureFixture]:
     """Fixture to capture nest init error messages."""
     with caplog.at_level(logging.ERROR, logger="homeassistant.components.nest"):
         yield caplog
@@ -60,7 +60,7 @@ def error_caplog(
 @pytest.fixture
 def warning_caplog(
     caplog: pytest.LogCaptureFixture,
-) -> Generator[pytest.LogCaptureFixture, None, None]:
+) -> Generator[pytest.LogCaptureFixture]:
     """Fixture to capture nest init warning messages."""
     with caplog.at_level(logging.WARNING, logger="homeassistant.components.nest"):
         yield caplog

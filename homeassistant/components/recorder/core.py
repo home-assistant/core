@@ -85,6 +85,7 @@ from .db_schema import (
 )
 from .executor import DBInterruptibleThreadPoolExecutor
 from .migration import (
+    BaseRunTimeMigration,
     EntityIDMigration,
     EventsContextIDMigration,
     EventTypeIDMigration,
@@ -178,7 +179,7 @@ class Recorder(threading.Thread):
         uri: str,
         db_max_retries: int,
         db_retry_wait: int,
-        entity_filter: Callable[[str], bool],
+        entity_filter: Callable[[str], bool] | None,
         exclude_event_types: set[EventType[Any] | str],
     ) -> None:
         """Initialize the recorder."""
@@ -318,7 +319,10 @@ class Recorder(threading.Thread):
             if event.event_type in exclude_event_types:
                 return
 
-            if (entity_id := event.data.get(ATTR_ENTITY_ID)) is None:
+            if (
+                entity_filter is None
+                or (entity_id := event.data.get(ATTR_ENTITY_ID)) is None
+            ):
                 queue_put(event)
                 return
 
@@ -795,6 +799,7 @@ class Recorder(threading.Thread):
                 for row in execute_stmt_lambda_element(session, get_migration_changes())
             }
 
+            migrator: BaseRunTimeMigration
             for migrator_cls in (StatesContextIDMigration, EventsContextIDMigration):
                 migrator = migrator_cls(session, schema_version, migration_changes)
                 if migrator.needs_migrate():

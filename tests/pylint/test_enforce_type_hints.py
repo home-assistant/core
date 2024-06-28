@@ -55,6 +55,7 @@ def test_regex_get_module_platform(
         ("list[dict[str, Any]]", 1, ("list", "dict[str, Any]")),
         ("tuple[bytes | None, str | None]", 2, ("tuple", "bytes | None", "str | None")),
         ("Callable[[], TestServer]", 2, ("Callable", "[]", "TestServer")),
+        ("pytest.CaptureFixture[str]", 1, ("pytest.CaptureFixture", "str")),
     ],
 )
 def test_regex_x_of_y_i(
@@ -1152,6 +1153,28 @@ def test_pytest_function(
         type_hint_checker.visit_asyncfunctiondef(func_node)
 
 
+def test_pytest_nested_function(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Ensure valid hints are accepted for a test function."""
+    func_node, nested_func_node = astroid.extract_node(
+        """
+    async def some_function( #@
+    ):
+        def test_value(value: str) -> bool: #@
+            return value == "Yes"
+        return test_value
+    """,
+        "tests.components.pylint_test.notify",
+    )
+    type_hint_checker.visit_module(func_node.parent)
+
+    with assert_no_messages(
+        linter,
+    ):
+        type_hint_checker.visit_asyncfunctiondef(nested_func_node)
+
+
 def test_pytest_invalid_function(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
@@ -1242,6 +1265,7 @@ def test_pytest_fixture(linter: UnittestLinter, type_hint_checker: BaseChecker) 
     def sample_fixture( #@
         hass: HomeAssistant,
         caplog: pytest.LogCaptureFixture,
+        capsys: pytest.CaptureFixture[str],
         aiohttp_server: Callable[[], TestServer],
         unused_tcp_port_factory: Callable[[], int],
         enable_custom_integrations: None,

@@ -19,14 +19,14 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
-from . import TautulliEntity
+from . import TautulliConfigEntry, TautulliEntity
 from .const import ATTR_TOP_USER, DOMAIN
 from .coordinator import TautulliDataUpdateCoordinator
 
@@ -210,26 +210,28 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TautulliConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Tautulli sensor."""
-    coordinator: TautulliDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     entities: list[TautulliSensor | TautulliSessionSensor] = [
         TautulliSensor(
-            coordinator,
+            data,
             description,
         )
         for description in SENSOR_TYPES
     ]
-    if coordinator.users:
+    if data.users:
         entities.extend(
             TautulliSessionSensor(
-                coordinator,
+                data,
                 description,
                 user,
             )
             for description in SESSION_SENSOR_TYPES
-            for user in coordinator.users
+            for user in data.users
             if user.username != "Local"
         )
     async_add_entities(entities)

@@ -81,7 +81,7 @@ def assert_state(actual: State | None, expected: State | None) -> None:
 )
 def add_event_call_service(
     hass: HomeAssistant,
-    request: Any,
+    request: pytest.FixtureRequest,
 ) -> Callable[dict[str, Any], Awaitable[None]]:
     """Fixture for calling the add or create event service."""
     (domain, service_call, data, target) = request.param

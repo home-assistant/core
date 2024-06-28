@@ -83,7 +83,8 @@ class Tami4ConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=api.device.name, data={CONF_REFRESH_TOKEN: refresh_token}
+                    title=api.device_metadata.name,
+                    data={CONF_REFRESH_TOKEN: refresh_token},
                 )
 
         return self.async_show_form(

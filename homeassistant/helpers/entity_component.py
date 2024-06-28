@@ -11,7 +11,6 @@ from types import ModuleType
 from typing import Any, Generic
 
 from typing_extensions import TypeVar
-import voluptuous as vol
 
 from homeassistant import config as conf_util
 from homeassistant.config_entries import ConfigEntry
@@ -36,7 +35,7 @@ from homeassistant.setup import async_prepare_setup_platform
 
 from . import config_validation as cv, discovery, entity, service
 from .entity_platform import EntityPlatform
-from .typing import ConfigType, DiscoveryInfoType
+from .typing import ConfigType, DiscoveryInfoType, VolDictType, VolSchemaType
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
 DATA_INSTANCES = "entity_components"
@@ -222,7 +221,7 @@ class EntityComponent(Generic[_EntityT]):
     def async_register_legacy_entity_service(
         self,
         name: str,
-        schema: dict[str | vol.Marker, Any] | vol.Schema,
+        schema: VolDictType | VolSchemaType,
         func: str | Callable[..., Any],
         required_features: list[int] | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
@@ -259,7 +258,7 @@ class EntityComponent(Generic[_EntityT]):
     def async_register_entity_service(
         self,
         name: str,
-        schema: dict[str | vol.Marker, Any] | vol.Schema,
+        schema: VolDictType | VolSchemaType,
         func: str | Callable[..., Any],
         required_features: list[int] | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,

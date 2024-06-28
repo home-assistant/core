@@ -1,11 +1,11 @@
 """The tests for the Button component."""
 
-from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.button import (
     DOMAIN,
@@ -55,12 +55,11 @@ async def test_button(hass: HomeAssistant) -> None:
     assert button.press.called
 
 
+@pytest.mark.usefixtures("enable_custom_integrations", "setup_platform")
 async def test_custom_integration(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
     freezer: FrozenDateTimeFactory,
-    setup_platform: None,
 ) -> None:
     """Test we integration."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
@@ -95,9 +94,8 @@ async def test_custom_integration(
     assert hass.states.get("button.button_1").state == new_time_isoformat
 
 
-async def test_restore_state(
-    hass: HomeAssistant, enable_custom_integrations: None, setup_platform: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations", "setup_platform")
+async def test_restore_state(hass: HomeAssistant) -> None:
     """Test we restore state integration."""
     mock_restore_cache(hass, (State("button.button_1", "2021-01-01T23:59:59+00:00"),))
 
@@ -107,9 +105,8 @@ async def test_restore_state(
     assert hass.states.get("button.button_1").state == "2021-01-01T23:59:59+00:00"
 
 
-async def test_restore_state_does_not_restore_unavailable(
-    hass: HomeAssistant, enable_custom_integrations: None, setup_platform: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations", "setup_platform")
+async def test_restore_state_does_not_restore_unavailable(hass: HomeAssistant) -> None:
     """Test we restore state integration except for unavailable."""
     mock_restore_cache(hass, (State("button.button_1", STATE_UNAVAILABLE),))
 
@@ -124,7 +121,7 @@ class MockFlow(ConfigFlow):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -139,7 +136,7 @@ async def test_name(hass: HomeAssistant) -> None:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
         return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")

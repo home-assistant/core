@@ -25,8 +25,8 @@ from homeassistant.components.generic.const import (
     CONF_STREAM_SOURCE,
     DOMAIN,
 )
-from homeassistant.components.stream.const import CONF_RTSP_TRANSPORT
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components.stream import CONF_RTSP_TRANSPORT
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_NAME,

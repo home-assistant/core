@@ -1,6 +1,7 @@
 """Test deCONZ gateway."""
 
 from copy import deepcopy
+from typing import Any
 from unittest.mock import patch
 
 import pydeconz
@@ -44,6 +45,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -105,12 +107,10 @@ def mock_deconz_put_request(aioclient_mock, config, path):
 
 
 async def setup_deconz_integration(
-    hass,
-    aioclient_mock=None,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker | None = None,
     *,
-    config=ENTRY_CONFIG,
-    options=ENTRY_OPTIONS,
-    get_state_response=DECONZ_WEB_REQUEST,
+    options: dict[str, Any] | UndefinedType = UNDEFINED,
     entry_id="1",
     unique_id=BRIDGEID,
     source=SOURCE_USER,
@@ -119,15 +119,15 @@ async def setup_deconz_integration(
     config_entry = MockConfigEntry(
         domain=DECONZ_DOMAIN,
         source=source,
-        data=deepcopy(config),
-        options=deepcopy(options),
+        data=deepcopy(ENTRY_CONFIG),
+        options=deepcopy(ENTRY_OPTIONS if options is UNDEFINED else options),
         entry_id=entry_id,
         unique_id=unique_id,
     )
     config_entry.add_to_hass(hass)
 
     if aioclient_mock:
-        mock_deconz_request(aioclient_mock, config, get_state_response)
+        mock_deconz_request(aioclient_mock, ENTRY_CONFIG, DECONZ_WEB_REQUEST)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -141,6 +141,8 @@ async def test_gateway_setup(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Successful setup."""
+    # Patching async_forward_entry_setup* is not advisable, and should be refactored
+    # in the future.
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
         return_value=True,
@@ -190,8 +192,10 @@ async def test_gateway_device_configuration_url_when_addon(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Successful setup."""
+    # Patching async_forward_entry_setup* is not advisable, and should be refactored
+    # in the future.
     with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup",
+        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
         return_value=True,
     ):
         config_entry = await setup_deconz_integration(

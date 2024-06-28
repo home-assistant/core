@@ -53,6 +53,7 @@ from homeassistant.helpers.typing import (
     ConfigType,
     DiscoveryInfoType,
     UndefinedType,
+    VolSchemaType,
 )
 from homeassistant.util.json import json_loads
 from homeassistant.util.yaml import dump as yaml_dump
@@ -156,7 +157,7 @@ class SetupEntity(Protocol):
 
 @callback
 def async_handle_schema_error(
-    discovery_payload: MQTTDiscoveryPayload, err: vol.MultipleInvalid
+    discovery_payload: MQTTDiscoveryPayload, err: vol.Invalid
 ) -> None:
     """Help handling schema errors on MQTT discovery messages."""
     discovery_topic: str = discovery_payload.discovery_data[ATTR_DISCOVERY_TOPIC]
@@ -247,8 +248,8 @@ def async_setup_entity_entry_helper(
     entity_class: type[MqttEntity] | None,
     domain: str,
     async_add_entities: AddEntitiesCallback,
-    discovery_schema: vol.Schema,
-    platform_schema_modern: vol.Schema,
+    discovery_schema: VolSchemaType,
+    platform_schema_modern: VolSchemaType,
     schema_class_mapping: dict[str, type[MqttEntity]] | None = None,
 ) -> None:
     """Set up entity creation dynamically through MQTT discovery."""
@@ -682,7 +683,6 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
         self._config_entry = config_entry
         self._config_entry_id = config_entry.entry_id
         self._skip_device_removal: bool = False
-        self._migrate_discovery: str | None = None
 
         discovery_hash = get_discovery_hash(discovery_data)
         self._remove_discovery_updated = async_dispatcher_connect(
@@ -721,24 +721,6 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
             discovery_hash,
             discovery_payload,
         )
-        if not discovery_payload and self._migrate_discovery is not None:
-            # Ignore empty update from migrated and removed discovery config.
-            self._discovery_data[ATTR_DISCOVERY_TOPIC] = self._migrate_discovery
-            self._migrate_discovery = None
-            _LOGGER.info("Component successfully migrated: %s", discovery_hash)
-            send_discovery_done(self.hass, self._discovery_data)
-            return
-
-        if discovery_payload and (
-            (discovery_topic := discovery_payload.discovery_data[ATTR_DISCOVERY_TOPIC])
-            != self._discovery_data[ATTR_DISCOVERY_TOPIC]
-        ):
-            # Make sure the migrated discovery topic is removed.
-            self._migrate_discovery = discovery_topic
-            _LOGGER.debug("Migrating component: %s", discovery_hash)
-            self.hass.async_create_task(
-                async_remove_discovery_payload(self.hass, self._discovery_data)
-            )
         if (
             discovery_payload
             and discovery_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
@@ -835,7 +817,6 @@ class MqttDiscoveryUpdateMixin(Entity):
         mqtt_data = hass.data[DATA_MQTT]
         self._registry_hooks = mqtt_data.discovery_registry_hooks
         discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
-        self._migrate_discovery: str | None = None
         if discovery_hash in self._registry_hooks:
             self._registry_hooks.pop(discovery_hash)()
 
@@ -918,27 +899,12 @@ class MqttDiscoveryUpdateMixin(Entity):
         old_payload = self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
         debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
         if not payload:
-            if self._migrate_discovery is not None:
-                # Ignore empty update of the migrated and removed discovery config.
-                self._discovery_data[ATTR_DISCOVERY_TOPIC] = self._migrate_discovery
-                self._migrate_discovery = None
-                _LOGGER.info("Component successfully migrated: %s", self.entity_id)
-                send_discovery_done(self.hass, self._discovery_data)
-                return
             # Empty payload: Remove component
             _LOGGER.info("Removing component: %s", self.entity_id)
             self.hass.async_create_task(
                 self._async_process_discovery_update_and_remove()
             )
         elif self._discovery_update:
-            discovery_topic = payload.discovery_data[ATTR_DISCOVERY_TOPIC]
-            if discovery_topic != self._discovery_data[ATTR_DISCOVERY_TOPIC]:
-                # Make sure the migrated discovery topic is removed.
-                self._migrate_discovery = discovery_topic
-                _LOGGER.debug("Migrating component: %s", self.entity_id)
-                self.hass.async_create_task(
-                    async_remove_discovery_payload(self.hass, self._discovery_data)
-                )
             if old_payload != payload:
                 # Non-empty, changed payload: Notify component
                 _LOGGER.info("Updating component: %s", self.entity_id)
@@ -1222,7 +1188,7 @@ class MqttEntity(
 
     @staticmethod
     @abstractmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
 
     def _set_entity_name(self, config: ConfigType) -> None:

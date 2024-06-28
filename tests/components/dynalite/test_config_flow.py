@@ -139,7 +139,7 @@ async def test_two_entries(hass: HomeAssistant) -> None:
     assert result["result"].state is ConfigEntryState.LOADED
 
 
-async def test_setup_user(hass):
+async def test_setup_user(hass: HomeAssistant) -> None:
     """Test configuration via the user flow."""
     host = "3.4.5.6"
     port = 1234
@@ -169,7 +169,7 @@ async def test_setup_user(hass):
     }
 
 
-async def test_setup_user_existing_host(hass):
+async def test_setup_user_existing_host(hass: HomeAssistant) -> None:
     """Test that when we setup a host that is defined, we get an error."""
     host = "3.4.5.6"
     MockConfigEntry(
