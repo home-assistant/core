@@ -274,6 +274,21 @@ def main() -> int:
             print(f"Please remove the package from the EXCEPTIONS list: {package.name}")
             print("")
             exit_code = 1
+    current_packages = {package.name for package in package_definitions}
+    for package in TODO:
+        if package not in current_packages:
+            print(
+                f"Package {package} is tracked, but not used. Please remove from the licenses.py file."
+            )
+            print("")
+            exit_code = 1
+    for package in EXCEPTIONS:
+        if package not in current_packages:
+            print(
+                f"Package {package} is tracked, but not used. Please remove from the licenses.py file."
+            )
+            print("")
+            exit_code = 1
     return exit_code
 
 
