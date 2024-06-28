@@ -21,6 +21,7 @@ from pyenphase.models.enpower import EnvoyEnpower
 from pyenphase.models.meters import EnvoyMeterData
 from pyenphase.models.tariff import EnvoyStorageSettings, EnvoyTariff
 import pytest
+from typing_extensions import AsyncGenerator
 
 from homeassistant.components.enphase_envoy import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
@@ -32,7 +33,9 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass: HomeAssistant, config, serial_number):
+def config_entry_fixture(
+    hass: HomeAssistant, config: dict[str, str], serial_number: str
+) -> MockConfigEntry:
     """Define a config entry fixture."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -46,7 +49,7 @@ def config_entry_fixture(hass: HomeAssistant, config, serial_number):
 
 
 @pytest.fixture(name="config")
-def config_fixture():
+def config_fixture() -> dict[str, str]:
     """Define a config entry data fixture."""
     return {
         CONF_HOST: "1.1.1.1",
@@ -233,13 +236,13 @@ async def setup_enphase_envoy_fixture(hass: HomeAssistant, config, mock_envoy):
 
 
 @pytest.fixture(name="mock_authenticate")
-def mock_authenticate():
+def mock_authenticate() -> AsyncMock:
     """Define a mocked Envoy.authenticate fixture."""
     return AsyncMock()
 
 
 @pytest.fixture(name="mock_auth")
-def mock_auth(serial_number):
+def mock_auth(serial_number: str) -> EnvoyTokenAuth:
     """Define a mocked EnvoyAuth fixture."""
     token = jwt.encode(
         payload={"name": "envoy", "exp": 1907837780}, key="secret", algorithm="HS256"
@@ -248,13 +251,13 @@ def mock_auth(serial_number):
 
 
 @pytest.fixture(name="mock_setup")
-def mock_setup():
+def mock_setup() -> AsyncMock:
     """Define a mocked Envoy.setup fixture."""
     return AsyncMock()
 
 
 @pytest.fixture(name="serial_number")
-def serial_number_fixture():
+def serial_number_fixture() -> str:
     """Define a serial number fixture."""
     return "1234"
 

@@ -2,12 +2,13 @@
 
 import itertools
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock, patch
 
 from pyenphase.const import PHASENAMES
 from pyenphase.models.meters import CtType
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from typing_extensions import AsyncGenerator
 
 from homeassistant.components.enphase_envoy.const import Platform
 from homeassistant.const import UnitOfTemperature
@@ -19,6 +20,7 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 from . import setup_with_selected_platforms
 
 from tests.common import MockConfigEntry
+
 
 SENSOR_FIXTURES = (
     [

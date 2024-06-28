@@ -1,6 +1,7 @@
 """Test the cloud.iot module."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import aiohttp
@@ -20,6 +21,7 @@ from homeassistant.components.cloud.const import (
     PREF_ENABLE_ALEXA,
     PREF_ENABLE_GOOGLE,
 )
+from homeassistant.components.cloud.prefs import CloudPreferences
 from homeassistant.components.homeassistant.exposed_entities import (
     DATA_EXPOSED_ENTITIES,
     async_expose_entity,
@@ -37,7 +39,7 @@ from tests.components.alexa import test_smart_home as test_alexa
 
 
 @pytest.fixture
-def mock_cloud_inst():
+def mock_cloud_inst() -> MagicMock:
     """Mock cloud class."""
     return MagicMock(subscription_expired=False)
 
@@ -81,7 +83,9 @@ async def test_handler_alexa(hass: HomeAssistant) -> None:
     assert device["manufacturerName"] == "Home Assistant"
 
 
-async def test_handler_alexa_disabled(hass: HomeAssistant, mock_cloud_fixture) -> None:
+async def test_handler_alexa_disabled(
+    hass: HomeAssistant, mock_cloud_fixture: CloudPreferences
+) -> None:
     """Test handler Alexa when user has disabled it."""
     mock_cloud_fixture._prefs[PREF_ENABLE_ALEXA] = False
     cloud = hass.data[DATA_CLOUD]
@@ -154,7 +158,10 @@ async def test_handler_google_actions(hass: HomeAssistant) -> None:
     ],
 )
 async def test_handler_google_actions_disabled(
-    hass: HomeAssistant, mock_cloud_fixture, intent, response_payload
+    hass: HomeAssistant,
+    mock_cloud_fixture: CloudPreferences,
+    intent: str,
+    response_payload: dict[str, Any],
 ) -> None:
     """Test handler Google Actions when user has disabled it."""
     mock_cloud_fixture._prefs[PREF_ENABLE_GOOGLE] = False
@@ -253,11 +260,10 @@ async def test_webhook_msg(
     assert '{"nonexisting": "payload"}' in caplog.text
 
 
+@pytest.mark.usefixtures("mock_cloud_setup", "mock_cloud_login")
 async def test_google_config_expose_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_cloud_setup,
-    mock_cloud_login,
 ) -> None:
     """Test Google config exposing entity method uses latest config."""
 
@@ -281,11 +287,10 @@ async def test_google_config_expose_entity(
     assert not gconf.should_expose(state)
 
 
+@pytest.mark.usefixtures("mock_cloud_setup", "mock_cloud_login")
 async def test_google_config_should_2fa(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_cloud_setup,
-    mock_cloud_login,
 ) -> None:
     """Test Google config disabling 2FA method uses latest config."""
 

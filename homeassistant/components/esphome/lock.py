@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
+from functools import partial
 from typing import Any
 
 from aioesphomeapi import EntityInfo, LockCommand, LockEntityState, LockInfo, LockState
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.const import ATTR_CODE
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import callback
 
 from .entity import (
     EsphomeEntity,
@@ -17,23 +17,6 @@ from .entity import (
     esphome_state_property,
     platform_async_setup_entry,
 )
-from .entry_data import ESPHomeConfigEntry
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ESPHomeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up ESPHome switches based on a config entry."""
-    await platform_async_setup_entry(
-        hass,
-        entry,
-        async_add_entities,
-        info_type=LockInfo,
-        entity_type=EsphomeLock,
-        state_type=LockEntityState,
-    )
 
 
 class EsphomeLock(EsphomeEntity[LockInfo, LockEntityState], LockEntity):
@@ -92,3 +75,11 @@ class EsphomeLock(EsphomeEntity[LockInfo, LockEntityState], LockEntity):
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
         self._client.lock_command(self._key, LockCommand.OPEN)
+
+
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=LockInfo,
+    entity_type=EsphomeLock,
+    state_type=LockEntityState,
+)

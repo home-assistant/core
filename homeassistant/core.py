@@ -158,12 +158,29 @@ class ConfigSource(enum.StrEnum):
     YAML = "yaml"
 
 
-class EventStateChangedData(TypedDict):
-    """EventStateChanged data."""
+class EventStateEventData(TypedDict):
+    """Base class for EVENT_STATE_CHANGED and EVENT_STATE_REPORTED data."""
 
     entity_id: str
-    old_state: State | None
     new_state: State | None
+
+
+class EventStateChangedData(EventStateEventData):
+    """EVENT_STATE_CHANGED data.
+
+    A state changed event is fired when on state write when the state is changed.
+    """
+
+    old_state: State | None
+
+
+class EventStateReportedData(EventStateEventData):
+    """EVENT_STATE_REPORTED data.
+
+    A state reported event is fired when on state write when the state is unchanged.
+    """
+
+    old_last_reported: datetime.datetime
 
 
 # SOURCE_* are deprecated as of Home Assistant 2022.2, use ConfigSource instead
@@ -1604,26 +1621,7 @@ class EventBus:
                 raise HomeAssistantError(
                     f"Event filter is required for event {event_type}"
                 )
-            # Special case for EVENT_STATE_REPORTED, we also want to listen to
-            # EVENT_STATE_CHANGED
-            self._listeners[EVENT_STATE_REPORTED].append(filterable_job)
-            self._listeners[EVENT_STATE_CHANGED].append(filterable_job)
-            return functools.partial(
-                self._async_remove_multiple_listeners,
-                (EVENT_STATE_REPORTED, EVENT_STATE_CHANGED),
-                filterable_job,
-            )
         return self._async_listen_filterable_job(event_type, filterable_job)
-
-    @callback
-    def _async_remove_multiple_listeners(
-        self,
-        keys: Iterable[EventType[_DataT] | str],
-        filterable_job: _FilterableJobType[Any],
-    ) -> None:
-        """Remove multiple listeners for specific event_types."""
-        for key in keys:
-            self._async_remove_listener(key, filterable_job)
 
     @callback
     def _async_listen_filterable_job(
@@ -2278,7 +2276,8 @@ class StateMachine:
             old_last_reported = old_state.last_reported  # type: ignore[union-attr]
             old_state.last_reported = now  # type: ignore[union-attr]
             old_state.last_reported_timestamp = timestamp  # type: ignore[union-attr]
-            self._bus.async_fire_internal(
+            # Avoid creating an EventStateReportedData
+            self._bus.async_fire_internal(  # type: ignore[misc]
                 EVENT_STATE_REPORTED,
                 {
                     "entity_id": entity_id,

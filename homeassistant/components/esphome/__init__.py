@@ -25,6 +25,8 @@ from .manager import ESPHomeManager, cleanup_instance
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
+CLIENT_INFO = f"Home Assistant {ha_version}"
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the esphome component."""
@@ -34,10 +36,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> bool:
     """Set up the esphome component."""
-    host = entry.data[CONF_HOST]
-    port = entry.data[CONF_PORT]
-    password = entry.data[CONF_PASSWORD]
-    noise_psk = entry.data.get(CONF_NOISE_PSK)
+    host: str = entry.data[CONF_HOST]
+    port: int = entry.data[CONF_PORT]
+    password: str | None = entry.data[CONF_PASSWORD]
+    noise_psk: str | None = entry.data.get(CONF_NOISE_PSK)
 
     zeroconf_instance = await zeroconf.async_get_instance(hass)
 
@@ -45,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> b
         host,
         port,
         password,
-        client_info=f"Home Assistant {ha_version}",
+        client_info=CLIENT_INFO,
         zeroconf_instance=zeroconf_instance,
         noise_psk=noise_psk,
     )
@@ -61,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> b
     entry.runtime_data = entry_data
 
     manager = ESPHomeManager(
-        hass, entry, host, password, cli, zeroconf_instance, domain_data, entry_data
+        hass, entry, host, password, cli, zeroconf_instance, domain_data
     )
     await manager.async_start()
 

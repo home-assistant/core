@@ -1,5 +1,6 @@
 """Test the Reolink init."""
 
+import asyncio
 from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -37,6 +38,11 @@ from .conftest import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = pytest.mark.usefixtures("reolink_connect", "reolink_platforms")
+
+
+async def test_wait(*args, **key_args):
+    """Ensure a mocked function takes a bit of time to be able to timeout in test."""
+    await asyncio.sleep(0)
 
 
 @pytest.mark.parametrize(
@@ -377,9 +383,13 @@ async def test_no_repair_issue(
 
 
 async def test_https_repair_issue(
-    hass: HomeAssistant, config_entry: MockConfigEntry, issue_registry: ir.IssueRegistry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test repairs issue is raised when https local url is used."""
+    reolink_connect.get_states = test_wait
     await async_process_ha_core_config(
         hass, {"country": "GB", "internal_url": "https://test_homeassistant_address"}
     )
@@ -400,9 +410,13 @@ async def test_https_repair_issue(
 
 
 async def test_ssl_repair_issue(
-    hass: HomeAssistant, config_entry: MockConfigEntry, issue_registry: ir.IssueRegistry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test repairs issue is raised when global ssl certificate is used."""
+    reolink_connect.get_states = test_wait
     assert await async_setup_component(hass, "webhook", {})
     hass.config.api.use_ssl = True
 
@@ -446,9 +460,13 @@ async def test_port_repair_issue(
 
 
 async def test_webhook_repair_issue(
-    hass: HomeAssistant, config_entry: MockConfigEntry, issue_registry: ir.IssueRegistry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test repairs issue is raised when the webhook url is unreachable."""
+    reolink_connect.get_states = test_wait
     with (
         patch("homeassistant.components.reolink.host.FIRST_ONVIF_TIMEOUT", new=0),
         patch(
@@ -471,7 +489,7 @@ async def test_firmware_repair_issue(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test firmware issue is raised when too old firmware is used."""
-    reolink_connect.sw_version_update_required = True
+    reolink_connect.camera_sw_version_update_required.return_value = True
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 

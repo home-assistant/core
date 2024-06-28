@@ -67,8 +67,9 @@ async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
     assert cl.remotestate_server == "test-remotestate-server"
 
 
+@pytest.mark.usefixtures("mock_cloud_fixture")
 async def test_remote_services(
-    hass: HomeAssistant, mock_cloud_fixture, hass_read_only_user: MockUser
+    hass: HomeAssistant, hass_read_only_user: MockUser
 ) -> None:
     """Setup cloud component and test services."""
     cloud = hass.data[DATA_CLOUD]
@@ -114,7 +115,8 @@ async def test_remote_services(
     assert mock_disconnect.called is False
 
 
-async def test_shutdown_event(hass: HomeAssistant, mock_cloud_fixture) -> None:
+@pytest.mark.usefixtures("mock_cloud_fixture")
+async def test_shutdown_event(hass: HomeAssistant) -> None:
     """Test if the cloud will stop on shutdown event."""
     with patch("hass_nabucasa.Cloud.stop") as mock_stop:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
@@ -149,7 +151,8 @@ async def test_setup_existing_cloud_user(
     assert hass_storage[STORAGE_KEY]["data"]["cloud_user"] == user.id
 
 
-async def test_on_connect(hass: HomeAssistant, mock_cloud_fixture) -> None:
+@pytest.mark.usefixtures("mock_cloud_fixture")
+async def test_on_connect(hass: HomeAssistant) -> None:
     """Test cloud on connect triggers."""
     cl = hass.data[DATA_CLOUD]
 
@@ -206,7 +209,8 @@ async def test_on_connect(hass: HomeAssistant, mock_cloud_fixture) -> None:
     assert cloud_states[-1] == CloudConnectionState.CLOUD_DISCONNECTED
 
 
-async def test_remote_ui_url(hass: HomeAssistant, mock_cloud_fixture) -> None:
+@pytest.mark.usefixtures("mock_cloud_fixture")
+async def test_remote_ui_url(hass: HomeAssistant) -> None:
     """Test getting remote ui url."""
     cl = hass.data[DATA_CLOUD]
 

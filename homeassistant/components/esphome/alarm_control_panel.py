@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from functools import partial
+
 from aioesphomeapi import (
     AlarmControlPanelCommand,
     AlarmControlPanelEntityState,
@@ -28,8 +30,7 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import callback
 
 from .entity import (
     EsphomeEntity,
@@ -37,7 +38,6 @@ from .entity import (
     esphome_state_property,
     platform_async_setup_entry,
 )
-from .entry_data import ESPHomeConfigEntry
 from .enum_mapper import EsphomeEnumMapper
 
 _ESPHOME_ACP_STATE_TO_HASS_STATE: EsphomeEnumMapper[AlarmControlPanelState, str] = (
@@ -67,22 +67,6 @@ class EspHomeACPFeatures(APIIntEnum):
     TRIGGER = 8
     ARM_CUSTOM_BYPASS = 16
     ARM_VACATION = 32
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ESPHomeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up ESPHome switches based on a config entry."""
-    await platform_async_setup_entry(
-        hass,
-        entry,
-        async_add_entities,
-        info_type=AlarmControlPanelInfo,
-        entity_type=EsphomeAlarmControlPanel,
-        state_type=AlarmControlPanelEntityState,
-    )
 
 
 class EsphomeAlarmControlPanel(
@@ -169,3 +153,11 @@ class EsphomeAlarmControlPanel(
         self._client.alarm_control_panel_command(
             self._key, AlarmControlPanelCommand.TRIGGER, code
         )
+
+
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=AlarmControlPanelInfo,
+    entity_type=EsphomeAlarmControlPanel,
+    state_type=AlarmControlPanelEntityState,
+)

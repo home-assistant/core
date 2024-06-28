@@ -126,11 +126,11 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
 
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
-        await self._remote.async_send_key(Keys.volume_up)
+        await self._remote.async_send_key(Keys.VOLUME_UP)
 
     async def async_volume_down(self) -> None:
         """Volume down media player."""
-        await self._remote.async_send_key(Keys.volume_down)
+        await self._remote.async_send_key(Keys.VOLUME_DOWN)
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
@@ -143,33 +143,33 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
     async def async_media_play_pause(self) -> None:
         """Simulate play pause media player."""
         if self._remote.playing:
-            await self._remote.async_send_key(Keys.pause)
+            await self._remote.async_send_key(Keys.PAUSE)
             self._remote.playing = False
         else:
-            await self._remote.async_send_key(Keys.play)
+            await self._remote.async_send_key(Keys.PLAY)
             self._remote.playing = True
 
     async def async_media_play(self) -> None:
         """Send play command."""
-        await self._remote.async_send_key(Keys.play)
+        await self._remote.async_send_key(Keys.PLAY)
         self._remote.playing = True
 
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        await self._remote.async_send_key(Keys.pause)
+        await self._remote.async_send_key(Keys.PAUSE)
         self._remote.playing = False
 
     async def async_media_stop(self) -> None:
         """Stop playback."""
-        await self._remote.async_send_key(Keys.stop)
+        await self._remote.async_send_key(Keys.STOP)
 
     async def async_media_next_track(self) -> None:
         """Send the fast forward command."""
-        await self._remote.async_send_key(Keys.fast_forward)
+        await self._remote.async_send_key(Keys.FAST_FORWARD)
 
     async def async_media_previous_track(self) -> None:
         """Send the rewind command."""
-        await self._remote.async_send_key(Keys.rewind)
+        await self._remote.async_send_key(Keys.REWIND)
 
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any

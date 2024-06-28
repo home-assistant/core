@@ -138,7 +138,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             user_input = {}
 
         description_placeholders = {}
-        data_schema = {}
+        data_schema = None
 
         if step_id == "link":
             user_input.update(self.discovered_conf)
