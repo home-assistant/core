@@ -141,7 +141,7 @@ async def test_get_operation_modes(
     await mqtt_mock_entry()
 
     state = hass.states.get(ENTITY_WATER_HEATER)
-    assert [
+    assert state.attributes.get("operation_list") == [
         STATE_ECO,
         STATE_ELECTRIC,
         STATE_GAS,
@@ -149,7 +149,7 @@ async def test_get_operation_modes(
         STATE_HIGH_DEMAND,
         STATE_PERFORMANCE,
         STATE_OFF,
-    ] == state.attributes.get("operation_list")
+    ]
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
