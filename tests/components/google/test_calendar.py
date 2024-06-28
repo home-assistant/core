@@ -651,6 +651,7 @@ async def test_future_event_offset_update_behavior(
     await hass.async_block_till_done()
     # Ensure coordinator update completes
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     # Event has not started, but the offset was reached
     state = hass.states.get(TEST_ENTITY)
