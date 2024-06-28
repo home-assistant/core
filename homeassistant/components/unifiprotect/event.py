@@ -33,6 +33,7 @@ class ProtectEventEntityDescription(ProtectEventMixin, EventEntityDescription):
 EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ProtectEventEntityDescription(
         key="doorbell",
+        translation_key="doorbell",
         name="Doorbell",
         device_class=EventDeviceClass.DOORBELL,
         icon="mdi:doorbell-video",
