@@ -24,7 +24,7 @@ from sqlalchemy.exc import (
     SQLAlchemyError,
 )
 from sqlalchemy.orm.session import Session
-from sqlalchemy.schema import AddConstraint, DropConstraint
+from sqlalchemy.schema import AddConstraint, CreateTable, DropConstraint
 from sqlalchemy.sql.expression import true
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 
@@ -1089,6 +1089,11 @@ def _apply_update(  # noqa: C901
             "states",
             [f"last_reported_ts {_column_types.timestamp_type}"],
         )
+    elif new_version == 44:
+        if dialect == SupportedDialect.SQLITE:
+            with session_scope(session=session_maker()) as session:
+                if not session.execute(has_used_states_event_ids()).scalar():
+                    recreate_sqlite_table(session_maker, engine, States)
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
@@ -1738,14 +1743,16 @@ def cleanup_legacy_states_event_ids(instance: Recorder) -> bool:
         # Only drop the index if there are no more event_ids in the states table
         # ex all NULL
         assert instance.engine is not None, "engine should never be None"
-        if instance.dialect_name != SupportedDialect.SQLITE:
+        if instance.dialect_name == SupportedDialect.SQLITE:
+            recreate_sqlite_table(session_maker, instance.engine, States)
+        else:
             # SQLite does not support dropping foreign key constraints
             # so we can't drop the index at this time but we can avoid
             # looking for legacy rows during purge
             _drop_foreign_key_constraints(
                 session_maker, instance.engine, TABLE_STATES, ["event_id"]
             )
-            _drop_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
+        _drop_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
         instance.use_legacy_events_index = False
 
     return True
@@ -1894,3 +1901,33 @@ def _mark_migration_done(
             migration_id=migration.migration_id, version=migration.migration_version
         )
     )
+
+
+def recreate_sqlite_table(
+    session_maker: Callable[[], Session], engine: Engine, table: type[Base]
+) -> None:
+    """Recreate a SQLite table with new columns."""
+    table_table = cast(Table, table.__table__)
+    try:
+        with session_scope(session=session_maker()) as session:
+            session.execute(text("PRAGMA foreign_keys=OFF"))
+            original_version = int(
+                str(session.execute(text("PRAGMA schema_version")).scalar())
+            )
+            new_version = original_version + 1
+            new_sql = str(CreateTable(table_table).compile(engine)).strip("\n") + ";"
+            session.execute(text("PRAGMA writable_schema=ON"))
+            session.execute(
+                text(
+                    "UPDATE sqlite_schema set sql=:sql where name=:name and type='table';"
+                ),
+                params={"name": table_table.name, "sql": new_sql},
+            )
+            session.execute(text(f"PRAGMA schema_version={new_version}"))
+            session.execute(text("PRAGMA writable_schema=OFF"))
+            session.execute(text("PRAGMA integrity_check"))
+            session.execute(text("PRAGMA foreign_keys=ON"))
+            session.commit()
+    except sqlalchemy.SQLAlchemyError:
+        _LOGGER.exception("Error recreating SQLite table %s", table_table.name)
+        # Swallow the exception since we do not want to crash the recorder
