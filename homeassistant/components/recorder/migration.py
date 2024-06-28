@@ -1954,6 +1954,8 @@ def rebuild_sqlite_table(
         # Swallow the exception since we do not want to ever raise
         # an integrity error as it would cause the database
         # to be discarded and recreated from scratch
+    else:
+        _LOGGER.warning("Rebuilding SQLite table %s finished", orig_name)
     finally:
         with session_scope(session=session_maker()) as session:
             # Step 12 - Re-enable foreign keys
