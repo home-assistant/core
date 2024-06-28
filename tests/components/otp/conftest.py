@@ -33,7 +33,10 @@ def mock_pyotp() -> Generator[MagicMock, None, None]:
     ):
         mock_totp = MagicMock()
         mock_totp.now.return_value = 123456
+        mock_totp.verify.return_value = True
+        mock_totp.provisioning_uri.return_value = "otpauth://totp/Home%20Assistant:OTP%20Sensor?secret=2FX5FBSYRE6VEC2FSHBQCRKO2GNDVZ52&issuer=Home%20Assistant"
         mock_client.TOTP.return_value = mock_totp
+        mock_client.random_base32.return_value = "2FX5FBSYRE6VEC2FSHBQCRKO2GNDVZ52"
         yield mock_client
 
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
+from datetime import datetime
 from functools import partial
 import logging
 from operator import attrgetter
@@ -303,6 +304,7 @@ class EventEntityMixin(ProtectDeviceEntity):
     entity_description: ProtectEventMixin
     _unrecorded_attributes = frozenset({ATTR_EVENT_ID, ATTR_EVENT_SCORE})
     _event: Event | None = None
+    _event_end: datetime | None = None
 
     @callback
     def _set_event_done(self) -> None:
@@ -326,6 +328,21 @@ class EventEntityMixin(ProtectDeviceEntity):
         self.async_write_ha_state()
 
     @callback
-    def _event_already_ended(self, prev_event: Event | None) -> bool:
+    def _event_already_ended(
+        self, prev_event: Event | None, prev_event_end: datetime | None
+    ) -> bool:
+        """Determine if the event has already ended.
+
+        The event_end time is passed because the prev_event and event object
+        may be the same object, and the uiprotect code will mutate the
+        event object so we need to check the datetime object that was
+        saved from the last time the entity was updated.
+        """
         event = self._event
-        return bool(event and event.end and prev_event and prev_event.id == event.id)
+        return bool(
+            event
+            and event.end
+            and prev_event
+            and prev_event_end
+            and prev_event.id == event.id
+        )

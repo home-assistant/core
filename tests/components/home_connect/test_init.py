@@ -118,6 +118,7 @@ SERVICE_APPLIANCE_METHOD_MAPPING = {
 
 
 async def test_api_setup(
+    bypass_throttle: Generator[None, Any, None],
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],

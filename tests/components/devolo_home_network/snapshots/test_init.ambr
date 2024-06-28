@@ -27,6 +27,7 @@
     'model': 'dLAN pro 1200+ WiFi ac',
     'name': 'Mock Title',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': '1234567890',
     'suggested_area': None,
     'sw_version': '5.6.1',

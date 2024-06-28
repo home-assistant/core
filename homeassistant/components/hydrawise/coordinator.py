@@ -23,7 +23,7 @@ class HydrawiseData:
     controllers: dict[int, Controller]
     zones: dict[int, Zone]
     sensors: dict[int, Sensor]
-    daily_water_use: dict[int, ControllerWaterUseSummary]
+    daily_water_summary: dict[int, ControllerWaterUseSummary]
 
 
 class HydrawiseDataUpdateCoordinator(DataUpdateCoordinator[HydrawiseData]):
@@ -40,33 +40,31 @@ class HydrawiseDataUpdateCoordinator(DataUpdateCoordinator[HydrawiseData]):
 
     async def _async_update_data(self) -> HydrawiseData:
         """Fetch the latest data from Hydrawise."""
-        user = await self.api.get_user()
+        # Don't fetch zones. We'll fetch them for each controller later.
+        # This is to prevent 502 errors in some cases.
+        # See: https://github.com/home-assistant/core/issues/120128
+        user = await self.api.get_user(fetch_zones=False)
         controllers = {}
         zones = {}
         sensors = {}
-        daily_water_use: dict[int, ControllerWaterUseSummary] = {}
+        daily_water_summary: dict[int, ControllerWaterUseSummary] = {}
         for controller in user.controllers:
             controllers[controller.id] = controller
+            controller.zones = await self.api.get_zones(controller)
             for zone in controller.zones:
                 zones[zone.id] = zone
             for sensor in controller.sensors:
                 sensors[sensor.id] = sensor
-            if any(
-                "flow meter" in sensor.model.name.lower()
-                for sensor in controller.sensors
-            ):
-                daily_water_use[controller.id] = await self.api.get_water_use_summary(
-                    controller,
-                    now().replace(hour=0, minute=0, second=0, microsecond=0),
-                    now(),
-                )
-            else:
-                daily_water_use[controller.id] = ControllerWaterUseSummary()
+            daily_water_summary[controller.id] = await self.api.get_water_use_summary(
+                controller,
+                now().replace(hour=0, minute=0, second=0, microsecond=0),
+                now(),
+            )
 
         return HydrawiseData(
             user=user,
             controllers=controllers,
             zones=zones,
             sensors=sensors,
-            daily_water_use=daily_water_use,
+            daily_water_summary=daily_water_summary,
         )

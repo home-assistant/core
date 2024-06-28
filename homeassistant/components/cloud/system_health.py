@@ -2,13 +2,10 @@
 
 from typing import Any
 
-from hass_nabucasa import Cloud
-
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
 
-from .client import CloudClient
-from .const import DOMAIN
+from .const import DATA_CLOUD
 
 
 @callback
@@ -21,7 +18,7 @@ def async_register(
 
 async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     """Get info for the info page."""
-    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    cloud = hass.data[DATA_CLOUD]
     client = cloud.client
 
     data: dict[str, Any] = {

@@ -269,5 +269,29 @@
     "command_send_failed": {
       "message": "Failed to send command: {exception}"
     }
+  },
+  "selector": {
+    "override_modes": {
+      "options": {
+        "mow": "Mow",
+        "park": "Park"
+      }
+    }
+  },
+  "services": {
+    "override_schedule": {
+      "name": "Override schedule",
+      "description": "Override the schedule to either mow or park for a duration of time.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "Minimum: 1 minute, maximum: 42 days, seconds will be ignored."
+        },
+        "override_mode": {
+          "name": "Override mode",
+          "description": "With which action the schedule should be overridden."
+        }
+      }
+    }
   }
 }

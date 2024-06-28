@@ -1381,6 +1381,24 @@ def device_attr(hass: HomeAssistant, device_or_entity_id: str, attr_name: str) -
     return getattr(device, attr_name)
 
 
+def config_entry_attr(
+    hass: HomeAssistant, config_entry_id_: str, attr_name: str
+) -> Any:
+    """Get config entry specific attribute."""
+    if not isinstance(config_entry_id_, str):
+        raise TemplateError("Must provide a config entry ID")
+
+    if attr_name not in ("domain", "title", "state", "source", "disabled_by"):
+        raise TemplateError("Invalid config entry attribute")
+
+    config_entry = hass.config_entries.async_get_entry(config_entry_id_)
+
+    if config_entry is None:
+        return None
+
+    return getattr(config_entry, attr_name)
+
+
 def is_device_attr(
     hass: HomeAssistant, device_or_entity_id: str, attr_name: str, attr_value: Any
 ) -> bool:
@@ -2867,6 +2885,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.globals["device_attr"] = hassfunction(device_attr)
         self.filters["device_attr"] = self.globals["device_attr"]
+
+        self.globals["config_entry_attr"] = hassfunction(config_entry_attr)
+        self.filters["config_entry_attr"] = self.globals["config_entry_attr"]
 
         self.globals["is_device_attr"] = hassfunction(is_device_attr)
         self.tests["is_device_attr"] = hassfunction(is_device_attr, pass_eval_context)

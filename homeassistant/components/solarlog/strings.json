@@ -79,6 +79,9 @@
       "consumption_total": {
         "name": "Consumption total"
       },
+      "self_consumption_year": {
+        "name": "Self-consumption year"
+      },
       "total_power": {
         "name": "Installed peak power"
       },

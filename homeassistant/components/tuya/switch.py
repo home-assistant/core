@@ -49,6 +49,28 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             translation_key="water",
         ),
     ),
+    # Dehumidifier
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r6jke8e
+    "cs": (
+        SwitchEntityDescription(
+            key=DPCode.ANION,
+            translation_key="ionizer",
+            icon="mdi:atom",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            translation_key="child_lock",
+            icon="mdi:account-lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.FILTER_RESET,
+            translation_key="filter_reset",
+            icon="mdi:filter",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Smart Pet Feeder
     # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
     "cwwsq": (
@@ -670,6 +692,13 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.STERILIZATION,
             translation_key="sterilization",
             entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Pool HeatPump
+    "znrb": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            translation_key="switch",
         ),
     ),
 }

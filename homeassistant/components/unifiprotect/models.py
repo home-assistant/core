@@ -10,6 +10,7 @@ import logging
 from operator import attrgetter
 from typing import Any, Generic, TypeVar
 
+from uiprotect import make_enabled_getter, make_required_getter, make_value_getter
 from uiprotect.data import (
     NVR,
     Event,
@@ -18,8 +19,6 @@ from uiprotect.data import (
 )
 
 from homeassistant.helpers.entity import EntityDescription
-
-from .utils import get_nested_attr
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,22 +60,16 @@ class ProtectEntityDescription(EntityDescription, Generic[T]):
         """Override get_ufp_value, has_required, and get_ufp_enabled if required."""
         _setter = partial(object.__setattr__, self)
 
-        if (_ufp_value := self.ufp_value) is not None:
-            ufp_value = tuple(_ufp_value.split("."))
-            _setter("get_ufp_value", partial(get_nested_attr, attrs=ufp_value))
+        if (ufp_value := self.ufp_value) is not None:
+            _setter("get_ufp_value", make_value_getter(ufp_value))
         elif (ufp_value_fn := self.ufp_value_fn) is not None:
             _setter("get_ufp_value", ufp_value_fn)
 
-        if (_ufp_enabled := self.ufp_enabled) is not None:
-            ufp_enabled = tuple(_ufp_enabled.split("."))
-            _setter("get_ufp_enabled", partial(get_nested_attr, attrs=ufp_enabled))
+        if (ufp_enabled := self.ufp_enabled) is not None:
+            _setter("get_ufp_enabled", make_enabled_getter(ufp_enabled))
 
-        if (_ufp_required_field := self.ufp_required_field) is not None:
-            ufp_required_field = tuple(_ufp_required_field.split("."))
-            _setter(
-                "has_required",
-                lambda obj: bool(get_nested_attr(obj, ufp_required_field)),
-            )
+        if (ufp_required_field := self.ufp_required_field) is not None:
+            _setter("has_required", make_required_getter(ufp_required_field))
 
 
 @dataclass(frozen=True, kw_only=True)

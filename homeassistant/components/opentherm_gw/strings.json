@@ -190,6 +190,24 @@
           "description": "The setback temperature to configure on the gateway."
         }
       }
+    },
+    "send_transparent_command": {
+      "name": "Send transparent command",
+      "description": "Sends custom otgw commands (https://otgw.tclcode.com/firmware.html) through a transparent interface.",
+      "fields": {
+        "gateway_id": {
+          "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
+          "description": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::description%]"
+        },
+        "transp_cmd": {
+          "name": "Command",
+          "description": "The command to be sent to the OpenTherm Gateway."
+        },
+        "transp_arg": {
+          "name": "Argument",
+          "description": "The argument of the command to be sent to the OpenTherm Gateway."
+        }
+      }
     }
   }
 }

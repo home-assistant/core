@@ -79,6 +79,9 @@ class ReolinkHost:
         )
         self.firmware_ch_list: list[int | None] = []
 
+        self.starting: bool = True
+        self.credential_errors: int = 0
+
         self.webhook_id: str | None = None
         self._onvif_push_supported: bool = True
         self._onvif_long_poll_supported: bool = True
@@ -191,7 +194,10 @@ class ReolinkHost:
         else:
             ir.async_delete_issue(self._hass, DOMAIN, "enable_port")
 
-        self._unique_id = format_mac(self._api.mac_address)
+        if self._api.supported(None, "UID"):
+            self._unique_id = self._api.uid
+        else:
+            self._unique_id = format_mac(self._api.mac_address)
 
         if self._onvif_push_supported:
             try:
