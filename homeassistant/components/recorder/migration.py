@@ -1089,11 +1089,6 @@ def _apply_update(  # noqa: C901
             "states",
             [f"last_reported_ts {_column_types.timestamp_type}"],
         )
-    elif new_version == 44:
-        if dialect == SupportedDialect.SQLITE:
-            with session_scope(session=session_maker()) as session:
-                if not session.execute(has_used_states_event_ids()).scalar():
-                    recreate_sqlite_table(session_maker, engine, States)
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
@@ -1744,7 +1739,7 @@ def cleanup_legacy_states_event_ids(instance: Recorder) -> bool:
         # ex all NULL
         assert instance.engine is not None, "engine should never be None"
         if instance.dialect_name == SupportedDialect.SQLITE:
-            recreate_sqlite_table(session_maker, instance.engine, States)
+            recreate_sqlite_table_schema(session_maker, instance.engine, States)
         else:
             # SQLite does not support dropping foreign key constraints
             # so we can't drop the index at this time but we can avoid
@@ -1903,10 +1898,24 @@ def _mark_migration_done(
     )
 
 
-def recreate_sqlite_table(
+def recreate_sqlite_table_schema(
     session_maker: Callable[[], Session], engine: Engine, table: type[Base]
 ) -> None:
-    """Recreate a SQLite table with new columns."""
+    """Rebuild the SQLite schema for a table.
+
+    This must only be called after all migrations are complete
+    and the database is in a consistent state since it will
+    replace the schema for the table with the current schema.
+
+    If the table is not migrated to the current schema this
+    will fail with an integrity error.
+
+    If the schema has been manually altered to add additional
+    columns, the columns will be lost since the schema is
+    replaced with the current schema. The data may be lost
+    as well if the schema is not compatible with the current
+    schema.
+    """
     table_table = cast(Table, table.__table__)
     try:
         with session_scope(session=session_maker()) as session:
