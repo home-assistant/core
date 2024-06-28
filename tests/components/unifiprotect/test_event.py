@@ -57,8 +57,6 @@ async def test_doorbell_ring(
     def _capture_event(event: HAEvent) -> None:
         events.append(event)
 
-    doorbell.smart_detect_settings.object_types.append(SmartDetectObjectType.PACKAGE)
-
     _, entity_id = ids_from_device_description(
         Platform.EVENT, doorbell, EVENT_DESCRIPTIONS[0]
     )
