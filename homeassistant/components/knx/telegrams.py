@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import deque
+from enum import Enum
 from typing import Final, TypedDict
 
 from xknx import XKNX
@@ -156,8 +157,12 @@ def decode_telegram_payload(
         value = transcoder.from_knx(payload)
     except XKNXException:
         value = "Error decoding value"
+
     if isinstance(value, DPTComplexData):
         value = value.as_dict()
+    elif isinstance(value, Enum):
+        value = value.name.lower()
+
     return DecodedTelegramPayload(
         dpt_main=transcoder.dpt_main_number,
         dpt_sub=transcoder.dpt_sub_number,
