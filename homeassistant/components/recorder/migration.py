@@ -1946,7 +1946,9 @@ def rebuild_sqlite_table(
             session.commit()
     except SQLAlchemyError:
         _LOGGER.exception("Error recreating SQLite table %s", table_table.name)
-        # Swallow the exception since we do not want to crash the recorder
+        # Swallow the exception since we do not want to ever raise
+        # an integrity error as it would cause the database
+        # to be discarded and recreated from scratch
     finally:
         with session_scope(session=session_maker()) as session:
             # Step 12 - Re-enable foreign keys
