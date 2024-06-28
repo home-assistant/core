@@ -75,12 +75,14 @@ class VentilationMode(enum.StrEnum):
     @staticmethod
     def to_ha_mode(mode: str | None) -> str | None:
         """Return the mapped Home Assistant mode for the ViCare ventilation mode."""
-        try:
-            ventilation_mode = VentilationMode(mode)
-        except ValueError:
-            # ignore unsupported / unmapped modes
-            return None
-        return VICARE_TO_HA_MODE_VENTILATION.get(ventilation_mode) if mode else None
+        if mode:
+            try:
+                ventilation_mode = VentilationMode(mode)
+            except ValueError:
+                # ignore unsupported / unmapped modes
+                return None
+            return VICARE_TO_HA_MODE_VENTILATION.get(ventilation_mode) if mode else None
+        return None
 
     @staticmethod
     def from_ha_mode(ha_mode: str | None) -> str | None:
