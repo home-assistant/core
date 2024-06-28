@@ -1013,7 +1013,7 @@ greeneye_monitor==3.0.3
 greenwavereality==0.5.1
 
 # homeassistant.components.pure_energie
-gridnet==5.0.0
+gridnet==5.0.1
 
 # homeassistant.components.growatt_server
 growattServer==1.5.0
