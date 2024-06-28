@@ -73,7 +73,7 @@ from .const import (
     TYPE_HEATING,
 )
 from .entity import TadoZoneEntity
-from .helper import decide_duration, decide_overlay_mode
+from .helper import decide_duration, decide_overlay_mode, generate_supported_fanmodes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -200,15 +200,14 @@ def create_climate_entity(
                 continue
 
             if capabilities[mode].get("fanSpeeds"):
-                supported_fan_modes = [
-                    TADO_TO_HA_FAN_MODE_MAP_LEGACY[speed]
-                    for speed in capabilities[mode]["fanSpeeds"]
-                ]
+                supported_fan_modes = generate_supported_fanmodes(
+                    TADO_TO_HA_FAN_MODE_MAP_LEGACY, capabilities[mode]["fanSpeeds"]
+                )
+
             else:
-                supported_fan_modes = [
-                    TADO_TO_HA_FAN_MODE_MAP[level]
-                    for level in capabilities[mode]["fanLevel"]
-                ]
+                supported_fan_modes = generate_supported_fanmodes(
+                    TADO_TO_HA_FAN_MODE_MAP, capabilities[mode]["fanLevel"]
+                )
 
         cool_temperatures = capabilities[CONST_MODE_COOL]["temperatures"]
     else:
