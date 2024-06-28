@@ -1685,7 +1685,7 @@ async def test_device_id(
         options={
             "name": "Statistics",
             "entity_id": "sensor.test_source",
-            "state_characteristic": "mean_circular",
+            "state_characteristic": "mean",
             "keep_last_sample": False,
             "percentile": 50.0,
             "precision": 2.0,
@@ -1693,7 +1693,6 @@ async def test_device_id(
         },
         title="Statistics",
     )
-
     statistics_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(statistics_config_entry.entry_id)

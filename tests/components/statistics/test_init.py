@@ -24,7 +24,7 @@ async def test_device_cleaning(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test for source entity device for Statistics."""
+    """Test the cleaning of devices linked to the helper Statistics."""
 
     # Source entity device config entry
     source_config_entry = MockConfigEntry()
@@ -55,7 +55,7 @@ async def test_device_cleaning(
         options={
             "name": "Statistics",
             "entity_id": "sensor.test_source",
-            "state_characteristic": "mean_circular",
+            "state_characteristic": "mean",
             "keep_last_sample": False,
             "percentile": 50.0,
             "precision": 2.0,
