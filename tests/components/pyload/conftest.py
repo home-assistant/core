@@ -41,6 +41,19 @@ YAML_INPUT = {
     CONF_SSL: True,
     CONF_USERNAME: "test-username",
 }
+REAUTH_INPUT = {
+    CONF_PASSWORD: "new-password",
+    CONF_USERNAME: "new-username",
+}
+
+NEW_INPUT = {
+    CONF_HOST: "pyload.local",
+    CONF_PASSWORD: "new-password",
+    CONF_PORT: 8000,
+    CONF_SSL: True,
+    CONF_USERNAME: "new-username",
+    CONF_VERIFY_SSL: False,
+}
 
 
 @pytest.fixture
