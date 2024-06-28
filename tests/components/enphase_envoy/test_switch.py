@@ -1,11 +1,13 @@
-"""Test Enphase Envoy switch."""
+"""Test Enphase Envoy number sensors."""
 
-from unittest.mock import AsyncMock
+from collections.abc import AsyncGenerator
+from unittest.mock import AsyncMock, Mock, patch
 
-from pyenphase.models.dry_contacts import DryContactStatus
+from pyenphase import Envoy, EnvoyTokenAuth
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.enphase_envoy import DOMAIN
 from homeassistant.components.enphase_envoy.const import Platform
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -17,8 +19,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
-from . import setup_with_selected_platforms
+from . import load_envoy_fixture
 
 from tests.common import MockConfigEntry
 
@@ -29,19 +32,44 @@ SWITCH_FIXTURES = (
 )
 
 
+@pytest.fixture(name="setup_enphase_envoy_switch")
+async def setup_enphase_envoy_sensor_fixture(
+    hass: HomeAssistant, config: dict[str, str], switch_envoy: AsyncMock
+) -> AsyncGenerator[None, None]:
+    """Define a fixture to set up Enphase Envoy with number platform only."""
+    with (
+        patch(
+            "homeassistant.components.enphase_envoy.config_flow.Envoy",
+            return_value=switch_envoy,
+        ),
+        patch(
+            "homeassistant.components.enphase_envoy.Envoy",
+            return_value=switch_envoy,
+        ),
+        patch(
+            "homeassistant.components.enphase_envoy.PLATFORMS",
+            [Platform.SWITCH],
+        ),
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+        yield
+
+
 @pytest.mark.parametrize(
-    ("mock_envoy", "entity_count"), *SWITCH_FIXTURES, indirect=["mock_envoy"]
+    ("switch_envoy", "entity_count"), *SWITCH_FIXTURES, indirect=["switch_envoy"]
 )
 async def test_switch(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
-    mock_envoy: AsyncMock,
-    entity_registry: er.EntityRegistry,
+    setup_enphase_envoy_switch: None,
+    mock_set_reserve_soc: AsyncMock,
+    switch_envoy: AsyncMock,
     entity_count: int,
 ) -> None:
-    """Test enphase_envoy switch entities."""
-    await setup_with_selected_platforms(hass, config_entry, [Platform.SWITCH])
+    """Test enphase_envoy switch entities operation."""
 
     # number entities states should be created from test data
     assert len(hass.states.async_all()) == entity_count
@@ -60,20 +88,26 @@ async def test_switch(
 
 
 @pytest.mark.parametrize(
-    ("mock_envoy", "entity_count"), *SWITCH_FIXTURES, indirect=["mock_envoy"]
+    ("switch_envoy", "entity_count"), *SWITCH_FIXTURES, indirect=["switch_envoy"]
 )
-async def test_switch_grid_operation(
+async def test_switch_operation(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     config_entry: MockConfigEntry,
-    mock_envoy: AsyncMock,
+    snapshot: SnapshotAssertion,
+    setup_enphase_envoy_switch: None,
     mock_go_on_grid: AsyncMock,
     mock_go_off_grid: AsyncMock,
+    switch_envoy: AsyncMock,
     entity_count: int,
 ) -> None:
-    """Test enphase_envoy grid connection operation."""
+    """Test enphase_envoy number entities operation."""
 
-    await setup_with_selected_platforms(hass, config_entry, [Platform.SWITCH])
     assert len(hass.states.async_all()) == entity_count
+
+    entity_base = f"{Platform.NUMBER}.enpower_"
+
+    sn = switch_envoy.data.enpower.serial_number
 
     # build switching orders
     INITIAL_OFF_ORDER = (SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE)
@@ -81,11 +115,11 @@ async def test_switch_grid_operation(
 
     entity_base = f"{Platform.SWITCH}.enpower_"
 
-    sn = mock_envoy.data.enpower.serial_number
+    sn = switch_envoy.data.enpower.serial_number
     test_entity = f"{entity_base}{sn}_grid_enabled"
     grid_status = (
         STATE_ON
-        if (mock_envoy.data.enpower.mains_admin_state == "closed")
+        if (switch_envoy.data.enpower.mains_admin_state == "closed")
         else STATE_OFF
     )
     # validate envoy value is reflected in entity
@@ -103,109 +137,52 @@ async def test_switch_grid_operation(
     assert mock_go_off_grid.await_count == (2 if grid_status == STATE_ON else 1)
 
 
-@pytest.mark.parametrize(
-    ("mock_envoy", "entity_count"), *SWITCH_FIXTURES, indirect=["mock_envoy"]
-)
-async def test_switch_grid_charge(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_envoy: AsyncMock,
+@pytest.fixture(name="switch_envoy")
+async def mock_switch_envoy_fixture(
+    serial_number: str,
+    mock_authenticate: AsyncMock,
+    mock_setup: AsyncMock,
+    mock_auth: EnvoyTokenAuth,
+    mock_go_on_grid: AsyncMock,
+    mock_go_off_grid: AsyncMock,
+    mock_open_dry_contact: AsyncMock,
+    mock_close_dry_contact: AsyncMock,
+    mock_update_dry_contact: AsyncMock,
     mock_disable_charge_from_grid: AsyncMock,
     mock_enable_charge_from_grid: AsyncMock,
-    entity_count: int,
-) -> None:
-    """Test enphase_envoy switch charge from grid operation."""
+    mock_set_reserve_soc: AsyncMock,
+    mock_set_storage_mode: AsyncMock,
+    request: pytest.FixtureRequest,
+) -> AsyncGenerator[AsyncMock, None]:
+    """Define a mocked Envoy fixture."""
+    mock_envoy = Mock(spec=Envoy)
+    with (
+        patch(
+            "homeassistant.components.enphase_envoy.config_flow.Envoy",
+            return_value=mock_envoy,
+        ),
+        patch(
+            "homeassistant.components.enphase_envoy.Envoy",
+            return_value=mock_envoy,
+        ),
+    ):
+        # load the fixture
+        load_envoy_fixture(mock_envoy, request.param)
 
-    await setup_with_selected_platforms(hass, config_entry, [Platform.SWITCH])
-    assert len(hass.states.async_all()) == entity_count
+        # set the mock for the methods
+        mock_envoy.serial_number = serial_number
+        mock_envoy.authenticate = mock_authenticate
+        mock_envoy.go_off_grid = mock_go_off_grid
+        mock_envoy.go_on_grid = mock_go_on_grid
+        mock_envoy.open_dry_contact = mock_open_dry_contact
+        mock_envoy.close_dry_contact = mock_close_dry_contact
+        mock_envoy.disable_charge_from_grid = mock_disable_charge_from_grid
+        mock_envoy.enable_charge_from_grid = mock_enable_charge_from_grid
+        mock_envoy.update_dry_contact = mock_update_dry_contact
+        mock_envoy.set_reserve_soc = mock_set_reserve_soc
+        mock_envoy.set_storage_mode = mock_set_storage_mode
+        mock_envoy.setup = mock_setup
+        mock_envoy.auth = mock_auth
+        mock_envoy.update = AsyncMock(return_value=mock_envoy.data)
 
-    # build switching orders
-    INITIAL_OFF_ORDER = (SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE)
-    INITIAL_ON_ORDER = (SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_TOGGLE)
-
-    entity_base = f"{Platform.SWITCH}.enpower_"
-
-    sn = mock_envoy.data.enpower.serial_number
-    test_entity = f"{entity_base}{sn}_charge_from_grid"
-    charge_status = (
-        STATE_ON
-        if (mock_envoy.data.tariff.storage_settings.charge_from_grid)
-        else STATE_OFF
-    )
-    assert charge_status == hass.states.get(test_entity).state
-
-    # test charge from grid switch change operation
-    for option in INITIAL_OFF_ORDER if charge_status == STATE_OFF else INITIAL_ON_ORDER:
-        await hass.services.async_call(
-            Platform.SWITCH,
-            option,
-            {ATTR_ENTITY_ID: test_entity},
-            blocking=True,
-        )
-
-    assert mock_enable_charge_from_grid.await_count == (
-        2 if charge_status == STATE_OFF else 1
-    )
-    assert mock_disable_charge_from_grid.await_count == (
-        2 if charge_status == STATE_ON else 1
-    )
-
-    mock_enable_charge_from_grid.reset_mock()
-    mock_disable_charge_from_grid.reset_mock()
-
-
-@pytest.mark.parametrize(
-    ("mock_envoy", "entity_count"), *SWITCH_FIXTURES, indirect=["mock_envoy"]
-)
-async def test_switch_relay_operation(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_envoy: AsyncMock,
-    mock_close_dry_contact: AsyncMock,
-    mock_open_dry_contact: AsyncMock,
-    entity_count: int,
-) -> None:
-    """Test enphase_envoy relay entities operation."""
-
-    await setup_with_selected_platforms(hass, config_entry, [Platform.SWITCH])
-    assert len(hass.states.async_all()) == entity_count
-
-    # build switching orders
-    INITIAL_OFF_ORDER = (SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE)
-    INITIAL_ON_ORDER = (SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_TOGGLE)
-
-    entity_base = f"{Platform.SWITCH}."
-
-    for contact_id, dry_contact in mock_envoy.data.dry_contact_status.items():
-        name = (
-            mock_envoy.data.dry_contact_settings[contact_id]
-            .load_name.lower()
-            .replace(" ", "_")
-        )
-        test_entity = f"{entity_base}{name}"
-
-        relay_status = (
-            STATE_ON if (dry_contact.status == DryContactStatus.CLOSED) else STATE_OFF
-        )
-        assert relay_status == hass.states.get(test_entity).state
-
-        # test ralay switch change operations
-        for option in (
-            INITIAL_OFF_ORDER if relay_status == STATE_OFF else INITIAL_ON_ORDER
-        ):
-            await hass.services.async_call(
-                Platform.SWITCH,
-                option,
-                {ATTR_ENTITY_ID: test_entity},
-                blocking=True,
-            )
-
-        assert mock_close_dry_contact.await_count == (
-            2 if relay_status == STATE_OFF else 1
-        )
-        assert mock_open_dry_contact.await_count == (
-            2 if relay_status == STATE_ON else 1
-        )
-
-        mock_open_dry_contact.reset_mock()
-        mock_close_dry_contact.reset_mock()
+        return mock_envoy

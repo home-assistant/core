@@ -1,7 +1,9 @@
 """Test Enphase Envoy diagnostics."""
 
-from unittest.mock import AsyncMock, patch
+from collections.abc import AsyncGenerator
+from unittest.mock import AsyncMock, Mock, patch
 
+from pyenphase import Envoy, EnvoyTokenAuth
 from pyenphase.exceptions import EnvoyError
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -9,13 +11,12 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.enphase_envoy.const import (
     DOMAIN,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
-    PLATFORMS as ENVOY_PLATFORMS,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import setup_with_selected_platforms
+from . import load_envoy_fixture
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -48,17 +49,38 @@ def limit_diagnostic_attrs(prop, path) -> bool:
     return prop in TO_EXCLUDE
 
 
-@pytest.mark.parametrize(("mock_envoy"), *ALL_FIXTURES, indirect=["mock_envoy"])
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.fixture(name="setup_enphase_envoy_diag")
+async def setup_enphase_envoy_diag_fixture(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    diag_envoy: AsyncMock,
+) -> AsyncGenerator[None, None]:
+    """Define a fixture to set up Enphase Envoy."""
+    with (
+        patch(
+            "homeassistant.components.enphase_envoy.config_flow.Envoy",
+            return_value=diag_envoy,
+        ),
+        patch(
+            "homeassistant.components.enphase_envoy.Envoy",
+            return_value=diag_envoy,
+        ),
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+        yield
+
+
+@pytest.mark.parametrize(("diag_envoy"), *ALL_FIXTURES, indirect=["diag_envoy"])
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     hass_client: ClientSessionGenerator,
-    mock_envoy: AsyncMock,
+    setup_enphase_envoy_diag: AsyncGenerator[None, None],
     snapshot: SnapshotAssertion,
+    diag_envoy: AsyncMock,
 ) -> None:
     """Test config entry diagnostics."""
-    await setup_with_selected_platforms(hass, config_entry, ENVOY_PLATFORMS)
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
     )
@@ -92,10 +114,11 @@ async def test_entry_diagnostics(
                 exclude=limit_diagnostic_attrs,
             )
 
-@pytest.mark.parametrize(("mock_envoy"), *ALL_FIXTURES, indirect=["mock_envoy"])
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+
 @pytest.fixture(name="config_entry_options")
-def config_entry_options_fixture(hass: HomeAssistant, config, serial_number):
+def config_entry_options_fixture(
+    hass: HomeAssistant, config: dict[str, str], serial_number: str
+):
     """Define a config entry fixture."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -109,38 +132,21 @@ def config_entry_options_fixture(hass: HomeAssistant, config, serial_number):
     return entry
 
 
-@pytest.mark.parametrize(("mock_envoy"), *ALL_FIXTURES, indirect=["mock_envoy"])
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_entry_diagnostics_with_fixtures(
+@pytest.fixture(name="setup_enphase_envoy_options")
+async def setup_enphase_envoy_options_fixture(
     hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    config_entry_options: ConfigEntry,
-    setup_enphase_envoy,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test config entry diagnostics."""
-    assert await get_diagnostics_for_config_entry(
-        hass, hass_client, config_entry_options
-    ) == snapshot(exclude=limit_diagnostic_attrs)
-
-
-@pytest.mark.parametrize(("mock_envoy"), *ALL_FIXTURES, indirect=["mock_envoy"])
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.fixture(name="setup_enphase_envoy_options_error")
-async def setup_enphase_envoy_options_error_fixture(
-    hass: HomeAssistant,
-    config,
-    mock_envoy_options_error,
-):
+    config: dict[str, str],
+    diag_envoy: AsyncMock,
+) -> AsyncGenerator[None, None]:
     """Define a fixture to set up Enphase Envoy."""
     with (
         patch(
             "homeassistant.components.enphase_envoy.config_flow.Envoy",
-            return_value=mock_envoy_options_error,
+            return_value=diag_envoy,
         ),
         patch(
             "homeassistant.components.enphase_envoy.Envoy",
-            return_value=mock_envoy_options_error,
+            return_value=diag_envoy,
         ),
     ):
         assert await async_setup_component(hass, DOMAIN, config)
@@ -148,28 +154,125 @@ async def setup_enphase_envoy_options_error_fixture(
         yield
 
 
-@pytest.mark.parametrize(("mock_envoy"), *ALL_FIXTURES, indirect=["mock_envoy"])
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.fixture(name="mock_envoy_options_error")
+@pytest.mark.parametrize(("diag_envoy"), *ALL_FIXTURES, indirect=["diag_envoy"])
+async def test_entry_diagnostics_with_fixtures(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry_options: ConfigEntry,
+    setup_enphase_envoy_options: AsyncGenerator[None, None],
+    snapshot: SnapshotAssertion,
+    diag_envoy: AsyncMock,
+) -> None:
+    """Test config entry diagnostics."""
+    diagnostics = await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry_options
+    )
+
+    assert diagnostics
+    assert diagnostics["fixtures"] == snapshot(
+        name="fixtures", exclude=limit_diagnostic_attrs
+    )
+
+
+@pytest.fixture(name="setup_enphase_envoy_diag_options_error")
+async def setup_enphase_envoy_diag_options_error_fixture(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    mock_envoy_diag_options_error,
+) -> AsyncGenerator[None, None]:
+    """Define a fixture to set up Enphase Envoy."""
+    with (
+        patch(
+            "homeassistant.components.enphase_envoy.config_flow.Envoy",
+            return_value=mock_envoy_diag_options_error,
+        ),
+        patch(
+            "homeassistant.components.enphase_envoy.Envoy",
+            return_value=mock_envoy_diag_options_error,
+        ),
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+        yield
+
+
+@pytest.fixture(name="mock_envoy_diag_options_error")
 def mock_envoy_options_fixture(
-    mock_envoy,
+    diag_envoy,
 ):
     """Mock envoy with error in request."""
-    mock_envoy_options = mock_envoy
+    mock_envoy_options = diag_envoy
     mock_envoy_options.request.side_effect = AsyncMock(side_effect=EnvoyError("Test"))
     return mock_envoy_options
 
 
-@pytest.mark.parametrize(("mock_envoy"), *ALL_FIXTURES, indirect=["mock_envoy"])
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(("diag_envoy"), *ALL_FIXTURES, indirect=["diag_envoy"])
 async def test_entry_diagnostics_with_fixtures_with_error(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     config_entry_options: ConfigEntry,
-    setup_enphase_envoy_options_error,
+    setup_enphase_envoy_diag_options_error: AsyncGenerator[None, None],
     snapshot: SnapshotAssertion,
+    diag_envoy: AsyncMock,
 ) -> None:
     """Test config entry diagnostics."""
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry_options
     ) == snapshot(exclude=limit_diagnostic_attrs)
+
+
+@pytest.fixture(name="diag_envoy")
+async def mock_diag_envoy_fixture(
+    serial_number: str,
+    mock_authenticate: AsyncMock,
+    mock_setup: AsyncMock,
+    mock_auth: EnvoyTokenAuth,
+    mock_go_on_grid: AsyncMock,
+    mock_go_off_grid: AsyncMock,
+    mock_open_dry_contact: AsyncMock,
+    mock_close_dry_contact: AsyncMock,
+    mock_update_dry_contact: AsyncMock,
+    mock_disable_charge_from_grid: AsyncMock,
+    mock_enable_charge_from_grid: AsyncMock,
+    mock_set_reserve_soc: AsyncMock,
+    mock_set_storage_mode: AsyncMock,
+    request: pytest.FixtureRequest,
+) -> AsyncGenerator[AsyncMock, None]:
+    """Define a mocked Envoy fixture."""
+    mock_envoy = Mock(spec=Envoy)
+    with (
+        patch(
+            "homeassistant.components.enphase_envoy.config_flow.Envoy",
+            return_value=mock_envoy,
+        ),
+        patch(
+            "homeassistant.components.enphase_envoy.Envoy",
+            return_value=mock_envoy,
+        ),
+    ):
+        # load the fixture
+        load_envoy_fixture(mock_envoy, request.param)
+
+        # set the mock for the methods
+        mock_envoy.serial_number = serial_number
+        mock_envoy.authenticate = mock_authenticate
+        mock_envoy.go_off_grid = mock_go_off_grid
+        mock_envoy.go_on_grid = mock_go_on_grid
+        mock_envoy.open_dry_contact = mock_open_dry_contact
+        mock_envoy.close_dry_contact = mock_close_dry_contact
+        mock_envoy.disable_charge_from_grid = mock_disable_charge_from_grid
+        mock_envoy.enable_charge_from_grid = mock_enable_charge_from_grid
+        mock_envoy.update_dry_contact = mock_update_dry_contact
+        mock_envoy.set_reserve_soc = mock_set_reserve_soc
+        mock_envoy.set_storage_mode = mock_set_storage_mode
+        mock_envoy.setup = mock_setup
+        mock_envoy.auth = mock_auth
+        mock_envoy.update = AsyncMock(return_value=mock_envoy.data)
+
+        response = Mock()
+        response.status_code = 200
+        response.text = "Testing request \nreplies."
+        response.headers = {"Hello": "World"}
+        mock_envoy.request = AsyncMock(return_value=response)
+
+        return mock_envoy
