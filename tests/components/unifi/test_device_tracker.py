@@ -213,67 +213,40 @@ async def test_client_state_from_event_source(
     assert hass.states.get("device_tracker.ws_client_1").state == STATE_NOT_HOME
 
 
+@pytest.mark.parametrize("device_payload", [[SWITCH_1]])
+@pytest.mark.usefixtures("mock_device_registry")
 @pytest.mark.parametrize(
-    "device_payload",
+    ("state", "interval", "expected"),
     [
-        [
-            {
-                "board_rev": 3,
-                "device_id": "mock-id",
-                "has_fan": True,
-                "fan_level": 0,
-                "ip": "10.0.1.1",
-                "last_seen": 1562600145,
-                "mac": "00:00:00:00:01:01",
-                "model": "US16P150",
-                "name": "Device 1",
-                "next_interval": 20,
-                "overheating": True,
-                "state": 1,
-                "type": "usw",
-                "upgradable": True,
-                "version": "4.0.42.10433",
-            },
-            {
-                "board_rev": 3,
-                "device_id": "mock-id",
-                "has_fan": True,
-                "ip": "10.0.1.2",
-                "mac": "00:00:00:00:01:02",
-                "model": "US16P150",
-                "name": "Device 2",
-                "next_interval": 20,
-                "state": 0,
-                "type": "usw",
-                "version": "4.0.42.10433",
-            },
-        ]
+        # Start home, new signal but still home, heartbeat timer triggers away
+        (1, 20, (STATE_HOME, STATE_HOME, STATE_NOT_HOME)),
+        # Start away, new signal but still home, heartbeat time do not trigger
+        (0, 40, (STATE_NOT_HOME, STATE_HOME, STATE_HOME)),
     ],
 )
-@pytest.mark.usefixtures("config_entry_setup")
-@pytest.mark.usefixtures("mock_device_registry")
-async def test_tracked_devices(
+async def test_tracked_device_state_change(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    config_entry_factory,
     mock_websocket_message,
     device_payload: list[dict[str, Any]],
+    state: int,
+    interval: int,
+    expected: list[str],
 ) -> None:
     """Test the update_items function with some devices."""
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
-    assert hass.states.get("device_tracker.device_1").state == STATE_HOME
-    assert hass.states.get("device_tracker.device_2").state == STATE_NOT_HOME
+    device_payload[0] = device_payload[0] | {"state": state}
+    await config_entry_factory()
+    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
+    assert hass.states.get("device_tracker.switch_1").state == expected[0]
 
     # State change signalling work
-    device_1 = device_payload[0]
-    device_1["next_interval"] = 20
-    device_2 = device_payload[1]
-    device_2["state"] = 1
-    device_2["next_interval"] = 50
-    mock_websocket_message(message=MessageKey.DEVICE, data=[device_1, device_2])
+    switch_1 = device_payload[0] | {"state": 1, "next_interval": interval}
+    mock_websocket_message(message=MessageKey.DEVICE, data=[switch_1])
     await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.device_1").state == STATE_HOME
-    assert hass.states.get("device_tracker.device_2").state == STATE_HOME
+    # Too little time has passed
+    assert hass.states.get("device_tracker.switch_1").state == expected[1]
 
     # Change of time can mark device not_home outside of expected reporting interval
     new_time = dt_util.utcnow() + timedelta(seconds=90)
@@ -281,16 +254,15 @@ async def test_tracked_devices(
     async_fire_time_changed(hass, new_time)
     await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.device_1").state == STATE_NOT_HOME
-    assert hass.states.get("device_tracker.device_2").state == STATE_HOME
+    # Heartbeat to update state is interval + 60 seconds
+    assert hass.states.get("device_tracker.switch_1").state == expected[2]
 
     # Disabled device is unavailable
-    device_1["disabled"] = True
-    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
+    switch_1["disabled"] = True
+    mock_websocket_message(message=MessageKey.DEVICE, data=switch_1)
     await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.device_1").state == STATE_UNAVAILABLE
-    assert hass.states.get("device_tracker.device_2").state == STATE_HOME
+    assert hass.states.get("device_tracker.switch_1").state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize("client_payload", [[WIRELESS_CLIENT_1, WIRED_CLIENT_1]])
