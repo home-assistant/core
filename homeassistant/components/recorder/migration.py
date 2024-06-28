@@ -1739,11 +1739,10 @@ def cleanup_legacy_states_event_ids(instance: Recorder) -> bool:
         # ex all NULL
         assert instance.engine is not None, "engine should never be None"
         if instance.dialect_name == SupportedDialect.SQLITE:
+            # SQLite does not support dropping foreign key constraints
+            # so we have to rebuild the table
             rebuild_sqlite_table(session_maker, instance.engine, States)
         else:
-            # SQLite does not support dropping foreign key constraints
-            # so we can't drop the index at this time but we can avoid
-            # looking for legacy rows during purge
             _drop_foreign_key_constraints(
                 session_maker, instance.engine, TABLE_STATES, ["event_id"]
             )
