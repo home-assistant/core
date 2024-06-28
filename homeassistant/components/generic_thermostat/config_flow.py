@@ -16,14 +16,15 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
 )
 
-from .climate import CONF_PRESETS, DEFAULT_TOLERANCE
 from .const import (
     CONF_AC_MODE,
     CONF_COLD_TOLERANCE,
     CONF_HEATER,
     CONF_HOT_TOLERANCE,
     CONF_MIN_DUR,
+    CONF_PRESETS,
     CONF_SENSOR,
+    DEFAULT_TOLERANCE,
     DOMAIN,
 )
 

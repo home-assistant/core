@@ -14,13 +14,7 @@ import voluptuous as vol
 from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
-    PRESET_ACTIVITY,
-    PRESET_AWAY,
-    PRESET_COMFORT,
-    PRESET_ECO,
-    PRESET_HOME,
     PRESET_NONE,
-    PRESET_SLEEP,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -69,14 +63,15 @@ from .const import (
     CONF_HEATER,
     CONF_HOT_TOLERANCE,
     CONF_MIN_DUR,
+    CONF_PRESETS,
     CONF_SENSOR,
+    DEFAULT_TOLERANCE,
     DOMAIN,
     PLATFORMS,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_TOLERANCE = 0.3
 DEFAULT_NAME = "Generic Thermostat"
 
 CONF_MIN_TEMP = "min_temp"
@@ -87,17 +82,6 @@ CONF_INITIAL_HVAC_MODE = "initial_hvac_mode"
 CONF_PRECISION = "precision"
 CONF_TEMP_STEP = "target_temp_step"
 
-CONF_PRESETS = {
-    p: f"{p}_temp"
-    for p in (
-        PRESET_AWAY,
-        PRESET_COMFORT,
-        PRESET_ECO,
-        PRESET_HOME,
-        PRESET_SLEEP,
-        PRESET_ACTIVITY,
-    )
-}
 
 PRESETS_SCHEMA: VolDictType = {
     vol.Optional(v): vol.Coerce(float) for v in CONF_PRESETS.values()

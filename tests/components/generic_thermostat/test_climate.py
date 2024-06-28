@@ -21,7 +21,7 @@ from homeassistant.components.climate import (
     PRESET_SLEEP,
     HVACMode,
 )
-from homeassistant.components.generic_thermostat import (
+from homeassistant.components.generic_thermostat.const import (
     DOMAIN as GENERIC_THERMOSTAT_DOMAIN,
 )
 from homeassistant.const import (
