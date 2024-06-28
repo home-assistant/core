@@ -63,22 +63,25 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolDictType
 
-from . import DOMAIN, PLATFORMS
+from .const import (
+    CONF_AC_MODE,
+    CONF_COLD_TOLERANCE,
+    CONF_HEATER,
+    CONF_HOT_TOLERANCE,
+    CONF_MIN_DUR,
+    CONF_SENSOR,
+    DOMAIN,
+    PLATFORMS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TOLERANCE = 0.3
 DEFAULT_NAME = "Generic Thermostat"
 
-CONF_HEATER = "heater"
-CONF_SENSOR = "target_sensor"
 CONF_MIN_TEMP = "min_temp"
 CONF_MAX_TEMP = "max_temp"
 CONF_TARGET_TEMP = "target_temp"
-CONF_AC_MODE = "ac_mode"
-CONF_MIN_DUR = "min_cycle_duration"
-CONF_COLD_TOLERANCE = "cold_tolerance"
-CONF_HOT_TOLERANCE = "hot_tolerance"
 CONF_KEEP_ALIVE = "keep_alive"
 CONF_INITIAL_HVAC_MODE = "initial_hvac_mode"
 CONF_PRECISION = "precision"

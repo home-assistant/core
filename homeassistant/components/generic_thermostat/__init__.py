@@ -1,11 +1,9 @@
 """The generic_thermostat component."""
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-DOMAIN = "generic_thermostat"
-PLATFORMS = [Platform.CLIMATE]
+from .const import PLATFORMS
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
