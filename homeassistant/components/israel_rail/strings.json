@@ -1,0 +1,52 @@
+{
+  "config": {
+    "error": {
+      "too_many_via_stations": "Too many via stations, only up to 5 via stations are allowed per connection.",
+      "unknown": "An unknown error was raised by python-opendata-transport"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "unknown": "An unknown error was raised by python-opendata-transport"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "from": "Start station",
+          "to": "End station"
+        },
+        "description": "Provide start and end station for your connection\n\nCheck https://www.rail.co.il for valid stations.",
+        "title": "Israel Rail"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "departure0": {
+        "name": "Departure"
+      },
+      "departure1": {
+        "name": "Departure +1"
+      },
+      "departure2": {
+        "name": "Departure +2"
+      },
+      "duration": {
+        "name": "Duration"
+      },
+      "transfers": {
+        "name": "Transfers"
+      },
+      "platform": {
+        "name": "Platform"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_data": {
+      "message": "Setup failed for entry {config_title} with invalid data, check at the https://www.rail.co.il if your station names are valid.\n{error}"
+    },
+    "request_timeout": {
+      "message": "Timeout while connecting for entry {config_title}.\n{error}"
+    }
+  }
+}

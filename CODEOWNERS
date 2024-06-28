@@ -703,6 +703,7 @@ build.json @home-assistant/supervisor
 /tests/components/isal/ @bdraco
 /homeassistant/components/islamic_prayer_times/ @engrbm87 @cpfair
 /tests/components/islamic_prayer_times/ @engrbm87 @cpfair
+/homeassistant/components/israel_rail/ @shaiu
 /homeassistant/components/iss/ @DurgNomis-drol
 /tests/components/iss/ @DurgNomis-drol
 /homeassistant/components/ista_ecotrend/ @tr4nt0r

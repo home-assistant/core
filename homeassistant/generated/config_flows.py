@@ -271,6 +271,7 @@ FLOWS = {
         "ipp",
         "iqvia",
         "islamic_prayer_times",
+        "israel_rail",
         "iss",
         "ista_ecotrend",
         "isy994",
