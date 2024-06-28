@@ -2538,8 +2538,6 @@ securetar==2024.2.1
 sendgrid==6.8.2
 
 # homeassistant.components.emulated_kasa
-sense-energy==0.12.2
-
 # homeassistant.components.sense
 sense-energy==0.12.4
 
