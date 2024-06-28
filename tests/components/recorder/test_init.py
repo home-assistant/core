@@ -908,7 +908,7 @@ async def test_saving_event_with_oversized_data(
 
     with session_scope(hass=hass, read_only=True) as session:
         events = {
-            event_type: event_data
+            event_type: data
             for _, data, event_type in (
                 session.query(
                     Events.event_id, EventData.shared_data, EventTypes.event_type
