@@ -128,6 +128,10 @@ class Remote:
 
     _control: RemoteControl | None = None
     state: MediaPlayerState | None = None
+    available: bool = False
+    volume: int = 0
+    muted: bool = False
+    playing: bool = True
 
     def __init__(
         self,
@@ -148,12 +152,6 @@ class Remote:
 
         self._app_id = app_id
         self._encryption_key = encryption_key
-
-        self.state = None
-        self.available = False
-        self.volume = 0
-        self.muted = False
-        self.playing = True
 
     async def async_create_remote_control(self, during_setup: bool = False) -> None:
         """Create remote control."""
