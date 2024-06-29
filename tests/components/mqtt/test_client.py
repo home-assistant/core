@@ -1200,11 +1200,11 @@ async def test_handle_mqtt_on_callback_after_cancellation(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
-    """Test receiving an ACK after a timeout."""
+    """Test receiving an ACK after a cancellation."""
     mqtt_mock = await mqtt_mock_entry()
     # Simulate the mid future getting a cancellation
     mqtt_mock()._async_get_mid_future(101).cancel()
-    # Simulate an ACK for mid == 101, being received after the timeout
+    # Simulate an ACK for mid == 101, being received after the cancellation
     mqtt_client_mock.on_publish(mqtt_client_mock, None, 101)
     await hass.async_block_till_done()
     assert "No ACK from MQTT server" not in caplog.text
