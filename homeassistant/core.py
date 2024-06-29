@@ -1311,9 +1311,7 @@ class EventOrigin(enum.Enum):
     @cached_property
     def idx(self) -> int:
         """Return the index of the origin."""
-        return next(
-            (idx for idx, origin in enumerate(EventOrigin) if origin is self), 0
-        )
+        return next((idx for idx, origin in enumerate(EventOrigin) if origin is self))
 
 
 class Event(Generic[_DataT]):
