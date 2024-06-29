@@ -41,7 +41,7 @@ SHEET_SERVICE_SCHEMA = vol.All(
     {
         vol.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector(),
         vol.Optional(WORKSHEET): cv.string,
-        vol.Required(DATA): dict,
+        vol.Required(DATA): vol.Any(dict, list[dict]),
     },
 )
 
@@ -108,15 +108,26 @@ async def async_setup_service(hass: HomeAssistant) -> None:
             raise HomeAssistantError("Failed to write data") from ex
 
         worksheet = sheet.worksheet(call.data.get(WORKSHEET, sheet.sheet1.title))
-        row_data = {"created": str(datetime.now())} | call.data[DATA]
+        data = (
+            [call.data[DATA]] if isinstance(call.data[DATA], dict) else call.data[DATA]
+        )
+
+        now = str(datetime.now())
+        rows_data = []
+        rows = []
         columns: list[str] = next(iter(worksheet.get_values("A1:ZZ1")), [])
-        row = [row_data.get(column, "") for column in columns]
-        for key, value in row_data.items():
-            if key not in columns:
-                columns.append(key)
-                worksheet.update_cell(1, len(columns), key)
-                row.append(value)
-        worksheet.append_row(row, value_input_option=ValueInputOption.user_entered)
+
+        rows_data = [{"created": now} | d for d in data]
+
+        for row_data in rows_data:
+            row = [row_data.get(column, "") for column in columns]
+            for key, value in row_data.items():
+                if key not in columns:
+                    columns.append(key)
+                    worksheet.update_cell(1, len(columns), key)
+                    row.append(value)
+            rows.append(row)
+        worksheet.append_rows(rows, value_input_option=ValueInputOption.user_entered)
 
     async def append_to_sheet(call: ServiceCall) -> None:
         """Append new line of data to a Google Sheets document."""
