@@ -921,7 +921,7 @@ def test_event_repr() -> None:
 
 
 def test_event_origin_idx() -> None:
-    """Test the Event origin idx."""
+    """Test the EventOrigin idx."""
     assert ha.EventOrigin.remote is ha.EventOrigin.remote
     assert ha.EventOrigin.local is ha.EventOrigin.local
     assert ha.EventOrigin.local.idx == 0
