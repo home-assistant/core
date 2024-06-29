@@ -41,7 +41,7 @@ class PinecilConfigFlow(ConfigFlow, domain=DOMAIN):
         title = discovery_info.name
 
         if user_input is not None:
-            return self.async_create_entry(title=title, data=user_input)
+            return self.async_create_entry(title=title, data={})
 
         self._set_confirm_only()
         placeholders = {"name": title}
@@ -59,7 +59,7 @@ class PinecilConfigFlow(ConfigFlow, domain=DOMAIN):
             title = self._discovered_devices[address]
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
-            return self.async_create_entry(title=title, data=user_input)
+            return self.async_create_entry(title=title, data={})
 
         current_addresses = self._async_current_ids()
         for discovery_info in async_discovered_service_info(self.hass, True):

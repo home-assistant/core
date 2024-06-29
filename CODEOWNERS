@@ -1068,6 +1068,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/pilight/ @trekky12
 /tests/components/pilight/ @trekky12
 /homeassistant/components/pinecil/ @tr4nt0r
+/tests/components/pinecil/ @tr4nt0r
 /homeassistant/components/ping/ @jpbede
 /tests/components/ping/ @jpbede
 /homeassistant/components/plaato/ @JohNan

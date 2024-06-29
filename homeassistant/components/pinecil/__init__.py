@@ -3,19 +3,20 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
-from pynecil import CommunicationError, Pynecil
+from pynecil import Pynecil
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, Platform
+from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 from .coordinator import PinecilCoordinator
 
-PLATFORMS: list[Platform] = [Platform.NUMBER, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 type PinecilConfigEntry = ConfigEntry[PinecilCoordinator]
 
@@ -24,9 +25,10 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: PinecilConfigEntry) -> bool:
     """Set up Pinecil from a config entry."""
-
+    if TYPE_CHECKING:
+        assert entry.unique_id
     ble_device = bluetooth.async_ble_device_from_address(
-        hass, entry.data[CONF_ADDRESS], connectable=True
+        hass, entry.unique_id, connectable=True
     )
     if not ble_device:
         raise ConfigEntryNotReady(
@@ -36,16 +38,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PinecilConfigEntry) -> b
         )
 
     pinecil = Pynecil(ble_device)
-    try:
-        await pinecil.connect()
-    except CommunicationError as e:
-        _LOGGER.exception("Cannot connect to device: ", exc_info=e)
-        await pinecil.disconnect()
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="setup_device_connection_error_exception",
-            translation_placeholders={CONF_NAME: entry.title},
-        ) from e
 
     coordinator = PinecilCoordinator(hass, pinecil)
     await coordinator.async_config_entry_first_refresh()

@@ -48,10 +48,6 @@ class PinecilSensor(StrEnum):
     HALL_SENSOR = "hall_sensor"
     OPERATING_MODE = "operating_mode"
     ESTIMATED_POWER = "estimated_power"
-    SLEEP_TEMP = "sleep_temperature"
-    SLEEP_TIMEOUT = "sleep_timeout"
-    QC_MAX_VOLTAGE = "qc_max_voltage"
-    PD_TIMEOUT = "pd_timeout"
 
 
 @dataclass(frozen=True, kw_only=True)

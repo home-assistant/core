@@ -2,17 +2,10 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 
-from pynecil import (
-    CommunicationError,
-    DeviceInfoResponse,
-    LiveDataResponse,
-    Pynecil,
-    SettingsDataResponse,
-)
+from pynecil import CommunicationError, DeviceInfoResponse, LiveDataResponse, Pynecil
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -27,8 +20,6 @@ SCAN_INTERVAL = timedelta(seconds=5)
 class PinecilCoordinator(DataUpdateCoordinator[LiveDataResponse]):
     """Pinecil coordinator."""
 
-    _save_delayed_task: asyncio.Task | None = None
-    settings: SettingsDataResponse = SettingsDataResponse()
     device: DeviceInfoResponse | None = None
 
     def __init__(self, hass: HomeAssistant, pinecil: Pynecil) -> None:
@@ -40,7 +31,6 @@ class PinecilCoordinator(DataUpdateCoordinator[LiveDataResponse]):
             update_interval=SCAN_INTERVAL,
         )
         self.pinecil = pinecil
-        self.hass = hass
 
     async def _async_update_data(self) -> LiveDataResponse:
         """Fetch data from Pinecil."""

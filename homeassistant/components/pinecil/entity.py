@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.const import CONF_ADDRESS
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -34,12 +33,11 @@ class PinecilBaseEntity(CoordinatorEntity[PinecilCoordinator]):
         self._attr_unique_id = (
             f"{coordinator.config_entry.unique_id}_{entity_description.key}"
         )
-
+        if TYPE_CHECKING:
+            assert coordinator.config_entry.unique_id
         self.device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.config_entry.data[CONF_ADDRESS])},
-            connections={
-                (CONNECTION_BLUETOOTH, coordinator.config_entry.data[CONF_ADDRESS])
-            },
+            identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
+            connections={(CONNECTION_BLUETOOTH, coordinator.config_entry.unique_id)},
             manufacturer=MANUFACTURER,
             model=MODEL,
             name="Pinecil",
