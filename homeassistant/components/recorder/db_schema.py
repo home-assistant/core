@@ -142,6 +142,13 @@ _DEFAULT_TABLE_ARGS = {
     "mariadb_engine": MYSQL_ENGINE,
 }
 
+_MATCH_ALL_KEEP_ATTRS = {
+    ATTR_DEVICE_CLASS,
+    ATTR_STATE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+    ATTR_FRIENDLY_NAME,
+}
+
 
 class UnusedDateTime(DateTime):
     """An unused column type that behaves like a datetime."""
@@ -597,19 +604,13 @@ class StateAttributes(Base):
             if MATCH_ALL in unrecorded_attributes:
                 # Don't exclude device class, state class, unit of measurement
                 # or friendly name when using the MATCH_ALL exclude constant
-                _exclude_attributes = {
-                    k: v
-                    for k, v in state.attributes.items()
-                    if k
-                    not in (
-                        ATTR_DEVICE_CLASS,
-                        ATTR_STATE_CLASS,
-                        ATTR_UNIT_OF_MEASUREMENT,
-                        ATTR_FRIENDLY_NAME,
-                    )
-                }
-                exclude_attrs.update(_exclude_attributes)
-
+                exclude_attrs.update(
+                    {
+                        k: v
+                        for k, v in state.attributes.items()
+                        if k not in _MATCH_ALL_KEEP_ATTRS
+                    }
+                )
         else:
             exclude_attrs = ALL_DOMAIN_EXCLUDE_ATTRS
         encoder = json_bytes_strip_null if dialect == PSQL_DIALECT else json_bytes
