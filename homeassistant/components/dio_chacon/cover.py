@@ -42,6 +42,7 @@ class DioChaconCover(DioChaconEntity, CoverEntity):
     """Object for controlling a Dio Chacon cover."""
 
     _attr_device_class = CoverDeviceClass.SHUTTER
+    _attr_name = None
 
     _attr_supported_features = (
         CoverEntityFeature.OPEN

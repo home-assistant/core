@@ -17,6 +17,7 @@ class DioChaconEntity(Entity):
     """Implements a common class elements representing the Dio Chacon entity."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self, dio_chacon_client: DIOChaconAPIClient, device: dict[str, Any]
@@ -26,8 +27,7 @@ class DioChaconEntity(Entity):
         self.dio_chacon_client: DIOChaconAPIClient = dio_chacon_client
 
         self.target_id: str = device["id"]
-        self._attr_unique_id: str | None = device["id"]
-        self._attr_name: str | None = device["name"]
+        self._attr_unique_id: str = device["id"]
         self._attr_device_info: DeviceInfo | None = DeviceInfo(
             identifiers={(DOMAIN, self.target_id)},
             manufacturer=MANUFACTURER,
