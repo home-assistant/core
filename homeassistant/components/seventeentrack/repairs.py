@@ -53,15 +53,9 @@ class SensorDeprecationRepairFlow(RepairsFlow):
             self.hass.config_entries.async_update_entry(self.entry, data=data)
             return self.async_create_entry(data={})
 
-        issue_registry = ir.async_get(self.hass)
-        description_placeholders = None
-        if issue := issue_registry.async_get_issue(self.handler, self.issue_id):
-            description_placeholders = issue.translation_placeholders
-
         return self.async_show_form(
             step_id="confirm",
             data_schema=vol.Schema({}),
-            description_placeholders=description_placeholders,
         )
 
 
