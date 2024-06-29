@@ -1306,12 +1306,14 @@ class EventOrigin(enum.Enum):
 
     def __str__(self) -> str:
         """Return the event."""
-        return self.as_str
+        return self.value
 
     @cached_property
-    def as_str(self) -> str:
-        """Return the event."""
-        return self.value
+    def idx(self) -> int:
+        """Return the index of the origin."""
+        return next(
+            (idx for idx, origin in enumerate(EventOrigin) if origin is self), 0
+        )
 
 
 class Event(Generic[_DataT]):
