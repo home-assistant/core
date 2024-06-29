@@ -35,6 +35,7 @@ from homeassistant.const import (
     URL_API_STATES,
     URL_API_STREAM,
     URL_API_TEMPLATE,
+    URL_API_USER,
 )
 import homeassistant.core as ha
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant
@@ -102,6 +103,19 @@ class APIStatusView(HomeAssistantView):
     def get(self, request: web.Request) -> web.Response:
         """Retrieve if API is running."""
         return self.json_message("API running.")
+
+
+class APIUserView(HomeAssistantView):
+    """View to handle User requests."""
+
+    url = URL_API_USER
+    name = "api:user"
+
+    @ha.callback
+    def get(self, request: web.Request) -> web.Response:
+        """Retrieve user's info."""
+        user: User = request[KEY_HASS_USER]
+        return self.json({"id": user.id, "name": user.name, "is_admin": user.is_admin})
 
 
 class APICoreStateView(HomeAssistantView):
