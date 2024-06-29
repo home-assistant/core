@@ -48,6 +48,7 @@ from .const import (
     UNIQUE_ID_TEMPLATE,
     VALUE_DELIVERED,
 )
+from .repairs import deprecate_sensor_issue
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
@@ -113,9 +114,12 @@ async def async_setup_entry(
     coordinator: SeventeenTrackCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     previous_tracking_numbers: set[str] = set()
 
-    # This has been deprecated in 2024.6, will be removed in 2024.12
+    # This has been deprecated in 2024.7, will be removed in 2025.1
     @callback
     def _async_create_remove_entities():
+        if config_entry.data.get("deprecated"):
+            remove_packages(hass, coordinator.account_id, previous_tracking_numbers)
+            return
         live_tracking_numbers = set(coordinator.data.live_packages.keys())
 
         new_tracking_numbers = live_tracking_numbers - previous_tracking_numbers
@@ -158,7 +162,9 @@ async def async_setup_entry(
         for status, summary_data in coordinator.data.summary.items()
     )
 
-    _async_create_remove_entities()
+    if not config_entry.data.get("deprecated"):
+        deprecate_sensor_issue(hass, config_entry.entry_id)
+        _async_create_remove_entities()
 
     config_entry.async_on_unload(
         coordinator.async_add_listener(_async_create_remove_entities)
@@ -207,7 +213,7 @@ class SeventeenTrackSummarySensor(SeventeenTrackSensor):
         """Return the state of the sensor."""
         return self.coordinator.data.summary[self._status]["quantity"]
 
-    # This has been deprecated in 2024.6, will be removed in 2024.12
+    # This has been deprecated in 2024.7, will be removed in 2025.1
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
