@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
-from bimmer_connected.vehicle import MyBMWVehicle
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,11 +15,9 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_VIN, ATTRIBUTION, CONF_READ_ONLY, DATA_HASS_CONFIG, DOMAIN
+from .const import ATTR_VIN, CONF_READ_ONLY, DATA_HASS_CONFIG, DOMAIN
 from .coordinator import BMWDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -179,37 +175,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-class BMWBaseEntity(CoordinatorEntity[BMWDataUpdateCoordinator]):
-    """Common base for BMW entities."""
-
-    coordinator: BMWDataUpdateCoordinator
-    _attr_attribution = ATTRIBUTION
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: BMWDataUpdateCoordinator,
-        vehicle: MyBMWVehicle,
-    ) -> None:
-        """Initialize entity."""
-        super().__init__(coordinator)
-
-        self.vehicle = vehicle
-
-        self._attrs: dict[str, Any] = {
-            "car": self.vehicle.name,
-            "vin": self.vehicle.vin,
-        }
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.vehicle.vin)},
-            manufacturer=vehicle.brand.name,
-            model=vehicle.name,
-            name=vehicle.name,
-        )
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-        self._handle_coordinator_update()

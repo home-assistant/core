@@ -12,9 +12,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BMWBaseEntity
 from .const import ATTR_DIRECTION, DOMAIN
 from .coordinator import BMWDataUpdateCoordinator
+from .entity import BMWBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ class BMWDeviceTracker(BMWBaseEntity, TrackerEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return entity specific state attributes."""
-        return {**self._attrs, ATTR_DIRECTION: self.vehicle.vehicle_location.heading}
+        return {ATTR_DIRECTION: self.vehicle.vehicle_location.heading}
 
     @property
     def latitude(self) -> float | None:
