@@ -27,7 +27,7 @@ from homeassistant.const import (
     CONF_TYPE,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.setup import async_setup_component
@@ -44,7 +44,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-def automation_calls(hass):
+def automation_calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track automation calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -300,7 +300,7 @@ async def test_functional_device_trigger(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_deconz_websocket,
-    automation_calls,
+    automation_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test proper matching and attachment of device trigger automation."""

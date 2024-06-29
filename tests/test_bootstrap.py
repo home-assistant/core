@@ -1489,7 +1489,7 @@ async def test_setup_does_base_platforms_first(hass: HomeAssistant) -> None:
     assert order[3:] == ["root", "first_dep", "second_dep"]
 
 
-def test_should_rollover_is_always_false():
+def test_should_rollover_is_always_false() -> None:
     """Test that shouldRollover always returns False."""
     assert (
         bootstrap._RotatingFileHandlerWithoutShouldRollOver(

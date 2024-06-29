@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 
 from . import TadoConnector
 from .const import (
@@ -32,6 +33,8 @@ from .const import (
     TYPE_HOT_WATER,
 )
 from .entity import TadoZoneEntity
+from .helper import decide_duration, decide_overlay_mode
+from .repairs import manage_water_heater_fallback_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +56,7 @@ WATER_HEATER_MAP_TADO = {
 SERVICE_WATER_HEATER_TIMER = "set_water_heater_timer"
 ATTR_TIME_PERIOD = "time_period"
 
-WATER_HEATER_TIMER_SCHEMA = {
+WATER_HEATER_TIMER_SCHEMA: VolDictType = {
     vol.Required(ATTR_TIME_PERIOD, default="01:00:00"): vol.All(
         cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds()
     ),
@@ -79,8 +82,14 @@ async def async_setup_entry(
 
     async_add_entities(entities, True)
 
+    manage_water_heater_fallback_issue(
+        hass=hass,
+        water_heater_names=[e.zone_name for e in entities],
+        integration_overlay_fallback=tado.fallback,
+    )
 
-def _generate_entities(tado: TadoConnector) -> list[WaterHeaterEntity]:
+
+def _generate_entities(tado: TadoConnector) -> list:
     """Create all water heater entities."""
     entities = []
 
@@ -277,13 +286,17 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
             self._tado.set_zone_off(self.zone_id, CONST_OVERLAY_MANUAL, TYPE_HOT_WATER)
             return
 
-        overlay_mode = CONST_OVERLAY_MANUAL
-        if duration:
-            overlay_mode = CONST_OVERLAY_TIMER
-        elif self._tado.fallback:
-            # Fallback to Smart Schedule at next Schedule switch if we have fallback enabled
-            overlay_mode = CONST_OVERLAY_TADO_MODE
-
+        overlay_mode = decide_overlay_mode(
+            tado=self._tado,
+            duration=duration,
+            zone_id=self.zone_id,
+        )
+        duration = decide_duration(
+            tado=self._tado,
+            duration=duration,
+            zone_id=self.zone_id,
+            overlay_mode=overlay_mode,
+        )
         _LOGGER.debug(
             "Switching to %s for zone %s (%d) with temperature %s",
             self._current_tado_hvac_mode,

@@ -13,7 +13,6 @@ from uiprotect.exceptions import ClientError
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -238,15 +237,3 @@ def async_setup_services(hass: HomeAssistant) -> None:
         if hass.services.has_service(DOMAIN, name):
             continue
         hass.services.async_register(DOMAIN, name, method, schema=schema)
-
-
-def async_cleanup_services(hass: HomeAssistant) -> None:
-    """Cleanup global UniFi Protect services (if all config entries unloaded)."""
-    loaded_entries = [
-        entry
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.state == ConfigEntryState.LOADED
-    ]
-    if len(loaded_entries) == 1:
-        for name in ALL_GLOBAL_SERIVCES:
-            hass.services.async_remove(DOMAIN, name)

@@ -32,5 +32,8 @@
         "default": "mdi:tooltip-question"
       }
     }
+  },
+  "services": {
+    "override_schedule": "mdi:debug-step-over"
   }
 }

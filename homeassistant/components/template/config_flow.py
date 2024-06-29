@@ -18,6 +18,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
+    CONF_DEVICE_ID,
     CONF_NAME,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
@@ -94,6 +95,8 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
                 ),
             ),
         }
+
+    schema[vol.Optional(CONF_DEVICE_ID)] = selector.DeviceSelector()
 
     return schema
 

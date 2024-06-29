@@ -17,7 +17,7 @@ from homeassistant.components.lock import LockEntity, LockEntityDescription
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .data import ProtectData, UFPConfigEntry
+from .data import UFPConfigEntry
 from .entity import ProtectDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,7 +39,9 @@ async def async_setup_entry(
     data.async_subscribe_adopt(_add_new_device)
 
     async_add_entities(
-        ProtectLock(data, cast(Doorlock, device))
+        ProtectLock(
+            data, cast(Doorlock, device), LockEntityDescription(key="lock", name="Lock")
+        )
         for device in data.get_by_types({ModelType.DOORLOCK})
     )
 
@@ -56,20 +58,6 @@ class ProtectLock(ProtectDeviceEntity, LockEntity):
         "_attr_is_unlocking",
         "_attr_is_jammed",
     )
-
-    def __init__(
-        self,
-        data: ProtectData,
-        doorlock: Doorlock,
-    ) -> None:
-        """Initialize an UniFi lock."""
-        super().__init__(
-            data,
-            doorlock,
-            LockEntityDescription(key="lock"),
-        )
-
-        self._attr_name = f"{self.device.display_name} Lock"
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:

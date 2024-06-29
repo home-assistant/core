@@ -9,6 +9,7 @@ import voluptuous as vol
 from xknxproject.exceptions import XknxProjectException
 
 from homeassistant.components import panel_custom, websocket_api
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
@@ -31,10 +32,14 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_get_knx_project)
 
     if DOMAIN not in hass.data.get("frontend_panels", {}):
-        hass.http.register_static_path(
-            URL_BASE,
-            path=knx_panel.locate_dir(),
-            cache_headers=knx_panel.is_prod_build,
+        await hass.http.async_register_static_paths(
+            [
+                StaticPathConfig(
+                    URL_BASE,
+                    path=knx_panel.locate_dir(),
+                    cache_headers=knx_panel.is_prod_build,
+                )
+            ]
         )
         await panel_custom.async_register_panel(
             hass=hass,

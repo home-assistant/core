@@ -905,16 +905,19 @@ async def test_saving_event_with_oversized_data(
     hass.bus.async_fire("test_event", event_data)
     hass.bus.async_fire("test_event_too_big", massive_dict)
     await async_wait_recording_done(hass)
-    events = {}
 
     with session_scope(hass=hass, read_only=True) as session:
-        for _, data, event_type in (
-            session.query(Events.event_id, EventData.shared_data, EventTypes.event_type)
-            .outerjoin(EventData, Events.data_id == EventData.data_id)
-            .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
-            .where(EventTypes.event_type.in_(["test_event", "test_event_too_big"]))
-        ):
-            events[event_type] = data
+        events = {
+            event_type: data
+            for _, data, event_type in (
+                session.query(
+                    Events.event_id, EventData.shared_data, EventTypes.event_type
+                )
+                .outerjoin(EventData, Events.data_id == EventData.data_id)
+                .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
+                .where(EventTypes.event_type.in_(["test_event", "test_event_too_big"]))
+            )
+        }
 
     assert "test_event_too_big" in caplog.text
 
@@ -932,16 +935,19 @@ async def test_saving_event_invalid_context_ulid(
     event_data = {"test_attr": 5, "test_attr_10": "nice"}
     hass.bus.async_fire("test_event", event_data, context=Context(id="invalid"))
     await async_wait_recording_done(hass)
-    events = {}
 
     with session_scope(hass=hass, read_only=True) as session:
-        for _, data, event_type in (
-            session.query(Events.event_id, EventData.shared_data, EventTypes.event_type)
-            .outerjoin(EventData, Events.data_id == EventData.data_id)
-            .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
-            .where(EventTypes.event_type.in_(["test_event"]))
-        ):
-            events[event_type] = data
+        events = {
+            event_type: data
+            for _, data, event_type in (
+                session.query(
+                    Events.event_id, EventData.shared_data, EventTypes.event_type
+                )
+                .outerjoin(EventData, Events.data_id == EventData.data_id)
+                .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
+                .where(EventTypes.event_type.in_(["test_event"]))
+            )
+        }
 
     assert "invalid" in caplog.text
 
@@ -2417,6 +2423,71 @@ async def test_excluding_attributes_by_integration(
 
     expected = _state_with_context(hass, entity_id)
     expected.attributes = {"test_attr": 5}
+    assert state.as_dict() == expected.as_dict()
+
+
+async def test_excluding_all_attributes_by_integration(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_recorder: None,
+) -> None:
+    """Test that an entity can exclude all attributes from being recorded using MATCH_ALL."""
+    state = "restoring_from_db"
+    attributes = {
+        "test_attr": 5,
+        "excluded_component": 10,
+        "excluded_integration": 20,
+        "device_class": "test",
+        "state_class": "test",
+        "friendly_name": "Test entity",
+        "unit_of_measurement": "mm",
+    }
+    mock_platform(
+        hass,
+        "fake_integration.recorder",
+        Mock(exclude_attributes=lambda hass: {"excluded"}),
+    )
+    hass.config.components.add("fake_integration")
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {"component": "fake_integration"})
+    await hass.async_block_till_done()
+
+    class EntityWithExcludedAttributes(MockEntity):
+        _unrecorded_attributes = frozenset({MATCH_ALL})
+
+    entity_id = "test.fake_integration_recorder"
+    entity_platform = MockEntityPlatform(hass, platform_name="fake_integration")
+    entity = EntityWithExcludedAttributes(
+        entity_id=entity_id,
+        extra_state_attributes=attributes,
+    )
+    await entity_platform.async_add_entities([entity])
+    await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+
+    with session_scope(hass=hass, read_only=True) as session:
+        db_states = []
+        for db_state, db_state_attributes, states_meta in (
+            session.query(States, StateAttributes, StatesMeta)
+            .outerjoin(
+                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            )
+            .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+        ):
+            db_state.entity_id = states_meta.entity_id
+            db_states.append(db_state)
+            state = db_state.to_native()
+            state.attributes = db_state_attributes.to_native()
+        assert len(db_states) == 1
+        assert db_states[0].event_id is None
+
+    expected = _state_with_context(hass, entity_id)
+    expected.attributes = {
+        "device_class": "test",
+        "state_class": "test",
+        "friendly_name": "Test entity",
+        "unit_of_measurement": "mm",
+    }
     assert state.as_dict() == expected.as_dict()
 
 

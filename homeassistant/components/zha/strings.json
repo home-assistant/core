@@ -249,6 +249,13 @@
       "face_4": "With face 4 activated",
       "face_5": "With face 5 activated",
       "face_6": "With face 6 activated"
+    },
+    "extra_fields": {
+      "color": "Color hue",
+      "duration": "Duration in seconds",
+      "effect_type": "Effect type",
+      "led_number": "LED number",
+      "level": "Brightness (%)"
     }
   },
   "services": {

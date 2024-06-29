@@ -26,12 +26,11 @@ from .const import (
     ATTR_FPS,
     ATTR_HEIGHT,
     ATTR_WIDTH,
-    DISPATCH_CHANNELS,
     DOMAIN,
 )
 from .data import ProtectData, UFPConfigEntry
 from .entity import ProtectDeviceEntity
-from .utils import async_dispatch_id as _ufpd, get_camera_base_name
+from .utils import get_camera_base_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -153,9 +152,12 @@ async def async_setup_entry(
 
     data.async_subscribe_adopt(_add_new_device)
     entry.async_on_unload(
-        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_CHANNELS), _add_new_device)
+        async_dispatcher_connect(hass, data.channels_signal, _add_new_device)
     )
     async_add_entities(_async_camera_entities(hass, entry, data))
+
+
+_EMPTY_CAMERA_FEATURES = CameraEntityFeature(0)
 
 
 class ProtectCamera(ProtectDeviceEntity, Camera):
@@ -188,10 +190,10 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         camera_name = get_camera_base_name(channel)
         if self._secure:
             self._attr_unique_id = f"{device.mac}_{channel.id}"
-            self._attr_name = f"{device.display_name} {camera_name}"
+            self._attr_name = camera_name
         else:
             self._attr_unique_id = f"{device.mac}_{channel.id}_insecure"
-            self._attr_name = f"{device.display_name} {camera_name} (Insecure)"
+            self._attr_name = f"{camera_name} (insecure)"
         # only the default (first) channel is enabled by default
         self._attr_entity_registry_enabled_default = is_default and secure
 
@@ -206,13 +208,12 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         rtsp_url = channel.rtsps_url if self._secure else channel.rtsp_url
 
         # _async_set_stream_source called by __init__
-        self._stream_source = (  # pylint: disable=attribute-defined-outside-init
-            None if disable_stream else rtsp_url
-        )
+        # pylint: disable-next=attribute-defined-outside-init
+        self._stream_source = None if disable_stream else rtsp_url
         if self._stream_source:
             self._attr_supported_features = CameraEntityFeature.STREAM
         else:
-            self._attr_supported_features = CameraEntityFeature(0)
+            self._attr_supported_features = _EMPTY_CAMERA_FEATURES
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:

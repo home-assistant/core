@@ -21,7 +21,7 @@ from tests.common import MockConfigEntry
 
 async def test_sensors(hass: HomeAssistant, setup_entry: MockConfigEntry) -> None:
     """Test sensors and check test values are correctly set."""
-    assert len(hass.states.async_all("sensor")) == 28
+    assert len(hass.states.async_all("sensor")) == 34
     assert hass.states.get("sensor.roborock_s7_maxv_main_brush_time_left").state == str(
         MAIN_BRUSH_REPLACE_TIME - 74382
     )
@@ -54,6 +54,12 @@ async def test_sensors(hass: HomeAssistant, setup_entry: MockConfigEntry) -> Non
         hass.states.get("sensor.roborock_s7_maxv_last_clean_end").state
         == "2023-01-01T03:43:58+00:00"
     )
+    assert hass.states.get("sensor.dyad_pro_status").state == "drying"
+    assert hass.states.get("sensor.dyad_pro_battery").state == "100"
+    assert hass.states.get("sensor.dyad_pro_filter_time_left").state == "111"
+    assert hass.states.get("sensor.dyad_pro_roller_left").state == "222"
+    assert hass.states.get("sensor.dyad_pro_error").state == "none"
+    assert hass.states.get("sensor.dyad_pro_total_cleaning_time").state == "213"
 
 
 async def test_listener_update(
