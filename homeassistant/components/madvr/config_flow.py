@@ -5,6 +5,7 @@ import logging
 from typing import Any
 
 import aiohttp
+from madvr.errors import CannotConnect
 from madvr.madvr import HeartBeatError, Madvr
 import voluptuous as vol
 
@@ -19,7 +20,6 @@ from homeassistant.core import callback
 
 from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 from .coordinator import MadVRCoordinator
-from .utils import CannotConnect
 
 _LOGGER = logging.getLogger(__name__)
 
