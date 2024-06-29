@@ -1308,6 +1308,11 @@ class EventOrigin(enum.Enum):
         """Return the event."""
         return self.value
 
+    @cached_property
+    def idx(self) -> int:
+        """Return the index of the origin."""
+        return next((idx for idx, origin in enumerate(EventOrigin) if origin is self))
+
 
 class Event(Generic[_DataT]):
     """Representation of an event within the bus."""

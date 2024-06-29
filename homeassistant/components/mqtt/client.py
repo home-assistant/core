@@ -1163,8 +1163,8 @@ class MQTT:
         # see https://github.com/eclipse/paho.mqtt.python/issues/687
         # properties and reason codes are not used in Home Assistant
         future = self._async_get_mid_future(mid)
-        if future.done() and future.exception():
-            # Timed out
+        if future.done() and (future.cancelled() or future.exception()):
+            # Timed out or cancelled
             return
         future.set_result(None)
 
