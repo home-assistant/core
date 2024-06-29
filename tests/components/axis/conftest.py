@@ -255,12 +255,15 @@ def fixture_default_requests(mock_requests: Callable[[str], None]) -> None:
 
 @pytest.fixture(name="config_entry_factory")
 async def fixture_config_entry_factory(
-    hass: HomeAssistant, config_entry: ConfigEntry, mock_default_requests: None
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    mock_requests: Callable[[str], None],
 ) -> Callable[[], ConfigEntry]:
     """Fixture factory to set up Axis network device."""
 
     async def __mock_setup_config_entry() -> ConfigEntry:
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        mock_requests(config_entry.data[CONF_HOST])
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         return config_entry
 
@@ -269,12 +272,10 @@ async def fixture_config_entry_factory(
 
 @pytest.fixture(name="config_entry_setup")
 async def fixture_config_entry_setup(
-    hass: HomeAssistant, config_entry: ConfigEntry, mock_default_requests: None
+    hass: HomeAssistant, config_entry_factory: Callable[[], ConfigEntry]
 ) -> ConfigEntry:
     """Define a fixture to set up Axis network device."""
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    return config_entry
+    return await config_entry_factory()
 
 
 # RTSP fixtures
