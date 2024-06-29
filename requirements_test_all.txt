@@ -267,7 +267,7 @@ aiolookin==1.0.0
 aiolyric==1.1.0
 
 # homeassistant.components.mealie
-aiomealie==0.4.0
+aiomealie==0.5.0
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -827,7 +827,7 @@ govee-local-api==1.5.1
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==1.4.1
+greeclimate==1.4.6
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==3.0.3
@@ -895,7 +895,7 @@ hole==0.8.0
 holidays==0.51
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240627.0
+home-assistant-frontend==20240628.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.6.26
@@ -1629,7 +1629,7 @@ pyotgw==2.2.0
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.13.11
+pyoverkiz==1.13.12
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -1793,7 +1793,7 @@ python-mystrom==2.2.0
 python-opendata-transport==0.4.0
 
 # homeassistant.components.opensky
-python-opensky==1.0.0
+python-opensky==1.0.1
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
