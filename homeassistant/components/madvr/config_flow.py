@@ -17,7 +17,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import callback
 
-from .const import CONF_POWER_ON, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 from .coordinator import MadVRCoordinator
 from .utils import CannotConnect
 
@@ -32,10 +32,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
             CONF_PORT,
             default=DEFAULT_PORT,
         ): int,
-        vol.Required(
-            CONF_POWER_ON,
-            default=False,
-        ): bool,
     }
 )
 
@@ -52,9 +48,8 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
-            keep_power_on = user_input[CONF_POWER_ON]
             try:
-                await self._test_connection(host, port, keep_power_on)
+                await self._test_connection(host, port)
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
                     data=user_input,
@@ -71,7 +66,7 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _test_connection(self, host: str, port: int, keep_power_on: bool):
+    async def _test_connection(self, host: str, port: int):
         """Test if we can connect to the device."""
         try:
             madvr_client = Madvr(host=host, port=port)
@@ -96,11 +91,6 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
             raise CannotConnect("Connection failed")
 
         _LOGGER.debug("Connection test successful")
-        if not keep_power_on:
-            _LOGGER.debug("Turning off device during setup")
-            await madvr_client.power_off()
-
-        _LOGGER.debug("Finished testing connection")
 
     @staticmethod
     @callback
@@ -116,7 +106,6 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_NAME: import_config.get(CONF_NAME, DEFAULT_NAME),
             CONF_HOST: import_config.get(CONF_HOST, ""),
             CONF_PORT: import_config.get(CONF_PORT, DEFAULT_PORT),
-            CONF_POWER_ON: False,
         }
 
         result = await self.async_step_user(config)

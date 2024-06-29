@@ -39,7 +39,6 @@ async def test_user_form(hass: HomeAssistant, mock_madvr) -> None:
             {
                 "host": "192.168.1.100",
                 "port": 44077,
-                "keep_power_on": False,
             },
         )
         await hass.async_block_till_done()
@@ -49,7 +48,6 @@ async def test_user_form(hass: HomeAssistant, mock_madvr) -> None:
     assert result2["data"] == {
         "host": "192.168.1.100",
         "port": 44077,
-        "keep_power_on": False,
     }
 
 
@@ -70,7 +68,6 @@ async def test_user_form_cannot_connect(hass: HomeAssistant, mock_madvr) -> None
             {
                 "host": "192.168.1.100",
                 "port": 44077,
-                "keep_power_on": False,
             },
         )
 
@@ -91,7 +88,6 @@ async def test_user_form_cannot_connect(hass: HomeAssistant, mock_madvr) -> None
             {
                 "host": "192.168.1.100",
                 "port": 44077,
-                "keep_power_on": False,
             },
         )
 
@@ -100,5 +96,4 @@ async def test_user_form_cannot_connect(hass: HomeAssistant, mock_madvr) -> None
     assert result3["data"] == {
         "host": "192.168.1.100",
         "port": 44077,
-        "keep_power_on": False,
     }
