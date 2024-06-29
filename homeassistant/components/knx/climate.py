@@ -80,7 +80,7 @@ def _create_climate(xknx: XKNX, config: ConfigType) -> XknxClimate:
         group_address_operation_mode_protection=config.get(
             ClimateSchema.CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS
         ),
-        group_address_operation_mode_night=config.get(
+        group_address_operation_mode_economy=config.get(
             ClimateSchema.CONF_OPERATION_MODE_NIGHT_ADDRESS
         ),
         group_address_operation_mode_comfort=config.get(

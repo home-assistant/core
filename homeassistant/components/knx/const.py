@@ -177,8 +177,8 @@ CURRENT_HVAC_ACTIONS: Final = {
 PRESET_MODES: Final = {
     # Map DPT 20.102 HVAC operating modes to HA presets
     "Auto": PRESET_NONE,
-    "Frost Protection": PRESET_ECO,
-    "Night": PRESET_SLEEP,
+    "Building Protection": PRESET_ECO,
+    "Economy": PRESET_SLEEP,
     "Standby": PRESET_AWAY,
     "Comfort": PRESET_COMFORT,
 }
