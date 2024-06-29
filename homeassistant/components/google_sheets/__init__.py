@@ -111,14 +111,10 @@ async def async_setup_service(hass: HomeAssistant) -> None:
         data = (
             [call.data[DATA]] if isinstance(call.data[DATA], dict) else call.data[DATA]
         )
-
-        now = str(datetime.now())
-        rows_data = []
-        rows = []
         columns: list[str] = next(iter(worksheet.get_values("A1:ZZ1")), [])
-
+        now = str(datetime.now())
         rows_data = [{"created": now} | d for d in data]
-
+        rows = []
         for row_data in rows_data:
             row = [row_data.get(column, "") for column in columns]
             for key, value in row_data.items():
