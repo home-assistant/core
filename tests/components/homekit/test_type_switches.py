@@ -17,6 +17,7 @@ from homeassistant.components.homekit.type_switches import (
     Switch,
     Vacuum,
     Valve,
+    ValveSwitch,
 )
 from homeassistant.components.select import ATTR_OPTIONS
 from homeassistant.components.vacuum import (
@@ -143,10 +144,10 @@ async def test_switch_set_state(
 
 
 @pytest.mark.parametrize(
-    ("domain", "service_on", "service_off", "state_on", "state_off"),
+    ("domain", "accessory_class", "service_on", "service_off", "state_on", "state_off"),
     [
-        ("switch", "turn_on", "turn_off", STATE_ON, STATE_OFF),
-        ("valve", "open_valve", "close_valve", STATE_OPEN, STATE_CLOSED),
+        ("switch", ValveSwitch, "turn_on", "turn_off", STATE_ON, STATE_OFF),
+        ("valve", Valve, "open_valve", "close_valve", STATE_OPEN, STATE_CLOSED),
     ],
 )
 async def test_valve_set_state(
@@ -154,6 +155,7 @@ async def test_valve_set_state(
     hk_driver,
     events,
     domain,
+    accessory_class,
     service_on,
     service_off,
     state_on,
@@ -166,25 +168,33 @@ async def test_valve_set_state(
     await hass.async_block_till_done()
 
     if domain == "switch":
-        acc = Valve(hass, hk_driver, "Valve", entity_id, 2, {CONF_TYPE: TYPE_FAUCET})
+        acc = accessory_class(
+            hass, hk_driver, "Valve", entity_id, 2, {CONF_TYPE: TYPE_FAUCET}
+        )
         acc.run()
         await hass.async_block_till_done()
         assert acc.category == 29  # Faucet
         assert acc.char_valve_type.value == 3  # Water faucet
 
-        acc = Valve(hass, hk_driver, "Valve", entity_id, 3, {CONF_TYPE: TYPE_SHOWER})
+        acc = accessory_class(
+            hass, hk_driver, "Valve", entity_id, 3, {CONF_TYPE: TYPE_SHOWER}
+        )
         acc.run()
         await hass.async_block_till_done()
         assert acc.category == 30  # Shower
         assert acc.char_valve_type.value == 2  # Shower head
 
-        acc = Valve(hass, hk_driver, "Valve", entity_id, 4, {CONF_TYPE: TYPE_SPRINKLER})
+        acc = accessory_class(
+            hass, hk_driver, "Valve", entity_id, 4, {CONF_TYPE: TYPE_SPRINKLER}
+        )
         acc.run()
         await hass.async_block_till_done()
         assert acc.category == 28  # Sprinkler
         assert acc.char_valve_type.value == 1  # Irrigation
 
-    acc = Valve(hass, hk_driver, "Valve", entity_id, 5, {CONF_TYPE: TYPE_VALVE})
+    acc = accessory_class(
+        hass, hk_driver, "Valve", entity_id, 5, {CONF_TYPE: TYPE_VALVE}
+    )
     acc.run()
     await hass.async_block_till_done()
 

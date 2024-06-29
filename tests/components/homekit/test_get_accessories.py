@@ -335,10 +335,10 @@ def test_type_sensors(type_name, entity_id, state, attrs) -> None:
         ("SelectSwitch", "select.test", "option1", {}, {}),
         ("Switch", "switch.test", "on", {}, {}),
         ("Switch", "switch.test", "on", {}, {CONF_TYPE: TYPE_SWITCH}),
-        ("Valve", "switch.test", "on", {}, {CONF_TYPE: TYPE_FAUCET}),
-        ("Valve", "switch.test", "on", {}, {CONF_TYPE: TYPE_VALVE}),
-        ("Valve", "switch.test", "on", {}, {CONF_TYPE: TYPE_SHOWER}),
-        ("Valve", "switch.test", "on", {}, {CONF_TYPE: TYPE_SPRINKLER}),
+        ("ValveSwitch", "switch.test", "on", {}, {CONF_TYPE: TYPE_FAUCET}),
+        ("ValveSwitch", "switch.test", "on", {}, {CONF_TYPE: TYPE_VALVE}),
+        ("ValveSwitch", "switch.test", "on", {}, {CONF_TYPE: TYPE_SHOWER}),
+        ("ValveSwitch", "switch.test", "on", {}, {CONF_TYPE: TYPE_SPRINKLER}),
     ],
 )
 def test_type_switches(type_name, entity_id, state, attrs, config) -> None:
