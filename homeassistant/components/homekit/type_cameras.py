@@ -338,7 +338,7 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
         assert self._char_doorbell_detected
         assert self._char_doorbell_detected_switch
         state = new_state.state
-        if state == STATE_ON or (self.doorbell_is_event and state != STATE_UNKNOWN):
+        if state == STATE_ON or (self.doorbell_is_event and state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)):
             self._char_doorbell_detected.set_value(DOORBELL_SINGLE_PRESS)
             self._char_doorbell_detected_switch.set_value(DOORBELL_SINGLE_PRESS)
             _LOGGER.debug(
