@@ -233,12 +233,14 @@ class HabiticaTodosListEntity(BaseHabiticaListEntity):
                         if task.get("date")
                         else None
                     ),
-                    status=TodoItemStatus.NEEDS_ACTION
-                    if not task["completed"]
-                    else TodoItemStatus.COMPLETED,
+                    status=(
+                        TodoItemStatus.NEEDS_ACTION
+                        if not task["completed"]
+                        else TodoItemStatus.COMPLETED
+                    ),
                 )
                 for task in self.coordinator.data.tasks
-                if task["type"] is HabiticaTaskType.TODO
+                if task["type"] == HabiticaTaskType.TODO
             ),
         ]
 
@@ -320,9 +322,11 @@ class HabiticaDailiesListEntity(BaseHabiticaListEntity):
                     summary=task["text"],
                     description=task["notes"],
                     due=next_due_date(task),
-                    status=TodoItemStatus.COMPLETED
-                    if task["completed"]
-                    else TodoItemStatus.NEEDS_ACTION,
+                    status=(
+                        TodoItemStatus.COMPLETED
+                        if task["completed"]
+                        else TodoItemStatus.NEEDS_ACTION
+                    ),
                 )
                 for task in self.coordinator.data.tasks
                 if task["type"] == HabiticaTaskType.DAILY
