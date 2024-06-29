@@ -106,10 +106,10 @@ def raise_for_blocking_call(
 
     if strict:
         raise RuntimeError(
-            "Caught blocking call to {func.__name__} with args "
-            f"{mapped_args.get('args')} inside the event loop by"
+            f"Caught blocking call to {func.__name__} with args "
+            f"{mapped_args.get('args')} inside the event loop by "
             f"{'custom ' if integration_frame.custom_integration else ''}"
-            "integration '{integration_frame.integration}' at "
+            f"integration '{integration_frame.integration}' at "
             f"{integration_frame.relative_filename}, line {integration_frame.line_number}:"
             f" {integration_frame.line}. (offender: {offender_filename}, line "
             f"{offender_lineno}: {offender_line}), please {report_issue}\n"
