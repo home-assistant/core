@@ -26,7 +26,6 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
     CONF_PASSWORD,
-    CONF_UNIQUE_ID,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -58,7 +57,6 @@ async def test_cover(hass: HomeAssistant, entity_registry: er.EntityRegistry) ->
         data={
             CONF_USERNAME: "dummylogin",
             CONF_PASSWORD: "dummypass",
-            CONF_UNIQUE_ID: "dummy-user-id",
         },
     )
 
@@ -200,7 +198,6 @@ async def test_cover_shutdown_event(
         data={
             CONF_USERNAME: "dummylogin",
             CONF_PASSWORD: "dummypass",
-            CONF_UNIQUE_ID: "dummy-user-id",
         },
     )
 
@@ -233,7 +230,6 @@ async def test_no_cover_found(
         data={
             CONF_USERNAME: "dummylogin",
             CONF_PASSWORD: "dummypass",
-            CONF_UNIQUE_ID: "dummy-user-id",
         },
     )
 

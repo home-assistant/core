@@ -9,7 +9,6 @@ from dio_chacon_wifi_api import DIOChaconAPIClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
-    CONF_UNIQUE_ID,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
@@ -39,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DioChaconConfigEntry) ->
 
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
-    dio_chacon_id = config[CONF_UNIQUE_ID]
+    dio_chacon_id = entry.unique_id
 
     _LOGGER.debug("Initializing Dio Chacon client %s, %s", username, dio_chacon_id)
     dio_chacon_client: DIOChaconAPIClient = DIOChaconAPIClient(

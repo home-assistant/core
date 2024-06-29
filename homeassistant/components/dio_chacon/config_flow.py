@@ -10,7 +10,7 @@ from dio_chacon_wifi_api.exceptions import DIOChaconAPIError, DIOChaconInvalidAu
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_PASSWORD, CONF_UNIQUE_ID, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import DOMAIN
 
@@ -35,13 +35,12 @@ class DioChaconConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            # Validate the user name and password and retrieve the technical user id.
+            client = DIOChaconAPIClient(
+                user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+            )
             try:
-                # Validate the user name and password and retrieve the technical user id.
-                client = DIOChaconAPIClient(
-                    user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-                )
                 _user_id: str = await client.get_user_id()
-                await client.disconnect()
             except DIOChaconAPIError:
                 errors["base"] = "cannot_connect"
             except DIOChaconInvalidAuthError:
@@ -56,13 +55,12 @@ class DioChaconConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title="Dio Chacon " + user_input[CONF_USERNAME],
-                    data={
-                        CONF_USERNAME: user_input[CONF_USERNAME],
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        CONF_UNIQUE_ID: _user_id,
-                    },
+                    title=f"Dio Chacon {user_input[CONF_USERNAME]}",
+                    data=user_input,
                 )
+
+            finally:
+                await client.disconnect()
 
         # User input is None or an error happened, show the form to the user.
         return self.async_show_form(
