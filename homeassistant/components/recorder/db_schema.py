@@ -231,7 +231,9 @@ class JSONLiteral(JSON):
 
 
 EVENT_ORIGIN_ORDER = [EventOrigin.local, EventOrigin.remote]
-EVENT_ORIGIN_TO_IDX = {origin: idx for idx, origin in enumerate(EVENT_ORIGIN_ORDER)}
+EVENT_ORIGIN_VALUE_TO_IDX = {
+    origin.value: idx for idx, origin in enumerate(EVENT_ORIGIN_ORDER)
+}
 
 
 class Events(Base):
@@ -302,7 +304,7 @@ class Events(Base):
         return Events(
             event_type=None,
             event_data=None,
-            origin_idx=EVENT_ORIGIN_TO_IDX[event.origin],
+            origin_idx=EVENT_ORIGIN_VALUE_TO_IDX[event.origin.value],
             time_fired=None,
             time_fired_ts=event.time_fired_timestamp,
             context_id=None,
@@ -515,7 +517,7 @@ class States(Base):
             context_user_id_bin=uuid_hex_to_bytes_or_none(context.user_id),
             context_parent_id=None,
             context_parent_id_bin=ulid_to_bytes_or_none(context.parent_id),
-            origin_idx=EVENT_ORIGIN_TO_IDX[event.origin],
+            origin_idx=EVENT_ORIGIN_VALUE_TO_IDX[event.origin.value],
             last_updated=None,
             last_changed=None,
             last_updated_ts=last_updated_ts,
