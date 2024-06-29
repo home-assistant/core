@@ -75,6 +75,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the API with the HTTP interface."""
     hass.http.register_view(APIStatusView)
+    hass.http.register_view(APIUserView)
     hass.http.register_view(APICoreStateView)
     hass.http.register_view(APIEventStream)
     hass.http.register_view(APIConfigView)
@@ -115,7 +116,14 @@ class APIUserView(HomeAssistantView):
     def get(self, request: web.Request) -> web.Response:
         """Retrieve user's info."""
         user: User = request[KEY_HASS_USER]
-        return self.json({"id": user.id, "name": user.name, "is_admin": user.is_admin})
+        return self.json(
+            {
+                "id": user.id,
+                "username": user.credentials[0].data["username"],
+                "name": user.name,
+                "is_admin": user.is_admin,
+            }
+        )
 
 
 class APICoreStateView(HomeAssistantView):
