@@ -227,7 +227,7 @@ async def test_client_state_from_event_source(
 async def test_tracked_device_state_change(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    config_entry_factory,
+    config_entry_factory: Callable[[], ConfigEntry],
     mock_websocket_message,
     device_payload: list[dict[str, Any]],
     state: int,
