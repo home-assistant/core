@@ -635,6 +635,19 @@ async def test_event_stream_requires_admin(
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
+async def test_api_user(
+    hass: HomeAssistant, mock_api_client: TestClient, hass_admin_user: MockUser
+) -> None:
+    """Test getting user information."""
+    resp = await mock_api_client.get("/api/user")
+    assert resp.status == HTTPStatus.OK
+    json = await resp.json()
+    assert json["id"] == hass_admin_user.id
+    assert json["username"] == hass_admin_user.credentials[0].data["username"]
+    assert json["name"] == hass_admin_user.name
+    assert json["is_admin"]
+
+
 async def test_states(
     hass: HomeAssistant, mock_api_client: TestClient, hass_admin_user: MockUser
 ) -> None:
