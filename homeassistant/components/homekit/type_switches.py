@@ -286,7 +286,7 @@ class Valve(ValveBase):
 
     def __init__(self, *args: Any) -> None:
         """Initialize a Valve accessory object."""
-        super().__init__(TYPE_VALVE, *args)
+        super().__init__(TYPE_VALVE, *args, category=CATEGORY_OUTLET)
 
     def set_state(self, value: bool) -> None:
         """Move value state to value if call came from HomeKit."""
