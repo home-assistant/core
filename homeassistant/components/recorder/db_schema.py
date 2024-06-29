@@ -604,9 +604,8 @@ class StateAttributes(Base):
             if MATCH_ALL in unrecorded_attributes:
                 # Don't exclude device class, state class, unit of measurement
                 # or friendly name when using the MATCH_ALL exclude constant
-                exclude_attrs.update(
-                    _MATCH_ALL_KEEP.symmetric_difference(state.attributes)
-                )
+                exclude_attrs.update(state.attributes)
+                exclude_attrs -= _MATCH_ALL_KEEP
         else:
             exclude_attrs = ALL_DOMAIN_EXCLUDE_ATTRS
         encoder = json_bytes_strip_null if dialect == PSQL_DIALECT else json_bytes
