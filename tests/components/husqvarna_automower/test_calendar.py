@@ -1,6 +1,6 @@
 """Tests for calendar platform."""
 
-from datetime import UTC, datetime
+import datetime
 from unittest.mock import AsyncMock
 
 import pytest
@@ -20,15 +20,38 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry
 
+# @pytest.mark.freeze_time(datetime.datetime(2023, 6, 5, 21, tzinfo=datetime.UTC))
+# async def test_calendar_state(
+#     hass: HomeAssistant,
+#     entity_registry: er.EntityRegistry,
+#     mock_automower_client: AsyncMock,
+#     mock_config_entry: MockConfigEntry,
+#     freezer: FrozenDateTimeFactory,
+# ) -> None:
+#     """State test of the calendar."""
+#     await setup_integration(hass, mock_config_entry)
+#     state = hass.states.get("calendar.test_mower_1")
+#     assert state is not None
+#     assert state.state == "off"
+#     freezer.tick(datetime.timedelta(hours=20))
+#     async_fire_time_changed(hass)
+#     await hass.async_block_till_done()
+#     state = hass.states.get("calendar.test_mower_1")
+#     assert state is not None
+#     assert state.state == "on"
 
-@pytest.mark.freeze_time(datetime(2023, 6, 5, 12, tzinfo=UTC))
+
+@pytest.mark.freeze_time(datetime.datetime(2023, 6, 5, tzinfo=datetime.UTC))
 @pytest.mark.parametrize(
     (
         "start_date",
         "end_date",
     ),
     [
-        (datetime(2024, 3, 2, 6, 0), datetime(2024, 3, 18, 6, 0)),
+        (
+            datetime.datetime(2023, 6, 5, tzinfo=datetime.UTC),
+            datetime.datetime(2023, 6, 12, tzinfo=datetime.UTC),
+        ),
     ],
 )
 async def test_calendar_snapshot(
@@ -40,8 +63,8 @@ async def test_calendar_snapshot(
     start_date: datetime,
     end_date: datetime,
 ) -> None:
-    """Snapshot tesst of the calendars."""
-    await hass.config.async_set_time_zone("Europe/Berlin")
+    """Snapshot test of the calendar."""
+    await hass.config.async_set_time_zone("UTC")
     await setup_integration(hass, mock_config_entry)
     events = await hass.services.async_call(
         CALENDAR_DOMAIN,

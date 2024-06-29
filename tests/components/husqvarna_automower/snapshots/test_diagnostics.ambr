@@ -7,16 +7,16 @@
     'calendar': dict({
       'events': list([
         dict({
-          'end': '2024-03-02T00:00:00+00:00',
+          'end': '2023-06-06T00:00:00+00:00',
           'rrule': 'FREQ=WEEKLY;BYDAY=MO,WE,FR',
-          'start': '2024-03-01T19:00:00+00:00',
+          'start': '2023-06-05T19:00:00+00:00',
           'uid': '1140_300_MO,WE,FR',
           'work_area_id': 123456,
         }),
         dict({
-          'end': '2024-03-02T08:00:00+00:00',
+          'end': '2023-06-06T08:00:00+00:00',
           'rrule': 'FREQ=WEEKLY;BYDAY=TU,TH,SA',
-          'start': '2024-03-02T00:00:00+00:00',
+          'start': '2023-06-06T00:00:00+00:00',
           'uid': '0_480_TU,TH,SA',
           'work_area_id': 123456,
         }),
@@ -56,7 +56,7 @@
     }),
     'metadata': dict({
       'connected': True,
-      'status_dateteime': '2023-06-05T12:00:00+00:00',
+      'status_dateteime': '2023-06-05T00:00:00+00:00',
     }),
     'mower': dict({
       'activity': 'PARKED_IN_CS',
@@ -135,7 +135,7 @@
       'auth_implementation': 'husqvarna_automower',
       'token': dict({
         'access_token': '**REDACTED**',
-        'expires_at': 1685970000.0,
+        'expires_at': 1685926800.0,
         'expires_in': 86399,
         'provider': 'husqvarna',
         'refresh_token': '**REDACTED**',

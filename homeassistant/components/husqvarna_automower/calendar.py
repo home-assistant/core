@@ -42,22 +42,33 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
         self,
         mower_id: str,
         coordinator: AutomowerDataUpdateCoordinator,
+        # calendar: Calendar,
     ) -> None:
         """Set up HusqvarnaAutomowerEntity."""
         super().__init__(mower_id, coordinator)
         self._attr_unique_id = mower_id
         self._event: CalendarEvent | None = None
+        # self.calendar = calendar
+        self.calendar = Calendar()
 
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
-        return self._event
+        # now = dt_util.now()
+        # _LOGGER.debug("now: %s ", now)
+        # events = self.calendar.timeline_tz(now.tzinfo).active_after(now)
+        # _LOGGER.debug("events: %s ", events)
+        # return _get_calendar_event(self.mower_attributes.calendar.events[0])
+        # if event := next(events, None):
+        #     self._event = _get_calendar_event(event)
+        # else:
+        #     self._event = None
+        # return self._event
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
-        calendar = Calendar()
         schedule_no: dict = {}
         for event in self.mower_attributes.calendar.events:
             if event.work_area_id is not None:
@@ -78,7 +89,7 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
             if event.work_area_id is None:
                 schedule_no["-1"] = schedule_no["-1"] + 1
                 number = schedule_no["-1"]
-            calendar.events.append(
+            self.calendar.events.append(
                 Event(
                     dtstart=event.start,
                     dtend=event.end,
@@ -86,11 +97,23 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
                     summary=f"{wa_name}Schedule {number}",
                 )
             )
-        events = calendar.timeline_tz(start_date.tzinfo).overlapping(
+        events = self.calendar.timeline_tz(start_date.tzinfo).overlapping(
             start_date,
             end_date,
         )
+        test = [_get_calendar_event(event) for event in events]
+        _LOGGER.debug("test: %s ", test)
         return [_get_calendar_event(event) for event in events]
+
+    async def async_update(self) -> None:
+        """Update entity state with the next upcoming event."""
+        now = dt_util.now()
+        _LOGGER.debug("now: %s ", now)
+        events = self.calendar.timeline_tz(now.tzinfo).active_after(now)
+        if event := next(events, None):
+            self._event = _get_calendar_event(event)
+        else:
+            self._event = None
 
 
 def _get_calendar_event(event: Event) -> CalendarEvent:
