@@ -5,8 +5,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.madvr import DEFAULT_NAME, DOMAIN
+from homeassistant.components.madvr import DEFAULT_NAME
 from homeassistant.components.madvr.config_flow import CannotConnect
+from homeassistant.components.madvr.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -37,7 +38,6 @@ async def test_user_form(hass: HomeAssistant, mock_madvr) -> None:
             result["flow_id"],
             {
                 "host": "192.168.1.100",
-                "mac": "00:11:22:33:44:55",
                 "port": 44077,
                 "keep_power_on": False,
             },
@@ -48,7 +48,6 @@ async def test_user_form(hass: HomeAssistant, mock_madvr) -> None:
     assert result2["title"] == DEFAULT_NAME
     assert result2["data"] == {
         "host": "192.168.1.100",
-        "mac": "00:11:22:33:44:55",
         "port": 44077,
         "keep_power_on": False,
     }
@@ -70,7 +69,6 @@ async def test_user_form_cannot_connect(hass: HomeAssistant, mock_madvr) -> None
             result["flow_id"],
             {
                 "host": "192.168.1.100",
-                "mac": "00:11:22:33:44:55",
                 "port": 44077,
                 "keep_power_on": False,
             },
@@ -92,7 +90,6 @@ async def test_user_form_cannot_connect(hass: HomeAssistant, mock_madvr) -> None
             result2["flow_id"],
             {
                 "host": "192.168.1.100",
-                "mac": "00:11:22:33:44:55",
                 "port": 44077,
                 "keep_power_on": False,
             },
@@ -102,7 +99,6 @@ async def test_user_form_cannot_connect(hass: HomeAssistant, mock_madvr) -> None
     assert result3["title"] == DEFAULT_NAME
     assert result3["data"] == {
         "host": "192.168.1.100",
-        "mac": "00:11:22:33:44:55",
         "port": 44077,
         "keep_power_on": False,
     }

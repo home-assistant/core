@@ -46,6 +46,13 @@ class MadVRCoordinator(DataUpdateCoordinator[dict]):
         _LOGGER.debug("Received push data: %s", data)
         self.async_set_updated_data(data)
 
+    async def handle_coordinator_load(self):
+        """Handle operations on integration load."""
+        _LOGGER.debug("Using loop: %s", self.client.loop)
+        # tell the library to start background tasks
+        await self.client.async_add_tasks()
+        _LOGGER.debug("Added %s tasks to client", len(self.client.tasks))
+
     async def async_handle_unload(self):
         """Handle unload."""
         _LOGGER.debug("Coordinator unloading")

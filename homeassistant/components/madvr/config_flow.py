@@ -14,7 +14,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import callback
 
 from .const import CONF_POWER_ON, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
@@ -27,9 +27,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(
             CONF_HOST,
-        ): str,
-        vol.Required(
-            CONF_MAC,
         ): str,
         vol.Required(
             CONF_PORT,
@@ -55,12 +52,11 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
-            mac = user_input[CONF_MAC]
             keep_power_on = user_input[CONF_POWER_ON]
             try:
-                await self._test_connection(host, port, mac, keep_power_on)
+                await self._test_connection(host, port, keep_power_on)
                 return self.async_create_entry(
-                    title=user_input.pop(CONF_NAME, DEFAULT_NAME),
+                    title=DEFAULT_NAME,
                     data=user_input,
                 )
             except CannotConnect:
@@ -75,15 +71,11 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _test_connection(
-        self, host: str, port: int, mac: str, keep_power_on: bool
-    ):
+    async def _test_connection(self, host: str, port: int, keep_power_on: bool):
         """Test if we can connect to the device."""
         try:
-            madvr_client = Madvr(host=host, port=port, mac=mac)
-            _LOGGER.debug(
-                "Testing connection to MadVR at %s:%s with mac %s", host, port, mac
-            )
+            madvr_client = Madvr(host=host, port=port)
+            _LOGGER.debug("Testing connection to MadVR at %s:%s", host, port)
             # turn on the device
             await madvr_client.power_on()
         except ValueError as err:
@@ -124,7 +116,6 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_NAME: import_config.get(CONF_NAME, DEFAULT_NAME),
             CONF_HOST: import_config.get(CONF_HOST, ""),
             CONF_PORT: import_config.get(CONF_PORT, DEFAULT_PORT),
-            CONF_MAC: import_config.get(CONF_MAC, ""),
             CONF_POWER_ON: False,
         }
 
@@ -166,7 +157,6 @@ class MadVROptionsFlowHandler(OptionsFlow):
             {
                 vol.Optional(CONF_NAME, default=options.get(CONF_NAME, "")): str,
                 vol.Optional(CONF_HOST, default=options.get(CONF_HOST, "")): str,
-                vol.Optional(CONF_MAC, default=options.get(CONF_MAC, "")): str,
                 vol.Optional(CONF_PORT, default=options.get(CONF_PORT, 44077)): int,
             }
         )

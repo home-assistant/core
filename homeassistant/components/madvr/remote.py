@@ -12,7 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import MadVRCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,36 +54,23 @@ class MadvrRemote(CoordinatorEntity, RemoteEntity):
         self.coordinator = coordinator
         self._attr_name = coordinator.name
         self._attr_unique_id = f"{entry_id}_remote"
-        self.entry_id = hass.data[DOMAIN]["entry_id"]
+        self.entry_id = entry_id
         self._attr_should_poll = False
         self.connection_event = self.madvr_client.connection_event
-        self.madvr_client.set_update_callback(coordinator.handle_push_data)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        # inform the client to start tasks
         _LOGGER.debug("Adding to hass")
-        _LOGGER.debug("Using loop: %s", self.madvr_client.loop)
-        await self.madvr_client.async_add_tasks()
-        _LOGGER.debug("Added %s tasks to client", len(self.madvr_client.tasks))
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when removed."""
         _LOGGER.debug("Removing from hass")
-        # inform the client to cancel all tasks
-        await self.coordinator.async_handle_unload()
 
     @property
     def is_on(self) -> bool:
         """Return true if the device is on."""
         return self.madvr_client.is_on
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        # Useful for making sensors
-        return self.madvr_client.msg_dict
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""

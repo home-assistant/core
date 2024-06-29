@@ -3,12 +3,10 @@
     "step": {
       "user": {
         "title": "Setup MadVR Envy",
-        "description": "Your device will be turned on so we can test the connection. ",
+        "description": "Your device needs to be turned on so we can test the connection. ",
         "data": {
-          "host": "Host or IP Address",
-          "mac": "MAC Address",
-          "port": "Port",
-          "keep_power_on": "Keep device powered on after testing connection"
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
         }
       }
     },
@@ -17,7 +15,7 @@
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
     "error": {
-      "cannot_connect": "Failed to connect to the device. Please ensure the device is ON or check the connection settings."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "options": {
@@ -26,9 +24,8 @@
         "title": "MadVR Options",
         "description": "Update the configuration options for MadVR.",
         "data": {
-          "host": "Host or IP Address",
-          "mac": "MAC Address",
-          "port": "Port"
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
         }
       }
     }

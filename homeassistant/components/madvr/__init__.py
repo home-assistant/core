@@ -7,10 +7,10 @@ import logging
 from madvr.madvr import Madvr
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DEFAULT_NAME
 from .coordinator import MadVRCoordinator
 
 PLATFORMS: list[Platform] = [Platform.REMOTE]
@@ -27,7 +27,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MadVRConfigEntry) -> boo
         host=entry.data[CONF_HOST],
         logger=_LOGGER,
         port=entry.data[CONF_PORT],
-        mac=entry.data[CONF_MAC],
         connect_timeout=10,
         loop=hass.loop,
     )
@@ -37,17 +36,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: MadVRConfigEntry) -> boo
         madVRClient,
         name=name,
     )
-    hass.data.setdefault(DOMAIN, {})
-    await coordinator.async_refresh()
-    entry.runtime_data = coordinator
-    hass.data[DOMAIN]["entry_id"] = entry.entry_id
 
     await coordinator.async_config_entry_first_refresh()
 
-    # Forward the entry setup to the platforms
+    entry.runtime_data = coordinator
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.add_update_listener(async_reload_entry)
 
+    # handle loading operations
+    await coordinator.handle_coordinator_load()
     return True
 
 
