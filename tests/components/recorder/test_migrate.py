@@ -16,7 +16,7 @@ from sqlalchemy.exc import (
     ProgrammingError,
     SQLAlchemyError,
 )
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, scoped_session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from homeassistant.bootstrap import async_setup_component
@@ -24,6 +24,7 @@ from homeassistant.components import persistent_notification as pn, recorder
 from homeassistant.components.recorder import db_schema, migration
 from homeassistant.components.recorder.db_schema import (
     SCHEMA_VERSION,
+    Events,
     RecorderRuns,
     States,
 )
@@ -633,3 +634,89 @@ def test_raise_if_exception_missing_empty_cause_str() -> None:
 
     with pytest.raises(ProgrammingError):
         migration.raise_if_exception_missing_str(programming_exc, ["not present"])
+
+
+def test_rebuild_sqlite_states_table(recorder_db_url: str) -> None:
+    """Test that we can rebuild the states table in SQLite."""
+    if not recorder_db_url.startswith("sqlite://"):
+        # This test is specific for SQLite
+        return
+
+    engine = create_engine(recorder_db_url)
+    session_maker = scoped_session(sessionmaker(bind=engine, future=True))
+    with session_scope(session=session_maker()) as session:
+        db_schema.Base.metadata.create_all(engine)
+    with session_scope(session=session_maker()) as session:
+        session.add(States(state="on"))
+        session.commit()
+
+    migration.rebuild_sqlite_table(session_maker, engine, States)
+
+    with session_scope(session=session_maker()) as session:
+        assert session.query(States).count() == 1
+        assert session.query(States).first().state == "on"
+
+    engine.dispose()
+
+
+def test_rebuild_sqlite_states_table_missing_fails(
+    recorder_db_url: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test handling missing states table when attempting rebuild."""
+    if not recorder_db_url.startswith("sqlite://"):
+        # This test is specific for SQLite
+        return
+
+    engine = create_engine(recorder_db_url)
+    session_maker = scoped_session(sessionmaker(bind=engine, future=True))
+    with session_scope(session=session_maker()) as session:
+        db_schema.Base.metadata.create_all(engine)
+
+    with session_scope(session=session_maker()) as session:
+        session.add(Events(event_type="state_changed", event_data="{}"))
+        session.connection().execute(text("DROP TABLE states"))
+        session.commit()
+
+    migration.rebuild_sqlite_table(session_maker, engine, States)
+    assert "Error recreating SQLite table states" in caplog.text
+    caplog.clear()
+
+    # Now rebuild the events table to make sure the database did not
+    # get corrupted
+    migration.rebuild_sqlite_table(session_maker, engine, Events)
+
+    with session_scope(session=session_maker()) as session:
+        assert session.query(Events).count() == 1
+        assert session.query(Events).first().event_type == "state_changed"
+        assert session.query(Events).first().event_data == "{}"
+
+    engine.dispose()
+
+
+def test_rebuild_sqlite_states_table_extra_columns(
+    recorder_db_url: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test handling extra columns when rebuilding the states table."""
+    if not recorder_db_url.startswith("sqlite://"):
+        # This test is specific for SQLite
+        return
+
+    engine = create_engine(recorder_db_url)
+    session_maker = scoped_session(sessionmaker(bind=engine, future=True))
+    with session_scope(session=session_maker()) as session:
+        db_schema.Base.metadata.create_all(engine)
+    with session_scope(session=session_maker()) as session:
+        session.add(States(state="on"))
+        session.commit()
+        session.connection().execute(
+            text("ALTER TABLE states ADD COLUMN extra_column TEXT")
+        )
+
+    migration.rebuild_sqlite_table(session_maker, engine, States)
+    assert "Error recreating SQLite table states" not in caplog.text
+
+    with session_scope(session=session_maker()) as session:
+        assert session.query(States).count() == 1
+        assert session.query(States).first().state == "on"
+
+    engine.dispose()
