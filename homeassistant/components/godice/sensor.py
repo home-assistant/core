@@ -17,18 +17,20 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DiceConfigEntry
-from .const import DOMAIN, MANUFACTURER, MODEL
+from .const import DICE_MAX_NUMBER, DICE_MIN_NUMBER, DOMAIN, MANUFACTURER, MODEL
 
 _LOGGER = logging.getLogger(__name__)
 
 
 ROLLED_NUMBER_SENSOR_DESCR = SensorEntityDescription(
-    key="rolled_number", state_class=SensorStateClass.MEASUREMENT
+    key="rolled_number",
+    device_class=SensorDeviceClass.ENUM,
+    options=[str(num) for num in range(DICE_MIN_NUMBER, DICE_MAX_NUMBER + 1)],
 )
 COLOR_SENSOR_DESCR = SensorEntityDescription(
     key="color",
     device_class=SensorDeviceClass.ENUM,
-    options=[color.name for color in godice.Color],
+    options=[color.name.lower() for color in godice.Color],
 )
 BATTERY_SENSOR_DESCR = SensorEntityDescription(
     key="battery_level",
@@ -100,7 +102,7 @@ class DiceColorSensor(RestoreSensor, BaseSensor):
             self._attr_native_value = last_state.native_value
         else:
             color = await self.dice.get_color()
-            self._attr_native_value = color.name
+            self._attr_native_value = color.name.lower()
 
 
 class BatteryLevelSensor(BaseSensor):
@@ -126,5 +128,5 @@ class DiceNumberSensor(BaseSensor):
     ) -> None:
         """Handle a rolled number event, update the sensor."""
         _LOGGER.debug("Number update: %s", number)
-        self._attr_native_value = number
+        self._attr_native_value = str(number)
         self.async_write_ha_state()

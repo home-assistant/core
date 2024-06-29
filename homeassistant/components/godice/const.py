@@ -9,3 +9,6 @@ MANUFACTURER = "Particula"
 MODEL = "GoDice"
 
 CONF_SHELL = "shell"
+
+DICE_MIN_NUMBER = 1
+DICE_MAX_NUMBER = 20
