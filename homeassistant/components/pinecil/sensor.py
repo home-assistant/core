@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
 
 from pynecil import LiveDataResponse, OperatingMode, PowerSource
 
@@ -54,7 +53,7 @@ class PinecilSensor(StrEnum):
 class PinecilSensorEntityDescription(SensorEntityDescription):
     """Pinecil sensor entity descriptions."""
 
-    value_fn: Callable[[LiveDataResponse], Any]
+    value_fn: Callable[[LiveDataResponse], StateType]
 
 
 SENSOR_DESCRIPTIONS: tuple[PinecilSensorEntityDescription, ...] = (
@@ -95,7 +94,7 @@ SENSOR_DESCRIPTIONS: tuple[PinecilSensorEntityDescription, ...] = (
         key=PinecilSensor.POWER_SRC,
         translation_key=PinecilSensor.POWER_SRC,
         device_class=SensorDeviceClass.ENUM,
-        options=[item.lower() for item in PowerSource._member_names_],
+        options=[item.name.lower() for item in PowerSource],
         value_fn=lambda data: data.power_src.name.lower() if data.power_src else None,
     ),
     PinecilSensorEntityDescription(
@@ -147,7 +146,7 @@ SENSOR_DESCRIPTIONS: tuple[PinecilSensorEntityDescription, ...] = (
         key=PinecilSensor.OPERATING_MODE,
         translation_key=PinecilSensor.OPERATING_MODE,
         device_class=SensorDeviceClass.ENUM,
-        options=[item.lower() for item in OperatingMode._member_names_],
+        options=[item.name.lower() for item in OperatingMode],
         value_fn=lambda data: data.op_mode.name.lower() if data.op_mode else None,
     ),
     PinecilSensorEntityDescription(
@@ -178,7 +177,6 @@ async def async_setup_entry(
 class PinecilSensorEntity(PinecilBaseEntity, SensorEntity):
     """Representation of a Pinecil sensor entity."""
 
-    _attr_has_entity_name = True
     entity_description: PinecilSensorEntityDescription
 
     @property

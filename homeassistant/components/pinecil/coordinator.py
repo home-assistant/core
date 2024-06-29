@@ -41,5 +41,4 @@ class PinecilCoordinator(DataUpdateCoordinator[LiveDataResponse]):
             return await self.pinecil.get_live_data()
 
         except CommunicationError as e:
-            await self.pinecil.disconnect()
             raise UpdateFailed("Cannot connect to device") from e

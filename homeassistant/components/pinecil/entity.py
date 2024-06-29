@@ -8,7 +8,7 @@ from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceIn
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER, MODEL
+from .const import MANUFACTURER, MODEL
 from .coordinator import PinecilCoordinator
 
 
@@ -36,7 +36,6 @@ class PinecilBaseEntity(CoordinatorEntity[PinecilCoordinator]):
         if TYPE_CHECKING:
             assert coordinator.config_entry.unique_id
         self.device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
             connections={(CONNECTION_BLUETOOTH, coordinator.config_entry.unique_id)},
             manufacturer=MANUFACTURER,
             model=MODEL,
