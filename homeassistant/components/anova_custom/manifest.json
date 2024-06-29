@@ -1,0 +1,10 @@
+{
+  "domain": "anova_custom",
+  "name": "Anova Sous Vide",
+  "codeowners": ["@Lash-L"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/anova_sous_vide",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/Lash-L/anova-wifi-hacs/issues",
+  "requirements": ["anova-wifi==0.8.0"]
+}
