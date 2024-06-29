@@ -5,9 +5,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.madvr import DEFAULT_NAME
 from homeassistant.components.madvr.config_flow import CannotConnect
-from homeassistant.components.madvr.const import DOMAIN
+from homeassistant.components.madvr.const import DEFAULT_NAME, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
