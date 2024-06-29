@@ -67,31 +67,39 @@ def fixture_config_entry_options() -> MappingProxyType[str, Any]:
 @pytest.fixture(name="mock_requests")
 def fixture_request(
     aioclient_mock: AiohttpClientMocker,
-    config_payload: dict[str, Any],
-    group_payload: dict[str, Any],
-    light_payload: dict[str, Any],
-    sensor_payload: dict[str, Any],
+    deconz_payload: dict[str, Any],
 ) -> Callable[[str], None]:
     """Mock default UniFi requests responses."""
 
     def __mock_requests(host: str = HOST) -> None:
-        url = f"https://{host}:{PORT}/api/{API_KEY}"
+        url = f"http://{host}:{PORT}/api/{API_KEY}"
 
         aioclient_mock.get(
-            url,
-            json={
-                "config": config_payload,
-                "groups": group_payload,
-                "lights": light_payload,
-                "sensors": sensor_payload,
-            },
-            headers={"content-type": CONTENT_TYPE_JSON},
+            url, json=deconz_payload, headers={"content-type": CONTENT_TYPE_JSON}
         )
 
     return __mock_requests
 
 
 # Request payload fixtures
+
+
+@pytest.fixture(name="deconz_payload")
+def fixture_data(
+    alarm_system_payload: dict[str, Any],
+    config_payload: dict[str, Any],
+    group_payload: dict[str, Any],
+    light_payload: dict[str, Any],
+    sensor_payload: dict[str, Any],
+) -> dict[str, Any]:
+    """DeCONZ data."""
+    return {
+        "alarmsystems": alarm_system_payload,
+        "config": config_payload,
+        "groups": group_payload,
+        "lights": light_payload,
+        "sensors": sensor_payload,
+    }
 
 
 @pytest.fixture(name="alarm_system_payload")
@@ -103,7 +111,16 @@ def fixture_alarm_system_data() -> dict[str, Any]:
 @pytest.fixture(name="config_payload")
 def fixture_config_data() -> dict[str, Any]:
     """Config data."""
-    return {}
+    return {
+        "bridgeid": BRIDGEID,
+        "ipaddress": HOST,
+        "mac": "00:11:22:33:44:55",
+        "modelid": "deCONZ",
+        "name": "deCONZ mock gateway",
+        "sw_version": "2.05.69",
+        "uuid": "1234",
+        "websocketport": 1234,
+    }
 
 
 @pytest.fixture(name="group_payload")

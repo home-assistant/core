@@ -1,6 +1,6 @@
 """deCONZ switch platform tests."""
 
-from unittest.mock import patch
+import pytest
 
 from homeassistant.components.siren import ATTR_DURATION, DOMAIN as SIREN_DOMAIN
 from homeassistant.const import (
@@ -13,21 +13,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .test_gateway import (
-    DECONZ_WEB_REQUEST,
-    mock_deconz_put_request,
-    setup_deconz_integration,
-)
+from .test_gateway import mock_deconz_put_request
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_sirens(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
-) -> None:
-    """Test that siren entities are created."""
-    data = {
-        "lights": {
+@pytest.mark.parametrize(
+    "light_payload",
+    [
+        {
             "1": {
                 "name": "Warning device",
                 "type": "Warning device",
@@ -41,10 +35,15 @@ async def test_sirens(
                 "uniqueid": "00:00:00:00:00:00:00:01-00",
             },
         }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
+    ],
+)
+async def test_sirens(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup,
+    mock_deconz_websocket,
+) -> None:
+    """Test that siren entities are created."""
     assert len(hass.states.async_all()) == 2
     assert hass.states.get("siren.warning_device").state == STATE_ON
     assert not hass.states.get("siren.unsupported_siren")
@@ -63,7 +62,7 @@ async def test_sirens(
 
     # Verify service calls
 
-    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/1/state")
+    mock_deconz_put_request(aioclient_mock, config_entry_setup.data, "/lights/1/state")
 
     # Service turn on siren
 
@@ -95,13 +94,13 @@ async def test_sirens(
     )
     assert aioclient_mock.mock_calls[3][2] == {"alert": "lselect", "ontime": 100}
 
-    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.config_entries.async_unload(config_entry_setup.entry_id)
 
     states = hass.states.async_all()
     assert len(states) == 2
     for state in states:
         assert state.state == STATE_UNAVAILABLE
 
-    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.config_entries.async_remove(config_entry_setup.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
