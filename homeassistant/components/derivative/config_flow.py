@@ -26,7 +26,6 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 
 from .const import (
-    CONF_IGNORE_NEGATIVE_DERIVATIVE,
     CONF_ROUND_DIGITS,
     CONF_TIME_WINDOW,
     CONF_UNIT_PREFIX,
@@ -88,9 +87,6 @@ async def _get_options_dict(handler: SchemaCommonFlowHandler | None) -> dict:
 
     return {
         vol.Required(CONF_SOURCE): entity_selector,
-        vol.Required(
-            CONF_IGNORE_NEGATIVE_DERIVATIVE, default=False
-        ): selector.BooleanSelector(),
         vol.Required(CONF_ROUND_DIGITS, default=2): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=0,

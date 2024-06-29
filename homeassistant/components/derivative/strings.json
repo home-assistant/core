@@ -7,7 +7,6 @@
         "description": "Create a sensor that estimates the derivative of a sensor.",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
-          "ignore_negative_derivative": "Ignore negative derivative",
           "round": "Precision",
           "source": "Input sensor",
           "time_window": "Time window",
@@ -15,7 +14,6 @@
           "unit_time": "Time unit"
         },
         "data_description": {
-          "ignore_negative_derivative": "Enable this when you have a sensor that periodically resets.",
           "round": "Controls the number of decimal digits in the output.",
           "time_window": "If set, the sensor's value is a time weighted moving average of derivatives within this window.",
           "unit_prefix": "The output will be scaled according to the selected metric prefix and time unit of the derivative."
@@ -27,7 +25,6 @@
     "step": {
       "init": {
         "data": {
-          "ignore_negative_derivative": "[%key:component::derivative::config::step::user::data::ignore_negative_derivative%]",
           "name": "[%key:common::config_flow::data::name%]",
           "round": "[%key:component::derivative::config::step::user::data::round%]",
           "source": "[%key:component::derivative::config::step::user::data::source%]",
@@ -36,7 +33,6 @@
           "unit_time": "[%key:component::derivative::config::step::user::data::unit_time%]"
         },
         "data_description": {
-          "ignore_negative_derivative": "[%key:component::derivative::config::step::user::data_description::ignore_negative_derivative%]",
           "round": "[%key:component::derivative::config::step::user::data_description::round%]",
           "time_window": "[%key:component::derivative::config::step::user::data_description::time_window%]",
           "unit_prefix": "[%key:component::derivative::config::step::user::data_description::unit_prefix%]"
