@@ -24,7 +24,6 @@ from homeassistant.components.vacuum import (
     STATE_CLEANING,
     VacuumEntityFeature,
 )
-from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -38,10 +37,10 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.core import State, callback, split_entity_id
+from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.helpers.event import async_call_later
 
-from .accessories import TYPES, HomeAccessory
+from .accessories import TYPES, HomeAccessory, HomeDriver
 from .const import (
     CHAR_ACTIVE,
     CHAR_IN_USE,
@@ -222,7 +221,9 @@ class Vacuum(Switch):
 class ValveBase(HomeAccessory):
     """Valve base class."""
 
-    def _init_valve(self, valve_type: str) -> None:
+    def __init__(self, valve_type: str, *args: Any, **kwargs: Any) -> None:
+        """Initialize a Valve accessory object."""
+        super().__init__(*args, **kwargs)
         self.domain = split_entity_id(self.entity_id)[0]
         state = self.hass.states.get(self.entity_id)
         assert state
@@ -246,16 +247,25 @@ class ValveBase(HomeAccessory):
 class ValveSwitch(ValveBase):
     """Generate a Valve accessory from a HomeAssistant switch."""
 
-    def __init__(self, *args: Any) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        driver: HomeDriver,
+        name: str,
+        entity_id: str,
+        aid: int,
+        config: dict[str, Any],
+        *args: Any,
+    ) -> None:
         """Initialize a Valve accessory object."""
-        super().__init__(*args)
-        super()._init_valve(self.config[CONF_TYPE])
+        super().__init__(
+            config[CONF_TYPE], hass, driver, name, entity_id, aid, config, *args
+        )
 
     def set_state(self, value: bool) -> None:
         """Move value state to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
         self.char_in_use.set_value(value)
-
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
         self.async_call_service(self.domain, service, params)
@@ -263,7 +273,6 @@ class ValveSwitch(ValveBase):
     @callback
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
-
         current_state = 1 if new_state.state == STATE_ON else 0
         _LOGGER.debug("%s: Set active state to %s", self.entity_id, current_state)
         self.char_active.set_value(current_state)
@@ -277,14 +286,12 @@ class Valve(ValveBase):
 
     def __init__(self, *args: Any) -> None:
         """Initialize a Valve accessory object."""
-        super().__init__(*args, category=CATEGORY_OUTLET)
-        super()._init_valve(VALVE_DOMAIN)
+        super().__init__(TYPE_VALVE, *args)
 
     def set_state(self, value: bool) -> None:
         """Move value state to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set valve state to %s", self.entity_id, value)
         self.char_in_use.set_value(value)
-
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_OPEN_VALVE if value else SERVICE_CLOSE_VALVE
         self.async_call_service(self.domain, service, params)
@@ -292,7 +299,6 @@ class Valve(ValveBase):
     @callback
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
-
         current_state = 1 if new_state.state in VALVE_OPEN_STATES else 0
         _LOGGER.debug("%s: Set active state to %s", self.entity_id, current_state)
         self.char_active.set_value(current_state)

@@ -292,7 +292,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         name: str,
         entity_id: str,
         aid: int,
-        config: dict,
+        config: dict[str, Any],
         *args: Any,
         category: int = CATEGORY_OTHER,
         device_id: str | None = None,
