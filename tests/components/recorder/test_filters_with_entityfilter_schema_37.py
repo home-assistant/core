@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 from sqlalchemy import select
 from sqlalchemy.engine.row import Row
+from typing_extensions import AsyncGenerator
 
 from homeassistant.components.recorder import Recorder, get_instance
 from homeassistant.components.recorder.db_schema import EventData, Events, States
@@ -38,7 +39,9 @@ def db_schema_32():
 
 
 @pytest.fixture(name="legacy_recorder_mock")
-async def legacy_recorder_mock_fixture(recorder_mock):
+async def legacy_recorder_mock_fixture(
+    recorder_mock: Recorder,
+) -> AsyncGenerator[Recorder]:
     """Fixture for legacy recorder mock."""
     with patch.object(recorder_mock.states_meta_manager, "active", False):
         yield recorder_mock

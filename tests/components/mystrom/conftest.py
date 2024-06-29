@@ -1,9 +1,9 @@
 """Provide common mystrom fixtures and mocks."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.mystrom.const import DOMAIN
 from homeassistant.const import CONF_HOST
@@ -16,7 +16,7 @@ DEVICE_MAC = "6001940376EB"
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.mystrom.async_setup_entry", return_value=True

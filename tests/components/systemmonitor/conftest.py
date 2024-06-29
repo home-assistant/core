@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 import socket
 from unittest.mock import AsyncMock, Mock, NonCallableMock, patch
 
 from psutil import NoSuchProcess, Process
 from psutil._common import sdiskpart, sdiskusage, shwtemp, snetio, snicaddr, sswap
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.systemmonitor.const import DOMAIN
 from homeassistant.components.systemmonitor.coordinator import VirtualMemory
@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
-def mock_sys_platform() -> Generator[None, None, None]:
+def mock_sys_platform() -> Generator[None]:
     """Mock sys platform to Linux."""
     with patch("sys.platform", "linux"):
         yield
@@ -42,7 +42,7 @@ class MockProcess(Process):
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setup entry."""
     with patch(
         "homeassistant.components.systemmonitor.async_setup_entry",

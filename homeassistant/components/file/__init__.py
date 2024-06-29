@@ -2,7 +2,13 @@
 
 from homeassistant.components.notify import migrate_notify_issue
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_FILE_PATH, CONF_NAME, CONF_PLATFORM, Platform
+from homeassistant.const import (
+    CONF_FILE_PATH,
+    CONF_NAME,
+    CONF_PLATFORM,
+    CONF_SCAN_INTERVAL,
+    Platform,
+)
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -63,6 +69,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if item[CONF_PLATFORM] == DOMAIN:
                 file_config_item = IMPORT_SCHEMA[domain](item)
                 file_config_item[CONF_PLATFORM] = domain
+                if CONF_SCAN_INTERVAL in file_config_item:
+                    del file_config_item[CONF_SCAN_INTERVAL]
                 hass.async_create_task(
                     hass.config_entries.flow.async_init(
                         DOMAIN,

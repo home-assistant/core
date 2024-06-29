@@ -30,7 +30,9 @@ async def test_subscribing_config_topic(
     discovery_topic = DEFAULT_PREFIX
 
     assert mqtt_mock.async_subscribe.called
-    mqtt_mock.async_subscribe.assert_any_call(discovery_topic + "/#", ANY, 0, "utf-8")
+    mqtt_mock.async_subscribe.assert_any_call(
+        discovery_topic + "/#", ANY, 0, "utf-8", ANY
+    )
 
 
 async def test_future_discovery_message(
@@ -578,6 +580,7 @@ async def test_same_topic(
     device_reg,
     entity_reg,
     setup_tasmota,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test detecting devices with same topic."""
     configs = [
@@ -624,7 +627,6 @@ async def test_same_topic(
 
     # Verify a repairs issue was created
     issue_id = "topic_duplicated_tasmota_49A3BC/cmnd/"
-    issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue("tasmota", issue_id)
     assert issue.data["mac"] == " ".join(config["mac"] for config in configs[0:2])
 
@@ -702,6 +704,7 @@ async def test_topic_no_prefix(
     device_reg,
     entity_reg,
     setup_tasmota,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test detecting devices with same topic."""
     config = copy.deepcopy(DEFAULT_CONFIG)
@@ -734,7 +737,6 @@ async def test_topic_no_prefix(
 
     # Verify a repairs issue was created
     issue_id = "topic_no_prefix_00000049A3BC"
-    issue_registry = ir.async_get(hass)
     assert ("tasmota", issue_id) in issue_registry.issues
 
     # Rediscover device with fixed config
@@ -753,5 +755,4 @@ async def test_topic_no_prefix(
     assert len(er.async_entries_for_device(entity_reg, device_entry.id, True)) == 1
 
     # Verify the repairs issue has been removed
-    issue_registry = ir.async_get(hass)
     assert ("tasmota", issue_id) not in issue_registry.issues

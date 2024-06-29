@@ -19,3 +19,14 @@ DOMAIN = "refoss"
 COORDINATOR = "coordinator"
 
 MAX_ERRORS = 2
+
+CHANNEL_DISPLAY_NAME: dict[str, dict[int, str]] = {
+    "em06": {
+        1: "A1",
+        2: "B1",
+        3: "C1",
+        4: "A2",
+        5: "B2",
+        6: "C2",
+    }
+}

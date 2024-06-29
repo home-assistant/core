@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
@@ -50,8 +49,7 @@ async def async_get_config(hass: HomeAssistant, host: str) -> NamConfig:
     options = ConnectionOptions(host)
     nam = await NettigoAirMonitor.create(websession, options)
 
-    async with asyncio.timeout(10):
-        mac = await nam.async_get_mac_address()
+    mac = await nam.async_get_mac_address()
 
     return NamConfig(mac, nam.auth_enabled)
 
@@ -66,8 +64,7 @@ async def async_check_credentials(
 
     nam = await NettigoAirMonitor.create(websession, options)
 
-    async with asyncio.timeout(10):
-        await nam.async_check_credentials()
+    await nam.async_check_credentials()
 
 
 class NAMFlowHandler(ConfigFlow, domain=DOMAIN):

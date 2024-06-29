@@ -134,8 +134,15 @@ COOLDOWN_TIME = 60
 
 
 DEBUGGER_INTEGRATIONS = {"debugpy"}
+
+# Core integrations are unconditionally loaded
 CORE_INTEGRATIONS = {"homeassistant", "persistent_notification"}
-LOGGING_INTEGRATIONS = {
+
+# Integrations that are loaded right after the core is set up
+LOGGING_AND_HTTP_DEPS_INTEGRATIONS = {
+    # isal is loaded right away before `http` to ensure if its
+    # enabled, that `isal` is up to date.
+    "isal",
     # Set log levels
     "logger",
     # Error logging
@@ -214,8 +221,8 @@ CRITICAL_INTEGRATIONS = {
 }
 
 SETUP_ORDER = (
-    # Load logging as soon as possible
-    ("logging", LOGGING_INTEGRATIONS),
+    # Load logging and http deps as soon as possible
+    ("logging, http deps", LOGGING_AND_HTTP_DEPS_INTEGRATIONS),
     # Setup frontend and recorder
     ("frontend, recorder", {*FRONTEND_INTEGRATIONS, *RECORDER_INTEGRATIONS}),
     # Start up debuggers. Start these first in case they want to wait.
@@ -249,22 +256,39 @@ async def async_setup_hass(
     runtime_config: RuntimeConfig,
 ) -> core.HomeAssistant | None:
     """Set up Home Assistant."""
-    hass = core.HomeAssistant(runtime_config.config_dir)
 
-    async_enable_logging(
-        hass,
-        runtime_config.verbose,
-        runtime_config.log_rotate_days,
-        runtime_config.log_file,
-        runtime_config.log_no_color,
-    )
+    def create_hass() -> core.HomeAssistant:
+        """Create the hass object and do basic setup."""
+        hass = core.HomeAssistant(runtime_config.config_dir)
+        loader.async_setup(hass)
 
-    if runtime_config.debug or hass.loop.get_debug():
-        hass.config.debug = True
+        async_enable_logging(
+            hass,
+            runtime_config.verbose,
+            runtime_config.log_rotate_days,
+            runtime_config.log_file,
+            runtime_config.log_no_color,
+        )
 
-    hass.config.safe_mode = runtime_config.safe_mode
-    hass.config.skip_pip = runtime_config.skip_pip
-    hass.config.skip_pip_packages = runtime_config.skip_pip_packages
+        if runtime_config.debug or hass.loop.get_debug():
+            hass.config.debug = True
+
+        hass.config.safe_mode = runtime_config.safe_mode
+        hass.config.skip_pip = runtime_config.skip_pip
+        hass.config.skip_pip_packages = runtime_config.skip_pip_packages
+
+        return hass
+
+    async def stop_hass(hass: core.HomeAssistant) -> None:
+        """Stop hass."""
+        # Ask integrations to shut down. It's messy but we can't
+        # do a clean stop without knowing what is broken
+        with contextlib.suppress(TimeoutError):
+            async with hass.timeout.async_timeout(10):
+                await hass.async_stop()
+
+    hass = create_hass()
+
     if runtime_config.skip_pip or runtime_config.skip_pip_packages:
         _LOGGER.warning(
             "Skipping pip installation of required modules. This may cause issues"
@@ -276,7 +300,6 @@ async def async_setup_hass(
 
     _LOGGER.info("Config directory: %s", runtime_config.config_dir)
 
-    loader.async_setup(hass)
     block_async_io.enable()
 
     config_dict = None
@@ -302,27 +325,28 @@ async def async_setup_hass(
 
     if config_dict is None:
         recovery_mode = True
+        await stop_hass(hass)
+        hass = create_hass()
 
     elif not basic_setup_success:
         _LOGGER.warning("Unable to set up core integrations. Activating recovery mode")
         recovery_mode = True
+        await stop_hass(hass)
+        hass = create_hass()
 
     elif any(domain not in hass.config.components for domain in CRITICAL_INTEGRATIONS):
         _LOGGER.warning(
             "Detected that %s did not load. Activating recovery mode",
             ",".join(CRITICAL_INTEGRATIONS),
         )
-        # Ask integrations to shut down. It's messy but we can't
-        # do a clean stop without knowing what is broken
-        with contextlib.suppress(TimeoutError):
-            async with hass.timeout.async_timeout(10):
-                await hass.async_stop()
 
-        recovery_mode = True
         old_config = hass.config
         old_logging = hass.data.get(DATA_LOGGING)
 
-        hass = core.HomeAssistant(old_config.config_dir)
+        recovery_mode = True
+        await stop_hass(hass)
+        hass = create_hass()
+
         if old_logging:
             hass.data[DATA_LOGGING] = old_logging
         hass.config.debug = old_config.debug
@@ -421,6 +445,9 @@ async def async_from_config_dict(
     start = monotonic()
 
     hass.config_entries = config_entries.ConfigEntries(hass, config)
+    # Prime custom component cache early so we know if registry entries are tied
+    # to a custom integration
+    await loader.async_get_custom_components(hass)
     await async_load_base_functionality(hass)
 
     # Set up core.

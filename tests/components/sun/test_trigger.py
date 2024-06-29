@@ -14,7 +14,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -27,7 +27,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -41,7 +41,7 @@ def setup_comp(hass):
     )
 
 
-async def test_sunset_trigger(hass: HomeAssistant, calls) -> None:
+async def test_sunset_trigger(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test the sunset trigger."""
     now = datetime(2015, 9, 15, 23, tzinfo=dt_util.UTC)
     trigger_time = datetime(2015, 9, 16, 2, tzinfo=dt_util.UTC)
@@ -86,7 +86,7 @@ async def test_sunset_trigger(hass: HomeAssistant, calls) -> None:
         assert calls[0].data["id"] == 0
 
 
-async def test_sunrise_trigger(hass: HomeAssistant, calls) -> None:
+async def test_sunrise_trigger(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test the sunrise trigger."""
     now = datetime(2015, 9, 13, 23, tzinfo=dt_util.UTC)
     trigger_time = datetime(2015, 9, 16, 14, tzinfo=dt_util.UTC)
@@ -108,7 +108,9 @@ async def test_sunrise_trigger(hass: HomeAssistant, calls) -> None:
         assert len(calls) == 1
 
 
-async def test_sunset_trigger_with_offset(hass: HomeAssistant, calls) -> None:
+async def test_sunset_trigger_with_offset(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test the sunset trigger with offset."""
     now = datetime(2015, 9, 15, 23, tzinfo=dt_util.UTC)
     trigger_time = datetime(2015, 9, 16, 2, 30, tzinfo=dt_util.UTC)
@@ -144,7 +146,9 @@ async def test_sunset_trigger_with_offset(hass: HomeAssistant, calls) -> None:
         assert calls[0].data["some"] == "sun - sunset - 0:30:00"
 
 
-async def test_sunrise_trigger_with_offset(hass: HomeAssistant, calls) -> None:
+async def test_sunrise_trigger_with_offset(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test the sunrise trigger with offset."""
     now = datetime(2015, 9, 13, 23, tzinfo=dt_util.UTC)
     trigger_time = datetime(2015, 9, 16, 13, 30, tzinfo=dt_util.UTC)

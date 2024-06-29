@@ -1,0 +1,45 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Fill in your Aquacell mobile app credentials",
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "salt_left_side_percentage": {
+        "name": "Salt left side percentage"
+      },
+      "salt_right_side_percentage": {
+        "name": "Salt right side percentage"
+      },
+      "salt_left_side_time_remaining": {
+        "name": "Salt left side time remaining"
+      },
+      "salt_right_side_time_remaining": {
+        "name": "Salt right side time remaining"
+      },
+      "wi_fi_strength": {
+        "name": "Wi-Fi strength",
+        "state": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
+      }
+    }
+  }
+}

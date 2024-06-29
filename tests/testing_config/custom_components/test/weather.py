@@ -33,6 +33,7 @@ ENTITIES = []
 
 def init(empty=False):
     """Initialize the platform with entities."""
+    # pylint: disable-next=global-statement
     global ENTITIES  # noqa: PLW0603
     ENTITIES = [] if empty else [MockWeather()]
 

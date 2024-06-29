@@ -17,9 +17,9 @@ from tests.common import MockConfigEntry
         (OSError("OS error"), "was excluded because of: OS error"),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_disk_setup_failure(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_os: Mock,
     mock_config_entry: MockConfigEntry,
@@ -40,9 +40,9 @@ async def test_disk_setup_failure(
     assert error_text in caplog.text
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_disk_util(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_os: Mock,
     mock_config_entry: MockConfigEntry,

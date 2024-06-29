@@ -91,7 +91,7 @@ async def test_sensor_reauth_triggered(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     electricity_maps: AsyncMock,
-):
+) -> None:
     """Test if reauth flow is triggered."""
     assert (state := hass.states.get("sensor.electricity_maps_co2_intensity"))
     assert state.state == "45.9862319009581"

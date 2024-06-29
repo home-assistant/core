@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.brother.const import DOMAIN, UPDATE_INTERVAL
@@ -16,10 +17,10 @@ from . import init_integration
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    entity_registry_enabled_by_default: None,
     snapshot: SnapshotAssertion,
     mock_brother_client: AsyncMock,
     mock_config_entry: MockConfigEntry,

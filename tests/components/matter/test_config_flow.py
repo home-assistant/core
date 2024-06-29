@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from ipaddress import ip_address
 from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, MagicMock, call, patch
 
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
 import pytest
+from typing_extensions import Generator
 
 from homeassistant import config_entries
 from homeassistant.components.hassio import HassioAPIError, HassioServiceInfo
@@ -58,7 +58,7 @@ ZEROCONF_INFO_UDP = ZeroconfServiceInfo(
 
 
 @pytest.fixture(name="setup_entry", autouse=True)
-def setup_entry_fixture() -> Generator[AsyncMock, None, None]:
+def setup_entry_fixture() -> Generator[AsyncMock]:
     """Mock entry setup."""
     with patch(
         "homeassistant.components.matter.async_setup_entry", return_value=True
@@ -67,7 +67,7 @@ def setup_entry_fixture() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture(name="unload_entry", autouse=True)
-def unload_entry_fixture() -> Generator[AsyncMock, None, None]:
+def unload_entry_fixture() -> Generator[AsyncMock]:
     """Mock entry unload."""
     with patch(
         "homeassistant.components.matter.async_unload_entry", return_value=True
@@ -76,7 +76,7 @@ def unload_entry_fixture() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture(name="client_connect", autouse=True)
-def client_connect_fixture() -> Generator[AsyncMock, None, None]:
+def client_connect_fixture() -> Generator[AsyncMock]:
     """Mock server version."""
     with patch(
         "homeassistant.components.matter.config_flow.MatterClient.connect"
@@ -85,7 +85,7 @@ def client_connect_fixture() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture(name="supervisor")
-def supervisor_fixture() -> Generator[MagicMock, None, None]:
+def supervisor_fixture() -> Generator[MagicMock]:
     """Mock Supervisor."""
     with patch(
         "homeassistant.components.matter.config_flow.is_hassio", return_value=True
@@ -100,9 +100,7 @@ def discovery_info_fixture() -> Any:
 
 
 @pytest.fixture(name="get_addon_discovery_info", autouse=True)
-def get_addon_discovery_info_fixture(
-    discovery_info: Any,
-) -> Generator[AsyncMock, None, None]:
+def get_addon_discovery_info_fixture(discovery_info: Any) -> Generator[AsyncMock]:
     """Mock get add-on discovery info."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_get_addon_discovery_info",
@@ -112,7 +110,7 @@ def get_addon_discovery_info_fixture(
 
 
 @pytest.fixture(name="addon_setup_time", autouse=True)
-def addon_setup_time_fixture() -> Generator[int, None, None]:
+def addon_setup_time_fixture() -> Generator[int]:
     """Mock add-on setup sleep time."""
     with patch(
         "homeassistant.components.matter.config_flow.ADDON_SETUP_TIMEOUT", new=0
@@ -121,7 +119,7 @@ def addon_setup_time_fixture() -> Generator[int, None, None]:
 
 
 @pytest.fixture(name="not_onboarded")
-def mock_onboarded_fixture() -> Generator[MagicMock, None, None]:
+def mock_onboarded_fixture() -> Generator[MagicMock]:
     """Mock that Home Assistant is not yet onboarded."""
     with patch(
         "homeassistant.components.matter.config_flow.async_is_onboarded",

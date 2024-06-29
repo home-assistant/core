@@ -26,6 +26,7 @@ PLATFORMS: list[Platform] = [
     Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.VALVE,
 ]
 LOGGER = logging.getLogger(__name__)
 TIMEOUT = 20.0

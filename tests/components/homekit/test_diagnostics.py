@@ -2,6 +2,8 @@
 
 from unittest.mock import ANY, MagicMock, patch
 
+import pytest
+
 from homeassistant.components.homekit.const import (
     CONF_DEVICES,
     CONF_HOMEKIT_MODE,
@@ -20,11 +22,11 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_config_entry_not_running(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hk_driver,
-    mock_async_zeroconf: None,
 ) -> None:
     """Test generating diagnostics for a config entry."""
     entry = await async_init_integration(hass)
@@ -40,11 +42,11 @@ async def test_config_entry_not_running(
     }
 
 
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_config_entry_running(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hk_driver,
-    mock_async_zeroconf: None,
 ) -> None:
     """Test generating diagnostics for a bridge config entry."""
     entry = MockConfigEntry(
@@ -152,11 +154,11 @@ async def test_config_entry_running(
         await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_config_entry_accessory(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hk_driver,
-    mock_async_zeroconf: None,
 ) -> None:
     """Test generating diagnostics for an accessory config entry."""
     hass.states.async_set("light.demo", "on")
@@ -314,11 +316,11 @@ async def test_config_entry_accessory(
         await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_config_entry_with_trigger_accessory(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hk_driver,
-    mock_async_zeroconf: None,
     events,
     demo_cleanup,
     device_registry: dr.DeviceRegistry,

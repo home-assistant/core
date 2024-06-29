@@ -3,11 +3,13 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import gpslogger, zone
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
+from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.components.gpslogger import DOMAIN, TRACKER_UPDATE
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
@@ -17,17 +19,21 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
 
+from tests.typing import ClientSessionGenerator
+
 HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811
 
 
 @pytest.fixture(autouse=True)
-def mock_dev_track(mock_device_tracker_conf):
+def mock_dev_track(mock_device_tracker_conf: list[Device]) -> None:
     """Mock device tracker config loading."""
 
 
 @pytest.fixture
-async def gpslogger_client(hass, hass_client_no_auth):
+async def gpslogger_client(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> TestClient:
     """Mock client for GPSLogger (unauthenticated)."""
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})

@@ -6,6 +6,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from pytrafikverket.exceptions import InvalidAuthentication, NoTrainAnnouncementFound
 from pytrafikverket.trafikverket_train import TrainStop
 from syrupy.assertion import SnapshotAssertion
@@ -17,10 +18,10 @@ from homeassistant.core import HomeAssistant
 from tests.common import async_fire_time_changed
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_next(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     get_trains_next: list[TrainStop],
     get_train_stop: TrainStop,
@@ -64,10 +65,10 @@ async def test_sensor_next(
         assert state == snapshot
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_single_stop(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     get_trains_next: list[TrainStop],
     snapshot: SnapshotAssertion,
@@ -80,10 +81,10 @@ async def test_sensor_single_stop(
     assert state == snapshot
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_update_auth_failure(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     get_trains_next: list[TrainStop],
     snapshot: SnapshotAssertion,
@@ -113,10 +114,10 @@ async def test_sensor_update_auth_failure(
         assert flow == snapshot
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_update_failure(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     get_trains_next: list[TrainStop],
     snapshot: SnapshotAssertion,
@@ -143,10 +144,10 @@ async def test_sensor_update_failure(
     assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_update_failure_no_state(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     get_trains_next: list[TrainStop],
     snapshot: SnapshotAssertion,

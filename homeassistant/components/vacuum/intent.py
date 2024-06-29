@@ -13,11 +13,21 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
     """Set up the vacuum intents."""
     intent.async_register(
         hass,
-        intent.ServiceIntentHandler(INTENT_VACUUM_START, DOMAIN, SERVICE_START),
+        intent.ServiceIntentHandler(
+            INTENT_VACUUM_START,
+            DOMAIN,
+            SERVICE_START,
+            description="Starts a vacuum",
+            platforms={DOMAIN},
+        ),
     )
     intent.async_register(
         hass,
         intent.ServiceIntentHandler(
-            INTENT_VACUUM_RETURN_TO_BASE, DOMAIN, SERVICE_RETURN_TO_BASE
+            INTENT_VACUUM_RETURN_TO_BASE,
+            DOMAIN,
+            SERVICE_RETURN_TO_BASE,
+            description="Returns a vacuum to base",
+            platforms={DOMAIN},
         ),
     )

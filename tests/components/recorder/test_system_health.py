@@ -37,18 +37,18 @@ async def test_recorder_system_health(
 
 
 @pytest.mark.parametrize(
-    "dialect_name", [SupportedDialect.MYSQL, SupportedDialect.POSTGRESQL]
+    "db_engine", [SupportedDialect.MYSQL, SupportedDialect.POSTGRESQL]
 )
 async def test_recorder_system_health_alternate_dbms(
-    recorder_mock: Recorder, hass: HomeAssistant, dialect_name
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    db_engine: SupportedDialect,
+    recorder_dialect_name: None,
 ) -> None:
     """Test recorder system health."""
     assert await async_setup_component(hass, "system_health", {})
     await async_wait_recording_done(hass)
     with (
-        patch(
-            "homeassistant.components.recorder.core.Recorder.dialect_name", dialect_name
-        ),
         patch(
             "sqlalchemy.orm.session.Session.execute",
             return_value=Mock(scalar=Mock(return_value=("1048576"))),
@@ -60,16 +60,19 @@ async def test_recorder_system_health_alternate_dbms(
         "current_recorder_run": instance.recorder_runs_manager.current.start,
         "oldest_recorder_run": instance.recorder_runs_manager.first.start,
         "estimated_db_size": "1.00 MiB",
-        "database_engine": dialect_name.value,
+        "database_engine": db_engine.value,
         "database_version": ANY,
     }
 
 
 @pytest.mark.parametrize(
-    "dialect_name", [SupportedDialect.MYSQL, SupportedDialect.POSTGRESQL]
+    "db_engine", [SupportedDialect.MYSQL, SupportedDialect.POSTGRESQL]
 )
 async def test_recorder_system_health_db_url_missing_host(
-    recorder_mock: Recorder, hass: HomeAssistant, dialect_name
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    db_engine: SupportedDialect,
+    recorder_dialect_name: None,
 ) -> None:
     """Test recorder system health with a db_url without a hostname."""
     assert await async_setup_component(hass, "system_health", {})
@@ -77,9 +80,6 @@ async def test_recorder_system_health_db_url_missing_host(
 
     instance = get_instance(hass)
     with (
-        patch(
-            "homeassistant.components.recorder.core.Recorder.dialect_name", dialect_name
-        ),
         patch.object(
             instance,
             "db_url",
@@ -95,7 +95,7 @@ async def test_recorder_system_health_db_url_missing_host(
         "current_recorder_run": instance.recorder_runs_manager.current.start,
         "oldest_recorder_run": instance.recorder_runs_manager.first.start,
         "estimated_db_size": "1.00 MiB",
-        "database_engine": dialect_name.value,
+        "database_engine": db_engine.value,
         "database_version": ANY,
     }
 

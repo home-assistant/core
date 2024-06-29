@@ -1,10 +1,10 @@
 """Tests for 1-Wire binary sensors."""
 
-from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from typing_extensions import Generator
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -15,7 +15,7 @@ from . import setup_owproxy_mock_devices
 
 
 @pytest.fixture(autouse=True)
-def override_platforms() -> Generator[None, None, None]:
+def override_platforms() -> Generator[None]:
     """Override PLATFORMS."""
     with patch("homeassistant.components.onewire.PLATFORMS", [Platform.BINARY_SENSOR]):
         yield

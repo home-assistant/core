@@ -1,13 +1,13 @@
 """Test fixtures for the Home Assistant SkyConnect integration."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 
 @pytest.fixture(name="mock_usb_serial_by_id", autouse=True)
-def mock_usb_serial_by_id_fixture() -> Generator[MagicMock, None, None]:
+def mock_usb_serial_by_id_fixture() -> Generator[MagicMock]:
     """Mock usb serial by id."""
     with patch(
         "homeassistant.components.zha.config_flow.usb.get_serial_by_id"
@@ -39,7 +39,7 @@ def mock_zha():
 
 
 @pytest.fixture(autouse=True)
-def mock_zha_get_last_network_settings() -> Generator[None, None, None]:
+def mock_zha_get_last_network_settings() -> Generator[None]:
     """Mock zha.api.async_get_last_network_settings."""
 
     with patch(

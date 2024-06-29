@@ -3,10 +3,10 @@
   "name": "Wyoming Protocol",
   "codeowners": ["@balloob", "@synesthesiam"],
   "config_flow": true,
-  "dependencies": ["assist_pipeline"],
+  "dependencies": ["assist_pipeline", "intent", "conversation"],
   "documentation": "https://www.home-assistant.io/integrations/wyoming",
   "integration_type": "service",
   "iot_class": "local_push",
-  "requirements": ["wyoming==1.5.3"],
+  "requirements": ["wyoming==1.5.4"],
   "zeroconf": ["_wyoming._tcp.local."]
 }

@@ -1,12 +1,12 @@
 """The tests for the JSON MQTT device tracker platform."""
 
-from collections.abc import Generator
 import json
 import logging
 import os
 from unittest.mock import patch
 
 import pytest
+from typing_extensions import AsyncGenerator
 
 from homeassistant.components.device_tracker.legacy import (
     DOMAIN as DT_DOMAIN,
@@ -34,7 +34,7 @@ LOCATION_MESSAGE_INCOMPLETE = {"longitude": 2.0}
 @pytest.fixture(autouse=True)
 async def setup_comp(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient
-) -> Generator[None, None, None]:
+) -> AsyncGenerator[None]:
     """Initialize components."""
     yaml_devices = hass.config.path(YAML_DEVICES)
     yield
@@ -43,7 +43,7 @@ async def setup_comp(
 
 
 async def test_setup_fails_without_mqtt_being_setup(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Ensure mqtt is started when we setup the component."""
     # Simulate MQTT is was removed
@@ -52,6 +52,8 @@ async def test_setup_fails_without_mqtt_being_setup(
     await hass.config_entries.async_set_disabled_by(
         mqtt_entry.entry_id, ConfigEntryDisabler.USER
     )
+    # mqtt is mocked so we need to simulate it is not connected
+    mqtt_mock.connected = False
 
     dev_id = "zanzito"
     topic = "location/zanzito"

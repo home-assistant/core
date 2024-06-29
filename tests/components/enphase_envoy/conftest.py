@@ -21,6 +21,7 @@ from pyenphase.models.meters import (
     EnvoyPhaseMode,
 )
 import pytest
+from typing_extensions import AsyncGenerator
 
 from homeassistant.components.enphase_envoy import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
@@ -31,7 +32,9 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass: HomeAssistant, config, serial_number):
+def config_entry_fixture(
+    hass: HomeAssistant, config: dict[str, str], serial_number: str
+) -> MockConfigEntry:
     """Define a config entry fixture."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -45,7 +48,7 @@ def config_entry_fixture(hass: HomeAssistant, config, serial_number):
 
 
 @pytest.fixture(name="config")
-def config_fixture():
+def config_fixture() -> dict[str, str]:
     """Define a config entry data fixture."""
     return {
         CONF_HOST: "1.1.1.1",
@@ -57,11 +60,11 @@ def config_fixture():
 
 @pytest.fixture(name="mock_envoy")
 def mock_envoy_fixture(
-    serial_number,
-    mock_authenticate,
-    mock_setup,
-    mock_auth,
-):
+    serial_number: str,
+    mock_authenticate: AsyncMock,
+    mock_setup: AsyncMock,
+    mock_auth: EnvoyTokenAuth,
+) -> Mock:
     """Define a mocked Envoy fixture."""
     mock_envoy = Mock(spec=Envoy)
     mock_envoy.serial_number = serial_number
@@ -339,11 +342,22 @@ def mock_envoy_fixture(
         raw={"varies_by": "firmware_version"},
     )
     mock_envoy.update = AsyncMock(return_value=mock_envoy.data)
+
+    response = Mock()
+    response.status_code = 200
+    response.text = "Testing request \nreplies."
+    response.headers = {"Hello": "World"}
+    mock_envoy.request = AsyncMock(return_value=response)
+
     return mock_envoy
 
 
 @pytest.fixture(name="setup_enphase_envoy")
-async def setup_enphase_envoy_fixture(hass: HomeAssistant, config, mock_envoy):
+async def setup_enphase_envoy_fixture(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    mock_envoy: Mock,
+) -> AsyncGenerator[None]:
     """Define a fixture to set up Enphase Envoy."""
     with (
         patch(
@@ -361,13 +375,13 @@ async def setup_enphase_envoy_fixture(hass: HomeAssistant, config, mock_envoy):
 
 
 @pytest.fixture(name="mock_authenticate")
-def mock_authenticate():
+def mock_authenticate() -> AsyncMock:
     """Define a mocked Envoy.authenticate fixture."""
     return AsyncMock()
 
 
 @pytest.fixture(name="mock_auth")
-def mock_auth(serial_number):
+def mock_auth(serial_number: str) -> EnvoyTokenAuth:
     """Define a mocked EnvoyAuth fixture."""
     token = jwt.encode(
         payload={"name": "envoy", "exp": 1907837780}, key="secret", algorithm="HS256"
@@ -376,12 +390,12 @@ def mock_auth(serial_number):
 
 
 @pytest.fixture(name="mock_setup")
-def mock_setup():
+def mock_setup() -> AsyncMock:
     """Define a mocked Envoy.setup fixture."""
     return AsyncMock()
 
 
 @pytest.fixture(name="serial_number")
-def serial_number_fixture():
+def serial_number_fixture() -> str:
     """Define a serial number fixture."""
     return "1234"
