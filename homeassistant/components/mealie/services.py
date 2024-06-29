@@ -1,8 +1,9 @@
 """Define services for the Mealie integration."""
 
 from dataclasses import asdict
-from typing import cast
+from typing import Any, cast
 
+from aiomealie import MealplanEntryType
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
@@ -47,10 +48,16 @@ def setup_services(hass: HomeAssistant) -> None:
                 translation_placeholders={"target": entry.title},
             )
         client = cast(MealieConfigEntry, entry).runtime_data.client
-        return {
-            mealplan.entry_type.value: asdict(mealplan)
-            for mealplan in await client.get_mealplan_today()
+        response: dict[str, Any] = {
+            MealplanEntryType.BREAKFAST: [],
+            MealplanEntryType.LUNCH: [],
+            MealplanEntryType.DINNER: [],
+            MealplanEntryType.SIDE: [],
         }
+        mealplans = await client.get_mealplan_today()
+        for mealplan in mealplans:
+            response[mealplan.entry_type].append(asdict(mealplan))
+        return response
 
     hass.services.async_register(
         DOMAIN,
