@@ -9,6 +9,7 @@ from enum import StrEnum
 from pynecil import LiveDataResponse, OperatingMode, PowerSource
 
 from homeassistant.components.sensor import (
+    EntityCategory,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -72,6 +73,7 @@ SENSOR_DESCRIPTIONS: tuple[PinecilSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.dc_input,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PinecilSensorEntityDescription(
         key=PinecilSensor.HANDLETEMP,
@@ -89,6 +91,7 @@ SENSOR_DESCRIPTIONS: tuple[PinecilSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.power_level,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PinecilSensorEntityDescription(
         key=PinecilSensor.POWER_SRC,
@@ -96,12 +99,14 @@ SENSOR_DESCRIPTIONS: tuple[PinecilSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=[item.name.lower() for item in PowerSource],
         value_fn=lambda data: data.power_src.name.lower() if data.power_src else None,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PinecilSensorEntityDescription(
         key=PinecilSensor.TIP_RESISTANCE,
         translation_key=PinecilSensor.TIP_RESISTANCE,
         native_unit_of_measurement=OHM,
         value_fn=lambda data: data.tip_res,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PinecilSensorEntityDescription(
         key=PinecilSensor.UPTIME,
@@ -110,6 +115,7 @@ SENSOR_DESCRIPTIONS: tuple[PinecilSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: data.uptime,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PinecilSensorEntityDescription(
         key=PinecilSensor.MOVEMENT_TIME,
@@ -118,6 +124,7 @@ SENSOR_DESCRIPTIONS: tuple[PinecilSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.movement,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PinecilSensorEntityDescription(
         key=PinecilSensor.MAX_TIP_TEMP_ABILITY,
@@ -125,6 +132,7 @@ SENSOR_DESCRIPTIONS: tuple[PinecilSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         value_fn=lambda data: data.max_temp,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PinecilSensorEntityDescription(
         key=PinecilSensor.TIP_VOLTAGE,
@@ -134,6 +142,7 @@ SENSOR_DESCRIPTIONS: tuple[PinecilSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
         value_fn=lambda data: data.raw_tip,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PinecilSensorEntityDescription(
         key=PinecilSensor.HALL_SENSOR,
@@ -141,6 +150,7 @@ SENSOR_DESCRIPTIONS: tuple[PinecilSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.hall_sensor,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PinecilSensorEntityDescription(
         key=PinecilSensor.OPERATING_MODE,
