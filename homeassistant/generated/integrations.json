@@ -2255,10 +2255,9 @@
           "name": "Google Assistant SDK"
         },
         "google_cloud": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "cloud_push",
-          "name": "Google Cloud Platform"
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_push"
         },
         "google_domains": {
           "integration_type": "hub",
@@ -7266,6 +7265,7 @@
     "generic",
     "generic_hygrostat",
     "generic_thermostat",
+    "google_cloud",
     "google_travel_time",
     "group",
     "growatt_server",

@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "key_file": "Path to your Google Cloud service account json file"
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "`{key_file}` is no longer valid. Fix the path or recreate it."
+      }
+    },
+    "error": {
+      "file_not_found": "The specidied key file does not exist. Fix the path and try again."
+    },
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "language": "Default language of the voice",
+          "gender": "Default gender of the voice",
+          "voice": "Default voice name (overrides language and gender)",
+          "encoding": "Default audio encoder",
+          "speed": "Default rate/speed of the voice",
+          "pitch": "Default pitch of the voice",
+          "gain": "Default volume gain (in dB) of the voice",
+          "profiles": "Default audio profiles",
+          "text_type": "Default text type",
+          "stt_model": "STT model"
+        }
+      }
+    }
+  },
+  "title": "Google Cloud"
+}
