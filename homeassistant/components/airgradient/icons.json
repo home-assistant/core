@@ -67,6 +67,11 @@
       "co2_automatic_baseline_calibration": {
         "default": "mdi:molecule-co2"
       }
+    },
+    "switch": {
+      "post_data_to_airgradient": {
+        "default": "mdi:cogs"
+      }
     }
   }
 }
