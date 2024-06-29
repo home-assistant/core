@@ -207,7 +207,7 @@ class Remote:
         if self._on_action is not None:
             await self._on_action.async_run(context=context)
             await self.async_update()
-        elif self.state != MediaPlayerState.ON:
+        elif self.state is not MediaPlayerState.ON:
             await self.async_send_key(Keys.POWER)
             await self.async_update()
 
@@ -223,7 +223,7 @@ class Remote:
         assert self._control is not None
         await self._handle_errors(self._control.set_mute, enable)
 
-    async def async_set_volume(self, volume: int) -> None:
+    async def async_set_volume(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         assert self._control is not None
         volume = int(volume * 100)
@@ -239,11 +239,13 @@ class Remote:
         """Return device info."""
         if self._control is None:
             return None
-        device_info = await self._handle_errors(self._control.get_device_info)  # type: ignore[func-returns-value]
+        device_info = await self._handle_errors(self._control.get_device_info)
         _LOGGER.debug("Fetched device info: %s", str(device_info))
         return device_info
 
-    async def _handle_errors[_T](self, func: Callable, *args: Any) -> _T | None:
+    async def _handle_errors[_R, *_Ts](
+        self, func: Callable[[*_Ts], _R], *args: *_Ts
+    ) -> _R | None:
         """Handle errors from func, set available and reconnect if needed."""
         try:
             result = await self._hass.async_add_executor_job(func, *args)

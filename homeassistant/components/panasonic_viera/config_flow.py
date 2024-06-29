@@ -48,7 +48,7 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             await self.async_load_data(user_input)
@@ -108,7 +108,7 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the pairing step."""
-        errors = {}
+        errors: dict[str, str] = {}
         assert self._remote is not None
 
         if user_input is not None:
