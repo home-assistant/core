@@ -1306,6 +1306,11 @@ class EventOrigin(enum.Enum):
 
     def __str__(self) -> str:
         """Return the event."""
+        return self.as_str
+
+    @cached_property
+    def as_str(self) -> str:
+        """Return the event."""
         return self.value
 
 

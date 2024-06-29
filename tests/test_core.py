@@ -920,6 +920,16 @@ def test_event_repr() -> None:
     )
 
 
+def test_event_origin_as_str_singleton() -> None:
+    """Test that Event origin is returned as string."""
+    assert ha.EventOrigin.remote.as_str == "REMOTE"
+    assert ha.EventOrigin.local.as_str == "LOCAL"
+    assert ha.EventOrigin.remote.as_str is ha.EventOrigin.remote.as_str
+    assert ha.EventOrigin.local.as_str is ha.EventOrigin.local.as_str
+    assert ha.EventOrigin.remote is ha.EventOrigin.remote
+    assert ha.EventOrigin.local is ha.EventOrigin.local
+
+
 def test_event_as_dict() -> None:
     """Test an Event as dictionary."""
     event_type = "some_type"
