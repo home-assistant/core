@@ -147,6 +147,20 @@
       'summary': 'Mousse de saumon',
       'uid': None,
     }),
+    dict({
+      'description': 'Dineren met de boys',
+      'end': dict({
+        'date': '2024-01-22',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'date': '2024-01-21',
+      }),
+      'summary': 'Aquavite',
+      'uid': None,
+    }),
   ])
 # ---
 # name: test_entities[calendar.mealie_breakfast-entry]
