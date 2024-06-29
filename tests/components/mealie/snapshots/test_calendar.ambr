@@ -192,7 +192,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'breakfast',
-    'unique_id': '01J0BC4QM2YBRP6H5G933CETT7_breakfast',
+    'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_breakfast',
     'unit_of_measurement': None,
   })
 # ---
@@ -244,7 +244,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'dinner',
-    'unique_id': '01J0BC4QM2YBRP6H5G933CETT7_dinner',
+    'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_dinner',
     'unit_of_measurement': None,
   })
 # ---
@@ -296,7 +296,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'lunch',
-    'unique_id': '01J0BC4QM2YBRP6H5G933CETT7_lunch',
+    'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_lunch',
     'unit_of_measurement': None,
   })
 # ---
@@ -348,7 +348,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'side',
-    'unique_id': '01J0BC4QM2YBRP6H5G933CETT7_side',
+    'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_side',
     'unit_of_measurement': None,
   })
 # ---
