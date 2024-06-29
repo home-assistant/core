@@ -56,7 +56,7 @@
     }),
     'metadata': dict({
       'connected': True,
-      'status_dateteime': '2023-10-18T22:58:52.683000+00:00',
+      'status_dateteime': '2023-06-05T12:00:00+00:00',
     }),
     'mower': dict({
       'activity': 'PARKED_IN_CS',
@@ -135,7 +135,7 @@
       'auth_implementation': 'husqvarna_automower',
       'token': dict({
         'access_token': '**REDACTED**',
-        'expires_at': 1709208000.0,
+        'expires_at': 1685970000.0,
         'expires_in': 86399,
         'provider': 'husqvarna',
         'refresh_token': '**REDACTED**',

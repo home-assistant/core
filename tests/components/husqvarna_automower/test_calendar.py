@@ -1,4 +1,4 @@
-"""Tests for binary sensor platform."""
+"""Tests for calendar platform."""
 
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock
@@ -21,7 +21,7 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.freeze_time(datetime(2024, 2, 29, 11, tzinfo=UTC))
+@pytest.mark.freeze_time(datetime(2023, 6, 5, 12, tzinfo=UTC))
 @pytest.mark.parametrize(
     (
         "start_date",
@@ -31,7 +31,7 @@ from tests.common import MockConfigEntry
         (datetime(2024, 3, 2, 6, 0), datetime(2024, 3, 18, 6, 0)),
     ],
 )
-async def test_binary_sensor_snapshot(
+async def test_calendar_snapshot(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_automower_client: AsyncMock,
@@ -40,7 +40,7 @@ async def test_binary_sensor_snapshot(
     start_date: datetime,
     end_date: datetime,
 ) -> None:
-    """Snapshot test states of the binary sensors."""
+    """Snapshot tesst of the calendars."""
     await hass.config.async_set_time_zone("Europe/Berlin")
     await setup_integration(hass, mock_config_entry)
     events = await hass.services.async_call(

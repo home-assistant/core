@@ -20,7 +20,7 @@ from tests.components.diagnostics import (
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.mark.freeze_time(datetime.datetime(2024, 2, 29, 11, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(datetime.datetime(2023, 6, 5, 12, tzinfo=datetime.UTC))
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
