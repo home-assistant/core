@@ -253,7 +253,7 @@ def fixture_default_requests(mock_requests: Callable[[str], None]) -> None:
     mock_requests(DEFAULT_HOST)
 
 
-@pytest.fixture(name="prepare_config_entry")
+@pytest.fixture(name="config_entry_factory")
 async def fixture_config_entry_factory(
     hass: HomeAssistant, config_entry: ConfigEntry, mock_default_requests: None
 ) -> Callable[[], ConfigEntry]:

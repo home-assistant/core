@@ -87,8 +87,8 @@ root.Properties.System.SerialNumber={MAC}
 
 @pytest.mark.parametrize("param_properties_payload", [PROPERTY_DATA])
 async def test_camera_disabled(
-    hass: HomeAssistant, prepare_config_entry: Callable[[], ConfigEntry]
+    hass: HomeAssistant, config_entry_factory: Callable[[], ConfigEntry]
 ) -> None:
     """Test that Axis camera platform is loaded properly but does not create camera entity."""
-    await prepare_config_entry()
+    await config_entry_factory()
     assert len(hass.states.async_entity_ids(CAMERA_DOMAIN)) == 0
