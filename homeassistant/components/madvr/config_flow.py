@@ -21,6 +21,9 @@ from homeassistant.core import callback
 from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 from .coordinator import MadVRCoordinator
 
+type MadVRConfigEntry = ConfigEntry[MadVRCoordinator]
+
+
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -94,7 +97,7 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(config_entry: MadVRConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
         return MadVROptionsFlowHandler(config_entry)
 
@@ -118,7 +121,7 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
 class MadVROptionsFlowHandler(OptionsFlow):
     """Handle an options flow for the integration."""
 
-    def __init__(self, config_entry: ConfigEntry[MadVRCoordinator]) -> None:
+    def __init__(self, config_entry: MadVRConfigEntry) -> None:
         """Initialize the options flow."""
         self.config_entry = config_entry
 
