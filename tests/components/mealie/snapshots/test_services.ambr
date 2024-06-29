@@ -3,7 +3,7 @@
   dict({
     <MealplanEntryType.BREAKFAST: 'breakfast'>: list([
     ]),
-    'dinner': list([
+    <MealplanEntryType.DINNER: 'dinner'>: list([
       dict({
         'description': None,
         'entry_type': <MealplanEntryType.DINNER: 'dinner'>,
@@ -105,7 +105,7 @@
         'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
       }),
     ]),
-    'lunch': list([
+    <MealplanEntryType.LUNCH: 'lunch'>: list([
       dict({
         'description': None,
         'entry_type': <MealplanEntryType.LUNCH: 'lunch'>,
@@ -147,7 +147,7 @@
         'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
       }),
     ]),
-    'side': list([
+    <MealplanEntryType.SIDE: 'side'>: list([
     ]),
   })
 # ---
