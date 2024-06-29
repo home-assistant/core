@@ -61,7 +61,7 @@ SERVICE_SET_SCHEDULES = "set_schedules"
 SERVICES = [SERVICE_GET_SCHEDULES, SERVICE_SET_SCHEDULES]
 
 
-def setup_services(hass: HomeAssistant) -> None:
+async def async_setup_services(hass: HomeAssistant) -> None:
     """Register the Wallbox services."""
 
     async def get_schedules(service_call: ServiceCall) -> dict[str, Any]:
@@ -77,13 +77,15 @@ def setup_services(hass: HomeAssistant) -> None:
     async def get_coordinator(service_call_data: Mapping) -> WallboxCoordinator:
         device_registry = dr.async_get(hass)
         device_id = service_call_data[ATTR_CHARGER_ID]
-        device_entry = device_registry.async_get_device({(DOMAIN, device_id)}, set())
+        device_entry: dr.DeviceEntry | None = device_registry.async_get_device(
+            {(DOMAIN, device_id)}, set()
+        )
 
         if device_entry is None:
             raise ValueError(f"Unable to find a charger with SN: {device_id}")
 
         coordinator: WallboxCoordinator = hass.data.get(DOMAIN, {})[
-            device_entry.config_entries[0]  # only one config entry for the device
+            list(device_entry.config_entries)[0]  # only one config entry for the device
         ]
 
         if coordinator is None:
