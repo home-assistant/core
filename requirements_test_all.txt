@@ -1603,6 +1603,9 @@ pymonoprice==0.4
 # homeassistant.components.mysensors
 pymysensors==0.24.0
 
+# homeassistant.components.pinecil
+pynecil==0.1.1
+
 # homeassistant.components.netgear
 pynetgear==0.10.10
 
