@@ -60,7 +60,7 @@ from .util import cleanup_name_for_homekit
 
 _LOGGER = logging.getLogger(__name__)
 
-VALVE_OPEN_STATES: Final = [STATE_OPEN, STATE_OPENING, STATE_CLOSING]
+VALVE_OPEN_STATES: Final = {STATE_OPEN, STATE_OPENING, STATE_CLOSING}
 
 
 class ValveInfo(NamedTuple):
@@ -221,7 +221,9 @@ class Vacuum(Switch):
 class ValveBase(HomeAccessory):
     """Valve base class."""
 
-    def __init__(self, valve_type: str, *args: Any, **kwargs: Any) -> None:
+    def __init__(
+        self, valve_type: str, open_states: set[str], *args: Any, **kwargs: Any
+    ) -> None:
         """Initialize a Valve accessory object."""
         super().__init__(*args, **kwargs)
         self.domain = split_entity_id(self.entity_id)[0]
@@ -229,6 +231,7 @@ class ValveBase(HomeAccessory):
         assert state
 
         self.category = VALVE_TYPE[valve_type].category
+        self.open_states = open_states
 
         serv_valve = self.add_preload_service(SERV_VALVE)
         self.char_active = serv_valve.configure_char(
@@ -241,6 +244,15 @@ class ValveBase(HomeAccessory):
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup
         self.async_update_state(state)
+
+    @callback
+    def async_update_state(self, new_state: State) -> None:
+        """Update switch state after state changed."""
+        current_state = 1 if new_state.state in self.open_states else 0
+        _LOGGER.debug("%s: Set active state to %s", self.entity_id, current_state)
+        self.char_active.set_value(current_state)
+        _LOGGER.debug("%s: Set in_use state to %s", self.entity_id, current_state)
+        self.char_in_use.set_value(current_state)
 
 
 @TYPES.register("ValveSwitch")
@@ -259,7 +271,15 @@ class ValveSwitch(ValveBase):
     ) -> None:
         """Initialize a Valve accessory object."""
         super().__init__(
-            config[CONF_TYPE], hass, driver, name, entity_id, aid, config, *args
+            config[CONF_TYPE],
+            {STATE_ON},
+            hass,
+            driver,
+            name,
+            entity_id,
+            aid,
+            config,
+            *args,
         )
 
     def set_state(self, value: bool) -> None:
@@ -270,15 +290,6 @@ class ValveSwitch(ValveBase):
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
         self.async_call_service(self.domain, service, params)
 
-    @callback
-    def async_update_state(self, new_state: State) -> None:
-        """Update switch state after state changed."""
-        current_state = 1 if new_state.state == STATE_ON else 0
-        _LOGGER.debug("%s: Set active state to %s", self.entity_id, current_state)
-        self.char_active.set_value(current_state)
-        _LOGGER.debug("%s: Set in_use state to %s", self.entity_id, current_state)
-        self.char_in_use.set_value(current_state)
-
 
 @TYPES.register("Valve")
 class Valve(ValveBase):
@@ -286,26 +297,15 @@ class Valve(ValveBase):
 
     def __init__(self, *args: Any) -> None:
         """Initialize a Valve accessory object."""
-        super().__init__(TYPE_VALVE, *args)
+        super().__init__(TYPE_VALVE, VALVE_OPEN_STATES, *args)
 
     def set_state(self, value: bool) -> None:
         """Move value state to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set valve state to %s", self.entity_id, value)
         self.char_in_use.set_value(value)
-
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_OPEN_VALVE if value else SERVICE_CLOSE_VALVE
         self.async_call_service(self.domain, service, params)
-
-    @callback
-    def async_update_state(self, new_state: State) -> None:
-        """Update switch state after state changed."""
-
-        current_state = 1 if new_state.state in VALVE_OPEN_STATES else 0
-        _LOGGER.debug("%s: Set active state to %s", self.entity_id, current_state)
-        self.char_active.set_value(current_state)
-        _LOGGER.debug("%s: Set in_use state to %s", self.entity_id, current_state)
-        self.char_in_use.set_value(current_state)
 
 
 @TYPES.register("SelectSwitch")
