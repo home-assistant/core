@@ -20,7 +20,7 @@
   },
   "options": {
     "step": {
-      "init": {
+      "user": {
         "title": "MadVR Options",
         "description": "Update the configuration options for MadVR.",
         "data": {

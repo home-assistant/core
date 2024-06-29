@@ -142,14 +142,13 @@ class MadVROptionsFlowHandler(OptionsFlow):
             )
             # reload the entity if changed
             await self.hass.config_entries.async_reload(self.config_entry.entry_id)
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 
         options = self.config_entry.data
         data_schema = vol.Schema(
             {
-                vol.Optional(CONF_NAME, default=options.get(CONF_NAME, "")): str,
-                vol.Optional(CONF_HOST, default=options.get(CONF_HOST, "")): str,
-                vol.Optional(CONF_PORT, default=options.get(CONF_PORT, 44077)): int,
+                vol.Required(CONF_HOST, default=options.get(CONF_HOST, "")): str,
+                vol.Required(CONF_PORT, default=options.get(CONF_PORT, 44077)): int,
             }
         )
 
