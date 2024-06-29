@@ -16,7 +16,7 @@ from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components import camera
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
-from homeassistant.const import STATE_ON, STATE_UNKNOWN
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import (
     Event,
     EventStateChangedData,
@@ -338,7 +338,9 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
         assert self._char_doorbell_detected
         assert self._char_doorbell_detected_switch
         state = new_state.state
-        if state == STATE_ON or (self.doorbell_is_event and state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)):
+        if state == STATE_ON or (
+            self.doorbell_is_event and state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+        ):
             self._char_doorbell_detected.set_value(DOORBELL_SINGLE_PRESS)
             self._char_doorbell_detected_switch.set_value(DOORBELL_SINGLE_PRESS)
             _LOGGER.debug(
