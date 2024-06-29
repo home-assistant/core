@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import TYPE_CHECKING
 
 from aiomealie import (
     MealieAuthenticationError,
@@ -13,6 +12,7 @@ from aiomealie import (
     MealplanEntryType,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
@@ -22,10 +22,9 @@ import homeassistant.util.dt as dt_util
 
 from .const import LOGGER
 
-if TYPE_CHECKING:
-    from . import MealieConfigEntry
-
 WEEK = timedelta(days=7)
+
+type MealieConfigEntry = ConfigEntry[MealieCoordinator]
 
 
 class MealieCoordinator(DataUpdateCoordinator[dict[MealplanEntryType, list[Mealplan]]]):

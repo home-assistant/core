@@ -32,5 +32,25 @@
         "name": "Side"
       }
     }
+  },
+  "exceptions": {
+    "not_loaded": {
+      "message": "{target} is not loaded."
+    },
+    "integration_not_found": {
+      "message": "Integration \"{target}\" not found in registry."
+    }
+  },
+  "services": {
+    "get_mealplan_today": {
+      "name": "Get today's meal plan",
+      "description": "Get today's meal plan sorted by meal type",
+      "fields": {
+        "config_entry_id": {
+          "name": "Mealie instance",
+          "description": "Select the Mealie instance to get today's meal plan from"
+        }
+      }
+    }
   }
 }

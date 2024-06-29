@@ -1,0 +1,7 @@
+get_mealplan_today:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: mealie

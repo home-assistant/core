@@ -10,7 +10,7 @@ from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MealieConfigEntry, MealieCoordinator
+from .coordinator import MealieConfigEntry, MealieCoordinator
 from .entity import MealieEntity
 
 

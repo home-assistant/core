@@ -2,16 +2,25 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
+from hatasmota.utils import ConfigType
+
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 
-from .coordinator import MealieCoordinator
+from .const import DOMAIN
+from .coordinator import MealieConfigEntry, MealieCoordinator
+from .services import setup_services
 
 PLATFORMS: list[Platform] = [Platform.CALENDAR]
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
-type MealieConfigEntry = ConfigEntry[MealieCoordinator]
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Mealie component."""
+    setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bool:

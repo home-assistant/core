@@ -1,0 +1,5 @@
+{
+  "services": {
+    "get_mealplan_today": "mdi:calendar-today"
+  }
+}
