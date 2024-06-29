@@ -380,7 +380,7 @@ aiowatttime==0.1.1
 aiowebostv==0.4.0
 
 # homeassistant.components.withings
-aiowithings==3.0.1
+aiowithings==3.0.2
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.4
@@ -643,7 +643,7 @@ dynalite-panel==0.0.4
 eagle100==0.1.1
 
 # homeassistant.components.easyenergy
-easyenergy==2.1.1
+easyenergy==2.1.2
 
 # homeassistant.components.electric_kiwi
 electrickiwi-api==0.8.5
@@ -667,7 +667,7 @@ emulated-roku==0.3.0
 energyflip-client==0.2.2
 
 # homeassistant.components.energyzero
-energyzero==2.1.0
+energyzero==2.1.1
 
 # homeassistant.components.enocean
 enocean==0.50
@@ -821,7 +821,7 @@ gotailwind==0.2.3
 govee-ble==0.31.3
 
 # homeassistant.components.govee_light_local
-govee-local-api==1.5.0
+govee-local-api==1.5.1
 
 # homeassistant.components.gpsd
 gps3==0.33.3
@@ -833,7 +833,7 @@ greeclimate==1.4.1
 greeneye_monitor==3.0.3
 
 # homeassistant.components.pure_energie
-gridnet==5.0.0
+gridnet==5.0.1
 
 # homeassistant.components.growatt_server
 growattServer==1.5.0
@@ -895,7 +895,7 @@ hole==0.8.0
 holidays==0.51
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240627.0
+home-assistant-frontend==20240628.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.6.26
@@ -1177,7 +1177,7 @@ oauth2client==4.1.3
 objgraph==3.5.0
 
 # homeassistant.components.garages_amsterdam
-odp-amsterdam==6.0.1
+odp-amsterdam==6.0.2
 
 # homeassistant.components.ollama
 ollama-hass==0.1.7
@@ -1222,7 +1222,7 @@ ourgroceries==1.5.4
 ovoenergy==2.0.0
 
 # homeassistant.components.p1_monitor
-p1monitor==3.0.0
+p1monitor==3.0.1
 
 # homeassistant.components.mqtt
 paho-mqtt==1.6.1
@@ -1360,7 +1360,7 @@ pyairnow==1.2.1
 pyairvisual==2023.08.1
 
 # homeassistant.components.aprilaire
-pyaprilaire==0.7.0
+pyaprilaire==0.7.4
 
 # homeassistant.components.asuswrt
 pyasuswrt==0.1.21
@@ -1976,7 +1976,7 @@ securetar==2024.2.1
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense-energy==0.12.2
+sense-energy==0.12.4
 
 # homeassistant.components.sensirion_ble
 sensirion-ble==0.1.1
@@ -2268,7 +2268,7 @@ wyoming==1.5.4
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.30.0
+xiaomi-ble==0.30.1
 
 # homeassistant.components.knx
 xknx==2.12.2

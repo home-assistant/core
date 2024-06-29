@@ -377,12 +377,13 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
                 eager_start=True,
             )
         elif update_type is BlockUpdateType.COAP_PERIODIC:
+            if self._push_update_failures >= MAX_PUSH_UPDATE_FAILURES:
+                ir.async_delete_issue(
+                    self.hass,
+                    DOMAIN,
+                    PUSH_UPDATE_ISSUE_ID.format(unique=self.mac),
+                )
             self._push_update_failures = 0
-            ir.async_delete_issue(
-                self.hass,
-                DOMAIN,
-                PUSH_UPDATE_ISSUE_ID.format(unique=self.mac),
-            )
         elif update_type is BlockUpdateType.COAP_REPLY:
             self._push_update_failures += 1
             if self._push_update_failures == MAX_PUSH_UPDATE_FAILURES:
