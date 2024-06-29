@@ -1194,30 +1194,21 @@ async def test_handle_mqtt_on_callback(
         assert "No ACK from MQTT server" not in caplog.text
 
 
-@patch("homeassistant.components.mqtt.client.TIMEOUT_ACK", 0.3)
-async def test_handle_mqtt_on_callback_cancelled(
+async def test_handle_mqtt_on_callback_after_cancellation(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    setup_with_birth_msg_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
-    """Test cancel waiting for a publish."""
-    mqtt_client_mock = setup_with_birth_msg_client_mock
-    with patch.object(mqtt_client_mock, "get_mid", return_value=100):
-        # Simulate an ACK for mid == 100, this will call mqtt_mock._async_get_mid_future(mid)
-        mqtt_client_mock.on_publish(mqtt_client_mock, None, 100)
-        await hass.async_block_till_done()
-        # Make sure the ACK has been received
-        await hass.async_block_till_done()
-        # Now call publish without call back, this will call _async_async_wait_for_mid(msg_info.mid)
-        task = hass.async_create_task(
-            mqtt.async_publish(hass, "no_callback/test-topic", "test-payload")
-        )
-        await asyncio.sleep(0)
-        # Cancel the task so the future is cancelled
-        task.cancel()
-        # Since the future was cancelled, we should not see any timeout warning in the log
-        await hass.async_block_till_done()
-        assert "No ACK from MQTT server" not in caplog.text
+    """Test receiving an ACK after a timeout."""
+    mqtt_mock = await mqtt_mock_entry()
+    # Simulate the mid future getting a cancellation
+    mqtt_mock()._async_get_mid_future(101).set_exception(asyncio.CancelledError)
+    # Simulate an ACK for mid == 101, being received after the timeout
+    mqtt_client_mock.on_publish(mqtt_client_mock, None, 101)
+    await hass.async_block_till_done()
+    assert "No ACK from MQTT server" not in caplog.text
+    assert "InvalidStateError" not in caplog.text
 
 
 async def test_handle_mqtt_on_callback_after_timeout(
