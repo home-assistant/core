@@ -125,13 +125,13 @@ async def test_device_support_mqtt_low_privilege(mqtt_mock: MqttMockHAClient) ->
 async def test_update_address(
     hass: HomeAssistant,
     setup_config_entry: ConfigEntry,
-    mock_vapix_requests: Callable[[str], None],
+    mock_requests: Callable[[str], None],
 ) -> None:
     """Test update address works."""
     hub = setup_config_entry.runtime_data
     assert hub.api.config.host == "1.2.3.4"
 
-    mock_vapix_requests("2.3.4.5")
+    mock_requests("2.3.4.5")
     await hass.config_entries.flow.async_init(
         AXIS_DOMAIN,
         data=zeroconf.ZeroconfServiceInfo(

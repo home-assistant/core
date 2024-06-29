@@ -109,7 +109,7 @@ def fixture_config_entry_options() -> MappingProxyType[str, Any]:
 # Axis API fixtures
 
 
-@pytest.fixture(name="mock_vapix_requests")
+@pytest.fixture(name="mock_requests")
 def fixture_request(
     respx_mock: respx.MockRouter,
     port_management_payload: dict[str, Any],
@@ -248,9 +248,9 @@ def fixture_mqtt_status_code() -> int:
 
 
 @pytest.fixture(name="setup_default_vapix_requests")
-def fixture_default_requests(mock_vapix_requests: Callable[[str], None]) -> None:
+def fixture_default_requests(mock_requests: Callable[[str], None]) -> None:
     """Mock default Vapix requests responses."""
-    mock_vapix_requests(DEFAULT_HOST)
+    mock_requests(DEFAULT_HOST)
 
 
 @pytest.fixture(name="prepare_config_entry")

@@ -94,7 +94,7 @@ async def test_flow_manual_configuration(hass: HomeAssistant) -> None:
 async def test_manual_configuration_update_configuration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_vapix_requests: Callable[[str], None],
+    mock_requests: Callable[[str], None],
 ) -> None:
     """Test that config flow fails on already configured device."""
     assert mock_config_entry.data[CONF_HOST] == "1.2.3.4"
@@ -106,7 +106,7 @@ async def test_manual_configuration_update_configuration(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    mock_vapix_requests("2.3.4.5")
+    mock_requests("2.3.4.5")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -230,7 +230,7 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(
 async def test_reauth_flow_update_configuration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_vapix_requests: Callable[[str], None],
+    mock_requests: Callable[[str], None],
 ) -> None:
     """Test that config flow fails on already configured device."""
     assert mock_config_entry.data[CONF_HOST] == "1.2.3.4"
@@ -246,7 +246,7 @@ async def test_reauth_flow_update_configuration(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    mock_vapix_requests("2.3.4.5")
+    mock_requests("2.3.4.5")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -271,7 +271,7 @@ async def test_reauth_flow_update_configuration(
 async def test_reconfiguration_flow_update_configuration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_vapix_requests: Callable[[str], None],
+    mock_requests: Callable[[str], None],
 ) -> None:
     """Test that config flow reconfiguration updates configured device."""
     assert mock_config_entry.data[CONF_HOST] == "1.2.3.4"
@@ -289,7 +289,7 @@ async def test_reconfiguration_flow_update_configuration(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    mock_vapix_requests("2.3.4.5")
+    mock_requests("2.3.4.5")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -514,7 +514,7 @@ async def test_discovered_device_already_configured(
 async def test_discovery_flow_updated_configuration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_vapix_requests: Callable[[str], None],
+    mock_requests: Callable[[str], None],
     source: str,
     discovery_info: BaseServiceInfo,
     expected_port: int,
@@ -529,7 +529,7 @@ async def test_discovery_flow_updated_configuration(
         CONF_NAME: NAME,
     }
 
-    mock_vapix_requests("2.3.4.5")
+    mock_requests("2.3.4.5")
     result = await hass.config_entries.flow.async_init(
         AXIS_DOMAIN, data=discovery_info, context={"source": source}
     )
