@@ -222,7 +222,13 @@ class ValveBase(HomeAccessory):
     """Valve base class."""
 
     def __init__(
-        self, valve_type: str, open_states: set[str], *args: Any, **kwargs: Any
+        self,
+        valve_type: str,
+        open_states: set[str],
+        on_service: str,
+        off_service: str,
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         """Initialize a Valve accessory object."""
         super().__init__(*args, **kwargs)
@@ -232,6 +238,8 @@ class ValveBase(HomeAccessory):
 
         self.category = VALVE_TYPE[valve_type].category
         self.open_states = open_states
+        self.on_service = on_service
+        self.off_service = off_service
 
         serv_valve = self.add_preload_service(SERV_VALVE)
         self.char_active = serv_valve.configure_char(
@@ -254,6 +262,14 @@ class ValveBase(HomeAccessory):
         _LOGGER.debug("%s: Set in_use state to %s", self.entity_id, current_state)
         self.char_in_use.set_value(current_state)
 
+    def set_state(self, value: bool) -> None:
+        """Move value state to value if call came from HomeKit."""
+        _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
+        self.char_in_use.set_value(value)
+        params = {ATTR_ENTITY_ID: self.entity_id}
+        service = self.on_service if value else self.off_service
+        self.async_call_service(self.domain, service, params)
+
 
 @TYPES.register("ValveSwitch")
 class ValveSwitch(ValveBase):
@@ -273,6 +289,8 @@ class ValveSwitch(ValveBase):
         super().__init__(
             config[CONF_TYPE],
             {STATE_ON},
+            SERVICE_TURN_ON,
+            SERVICE_TURN_OFF,
             hass,
             driver,
             name,
@@ -282,14 +300,6 @@ class ValveSwitch(ValveBase):
             *args,
         )
 
-    def set_state(self, value: bool) -> None:
-        """Move value state to value if call came from HomeKit."""
-        _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
-        self.char_in_use.set_value(value)
-        params = {ATTR_ENTITY_ID: self.entity_id}
-        service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
-        self.async_call_service(self.domain, service, params)
-
 
 @TYPES.register("Valve")
 class Valve(ValveBase):
@@ -297,15 +307,13 @@ class Valve(ValveBase):
 
     def __init__(self, *args: Any) -> None:
         """Initialize a Valve accessory object."""
-        super().__init__(TYPE_VALVE, VALVE_OPEN_STATES, *args)
-
-    def set_state(self, value: bool) -> None:
-        """Move value state to value if call came from HomeKit."""
-        _LOGGER.debug("%s: Set valve state to %s", self.entity_id, value)
-        self.char_in_use.set_value(value)
-        params = {ATTR_ENTITY_ID: self.entity_id}
-        service = SERVICE_OPEN_VALVE if value else SERVICE_CLOSE_VALVE
-        self.async_call_service(self.domain, service, params)
+        super().__init__(
+            TYPE_VALVE,
+            VALVE_OPEN_STATES,
+            SERVICE_OPEN_VALVE,
+            SERVICE_CLOSE_VALVE,
+            *args,
+        )
 
 
 @TYPES.register("SelectSwitch")
