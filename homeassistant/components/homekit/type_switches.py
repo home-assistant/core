@@ -292,6 +292,7 @@ class Valve(ValveBase):
         """Move value state to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set valve state to %s", self.entity_id, value)
         self.char_in_use.set_value(value)
+
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_OPEN_VALVE if value else SERVICE_CLOSE_VALVE
         self.async_call_service(self.domain, service, params)
@@ -299,6 +300,7 @@ class Valve(ValveBase):
     @callback
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
+
         current_state = 1 if new_state.state in VALVE_OPEN_STATES else 0
         _LOGGER.debug("%s: Set active state to %s", self.entity_id, current_state)
         self.char_active.set_value(current_state)
