@@ -77,7 +77,9 @@ async def test_lg_netcast_turn_on_trigger_device_id(
     assert len(calls) == 0
 
 
-async def test_lg_netcast_turn_on_trigger_entity_id(hass: HomeAssistant, calls):
+async def test_lg_netcast_turn_on_trigger_entity_id(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test for turn_on triggers by entity firing."""
     await setup_lgnetcast(hass)
 

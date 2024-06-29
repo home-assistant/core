@@ -10,7 +10,7 @@ from homeassistant.components.hue.const import ATTR_HUE_EVENT
 from homeassistant.components.hue.v1 import sensor_base
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import async_get
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import create_mock_bridge, setup_platform
 
@@ -314,7 +314,9 @@ async def test_sensors_with_multiple_bridges(
     assert len(hass.states.async_all()) == 10
 
 
-async def test_sensors(hass: HomeAssistant, mock_bridge_v1) -> None:
+async def test_sensors(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_bridge_v1
+) -> None:
     """Test the update_items function with some sensors."""
     mock_bridge_v1.mock_sensor_responses.append(SENSOR_RESPONSE)
     await setup_platform(hass, mock_bridge_v1, ["binary_sensor", "sensor"])
@@ -351,9 +353,10 @@ async def test_sensors(hass: HomeAssistant, mock_bridge_v1) -> None:
     assert battery_remote_1.state == "100"
     assert battery_remote_1.name == "Hue dimmer switch 1 battery level"
 
-    ent_reg = async_get(hass)
     assert (
-        ent_reg.async_get("sensor.hue_dimmer_switch_1_battery_level").entity_category
+        entity_registry.async_get(
+            "sensor.hue_dimmer_switch_1_battery_level"
+        ).entity_category
         == EntityCategory.DIAGNOSTIC
     )
 

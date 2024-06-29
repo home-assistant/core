@@ -360,6 +360,12 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^RESULT_TYPE_(\w*)$"),
         ),
     ],
+    "homeassistant.helpers.config_validation": [
+        ObsoleteImportMatch(
+            reason="should be imported from homeassistant/components/<platform>",
+            constant=re.compile(r"^PLATFORM_SCHEMA(_BASE)?$"),
+        ),
+    ],
     "homeassistant.helpers.device_registry": [
         ObsoleteImportMatch(
             reason="replaced by DeviceEntryDisabler enum",
@@ -395,6 +401,38 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
 }
 
 
+# Blacklist of imports that should be using the namespace
+@dataclass
+class NamespaceAlias:
+    """Class for namespace imports."""
+
+    alias: str
+    names: set[str]  # function names
+
+
+_FORCE_NAMESPACE_IMPORT: dict[str, NamespaceAlias] = {
+    "homeassistant.helpers.area_registry": NamespaceAlias("ar", {"async_get"}),
+    "homeassistant.helpers.category_registry": NamespaceAlias("cr", {"async_get"}),
+    "homeassistant.helpers.device_registry": NamespaceAlias(
+        "dr",
+        {
+            "async_get",
+            "async_entries_for_config_entry",
+        },
+    ),
+    "homeassistant.helpers.entity_registry": NamespaceAlias(
+        "er",
+        {
+            "async_get",
+            "async_entries_for_config_entry",
+        },
+    ),
+    "homeassistant.helpers.floor_registry": NamespaceAlias("fr", {"async_get"}),
+    "homeassistant.helpers.issue_registry": NamespaceAlias("ir", {"async_get"}),
+    "homeassistant.helpers.label_registry": NamespaceAlias("lr", {"async_get"}),
+}
+
+
 class HassImportsFormatChecker(BaseChecker):
     """Checker for imports."""
 
@@ -421,6 +459,12 @@ class HassImportsFormatChecker(BaseChecker):
             "hass-component-root-import",
             "Used when an import from another component should be "
             "from the component root",
+        ),
+        "W7425": (
+            "`%s` should not be imported directly. Please import `%s` as `%s` "
+            "and use `%s.%s`",
+            "hass-helper-namespace-import",
+            "Used when a helper should be used via the namespace",
         ),
     }
     options = ()
@@ -524,6 +568,20 @@ class HassImportsFormatChecker(BaseChecker):
                             node=node,
                             args=(import_match.string, obsolete_import.reason),
                         )
+        if namespace_alias := _FORCE_NAMESPACE_IMPORT.get(node.modname):
+            for name in node.names:
+                if name[0] in namespace_alias.names:
+                    self.add_message(
+                        "hass-helper-namespace-import",
+                        node=node,
+                        args=(
+                            name[0],
+                            node.modname,
+                            namespace_alias.alias,
+                            namespace_alias.alias,
+                            name[0],
+                        ),
+                    )
 
 
 def register(linter: PyLinter) -> None:

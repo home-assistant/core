@@ -6,6 +6,7 @@ from ollama import Message, ResponseError
 import pytest
 
 from homeassistant.components import conversation, ollama
+from homeassistant.components.conversation import trace
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.const import ATTR_FRIENDLY_NAME, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant
@@ -109,6 +110,19 @@ async def test_chat(
             result.response.response_type == intent.IntentResponseType.ACTION_DONE
         ), result
         assert result.response.speech["plain"]["speech"] == "test response"
+
+    # Test Conversation tracing
+    traces = trace.async_get_traces()
+    assert traces
+    last_trace = traces[-1].as_dict()
+    trace_events = last_trace.get("events", [])
+    assert [event["event_type"] for event in trace_events] == [
+        trace.ConversationTraceEventType.ASYNC_PROCESS,
+        trace.ConversationTraceEventType.AGENT_DETAIL,
+    ]
+    # AGENT_DETAIL event contains the raw prompt passed to the model
+    detail_event = trace_events[1]
+    assert "The current time is" in detail_event["data"]["messages"][0]["content"]
 
 
 async def test_message_history_trimming(

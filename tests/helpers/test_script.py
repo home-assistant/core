@@ -450,7 +450,6 @@ async def test_service_response_data_errors(
 
     with pytest.raises(vol.Invalid, match=expected_error):
         await script_obj.async_run(context=context)
-        await hass.async_block_till_done()
 
 
 async def test_data_template_with_templated_key(hass: HomeAssistant) -> None:
@@ -4903,15 +4902,15 @@ async def test_script_mode_queued_cancel(hass: HomeAssistant) -> None:
         assert script_obj.is_running
         assert script_obj.runs == 2
 
+        task2.cancel()
         with pytest.raises(asyncio.CancelledError):
-            task2.cancel()
             await task2
 
         assert script_obj.is_running
         assert script_obj.runs == 2
 
+        task1.cancel()
         with pytest.raises(asyncio.CancelledError):
-            task1.cancel()
             await task1
 
         assert not script_obj.is_running
@@ -6247,3 +6246,72 @@ async def test_stopping_run_before_starting(
     # would hang indefinitely.
     run = script._ScriptRun(hass, script_obj, {}, None, True)
     await run.async_stop()
+
+
+async def test_disallowed_recursion(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a queued mode script disallowed recursion."""
+    context = Context()
+    calls = 0
+    alias = "event step"
+    sequence1 = cv.SCRIPT_SCHEMA({"alias": alias, "service": "test.call_script_2"})
+    script1_obj = script.Script(
+        hass,
+        sequence1,
+        "Test Name1",
+        "test_domain1",
+        script_mode="queued",
+        running_description="test script1",
+    )
+
+    sequence2 = cv.SCRIPT_SCHEMA({"alias": alias, "service": "test.call_script_3"})
+    script2_obj = script.Script(
+        hass,
+        sequence2,
+        "Test Name2",
+        "test_domain2",
+        script_mode="queued",
+        running_description="test script2",
+    )
+
+    sequence3 = cv.SCRIPT_SCHEMA({"alias": alias, "service": "test.call_script_1"})
+    script3_obj = script.Script(
+        hass,
+        sequence3,
+        "Test Name3",
+        "test_domain3",
+        script_mode="queued",
+        running_description="test script3",
+    )
+
+    async def _async_service_handler_1(*args, **kwargs) -> None:
+        await script1_obj.async_run(context=context)
+
+    hass.services.async_register("test", "call_script_1", _async_service_handler_1)
+
+    async def _async_service_handler_2(*args, **kwargs) -> None:
+        await script2_obj.async_run(context=context)
+
+    hass.services.async_register("test", "call_script_2", _async_service_handler_2)
+
+    async def _async_service_handler_3(*args, **kwargs) -> None:
+        await script3_obj.async_run(context=context)
+
+    hass.services.async_register("test", "call_script_3", _async_service_handler_3)
+
+    await script1_obj.async_run(context=context)
+    await hass.async_block_till_done()
+
+    assert calls == 0
+    assert (
+        "Test Name1: Disallowed recursion detected, "
+        "test_domain3.Test Name3 tried to start test_domain1.Test Name1"
+        " which is already running in the current execution path; "
+        "Traceback (most recent call last):"
+    ) in caplog.text
+    assert (
+        "- test_domain1.Test Name1\n"
+        "- test_domain2.Test Name2\n"
+        "- test_domain3.Test Name3"
+    ) in caplog.text

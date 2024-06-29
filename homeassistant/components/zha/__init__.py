@@ -1,6 +1,5 @@
 """Support for Zigbee Home Automation devices."""
 
-import asyncio
 import contextlib
 import copy
 import logging
@@ -238,12 +237,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     websocket_api.async_unload_api(hass)
 
     # our components don't have unload methods so no need to look at return values
-    await asyncio.gather(
-        *(
-            hass.config_entries.async_forward_entry_unload(config_entry, platform)
-            for platform in PLATFORMS
-        )
-    )
+    await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
     return True
 

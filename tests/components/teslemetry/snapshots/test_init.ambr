@@ -23,13 +23,14 @@
     'model': 'Powerwall 2, Tesla Backup Gateway 2',
     'name': 'Energy Site',
     'name_by_user': None,
-    'serial_number': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '123456',
     'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
 # ---
-# name: test_devices[{('teslemetry', 'VINVINVIN')}]
+# name: test_devices[{('teslemetry', 'LRWXF7EK4KC700000')}]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -43,17 +44,18 @@
     'identifiers': set({
       tuple(
         'teslemetry',
-        'VINVINVIN',
+        'LRWXF7EK4KC700000',
       ),
     }),
     'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Tesla',
-    'model': None,
+    'model': 'Model X',
     'name': 'Test',
     'name_by_user': None,
-    'serial_number': 'VINVINVIN',
+    'primary_config_entry': <ANY>,
+    'serial_number': 'LRWXF7EK4KC700000',
     'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
@@ -80,9 +82,10 @@
     'labels': set({
     }),
     'manufacturer': 'Tesla',
-    'model': None,
+    'model': 'Gen 3 Wall Connector',
     'name': 'Wall Connector',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': '123',
     'suggested_area': None,
     'sw_version': None,
@@ -110,9 +113,10 @@
     'labels': set({
     }),
     'manufacturer': 'Tesla',
-    'model': None,
+    'model': 'Gen 3 Wall Connector',
     'name': 'Wall Connector',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': '234',
     'suggested_area': None,
     'sw_version': None,

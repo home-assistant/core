@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from freezegun import freeze_time
 from pyplaato.models.airlock import PlaatoAirlock
 from pyplaato.models.device import PlaatoDeviceType
 from pyplaato.models.keg import PlaatoKeg
@@ -23,6 +24,7 @@ AIRLOCK_DATA = {}
 KEG_DATA = {}
 
 
+@freeze_time("2024-05-24 12:00:00", tz_offset=0)
 async def init_integration(
     hass: HomeAssistant, device_type: PlaatoDeviceType
 ) -> MockConfigEntry:

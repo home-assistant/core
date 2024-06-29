@@ -2,10 +2,12 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from google.api_core.exceptions import ClientError
+from google.api_core.exceptions import ClientError, DeadlineExceeded
+from google.rpc.error_details_pb2 import ErrorInfo  # pylint: disable=no-name-in-module
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -92,22 +94,20 @@ async def test_generate_content_service_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test generate content service handles errors."""
-    with (
-        patch("google.generativeai.GenerativeModel") as mock_model,
-        pytest.raises(
-            HomeAssistantError, match="Error generating content: None reason"
-        ),
-    ):
+    with patch("google.generativeai.GenerativeModel") as mock_model:
         mock_model.return_value.generate_content_async = AsyncMock(
             side_effect=ClientError("reason")
         )
-        await hass.services.async_call(
-            "google_generative_ai_conversation",
-            "generate_content",
-            {"prompt": "write a story about an epic fail"},
-            blocking=True,
-            return_response=True,
-        )
+        with pytest.raises(
+            HomeAssistantError, match="Error generating content: None reason"
+        ):
+            await hass.services.async_call(
+                "google_generative_ai_conversation",
+                "generate_content",
+                {"prompt": "write a story about an epic fail"},
+                blocking=True,
+                return_response=True,
+            )
 
 
 @pytest.mark.usefixtures("mock_init_component")
@@ -118,20 +118,20 @@ async def test_generate_content_response_has_empty_parts(
     """Test generate content service handles response with empty parts."""
     with (
         patch("google.generativeai.GenerativeModel") as mock_model,
-        pytest.raises(HomeAssistantError, match="Error generating content"),
     ):
         mock_response = MagicMock()
         mock_response.parts = []
         mock_model.return_value.generate_content_async = AsyncMock(
             return_value=mock_response
         )
-        await hass.services.async_call(
-            "google_generative_ai_conversation",
-            "generate_content",
-            {"prompt": "write a story about an epic fail"},
-            blocking=True,
-            return_response=True,
-        )
+        with pytest.raises(HomeAssistantError, match="Error generating content"):
+            await hass.services.async_call(
+                "google_generative_ai_conversation",
+                "generate_content",
+                {"prompt": "write a story about an epic fail"},
+                blocking=True,
+                return_response=True,
+            )
 
 
 async def test_generate_content_service_with_image_not_allowed_path(
@@ -217,3 +217,42 @@ async def test_generate_content_service_with_non_image(
             blocking=True,
             return_response=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "state", "reauth"),
+    [
+        (
+            ClientError("some error"),
+            ConfigEntryState.SETUP_ERROR,
+            False,
+        ),
+        (
+            DeadlineExceeded("deadline exceeded"),
+            ConfigEntryState.SETUP_RETRY,
+            False,
+        ),
+        (
+            ClientError(
+                "invalid api key", error_info=ErrorInfo(reason="API_KEY_INVALID")
+            ),
+            ConfigEntryState.SETUP_ERROR,
+            True,
+        ),
+    ],
+)
+async def test_config_entry_error(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, side_effect, state, reauth
+) -> None:
+    """Test different configuration entry errors."""
+    mock_client = AsyncMock()
+    mock_client.get_model.side_effect = side_effect
+    with patch(
+        "google.ai.generativelanguage_v1beta.ModelServiceAsyncClient",
+        return_value=mock_client,
+    ):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_config_entry.state == state
+        mock_config_entry.async_get_active_flows(hass, {"reauth"})
+        assert any(mock_config_entry.async_get_active_flows(hass, {"reauth"})) == reauth

@@ -19,14 +19,10 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
+from . import YOUTUBE_EMPTY_PLAYLIST, YOUTUBE_PLAYLIST, YOUTUBE_VIDEO, MockYoutubeDL
+from .const import NO_FORMATS_RESPONSE, SOUNDCLOUD_TRACK
+
 from tests.common import load_json_object_fixture
-from tests.components.media_extractor import (
-    YOUTUBE_EMPTY_PLAYLIST,
-    YOUTUBE_PLAYLIST,
-    YOUTUBE_VIDEO,
-    MockYoutubeDL,
-)
-from tests.components.media_extractor.const import NO_FORMATS_RESPONSE, SOUNDCLOUD_TRACK
 
 
 async def test_play_media_service_is_registered(hass: HomeAssistant) -> None:
@@ -36,6 +32,7 @@ async def test_play_media_service_is_registered(hass: HomeAssistant) -> None:
 
     assert hass.services.has_service(DOMAIN, SERVICE_PLAY_MEDIA)
     assert hass.services.has_service(DOMAIN, SERVICE_EXTRACT_MEDIA_URL)
+    assert len(hass.config_entries.async_entries(DOMAIN))
 
 
 @pytest.mark.parametrize(

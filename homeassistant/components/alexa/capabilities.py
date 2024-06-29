@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 import logging
 from typing import Any
+
+from typing_extensions import Generator
 
 from homeassistant.components import (
     button,
@@ -260,7 +261,7 @@ class AlexaCapability:
 
         return result
 
-    def serialize_properties(self) -> Generator[dict[str, Any], None, None]:
+    def serialize_properties(self) -> Generator[dict[str, Any]]:
         """Return properties serialized for an API response."""
         for prop in self.properties_supported():
             prop_name = prop["name"]

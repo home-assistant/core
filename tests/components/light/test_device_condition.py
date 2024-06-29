@@ -10,11 +10,13 @@ from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.light import DOMAIN
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
+
+from .common import MockLight
 
 from tests.common import (
     MockConfigEntry,
@@ -23,7 +25,6 @@ from tests.common import (
     async_mock_service,
     setup_test_component_platform,
 )
-from tests.components.light.common import MockLight
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -32,7 +33,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -61,7 +62,7 @@ async def test_get_conditions(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
-        for condition in ["is_off", "is_on"]
+        for condition in ("is_off", "is_on")
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
@@ -109,7 +110,7 @@ async def test_get_conditions_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for condition in ["is_off", "is_on"]
+        for condition in ("is_off", "is_on")
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
@@ -180,12 +181,12 @@ async def test_get_condition_capabilities_legacy(
         assert capabilities == expected_capabilities
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_if_state(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
-    enable_custom_integrations: None,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off conditions."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -267,12 +268,12 @@ async def test_if_state(
     assert calls[1].data["some"] == "is_off event - test_event2"
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_if_state_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
-    enable_custom_integrations: None,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off conditions."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -330,7 +331,7 @@ async def test_if_fires_on_for_condition(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test for firing if condition is on with delay."""

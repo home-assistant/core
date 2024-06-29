@@ -1,11 +1,12 @@
 """Teslemetry Data Coordinator."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
 from tesla_fleet_api.const import VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
+    Forbidden,
     InvalidToken,
     SubscriptionRequired,
     TeslaFleetError,
@@ -19,6 +20,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import LOGGER, TeslemetryState
 
 VEHICLE_INTERVAL = timedelta(seconds=30)
+VEHICLE_WAIT = timedelta(minutes=15)
 ENERGY_LIVE_INTERVAL = timedelta(seconds=30)
 ENERGY_INFO_INTERVAL = timedelta(seconds=30)
 
@@ -49,6 +51,8 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the Teslemetry API."""
 
     updated_once: bool
+    pre2021: bool
+    last_active: datetime
 
     def __init__(
         self, hass: HomeAssistant, api: VehicleSpecific, product: dict
@@ -63,9 +67,13 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api = api
         self.data = flatten(product)
         self.updated_once = False
+        self.last_active = datetime.now()
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using Teslemetry API."""
+
+        self.update_interval = VEHICLE_INTERVAL
+
         try:
             data = (await self.api.vehicle_data(endpoints=ENDPOINTS))["response"]
         except VehicleOffline:
@@ -79,6 +87,25 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(e.message) from e
 
         self.updated_once = True
+
+        if self.api.pre2021 and data["state"] == TeslemetryState.ONLINE:
+            # Handle pre-2021 vehicles which cannot sleep by themselves
+            if (
+                data["charge_state"].get("charging_state") == "Charging"
+                or data["vehicle_state"].get("is_user_present")
+                or data["vehicle_state"].get("sentry_mode")
+            ):
+                # Vehicle is active, reset timer
+                self.last_active = datetime.now()
+            else:
+                elapsed = datetime.now() - self.last_active
+                if elapsed > timedelta(minutes=20):
+                    # Vehicle didn't sleep, try again in 15 minutes
+                    self.last_active = datetime.now()
+                elif elapsed > timedelta(minutes=15):
+                    # Let vehicle go to sleep now
+                    self.update_interval = VEHICLE_WAIT
+
         return flatten(data)
 
 
@@ -102,9 +129,7 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
 
         try:
             data = (await self.api.live_status())["response"]
-        except InvalidToken as e:
-            raise ConfigEntryAuthFailed from e
-        except SubscriptionRequired as e:
+        except (InvalidToken, Forbidden, SubscriptionRequired) as e:
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
@@ -138,9 +163,7 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
 
         try:
             data = (await self.api.site_info())["response"]
-        except InvalidToken as e:
-            raise ConfigEntryAuthFailed from e
-        except SubscriptionRequired as e:
+        except (InvalidToken, Forbidden, SubscriptionRequired) as e:
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e

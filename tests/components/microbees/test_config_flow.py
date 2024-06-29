@@ -19,10 +19,10 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    current_request_with_host: None,
     aioclient_mock: AiohttpClientMocker,
     microbees: AsyncMock,
 ) -> None:
@@ -80,10 +80,10 @@ async def test_full_flow(
     assert result["result"].data["token"]["refresh_token"] == "mock-refresh-token"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_config_non_unique_profile(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    current_request_with_host: None,
     microbees: AsyncMock,
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
@@ -133,13 +133,13 @@ async def test_config_non_unique_profile(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_config_reauth_profile(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     config_entry: MockConfigEntry,
     microbees: AsyncMock,
-    current_request_with_host,
 ) -> None:
     """Test reauth an existing profile reauthenticates the config entry."""
     await setup_integration(hass, config_entry)
@@ -194,13 +194,13 @@ async def test_config_reauth_profile(
     assert result["reason"] == "reauth_successful"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_config_reauth_wrong_account(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     config_entry: MockConfigEntry,
     microbees: AsyncMock,
-    current_request_with_host,
 ) -> None:
     """Test reauth with wrong account."""
     await setup_integration(hass, config_entry)
@@ -255,12 +255,12 @@ async def test_config_reauth_wrong_account(
     assert result["reason"] == "wrong_account"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_config_flow_with_invalid_credentials(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     microbees: AsyncMock,
-    current_request_with_host,
 ) -> None:
     """Test flow with invalid credentials."""
     result = await hass.config_entries.flow.async_init(
@@ -310,6 +310,7 @@ async def test_config_flow_with_invalid_credentials(
         (Exception("Unexpected error"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_unexpected_exceptions(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -318,7 +319,6 @@ async def test_unexpected_exceptions(
     microbees: AsyncMock,
     exception: Exception,
     error: str,
-    current_request_with_host,
 ) -> None:
     """Test unknown error from server."""
     await setup_integration(hass, config_entry)

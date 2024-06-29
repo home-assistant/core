@@ -4,15 +4,16 @@ from __future__ import annotations
 
 import logging
 
+from aioswitcher.bridge import SwitcherBridge
 from aioswitcher.device import SwitcherBase
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 
-from .const import DATA_DEVICE, DOMAIN
+from .const import DOMAIN
 from .coordinator import SwitcherDataUpdateCoordinator
-from .utils import async_start_bridge, async_stop_bridge
 
 PLATFORMS = [
     Platform.BUTTON,
@@ -25,20 +26,20 @@ PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+type SwitcherConfigEntry = ConfigEntry[dict[str, SwitcherDataUpdateCoordinator]]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> bool:
     """Set up Switcher from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][DATA_DEVICE] = {}
 
     @callback
     def on_device_data_callback(device: SwitcherBase) -> None:
         """Use as a callback for device data."""
 
+        coordinators = entry.runtime_data
+
         # Existing device update device data
-        if device.device_id in hass.data[DOMAIN][DATA_DEVICE]:
-            coordinator: SwitcherDataUpdateCoordinator = hass.data[DOMAIN][DATA_DEVICE][
-                device.device_id
-            ]
+        if coordinator := coordinators.get(device.device_id):
             coordinator.async_set_updated_data(device)
             return
 
@@ -52,18 +53,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             device.device_type.hex_rep,
         )
 
-        coordinator = hass.data[DOMAIN][DATA_DEVICE][device.device_id] = (
-            SwitcherDataUpdateCoordinator(hass, entry, device)
-        )
+        coordinator = SwitcherDataUpdateCoordinator(hass, entry, device)
         coordinator.async_setup()
+        coordinators[device.device_id] = coordinator
 
     # Must be ready before dispatcher is called
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    await async_start_bridge(hass, on_device_data_callback)
+    entry.runtime_data = {}
+    bridge = SwitcherBridge(on_device_data_callback)
+    await bridge.start()
 
-    async def stop_bridge(event: Event) -> None:
-        await async_stop_bridge(hass)
+    async def stop_bridge(event: Event | None = None) -> None:
+        await bridge.stop()
+
+    entry.async_on_unload(stop_bridge)
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge)
@@ -72,12 +76,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> bool:
     """Unload a config entry."""
-    await async_stop_bridge(hass)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(DATA_DEVICE)
 
-    return unload_ok
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: SwitcherConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+    return not device_entry.identifiers.intersection(
+        (DOMAIN, device_id) for device_id in config_entry.runtime_data
+    )

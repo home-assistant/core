@@ -28,10 +28,3 @@ SCAN_INTERVALS = {
     "north_america": 600,
     "rest_of_world": 300,
 }
-
-CLIMATE_ACTIVITY_STATE: list[str] = [
-    "cooling",
-    "heating",
-    "inactive",
-    "standby",
-]

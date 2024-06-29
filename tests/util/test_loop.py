@@ -27,6 +27,15 @@ async def test_raise_for_blocking_call_async_non_strict_core(
     """Test non_strict_core raise_for_blocking_call detects from event loop without integration context."""
     haloop.raise_for_blocking_call(banned_function, strict_core=False)
     assert "Detected blocking call to banned_function" in caplog.text
+    assert "Traceback (most recent call last)" in caplog.text
+    assert (
+        "Please create a bug report at https://github.com/home-assistant/core/issues"
+        in caplog.text
+    )
+    assert (
+        "For developers, please see "
+        "https://developers.home-assistant.io/docs/asyncio_blocking_operations/#banned_function"
+    ) in caplog.text
 
 
 async def test_raise_for_blocking_call_async_integration(
@@ -73,12 +82,17 @@ async def test_raise_for_blocking_call_async_integration(
     ):
         haloop.raise_for_blocking_call(banned_function)
     assert (
-        "Detected blocking call to banned_function inside the event loop by integration"
+        "Detected blocking call to banned_function with args None"
+        " inside the event loop by integration"
         " 'hue' at homeassistant/components/hue/light.py, line 23: self.light.is_on "
         "(offender: /home/paulus/aiohue/lights.py, line 2: mock_line), please create "
         "a bug report at https://github.com/home-assistant/core/issues?"
         "q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+hue%22" in caplog.text
     )
+    assert (
+        "For developers, please see "
+        "https://developers.home-assistant.io/docs/asyncio_blocking_operations/#banned_function"
+    ) in caplog.text
 
 
 async def test_raise_for_blocking_call_async_integration_non_strict(
@@ -124,12 +138,26 @@ async def test_raise_for_blocking_call_async_integration_non_strict(
     ):
         haloop.raise_for_blocking_call(banned_function, strict=False)
     assert (
-        "Detected blocking call to banned_function inside the event loop by integration"
+        "Detected blocking call to banned_function with args None"
+        " inside the event loop by integration"
         " 'hue' at homeassistant/components/hue/light.py, line 23: self.light.is_on "
         "(offender: /home/paulus/aiohue/lights.py, line 2: mock_line), "
         "please create a bug report at https://github.com/home-assistant/core/issues?"
         "q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+hue%22" in caplog.text
     )
+    assert "Traceback (most recent call last)" in caplog.text
+    assert (
+        'File "/home/paulus/homeassistant/components/hue/light.py", line 23'
+        in caplog.text
+    )
+    assert (
+        "please create a bug report at https://github.com/home-assistant/core/issues"
+        in caplog.text
+    )
+    assert (
+        "For developers, please see "
+        "https://developers.home-assistant.io/docs/asyncio_blocking_operations/#banned_function"
+    ) in caplog.text
 
 
 async def test_raise_for_blocking_call_async_custom(
@@ -176,11 +204,21 @@ async def test_raise_for_blocking_call_async_custom(
     ):
         haloop.raise_for_blocking_call(banned_function)
     assert (
-        "Detected blocking call to banned_function inside the event loop by custom "
+        "Detected blocking call to banned_function with args None"
+        " inside the event loop by custom "
         "integration 'hue' at custom_components/hue/light.py, line 23: self.light.is_on"
         " (offender: /home/paulus/aiohue/lights.py, line 2: mock_line), "
         "please create a bug report at https://github.com/home-assistant/core/issues?"
         "q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+hue%22"
+    ) in caplog.text
+    assert "Traceback (most recent call last)" in caplog.text
+    assert (
+        'File "/home/paulus/config/custom_components/hue/light.py", line 23'
+        in caplog.text
+    )
+    assert (
+        "For developers, please see "
+        "https://developers.home-assistant.io/docs/asyncio_blocking_operations/#banned_function"
     ) in caplog.text
 
 

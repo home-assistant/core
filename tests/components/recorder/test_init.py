@@ -3,18 +3,18 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Generator
 from datetime import datetime, timedelta
 from pathlib import Path
 import sqlite3
 import threading
-from typing import cast
+from typing import Any, cast
 from unittest.mock import MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 from sqlalchemy.pool import QueuePool
+from typing_extensions import Generator
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import (
@@ -74,8 +74,11 @@ from homeassistant.const import (
     STATE_UNLOCKED,
 )
 from homeassistant.core import Context, CoreState, Event, HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er, recorder as recorder_helper
-from homeassistant.helpers.issue_registry import async_get as async_get_issue_registry
+from homeassistant.helpers import (
+    entity_registry as er,
+    issue_registry as ir,
+    recorder as recorder_helper,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads
@@ -112,7 +115,7 @@ def setup_recorder(recorder_mock: Recorder) -> None:
 
 
 @pytest.fixture
-def small_cache_size() -> Generator[None, None, None]:
+def small_cache_size() -> Generator[None]:
     """Patch the default cache size to 8."""
     with (
         patch.object(state_attributes_table_manager, "CACHE_SIZE", 8),
@@ -290,7 +293,7 @@ async def test_saving_state(hass: HomeAssistant, setup_recorder: None) -> None:
 
 
 @pytest.mark.parametrize(
-    ("dialect_name", "expected_attributes"),
+    ("db_engine", "expected_attributes"),
     [
         (SupportedDialect.MYSQL, {"test_attr": 5, "test_attr_10": "silly\0stuff"}),
         (SupportedDialect.POSTGRESQL, {"test_attr": 5, "test_attr_10": "silly"}),
@@ -298,18 +301,19 @@ async def test_saving_state(hass: HomeAssistant, setup_recorder: None) -> None:
     ],
 )
 async def test_saving_state_with_nul(
-    hass: HomeAssistant, setup_recorder: None, dialect_name, expected_attributes
+    hass: HomeAssistant,
+    db_engine: str,
+    recorder_dialect_name: None,
+    setup_recorder: None,
+    expected_attributes: dict[str, Any],
 ) -> None:
     """Test saving and restoring a state with nul in attributes."""
     entity_id = "test.recorder"
     state = "restoring_from_db"
     attributes = {"test_attr": 5, "test_attr_10": "silly\0stuff"}
 
-    with patch(
-        "homeassistant.components.recorder.core.Recorder.dialect_name", dialect_name
-    ):
-        hass.states.async_set(entity_id, state, attributes)
-        await async_wait_recording_done(hass)
+    hass.states.async_set(entity_id, state, attributes)
+    await async_wait_recording_done(hass)
 
     with session_scope(hass=hass, read_only=True) as session:
         db_states = []
@@ -690,7 +694,7 @@ async def test_saving_event_exclude_event_type(
 
     await async_wait_recording_done(hass)
 
-    def _get_events(hass: HomeAssistant, event_types: list[str]) -> list[Event]:
+    def _get_events(hass: HomeAssistant, event_type_list: list[str]) -> list[Event]:
         with session_scope(hass=hass, read_only=True) as session:
             events = []
             for event, event_data, event_types in (
@@ -699,7 +703,7 @@ async def test_saving_event_exclude_event_type(
                     EventTypes, (Events.event_type_id == EventTypes.event_type_id)
                 )
                 .outerjoin(EventData, Events.data_id == EventData.data_id)
-                .where(EventTypes.event_type.in_(event_types))
+                .where(EventTypes.event_type.in_(event_type_list))
             ):
                 event = cast(Events, event)
                 event_data = cast(EventData, event_data)
@@ -901,16 +905,19 @@ async def test_saving_event_with_oversized_data(
     hass.bus.async_fire("test_event", event_data)
     hass.bus.async_fire("test_event_too_big", massive_dict)
     await async_wait_recording_done(hass)
-    events = {}
 
     with session_scope(hass=hass, read_only=True) as session:
-        for _, data, event_type in (
-            session.query(Events.event_id, EventData.shared_data, EventTypes.event_type)
-            .outerjoin(EventData, Events.data_id == EventData.data_id)
-            .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
-            .where(EventTypes.event_type.in_(["test_event", "test_event_too_big"]))
-        ):
-            events[event_type] = data
+        events = {
+            event_type: data
+            for _, data, event_type in (
+                session.query(
+                    Events.event_id, EventData.shared_data, EventTypes.event_type
+                )
+                .outerjoin(EventData, Events.data_id == EventData.data_id)
+                .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
+                .where(EventTypes.event_type.in_(["test_event", "test_event_too_big"]))
+            )
+        }
 
     assert "test_event_too_big" in caplog.text
 
@@ -928,16 +935,19 @@ async def test_saving_event_invalid_context_ulid(
     event_data = {"test_attr": 5, "test_attr_10": "nice"}
     hass.bus.async_fire("test_event", event_data, context=Context(id="invalid"))
     await async_wait_recording_done(hass)
-    events = {}
 
     with session_scope(hass=hass, read_only=True) as session:
-        for _, data, event_type in (
-            session.query(Events.event_id, EventData.shared_data, EventTypes.event_type)
-            .outerjoin(EventData, Events.data_id == EventData.data_id)
-            .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
-            .where(EventTypes.event_type.in_(["test_event"]))
-        ):
-            events[event_type] = data
+        events = {
+            event_type: data
+            for _, data, event_type in (
+                session.query(
+                    Events.event_id, EventData.shared_data, EventTypes.event_type
+                )
+                .outerjoin(EventData, Events.data_id == EventData.data_id)
+                .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
+                .where(EventTypes.event_type.in_(["test_event"]))
+            )
+        }
 
     assert "invalid" in caplog.text
 
@@ -1258,7 +1268,7 @@ async def test_auto_purge_disabled(
 async def test_auto_statistics(
     hass: HomeAssistant,
     setup_recorder: None,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test periodic statistics scheduling."""
     timezone = "Europe/Copenhagen"
@@ -1849,8 +1859,8 @@ async def test_database_lock_and_unlock(
     # Recording can't be finished while lock is held
     with pytest.raises(TimeoutError):
         await asyncio.wait_for(asyncio.shield(task), timeout=0.25)
-        db_events = await hass.async_add_executor_job(_get_db_events)
-        assert len(db_events) == 0
+    db_events = await hass.async_add_executor_job(_get_db_events)
+    assert len(db_events) == 0
 
     assert instance.unlock_database()
 
@@ -1865,6 +1875,7 @@ async def test_database_lock_and_overflow(
     recorder_db_url: str,
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test writing events during lock leading to overflow the queue causes the database to unlock."""
     if recorder_db_url.startswith(("mysql://", "postgresql://")):
@@ -1915,8 +1926,7 @@ async def test_database_lock_and_overflow(
         assert "Database queue backlog reached more than" in caplog.text
         assert not instance.unlock_database()
 
-    registry = async_get_issue_registry(hass)
-    issue = registry.async_get_issue(DOMAIN, "backup_failed_out_of_resources")
+    issue = issue_registry.async_get_issue(DOMAIN, "backup_failed_out_of_resources")
     assert issue is not None
     assert "start_time" in issue.translation_placeholders
     start_time = issue.translation_placeholders["start_time"]
@@ -1931,6 +1941,7 @@ async def test_database_lock_and_overflow_checks_available_memory(
     recorder_db_url: str,
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test writing events during lock leading to overflow the queue causes the database to unlock."""
     if recorder_db_url.startswith(("mysql://", "postgresql://")):
@@ -2005,8 +2016,7 @@ async def test_database_lock_and_overflow_checks_available_memory(
         db_events = await instance.async_add_executor_job(_get_db_events)
         assert len(db_events) >= 2
 
-    registry = async_get_issue_registry(hass)
-    issue = registry.async_get_issue(DOMAIN, "backup_failed_out_of_resources")
+    issue = issue_registry.async_get_issue(DOMAIN, "backup_failed_out_of_resources")
     assert issue is not None
     assert "start_time" in issue.translation_placeholders
     start_time = issue.translation_placeholders["start_time"]
@@ -2068,18 +2078,19 @@ async def test_in_memory_database(
     assert "In-memory SQLite database is not supported" in caplog.text
 
 
+@pytest.mark.parametrize("db_engine", ["mysql"])
 async def test_database_connection_keep_alive(
     hass: HomeAssistant,
+    recorder_dialect_name: None,
     async_setup_recorder_instance: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test we keep alive socket based dialects."""
-    with patch("homeassistant.components.recorder.Recorder.dialect_name"):
-        instance = await async_setup_recorder_instance(hass)
-        # We have to mock this since we don't have a mock
-        # MySQL server available in tests.
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await instance.async_recorder_ready.wait()
+    instance = await async_setup_recorder_instance(hass)
+    # We have to mock this since we don't have a mock
+    # MySQL server available in tests.
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await instance.async_recorder_ready.wait()
 
     async_fire_time_changed(
         hass, dt_util.utcnow() + timedelta(seconds=recorder.core.KEEPALIVE_TIME)
@@ -2412,6 +2423,71 @@ async def test_excluding_attributes_by_integration(
 
     expected = _state_with_context(hass, entity_id)
     expected.attributes = {"test_attr": 5}
+    assert state.as_dict() == expected.as_dict()
+
+
+async def test_excluding_all_attributes_by_integration(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_recorder: None,
+) -> None:
+    """Test that an entity can exclude all attributes from being recorded using MATCH_ALL."""
+    state = "restoring_from_db"
+    attributes = {
+        "test_attr": 5,
+        "excluded_component": 10,
+        "excluded_integration": 20,
+        "device_class": "test",
+        "state_class": "test",
+        "friendly_name": "Test entity",
+        "unit_of_measurement": "mm",
+    }
+    mock_platform(
+        hass,
+        "fake_integration.recorder",
+        Mock(exclude_attributes=lambda hass: {"excluded"}),
+    )
+    hass.config.components.add("fake_integration")
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {"component": "fake_integration"})
+    await hass.async_block_till_done()
+
+    class EntityWithExcludedAttributes(MockEntity):
+        _unrecorded_attributes = frozenset({MATCH_ALL})
+
+    entity_id = "test.fake_integration_recorder"
+    entity_platform = MockEntityPlatform(hass, platform_name="fake_integration")
+    entity = EntityWithExcludedAttributes(
+        entity_id=entity_id,
+        extra_state_attributes=attributes,
+    )
+    await entity_platform.async_add_entities([entity])
+    await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+
+    with session_scope(hass=hass, read_only=True) as session:
+        db_states = []
+        for db_state, db_state_attributes, states_meta in (
+            session.query(States, StateAttributes, StatesMeta)
+            .outerjoin(
+                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            )
+            .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+        ):
+            db_state.entity_id = states_meta.entity_id
+            db_states.append(db_state)
+            state = db_state.to_native()
+            state.attributes = db_state_attributes.to_native()
+        assert len(db_states) == 1
+        assert db_states[0].event_id is None
+
+    expected = _state_with_context(hass, entity_id)
+    expected.attributes = {
+        "device_class": "test",
+        "state_class": "test",
+        "friendly_name": "Test entity",
+        "unit_of_measurement": "mm",
+    }
     assert state.as_dict() == expected.as_dict()
 
 

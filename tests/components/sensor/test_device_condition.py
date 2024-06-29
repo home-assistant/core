@@ -21,6 +21,8 @@ from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import load_json
 
+from .common import UNITS_OF_MEASUREMENT, MockSensor
+
 from tests.common import (
     MockConfigEntry,
     async_get_device_automation_capabilities,
@@ -28,7 +30,6 @@ from tests.common import (
     async_mock_service,
     setup_test_component_platform,
 )
-from tests.components.sensor.common import UNITS_OF_MEASUREMENT, MockSensor
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -57,6 +58,7 @@ def test_matches_device_classes(device_class: SensorDeviceClass) -> None:
         SensorDeviceClass.BATTERY: "CONF_IS_BATTERY_LEVEL",
         SensorDeviceClass.CO: "CONF_IS_CO",
         SensorDeviceClass.CO2: "CONF_IS_CO2",
+        SensorDeviceClass.CONDUCTIVITY: "CONF_IS_CONDUCTIVITY",
         SensorDeviceClass.ENERGY_STORAGE: "CONF_IS_ENERGY",
         SensorDeviceClass.VOLUME_STORAGE: "CONF_IS_VOLUME",
     }.get(device_class, f"CONF_IS_{device_class.value.upper()}")
@@ -65,6 +67,7 @@ def test_matches_device_classes(device_class: SensorDeviceClass) -> None:
     # Ensure it has correct value
     constant_value = {
         SensorDeviceClass.BATTERY: "is_battery_level",
+        SensorDeviceClass.CONDUCTIVITY: "is_conductivity",
         SensorDeviceClass.ENERGY_STORAGE: "is_energy",
         SensorDeviceClass.VOLUME_STORAGE: "is_volume",
     }.get(device_class, f"is_{device_class.value}")
@@ -170,7 +173,7 @@ async def test_get_conditions_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for condition in ["is_value"]
+        for condition in ("is_value",)
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
@@ -462,13 +465,13 @@ async def test_get_condition_capabilities_none(
         assert capabilities == expected_capabilities
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_if_state_not_above_below(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
 ) -> None:
     """Test for bad value conditions."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -505,12 +508,12 @@ async def test_if_state_not_above_below(
     assert "must contain at least one of below, above" in caplog.text
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_if_state_above(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
-    enable_custom_integrations: None,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for value conditions."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -574,12 +577,12 @@ async def test_if_state_above(
     assert calls[0].data["some"] == "event - test_event1"
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_if_state_above_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
-    enable_custom_integrations: None,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for value conditions."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -643,12 +646,12 @@ async def test_if_state_above_legacy(
     assert calls[0].data["some"] == "event - test_event1"
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_if_state_below(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
-    enable_custom_integrations: None,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for value conditions."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -712,12 +715,12 @@ async def test_if_state_below(
     assert calls[0].data["some"] == "event - test_event1"
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_if_state_between(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
-    enable_custom_integrations: None,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for value conditions."""
     config_entry = MockConfigEntry(domain="test", data={})

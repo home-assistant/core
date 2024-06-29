@@ -1,4 +1,4 @@
-"""Test the Tessie init."""
+"""Test the Teslemetry init."""
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -10,7 +10,10 @@ from tesla_fleet_api.exceptions import (
     VehicleOffline,
 )
 
-from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
+from homeassistant.components.teslemetry.coordinator import (
+    VEHICLE_INTERVAL,
+    VEHICLE_WAIT,
+)
 from homeassistant.components.teslemetry.models import TeslemetryData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
@@ -18,6 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_platform
+from .const import VEHICLE_DATA_ALT
 
 from tests.common import async_fire_time_changed
 
@@ -88,6 +92,63 @@ async def test_vehicle_refresh_error(
     mock_vehicle_data.side_effect = side_effect
     entry = await setup_platform(hass)
     assert entry.state is state
+
+
+async def test_vehicle_sleep(
+    hass: HomeAssistant, mock_vehicle_data, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test coordinator refresh with an error."""
+    await setup_platform(hass, [Platform.CLIMATE])
+    assert mock_vehicle_data.call_count == 1
+
+    freezer.tick(VEHICLE_WAIT + VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    # Let vehicle sleep, no updates for 15 minutes
+    await hass.async_block_till_done()
+    assert mock_vehicle_data.call_count == 2
+
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    # No polling, call_count should not increase
+    await hass.async_block_till_done()
+    assert mock_vehicle_data.call_count == 2
+
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    # No polling, call_count should not increase
+    await hass.async_block_till_done()
+    assert mock_vehicle_data.call_count == 2
+
+    freezer.tick(VEHICLE_WAIT)
+    async_fire_time_changed(hass)
+    # Vehicle didn't sleep, go back to normal
+    await hass.async_block_till_done()
+    assert mock_vehicle_data.call_count == 3
+
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    # Regular polling
+    await hass.async_block_till_done()
+    assert mock_vehicle_data.call_count == 4
+
+    mock_vehicle_data.return_value = VEHICLE_DATA_ALT
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    # Vehicle active
+    await hass.async_block_till_done()
+    assert mock_vehicle_data.call_count == 5
+
+    freezer.tick(VEHICLE_WAIT)
+    async_fire_time_changed(hass)
+    # Dont let sleep when active
+    await hass.async_block_till_done()
+    assert mock_vehicle_data.call_count == 6
+
+    freezer.tick(VEHICLE_WAIT)
+    async_fire_time_changed(hass)
+    # Dont let sleep when active
+    await hass.async_block_till_done()
+    assert mock_vehicle_data.call_count == 7
 
 
 # Test Energy Live Coordinator

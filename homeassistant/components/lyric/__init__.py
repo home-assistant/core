@@ -84,6 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         for location in lyric.locations
                         for device in location.devices
                         if device.deviceClass == "Thermostat"
+                        and device.deviceID.startswith("LCC")
                     )
                 )
 

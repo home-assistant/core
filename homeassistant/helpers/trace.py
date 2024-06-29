@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from collections import deque
-from collections.abc import Callable, Coroutine, Generator
+from collections.abc import Callable, Coroutine
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import wraps
 from typing import Any
+
+from typing_extensions import Generator
 
 from homeassistant.core import ServiceResponse
 import homeassistant.util.dt as dt_util
@@ -248,7 +250,7 @@ def script_execution_get() -> str | None:
 
 
 @contextmanager
-def trace_path(suffix: str | list[str]) -> Generator[None, None, None]:
+def trace_path(suffix: str | list[str]) -> Generator[None]:
     """Go deeper in the config tree.
 
     Can not be used as a decorator on couroutine functions.

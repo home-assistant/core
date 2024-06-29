@@ -1,0 +1,20 @@
+{
+  "entity": {
+    "sensor": {
+      "salt_left_side_percentage": {
+        "default": "mdi:basket-fill"
+      },
+      "salt_right_side_percentage": {
+        "default": "mdi:basket-fill"
+      },
+      "wi_fi_strength": {
+        "default": "mdi:wifi",
+        "state": {
+          "low": "mdi:wifi-strength-1",
+          "medium": "mdi:wifi-strength-2",
+          "high": "mdi:wifi-strength-4"
+        }
+      }
+    }
+  }
+}

@@ -295,8 +295,6 @@ async def test_pending_msg_peak_recovery(
     instance._handle_task.cancel()
 
     msg = await websocket_client.receive()
-    assert msg.type == WSMsgType.TEXT
-    msg = await websocket_client.receive()
     assert msg.type is WSMsgType.CLOSE
     assert "Client unable to keep up with pending messages" not in caplog.text
 

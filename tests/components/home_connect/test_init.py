@@ -118,6 +118,7 @@ SERVICE_APPLIANCE_METHOD_MAPPING = {
 
 
 async def test_api_setup(
+    bypass_throttle: Generator[None, Any, None],
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
@@ -250,6 +251,7 @@ async def test_services(
     service_call: list[dict[str, Any]],
     bypass_throttle: Generator[None, Any, None],
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
     setup_credentials: None,
@@ -262,7 +264,6 @@ async def test_services(
     assert await integration_setup()
     assert config_entry.state == ConfigEntryState.LOADED
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, appliance.haId)},
@@ -295,7 +296,7 @@ async def test_services_exception(
 
     service_call = SERVICE_KV_CALL_PARAMS[0]
 
+    service_call["service_data"]["device_id"] = "DOES_NOT_EXISTS"
+
     with pytest.raises(ValueError):
-        service_call["service_data"]["device_id"] = "DOES_NOT_EXISTS"
         await hass.services.async_call(**service_call)
-        await hass.async_block_till

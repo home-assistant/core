@@ -25,8 +25,8 @@ from homeassistant.components.generic.const import (
     CONF_STREAM_SOURCE,
     DOMAIN,
 )
-from homeassistant.components.stream.const import CONF_RTSP_TRANSPORT
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components.stream import CONF_RTSP_TRANSPORT
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_NAME,
@@ -74,7 +74,7 @@ async def test_fetching_url(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     fakeimgbytes_png,
-    caplog: pytest.CaptureFixture,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that it fetches the given url."""
     hass.states.async_set("sensor.temp", "http://example.com/0a")

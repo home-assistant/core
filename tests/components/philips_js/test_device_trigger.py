@@ -6,7 +6,7 @@ from pytest_unordered import unordered
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.philips_js.const import DOMAIN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_get_device_automations, async_mock_service
@@ -18,7 +18,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -42,7 +42,7 @@ async def test_get_triggers(hass: HomeAssistant, mock_device) -> None:
 
 
 async def test_if_fires_on_turn_on_request(
-    hass: HomeAssistant, calls, mock_tv, mock_entity, mock_device
+    hass: HomeAssistant, calls: list[ServiceCall], mock_tv, mock_entity, mock_device
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
 

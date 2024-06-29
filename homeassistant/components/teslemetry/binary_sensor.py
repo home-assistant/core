@@ -12,12 +12,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from . import TeslemetryConfigEntry
 from .const import TeslemetryState
 from .entity import (
     TeslemetryEnergyInfoEntity,
@@ -25,6 +25,8 @@ from .entity import (
     TeslemetryVehicleEntity,
 )
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -174,7 +176,9 @@ ENERGY_INFO_DESCRIPTIONS: tuple[BinarySensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Teslemetry binary sensor platform from a config entry."""
 

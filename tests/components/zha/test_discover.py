@@ -493,7 +493,7 @@ async def test_group_probe_cleanup_called(
 
 
 async def test_quirks_v2_entity_discovery(
-    hass,
+    hass: HomeAssistant,
     zigpy_device_mock,
     zha_device_joined,
 ) -> None:
@@ -561,7 +561,7 @@ async def test_quirks_v2_entity_discovery(
 
 
 async def test_quirks_v2_entity_discovery_e1_curtain(
-    hass,
+    hass: HomeAssistant,
     zigpy_device_mock,
     zha_device_joined,
 ) -> None:
@@ -986,30 +986,30 @@ async def test_quirks_v2_metadata_errors(
     validate_metadata(validate_method)
 
     # ensure the error is caught and raised
-    with pytest.raises(ValueError, match=expected_exception_string):
-        try:
-            # introduce an error
-            zigpy_device = _get_test_device(
-                zigpy_device_mock,
+    try:
+        # introduce an error
+        zigpy_device = _get_test_device(
+            zigpy_device_mock,
+            "Ikea of Sweden4",
+            "TRADFRI remote control4",
+            augment_method=augment_method,
+        )
+        await zha_device_joined(zigpy_device)
+
+        validate_metadata(validate_method)
+        # if the device was created we remove it
+        # so we don't pollute the rest of the tests
+        zigpy.quirks._DEVICE_REGISTRY.remove(zigpy_device)
+    except ValueError:
+        # if the device was not created we remove it
+        # so we don't pollute the rest of the tests
+        zigpy.quirks._DEVICE_REGISTRY._registry_v2.pop(
+            (
                 "Ikea of Sweden4",
                 "TRADFRI remote control4",
-                augment_method=augment_method,
             )
-            await zha_device_joined(zigpy_device)
-
-            validate_metadata(validate_method)
-            # if the device was created we remove it
-            # so we don't pollute the rest of the tests
-            zigpy.quirks._DEVICE_REGISTRY.remove(zigpy_device)
-        except ValueError:
-            # if the device was not created we remove it
-            # so we don't pollute the rest of the tests
-            zigpy.quirks._DEVICE_REGISTRY._registry_v2.pop(
-                (
-                    "Ikea of Sweden4",
-                    "TRADFRI remote control4",
-                )
-            )
+        )
+        with pytest.raises(ValueError, match=expected_exception_string):
             raise
 
 

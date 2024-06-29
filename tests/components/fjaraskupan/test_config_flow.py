@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant import config_entries
 from homeassistant.components.fjaraskupan.const import DOMAIN
@@ -15,7 +16,7 @@ from . import COOKER_SERVICE_INFO
 
 
 @pytest.fixture(name="mock_setup_entry", autouse=True)
-async def fixture_mock_setup_entry(hass):
+def fixture_mock_setup_entry() -> Generator[AsyncMock]:
     """Fixture for config entry."""
 
     with patch(
@@ -24,7 +25,7 @@ async def fixture_mock_setup_entry(hass):
         yield mock_setup_entry
 
 
-async def test_configure(hass: HomeAssistant, mock_setup_entry) -> None:
+async def test_configure(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
     with patch(
         "homeassistant.components.fjaraskupan.config_flow.async_discovered_service_info",

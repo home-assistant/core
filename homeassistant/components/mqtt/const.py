@@ -149,8 +149,7 @@ DEFAULT_WILL = {
 
 DOMAIN = "mqtt"
 
-MQTT_CONNECTED = "mqtt_connected"
-MQTT_DISCONNECTED = "mqtt_disconnected"
+MQTT_CONNECTION_STATE = "mqtt_connection_state"
 
 PAYLOAD_EMPTY_JSON = "{}"
 PAYLOAD_NONE = "None"

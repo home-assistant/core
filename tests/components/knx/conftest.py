@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, Mock, patch
 
 import pytest
@@ -43,7 +44,7 @@ class KNXTestKit:
 
     INDIVIDUAL_ADDRESS = "1.2.3"
 
-    def __init__(self, hass: HomeAssistant, mock_config_entry: MockConfigEntry):
+    def __init__(self, hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
         """Init KNX test helper class."""
         self.hass: HomeAssistant = hass
         self.mock_config_entry: MockConfigEntry = mock_config_entry
@@ -265,7 +266,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-async def knx(request, hass, mock_config_entry: MockConfigEntry):
+async def knx(hass: HomeAssistant, mock_config_entry: MockConfigEntry):
     """Create a KNX TestKit instance."""
     knx_test_kit = KNXTestKit(hass, mock_config_entry)
     yield knx_test_kit
@@ -273,7 +274,7 @@ async def knx(request, hass, mock_config_entry: MockConfigEntry):
 
 
 @pytest.fixture
-def load_knxproj(hass_storage):
+def load_knxproj(hass_storage: dict[str, Any]) -> None:
     """Mock KNX project data."""
     hass_storage[KNX_PROJECT_STORAGE_KEY] = {
         "version": 1,

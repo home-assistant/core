@@ -86,6 +86,7 @@ async def test_entry_diagnostics(
 async def test_device_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
     create_device: CreateDevice,
     setup_platform: PlatformSetup,
     config_entry: MockConfigEntry,
@@ -96,7 +97,6 @@ async def test_device_diagnostics(
     await setup_platform()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, NEST_DEVICE_ID)})
     assert device is not None
 

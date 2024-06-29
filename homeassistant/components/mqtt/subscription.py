@@ -2,31 +2,32 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable
+from dataclasses import dataclass
+from functools import partial
 from typing import TYPE_CHECKING, Any
 
-import attr
+from homeassistant.core import HassJobType, HomeAssistant, callback
 
-from homeassistant.core import HomeAssistant
-
-from .. import mqtt
 from . import debug_info
+from .client import async_subscribe_internal
 from .const import DEFAULT_QOS
 from .models import MessageCallbackType
 
 
-@attr.s(slots=True)
+@dataclass(slots=True, kw_only=True)
 class EntitySubscription:
     """Class to hold data about an active entity topic subscription."""
 
-    hass: HomeAssistant = attr.ib()
-    topic: str | None = attr.ib()
-    message_callback: MessageCallbackType = attr.ib()
-    subscribe_task: Coroutine[Any, Any, Callable[[], None]] | None = attr.ib()
-    unsubscribe_callback: Callable[[], None] | None = attr.ib()
-    qos: int = attr.ib(default=0)
-    encoding: str = attr.ib(default="utf-8")
-    entity_id: str | None = attr.ib(default=None)
+    hass: HomeAssistant
+    topic: str | None
+    message_callback: MessageCallbackType
+    should_subscribe: bool | None
+    unsubscribe_callback: Callable[[], None] | None
+    qos: int = 0
+    encoding: str = "utf-8"
+    entity_id: str | None
+    job_type: HassJobType | None
 
     def resubscribe_if_necessary(
         self, hass: HomeAssistant, other: EntitySubscription | None
@@ -41,28 +42,30 @@ class EntitySubscription:
         if other is not None and other.unsubscribe_callback is not None:
             other.unsubscribe_callback()
             # Clear debug data if it exists
-            debug_info.remove_subscription(
-                self.hass, other.message_callback, str(other.topic), other.entity_id
-            )
+            debug_info.remove_subscription(self.hass, str(other.topic), other.entity_id)
 
         if self.topic is None:
             # We were asked to remove the subscription or not to create it
             return
 
         # Prepare debug data
-        debug_info.add_subscription(
-            self.hass, self.message_callback, self.topic, self.entity_id
-        )
+        debug_info.add_subscription(self.hass, self.topic, self.entity_id)
 
-        self.subscribe_task = mqtt.async_subscribe(
-            hass, self.topic, self.message_callback, self.qos, self.encoding
-        )
+        self.should_subscribe = True
 
-    async def subscribe(self) -> None:
+    @callback
+    def subscribe(self) -> None:
         """Subscribe to a topic."""
-        if not self.subscribe_task:
+        if not self.should_subscribe or not self.topic:
             return
-        self.unsubscribe_callback = await self.subscribe_task
+        self.unsubscribe_callback = async_subscribe_internal(
+            self.hass,
+            self.topic,
+            self.message_callback,
+            self.qos,
+            self.encoding,
+            self.job_type,
+        )
 
     def _should_resubscribe(self, other: EntitySubscription | None) -> bool:
         """Check if we should re-subscribe to the topic using the old state."""
@@ -80,6 +83,7 @@ class EntitySubscription:
         )
 
 
+@callback
 def async_prepare_subscribe_topics(
     hass: HomeAssistant,
     new_state: dict[str, EntitySubscription] | None,
@@ -102,14 +106,15 @@ def async_prepare_subscribe_topics(
     for key, value in topics.items():
         # Extract the new requested subscription
         requested = EntitySubscription(
-            topic=value.get("topic", None),
-            message_callback=value.get("msg_callback", None),
+            topic=value.get("topic"),
+            message_callback=value["msg_callback"],
             unsubscribe_callback=None,
             qos=value.get("qos", DEFAULT_QOS),
             encoding=value.get("encoding", "utf-8"),
             hass=hass,
-            subscribe_task=None,
-            entity_id=value.get("entity_id", None),
+            should_subscribe=None,
+            entity_id=value.get("entity_id"),
+            job_type=value.get("job_type"),
         )
         # Get the current subscription state
         current = current_subscriptions.pop(key, None)
@@ -123,7 +128,6 @@ def async_prepare_subscribe_topics(
             # Clear debug data if it exists
             debug_info.remove_subscription(
                 hass,
-                remaining.message_callback,
                 str(remaining.topic),
                 remaining.entity_id,
             )
@@ -136,12 +140,29 @@ async def async_subscribe_topics(
     sub_state: dict[str, EntitySubscription],
 ) -> None:
     """(Re)Subscribe to a set of MQTT topics."""
+    async_subscribe_topics_internal(hass, sub_state)
+
+
+@callback
+def async_subscribe_topics_internal(
+    hass: HomeAssistant,
+    sub_state: dict[str, EntitySubscription],
+) -> None:
+    """(Re)Subscribe to a set of MQTT topics.
+
+    This function is internal to the MQTT integration and should not be called
+    from outside the integration.
+    """
     for sub in sub_state.values():
-        await sub.subscribe()
+        sub.subscribe()
 
 
-def async_unsubscribe_topics(
-    hass: HomeAssistant, sub_state: dict[str, EntitySubscription] | None
-) -> dict[str, EntitySubscription]:
-    """Unsubscribe from all MQTT topics managed by async_subscribe_topics."""
-    return async_prepare_subscribe_topics(hass, sub_state, {})
+if TYPE_CHECKING:
+
+    def async_unsubscribe_topics(
+        hass: HomeAssistant, sub_state: dict[str, EntitySubscription] | None
+    ) -> dict[str, EntitySubscription]:
+        """Unsubscribe from all MQTT topics managed by async_subscribe_topics."""
+
+
+async_unsubscribe_topics = partial(async_prepare_subscribe_topics, topics={})

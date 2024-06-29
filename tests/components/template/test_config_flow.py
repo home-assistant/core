@@ -11,6 +11,7 @@ from homeassistant.components.template import DOMAIN, async_setup_entry
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
@@ -122,6 +123,90 @@ async def test_config_flow(
         assert state.attributes[key] == extra_attrs[key]
 
 
+@pytest.mark.parametrize(
+    (
+        "template_type",
+        "state_template",
+    ),
+    [
+        (
+            "sensor",
+            "{{ 15 }}",
+        ),
+        (
+            "binary_sensor",
+            "{{ false }}",
+        ),
+    ],
+)
+async def test_config_flow_device(
+    hass: HomeAssistant,
+    template_type: str,
+    state_template: str,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test remove the device registry configuration entry when the device changes."""
+
+    # Configure a device registry
+    entry_device = MockConfigEntry()
+    entry_device.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry_device.entry_id,
+        identifiers={("test", "identifier_test1")},
+        connections={("mac", "20:31:32:33:34:01")},
+    )
+    await hass.async_block_till_done()
+
+    device_id = device.id
+    assert device_id is not None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": template_type},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == template_type
+
+    with patch(
+        "homeassistant.components.template.async_setup_entry", wraps=async_setup_entry
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "name": "My template",
+                "state": state_template,
+                "device_id": device_id,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "My template"
+    assert result["data"] == {}
+    assert result["options"] == {
+        "name": "My template",
+        "state": state_template,
+        "template_type": template_type,
+        "device_id": device_id,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert config_entry.data == {}
+    assert config_entry.options == {
+        "name": "My template",
+        "state": state_template,
+        "template_type": template_type,
+        "device_id": device_id,
+    }
+
+
 def get_suggested(schema, key):
     """Get suggested value for key in voluptuous schema."""
     for k in schema:
@@ -130,7 +215,7 @@ def get_suggested(schema, key):
                 return None
             return k.description["suggested_value"]
     # Wanted key absent from schema
-    raise Exception
+    raise KeyError("Wanted key absent from schema")
 
 
 @pytest.mark.parametrize(
@@ -852,3 +937,148 @@ async def test_option_flow_sensor_preview_config_entry_removed(
     msg = await client.receive_json()
     assert not msg["success"]
     assert msg["error"] == {"code": "home_assistant_error", "message": "Unknown error"}
+
+
+@pytest.mark.parametrize(
+    (
+        "template_type",
+        "state_template",
+    ),
+    [
+        (
+            "sensor",
+            "{{ 15 }}",
+        ),
+        (
+            "binary_sensor",
+            "{{ false }}",
+        ),
+    ],
+)
+async def test_options_flow_change_device(
+    hass: HomeAssistant,
+    template_type: str,
+    state_template: str,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test remove the device registry configuration entry when the device changes."""
+
+    # Configure a device registry
+    entry_device1 = MockConfigEntry()
+    entry_device1.add_to_hass(hass)
+    device1 = device_registry.async_get_or_create(
+        config_entry_id=entry_device1.entry_id,
+        identifiers={("test", "identifier_test1")},
+        connections={("mac", "20:31:32:33:34:01")},
+    )
+    entry_device2 = MockConfigEntry()
+    entry_device2.add_to_hass(hass)
+    device2 = device_registry.async_get_or_create(
+        config_entry_id=entry_device1.entry_id,
+        identifiers={("test", "identifier_test2")},
+        connections={("mac", "20:31:32:33:34:02")},
+    )
+    await hass.async_block_till_done()
+
+    device_id1 = device1.id
+    assert device_id1 is not None
+
+    device_id2 = device2.id
+    assert device_id2 is not None
+
+    # Setup the config entry with device 1
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "template_type": template_type,
+            "name": "Test",
+            "state": state_template,
+            "device_id": device_id1,
+        },
+        title="Sensor template",
+    )
+    template_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Change to link to device 2
+    result = await hass.config_entries.options.async_init(
+        template_config_entry.entry_id
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "state": state_template,
+            "device_id": device_id2,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "template_type": template_type,
+        "name": "Test",
+        "state": state_template,
+        "device_id": device_id2,
+    }
+    assert template_config_entry.data == {}
+    assert template_config_entry.options == {
+        "template_type": template_type,
+        "name": "Test",
+        "state": state_template,
+        "device_id": device_id2,
+    }
+
+    # Remove link with device
+    result = await hass.config_entries.options.async_init(
+        template_config_entry.entry_id
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "state": state_template,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "template_type": template_type,
+        "name": "Test",
+        "state": state_template,
+    }
+    assert template_config_entry.data == {}
+    assert template_config_entry.options == {
+        "template_type": template_type,
+        "name": "Test",
+        "state": state_template,
+    }
+
+    # Change to link to device 1
+    result = await hass.config_entries.options.async_init(
+        template_config_entry.entry_id
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "state": state_template,
+            "device_id": device_id1,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "template_type": template_type,
+        "name": "Test",
+        "state": state_template,
+        "device_id": device_id1,
+    }
+    assert template_config_entry.data == {}
+    assert template_config_entry.options == {
+        "template_type": template_type,
+        "name": "Test",
+        "state": state_template,
+        "device_id": device_id1,
+    }

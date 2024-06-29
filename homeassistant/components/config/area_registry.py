@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.area_registry import async_get
+from homeassistant.helpers import area_registry as ar
 
 
 @callback
@@ -29,7 +29,7 @@ def websocket_list_areas(
     msg: dict[str, Any],
 ) -> None:
     """Handle list areas command."""
-    registry = async_get(hass)
+    registry = ar.async_get(hass)
     connection.send_result(
         msg["id"],
         [entry.json_fragment for entry in registry.async_list_areas()],
@@ -55,7 +55,7 @@ def websocket_create_area(
     msg: dict[str, Any],
 ) -> None:
     """Create area command."""
-    registry = async_get(hass)
+    registry = ar.async_get(hass)
 
     data = dict(msg)
     data.pop("type")
@@ -91,7 +91,7 @@ def websocket_delete_area(
     msg: dict[str, Any],
 ) -> None:
     """Delete area command."""
-    registry = async_get(hass)
+    registry = ar.async_get(hass)
 
     try:
         registry.async_delete(msg["area_id"])
@@ -121,7 +121,7 @@ def websocket_update_area(
     msg: dict[str, Any],
 ) -> None:
     """Handle update area websocket command."""
-    registry = async_get(hass)
+    registry = ar.async_get(hass)
 
     data = dict(msg)
     data.pop("type")
