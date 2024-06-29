@@ -646,13 +646,13 @@ async def test_discovery_flow_ignore_link_local_address(
 
 
 async def test_option_flow(
-    hass: HomeAssistant, setup_config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry_setup: ConfigEntry
 ) -> None:
     """Test config flow options."""
-    assert CONF_STREAM_PROFILE not in setup_config_entry.options
-    assert CONF_VIDEO_SOURCE not in setup_config_entry.options
+    assert CONF_STREAM_PROFILE not in config_entry_setup.options
+    assert CONF_VIDEO_SOURCE not in config_entry_setup.options
 
-    result = await hass.config_entries.options.async_init(setup_config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(config_entry_setup.entry_id)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_stream"
@@ -676,5 +676,5 @@ async def test_option_flow(
         CONF_STREAM_PROFILE: "profile_1",
         CONF_VIDEO_SOURCE: 1,
     }
-    assert setup_config_entry.options[CONF_STREAM_PROFILE] == "profile_1"
-    assert setup_config_entry.options[CONF_VIDEO_SOURCE] == 1
+    assert config_entry_setup.options[CONF_STREAM_PROFILE] == "profile_1"
+    assert config_entry_setup.options[CONF_VIDEO_SOURCE] == 1

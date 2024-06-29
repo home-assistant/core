@@ -50,11 +50,11 @@ def hass_mock_forward_entry_setup(hass: HomeAssistant) -> Generator[AsyncMock]:
 async def test_device_setup(
     forward_entry_setups: AsyncMock,
     config_entry_data: MappingProxyType[str, Any],
-    setup_config_entry: ConfigEntry,
+    config_entry_setup: ConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Successful setup."""
-    hub = setup_config_entry.runtime_data
+    hub = config_entry_setup.runtime_data
 
     assert hub.api.vapix.firmware_version == "9.10.1"
     assert hub.api.vapix.product_number == "M1065-LW"
@@ -78,9 +78,9 @@ async def test_device_setup(
 
 
 @pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_BASIC_DEVICE_INFO])
-async def test_device_info(setup_config_entry: ConfigEntry) -> None:
+async def test_device_info(config_entry_setup: ConfigEntry) -> None:
     """Verify other path of device information works."""
-    hub = setup_config_entry.runtime_data
+    hub = config_entry_setup.runtime_data
 
     assert hub.api.vapix.firmware_version == "9.80.1"
     assert hub.api.vapix.product_number == "M1065-LW"
@@ -89,7 +89,7 @@ async def test_device_info(setup_config_entry: ConfigEntry) -> None:
 
 
 @pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_MQTT])
-@pytest.mark.usefixtures("setup_config_entry")
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_device_support_mqtt(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient
 ) -> None:
@@ -115,7 +115,7 @@ async def test_device_support_mqtt(
 
 @pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_MQTT])
 @pytest.mark.parametrize("mqtt_status_code", [401])
-@pytest.mark.usefixtures("setup_config_entry")
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_device_support_mqtt_low_privilege(mqtt_mock: MqttMockHAClient) -> None:
     """Successful setup."""
     mqtt_call = call(f"{MAC}/#", mock.ANY, 0, "utf-8")
@@ -124,11 +124,11 @@ async def test_device_support_mqtt_low_privilege(mqtt_mock: MqttMockHAClient) ->
 
 async def test_update_address(
     hass: HomeAssistant,
-    setup_config_entry: ConfigEntry,
+    config_entry_setup: ConfigEntry,
     mock_requests: Callable[[str], None],
 ) -> None:
     """Test update address works."""
-    hub = setup_config_entry.runtime_data
+    hub = config_entry_setup.runtime_data
     assert hub.api.config.host == "1.2.3.4"
 
     mock_requests("2.3.4.5")
@@ -150,7 +150,7 @@ async def test_update_address(
     assert hub.api.config.host == "2.3.4.5"
 
 
-@pytest.mark.usefixtures("setup_config_entry")
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_device_unavailable(
     hass: HomeAssistant,
     mock_rtsp_event: Callable[[str, str, str, str, str, str], None],

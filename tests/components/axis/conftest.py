@@ -267,7 +267,7 @@ async def fixture_config_entry_factory(
     return __mock_setup_config_entry
 
 
-@pytest.fixture(name="setup_config_entry")
+@pytest.fixture(name="config_entry_setup")
 async def fixture_config_entry_setup(
     hass: HomeAssistant, config_entry: ConfigEntry, mock_default_requests: None
 ) -> ConfigEntry:
