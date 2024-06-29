@@ -55,7 +55,7 @@ async def mock_config_entry_fixture(
     return config_entry
 
 
-@pytest.mark.usefixtures("setup_default_vapix_requests", "mock_setup_entry")
+@pytest.mark.usefixtures("mock_default_requests", "mock_setup_entry")
 async def test_flow_manual_configuration(hass: HomeAssistant) -> None:
     """Test that config flow works."""
     MockConfigEntry(domain=AXIS_DOMAIN, source=SOURCE_IGNORE).add_to_hass(hass)
@@ -178,7 +178,7 @@ async def test_flow_fails_cannot_connect(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-@pytest.mark.usefixtures("setup_default_vapix_requests", "mock_setup_entry")
+@pytest.mark.usefixtures("mock_default_requests", "mock_setup_entry")
 async def test_flow_create_entry_multiple_existing_entries_of_same_model(
     hass: HomeAssistant,
 ) -> None:
@@ -372,7 +372,7 @@ async def test_reconfiguration_flow_update_configuration(
         ),
     ],
 )
-@pytest.mark.usefixtures("setup_default_vapix_requests", "mock_setup_entry")
+@pytest.mark.usefixtures("mock_default_requests", "mock_setup_entry")
 async def test_discovery_flow(
     hass: HomeAssistant,
     source: str,

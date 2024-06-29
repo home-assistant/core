@@ -247,7 +247,7 @@ def fixture_mqtt_status_code() -> int:
     return 200
 
 
-@pytest.fixture(name="setup_default_vapix_requests")
+@pytest.fixture(name="mock_default_requests")
 def fixture_default_requests(mock_requests: Callable[[str], None]) -> None:
     """Mock default Vapix requests responses."""
     mock_requests(DEFAULT_HOST)
@@ -255,7 +255,7 @@ def fixture_default_requests(mock_requests: Callable[[str], None]) -> None:
 
 @pytest.fixture(name="prepare_config_entry")
 async def fixture_config_entry_factory(
-    hass: HomeAssistant, config_entry: ConfigEntry, setup_default_vapix_requests: None
+    hass: HomeAssistant, config_entry: ConfigEntry, mock_default_requests: None
 ) -> Callable[[], ConfigEntry]:
     """Fixture factory to set up Axis network device."""
 
@@ -269,7 +269,7 @@ async def fixture_config_entry_factory(
 
 @pytest.fixture(name="setup_config_entry")
 async def fixture_config_entry_setup(
-    hass: HomeAssistant, config_entry: ConfigEntry, setup_default_vapix_requests: None
+    hass: HomeAssistant, config_entry: ConfigEntry, mock_default_requests: None
 ) -> ConfigEntry:
     """Define a fixture to set up Axis network device."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)

@@ -187,7 +187,7 @@ async def test_device_unavailable(
     assert hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_sound_1").state == STATE_OFF
 
 
-@pytest.mark.usefixtures("setup_default_vapix_requests")
+@pytest.mark.usefixtures("mock_default_requests")
 async def test_device_not_accessible(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
@@ -198,7 +198,7 @@ async def test_device_not_accessible(
     assert hass.data[AXIS_DOMAIN] == {}
 
 
-@pytest.mark.usefixtures("setup_default_vapix_requests")
+@pytest.mark.usefixtures("mock_default_requests")
 async def test_device_trigger_reauth_flow(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
@@ -215,7 +215,7 @@ async def test_device_trigger_reauth_flow(
     assert hass.data[AXIS_DOMAIN] == {}
 
 
-@pytest.mark.usefixtures("setup_default_vapix_requests")
+@pytest.mark.usefixtures("mock_default_requests")
 async def test_device_unknown_error(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
