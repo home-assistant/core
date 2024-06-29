@@ -4,8 +4,6 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from madvr.madvr import Madvr
-
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -16,43 +14,40 @@ from .coordinator import MadVRCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+type MadVRConfigEntry = ConfigEntry[MadVRCoordinator]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MadVRConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the MadVR remote."""
-    coordinator: MadVRCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
     if not isinstance(coordinator, MadVRCoordinator):
         raise TypeError("entry.runtime_data is not an instance of MadVRCoordinator")
 
-    madvr_client = coordinator.client
-
     async_add_entities(
         [
-            MadvrRemote(hass, coordinator, madvr_client, entry.entry_id),
+            MadvrRemote(hass, coordinator, entry.entry_id),
         ]
     )
 
 
-class MadvrRemote(CoordinatorEntity, RemoteEntity):
+class MadvrRemote(CoordinatorEntity[MadVRCoordinator], RemoteEntity):
     """Remote entity for the MadVR integration."""
-
-    coordinator: MadVRCoordinator
 
     def __init__(
         self,
         hass: HomeAssistant,
         coordinator: MadVRCoordinator,
-        madvr_client: Madvr,
         entry_id: str,
     ) -> None:
         """Initialize the remote entity."""
         super().__init__(coordinator)
-        self.madvr_client = madvr_client
         self.coordinator = coordinator
-        self._attr_name = coordinator.name
+        self.madvr_client = self.coordinator.client
+        self._attr_name = self.coordinator.name
         self._attr_unique_id = f"{entry_id}_remote"
         self.entry_id = entry_id
         self._attr_should_poll = False
