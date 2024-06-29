@@ -142,7 +142,7 @@ _DEFAULT_TABLE_ARGS = {
     "mariadb_engine": MYSQL_ENGINE,
 }
 
-_MATCH_ALL_KEEP_ATTRS = {
+_MATCH_ALL_KEEP = {
     ATTR_DEVICE_CLASS,
     ATTR_STATE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -605,7 +605,7 @@ class StateAttributes(Base):
                 # Don't exclude device class, state class, unit of measurement
                 # or friendly name when using the MATCH_ALL exclude constant
                 exclude_attrs.update(
-                    {k for k in state.attributes if k not in _MATCH_ALL_KEEP_ATTRS}
+                    _MATCH_ALL_KEEP.symmetric_difference(state.attributes)
                 )
         else:
             exclude_attrs = ALL_DOMAIN_EXCLUDE_ATTRS
