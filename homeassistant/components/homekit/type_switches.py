@@ -253,6 +253,14 @@ class ValveBase(HomeAccessory):
         # GET to avoid an event storm after homekit startup
         self.async_update_state(state)
 
+    def set_state(self, value: bool) -> None:
+        """Move value state to value if call came from HomeKit."""
+        _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
+        self.char_in_use.set_value(value)
+        params = {ATTR_ENTITY_ID: self.entity_id}
+        service = self.on_service if value else self.off_service
+        self.async_call_service(self.domain, service, params)
+
     @callback
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
@@ -261,14 +269,6 @@ class ValveBase(HomeAccessory):
         self.char_active.set_value(current_state)
         _LOGGER.debug("%s: Set in_use state to %s", self.entity_id, current_state)
         self.char_in_use.set_value(current_state)
-
-    def set_state(self, value: bool) -> None:
-        """Move value state to value if call came from HomeKit."""
-        _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
-        self.char_in_use.set_value(value)
-        params = {ATTR_ENTITY_ID: self.entity_id}
-        service = self.on_service if value else self.off_service
-        self.async_call_service(self.domain, service, params)
 
 
 @TYPES.register("ValveSwitch")
