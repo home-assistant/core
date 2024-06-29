@@ -9,14 +9,8 @@ from madvr.errors import CannotConnect
 from madvr.madvr import HeartBeatError, Madvr
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
-from homeassistant.core import callback
 
 from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 from .coordinator import MadVRCoordinator
@@ -95,12 +89,6 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("Connection test successful")
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry: MadVRConfigEntry) -> OptionsFlow:
-        """Get the options flow for this handler."""
-        return MadVROptionsFlowHandler(config_entry)
-
     async def async_step_import(
         self, import_config: dict[str, Any]
     ) -> ConfigFlowResult:
@@ -116,40 +104,3 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
         if errors := result.get("errors"):
             return self.async_abort(reason=errors["base"])
         return result
-
-
-class MadVROptionsFlowHandler(OptionsFlow):
-    """Handle an options flow for the integration."""
-
-    def __init__(self, config_entry: MadVRConfigEntry) -> None:
-        """Initialize the options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        return await self.async_step_user()
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the options step."""
-        if user_input is not None:
-            new_data = {**self.config_entry.data, **user_input}
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, data=new_data
-            )
-            # reload the entity if changed
-            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
-            return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
-
-        options = self.config_entry.data
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_HOST, default=options.get(CONF_HOST, "")): str,
-                vol.Required(CONF_PORT, default=options.get(CONF_PORT, 44077)): int,
-            }
-        )
-
-        return self.async_show_form(step_id="user", data_schema=data_schema)
