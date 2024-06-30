@@ -63,7 +63,6 @@ class MadvrRemote(CoordinatorEntity[MadVRCoordinator], RemoteEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
         _LOGGER.debug("Turning on device")
-        # supply the stored mac to the client
         await self.madvr_client.power_on()
 
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
