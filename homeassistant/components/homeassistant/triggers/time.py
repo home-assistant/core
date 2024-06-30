@@ -1,6 +1,6 @@
 """Offer time listening automation rules."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import partial
 
 import voluptuous as vol
@@ -9,6 +9,8 @@ from homeassistant.components import sensor
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     CONF_AT,
+    CONF_ENTITY_ID,
+    CONF_OFFSET,
     CONF_PLATFORM,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -32,12 +34,22 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
+_TIME_TRIGGER_ENTITY_REFERENCE = vol.All(
+    str, cv.entity_domain(["input_datetime", "sensor"])
+)
+
+_TIME_TRIGGER_WITH_OFFSET_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ENTITY_ID): cv.entity_domain(["sensor"]),
+        vol.Required(CONF_OFFSET): cv.time_period,
+    }
+)
+
 _TIME_TRIGGER_SCHEMA = vol.Any(
     cv.time,
-    vol.All(str, cv.entity_domain(["input_datetime", "sensor"])),
-    msg=(
-        "Expected HH:MM, HH:MM:SS or Entity ID with domain 'input_datetime' or 'sensor'"
-    ),
+    _TIME_TRIGGER_ENTITY_REFERENCE,
+    _TIME_TRIGGER_WITH_OFFSET_SCHEMA,
+    msg="Expected HH:MM, HH:MM:SS or Entity ID with domain 'input_datetime' or 'sensor'",
 )
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
@@ -59,6 +71,7 @@ async def async_attach_trigger(
     entities: dict[str, CALLBACK_TYPE] = {}
     removes: list[CALLBACK_TYPE] = []
     job = HassJob(action, f"time trigger {trigger_info}")
+    offsets: dict[str, timedelta] = {}
 
     @callback
     def time_automation_listener(
@@ -95,6 +108,8 @@ async def async_attach_trigger(
             return
 
         trigger_dt: datetime | None
+
+        offset = offsets[entity_id] if entity_id in offsets else timedelta(0)
 
         # Check state of entity. If valid, set up a listener.
         if new_state.domain == "input_datetime":
@@ -161,7 +176,7 @@ async def async_attach_trigger(
                         f"time set in {entity_id}",
                         entity_id=entity_id,
                     ),
-                    trigger_dt,
+                    trigger_dt + offset,
                 )
 
         # Was a listener set up?
@@ -175,6 +190,15 @@ async def async_attach_trigger(
             # entity
             to_track.append(at_time)
             update_entity_trigger(at_time, new_state=hass.states.get(at_time))
+        elif isinstance(at_time, dict) and CONF_OFFSET in at_time:
+            # entity with offset
+            entity_id: str = at_time.get(CONF_ENTITY_ID, "")
+            to_track.append(entity_id)
+            offsets[entity_id] = at_time.get(CONF_OFFSET, timedelta(0))
+            update_entity_trigger(
+                entity_id,
+                new_state=hass.states.get(entity_id),
+            )
         else:
             # datetime.time
             removes.append(
