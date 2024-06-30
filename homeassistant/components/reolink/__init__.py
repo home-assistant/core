@@ -184,14 +184,15 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove a device from a config entry."""
     host: ReolinkHost = hass.data[DOMAIN][config_entry.entry_id].host
-
-    if not host.api.is_nvr:
-        return False
-
     (device_uid, ch) = get_device_uid_and_ch(device, host)
 
-    if ch is None:
-        return False  # Do not remove the NVR itself
+    if not host.api.is_nvr or ch is None:
+        _LOGGER.warning(
+            "Can not remove Reolink device %s, because it is not a camera connected "
+            "to a NVR/Hub, please remove the integration entry instead",
+            device.name,
+        )
+        return False # Do not remove the host/NVR itself
 
     ch_model = host.api.camera_model(ch)
     if ch_model not in [device.model, "Unknown"]:
@@ -214,6 +215,13 @@ async def async_remove_config_entry_device(
         )
         return True
 
+    _LOGGER.warning(
+        "Can not remove Reolink device %s on channel %s, because it is still connected "
+        "to the NVR/Hub, please first remove the camera from the NVR/Hub "
+        "in the reolink app",
+        device.name,
+        ch,
+    )
     return False
 
 def get_device_uid_and_ch(
