@@ -2,10 +2,9 @@
 
 from collections.abc import Iterable
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.remote import RemoteEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -14,7 +13,8 @@ from .coordinator import MadVRCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-type MadVRConfigEntry = ConfigEntry[MadVRCoordinator]
+if TYPE_CHECKING:
+    from . import MadVRConfigEntry
 
 
 async def async_setup_entry(
@@ -24,9 +24,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the MadVR remote."""
     coordinator = entry.runtime_data
-    if not isinstance(coordinator, MadVRCoordinator):
-        raise TypeError("entry.runtime_data is not an instance of MadVRCoordinator")
-
     async_add_entities(
         [
             MadvrRemote(hass, coordinator, entry.entry_id),
@@ -37,6 +34,8 @@ async def async_setup_entry(
 class MadvrRemote(CoordinatorEntity[MadVRCoordinator], RemoteEntity):
     """Remote entity for the MadVR integration."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -45,22 +44,10 @@ class MadvrRemote(CoordinatorEntity[MadVRCoordinator], RemoteEntity):
     ) -> None:
         """Initialize the remote entity."""
         super().__init__(coordinator)
-        self.coordinator = coordinator
-        self.madvr_client = self.coordinator.client
-        self._attr_name = self.coordinator.name
+        self.madvr_client = coordinator.client
+        self._attr_name = coordinator.device_info.get("name")
         self._attr_unique_id = f"{entry_id}_remote"
-        self.entry_id = entry_id
-        self._attr_should_poll = False
         self.connection_event = self.madvr_client.connection_event
-
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        _LOGGER.debug("Adding to hass")
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when removed."""
-        _LOGGER.debug("Removing from hass")
 
     @property
     def is_on(self) -> bool:
@@ -78,7 +65,7 @@ class MadvrRemote(CoordinatorEntity[MadVRCoordinator], RemoteEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
         _LOGGER.debug("Turning on device")
-        # power state will be captured once the connection is established
+        # supply the stored mac to the client
         await self.madvr_client.power_on()
 
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
