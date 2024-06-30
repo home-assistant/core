@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import datetime
-from typing import Any
 
 import voluptuous as vol
 
@@ -27,42 +26,35 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN, PLATFORMS
+from . import exactly_two_period_keys
+from .const import (
+    CONF_DURATION,
+    CONF_END,
+    CONF_START,
+    CONF_TYPE_COUNT,
+    CONF_TYPE_KEYS,
+    CONF_TYPE_RATIO,
+    CONF_TYPE_TIME,
+    DEFAULT_NAME,
+    DOMAIN,
+    PLATFORMS,
+)
 from .coordinator import HistoryStatsUpdateCoordinator
 from .data import HistoryStats
 from .helpers import pretty_ratio
 
-CONF_START = "start"
-CONF_END = "end"
-CONF_DURATION = "duration"
-CONF_PERIOD_KEYS = [CONF_START, CONF_END, CONF_DURATION]
-
-CONF_TYPE_TIME = "time"
-CONF_TYPE_RATIO = "ratio"
-CONF_TYPE_COUNT = "count"
-CONF_TYPE_KEYS = [CONF_TYPE_TIME, CONF_TYPE_RATIO, CONF_TYPE_COUNT]
-
-DEFAULT_NAME = "unnamed statistics"
 UNITS: dict[str, str] = {
     CONF_TYPE_TIME: UnitOfTime.HOURS,
     CONF_TYPE_RATIO: PERCENTAGE,
     CONF_TYPE_COUNT: "",
 }
 ICON = "mdi:chart-line"
-
-
-def exactly_two_period_keys[_T: dict[str, Any]](conf: _T) -> _T:
-    """Ensure exactly 2 of CONF_PERIOD_KEYS are provided."""
-    if sum(param in conf for param in CONF_PERIOD_KEYS) != 2:
-        raise vol.Invalid(
-            "You must provide exactly 2 of the following: start, end, duration"
-        )
-    return conf
 
 
 PLATFORM_SCHEMA = vol.All(
@@ -90,16 +82,28 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the History Stats sensor."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    if sensor_config := config:
+        await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml_sensor",
+            breaks_in_ha_version="2025.1.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_platform_yaml",
+        )
+    if discovery_info:
+        sensor_config = discovery_info
 
-    entity_id: str = config[CONF_ENTITY_ID]
-    entity_states: list[str] = config[CONF_STATE]
-    start: Template | None = config.get(CONF_START)
-    end: Template | None = config.get(CONF_END)
-    duration: datetime.timedelta | None = config.get(CONF_DURATION)
-    sensor_type: str = config[CONF_TYPE]
-    name: str = config[CONF_NAME]
-    unique_id: str | None = config.get(CONF_UNIQUE_ID)
+    entity_id: str = sensor_config[CONF_ENTITY_ID]
+    entity_states: list[str] = sensor_config[CONF_STATE]
+    start: Template | None = sensor_config.get(CONF_START)
+    end: Template | None = sensor_config.get(CONF_END)
+    duration: datetime.timedelta | None = sensor_config.get(CONF_DURATION)
+    sensor_type: str = sensor_config[CONF_TYPE]
+    name: str = sensor_config[CONF_NAME]
+    unique_id: str | None = sensor_config.get(CONF_UNIQUE_ID)
 
     for template in (start, end):
         if template is not None:

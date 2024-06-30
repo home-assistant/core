@@ -1,4 +1,10 @@
 {
+  "issues": {
+    "deprecated_platform_yaml": {
+      "title": "History Stats YAML configuration has been changed",
+      "description": "Configuring History Stats using `platform:` has been deprecated.\n\nConsult the documentation to move your YAML configuration to `history_stats:` and restart Home Assistant to resolve this issue."
+    }
+  },
   "services": {
     "reload": {
       "name": "[%key:common::action::reload%]",
