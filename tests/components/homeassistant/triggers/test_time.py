@@ -519,11 +519,98 @@ async def test_if_fires_using_at_sensor(
 
 
 @pytest.mark.parametrize(
+    ("offset", "delta"),
+    [
+        ("00:00:10", timedelta(seconds=10)),
+        ("-00:00:10", timedelta(seconds=-10)),
+        ({"minutes": 5}, timedelta(minutes=5)),
+    ],
+)
+async def test_if_fires_using_at_sensor_with_offset(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    freezer: FrozenDateTimeFactory,
+    offset: str | dict[str, int],
+    delta: timedelta,
+) -> None:
+    """Test for firing at sensor time."""
+    now = dt_util.now()
+
+    start_dt = now.replace(hour=5, minute=0, second=0, microsecond=0) + timedelta(2)
+    trigger_dt = start_dt + delta
+
+    hass.states.async_set(
+        "sensor.next_alarm",
+        start_dt.isoformat(),
+        {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
+    )
+
+    time_that_will_not_match_right_away = trigger_dt - timedelta(minutes=1)
+
+    some_data = "{{ trigger.platform }}-{{ trigger.now.day }}-{{ trigger.now.hour }}-{{ trigger.now.minute }}-{{ trigger.now.second }}-{{trigger.entity_id}}"
+
+    freezer.move_to(dt_util.as_utc(time_that_will_not_match_right_away))
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "time",
+                    "at": {
+                        "entity_id": "sensor.next_alarm",
+                        "offset": offset,
+                    },
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"some": some_data},
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert (
+        calls[0].data["some"]
+        == f"time-{trigger_dt.day}-{trigger_dt.hour}-{trigger_dt.minute}-{trigger_dt.second}-sensor.next_alarm"
+    )
+
+    start_dt += timedelta(days=1, hours=1)
+    trigger_dt += timedelta(days=1, hours=1)
+
+    hass.states.async_set(
+        "sensor.next_alarm",
+        start_dt.isoformat(),
+        {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
+    )
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+    assert len(calls) == 2
+    assert (
+        calls[1].data["some"]
+        == f"time-{trigger_dt.day}-{trigger_dt.hour}-{trigger_dt.minute}-{trigger_dt.second}-sensor.next_alarm"
+    )
+
+
+@pytest.mark.parametrize(
     "conf",
     [
         {"platform": "time", "at": "input_datetime.bla"},
         {"platform": "time", "at": "sensor.bla"},
         {"platform": "time", "at": "12:34"},
+        {"platform": "time", "at": {"entity_id": "sensor.bla", "offset": "-00:01"}},
+        {
+            "platform": "time",
+            "at": [{"entity_id": "sensor.bla", "offset": "-01:00:00"}],
+        },
     ],
 )
 def test_schema_valid(conf) -> None:
@@ -537,6 +624,11 @@ def test_schema_valid(conf) -> None:
         {"platform": "time", "at": "binary_sensor.bla"},
         {"platform": "time", "at": 745},
         {"platform": "time", "at": "25:00"},
+        {
+            "platform": "time",
+            "at": {"entity_id": "input_datetime.bla", "offset": "0:10"},
+        },
+        {"platform": "time", "at": {"entity_id": "13:00:00", "offset": "0:10"}},
     ],
 )
 def test_schema_invalid(conf) -> None:
