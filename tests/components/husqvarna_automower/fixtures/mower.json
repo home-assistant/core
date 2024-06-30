@@ -53,6 +53,42 @@
               "saturday": true,
               "sunday": false,
               "workAreaId": 123456
+            },
+            {
+              "start": 0,
+              "duration": 480,
+              "monday": false,
+              "tuesday": true,
+              "wednesday": false,
+              "thursday": true,
+              "friday": false,
+              "saturday": true,
+              "sunday": false,
+              "workAreaId": 654321
+            },
+            {
+              "start": 60,
+              "duration": 480,
+              "monday": true,
+              "tuesday": true,
+              "wednesday": false,
+              "thursday": true,
+              "friday": false,
+              "saturday": true,
+              "sunday": false,
+              "workAreaId": 654321
+            },
+            {
+              "start": 120,
+              "duration": 480,
+              "monday": true,
+              "tuesday": false,
+              "wednesday": false,
+              "thursday": true,
+              "friday": false,
+              "saturday": true,
+              "sunday": false,
+              "workAreaId": 654321
             }
           ]
         },

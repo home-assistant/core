@@ -13,7 +13,6 @@ from ical.types.recur import Recur
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import dt as dt_util
 
 from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
@@ -43,26 +42,25 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
         self,
         mower_id: str,
         coordinator: AutomowerDataUpdateCoordinator,
-        # calendar: Calendar,
     ) -> None:
         """Set up HusqvarnaAutomowerEntity."""
         super().__init__(mower_id, coordinator)
         self._attr_unique_id = mower_id
-        self._event: CalendarEvent | None = None
         self.calendar = Calendar()
 
     @property
     def event(self) -> CalendarEvent | None:
         """Return the current or next upcoming event."""
-        ical_events: Calendar = self._automower_to_ical_event(
-            self.mower_attributes.calendar.events
-        )
-        return _ical_to_calendar_event(ical_events.events[0])
+        self._automower_to_ical_event(self.mower_attributes.calendar.events)
+        return _ical_to_calendar_event(self.calendar.events[0])
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
-        """Return calendar events within a datetime range."""
+        """Return calendar events within a datetime range.
+
+        This is only called when opening the calendar in the UI.
+        """
         self.calendar = await hass.async_add_executor_job(Calendar)
         self._automower_to_ical_event(self.mower_attributes.calendar.events)
         events = self.calendar.timeline_tz(start_date.tzinfo).overlapping(
@@ -73,8 +71,8 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
 
     def _automower_to_ical_event(
         self, event_list: list[AutomowerCalendarEvent]
-    ) -> list[CalendarEvent]:
-        """Return a Event from an API event."""
+    ) -> None:
+        """Convert the automower event to an ical event an store it."""
         schedule_no: dict = {}
         for event in event_list:
             if event.work_area_id is not None:
@@ -100,9 +98,9 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
                     dtend=event.end,
                     rrule=Recur.from_rrule(event.rrule),
                     summary=f"{wa_name}Schedule {number}",
+                    uid=event.uid,
                 )
             )
-        return self.calendar
 
 
 def _ical_to_calendar_event(event: Event) -> CalendarEvent:
