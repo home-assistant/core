@@ -370,6 +370,7 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
         effect_module = self._effect_module
         if effect_module.effect != LightEffect.LIGHT_EFFECTS_OFF:
             self._attr_effect = effect_module.effect
+            self._attr_color_mode = ColorMode.BRIGHTNESS
         else:
             self._attr_effect = EFFECT_OFF
         if effect_list := effect_module.effect_list:
