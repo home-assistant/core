@@ -34,6 +34,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_TYPE,
+    SERVICE_CLOSE_VALVE,
+    SERVICE_OPEN_VALVE,
     SERVICE_SELECT_OPTION,
     STATE_CLOSED,
     STATE_OFF,
@@ -143,58 +145,34 @@ async def test_switch_set_state(
     assert events[-1].data[ATTR_VALUE] is None
 
 
-@pytest.mark.parametrize(
-    ("domain", "accessory_class", "service_on", "service_off", "state_on", "state_off"),
-    [
-        ("switch", ValveSwitch, "turn_on", "turn_off", STATE_ON, STATE_OFF),
-        ("valve", Valve, "open_valve", "close_valve", STATE_OPEN, STATE_CLOSED),
-    ],
-)
-async def test_valve_set_state(
-    hass: HomeAssistant,
-    hk_driver,
-    events,
-    domain,
-    accessory_class,
-    service_on,
-    service_off,
-    state_on,
-    state_off,
-) -> None:
+async def test_valve_switch_set_state(hass: HomeAssistant, hk_driver, events) -> None:
     """Test if Valve accessory and HA are updated accordingly."""
-    entity_id = f"{domain}.valve_test"
+    entity_id = "switch.valve_test"
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
 
-    if domain == "switch":
-        acc = accessory_class(
-            hass, hk_driver, "Valve", entity_id, 2, {CONF_TYPE: TYPE_FAUCET}
-        )
-        acc.run()
-        await hass.async_block_till_done()
-        assert acc.category == 29  # Faucet
-        assert acc.char_valve_type.value == 3  # Water faucet
+    acc = ValveSwitch(hass, hk_driver, "Valve", entity_id, 2, {CONF_TYPE: TYPE_FAUCET})
+    acc.run()
+    await hass.async_block_till_done()
+    assert acc.category == 29  # Faucet
+    assert acc.char_valve_type.value == 3  # Water faucet
 
-        acc = accessory_class(
-            hass, hk_driver, "Valve", entity_id, 3, {CONF_TYPE: TYPE_SHOWER}
-        )
-        acc.run()
-        await hass.async_block_till_done()
-        assert acc.category == 30  # Shower
-        assert acc.char_valve_type.value == 2  # Shower head
+    acc = ValveSwitch(hass, hk_driver, "Valve", entity_id, 3, {CONF_TYPE: TYPE_SHOWER})
+    acc.run()
+    await hass.async_block_till_done()
+    assert acc.category == 30  # Shower
+    assert acc.char_valve_type.value == 2  # Shower head
 
-        acc = accessory_class(
-            hass, hk_driver, "Valve", entity_id, 4, {CONF_TYPE: TYPE_SPRINKLER}
-        )
-        acc.run()
-        await hass.async_block_till_done()
-        assert acc.category == 28  # Sprinkler
-        assert acc.char_valve_type.value == 1  # Irrigation
-
-    acc = accessory_class(
-        hass, hk_driver, "Valve", entity_id, 5, {CONF_TYPE: TYPE_VALVE}
+    acc = ValveSwitch(
+        hass, hk_driver, "Valve", entity_id, 4, {CONF_TYPE: TYPE_SPRINKLER}
     )
+    acc.run()
+    await hass.async_block_till_done()
+    assert acc.category == 28  # Sprinkler
+    assert acc.char_valve_type.value == 1  # Irrigation
+
+    acc = ValveSwitch(hass, hk_driver, "Valve", entity_id, 5, {CONF_TYPE: TYPE_VALVE})
     acc.run()
     await hass.async_block_till_done()
 
@@ -205,19 +183,68 @@ async def test_valve_set_state(
     assert acc.char_in_use.value == 0
     assert acc.char_valve_type.value == 0  # Generic Valve
 
-    hass.states.async_set(entity_id, state_on)
+    hass.states.async_set(entity_id, STATE_ON)
     await hass.async_block_till_done()
     assert acc.char_active.value == 1
     assert acc.char_in_use.value == 1
 
-    hass.states.async_set(entity_id, state_off)
+    hass.states.async_set(entity_id, STATE_OFF)
     await hass.async_block_till_done()
     assert acc.char_active.value == 0
     assert acc.char_in_use.value == 0
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, domain, service_on)
-    call_turn_off = async_mock_service(hass, domain, service_off)
+    call_turn_on = async_mock_service(hass, "switch", SERVICE_TURN_ON)
+    call_turn_off = async_mock_service(hass, "switch", SERVICE_TURN_OFF)
+
+    acc.char_active.client_update_value(1)
+    await hass.async_block_till_done()
+    assert acc.char_in_use.value == 1
+    assert call_turn_on
+    assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] is None
+
+    acc.char_active.client_update_value(0)
+    await hass.async_block_till_done()
+    assert acc.char_in_use.value == 0
+    assert call_turn_off
+    assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
+    assert len(events) == 2
+    assert events[-1].data[ATTR_VALUE] is None
+
+
+async def test_valve_set_state(hass: HomeAssistant, hk_driver, events) -> None:
+    """Test if Valve accessory and HA are updated accordingly."""
+    entity_id = "valve.valve_test"
+
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+
+    acc = Valve(hass, hk_driver, "Valve", entity_id, 5, {CONF_TYPE: TYPE_VALVE})
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.aid == 5
+    assert acc.category == 29  # Faucet
+
+    assert acc.char_active.value == 0
+    assert acc.char_in_use.value == 0
+    assert acc.char_valve_type.value == 0  # Generic Valve
+
+    hass.states.async_set(entity_id, STATE_OPEN)
+    await hass.async_block_till_done()
+    assert acc.char_active.value == 1
+    assert acc.char_in_use.value == 1
+
+    hass.states.async_set(entity_id, STATE_CLOSED)
+    await hass.async_block_till_done()
+    assert acc.char_active.value == 0
+    assert acc.char_in_use.value == 0
+
+    # Set from HomeKit
+    call_turn_on = async_mock_service(hass, "valve", SERVICE_OPEN_VALVE)
+    call_turn_off = async_mock_service(hass, "valve", SERVICE_CLOSE_VALVE)
 
     acc.char_active.client_update_value(1)
     await hass.async_block_till_done()
