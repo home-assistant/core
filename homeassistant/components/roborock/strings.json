@@ -152,6 +152,9 @@
       "clean_percent": {
         "name": "Cleaning progress"
       },
+      "selected_map": {
+        "name": "Selected map"
+      },
       "dock_error": {
         "name": "Dock error",
         "state": {

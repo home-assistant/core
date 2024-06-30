@@ -75,6 +75,9 @@
       },
       "dock_error": {
         "default": "mdi:garage-open"
+      },
+      "selected_map": {
+        "default": "mdi:home-map-marker"
       }
     },
     "switch": {

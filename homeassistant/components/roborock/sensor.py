@@ -268,6 +268,11 @@ async def async_setup_entry(
         if description.value_fn(coordinator.roborock_device_info.props) is not None
     )
     async_add_entities(
+        SelectedMapSensorEntity(coordinator)
+        for coordinator in coordinators.v1
+        if coordinator.current_map is not None
+    )
+    async_add_entities(
         RoborockSensorEntityA01(
             coordinator,
             description,
@@ -322,3 +327,29 @@ class RoborockSensorEntityA01(RoborockCoordinatedEntityA01, SensorEntity):
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.coordinator.data[self.entity_description.data_protocol]
+
+
+class SelectedMapSensorEntity(RoborockCoordinatedEntityV1, SensorEntity):
+    """Representation of the selected map."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "selected_map"
+
+    def __init__(
+        self,
+        coordinator: RoborockDataUpdateCoordinator,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(
+            f"selected_map_{slugify(coordinator.duid)}",
+            coordinator,
+        )
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the value reported by the sensor."""
+        if self.coordinator.current_map is not None:
+            current_map = self.coordinator.maps.get(self.coordinator.current_map)
+            if current_map is not None:
+                return current_map.name
+        return None
