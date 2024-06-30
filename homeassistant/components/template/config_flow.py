@@ -54,20 +54,16 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
     if domain == Platform.BINARY_SENSOR:
         schema = SCHEMA_STATE
         if flow_type == "config":
-            schema = (
-                SCHEMA_NAME
-                | {
-                    vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                        selector.SelectSelectorConfig(
-                            options=[cls.value for cls in BinarySensorDeviceClass],
-                            mode=selector.SelectSelectorMode.DROPDOWN,
-                            translation_key="binary_sensor_device_class",
-                            sort=True,
-                        ),
+            schema = {
+                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[cls.value for cls in BinarySensorDeviceClass],
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                        translation_key="binary_sensor_device_class",
+                        sort=True,
                     ),
-                }
-                | schema
-            )
+                ),
+            } | schema
 
     if domain == Platform.SENSOR:
         schema = {
@@ -109,8 +105,9 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
                 ),
             ),
         }
-        if flow_type == "config":
-            schema = SCHEMA_NAME | schema
+
+    if flow_type == "config":
+        schema = SCHEMA_NAME | schema
 
     schema[vol.Optional(CONF_DEVICE_ID)] = selector.DeviceSelector()
 
