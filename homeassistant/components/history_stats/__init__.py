@@ -122,20 +122,16 @@ async def _process_config(hass: HomeAssistant, config: ConfigType) -> None:
 
     _LOGGER.debug("Full config loaded: %s", history_stats_config)
 
-    load_coroutines: list[Coroutine[Any, Any, None]] = []
-    for _config in history_stats_config:
-        load_coroutines.append(  # noqa: PERF401
-            discovery.async_load_platform(
-                hass,
-                Platform.SENSOR,
-                DOMAIN,
-                _config,
-                config,
-            )
+    load_coroutines: list[Coroutine[Any, Any, None]] = [
+        discovery.async_load_platform(
+            hass,
+            Platform.SENSOR,
+            DOMAIN,
+            _config,
+            config,
         )
-
-    # This does not reload entries under history_stats:, only under sensor:
-    # await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+        for _config in history_stats_config
+    ]
 
     if load_coroutines:
         await asyncio.gather(*load_coroutines)

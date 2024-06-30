@@ -60,7 +60,15 @@ async def test_setup_integration(recorder_mock: Recorder, hass: HomeAssistant) -
                 ".replace(minute=0).replace(second=0) }}",
                 "duration": "02:00",
                 "name": "Test",
-            }
+            },
+            {
+                "entity_id": "binary_sensor.test_id",
+                "state": "on",
+                "start": "{{ utcnow().replace(hour=0)"
+                ".replace(minute=0).replace(second=0) }}",
+                "duration": "02:00",
+                "name": "Test2",
+            },
         ],
     }
 
@@ -68,6 +76,8 @@ async def test_setup_integration(recorder_mock: Recorder, hass: HomeAssistant) -
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test")
+    assert state.state == "0.0"
+    state = hass.states.get("sensor.test2")
     assert state.state == "0.0"
 
 
