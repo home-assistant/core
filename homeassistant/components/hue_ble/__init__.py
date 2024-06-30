@@ -12,8 +12,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -40,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not await light.connect() or not await light.poll_state():
         raise ConfigEntryNotReady("Device found but unable to connect.")
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = light
+    entry.runtime_data = light
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "light")
@@ -51,9 +49,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
-    unload_ok = await hass.config_entries.async_forward_entry_unload(entry, "light")
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_forward_entry_unload(entry, "light")
