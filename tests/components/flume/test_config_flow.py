@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import DEVICE_LIST_URL
+from .conftest import DEVICE_LIST, DEVICE_LIST_URL
 
 from tests.common import MockConfigEntry
 
@@ -71,7 +71,7 @@ async def test_form_invalid_auth(
         "GET",
         DEVICE_LIST_URL,
         status_code=HTTPStatus.UNAUTHORIZED,
-        json={},
+        json={"message": "Failure"},
     )
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -89,17 +89,11 @@ async def test_form_invalid_auth(
 
 
 async def test_form_cannot_connect(
-    hass: HomeAssistant, access_token: None, requests_mock: Mocker
+    hass: HomeAssistant, access_token: None, device_list_timeout: None
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    requests_mock.register_uri(
-        "GET",
-        DEVICE_LIST_URL,
-        exc=requests.exceptions.ConnectTimeout,
     )
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -155,12 +149,21 @@ async def test_reauth(
         exc=requests.exceptions.ConnectTimeout,
     )
 
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
-        {
-            CONF_PASSWORD: "test-password",
-        },
-    )
+    with (
+        patch(
+            "homeassistant.components.flume.config_flow.os.path.exists",
+            return_value=True,
+        ),
+        patch("homeassistant.components.flume.config_flow.os.unlink") as mock_unlink,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        # The existing token file was removed
+        assert len(mock_unlink.mock_calls) == 1
 
     assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": "cannot_connect"}
@@ -170,7 +173,7 @@ async def test_reauth(
         DEVICE_LIST_URL,
         status_code=HTTPStatus.OK,
         json={
-            "data": [{"id": 1}],
+            "data": DEVICE_LIST,
         },
     )
 
@@ -190,3 +193,32 @@ async def test_reauth(
     assert mock_setup_entry.called
     assert result4["type"] is FlowResultType.ABORT
     assert result4["reason"] == "reauth_successful"
+
+
+async def test_form_no_devices(
+    hass: HomeAssistant, access_token: None, requests_mock: Mocker
+) -> None:
+    """Test a device list response that contains no values will raise an error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    requests_mock.register_uri(
+        "GET",
+        DEVICE_LIST_URL,
+        status_code=HTTPStatus.OK,
+        json={"data": []},
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_CLIENT_ID: "client_id",
+            CONF_CLIENT_SECRET: "client_secret",
+        },
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}

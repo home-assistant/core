@@ -8,6 +8,7 @@ from unittest.mock import mock_open, patch
 
 import jwt
 import pytest
+import requests
 from requests_mock.mocker import Mocker
 
 from homeassistant.components.flume.const import DOMAIN
@@ -34,6 +35,7 @@ BRIDGE_DEVICE = {
         "name": "Bridge Location",
     },
     "name": "Flume Bridge",
+    "connected": True,
 }
 SENSOR_DEVICE = {
     "id": "1234",
@@ -42,8 +44,35 @@ SENSOR_DEVICE = {
         "name": "Sensor Location",
     },
     "name": "Flume Sensor",
+    "connected": True,
 }
 DEVICE_LIST = [BRIDGE_DEVICE, SENSOR_DEVICE]
+NOTIFICATIONS_URL = "https://api.flumetech.com/users/test-user-id/notifications?limit=50&offset=0&sort_direction=ASC"
+NOTIFICATION = {
+    "id": 111111,
+    "device_id": "6248148189204194987",
+    "user_id": USER_ID,
+    "type": 1,
+    "message": "Low Flow Leak triggered at Home. Water has been running for 2 hours averaging 0.43 gallons every minute.",
+    "created_datetime": "2020-01-15T16:33:39.000Z",
+    "title": "Potential Leak Detected!",
+    "read": True,
+    "extra": {
+        "query": {
+            "request_id": "SYSTEM_TRIGGERED_USAGE_ALERT",
+            "since_datetime": "2020-01-15 06:33:59",
+            "until_datetime": "2020-01-15 08:33:59",
+            "tz": "America/Los_Angeles",
+            "bucket": "MIN",
+            "raw": False,
+            "group_multiplier": 2,
+            "device_id": ["6248148189204194987"],
+        }
+    },
+    "event_rule": "Low Flow Leak",
+}
+
+NOTIFICATIONS_LIST = [NOTIFICATION]
 
 
 @pytest.fixture(name="config_entry")
@@ -52,6 +81,7 @@ def config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="test-username",
+        unique_id="test-username",
         data={
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
@@ -99,5 +129,39 @@ def device_list_fixture(requests_mock: Mocker) -> None:
         status_code=HTTPStatus.OK,
         json={
             "data": DEVICE_LIST,
+        },
+    )
+
+
+@pytest.fixture(name="device_list_timeout")
+def device_list_timeout_fixture(requests_mock: Mocker) -> None:
+    """Fixture to test a timeout when connecting to the device list url."""
+    requests_mock.register_uri(
+        "GET",
+        DEVICE_LIST_URL,
+        exc=requests.exceptions.ConnectTimeout,
+    )
+
+
+@pytest.fixture(name="device_list_unauthorized")
+def device_list_unauthorized_fixture(requests_mock: Mocker) -> None:
+    """Fixture to test an authorized error from the device list url."""
+    requests_mock.register_uri(
+        "GET",
+        DEVICE_LIST_URL,
+        status_code=HTTPStatus.UNAUTHORIZED,
+        json={},
+    )
+
+
+@pytest.fixture(name="notifications_list")
+def notifications_list_fixture(requests_mock: Mocker) -> None:
+    """Fixture to setup the device list API response access token."""
+    requests_mock.register_uri(
+        "GET",
+        NOTIFICATIONS_URL,
+        status_code=HTTPStatus.OK,
+        json={
+            "data": NOTIFICATIONS_LIST,
         },
     )
