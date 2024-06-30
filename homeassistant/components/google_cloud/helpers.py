@@ -57,7 +57,7 @@ def tts_options_schema(
             vol.Optional(
                 CONF_GENDER,
                 description={"suggested_value": config_options.get(CONF_GENDER)},
-                default=texttospeech.SsmlVoiceGender.NEUTRAL.name,
+                default=texttospeech.SsmlVoiceGender.NEUTRAL.name,  # type: ignore[attr-defined]
             ): SelectSelector(
                 SelectSelectorConfig(
                     mode=SelectSelectorMode.DROPDOWN,
@@ -77,7 +77,7 @@ def tts_options_schema(
             vol.Optional(
                 CONF_ENCODING,
                 description={"suggested_value": config_options.get(CONF_ENCODING)},
-                default=texttospeech.AudioEncoding.MP3.name,
+                default=texttospeech.AudioEncoding.MP3.name,  # type: ignore[attr-defined]
             ): SelectSelector(
                 SelectSelectorConfig(
                     mode=SelectSelectorMode.DROPDOWN,
