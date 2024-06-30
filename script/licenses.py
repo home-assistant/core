@@ -129,8 +129,6 @@ EXCEPTIONS = {
     "aiooui",  # https://github.com/Bluetooth-Devices/aiooui/pull/8
     "aioruuvigateway",  # https://github.com/akx/aioruuvigateway/pull/6
     "aiovodafone",  # https://github.com/chemelli74/aiovodafone/pull/131
-    "aiowebostv",  # https://github.com/home-assistant-libs/aiowebostv/pull/327
-    "aioymaps",  # https://github.com/devbis/aioymaps/pull/3
     "airthings-ble",  # https://github.com/Airthings/airthings-ble/pull/42
     "amberelectric",  # https://github.com/madpilot/amberelectric.py/pull/11
     "apple_weatherkit",  # https://github.com/tjhorner/python-weatherkit/pull/3
@@ -144,7 +142,6 @@ EXCEPTIONS = {
     "eliqonline",  # https://github.com/molobrakos/eliqonline/pull/17
     "enocean",  # https://github.com/kipe/enocean/pull/142
     "gardena-bluetooth",  # https://github.com/elupus/gardena-bluetooth/pull/11
-    "govee-local-api",  # https://github.com/Galorhallen/govee-local-api/pull/35
     "heatmiserV3",  # https://github.com/andylockran/heatmiserV3/pull/94
     "huum",  # https://github.com/frwickst/pyhuum/pull/8
     "imutils",  # https://github.com/PyImageSearch/imutils/pull/292
@@ -160,7 +157,6 @@ EXCEPTIONS = {
     "pigpio",  # https://github.com/joan2937/pigpio/pull/608
     "pyEmby",  # https://github.com/mezz64/pyEmby/pull/12
     "pyTibber",  # https://github.com/Danielhiversen/pyTibber/pull/294
-    "pyaprilaire",  # https://github.com/chamberlain2007/pyaprilaire/pull/16
     "pybbox",  # https://github.com/HydrelioxGitHub/pybbox/pull/5
     "pyeconet",  # https://github.com/w1ll1am23/pyeconet/pull/41
     "pylutron-caseta",  # https://github.com/gurumitts/pylutron-caseta/pull/168
@@ -169,10 +165,9 @@ EXCEPTIONS = {
     "pyswitchbee",  # https://github.com/jafar-atili/pySwitchbee/pull/5
     "pyvera",  # https://github.com/maximvelichko/pyvera/pull/164
     "pyxeoma",  # https://github.com/jeradM/pyxeoma/pull/11
-    "repoze.lru",  #
+    "repoze.lru",
     "russound",  # https://github.com/laf/russound/pull/14   # codespell:ignore laf
     "ruuvitag-ble",  # https://github.com/Bluetooth-Devices/ruuvitag-ble/pull/10
-    "sense-energy",  # https://github.com/scottbonline/sense/pull/67
     "sensirion-ble",  # https://github.com/akx/sensirion-ble/pull/9
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
@@ -180,7 +175,6 @@ EXCEPTIONS = {
     "tellsticknet",  # https://github.com/molobrakos/tellsticknet/pull/33
     "webrtc_noise_gain",  # https://github.com/rhasspy/webrtc-noise-gain/pull/24
     "vincenty",  # Public domain
-    "xiaomi-ble",  # https://github.com/Bluetooth-Devices/xiaomi-ble/pull/81
     "zeversolar",  # https://github.com/kvanzuijlen/zeversolar/pull/46
 }
 
