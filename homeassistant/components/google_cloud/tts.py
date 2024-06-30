@@ -51,22 +51,22 @@ async def async_get_engine(hass: HomeAssistant, config, discovery_info=None):
             _LOGGER.error("File %s doesn't exist", key_file)
             return None
     if key_file:
-        client = texttospeech.TextToSpeechClient.from_service_account_json(key_file)
+        client = texttospeech.TextToSpeechAsyncClient.from_service_account_json(
+            key_file
+        )
     else:
-        client = texttospeech.TextToSpeechClient()
+        client = texttospeech.TextToSpeechAsyncClient()
     try:
         voices = await async_tts_voices(client)
     except GoogleAPIError as err:
         _LOGGER.error("Error from calling list_voices: %s", err)
         return None
-    options_schema = tts_options_schema(config, voices)
-    language = config.get(CONF_LANG, DEFAULT_LANG)
     return GoogleCloudTTSProvider(
         hass,
         client,
-        language,
-        options_schema,
         voices,
+        config.get(CONF_LANG, DEFAULT_LANG),
+        tts_options_schema(config, voices),
     )
 
 
@@ -92,9 +92,9 @@ async def async_setup_entry(
             GoogleCloudTTSEntity(
                 config_entry,
                 client,
+                voices,
                 language,
                 options_schema,
-                voices,
             )
         ]
     )
@@ -107,9 +107,9 @@ class GoogleCloudTTSEntity(TextToSpeechEntity):
         self,
         entry: ConfigEntry,
         client: texttospeech.TextToSpeechAsyncClient,
+        voices: dict[str, list[str]],
         language,
         options_schema,
-        voices,
     ) -> None:
         """Init Google Cloud TTS entity."""
         self._attr_unique_id = f"{entry.entry_id}-tts"
@@ -122,9 +122,9 @@ class GoogleCloudTTSEntity(TextToSpeechEntity):
             entry_type=dr.DeviceEntryType.SERVICE,
         )
         self._client = client
+        self._voices = voices
         self._language = language
         self._options_schema = options_schema
-        self._voices = voices
 
     @property
     def supported_languages(self) -> list[str]:
@@ -169,17 +169,17 @@ class GoogleCloudTTSProvider(Provider):
         self,
         hass: HomeAssistant,
         client: texttospeech.TextToSpeechAsyncClient,
+        voices: dict[str, list[str]],
         language,
         options_schema,
-        voices,
     ) -> None:
         """Init Google Cloud TTS service."""
         self.hass = hass
         self.name = "Google Cloud TTS"
         self._client = client
+        self._voices = voices
         self._language = language
         self._options_schema = options_schema
-        self._voices = voices
 
     @property
     def supported_languages(self) -> list[str]:
@@ -222,7 +222,7 @@ async def _async_get_tts_audio(
 ) -> TtsAudioType:
     """Load TTS from Google Cloud."""
     try:
-        options = options_schema(options)
+        options = self._options_schema(options)
     except vol.Invalid as err:
         _LOGGER.error("Error: %s when validating options: %s", err, options)
         return None, None

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from types import MappingProxyType
 from typing import Any
 
@@ -32,35 +31,13 @@ from .const import (
     DEFAULT_LANG,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
-DEFAULT_GENDER = texttospeech.SsmlVoiceGender.NEUTRAL.name
 DEFAULT_VOICE = ""
-DEFAULT_ENCODING = texttospeech.AudioEncoding.MP3.name
-DEFAULT_SPEED = 1.0
-DEFAULT_PITCH = 0
-DEFAULT_GAIN = 0
-DEFAULT_PROFILES: list[str] = []
-DEFAULT_TEXT_TYPE = "text"
-
-# https://cloud.google.com/text-to-speech/docs/audio-profiles
-SUPPORTED_PROFILES = [
-    "wearable-class-device",
-    "handset-class-device",
-    "headphone-class-device",
-    "small-bluetooth-speaker-class-device",
-    "medium-bluetooth-speaker-class-device",
-    "large-home-entertainment-class-device",
-    "large-automotive-class-device",
-    "telephony-class-application",
-]
-SUPPORTED_TEXT_TYPES = ["text", "ssml"]
 
 
 async def async_tts_voices(
     client: texttospeech.TextToSpeechAsyncClient,
 ) -> dict[str, list[str]]:
-    """Get TTS voice models keyed by language."""
+    """Get TTS voice model names keyed by language."""
     voices: dict[str, list[str]] = {}
     list_voices_response = await client.list_voices()
     for voice in list_voices_response.voices:
@@ -80,7 +57,7 @@ def tts_options_schema(
             vol.Optional(
                 CONF_GENDER,
                 description={"suggested_value": config_options.get(CONF_GENDER)},
-                default=DEFAULT_GENDER,
+                default=texttospeech.SsmlVoiceGender.NEUTRAL.name,  # type: ignore[attr-defined]
             ): SelectSelector(
                 SelectSelectorConfig(
                     mode=SelectSelectorMode.DROPDOWN,
@@ -100,7 +77,7 @@ def tts_options_schema(
             vol.Optional(
                 CONF_ENCODING,
                 description={"suggested_value": config_options.get(CONF_ENCODING)},
-                default=DEFAULT_ENCODING,
+                default=texttospeech.AudioEncoding.MP3.name,  # type: ignore[attr-defined]
             ): SelectSelector(
                 SelectSelectorConfig(
                     mode=SelectSelectorMode.DROPDOWN,
@@ -110,26 +87,36 @@ def tts_options_schema(
             vol.Optional(
                 CONF_SPEED,
                 description={"suggested_value": config_options.get(CONF_SPEED)},
-                default=DEFAULT_SPEED,
-            ): NumberSelector(NumberSelectorConfig(min=0.25, max=4, step=0.05)),
+                default=1.0,
+            ): NumberSelector(NumberSelectorConfig(min=0.25, max=4.0, step=0.01)),
             vol.Optional(
                 CONF_PITCH,
                 description={"suggested_value": config_options.get(CONF_PITCH)},
-                default=DEFAULT_PITCH,
-            ): NumberSelector(NumberSelectorConfig(min=-20, max=20, step=0.1)),
+                default=0,
+            ): NumberSelector(NumberSelectorConfig(min=-20.0, max=20.0, step=0.1)),
             vol.Optional(
                 CONF_GAIN,
                 description={"suggested_value": config_options.get(CONF_GAIN)},
-                default=DEFAULT_GAIN,
-            ): NumberSelector(NumberSelectorConfig(min=-96, max=16, step=1)),
+                default=0,
+            ): NumberSelector(NumberSelectorConfig(min=-96.0, max=16.0, step=0.1)),
             vol.Optional(
                 CONF_PROFILES,
                 description={"suggested_value": config_options.get(CONF_PROFILES)},
-                default=DEFAULT_PROFILES,
+                default=[],
             ): SelectSelector(
                 SelectSelectorConfig(
                     mode=SelectSelectorMode.DROPDOWN,
-                    options=SUPPORTED_PROFILES,
+                    options=[
+                        # https://cloud.google.com/text-to-speech/docs/audio-profiles
+                        "wearable-class-device",
+                        "handset-class-device",
+                        "headphone-class-device",
+                        "small-bluetooth-speaker-class-device",
+                        "medium-bluetooth-speaker-class-device",
+                        "large-home-entertainment-class-device",
+                        "large-automotive-class-device",
+                        "telephony-class-application",
+                    ],
                     multiple=True,
                     sort=False,
                 )
@@ -137,11 +124,11 @@ def tts_options_schema(
             vol.Optional(
                 CONF_TEXT_TYPE,
                 description={"suggested_value": config_options.get(CONF_TEXT_TYPE)},
-                default=DEFAULT_TEXT_TYPE,
+                default="text",
             ): SelectSelector(
                 SelectSelectorConfig(
                     mode=SelectSelectorMode.DROPDOWN,
-                    options=SUPPORTED_TEXT_TYPES,
+                    options=["text", "ssml"],
                 )
             ),
         }
@@ -154,9 +141,9 @@ def tts_platform_schema():
         {
             vol.Optional(CONF_KEY_FILE): cv.string,
             vol.Optional(CONF_LANG, default=DEFAULT_LANG): cv.matches_regex(
-                r"[a-z]{2,3}-[A-Z]{2}"
+                r"[a-z]{2,3}-[A-Z]{2}|"
             ),
-            **tts_options_schema(config_options={}, voices={}).schema,
+            **tts_options_schema({}, {}).schema,
             vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): cv.matches_regex(
                 r"[a-z]{2,3}-[A-Z]{2}-.*-[A-Z]|"
             ),

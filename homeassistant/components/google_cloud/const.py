@@ -6,6 +6,8 @@ DOMAIN = "google_cloud"
 
 CONF_KEY_FILE = "key_file"
 
+DEFAULT_LANG = "en-US"
+
 # TTS constants
 CONF_GENDER = "gender"
 CONF_VOICE = "voice"
@@ -15,8 +17,6 @@ CONF_PITCH = "pitch"
 CONF_GAIN = "gain"
 CONF_PROFILES = "profiles"
 CONF_TEXT_TYPE = "text_type"
-
-DEFAULT_LANG = "en-US"
 
 # STT constants
 CONF_STT_MODEL = "stt_model"
