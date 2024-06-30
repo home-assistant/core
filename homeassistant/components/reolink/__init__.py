@@ -179,6 +179,43 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device: dr.DeviceEntry
+) -> bool:
+    """Remove a device from a config entry."""
+    host: ReolinkHost = hass.data[DOMAIN][config_entry.entry_id].host
+
+    if not host.api.is_nvr:
+        return False
+
+    (device_uid, ch) = get_device_uid_and_ch(device, host)
+
+    if ch is None:
+        return False  # Do not remove the NVR itself
+
+    ch_model = host.api.camera_model(ch)
+    if ch_model not in [device.model, "Unknown"]:
+        _LOGGER.debug(
+            "Removing Reolink device %s, "
+            "since the camera model connected to channel %s changed from %s to %s",
+            device.name,
+            ch,
+            device.model,
+            ch_model,
+        )
+        return True
+
+    if ch not in host.api.channels:
+        _LOGGER.debug(
+            "Removing Reolink device %s, "
+            "since no camera is connected to NVR channel %s anymore",
+            device.name,
+            ch,
+        )
+        return True
+
+    return False
+
 def get_device_uid_and_ch(
     device: dr.DeviceEntry, host: ReolinkHost
 ) -> tuple[list[str], int | None]:
