@@ -44,20 +44,34 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
     """Generate schema."""
     schema: dict[vol.Marker, Any] = {}
 
-    if domain == Platform.BINARY_SENSOR and flow_type == "config":
-        schema = {
-            vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[cls.value for cls in BinarySensorDeviceClass],
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                    translation_key="binary_sensor_device_class",
-                    sort=True,
-                ),
+    SCHEMA_NAME = {
+        vol.Required(CONF_NAME): selector.TextSelector(),
+    }
+    SCHEMA_STATE = {
+        vol.Required(CONF_STATE): selector.TemplateSelector(),
+    }
+
+    if domain == Platform.BINARY_SENSOR:
+        schema = SCHEMA_STATE
+        if flow_type == "config":
+            schema = (
+                SCHEMA_NAME
+                | {
+                    vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[cls.value for cls in BinarySensorDeviceClass],
+                            mode=selector.SelectSelectorMode.DROPDOWN,
+                            translation_key="binary_sensor_device_class",
+                            sort=True,
+                        ),
+                    ),
+                }
+                | schema
             )
-        }
 
     if domain == Platform.SENSOR:
         schema = {
+            **SCHEMA_STATE,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=list(
@@ -95,6 +109,8 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
                 ),
             ),
         }
+        if flow_type == "config":
+            schema = SCHEMA_NAME | schema
 
     schema[vol.Optional(CONF_DEVICE_ID)] = selector.DeviceSelector()
 
@@ -104,19 +120,14 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
 def options_schema(domain: str) -> vol.Schema:
     """Generate options schema."""
     return vol.Schema(
-        {vol.Required(CONF_STATE): selector.TemplateSelector()}
-        | generate_schema(domain, "option"),
+        generate_schema(domain, "option"),
     )
 
 
 def config_schema(domain: str) -> vol.Schema:
     """Generate config schema."""
     return vol.Schema(
-        {
-            vol.Required(CONF_NAME): selector.TextSelector(),
-            vol.Required(CONF_STATE): selector.TemplateSelector(),
-        }
-        | generate_schema(domain, "config"),
+        generate_schema(domain, "config"),
     )
 
 
