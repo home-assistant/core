@@ -50,13 +50,11 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_dio_chacon_client() -> Generator[AsyncMock]:
     """Mock a Dio Chacon client."""
 
-    # client = DIOChaconAPIClient("dummylogin", "dummypass")
     client = AsyncMock(spec=DIOChaconAPIClient)
     client.search_all_devices.return_value = MOCK_COVER_DEVICE
     client.move_shutter_direction.return_value = {}
     client.move_shutter_percentage.return_value = {}
     client.disconnect.return_value = {}
-    # client._callback_device_state_by_device.side_effect = DIOChaconAPIClient("dummylogin", "dummypass")._callback_device_state_by_device
 
     with patch(
         "homeassistant.components.dio_chacon.DIOChaconAPIClient",

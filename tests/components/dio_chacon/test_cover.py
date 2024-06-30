@@ -1,9 +1,8 @@
 """Test the Dio Chacon Cover sensor."""
 
+from collections.abc import Callable
 import logging
 from unittest.mock import AsyncMock
-
-from dio_chacon_wifi_api import DIOChaconAPIClient
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -111,9 +110,12 @@ async def test_cover(
     assert state.state == STATE_OPENING
 
     # Server side callback tests
-    client: DIOChaconAPIClient = mock_config_entry.runtime_data.dio_chacon_client
-    # client._callback_device_state_by_device["L4HActuator_idmock1"](
-    entity.callback_device_state(
+    # We find the callback method on the mock client
+    callback_device_state_function: Callable = (
+        mock_dio_chacon_client.set_callback_device_state_by_device.call_args[0][1]
+    )
+    # And calls it to effectively launch the callback as the server would do
+    callback_device_state_function(
         {
             "id": "L4HActuator_idmock1",
             "connected": True,
@@ -127,7 +129,7 @@ async def test_cover(
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 79
     assert state.state == STATE_OPEN
 
-    client._callback_device_state_by_device["L4HActuator_idmock1"](
+    callback_device_state_function(
         {
             "id": "L4HActuator_idmock1",
             "connected": True,
@@ -141,7 +143,7 @@ async def test_cover(
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 90
     assert state.state == STATE_OPENING
 
-    client._callback_device_state_by_device["L4HActuator_idmock1"](
+    callback_device_state_function(
         {
             "id": "L4HActuator_idmock1",
             "connected": True,
