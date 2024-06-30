@@ -3,6 +3,7 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+import pytest
 import requests.exceptions
 from requests_mock.mocker import Mocker
 
@@ -22,7 +23,8 @@ from .conftest import DEVICE_LIST, DEVICE_LIST_URL
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant, access_token: None, device_list: None) -> None:
+@pytest.mark.usefixtures("access_token", "device_list")
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form and can setup from user input."""
 
     result = await hass.config_entries.flow.async_init(
@@ -59,9 +61,8 @@ async def test_form(hass: HomeAssistant, access_token: None, device_list: None) 
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(
-    hass: HomeAssistant, access_token: None, requests_mock: Mocker
-) -> None:
+@pytest.mark.usefixtures("access_token")
+async def test_form_invalid_auth(hass: HomeAssistant, requests_mock: Mocker) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -88,9 +89,8 @@ async def test_form_invalid_auth(
     assert result2["errors"] == {"password": "invalid_auth"}
 
 
-async def test_form_cannot_connect(
-    hass: HomeAssistant, access_token: None, device_list_timeout: None
-) -> None:
+@pytest.mark.usefixtures("access_token", "device_list_timeout")
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -110,9 +110,8 @@ async def test_form_cannot_connect(
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_reauth(
-    hass: HomeAssistant, access_token: None, requests_mock: Mocker
-) -> None:
+@pytest.mark.usefixtures("access_token")
+async def test_reauth(hass: HomeAssistant, requests_mock: Mocker) -> None:
     """Test we can reauth."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -195,9 +194,8 @@ async def test_reauth(
     assert result4["reason"] == "reauth_successful"
 
 
-async def test_form_no_devices(
-    hass: HomeAssistant, access_token: None, requests_mock: Mocker
-) -> None:
+@pytest.mark.usefixtures("access_token")
+async def test_form_no_devices(hass: HomeAssistant, requests_mock: Mocker) -> None:
     """Test a device list response that contains no values will raise an error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

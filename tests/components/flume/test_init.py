@@ -24,12 +24,11 @@ def platforms_fixture() -> Generator[list[str]]:
         yield
 
 
+@pytest.mark.usefixtures("access_token", "device_list")
 async def test_setup_config_entry(
     hass: HomeAssistant,
     requests_mock: Mocker,
     config_entry: MockConfigEntry,
-    access_token: None,
-    device_list: None,
 ) -> None:
     """Test load and unload of a ConfigEntry."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -41,12 +40,11 @@ async def test_setup_config_entry(
     assert config_entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.usefixtures("access_token", "device_list_timeout")
 async def test_device_list_timeout(
     hass: HomeAssistant,
     requests_mock: Mocker,
     config_entry: MockConfigEntry,
-    access_token: None,
-    device_list_timeout: None,
 ) -> None:
     """Test error handling for a timeout when listing devices."""
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
@@ -55,12 +53,11 @@ async def test_device_list_timeout(
     assert config_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.usefixtures("access_token", "device_list_unauthorized")
 async def test_reauth_when_unauthorized(
     hass: HomeAssistant,
     requests_mock: Mocker,
     config_entry: MockConfigEntry,
-    access_token: None,
-    device_list_unauthorized: None,
 ) -> None:
     """Test error handling for an authentication error when listing devices."""
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
@@ -73,13 +70,11 @@ async def test_reauth_when_unauthorized(
     assert flows[0]["step_id"] == "reauth_confirm"
 
 
+@pytest.mark.usefixtures("access_token", "device_list", "notifications_list")
 async def test_list_notifications_service(
     hass: HomeAssistant,
     requests_mock: Mocker,
     config_entry: MockConfigEntry,
-    access_token: None,
-    device_list: None,
-    notifications_list: None,
 ) -> None:
     """Test the list notifications service."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -102,13 +97,11 @@ async def test_list_notifications_service(
     assert notifications[0].get("user_id") == USER_ID
 
 
+@pytest.mark.usefixtures("access_token", "device_list", "notifications_list")
 async def test_list_notifications_service_config_entry_errors(
     hass: HomeAssistant,
     requests_mock: Mocker,
     config_entry: MockConfigEntry,
-    access_token: None,
-    device_list: None,
-    notifications_list: None,
 ) -> None:
     """Test error handling for notification service with invalid config entries."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
