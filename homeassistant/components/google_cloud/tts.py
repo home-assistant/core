@@ -11,8 +11,12 @@ from homeassistant.components.tts import (
     CONF_LANG,
     PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
     Provider,
+    Voice,
 )
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+
+from .helpers import async_tts_voices
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,70 +30,12 @@ CONF_GAIN = "gain"
 CONF_PROFILES = "profiles"
 CONF_TEXT_TYPE = "text_type"
 
-SUPPORTED_LANGUAGES = [
-    "af-ZA",
-    "ar-XA",
-    "bg-BG",
-    "bn-IN",
-    "ca-ES",
-    "cmn-CN",
-    "cmn-TW",
-    "cs-CZ",
-    "da-DK",
-    "de-DE",
-    "el-GR",
-    "en-AU",
-    "en-GB",
-    "en-IN",
-    "en-US",
-    "es-ES",
-    "es-US",
-    "eu-ES",
-    "fi-FI",
-    "fil-PH",
-    "fr-CA",
-    "fr-FR",
-    "gl-ES",
-    "gu-IN",
-    "he-IL",
-    "hi-IN",
-    "hu-HU",
-    "id-ID",
-    "is-IS",
-    "it-IT",
-    "ja-JP",
-    "kn-IN",
-    "ko-KR",
-    "lv-LV",
-    "lt-LT",
-    "ml-IN",
-    "mr-IN",
-    "ms-MY",
-    "nb-NO",
-    "nl-BE",
-    "nl-NL",
-    "pa-IN",
-    "pl-PL",
-    "pt-BR",
-    "pt-PT",
-    "ro-RO",
-    "ru-RU",
-    "sk-SK",
-    "sr-RS",
-    "sv-SE",
-    "ta-IN",
-    "te-IN",
-    "th-TH",
-    "tr-TR",
-    "uk-UA",
-    "vi-VN",
-    "yue-HK",
-]
 DEFAULT_LANG = "en-US"
 
 DEFAULT_GENDER = "NEUTRAL"
 
-VOICE_REGEX = r"[a-z]{2,3}-[A-Z]{2}-(Standard|Wavenet)-[A-Z]|"
+LANG_REGEX = r"[a-z]{2,3}-[A-Z]{2}|"
+VOICE_REGEX = r"[a-z]{2,3}-[A-Z]{2}-.*-[A-Z]|"
 DEFAULT_VOICE = ""
 
 DEFAULT_ENCODING = "MP3"
@@ -143,7 +89,7 @@ TEXT_TYPE_SCHEMA = vol.All(vol.Lower, vol.In(SUPPORTED_TEXT_TYPES))
 PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_KEY_FILE): cv.string,
-        vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORTED_LANGUAGES),
+        vol.Optional(CONF_LANG, default=DEFAULT_LANG): cv.matches_regex(LANG_REGEX),
         vol.Optional(CONF_GENDER, default=DEFAULT_GENDER): GENDER_SCHEMA,
         vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): VOICE_SCHEMA,
         vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): SCHEMA_ENCODING,
@@ -163,10 +109,21 @@ async def async_get_engine(hass, config, discovery_info=None):
         if not os.path.isfile(key_file):
             _LOGGER.error("File %s doesn't exist", key_file)
             return None
-
+    if key_file:
+        client = texttospeech.TextToSpeechAsyncClient.from_service_account_json(
+            key_file
+        )
+    else:
+        client = texttospeech.TextToSpeechAsyncClient()
+    try:
+        voices = await async_tts_voices(client)
+    except GoogleAPIError as err:
+        _LOGGER.error("Error from calling list_voices: %s", err)
+        return None
     return GoogleCloudTTSProvider(
         hass,
-        key_file,
+        client,
+        voices,
         config[CONF_LANG],
         config[CONF_GENDER],
         config[CONF_VOICE],
@@ -185,7 +142,8 @@ class GoogleCloudTTSProvider(Provider):
     def __init__(
         self,
         hass,
-        key_file=None,
+        client: texttospeech.TextToSpeechAsyncClient,
+        voices: dict[str, list[str]],
         language=DEFAULT_LANG,
         gender=DEFAULT_GENDER,
         voice=DEFAULT_VOICE,
@@ -199,6 +157,8 @@ class GoogleCloudTTSProvider(Provider):
         """Init Google Cloud TTS service."""
         self.hass = hass
         self.name = "Google Cloud TTS"
+        self._client = client
+        self._voices = voices
         self._language = language
         self._gender = gender
         self._voice = voice
@@ -209,17 +169,10 @@ class GoogleCloudTTSProvider(Provider):
         self._profiles = profiles
         self._text_type = text_type
 
-        if key_file:
-            self._client = (
-                texttospeech.TextToSpeechAsyncClient.from_service_account_json(key_file)
-            )
-        else:
-            self._client = texttospeech.TextToSpeechAsyncClient()
-
     @property
     def supported_languages(self):
         """Return list of supported languages."""
-        return SUPPORTED_LANGUAGES
+        return list(self._voices)
 
     @property
     def default_language(self):
@@ -244,6 +197,13 @@ class GoogleCloudTTSProvider(Provider):
             CONF_PROFILES: self._profiles,
             CONF_TEXT_TYPE: self._text_type,
         }
+
+    @callback
+    def async_get_supported_voices(self, language: str) -> list[Voice] | None:
+        """Return a list of supported voices for a language."""
+        if not (voices := self._voices.get(language)):
+            return None
+        return [Voice(voice, voice) for voice in voices]
 
     async def async_get_tts_audio(self, message, language, options):
         """Load TTS from google."""
