@@ -261,7 +261,7 @@ class GoogleCloudTTSProvider(Provider):
         )
         options = options_schema(options)
 
-        encoding = options[CONF_ENCODING]
+        encoding = texttospeech.AudioEncoding[options[CONF_ENCODING]]
         voice = options[CONF_VOICE]
         if voice and not voice.startswith(language):
             language = voice[:5]
@@ -274,7 +274,7 @@ class GoogleCloudTTSProvider(Provider):
                 name=voice,
             ),
             audio_config=texttospeech.AudioConfig(
-                audio_encoding=texttospeech.AudioEncoding[encoding],
+                audio_encoding=encoding,
                 speaking_rate=options[CONF_SPEED],
                 pitch=options[CONF_PITCH],
                 volume_gain_db=options[CONF_GAIN],
@@ -288,4 +288,11 @@ class GoogleCloudTTSProvider(Provider):
             _LOGGER.error("Error occurred during Google Cloud TTS call: %s", err)
             return None, None
 
-        return encoding, response.audio_content
+        if encoding == texttospeech.AudioEncoding.MP3:
+            extension = "mp3"
+        elif encoding == texttospeech.AudioEncoding.OGG_OPUS:
+            extension = "ogg"
+        else:
+            extension = "wav"
+
+        return extension, response.audio_content
