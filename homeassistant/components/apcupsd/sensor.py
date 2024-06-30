@@ -157,7 +157,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "laststest": SensorEntityDescription(
+    LASTSTEST: SensorEntityDescription(
         key="laststest",
         translation_key="last_self_test",
     ),
@@ -418,19 +418,17 @@ async def async_setup_entry(
     available_resources: set[str] = {k.lower() for k, _ in coordinator.data.items()}
 
     entities = []
-    for resource in available_resources:
-        if resource not in SENSORS:
-            _LOGGER.warning("Invalid resource from APCUPSd: %s", resource.upper())
-            continue
-
-        entities.append(APCUPSdSensor(coordinator, SENSORS[resource]))
 
     # "laststest" is a special sensor that only appears when the APC UPS daemon has done a
     # periodical (or manual) self test since last daemon restart. It might not be available
     # when we set up the integration, and we do not know if it would ever be available. Here we
     # add it anyway and mark it as unknown initially.
-    if LASTSTEST not in coordinator.data:
-        entities.append(APCUPSdSensor(coordinator, SENSORS[LASTSTEST]))
+    for resource in available_resources | {LASTSTEST}:
+        if resource not in SENSORS:
+            _LOGGER.warning("Invalid resource from APCUPSd: %s", resource.upper())
+            continue
+
+        entities.append(APCUPSdSensor(coordinator, SENSORS[resource]))
 
     async_add_entities(entities)
 
