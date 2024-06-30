@@ -23,7 +23,6 @@ import homeassistant.util.dt as dt_util
 from . import RoborockConfigEntry
 from .const import DEFAULT_DRAWABLES, DOMAIN, DRAWABLES, IMAGE_CACHE_INTERVAL, MAP_SLEEP
 from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockCoordinatedEntity
 from .device import RoborockCoordinatedEntityV1
 from .roborock_storage import RoborockStorage
 
@@ -222,7 +221,7 @@ async def create_coordinator_maps(
             map_info.name,
             roborock_storage,
             create_map,
-            drawables
+            drawables,
         )
         entities.append(roborock_map)
         if create_map and roborock_map.cached_map != b"":

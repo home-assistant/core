@@ -252,3 +252,9 @@ async def update_listener(hass: HomeAssistant, entry: RoborockConfigEntry) -> No
     """Handle options update."""
     # Reload entry to update data
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle removal of an entry."""
+    roborock_storage = RoborockStorage(hass, entry.entry_id)
+    await roborock_storage.async_remove_maps(entry.entry_id)
