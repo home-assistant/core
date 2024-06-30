@@ -14,7 +14,6 @@ from .coordinator import BMWDataUpdateCoordinator
 class BMWBaseEntity(CoordinatorEntity[BMWDataUpdateCoordinator]):
     """Common base for BMW entities."""
 
-    coordinator: BMWDataUpdateCoordinator
     _attr_has_entity_name = True
 
     def __init__(
@@ -28,7 +27,7 @@ class BMWBaseEntity(CoordinatorEntity[BMWDataUpdateCoordinator]):
         self.vehicle = vehicle
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.vehicle.vin)},
+            identifiers={(DOMAIN, vehicle.vin)},
             manufacturer=vehicle.brand.name,
             model=vehicle.name,
             name=vehicle.name,
