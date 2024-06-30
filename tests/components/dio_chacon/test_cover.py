@@ -1,7 +1,7 @@
 """Test the Dio Chacon Cover sensor."""
 
 import logging
-from unittest.mock import patch
+from unittest.mock import AsyncMock
 
 from dio_chacon_wifi_api import DIOChaconAPIClient
 
@@ -19,14 +19,11 @@ from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntityFeature,
 )
-from homeassistant.components.dio_chacon.const import DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
-    CONF_PASSWORD,
-    CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
@@ -36,38 +33,20 @@ from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-MOCK_COVER_DEVICE = {
-    "L4HActuator_idmock1": {
-        "id": "L4HActuator_idmock1",
-        "name": "Shutter mock 1",
-        "type": "SHUTTER",
-        "model": "CERSwd-3B_1.0.6",
-        "connected": True,
-        "openlevel": 75,
-        "movement": "stop",
-    }
-}
 
-
-async def test_cover(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
+async def test_cover(
+    hass: HomeAssistant,
+    mock_dio_chacon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test the creation and values of the Dio Chacon covers."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="test_entry_unique_id",
-        data={
-            CONF_USERNAME: "dummylogin",
-            CONF_PASSWORD: "dummypass",
-        },
-    )
 
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        "dio_chacon_wifi_api.DIOChaconAPIClient.search_all_devices",
-        return_value=MOCK_COVER_DEVICE,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    # mock_dio_chacon_client.search_all_devices.return_value = MOCK_COVER_DEVICE
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     entity = entity_registry.async_get("cover.shutter_mock_1")
     _LOGGER.debug("Entity cover mock registered : %s", entity)
@@ -89,55 +68,52 @@ async def test_cover(hass: HomeAssistant, entity_registry: er.EntityRegistry) ->
         | CoverEntityFeature.STOP
     )
 
-    with patch(
-        "dio_chacon_wifi_api.DIOChaconAPIClient.move_shutter_direction",
-    ):
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: entity.entity_id},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        state = hass.states.get("cover.shutter_mock_1")
-        assert state.state == STATE_CLOSING
+    # mock_dio_chacon_client.move_shutter_direction.return_value = {}
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: entity.entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.shutter_mock_1")
+    assert state.state == STATE_CLOSING
 
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_STOP_COVER,
-            {ATTR_ENTITY_ID: entity.entity_id},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        state = hass.states.get("cover.shutter_mock_1")
-        assert state.state == STATE_OPEN
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: entity.entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.shutter_mock_1")
+    assert state.state == STATE_OPEN
 
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: entity.entity_id},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        state = hass.states.get("cover.shutter_mock_1")
-        assert state.state == STATE_OPENING
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: entity.entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.shutter_mock_1")
+    assert state.state == STATE_OPENING
 
-    with patch(
-        "dio_chacon_wifi_api.DIOChaconAPIClient.move_shutter_percentage",
-    ):
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_SET_COVER_POSITION,
-            {ATTR_POSITION: 25, ATTR_ENTITY_ID: entity.entity_id},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        state = hass.states.get("cover.shutter_mock_1")
-        assert state.state == STATE_OPENING
+    # mock_dio_chacon_client.move_shutter_direction.return_value = {}
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_POSITION: 25, ATTR_ENTITY_ID: entity.entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.shutter_mock_1")
+    assert state.state == STATE_OPENING
 
     # Server side callback tests
-    client: DIOChaconAPIClient = entry.runtime_data.dio_chacon_client
-    client._callback_device_state_by_device["L4HActuator_idmock1"](
+    client: DIOChaconAPIClient = mock_config_entry.runtime_data.dio_chacon_client
+    # client._callback_device_state_by_device["L4HActuator_idmock1"](
+    entity.callback_device_state(
         {
             "id": "L4HActuator_idmock1",
             "connected": True,
@@ -180,67 +156,46 @@ async def test_cover(hass: HomeAssistant, entity_registry: er.EntityRegistry) ->
     assert state.state == STATE_CLOSING
 
     # Tests coverage for unload actions.
-    with patch(
-        "dio_chacon_wifi_api.DIOChaconAPIClient.disconnect",
-    ):
-        await hass.config_entries.async_unload(entry.entry_id)
+    # mock_dio_chacon_client.disconnect.return_value = {}
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
     # pytest.fail("Fails to display logs of tests")
 
 
 async def test_cover_shutdown_event(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    mock_dio_chacon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the creation and values of the Dio Chacon covers."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="test_entry_unique_id",
-        data={
-            CONF_USERNAME: "dummylogin",
-            CONF_PASSWORD: "dummypass",
-        },
-    )
 
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        "dio_chacon_wifi_api.DIOChaconAPIClient.search_all_devices",
-        return_value=MOCK_COVER_DEVICE,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    # mock_dio_chacon_client.search_all_devices.return_value = MOCK_COVER_DEVICE
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Tests coverage for stop action.
-    with patch(
-        "dio_chacon_wifi_api.DIOChaconAPIClient.disconnect",
-    ):
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-        await hass.async_block_till_done()
+    # mock_dio_chacon_client.disconnect.return_value = {}
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
 
     # pytest.fail("Fails to display logs of tests")
 
 
 async def test_no_cover_found(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    mock_dio_chacon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the cover absence."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="test_entry_unique_id",
-        data={
-            CONF_USERNAME: "dummylogin",
-            CONF_PASSWORD: "dummypass",
-        },
-    )
 
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        "dio_chacon_wifi_api.DIOChaconAPIClient.search_all_devices",
-        return_value=None,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    mock_dio_chacon_client.search_all_devices.return_value = None
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     entity = entity_registry.async_get("cover.shutter_mock_1")
     _LOGGER.debug("Entity cover mock not found : %s", entity)
