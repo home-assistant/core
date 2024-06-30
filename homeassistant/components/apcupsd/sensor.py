@@ -158,7 +158,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
     ),
     LASTSTEST: SensorEntityDescription(
-        key="laststest",
+        key=LASTSTEST,
         translation_key="last_self_test",
     ),
     "lastxfer": SensorEntityDescription(
