@@ -1,4 +1,4 @@
-"""Test the flume init."""
+"""Flume test fixtures."""
 
 from collections.abc import Generator
 import datetime
