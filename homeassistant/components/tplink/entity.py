@@ -61,8 +61,6 @@ EXCLUDED_FEATURES = {
     # update
     "current_firmware_version",
     "available_firmware_version",
-    # fan
-    "fan_speed_level",
 }
 
 LEGACY_KEY_MAPPING = {
@@ -186,7 +184,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
     async def async_added_to_hass(self) -> None:
         """Handle being added to hass."""
         self._async_call_update_attrs()
-        return await super().async_added_to_hass()
+        await super().async_added_to_hass()
 
     @abstractmethod
     @callback
@@ -196,11 +194,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
 
     @callback
     def _async_call_update_attrs(self) -> None:
-        """Call update_attrs and make entity unavailable on error.
-
-        update_attrs can sometimes fail if a device firmware update breaks the
-        downstream library.
-        """
+        """Call update_attrs and make entity unavailable on errors."""
         try:
             self._async_update_attrs()
         except Exception as ex:  # noqa: BLE001
