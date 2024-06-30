@@ -876,7 +876,7 @@ hassil==1.7.1
 hdate==0.10.9
 
 # homeassistant.components.here_travel_time
-here-routing==0.2.0
+here-routing==1.0.1
 
 # homeassistant.components.here_travel_time
 here-transit==1.2.0
