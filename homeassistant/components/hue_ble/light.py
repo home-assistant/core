@@ -44,7 +44,6 @@ class HaHueBLE(LightEntity):
         self._address = self._light.address
         self._attr_unique_id = self._light.address
         self._attr_available = self._light.available
-        self._attr_name = self._name
         self._attr_is_on = self._light.power_state
         self._attr_brightness = self._light.brightness
         self._attr_color_temp = self._light.colour_temp
