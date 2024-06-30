@@ -1,0 +1,26 @@
+start_watering:
+  target:
+    entity:
+      integration: hydrawise
+      domain: binary_sensor
+      device_class: running
+  fields:
+    duration:
+      required: false
+suspend:
+  target:
+    entity:
+      integration: hydrawise
+      domain: binary_sensor
+      device_class: running
+  fields:
+    until:
+      required: true
+      selector:
+        datetime:
+resume:
+  target:
+    entity:
+      integration: hydrawise
+      domain: binary_sensor
+      device_class: running

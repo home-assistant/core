@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
+
+from pydrawise import Zone
+import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -12,9 +16,18 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    LOGGER,
+    MAX_WATERING_TIME,
+    SERVICE_RESUME,
+    SERVICE_START_WATERING,
+    SERVICE_SUSPEND,
+)
 from .coordinator import HydrawiseDataUpdateCoordinator
 from .entity import HydrawiseEntity
 
@@ -61,6 +74,13 @@ ZONE_BINARY_SENSORS: tuple[HydrawiseBinarySensorEntityDescription, ...] = (
     ),
 )
 
+SCHEMA_START_WATERING: VolDictType = {
+    vol.Optional("duration"): cv.positive_time_period,
+}
+SCHEMA_SUSPEND: VolDictType = {
+    vol.Required("until"): cv.datetime,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -89,11 +109,19 @@ async def async_setup_entry(
             if "rain sensor" in sensor.model.name.lower()
         )
         entities.extend(
-            HydrawiseBinarySensor(coordinator, description, controller, zone_id=zone.id)
+            HydrawiseZoneBinarySensor(
+                coordinator, description, controller, zone_id=zone.id
+            )
             for zone in controller.zones
             for description in ZONE_BINARY_SENSORS
         )
     async_add_entities(entities)
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(SERVICE_RESUME, {}, "resume")
+    platform.async_register_entity_service(
+        SERVICE_START_WATERING, SCHEMA_START_WATERING, "start_watering"
+    )
+    platform.async_register_entity_service(SERVICE_SUSPEND, SCHEMA_SUSPEND, "suspend")
 
 
 class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
@@ -111,3 +139,28 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
         if self.entity_description.always_available:
             return True
         return super().available
+
+
+class HydrawiseZoneBinarySensor(HydrawiseBinarySensor):
+    """A sensor implementation for a Hydrawise irrigation zone."""
+
+    zone: Zone
+
+    async def start_watering(self, duration: timedelta | None = None) -> None:
+        """Start watering in the irrigation zone."""
+        if duration is None:
+            duration = timedelta(minutes=0)
+        if duration > MAX_WATERING_TIME:
+            LOGGER.warning("Clamping watering time to %s", MAX_WATERING_TIME)
+            duration = MAX_WATERING_TIME
+        await self.coordinator.api.start_zone(
+            self.zone, custom_run_duration=int(duration.total_seconds())
+        )
+
+    async def suspend(self, until: datetime) -> None:
+        """Suspend automatic watering in the irrigation zone."""
+        await self.coordinator.api.suspend_zone(self.zone, until=until)
+
+    async def resume(self) -> None:
+        """Resume automatic watering in the irrigation zone."""
+        await self.coordinator.api.resume_zone(self.zone)
