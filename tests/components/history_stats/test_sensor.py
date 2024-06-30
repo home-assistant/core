@@ -26,7 +26,7 @@ from tests.components.recorder.common import async_wait_recording_done
 from tests.typing import RecorderInstanceGenerator
 
 
-async def test_setup(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+async def test_setup_platform(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test the history statistics sensor setup."""
 
     config = {
@@ -42,6 +42,29 @@ async def test_setup(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     }
 
     assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state.state == "0.0"
+
+
+async def test_setup_integration(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+    """Test the history statistics sensor setup."""
+
+    config = {
+        "history_stats": [
+            {
+                "entity_id": "binary_sensor.test_id",
+                "state": "on",
+                "start": "{{ utcnow().replace(hour=0)"
+                ".replace(minute=0).replace(second=0) }}",
+                "duration": "02:00",
+                "name": "Test",
+            }
+        ],
+    }
+
+    assert await async_setup_component(hass, "history_stats", config)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test")
