@@ -2,21 +2,17 @@
 
 from __future__ import annotations
 
-from typing import Any
+import logging
 
-# These constants are relevant to the type of entity we are using.
-# See below for how they are used.
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    CoverEntity,
-    CoverEntityFeature,
-)
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 # This function is called as part of the __init__.async_setup_entry (via the
@@ -26,64 +22,48 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Add cover for passed config_entry in HA."""
+    """Add switch for passed config_entry in HA."""
     # The hub is loaded from the associated hass.data entry that was created in the
     # __init__.async_setup_entry function
     hub = hass.data[DOMAIN][config_entry.entry_id]
 
     # Add all entities to HA
-    async_add_entities(HelloWorldCover(roller) for roller in hub.rollers)
+    async_add_entities(TRIGGERcmdSwitch(switch) for switch in hub.switches)
 
 
-# This entire class could be written to extend a base class to ensure common attributes
-# are kept identical/in sync. It's broken apart here between the Cover and Sensors to
-# be explicit about what is returned, and the comments outline where the overlap is.
-class HelloWorldCover(CoverEntity):
-    """Representation of a dummy Cover."""
+class TRIGGERcmdSwitch(SwitchEntity):
+    """Representation of a Switch."""
 
-    # Our dummy class is PUSH, so we tell HA that it should not be polled
+    # Our class is PUSH, so we tell HA that it should not be polled
     should_poll = False
-    # The supported features of a cover are done using a bitmask. Using the constants
-    # imported above, we can tell HA the features that are supported by this entity.
-    # If the supported features were dynamic (ie: different depending on the external
-    # device it connected to), then this should be function with an @property decorator.
-    supported_features = (
-        CoverEntityFeature.SET_POSITION
-        | CoverEntityFeature.OPEN
-        | CoverEntityFeature.CLOSE
-    )
 
-    def __init__(self, roller) -> None:
-        """Initialize the sensor."""
+    def __init__(self, switch) -> None:
+        """Initialize the switch."""
         # Usual setup is done here. Callbacks are added in async_added_to_hass.
-        self._roller = roller
-
-        # A unique_id for this entity with in this domain. This means for example if you
-        # have a sensor on this cover, you must ensure the value returned is unique,
-        # which is done here by appending "_cover". For more information, see:
-        # https://developers.home-assistant.io/docs/entity_registry_index/#unique-id-requirements
-        # Note: This is NOT used to generate the user visible Entity ID used in automations.
-        self._attr_unique_id = f"{self._roller.roller_id}_cover"
+        self._switch = switch
+        self._name = switch.name
+        self._state = False
+        self._attr_unique_id = f"{self._switch.switch_id}_switch"
 
         # This is the name for this *entity*, the "name" attribute from "device_info"
         # is used as the device name for device screens in the UI. This name is used on
         # entity screens, and used to build the Entity ID that's used is automations etc.
-        self._attr_name = self._roller.name
+        self._attr_name = self._switch.name
 
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
         # Importantly for a push integration, the module that will be getting updates
-        # needs to notify HA of changes. The dummy device has a registercallback
+        # needs to notify HA of changes. The device has a registercallback
         # method, so to this we add the 'self.async_write_ha_state' method, to be
         # called where ever there are changes.
         # The call back registration is done once this entity is registered with HA
         # (rather than in the __init__)
-        self._roller.register_callback(self.async_write_ha_state)
+        self._switch.register_callback(self.async_write_ha_state)
 
     async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
         # The opposite of async_added_to_hass. Remove any registered call backs here.
-        self._roller.remove_callback(self.async_write_ha_state)
+        self._switch.remove_callback(self.async_write_ha_state)
 
     # Information about the devices that is partially visible in the UI.
     # The most critical thing here is to give this entity a name so it is displayed
@@ -108,20 +88,20 @@ class HelloWorldCover(CoverEntity):
     def device_info(self) -> DeviceInfo:
         """Information about this entity/device."""
         return {
-            "identifiers": {(DOMAIN, self._roller.roller_id)},
+            "identifiers": {(DOMAIN, self._switch.switch_id)},
             # If desired, the name for the device could be different to the entity
             "name": str(self.name),
-            "sw_version": self._roller.firmware_version,
-            "model": self._roller.model,
-            "manufacturer": self._roller.hub.manufacturer,
+            "sw_version": self._switch.firmware_version,
+            "model": self._switch.model,
+            "manufacturer": self._switch.hub.manufacturer,
         }
 
     # This property is important to let HA know if this entity is online or not.
     # If an entity is offline (return False), the UI will reflect this.
     @property
     def available(self) -> bool:
-        """Return True if roller and hub is available."""
-        return self._roller.online and self._roller.hub.online
+        """Return True if switch and hub is available."""
+        return self._switch.online and self._switch.hub.online
 
     # The following properties are how HA knows the current state of the device.
     # These must return a value from memory, not make a live query to the device/hub
@@ -131,36 +111,36 @@ class HelloWorldCover(CoverEntity):
     # The properties that are expected for a cover are based on the supported_features
     # property of the object. In the case of a cover, see the following for more
     # details: https://developers.home-assistant.io/docs/core/entity/cover/
-    @property
-    def current_cover_position(self):
-        """Return the current position of the cover."""
-        return self._roller.position
 
     @property
-    def is_closed(self) -> bool:
-        """Return if the cover is closed, same as position 0."""
-        return self._roller.position == 0
+    def name(self) -> str:
+        """Return the display name of this switch."""
+        return self._name
 
     @property
-    def is_closing(self) -> bool:
-        """Return if the cover is closing or not."""
-        return self._roller.moving < 0
+    def is_on(self) -> bool | None:
+        """Return true if switch is on."""
+        return self._state
 
-    @property
-    def is_opening(self) -> bool:
-        """Return if the cover is opening or not."""
-        return self._roller.moving > 0
+    # @is_on.setter
+    # def is_on(self, value):
+    #     _LOGGER.info(f"{self.name} is_on = {value}")
+    #     self._is_on = value
 
-    # These methods allow HA to tell the actual device what to do. In this case, move
-    # the cover to the desired position, or open and close it all the way.
-    async def async_open_cover(self, **kwargs: Any) -> None:
-        """Open the cover."""
-        await self._roller.set_position(100)
+    async def async_turn_on(self, **kwargs):
+        """Turn the switch on."""
+        self._state = True
+        self.async_write_ha_state()
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
-        """Close the cover."""
-        await self._roller.set_position(0)
+    async def async_turn_off(self, **kwargs):
+        """Turn the switch off."""
+        self._state = False
+        self.async_write_ha_state()
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
-        """Close the cover."""
-        await self._roller.set_position(kwargs[ATTR_POSITION])
+    # def update(self) -> None:
+    #     """Fetch new state data for this switch.
+
+    #     This is the only method that should fetch new data for Home Assistant.
+    #     """
+    #     self._switch.update()
+    #     self._is_on = self._switch.is_on()

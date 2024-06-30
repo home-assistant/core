@@ -10,7 +10,7 @@ from .const import DOMAIN
 
 # List of platforms to support. There should be a matching .py file for each,
 # eg <cover.py> and <sensor.py>
-PLATFORMS: list[str] = ["cover", "sensor"]
+PLATFORMS: list[str] = ["switch"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
