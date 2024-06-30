@@ -1557,7 +1557,7 @@ pigpio==1.78
 pilight==0.1.1
 
 # homeassistant.components.dominos
-pizzapi==0.0.3
+pizzapi==0.0.6
 
 # homeassistant.components.plex
 plexauth==0.0.6
