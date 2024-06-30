@@ -108,18 +108,25 @@ class GoogleCloudTTSProvider(Provider):
 
     async def async_get_tts_audio(self, message, language, options):
         """Load TTS from google."""
-        options = self._options_schema(options)
+        try:
+            options = self._options_schema(options)
+        except vol.Invalid as err:
+            _LOGGER.error("Error: %s when validating options: %s", err, options)
+            return None, None
 
         encoding = options[CONF_ENCODING]
+        gender = texttospeech.SsmlVoiceGender[options[CONF_GENDER]]
         voice = options[CONF_VOICE]
-        if voice and not voice.startswith(language):
-            language = voice[:5]
+        if voice:
+            gender = None
+            if not voice.startswith(language):
+                language = voice[:5]
 
         request = texttospeech.SynthesizeSpeechRequest(
             input=texttospeech.SynthesisInput(**{options[CONF_TEXT_TYPE]: message}),
             voice=texttospeech.VoiceSelectionParams(
                 language_code=language,
-                ssml_gender=texttospeech.SsmlVoiceGender[options[CONF_GENDER]],
+                ssml_gender=gender,
                 name=voice,
             ),
             audio_config=texttospeech.AudioConfig(
