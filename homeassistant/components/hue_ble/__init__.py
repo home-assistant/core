@@ -9,7 +9,6 @@ from homeassistant.components.bluetooth import (
     async_scanner_count,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -21,9 +20,10 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the integration from a config entry."""
 
-    address = str(entry.data.get(CONF_MAC))
+    assert entry.unique_id is not None
+    address = entry.unique_id.upper()
 
-    ble_device = async_ble_device_from_address(hass, address.upper(), connectable=True)
+    ble_device = async_ble_device_from_address(hass, address, connectable=True)
 
     if ble_device is None:
         count_scanners = async_scanner_count(hass, connectable=True)
