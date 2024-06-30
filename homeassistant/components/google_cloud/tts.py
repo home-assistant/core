@@ -1,9 +1,9 @@
 """Support for the Google Cloud TTS service."""
 
-import asyncio
 import logging
 import os
 
+from google.api_core.exceptions import GoogleAPIError
 from google.cloud import texttospeech
 import voluptuous as vol
 
@@ -210,11 +210,11 @@ class GoogleCloudTTSProvider(Provider):
         self._text_type = text_type
 
         if key_file:
-            self._client = texttospeech.TextToSpeechClient.from_service_account_json(
-                key_file
+            self._client = (
+                texttospeech.TextToSpeechAsyncClient.from_service_account_json(key_file)
             )
         else:
-            self._client = texttospeech.TextToSpeechClient()
+            self._client = texttospeech.TextToSpeechAsyncClient()
 
     @property
     def supported_languages(self):
@@ -261,45 +261,31 @@ class GoogleCloudTTSProvider(Provider):
         )
         options = options_schema(options)
 
-        _encoding = options[CONF_ENCODING]
-        _voice = options[CONF_VOICE]
-        if _voice and not _voice.startswith(language):
-            language = _voice[:5]
+        encoding = options[CONF_ENCODING]
+        voice = options[CONF_VOICE]
+        if voice and not voice.startswith(language):
+            language = voice[:5]
 
-        try:
-            params = {options[CONF_TEXT_TYPE]: message}
-            synthesis_input = texttospeech.SynthesisInput(**params)
-
-            voice = texttospeech.VoiceSelectionParams(
+        request = texttospeech.SynthesizeSpeechRequest(
+            input=texttospeech.SynthesisInput(**{options[CONF_TEXT_TYPE]: message}),
+            voice=texttospeech.VoiceSelectionParams(
                 language_code=language,
                 ssml_gender=texttospeech.SsmlVoiceGender[options[CONF_GENDER]],
-                name=_voice,
-            )
-
-            audio_config = texttospeech.AudioConfig(
-                audio_encoding=texttospeech.AudioEncoding[_encoding],
+                name=voice,
+            ),
+            audio_config=texttospeech.AudioConfig(
+                audio_encoding=texttospeech.AudioEncoding[encoding],
                 speaking_rate=options[CONF_SPEED],
                 pitch=options[CONF_PITCH],
                 volume_gain_db=options[CONF_GAIN],
                 effects_profile_id=options[CONF_PROFILES],
-            )
+            ),
+        )
 
-            request = {
-                "voice": voice,
-                "audio_config": audio_config,
-                "input": synthesis_input,
-            }
+        try:
+            response = await self._client.synthesize_speech(request, timeout=10)
+        except GoogleAPIError as err:
+            _LOGGER.error("Error occurred during Google Cloud TTS call: %s", err)
+            return None, None
 
-            async with asyncio.timeout(10):
-                assert self.hass
-                response = await self.hass.async_add_executor_job(
-                    self._client.synthesize_speech, request
-                )
-                return _encoding, response.audio_content
-
-        except TimeoutError as ex:
-            _LOGGER.error("Timeout for Google Cloud TTS call: %s", ex)
-        except Exception:
-            _LOGGER.exception("Error occurred during Google Cloud TTS call")
-
-        return None, None
+        return encoding, response.audio_content
