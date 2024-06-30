@@ -48,11 +48,6 @@ class HaHueBLE(LightEntity):
         self._name = self._light.name
         self._address = self._light.address
         self._attr_unique_id = self._light.address
-        self._attr_available = self._light.available
-        self._attr_is_on = self._light.power_state
-        self._attr_brightness = self._light.brightness
-        self._attr_color_temp = self._light.colour_temp
-        self._attr_xy_color = self._light.colour_xy
         self._attr_min_mireds = self._light.minimum_mireds
         self._attr_max_mireds = self._light.maximum_mireds
         self._attr_device_info = DeviceInfo(
@@ -75,15 +70,33 @@ class HaHueBLE(LightEntity):
     def _state_change_callback(self) -> None:
         """Run when light informs of state update. Updates local properties."""
 
-        _LOGGER.debug("Received state notification from light %s", self.name)
-
-        self._attr_available = self._light.available
-        self._attr_is_on = self._light.power_state
-        self._attr_brightness = self._light.brightness
-        self._attr_color_temp = self._light.colour_temp
-        self._attr_xy_color = self._light.colour_xy
-
+        _LOGGER.debug("Received state notification from light %s", self._name)
         self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Is light available."""
+        return self._light.available
+
+    @property
+    def is_on(self) -> bool:
+        """Is light on."""
+        return self._light.power_state
+
+    @property
+    def brightness(self) -> int:
+        """Light brightness."""
+        return self._light.brightness
+
+    @property
+    def color_temp(self) -> int:
+        """Light color temperature in mireds."""
+        return self._light.colour_temp
+
+    @property
+    def xy_color(self) -> tuple[float, float]:
+        """XY color of light."""
+        return self._light.colour_xy
 
     async def async_update(self) -> None:
         """Fetch latest state from light and make available via properties."""
