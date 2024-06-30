@@ -13,6 +13,7 @@ from homeassistant.components.light import (
     ATTR_XY_COLOR,
     ColorMode,
     LightEntity,
+    LightEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -35,6 +36,10 @@ async def async_setup_entry(
 
 class HaHueBLE(LightEntity):
     """Representation of a light."""
+
+    entity_description = LightEntityDescription(
+        key="hue_light", has_entity_name=True, name=None
+    )
 
     def __init__(self, api: HueBleLight) -> None:
         """Initialize the light object. Does not connect."""
@@ -75,7 +80,6 @@ class HaHueBLE(LightEntity):
         self._name = self._light.name
         self._address = self._light.address
         self._attr_available = self._light.available
-        self._attr_name = self._name
         self._attr_is_on = self._light.power_state
         self._attr_brightness = self._light.brightness
         self._attr_color_temp = self._light.colour_temp
