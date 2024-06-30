@@ -54,7 +54,7 @@ PyChromecast==14.0.1
 PyFlick==0.0.2
 
 # homeassistant.components.flume
-PyFlume==0.8.7
+PyFlume==0.6.5
 
 # homeassistant.components.fronius
 PyFronius==0.7.3
@@ -404,7 +404,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webostv
-aiowebostv==0.4.0
+aiowebostv==0.4.1
 
 # homeassistant.components.withings
 aiowithings==3.0.2
@@ -974,7 +974,7 @@ google-api-python-client==2.71.0
 google-cloud-pubsub==2.13.11
 
 # homeassistant.components.google_cloud
-google-cloud-texttospeech==2.12.3
+google-cloud-texttospeech==2.16.3
 
 # homeassistant.components.google_generative_ai_conversation
 google-generativeai==0.6.0
