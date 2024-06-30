@@ -10,7 +10,7 @@ from madvr.madvr import HeartBeatError, Madvr
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 
 from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 from .coordinator import MadVRCoordinator
@@ -88,19 +88,3 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
             raise CannotConnect("Connection failed")
 
         _LOGGER.debug("Connection test successful")
-
-    async def async_step_import(
-        self, import_config: dict[str, Any]
-    ) -> ConfigFlowResult:
-        """Import a config entry from configuration.yaml."""
-        config = {
-            CONF_NAME: import_config.get(CONF_NAME, DEFAULT_NAME),
-            CONF_HOST: import_config.get(CONF_HOST, ""),
-            CONF_PORT: import_config.get(CONF_PORT, DEFAULT_PORT),
-        }
-
-        result = await self.async_step_user(config)
-
-        if errors := result.get("errors"):
-            return self.async_abort(reason=errors["base"])
-        return result
