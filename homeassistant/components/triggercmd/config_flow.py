@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import jwt
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -66,7 +67,8 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
     # "Title" is what is displayed to the user for this hub device
     # It is stored internally in HA as part of the device config.
     # See `async_step_user` below for how this is used
-    return {"title": data["token"]}
+    tokenData = jwt.decode(data["token"], options={"verify_signature": False})
+    return {"title": tokenData["id"]}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
