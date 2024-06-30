@@ -920,6 +920,14 @@ def test_event_repr() -> None:
     )
 
 
+def test_event_origin_idx() -> None:
+    """Test the EventOrigin idx."""
+    assert ha.EventOrigin.remote is ha.EventOrigin.remote
+    assert ha.EventOrigin.local is ha.EventOrigin.local
+    assert ha.EventOrigin.local.idx == 0
+    assert ha.EventOrigin.remote.idx == 1
+
+
 def test_event_as_dict() -> None:
     """Test an Event as dictionary."""
     event_type = "some_type"
