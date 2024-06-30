@@ -48,7 +48,7 @@ async def test_device_list_timeout(
     access_token: None,
     device_list_timeout: None,
 ) -> None:
-    """Test load and unload of a ConfigEntry."""
+    """Test error handling for a timeout when listing devices."""
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -62,7 +62,7 @@ async def test_reauth_when_unauthorized(
     access_token: None,
     device_list_unauthorized: None,
 ) -> None:
-    """Test load and unload of a ConfigEntry."""
+    """Test error handling for an authentication error when listing devices."""
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -81,7 +81,7 @@ async def test_list_notifications_service(
     device_list: None,
     notifications_list: None,
 ) -> None:
-    """Test load and unload of a ConfigEntry."""
+    """Test the list notifications service."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is config_entries.ConfigEntryState.LOADED
@@ -110,7 +110,7 @@ async def test_list_notifications_service_config_entry_errors(
     device_list: None,
     notifications_list: None,
 ) -> None:
-    """Test load and unload of a ConfigEntry."""
+    """Test error handling for notification service with invalid config entries."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is config_entries.ConfigEntryState.LOADED
