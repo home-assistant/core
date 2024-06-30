@@ -221,7 +221,7 @@ scapy>=2.5.0
 tuf>=4.0.0
 
 # https://github.com/jd/tenacity/issues/471
-tenacity<8.4.0
+tenacity!=8.4.0
 """
 
 GENERATED_MESSAGE = (

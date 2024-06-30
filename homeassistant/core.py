@@ -96,7 +96,7 @@ from .helpers.deprecation import (
     dir_with_deprecated_constants,
 )
 from .helpers.json import json_bytes, json_fragment
-from .helpers.typing import UNDEFINED, UndefinedType
+from .helpers.typing import UNDEFINED, UndefinedType, VolSchemaType
 from .util import dt as dt_util, location
 from .util.async_ import (
     cancelling,
@@ -158,12 +158,29 @@ class ConfigSource(enum.StrEnum):
     YAML = "yaml"
 
 
-class EventStateChangedData(TypedDict):
-    """EventStateChanged data."""
+class EventStateEventData(TypedDict):
+    """Base class for EVENT_STATE_CHANGED and EVENT_STATE_REPORTED data."""
 
     entity_id: str
-    old_state: State | None
     new_state: State | None
+
+
+class EventStateChangedData(EventStateEventData):
+    """EVENT_STATE_CHANGED data.
+
+    A state changed event is fired when on state write when the state is changed.
+    """
+
+    old_state: State | None
+
+
+class EventStateReportedData(EventStateEventData):
+    """EVENT_STATE_REPORTED data.
+
+    A state reported event is fired when on state write when the state is unchanged.
+    """
+
+    old_last_reported: datetime.datetime
 
 
 # SOURCE_* are deprecated as of Home Assistant 2022.2, use ConfigSource instead
@@ -1291,6 +1308,11 @@ class EventOrigin(enum.Enum):
         """Return the event."""
         return self.value
 
+    @cached_property
+    def idx(self) -> int:
+        """Return the index of the origin."""
+        return next((idx for idx, origin in enumerate(EventOrigin) if origin is self))
+
 
 class Event(Generic[_DataT]):
     """Representation of an event within the bus."""
@@ -1604,26 +1626,7 @@ class EventBus:
                 raise HomeAssistantError(
                     f"Event filter is required for event {event_type}"
                 )
-            # Special case for EVENT_STATE_REPORTED, we also want to listen to
-            # EVENT_STATE_CHANGED
-            self._listeners[EVENT_STATE_REPORTED].append(filterable_job)
-            self._listeners[EVENT_STATE_CHANGED].append(filterable_job)
-            return functools.partial(
-                self._async_remove_multiple_listeners,
-                (EVENT_STATE_REPORTED, EVENT_STATE_CHANGED),
-                filterable_job,
-            )
         return self._async_listen_filterable_job(event_type, filterable_job)
-
-    @callback
-    def _async_remove_multiple_listeners(
-        self,
-        keys: Iterable[EventType[_DataT] | str],
-        filterable_job: _FilterableJobType[Any],
-    ) -> None:
-        """Remove multiple listeners for specific event_types."""
-        for key in keys:
-            self._async_remove_listener(key, filterable_job)
 
     @callback
     def _async_listen_filterable_job(
@@ -2278,7 +2281,8 @@ class StateMachine:
             old_last_reported = old_state.last_reported  # type: ignore[union-attr]
             old_state.last_reported = now  # type: ignore[union-attr]
             old_state.last_reported_timestamp = timestamp  # type: ignore[union-attr]
-            self._bus.async_fire_internal(
+            # Avoid creating an EventStateReportedData
+            self._bus.async_fire_internal(  # type: ignore[misc]
                 EVENT_STATE_REPORTED,
                 {
                     "entity_id": entity_id,
@@ -2355,7 +2359,7 @@ class Service:
             | EntityServiceResponse
             | None,
         ],
-        schema: vol.Schema | None,
+        schema: VolSchemaType | None,
         domain: str,
         service: str,
         context: Context | None = None,
@@ -2503,7 +2507,7 @@ class ServiceRegistry:
             | EntityServiceResponse
             | None,
         ],
-        schema: vol.Schema | None = None,
+        schema: VolSchemaType | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
         job_type: HassJobType | None = None,
     ) -> None:
@@ -2530,7 +2534,7 @@ class ServiceRegistry:
             | EntityServiceResponse
             | None,
         ],
-        schema: vol.Schema | None = None,
+        schema: VolSchemaType | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
         job_type: HassJobType | None = None,
     ) -> None:

@@ -37,6 +37,7 @@ async def test_full_flow(
         CONF_HOST: "demo.mealie.io",
         CONF_API_TOKEN: "token",
     }
+    assert result["result"].unique_id == "bf1c62fe-4941-4332-9886-e54e88dbdba0"
 
 
 @pytest.mark.parametrize(
@@ -55,7 +56,7 @@ async def test_flow_errors(
     error: str,
 ) -> None:
     """Test flow errors."""
-    mock_mealie_client.get_mealplan_today.side_effect = exception
+    mock_mealie_client.get_user_info.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -72,7 +73,7 @@ async def test_flow_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    mock_mealie_client.get_mealplan_today.side_effect = None
+    mock_mealie_client.get_user_info.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

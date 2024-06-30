@@ -175,7 +175,9 @@ class SchemaCommonFlowHandler:
                         and key.default is not vol.UNDEFINED
                         and key not in self._options
                     ):
-                        user_input[str(key.schema)] = key.default()
+                        user_input[str(key.schema)] = cast(
+                            Callable[[], Any], key.default
+                        )()
 
         if user_input is not None and form_step.validate_user_input is not None:
             # Do extra validation of user input
@@ -215,7 +217,7 @@ class SchemaCommonFlowHandler:
                     )
                 ):
                     # Key not present, delete keys old value (if present) too
-                    values.pop(key, None)
+                    values.pop(key.schema, None)
 
     async def _show_next_step_or_create_entry(
         self, form_step: SchemaFlowFormStep
@@ -491,7 +493,7 @@ def wrapped_entity_config_entry_title(
 def entity_selector_without_own_entities(
     handler: SchemaOptionsFlowHandler,
     entity_selector_config: selector.EntitySelectorConfig,
-) -> vol.Schema:
+) -> selector.EntitySelector:
     """Return an entity selector which excludes own entities."""
     entity_registry = er.async_get(handler.hass)
     entities = er.async_entries_for_config_entry(

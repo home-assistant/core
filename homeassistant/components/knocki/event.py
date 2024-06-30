@@ -3,7 +3,7 @@
 from knocki import Event, EventType, KnockiClient, Trigger
 
 from homeassistant.components.event import EventEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -17,10 +17,26 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Knocki from a config entry."""
-    entry_data = entry.runtime_data
+    coordinator = entry.runtime_data
+
+    added_triggers = set(coordinator.data)
+
+    @callback
+    def _async_add_entities() -> None:
+        current_triggers = set(coordinator.data)
+        new_triggers = current_triggers - added_triggers
+        added_triggers.update(new_triggers)
+        if new_triggers:
+            async_add_entities(
+                KnockiTrigger(coordinator.data[trigger], coordinator.client)
+                for trigger in new_triggers
+            )
+
+    coordinator.async_add_listener(_async_add_entities)
 
     async_add_entities(
-        KnockiTrigger(trigger, entry_data.client) for trigger in entry_data.triggers
+        KnockiTrigger(trigger, coordinator.client)
+        for trigger in coordinator.data.values()
     )
 
 
@@ -32,6 +48,7 @@ class KnockiTrigger(EventEntity):
 
     _attr_event_types = [EVENT_TRIGGERED]
     _attr_has_entity_name = True
+    _attr_should_poll = False
     _attr_translation_key = "knocki"
 
     def __init__(self, trigger: Trigger, client: KnockiClient) -> None:

@@ -1,6 +1,7 @@
 """The tests for MQTT device triggers."""
 
 import json
+from typing import Any
 
 import pytest
 from pytest_unordered import unordered
@@ -194,7 +195,6 @@ async def test_update_remove_triggers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test triggers can be updated and removed."""
     await mqtt_mock_entry()
@@ -1016,10 +1016,10 @@ async def test_attach_remove(
     await hass.async_block_till_done()
     device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
 
-    calls = []
+    callback_calls: list[dict[str, Any]] = []
 
-    def callback(trigger):
-        calls.append(trigger["trigger"]["payload"])
+    def trigger_callback(trigger):
+        callback_calls.append(trigger["trigger"]["payload"])
 
     remove = await async_initialize_triggers(
         hass,
@@ -1033,7 +1033,7 @@ async def test_attach_remove(
                 "subtype": "button_1",
             },
         ],
-        callback,
+        trigger_callback,
         DOMAIN,
         "mock-name",
         _LOGGER.log,
@@ -1042,8 +1042,8 @@ async def test_attach_remove(
     # Fake short press.
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0] == "short_press"
+    assert len(callback_calls) == 1
+    assert callback_calls[0] == "short_press"
 
     # Remove the trigger
     remove()
@@ -1052,7 +1052,7 @@ async def test_attach_remove(
     # Verify the triggers are no longer active
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(callback_calls) == 1
 
 
 async def test_attach_remove_late(
@@ -1079,10 +1079,10 @@ async def test_attach_remove_late(
     await hass.async_block_till_done()
     device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
 
-    calls = []
+    callback_calls: list[dict[str, Any]] = []
 
-    def callback(trigger):
-        calls.append(trigger["trigger"]["payload"])
+    def trigger_callback(trigger):
+        callback_calls.append(trigger["trigger"]["payload"])
 
     remove = await async_initialize_triggers(
         hass,
@@ -1096,7 +1096,7 @@ async def test_attach_remove_late(
                 "subtype": "button_1",
             },
         ],
-        callback,
+        trigger_callback,
         DOMAIN,
         "mock-name",
         _LOGGER.log,
@@ -1108,8 +1108,8 @@ async def test_attach_remove_late(
     # Fake short press.
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0] == "short_press"
+    assert len(callback_calls) == 1
+    assert callback_calls[0] == "short_press"
 
     # Remove the trigger
     remove()
@@ -1118,7 +1118,7 @@ async def test_attach_remove_late(
     # Verify the triggers are no longer active
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(callback_calls) == 1
 
 
 async def test_attach_remove_late2(
@@ -1145,10 +1145,10 @@ async def test_attach_remove_late2(
     await hass.async_block_till_done()
     device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
 
-    calls = []
+    callback_calls: list[dict[str, Any]] = []
 
-    def callback(trigger):
-        calls.append(trigger["trigger"]["payload"])
+    def trigger_callback(trigger):
+        callback_calls.append(trigger["trigger"]["payload"])
 
     remove = await async_initialize_triggers(
         hass,
@@ -1162,7 +1162,7 @@ async def test_attach_remove_late2(
                 "subtype": "button_1",
             },
         ],
-        callback,
+        trigger_callback,
         DOMAIN,
         "mock-name",
         _LOGGER.log,
@@ -1178,7 +1178,7 @@ async def test_attach_remove_late2(
     # Verify the triggers are no longer active
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(callback_calls) == 0
 
     # Try to remove the trigger twice
     with pytest.raises(HomeAssistantError):

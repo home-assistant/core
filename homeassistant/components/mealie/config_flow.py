@@ -28,14 +28,13 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
         if user_input:
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             client = MealieClient(
                 user_input[CONF_HOST],
                 token=user_input[CONF_API_TOKEN],
                 session=async_get_clientsession(self.hass),
             )
             try:
-                await client.get_mealplan_today()
+                info = await client.get_user_info()
             except MealieConnectionError:
                 errors["base"] = "cannot_connect"
             except MealieAuthenticationError:
@@ -44,6 +43,8 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected error")
                 errors["base"] = "unknown"
             else:
+                await self.async_set_unique_id(info.user_id)
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title="Mealie",
                     data=user_input,

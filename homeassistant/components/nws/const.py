@@ -78,8 +78,8 @@ HOURLY = "hourly"
 
 OBSERVATION_VALID_TIME = timedelta(minutes=60)
 FORECAST_VALID_TIME = timedelta(minutes=45)
-# A lot of stations update once hourly plus some wiggle room
-UPDATE_TIME_PERIOD = timedelta(minutes=70)
+# Ask for observations for last four hours
+UPDATE_TIME_PERIOD = timedelta(minutes=240)
 
 DEBOUNCE_TIME = 10 * 60  # in seconds
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=10)

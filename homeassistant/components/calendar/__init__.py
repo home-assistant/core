@@ -29,12 +29,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-    time_period_str,
-)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_time
@@ -74,6 +69,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "calendar"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = datetime.timedelta(seconds=60)
 
 # Don't support rrules more often than daily
@@ -469,7 +466,7 @@ def extract_offset(summary: str, offset_prefix: str) -> tuple[str, datetime.time
             else:
                 time = f"0:{time}"
 
-        offset_time = time_period_str(time)
+        offset_time = cv.time_period_str(time)
         summary = (summary[: search.start()] + summary[search.end() :]).strip()
         return (summary, offset_time)
     return (summary, datetime.timedelta())
