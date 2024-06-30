@@ -5,6 +5,7 @@ import os
 
 from google.api_core.exceptions import GoogleAPIError
 from google.cloud import texttospeech
+import voluptuous as vol
 
 from homeassistant.components.tts import (
     CONF_LANG,
