@@ -8,9 +8,10 @@ from __future__ import annotations
 # for more information.
 # This dummy hub always returns 3 rollers.
 import asyncio
+from collections.abc import Callable
 import random
 
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import HomeAssistant
 
 
 class Hub:
@@ -51,8 +52,9 @@ class Roller:
         self.hub = hub
         self.name = name
         # self._callbacks = set()  # original
+        self._callbacks: set[Callable[[], None]] = set()
         # self._callbacks: dict[str, set[CALLBACK_TYPE]] = {}
-        self._callback: CALLBACK_TYPE | None = None
+        # self._callbacks: CALLBACK_TYPE | None = None
 
         self._loop = asyncio.get_event_loop()
         self._target_position = 100
@@ -94,21 +96,21 @@ class Roller:
         self.moving = 0
         await self.publish_updates()
 
-    # def register_callback(self, callback: Callable[[], None]) -> None:
-    #     """Register callback, called when Roller changes state."""
-    #     self._callbacks.add(callback)
+    def register_callback(self, callback: Callable[[], None]) -> None:
+        """Register callback, called when Roller changes state."""
+        self._callbacks.add(callback)
 
-    # def remove_callback(self, callback: Callable[[], None]) -> None:
-    #     """Remove previously registered callback."""
-    #     self._callbacks.discard(callback)
+    def remove_callback(self, callback: Callable[[], None]) -> None:
+        """Remove previously registered callback."""
+        self._callbacks.discard(callback)
 
     # In a real implementation, this library would call it's call backs when it was
     # notified of any state changeds for the relevant device.
     async def publish_updates(self) -> None:
         """Schedule call all registered callbacks."""
         self._current_position = self._target_position
-        # for callback in self._callbacks:
-        #     callback()
+        for callback in self._callbacks:
+            callback()
 
     @property
     def online(self) -> float:
