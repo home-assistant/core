@@ -47,7 +47,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         light = HueBleLight(ble_device)
 
         await light.connect()
-        if not light.authenticated:
+
+        if light.authenticated is None:
+            _LOGGER.warning(
+                "Unable to determine if light authenticated, proceeding anyway"
+            )
+        elif not light.authenticated:
             raise InvalidAuth
 
         if not light.connected:

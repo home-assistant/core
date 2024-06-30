@@ -199,6 +199,49 @@ async def test_form_not_authenticated(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_authentication_unknown(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test form when authentication status is unknown."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with (
+        patch(
+            "homeassistant.components.hue_ble.config_flow.async_ble_device_from_address",
+            return_value=generate_ble_device(TEST_DEVICE_MAC, TEST_DEVICE_NAME),
+        ),
+        patch(
+            "homeassistant.components.hue_ble.config_flow.HueBleLight.connect",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.hue_ble.config_flow.HueBleLight.authenticated",
+            return_value=None,
+            new_callable=PropertyMock,
+        ),
+        patch(
+            "homeassistant.components.hue_ble.config_flow.HueBleLight.connected",
+            return_value=True,
+            new_callable=PropertyMock,
+        ),
+        patch(
+            "homeassistant.components.hue_ble.config_flow.HueBleLight.poll_state",
+            return_value=(True, []),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_NAME: TEST_DEVICE_NAME, CONF_MAC: TEST_DEVICE_MAC},
+        )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_DEVICE_NAME
+    assert result["result"].unique_id == dr.format_mac(TEST_DEVICE_MAC)
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_form_cannot_connect(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
