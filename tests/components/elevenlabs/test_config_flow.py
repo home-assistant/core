@@ -37,7 +37,7 @@ async def test_user_step(
 
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"ElevenLabs {DEFAULT_MODEL}"
+    assert result["title"] == f"{DEFAULT_MODEL}"
     assert result["data"] == {
         "api_key": "api_key",
         CONF_MODEL: DEFAULT_MODEL,

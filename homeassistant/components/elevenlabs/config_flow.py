@@ -61,7 +61,7 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def _get_user_schema_authenticated(self) -> vol.Schema:
         assert self.voices and self.models
-        first_voice_id = next(iter(self.voices.keys()))
+        first_voice_id = next(iter(self.voices))
 
         return vol.Schema(
             {
@@ -110,7 +110,7 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input.setdefault(CONF_MODEL, DEFAULT_MODEL)
         self.user_info = user_input
         return self.async_create_entry(
-            title=f"ElevenLabs {self.models[user_input[CONF_MODEL]]}", data=user_input
+            title=f"{self.models[user_input[CONF_MODEL]]}", data=user_input
         )
 
     @staticmethod
@@ -144,7 +144,7 @@ class ElevenLabsOptionsFlow(OptionsFlow):
 
         if user_input is not None:
             return self.async_create_entry(
-                title=f"ElevenLabs {self.models[user_input[CONF_MODEL]]}",
+                title=f"{self.models[user_input[CONF_MODEL]]}",
                 data=user_input,
             )
 

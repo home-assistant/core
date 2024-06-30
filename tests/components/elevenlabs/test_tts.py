@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from elevenlabs.core import ApiError
+from elevenlabs.types import GetVoicesResponse
 import pytest
 
 from homeassistant.components import tts
@@ -19,6 +20,8 @@ from homeassistant.components.media_player import (
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY
 from homeassistant.core import HomeAssistant, ServiceCall
+
+from .const import MOCK_MODELS, MOCK_VOICES
 
 from tests.common import MockConfigEntry, async_mock_service
 from tests.components.tts.common import retrieve_media
@@ -85,7 +88,13 @@ async def mock_config_entry_setup(
     }
     config_entry = MockConfigEntry(domain=DOMAIN, data=default_config | config)
     config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    client_mock = AsyncMock()
+    client_mock.voices.get_all.return_value = GetVoicesResponse(voices=MOCK_VOICES)
+    client_mock.models.get_all.return_value = MOCK_MODELS
+    with patch(
+        "homeassistant.components.elevenlabs.AsyncElevenLabs", return_value=client_mock
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -104,7 +113,7 @@ async def mock_config_entry_setup(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.elevenlabs_model1",
+                ATTR_ENTITY_ID: "tts.mock_title",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "voice2"},
@@ -150,7 +159,7 @@ async def test_tts_service_speak(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.elevenlabs_model1",
+                ATTR_ENTITY_ID: "tts.mock_title",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_LANGUAGE: "de",
@@ -160,7 +169,7 @@ async def test_tts_service_speak(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.elevenlabs_model1",
+                ATTR_ENTITY_ID: "tts.mock_title",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_LANGUAGE: "es",
@@ -206,7 +215,7 @@ async def test_tts_service_speak_lang_config(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.elevenlabs_model1",
+                ATTR_ENTITY_ID: "tts.mock_title",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
             },

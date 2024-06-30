@@ -12,7 +12,6 @@ from elevenlabs.types import Model, Voice
 
 from homeassistant.components import tts
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -20,6 +19,15 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import CONF_MODEL, CONF_VOICE, DEFAULT_MODEL
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def get_model_by_id(client: AsyncElevenLabs, model_id: str) -> Model | None:
+    """Get ElevenLabs model from their API by the model_id."""
+    models = await client.models.get_all()
+    for maybe_model in models:
+        if maybe_model.model_id == model_id:
+            return maybe_model
+    return None
 
 
 async def async_setup_entry(
@@ -32,20 +40,14 @@ async def async_setup_entry(
     default_voice_id = config_entry.options.get(
         CONF_VOICE, config_entry.data.get(CONF_VOICE)
     )
-    client = AsyncElevenLabs(api_key=config_entry.data[CONF_API_KEY])
+    client = config_entry.runtime_data.client
 
-    # Load model and voices here in async context
-    model: Model | None = None
-    models = await client.models.get_all()
+    # Get model and voices
+    model_id = config_entry.options.get(CONF_MODEL, config_entry.data.get(CONF_MODEL))
+    # Fallback to default
     model_id = model_id if model_id is not None else DEFAULT_MODEL
-    for maybe_model in models:
-        if maybe_model.model_id == model_id:
-            model = maybe_model
-            break
-
-    if (model is None) or (not model.languages):
-        raise ValueError(f"Failed to load model for id: {model_id}")
-
+    model = await get_model_by_id(client, model_id)
+    assert model is not None, "Model was not found in async_setup_entry"
     voices = (await client.voices.get_all()).voices
 
     async_add_entities(
@@ -78,7 +80,7 @@ class ElevenLabsTTSEntity(tts.TextToSpeechEntity):
         ]
         if voice_indices:
             self._voices.insert(0, self._voices.pop(voice_indices[0]))
-        self._attr_name = f"ElevenLabs {self._model.model_id}"
+        self._attr_name = config_entry.title
         self._attr_unique_id = config_entry.entry_id
         self._config_entry = config_entry
 
