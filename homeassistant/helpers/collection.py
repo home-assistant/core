@@ -642,8 +642,8 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
                 }
                 for change in change_set
             ]
-            for connection, msg_id in self._subscribers:
-                connection.send_message(websocket_api.event_message(msg_id, json_msg))
+            for conn, msg_id in self._subscribers:
+                conn.send_message(websocket_api.event_message(msg_id, json_msg))
 
         if not self._subscribers:
             self._remove_subscription = (
