@@ -17,6 +17,7 @@ from tests.common import MockConfigEntry
     [
         ("select.roborock_s7_maxv_mop_mode", "deep"),
         ("select.roborock_s7_maxv_mop_intensity", "mild"),
+        ("select.roborock_s7_maxv_selected_map", "Downstairs"),
     ],
 )
 async def test_update_success(

@@ -79,6 +79,10 @@ async def async_setup_entry(
         )
         is not None
     )
+    async_add_entities(
+        RoborockCurrentMapSelectEntity(f"selected_map_{coordinator.duid}", coordinator)
+        for coordinator in config_entry.runtime_data.v1
+    )
 
 
 class RoborockSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
@@ -112,3 +116,40 @@ class RoborockSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
     def current_option(self) -> str | None:
         """Get the current status of the select entity from device_status."""
         return self.entity_description.value_fn(self._device_status)
+
+
+class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
+    """A class to let you set the selected map on Roborock vacuum."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "selected_map"
+
+    def __init__(
+        self,
+        unique_id: str,
+        coordinator: RoborockDataUpdateCoordinator,
+    ) -> None:
+        """Create a select entity."""
+        super().__init__(unique_id, coordinator)
+
+    async def async_select_option(self, option: str) -> None:
+        """Set the option."""
+        for map_id in self.coordinator.maps:
+            if self.coordinator.maps[map_id].name == option:
+                await self.send(
+                    RoborockCommand.LOAD_MULTI_MAP,
+                    [map_id],
+                )
+                break
+
+    @property
+    def options(self) -> list[str]:
+        """Gets all of the names of rooms that we are currently aware of."""
+        return [roborock_map.name for roborock_map in self.coordinator.maps.values()]
+
+    @property
+    def current_option(self) -> str | None:
+        """Get the current status of the select entity from device_status."""
+        if self.coordinator.current_map is not None:
+            return self.coordinator.maps[self.coordinator.current_map].name
+        return None
