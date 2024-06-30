@@ -5,6 +5,7 @@ import logging
 from typing import Any
 
 from homeassistant.components.remote import RemoteEntity
+from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -63,7 +64,13 @@ class MadvrRemote(CoordinatorEntity[MadVRCoordinator], RemoteEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
         _LOGGER.debug("Turning on device")
-        await self.madvr_client.power_on()
+
+        # pass in the persisted mac to the library, if present
+        mac = self.coordinator.config_entry.data.get(CONF_MAC, "")
+        if not mac:
+            _LOGGER.error("No mac address found in config entry")
+            return
+        await self.madvr_client.power_on(mac=mac)
 
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
