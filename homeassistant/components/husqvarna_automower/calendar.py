@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 import logging
 
+from aioautomower.model import AutomowerCalendarEvent
 from ical.calendar import Calendar
 from ical.event import Event
 from ical.types.recur import Recur
@@ -54,21 +55,17 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
-        # now = dt_util.now()
-        # _LOGGER.debug("now: %s ", now)
-        # events = self.calendar.timeline_tz(now.tzinfo).active_after(now)
-        # _LOGGER.debug("events: %s ", events)
-        # return _get_calendar_event(self.mower_attributes.calendar.events[0])
-        # if event := next(events, None):
-        #     self._event = _get_calendar_event(event)
-        # else:
-        #     self._event = None
-        # return self._event
+        now = dt_util.now()
+        _LOGGER.debug("now: %s ", now)
+        events = self.calendar.timeline_tz(now.tzinfo).active_after(now)
+        _LOGGER.debug("events: %s ", events)
+        return _get_calendar_event2(self.mower_attributes.calendar.events[0])
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
+        _LOGGER.debug("start_date: %s ", start_date)
         schedule_no: dict = {}
         for event in self.mower_attributes.calendar.events:
             if event.work_area_id is not None:
@@ -101,19 +98,54 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
             start_date,
             end_date,
         )
-        test = [_get_calendar_event(event) for event in events]
-        _LOGGER.debug("test: %s ", test)
         return [_get_calendar_event(event) for event in events]
 
-    async def async_update(self) -> None:
-        """Update entity state with the next upcoming event."""
-        now = dt_util.now()
-        _LOGGER.debug("now: %s ", now)
-        events = self.calendar.timeline_tz(now.tzinfo).active_after(now)
-        if event := next(events, None):
-            self._event = _get_calendar_event(event)
-        else:
-            self._event = None
+    def _automower_to_ical_event(
+        self, event_list: list[AutomowerCalendarEvent]
+    ) -> list[CalendarEvent]:
+        """Return a Event from an API event."""
+        schedule_no: dict = {}
+        for event in event_list:
+            if event.work_area_id is not None:
+                schedule_no[event.work_area_id] = 0
+            if event.work_area_id is None:
+                schedule_no["-1"] = 0
+        test = Calendar()
+        for event in self.mower_attributes.calendar.events:
+            wa_name = ""
+            if event.work_area_id is not None:
+                if self.mower_attributes.work_areas is not None:
+                    _work_areas = self.mower_attributes.work_areas
+                    wa_name = f"{_work_areas[event.work_area_id].name} "
+                    schedule_no[event.work_area_id] = (
+                        schedule_no[event.work_area_id] + 1
+                    )
+                    number = schedule_no[event.work_area_id]
+            if event.work_area_id is None:
+                schedule_no["-1"] = schedule_no["-1"] + 1
+                number = schedule_no["-1"]
+            test.events.append(
+                Event(
+                    dtstart=event.start,
+                    dtend=event.end,
+                    rrule=Recur.from_rrule(event.rrule),
+                    summary=f"{wa_name}Schedule {number}",
+                )
+            )
+        return test
+
+
+def _get_calendar_event2(event: Event) -> CalendarEvent:
+    """Return a CalendarEvent from an API event."""
+
+    return CalendarEvent(
+        summary="ttest",
+        start=event.start,
+        end=event.end,
+        description="test",
+        uid=event.uid,
+        rrule=event.rrule,
+    )
 
 
 def _get_calendar_event(event: Event) -> CalendarEvent:
