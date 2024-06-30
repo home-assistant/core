@@ -262,15 +262,18 @@ class GoogleCloudTTSProvider(Provider):
         options = options_schema(options)
 
         encoding = options[CONF_ENCODING]
+        gender = texttospeech.SsmlVoiceGender[options[CONF_GENDER]]
         voice = options[CONF_VOICE]
-        if voice and not voice.startswith(language):
-            language = voice[:5]
+        if voice:
+            gender = None
+            if not voice.startswith(language):
+                language = voice[:5]
 
         request = texttospeech.SynthesizeSpeechRequest(
             input=texttospeech.SynthesisInput(**{options[CONF_TEXT_TYPE]: message}),
             voice=texttospeech.VoiceSelectionParams(
                 language_code=language,
-                ssml_gender=texttospeech.SsmlVoiceGender[options[CONF_GENDER]],
+                ssml_gender=gender,
                 name=voice,
             ),
             audio_config=texttospeech.AudioConfig(
