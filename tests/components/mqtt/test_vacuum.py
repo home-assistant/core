@@ -507,11 +507,7 @@ async def test_update_with_json_attrs_not_dict(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        vacuum.DOMAIN,
-        DEFAULT_CONFIG_2,
+        hass, mqtt_mock_entry, caplog, vacuum.DOMAIN, DEFAULT_CONFIG_2
     )
 
 
@@ -522,11 +518,7 @@ async def test_update_with_json_attrs_bad_json(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        vacuum.DOMAIN,
-        DEFAULT_CONFIG_2,
+        hass, mqtt_mock_entry, caplog, vacuum.DOMAIN, DEFAULT_CONFIG_2
     )
 
 
@@ -682,20 +674,8 @@ async def test_entity_debug_info_message(
 @pytest.mark.parametrize(
     ("service", "topic", "parameters", "payload", "template"),
     [
-        (
-            vacuum.SERVICE_START,
-            "command_topic",
-            None,
-            "start",
-            None,
-        ),
-        (
-            vacuum.SERVICE_CLEAN_SPOT,
-            "command_topic",
-            None,
-            "clean_spot",
-            None,
-        ),
+        (vacuum.SERVICE_START, "command_topic", None, "start", None),
+        (vacuum.SERVICE_CLEAN_SPOT, "command_topic", None, "clean_spot", None),
         (
             vacuum.SERVICE_SET_FAN_SPEED,
             "set_fan_speed_topic",
@@ -710,13 +690,7 @@ async def test_entity_debug_info_message(
             "custom command",
             None,
         ),
-        (
-            vacuum.SERVICE_STOP,
-            "command_topic",
-            None,
-            "stop",
-            None,
-        ),
+        (vacuum.SERVICE_STOP, "command_topic", None, "stop", None),
     ],
 )
 async def test_publishing_with_custom_encoding(
@@ -760,8 +734,7 @@ async def test_publishing_with_custom_encoding(
 
 
 async def test_reloadable(
-    hass: HomeAssistant,
-    mqtt_client_mock: MqttMockPahoClient,
+    hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = vacuum.DOMAIN

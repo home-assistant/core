@@ -232,7 +232,10 @@
 # name: test_controlling_state_via_mqtt[sensor_config2-entity_ids2-messages2]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'energy',
       'friendly_name': 'Tasmota ENERGY TotalTariff 0',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.tasmota_energy_totaltariff_0',
@@ -247,7 +250,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -264,7 +269,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'ENERGY TotalTariff 0',
     'platform': 'tasmota',
@@ -272,13 +277,112 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ENERGY_TotalTariff_0',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_controlling_state_via_mqtt[sensor_config2-entity_ids2-messages2].10
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Tasmota ENERGY ExportTariff 0',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tasmota_energy_exporttariff_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5.6',
+  })
+# ---
+# name: test_controlling_state_via_mqtt[sensor_config2-entity_ids2-messages2].11
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Tasmota ENERGY ExportTariff 1',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tasmota_energy_exporttariff_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.8',
+  })
+# ---
+# name: test_controlling_state_via_mqtt[sensor_config2-entity_ids2-messages2].12
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Tasmota ENERGY TotalTariff 0',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tasmota_energy_totaltariff_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5.6',
+  })
+# ---
+# name: test_controlling_state_via_mqtt[sensor_config2-entity_ids2-messages2].13
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Tasmota ENERGY TotalTariff 1',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tasmota_energy_totaltariff_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.8',
+  })
+# ---
+# name: test_controlling_state_via_mqtt[sensor_config2-entity_ids2-messages2].14
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Tasmota ENERGY ExportTariff 0',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tasmota_energy_exporttariff_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.2',
+  })
+# ---
+# name: test_controlling_state_via_mqtt[sensor_config2-entity_ids2-messages2].15
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Tasmota ENERGY ExportTariff 1',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tasmota_energy_exporttariff_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.4',
   })
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config2-entity_ids2-messages2].2
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'energy',
       'friendly_name': 'Tasmota ENERGY TotalTariff 1',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.tasmota_energy_totaltariff_1',
@@ -293,7 +397,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -310,7 +416,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'ENERGY TotalTariff 1',
     'platform': 'tasmota',
@@ -318,13 +424,118 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ENERGY_TotalTariff_1',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config2-entity_ids2-messages2].4
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Tasmota ENERGY ExportTariff 0',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tasmota_energy_exporttariff_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_controlling_state_via_mqtt[sensor_config2-entity_ids2-messages2].5
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tasmota_energy_exporttariff_0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'ENERGY ExportTariff 0',
+    'platform': 'tasmota',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000049A3BC_sensor_sensor_ENERGY_ExportTariff_0',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_controlling_state_via_mqtt[sensor_config2-entity_ids2-messages2].6
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Tasmota ENERGY ExportTariff 1',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tasmota_energy_exporttariff_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_controlling_state_via_mqtt[sensor_config2-entity_ids2-messages2].7
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tasmota_energy_exporttariff_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'ENERGY ExportTariff 1',
+    'platform': 'tasmota',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000049A3BC_sensor_sensor_ENERGY_ExportTariff_1',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_controlling_state_via_mqtt[sensor_config2-entity_ids2-messages2].8
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
       'friendly_name': 'Tasmota ENERGY TotalTariff 0',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.tasmota_energy_totaltariff_0',
@@ -334,10 +545,13 @@
     'state': '1.2',
   })
 # ---
-# name: test_controlling_state_via_mqtt[sensor_config2-entity_ids2-messages2].5
+# name: test_controlling_state_via_mqtt[sensor_config2-entity_ids2-messages2].9
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'energy',
       'friendly_name': 'Tasmota ENERGY TotalTariff 1',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.tasmota_energy_totaltariff_1',
@@ -345,32 +559,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.4',
-  })
-# ---
-# name: test_controlling_state_via_mqtt[sensor_config2-entity_ids2-messages2].6
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Tasmota ENERGY TotalTariff 0',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tasmota_energy_totaltariff_0',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '5.6',
-  })
-# ---
-# name: test_controlling_state_via_mqtt[sensor_config2-entity_ids2-messages2].7
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Tasmota ENERGY TotalTariff 1',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tasmota_energy_totaltariff_1',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '7.8',
   })
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config3-entity_ids3-messages3]
@@ -1522,5 +1710,303 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2300',
+  })
+# ---
+# name: test_controlling_state_via_mqtt[sensor_config9-entity_ids9-messages9]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Tasmota SENSOR1 Unknown',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tasmota_sensor1_unknown',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_controlling_state_via_mqtt[sensor_config9-entity_ids9-messages9].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tasmota_sensor1_unknown',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'SENSOR1 Unknown',
+    'platform': 'tasmota',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000049A3BC_sensor_sensor_SENSOR1_Unknown',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_controlling_state_via_mqtt[sensor_config9-entity_ids9-messages9].10
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Tasmota SENSOR3 Unknown',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tasmota_sensor3_unknown',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.5',
+  })
+# ---
+# name: test_controlling_state_via_mqtt[sensor_config9-entity_ids9-messages9].11
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Tasmota SENSOR4 Unknown',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tasmota_sensor4_unknown',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.5',
+  })
+# ---
+# name: test_controlling_state_via_mqtt[sensor_config9-entity_ids9-messages9].12
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Tasmota SENSOR1 Unknown',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tasmota_sensor1_unknown',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
+# name: test_controlling_state_via_mqtt[sensor_config9-entity_ids9-messages9].13
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Tasmota SENSOR2 Unknown',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tasmota_sensor2_unknown',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
+# name: test_controlling_state_via_mqtt[sensor_config9-entity_ids9-messages9].14
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Tasmota SENSOR3 Unknown',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tasmota_sensor3_unknown',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
+# name: test_controlling_state_via_mqtt[sensor_config9-entity_ids9-messages9].15
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Tasmota SENSOR4 Unknown',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tasmota_sensor4_unknown',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
+# name: test_controlling_state_via_mqtt[sensor_config9-entity_ids9-messages9].2
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Tasmota SENSOR2 Unknown',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tasmota_sensor2_unknown',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_controlling_state_via_mqtt[sensor_config9-entity_ids9-messages9].3
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tasmota_sensor2_unknown',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'SENSOR2 Unknown',
+    'platform': 'tasmota',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000049A3BC_sensor_sensor_SENSOR2_Unknown',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_controlling_state_via_mqtt[sensor_config9-entity_ids9-messages9].4
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Tasmota SENSOR3 Unknown',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tasmota_sensor3_unknown',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_controlling_state_via_mqtt[sensor_config9-entity_ids9-messages9].5
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tasmota_sensor3_unknown',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'SENSOR3 Unknown',
+    'platform': 'tasmota',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000049A3BC_sensor_sensor_SENSOR3_Unknown',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_controlling_state_via_mqtt[sensor_config9-entity_ids9-messages9].6
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Tasmota SENSOR4 Unknown',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tasmota_sensor4_unknown',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_controlling_state_via_mqtt[sensor_config9-entity_ids9-messages9].7
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tasmota_sensor4_unknown',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'SENSOR4 Unknown',
+    'platform': 'tasmota',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000049A3BC_sensor_sensor_SENSOR4_Unknown',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_controlling_state_via_mqtt[sensor_config9-entity_ids9-messages9].8
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Tasmota SENSOR1 Unknown',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tasmota_sensor1_unknown',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.5',
+  })
+# ---
+# name: test_controlling_state_via_mqtt[sensor_config9-entity_ids9-messages9].9
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Tasmota SENSOR2 Unknown',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tasmota_sensor2_unknown',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.5',
   })
 # ---
