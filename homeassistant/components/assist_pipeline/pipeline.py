@@ -304,21 +304,25 @@ async def async_update_pipeline(
     updates.pop("id")
     # Refactor this once we bump to Python 3.12
     # and have https://peps.python.org/pep-0692/
-    for key, val in (
-        ("conversation_engine", conversation_engine),
-        ("conversation_language", conversation_language),
-        ("language", language),
-        ("name", name),
-        ("stt_engine", stt_engine),
-        ("stt_language", stt_language),
-        ("tts_engine", tts_engine),
-        ("tts_language", tts_language),
-        ("tts_voice", tts_voice),
-        ("wake_word_entity", wake_word_entity),
-        ("wake_word_id", wake_word_id),
-    ):
-        if val is not UNDEFINED:
-            updates[key] = val
+    updates.update(
+        {
+            key: val
+            for key, val in (
+                ("conversation_engine", conversation_engine),
+                ("conversation_language", conversation_language),
+                ("language", language),
+                ("name", name),
+                ("stt_engine", stt_engine),
+                ("stt_language", stt_language),
+                ("tts_engine", tts_engine),
+                ("tts_language", tts_language),
+                ("tts_voice", tts_voice),
+                ("wake_word_entity", wake_word_entity),
+                ("wake_word_id", wake_word_id),
+            )
+            if val is not UNDEFINED
+        }
+    )
 
     await pipeline_data.pipeline_store.async_update_item(pipeline.id, updates)
 

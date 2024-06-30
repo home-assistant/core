@@ -159,8 +159,8 @@ async def async_setup_entry(
         if coordinator.data.get(entity_description.key) is not None
     ]
 
-    LOGGER.debug("Adding sensor entities: %s", entities)
     async_add_entities(entities)
+    LOGGER.debug("Added sensor entities: %s", entities)
 
 
 class UpnpSensor(UpnpEntity, SensorEntity):
@@ -174,3 +174,13 @@ class UpnpSensor(UpnpEntity, SensorEntity):
         if (key := self.entity_description.value_key) is None:
             return None
         return self.coordinator.data[key]
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to updates."""
+        await super().async_added_to_hass()
+
+        # Register self at coordinator.
+        key = self.entity_description.key
+        entity_id = self.entity_id
+        unregister = self.coordinator.register_entity(key, entity_id)
+        self.async_on_remove(unregister)
