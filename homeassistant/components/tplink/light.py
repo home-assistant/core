@@ -140,9 +140,7 @@ async def async_setup_entry(
     parent_coordinator = data.parent_coordinator
     device = parent_coordinator.device
     entities: list[TPLinkLightEntity | TPLinkLightEffectEntity] = []
-    if (
-        effect_module := device.modules.get(Module.LightEffect)
-    ) and effect_module.has_custom_effects:
+    if effect_module := device.modules.get(Module.LightEffect):
         entities.append(
             TPLinkLightEffectEntity(
                 device,
@@ -151,17 +149,18 @@ async def async_setup_entry(
                 effect_module=effect_module,
             )
         )
-        platform = entity_platform.async_get_current_platform()
-        platform.async_register_entity_service(
-            SERVICE_RANDOM_EFFECT,
-            RANDOM_EFFECT_DICT,
-            "async_set_random_effect",
-        )
-        platform.async_register_entity_service(
-            SERVICE_SEQUENCE_EFFECT,
-            SEQUENCE_EFFECT_DICT,
-            "async_set_sequence_effect",
-        )
+        if effect_module.has_custom_effects:
+            platform = entity_platform.async_get_current_platform()
+            platform.async_register_entity_service(
+                SERVICE_RANDOM_EFFECT,
+                RANDOM_EFFECT_DICT,
+                "async_set_random_effect",
+            )
+            platform.async_register_entity_service(
+                SERVICE_SEQUENCE_EFFECT,
+                SEQUENCE_EFFECT_DICT,
+                "async_set_sequence_effect",
+            )
     elif Module.Light in device.modules:
         entities.append(
             TPLinkLightEntity(
