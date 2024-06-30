@@ -1,6 +1,6 @@
 {
   "domain": "hue_ble",
-  "name": "Hue BLE",
+  "name": "Philips Hue BLE",
   "bluetooth": [
     {
       "connectable": true,
