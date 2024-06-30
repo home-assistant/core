@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
 
 from madvr.madvr import Madvr
 
@@ -15,8 +14,8 @@ from .coordinator import MadVRCoordinator
 
 PLATFORMS: list[Platform] = [Platform.REMOTE]
 
-if TYPE_CHECKING:
-    type MadVRConfigEntry = ConfigEntry[MadVRCoordinator]
+
+type MadVRConfigEntry = ConfigEntry[MadVRCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -2,19 +2,17 @@
 
 from collections.abc import Iterable
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import MadVRConfigEntry
 from .coordinator import MadVRCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-if TYPE_CHECKING:
-    from . import MadVRConfigEntry
 
 
 async def async_setup_entry(

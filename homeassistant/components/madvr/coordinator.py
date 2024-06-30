@@ -42,7 +42,7 @@ class MadVRCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return DeviceInfo(
             identifiers={(DOMAIN, self.config_entry.entry_id)},
             default_manufacturer="madVR",
-            name=self.data.get("NAME") or "Envy",
+            name="Envy",
             connections={
                 (CONF_MAC, self.config_entry.data.get(CONF_MAC, "")),
                 (CONF_HOST, self.config_entry.data[CONF_HOST]),
