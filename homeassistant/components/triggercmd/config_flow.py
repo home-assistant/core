@@ -43,6 +43,10 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
     if len(data["token"]) < 100:
         raise InvalidToken
 
+    tokenData = jwt.decode(data["token"], options={"verify_signature": False})
+    if not tokenData["id"]:
+        raise InvalidToken
+
     hub = Hub(hass, data["token"])
     # The dummy hub provides a `test_connection` method to ensure it's working
     # as expected
@@ -67,12 +71,11 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
     # "Title" is what is displayed to the user for this hub device
     # It is stored internally in HA as part of the device config.
     # See `async_step_user` below for how this is used
-    tokenData = jwt.decode(data["token"], options={"verify_signature": False})
     return {"title": tokenData["id"]}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Hello World."""
+    """Handle a config flow."""
 
     VERSION = 1
     # Pick one of the available connection classes in homeassistant/config_entries.py
