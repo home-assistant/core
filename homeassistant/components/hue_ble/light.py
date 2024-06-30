@@ -19,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -55,8 +53,6 @@ class HaHueBLE(LightEntity):
         self._attr_max_mireds = self._light.maximum_mireds
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, self._light.address)},
-            identifiers={(DOMAIN, self._light.address)},
-            name=self._name,
             manufacturer=self._light.manufacturer,
             model=self._light.model,
             sw_version=self._light.firmware,
