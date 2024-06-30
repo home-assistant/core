@@ -1,8 +1,10 @@
 """Test the flume config flow."""
 
-from unittest.mock import MagicMock, patch
+from http import HTTPStatus
+from unittest.mock import patch
 
 import requests.exceptions
+from requests_mock.mocker import Mocker
 
 from homeassistant import config_entries
 from homeassistant.components.flume.const import DOMAIN
@@ -15,16 +17,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .conftest import DEVICE_LIST_URL
+
 from tests.common import MockConfigEntry
 
 
-def _get_mocked_flume_device_list():
-    flume_device_list_mock = MagicMock()
-    type(flume_device_list_mock).device_list = ["mock"]
-    return flume_device_list_mock
-
-
-async def test_form(hass: HomeAssistant) -> None:
+async def test_form(hass: HomeAssistant, access_token: None, device_list: None) -> None:
     """Test we get the form and can setup from user input."""
 
     result = await hass.config_entries.flow.async_init(
@@ -33,17 +31,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    mock_flume_device_list = _get_mocked_flume_device_list()
-
     with (
-        patch(
-            "homeassistant.components.flume.config_flow.FlumeAuth",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.flume.config_flow.FlumeDeviceList",
-            return_value=mock_flume_device_list,
-        ),
         patch(
             "homeassistant.components.flume.async_setup_entry",
             return_value=True,
@@ -71,66 +59,66 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
+async def test_form_invalid_auth(
+    hass: HomeAssistant, access_token: None, requests_mock: Mocker
+) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with (
-        patch(
-            "homeassistant.components.flume.config_flow.FlumeAuth",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.flume.config_flow.FlumeDeviceList",
-            side_effect=Exception,
-        ),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-                CONF_CLIENT_ID: "client_id",
-                CONF_CLIENT_SECRET: "client_secret",
-            },
-        )
+    requests_mock.register_uri(
+        "GET",
+        DEVICE_LIST_URL,
+        status_code=HTTPStatus.UNAUTHORIZED,
+        json={},
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_CLIENT_ID: "client_id",
+            CONF_CLIENT_SECRET: "client_secret",
+        },
+    )
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"password": "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+async def test_form_cannot_connect(
+    hass: HomeAssistant, access_token: None, requests_mock: Mocker
+) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    with (
-        patch(
-            "homeassistant.components.flume.config_flow.FlumeAuth",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.flume.config_flow.FlumeDeviceList",
-            side_effect=requests.exceptions.ConnectionError(),
-        ),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-                CONF_CLIENT_ID: "client_id",
-                CONF_CLIENT_SECRET: "client_secret",
-            },
-        )
+
+    requests_mock.register_uri(
+        "GET",
+        DEVICE_LIST_URL,
+        exc=requests.exceptions.ConnectTimeout,
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_CLIENT_ID: "client_id",
+            CONF_CLIENT_SECRET: "client_secret",
+        },
+    )
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_reauth(hass: HomeAssistant) -> None:
+async def test_reauth(
+    hass: HomeAssistant, access_token: None, requests_mock: Mocker
+) -> None:
     """Test we can reauth."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -151,57 +139,42 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    with (
-        patch(
-            "homeassistant.components.flume.config_flow.FlumeAuth",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.flume.config_flow.FlumeDeviceList",
-            side_effect=Exception,
-        ),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_PASSWORD: "test-password",
-            },
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PASSWORD: "test-password",
+        },
+    )
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"password": "invalid_auth"}
 
-    with (
-        patch(
-            "homeassistant.components.flume.config_flow.FlumeAuth",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.flume.config_flow.FlumeDeviceList",
-            side_effect=requests.exceptions.ConnectionError(),
-        ),
-    ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
-            {
-                CONF_PASSWORD: "test-password",
-            },
-        )
+    requests_mock.register_uri(
+        "GET",
+        DEVICE_LIST_URL,
+        exc=requests.exceptions.ConnectTimeout,
+    )
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            CONF_PASSWORD: "test-password",
+        },
+    )
 
     assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": "cannot_connect"}
 
-    mock_flume_device_list = _get_mocked_flume_device_list()
+    requests_mock.register_uri(
+        "GET",
+        DEVICE_LIST_URL,
+        status_code=HTTPStatus.OK,
+        json={
+            "data": [{"id": 1}],
+        },
+    )
 
     with (
-        patch(
-            "homeassistant.components.flume.config_flow.FlumeAuth",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.flume.config_flow.FlumeDeviceList",
-            return_value=mock_flume_device_list,
-        ),
         patch(
             "homeassistant.components.flume.async_setup_entry",
             return_value=True,
