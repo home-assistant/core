@@ -147,9 +147,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         firmware_coordinator=firmware_coordinator,
     )
 
-    # first migrate and then cleanup, otherwise entities lost
     migrate_entity_ids(hass, config_entry.entry_id, host)
-    cleanup_disconnected_cams(hass, config_entry.entry_id, host)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -192,7 +190,7 @@ async def async_remove_config_entry_device(
             "to a NVR/Hub, please remove the integration entry instead",
             device.name,
         )
-        return False # Do not remove the host/NVR itself
+        return False  # Do not remove the host/NVR itself
 
     ch_model = host.api.camera_model(ch)
     if ch_model not in [device.model, "Unknown"]:
@@ -224,6 +222,7 @@ async def async_remove_config_entry_device(
     )
     return False
 
+
 def get_device_uid_and_ch(
     device: dr.DeviceEntry, host: ReolinkHost
 ) -> tuple[list[str], int | None]:
@@ -240,47 +239,6 @@ def get_device_uid_and_ch(
     else:
         ch = host.api.channel_for_uid(device_uid[1])
     return (device_uid, ch)
-
-
-def cleanup_disconnected_cams(
-    hass: HomeAssistant, config_entry_id: str, host: ReolinkHost
-) -> None:
-    """Clean-up disconnected camera channels."""
-    if not host.api.is_nvr:
-        return
-
-    device_reg = dr.async_get(hass)
-    devices = dr.async_entries_for_config_entry(device_reg, config_entry_id)
-    for device in devices:
-        (device_uid, ch) = get_device_uid_and_ch(device, host)
-        if ch is None:
-            continue  # Do not consider the NVR itself
-
-        ch_model = host.api.camera_model(ch)
-        remove = False
-        if ch not in host.api.channels:
-            remove = True
-            _LOGGER.debug(
-                "Removing Reolink device %s, "
-                "since no camera is connected to NVR channel %s anymore",
-                device.name,
-                ch,
-            )
-        if ch_model not in [device.model, "Unknown"]:
-            remove = True
-            _LOGGER.debug(
-                "Removing Reolink device %s, "
-                "since the camera model connected to channel %s changed from %s to %s",
-                device.name,
-                ch,
-                device.model,
-                ch_model,
-            )
-        if not remove:
-            continue
-
-        # clean device registry and associated entities
-        device_reg.async_remove_device(device.id)
 
 
 def migrate_entity_ids(
