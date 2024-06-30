@@ -500,64 +500,51 @@ async def test_wireless_client_go_wired_issue(
     UniFi Network has a known issue that when a wireless device goes away it sometimes gets marked as wired.
     """
     client_payload.append(
-        {
-            "essid": "ssid",
-            "hostname": "client",
-            "ip": "10.0.0.1",
-            "is_wired": False,
-            "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
-            "mac": "00:00:00:00:00:01",
-        }
+        WIRELESS_CLIENT_1 | {"last_seen": dt_util.as_timestamp(dt_util.utcnow())}
     )
-    config_entry = await config_entry_factory()
+    await config_entry_factory()
 
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
 
     # Client is wireless
-    client_state = hass.states.get("device_tracker.client")
-    assert client_state.state == STATE_HOME
+    assert hass.states.get("device_tracker.ws_client_1").state == STATE_HOME
 
     # Trigger wired bug
-    client = client_payload[0]
-    client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
-    client["is_wired"] = True
-    mock_websocket_message(message=MessageKey.CLIENT, data=client)
+    ws_client_1 = client_payload[0] | {
+        "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
+        "is_wired": True,
+    }
+    mock_websocket_message(message=MessageKey.CLIENT, data=ws_client_1)
     await hass.async_block_till_done()
 
     # Wired bug fix keeps client marked as wireless
-    client_state = hass.states.get("device_tracker.client")
-    assert client_state.state == STATE_HOME
+    assert hass.states.get("device_tracker.ws_client_1").state == STATE_HOME
 
     # Pass time
-    new_time = dt_util.utcnow() + timedelta(
-        seconds=(config_entry.options.get(CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME))
-    )
+    new_time = dt_util.utcnow() + timedelta(seconds=DEFAULT_DETECTION_TIME)
     with freeze_time(new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
 
     # Marked as home according to the timer
-    client_state = hass.states.get("device_tracker.client")
-    assert client_state.state == STATE_NOT_HOME
+    assert hass.states.get("device_tracker.ws_client_1").state == STATE_NOT_HOME
 
     # Try to mark client as connected
-    client["last_seen"] += 1
-    mock_websocket_message(message=MessageKey.CLIENT, data=client)
+    ws_client_1["last_seen"] += 1
+    mock_websocket_message(message=MessageKey.CLIENT, data=ws_client_1)
     await hass.async_block_till_done()
 
     # Make sure it don't go online again until wired bug disappears
-    client_state = hass.states.get("device_tracker.client")
-    assert client_state.state == STATE_NOT_HOME
+    assert hass.states.get("device_tracker.ws_client_1").state == STATE_NOT_HOME
 
     # Make client wireless
-    client["last_seen"] += 1
-    client["is_wired"] = False
-    mock_websocket_message(message=MessageKey.CLIENT, data=client)
+    ws_client_1["last_seen"] += 1
+    ws_client_1["is_wired"] = False
+    mock_websocket_message(message=MessageKey.CLIENT, data=ws_client_1)
     await hass.async_block_till_done()
 
     # Client is no longer affected by wired bug and can be marked online
-    client_state = hass.states.get("device_tracker.client")
-    assert client_state.state == STATE_HOME
+    assert hass.states.get("device_tracker.ws_client_1").state == STATE_HOME
 
 
 @pytest.mark.parametrize("config_entry_options", [{CONF_IGNORE_WIRED_BUG: True}])
@@ -570,64 +557,49 @@ async def test_option_ignore_wired_bug(
 ) -> None:
     """Test option to ignore wired bug."""
     client_payload.append(
-        {
-            "ap_mac": "00:00:00:00:02:01",
-            "essid": "ssid",
-            "hostname": "client",
-            "ip": "10.0.0.1",
-            "is_wired": False,
-            "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
-            "mac": "00:00:00:00:00:01",
-        }
+        WIRELESS_CLIENT_1 | {"last_seen": dt_util.as_timestamp(dt_util.utcnow())}
     )
-    config_entry = await config_entry_factory()
+    await config_entry_factory()
 
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
 
     # Client is wireless
-    client_state = hass.states.get("device_tracker.client")
-    assert client_state.state == STATE_HOME
+    assert hass.states.get("device_tracker.ws_client_1").state == STATE_HOME
 
     # Trigger wired bug
-    client = client_payload[0]
-    client["is_wired"] = True
-    mock_websocket_message(message=MessageKey.CLIENT, data=client)
+    ws_client_1 = client_payload[0]
+    ws_client_1["is_wired"] = True
+    mock_websocket_message(message=MessageKey.CLIENT, data=ws_client_1)
     await hass.async_block_till_done()
 
     # Wired bug in effect
-    client_state = hass.states.get("device_tracker.client")
-    assert client_state.state == STATE_HOME
+    assert hass.states.get("device_tracker.ws_client_1").state == STATE_HOME
 
-    # pass time
-    new_time = dt_util.utcnow() + timedelta(
-        seconds=config_entry.options.get(CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME)
-    )
+    # Pass time
+    new_time = dt_util.utcnow() + timedelta(seconds=DEFAULT_DETECTION_TIME)
     with freeze_time(new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
 
     # Timer marks client as away
-    client_state = hass.states.get("device_tracker.client")
-    assert client_state.state == STATE_NOT_HOME
+    assert hass.states.get("device_tracker.ws_client_1").state == STATE_NOT_HOME
 
     # Mark client as connected again
-    client["last_seen"] += 1
-    mock_websocket_message(message=MessageKey.CLIENT, data=client)
+    ws_client_1["last_seen"] += 1
+    mock_websocket_message(message=MessageKey.CLIENT, data=ws_client_1)
     await hass.async_block_till_done()
 
     # Ignoring wired bug allows client to go home again even while affected
-    client_state = hass.states.get("device_tracker.client")
-    assert client_state.state == STATE_HOME
+    assert hass.states.get("device_tracker.ws_client_1").state == STATE_HOME
 
     # Make client wireless
-    client["last_seen"] += 1
-    client["is_wired"] = False
-    mock_websocket_message(message=MessageKey.CLIENT, data=client)
+    ws_client_1["last_seen"] += 1
+    ws_client_1["is_wired"] = False
+    mock_websocket_message(message=MessageKey.CLIENT, data=ws_client_1)
     await hass.async_block_till_done()
 
     # Client is wireless and still connected
-    client_state = hass.states.get("device_tracker.client")
-    assert client_state.state == STATE_HOME
+    assert hass.states.get("device_tracker.ws_client_1").state == STATE_HOME
 
 
 @pytest.mark.parametrize(
