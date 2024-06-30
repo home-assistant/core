@@ -28,10 +28,11 @@ async def test_user_form(hass: HomeAssistant, mock_madvr) -> None:
 
     mock_madvr.return_value.open_connection = MagicMock()
     mock_madvr.return_value.connected.return_value = True
+    mock_mac = "00:11:22:33:44:55"
 
     with patch(
         "homeassistant.components.madvr.config_flow.MadVRConfigFlow._test_connection",
-        return_value=None,
+        return_value=mock_mac,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -47,6 +48,7 @@ async def test_user_form(hass: HomeAssistant, mock_madvr) -> None:
     assert result2["data"] == {
         "host": "192.168.1.100",
         "port": 44077,
+        "mac": mock_mac,
     }
 
 
@@ -57,7 +59,6 @@ async def test_user_form_cannot_connect(hass: HomeAssistant, mock_madvr) -> None
     )
 
     mock_madvr.return_value.open_connection = MagicMock(side_effect=CannotConnect)
-
     with patch(
         "homeassistant.components.madvr.config_flow.MadVRConfigFlow._test_connection",
         side_effect=CannotConnect,
@@ -78,9 +79,10 @@ async def test_user_form_cannot_connect(hass: HomeAssistant, mock_madvr) -> None
     assert result2["errors"] == {"base": "cannot_connect"}
 
     # Test that we can retry the connection
+    mock_mac = "00:11:22:33:44:55"
     with patch(
         "homeassistant.components.madvr.config_flow.MadVRConfigFlow._test_connection",
-        return_value=None,
+        return_value=mock_mac,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
@@ -95,4 +97,36 @@ async def test_user_form_cannot_connect(hass: HomeAssistant, mock_madvr) -> None
     assert result3["data"] == {
         "host": "192.168.1.100",
         "port": 44077,
+        "mac": mock_mac,
+    }
+
+
+async def test_user_form_no_mac(hass: HomeAssistant, mock_madvr) -> None:
+    """Test we can set up the integration even if no MAC is returned."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_madvr.return_value.open_connection = MagicMock()
+    mock_madvr.return_value.connected.return_value = True
+
+    with patch(
+        "homeassistant.components.madvr.config_flow.MadVRConfigFlow._test_connection",
+        return_value="",  # Simulating no MAC returned
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "192.168.1.100",
+                "port": 44077,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == DEFAULT_NAME
+    assert result2["data"] == {
+        "host": "192.168.1.100",
+        "port": 44077,
+        "mac": "",  # Empty string for MAC
     }
