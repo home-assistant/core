@@ -168,6 +168,9 @@ async def async_attach_trigger(
         ):
             trigger_dt = dt_util.parse_datetime(new_state.state)
 
+            if trigger_dt is not None:
+                trigger_dt += offset
+
             if trigger_dt is not None and trigger_dt > dt_util.utcnow():
                 remove = async_track_point_in_time(
                     hass,
@@ -176,7 +179,7 @@ async def async_attach_trigger(
                         f"time set in {entity_id}",
                         entity_id=entity_id,
                     ),
-                    trigger_dt + offset,
+                    trigger_dt,
                 )
 
         # Was a listener set up?
