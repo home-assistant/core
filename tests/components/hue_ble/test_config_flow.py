@@ -13,6 +13,7 @@ from homeassistant.components.hue_ble.const import DOMAIN
 from homeassistant.const import CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 
 from . import HUE_BLE_SERVICE_INFO, TEST_DEVICE_MAC, TEST_DEVICE_NAME
 
@@ -63,10 +64,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_DEVICE_NAME
-    assert result["data"] == {
-        CONF_NAME: TEST_DEVICE_NAME,
-        CONF_MAC: TEST_DEVICE_MAC,
-    }
+    assert result["result"].unique_id == dr.format_mac(TEST_DEVICE_MAC)
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -108,10 +106,7 @@ async def test_form_no_scanners(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_DEVICE_NAME
-    assert result["data"] == {
-        CONF_NAME: TEST_DEVICE_NAME,
-        CONF_MAC: TEST_DEVICE_MAC,
-    }
+    assert result["result"].unique_id == dr.format_mac(TEST_DEVICE_MAC)
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -153,10 +148,7 @@ async def test_form_device_not_found(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_DEVICE_NAME
-    assert result["data"] == {
-        CONF_NAME: TEST_DEVICE_NAME,
-        CONF_MAC: TEST_DEVICE_MAC,
-    }
+    assert result["result"].unique_id == dr.format_mac(TEST_DEVICE_MAC)
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -203,10 +195,7 @@ async def test_form_not_authenticated(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_DEVICE_NAME
-    assert result["data"] == {
-        CONF_NAME: TEST_DEVICE_NAME,
-        CONF_MAC: TEST_DEVICE_MAC,
-    }
+    assert result["result"].unique_id == dr.format_mac(TEST_DEVICE_MAC)
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -258,10 +247,7 @@ async def test_form_cannot_connect(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_DEVICE_NAME
-    assert result["data"] == {
-        CONF_NAME: TEST_DEVICE_NAME,
-        CONF_MAC: TEST_DEVICE_MAC,
-    }
+    assert result["result"].unique_id == dr.format_mac(TEST_DEVICE_MAC)
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -317,10 +303,7 @@ async def test_form_failed_poll(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_DEVICE_NAME
-    assert result["data"] == {
-        CONF_NAME: TEST_DEVICE_NAME,
-        CONF_MAC: TEST_DEVICE_MAC,
-    }
+    assert result["result"].unique_id == dr.format_mac(TEST_DEVICE_MAC)
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -354,10 +337,7 @@ async def test_form_unknown(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_DEVICE_NAME
-    assert result["data"] == {
-        CONF_NAME: TEST_DEVICE_NAME,
-        CONF_MAC: TEST_DEVICE_MAC,
-    }
+    assert result["result"].unique_id == dr.format_mac(TEST_DEVICE_MAC)
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -384,10 +364,7 @@ async def test_bluetooth_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_DEVICE_NAME
-    assert result["data"] == {
-        CONF_NAME: TEST_DEVICE_NAME,
-        CONF_MAC: TEST_DEVICE_MAC,
-    }
+    assert result["result"].unique_id == dr.format_mac(TEST_DEVICE_MAC)
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -430,10 +407,7 @@ async def test_bluetooth_form_no_scanners(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_DEVICE_NAME
-    assert result["data"] == {
-        CONF_NAME: TEST_DEVICE_NAME,
-        CONF_MAC: TEST_DEVICE_MAC,
-    }
+    assert result["result"].unique_id == dr.format_mac(TEST_DEVICE_MAC)
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -476,10 +450,7 @@ async def test_bluetooth_form_device_not_found(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_DEVICE_NAME
-    assert result["data"] == {
-        CONF_NAME: TEST_DEVICE_NAME,
-        CONF_MAC: TEST_DEVICE_MAC,
-    }
+    assert result["result"].unique_id == dr.format_mac(TEST_DEVICE_MAC)
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -522,10 +493,7 @@ async def test_bluetooth_form_not_authenticated(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_DEVICE_NAME
-    assert result["data"] == {
-        CONF_NAME: TEST_DEVICE_NAME,
-        CONF_MAC: TEST_DEVICE_MAC,
-    }
+    assert result["result"].unique_id == dr.format_mac(TEST_DEVICE_MAC)
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -568,10 +536,7 @@ async def test_bluetooth_form_cannot_connect(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_DEVICE_NAME
-    assert result["data"] == {
-        CONF_NAME: TEST_DEVICE_NAME,
-        CONF_MAC: TEST_DEVICE_MAC,
-    }
+    assert result["result"].unique_id == dr.format_mac(TEST_DEVICE_MAC)
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -614,9 +579,6 @@ async def test_bluetooth_form_unknown(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_DEVICE_NAME
-    assert result["data"] == {
-        CONF_NAME: TEST_DEVICE_NAME,
-        CONF_MAC: TEST_DEVICE_MAC,
-    }
+    assert result["result"].unique_id == dr.format_mac(TEST_DEVICE_MAC)
 
     assert len(mock_setup_entry.mock_calls) == 1
