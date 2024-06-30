@@ -13,7 +13,7 @@ from homeassistant.components.tts import (
     Provider,
     Voice,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 
 from .helpers import async_tts_voices
@@ -141,7 +141,7 @@ class GoogleCloudTTSProvider(Provider):
 
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         client: texttospeech.TextToSpeechAsyncClient,
         voices: dict[str, list[str]],
         language=DEFAULT_LANG,
@@ -153,7 +153,7 @@ class GoogleCloudTTSProvider(Provider):
         gain=0,
         profiles=None,
         text_type=DEFAULT_TEXT_TYPE,
-    ):
+    ) -> None:
         """Init Google Cloud TTS service."""
         self.hass = hass
         self.name = "Google Cloud TTS"
