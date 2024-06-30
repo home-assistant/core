@@ -249,25 +249,46 @@ async def test_invalid_entity_returning_none_in_template(
     assert hass.states.get("sensor.test") is None
 
 
-async def test_reload(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("domain", "config", "yaml_file"),
+    [
+        (
+            "sensor",
+            {
+                "sensor": {
+                    "platform": "history_stats",
+                    "entity_id": "binary_sensor.test_id",
+                    "name": "test",
+                    "state": "on",
+                    "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                    "duration": "01:00",
+                },
+            },
+            "configuration_platform.yaml",
+        ),
+        (
+            "history_stats",
+            {
+                "history_stats": {
+                    "entity_id": "binary_sensor.test_id",
+                    "name": "test",
+                    "state": "on",
+                    "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                    "duration": "01:00",
+                },
+            },
+            "configuration_integration.yaml",
+        ),
+    ],
+)
+async def test_reload(
+    recorder_mock: Recorder, hass: HomeAssistant, domain, config, yaml_file
+) -> None:
     """Verify we can reload history_stats sensors."""
     hass.state = ha.CoreState.not_running
     hass.states.async_set("binary_sensor.test_id", "on")
 
-    await async_setup_component(
-        hass,
-        "sensor",
-        {
-            "sensor": {
-                "platform": "history_stats",
-                "entity_id": "binary_sensor.test_id",
-                "name": "test",
-                "state": "on",
-                "start": "{{ as_timestamp(utcnow()) - 3600 }}",
-                "duration": "01:00",
-            },
-        },
-    )
+    await async_setup_component(hass, domain, config)
     await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
@@ -276,7 +297,7 @@ async def test_reload(recorder_mock: Recorder, hass: HomeAssistant) -> None:
 
     assert hass.states.get("sensor.test")
 
-    yaml_path = get_fixture_path("configuration.yaml", "history_stats")
+    yaml_path = get_fixture_path(yaml_file, "history_stats")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
@@ -1170,7 +1191,7 @@ async def test_reload_before_start_event(
 
     assert hass.states.get("sensor.test")
 
-    yaml_path = get_fixture_path("configuration.yaml", "history_stats")
+    yaml_path = get_fixture_path("configuration_platform.yaml", "history_stats")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
