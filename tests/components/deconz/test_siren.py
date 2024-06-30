@@ -1,8 +1,11 @@
 """deCONZ switch platform tests."""
 
+from collections.abc import Callable
+
 import pytest
 
 from homeassistant.components.siren import ATTR_DURATION, DOMAIN as SIREN_DOMAIN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -12,8 +15,6 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-
-from .test_gateway import mock_deconz_put_request
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -39,9 +40,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 )
 async def test_sirens(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    config_entry_setup,
+    config_entry_setup: ConfigEntry,
     mock_deconz_websocket,
+    mock_put_request: Callable[[str, str], AiohttpClientMocker],
 ) -> None:
     """Test that siren entities are created."""
     assert len(hass.states.async_all()) == 2
@@ -62,7 +63,7 @@ async def test_sirens(
 
     # Verify service calls
 
-    mock_deconz_put_request(aioclient_mock, config_entry_setup.data, "/lights/1/state")
+    aioclient_mock = mock_put_request("/lights/1/state")
 
     # Service turn on siren
 
