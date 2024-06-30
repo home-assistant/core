@@ -222,7 +222,7 @@ async def _async_get_tts_audio(
 ) -> TtsAudioType:
     """Load TTS from Google Cloud."""
     try:
-        options = self._options_schema(options)
+        options = options_schema(options)
     except vol.Invalid as err:
         _LOGGER.error("Error: %s when validating options: %s", err, options)
         return None, None
