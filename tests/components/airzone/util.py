@@ -55,7 +55,7 @@ from aioairzone.const import (
     API_ZONE_ID,
 )
 
-from homeassistant.components.airzone import DOMAIN
+from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
 from homeassistant.core import HomeAssistant
 

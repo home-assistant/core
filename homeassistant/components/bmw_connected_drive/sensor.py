@@ -9,6 +9,8 @@ import logging
 
 from bimmer_connected.models import StrEnum, ValueWithUnit
 from bimmer_connected.vehicle import MyBMWVehicle
+from bimmer_connected.vehicle.climate import ClimateActivityState
+from bimmer_connected.vehicle.fuel_and_battery import ChargingState
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,7 +18,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     STATE_UNKNOWN,
@@ -28,8 +29,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import BMWBaseEntity
-from .const import CLIMATE_ACTIVITY_STATE, DOMAIN
+from . import BMWBaseEntity, BMWConfigEntry
 from .coordinator import BMWDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,6 +73,8 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
         key="charging_status",
         translation_key="charging_status",
         key_class="fuel_and_battery",
+        device_class=SensorDeviceClass.ENUM,
+        options=[s.value.lower() for s in ChargingState if s != ChargingState.UNKNOWN],
         is_available=lambda v: v.is_lsc_enabled and v.has_electric_drivetrain,
     ),
     BMWSensorEntityDescription(
@@ -155,7 +157,11 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
         translation_key="climate_status",
         key_class="climate",
         device_class=SensorDeviceClass.ENUM,
-        options=CLIMATE_ACTIVITY_STATE,
+        options=[
+            s.value.lower()
+            for s in ClimateActivityState
+            if s != ClimateActivityState.UNKNOWN
+        ],
         is_available=lambda v: v.is_remote_climate_stop_enabled,
     ),
 ]
@@ -163,11 +169,11 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BMWConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the MyBMW sensors from config entry."""
-    coordinator: BMWDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data.coordinator
 
     entities = [
         BMWSensor(coordinator, vehicle, description)
@@ -220,10 +226,6 @@ class BMWSensor(BMWBaseEntity, SensorEntity):
             state = state.value.lower()
             if state == STATE_UNKNOWN:
                 state = None
-
-            # special handling for charging_status to avoid a breaking change
-            if self.entity_description.key == "charging_status" and state:
-                state = state.upper()
 
         self._attr_native_value = state
         super()._handle_coordinator_update()

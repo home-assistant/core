@@ -15,9 +15,7 @@ import yarl
 from homeassistant.auth.const import GROUP_ID_READ_ONLY
 from homeassistant.auth.models import User
 from homeassistant.auth.providers import trusted_networks
-from homeassistant.auth.providers.legacy_api_password import (
-    LegacyApiPasswordAuthProvider,
-)
+from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_HASS
 from homeassistant.components.http.auth import (
@@ -76,14 +74,6 @@ async def mock_handler(request):
     return web.json_response(data={"user_id": user_id})
 
 
-async def get_legacy_user(auth):
-    """Get the user in legacy_api_password auth provider."""
-    provider = auth.get_auth_provider("legacy_api_password", None)
-    return await auth.async_get_or_create_user(
-        await provider.async_get_or_create_credentials({})
-    )
-
-
 @pytest.fixture
 def app(hass):
     """Fixture to set up a web.Application."""
@@ -126,7 +116,7 @@ async def test_auth_middleware_loaded_by_default(hass: HomeAssistant) -> None:
 async def test_cant_access_with_password_in_header(
     app,
     aiohttp_client: ClientSessionGenerator,
-    legacy_auth: LegacyApiPasswordAuthProvider,
+    local_auth: HassAuthProvider,
     hass: HomeAssistant,
 ) -> None:
     """Test access with password in header."""
@@ -143,7 +133,7 @@ async def test_cant_access_with_password_in_header(
 async def test_cant_access_with_password_in_query(
     app,
     aiohttp_client: ClientSessionGenerator,
-    legacy_auth: LegacyApiPasswordAuthProvider,
+    local_auth: HassAuthProvider,
     hass: HomeAssistant,
 ) -> None:
     """Test access with password in URL."""
@@ -164,7 +154,7 @@ async def test_basic_auth_does_not_work(
     app,
     aiohttp_client: ClientSessionGenerator,
     hass: HomeAssistant,
-    legacy_auth: LegacyApiPasswordAuthProvider,
+    local_auth: HassAuthProvider,
 ) -> None:
     """Test access with basic authentication."""
     await async_setup_auth(hass, app)
@@ -278,7 +268,7 @@ async def test_auth_active_access_with_trusted_ip(
 async def test_auth_legacy_support_api_password_cannot_access(
     app,
     aiohttp_client: ClientSessionGenerator,
-    legacy_auth: LegacyApiPasswordAuthProvider,
+    local_auth: HassAuthProvider,
     hass: HomeAssistant,
 ) -> None:
     """Test access using api_password if auth.support_legacy."""

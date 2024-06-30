@@ -31,8 +31,10 @@ CONTROLLER_BINARY_SENSORS: tuple[HydrawiseBinarySensorEntityDescription, ...] = 
     HydrawiseBinarySensorEntityDescription(
         key="status",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        value_fn=lambda status_sensor: status_sensor.coordinator.last_update_success
-        and status_sensor.controller.online,
+        value_fn=(
+            lambda status_sensor: status_sensor.coordinator.last_update_success
+            and status_sensor.controller.online
+        ),
         # Connectivtiy sensor is always available
         always_available=True,
     ),

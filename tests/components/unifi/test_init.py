@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .test_hub import DEFAULT_CONFIG_ENTRY_ID
+from .conftest import DEFAULT_CONFIG_ENTRY_ID
 
 from tests.common import flush_store
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -176,7 +176,7 @@ async def test_remove_config_entry_device(
     config_entry_factory: Callable[[], ConfigEntry],
     client_payload: list[dict[str, Any]],
     device_payload: list[dict[str, Any]],
-    mock_unifi_websocket,
+    mock_websocket_message,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Verify removing a device manually."""
@@ -206,7 +206,7 @@ async def test_remove_config_entry_device(
     )
 
     # Remove a client from Unifi API
-    mock_unifi_websocket(message=MessageKey.CLIENT_REMOVED, data=[client_payload[1]])
+    mock_websocket_message(message=MessageKey.CLIENT_REMOVED, data=[client_payload[1]])
     await hass.async_block_till_done()
 
     # Try to remove an inactive client from UI: allowed

@@ -9,6 +9,7 @@ from incomfortclient import Heater as InComfortHeater, Room as InComfortRoom
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
@@ -56,6 +57,7 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
         """Initialize the climate device."""
         super().__init__(coordinator)
 
+        self._heater = heater
         self._room = room
 
         self._attr_unique_id = f"{heater.serial_no}_{room.room_no}"
@@ -76,9 +78,20 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
         return self._room.room_temp
 
     @property
+    def hvac_action(self) -> HVACAction | None:
+        """Return the actual current HVAC action."""
+        if self._heater.is_burning and self._heater.is_pumping:
+            return HVACAction.HEATING
+        return HVACAction.IDLE
+
+    @property
     def target_temperature(self) -> float | None:
-        """Return the temperature we try to reach."""
-        return self._room.setpoint
+        """Return the (override)temperature we try to reach.
+
+        As we set the override, we report back the override. The actual set point is
+        is returned at a later time.
+        """
+        return self._room.override
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature for this zone."""

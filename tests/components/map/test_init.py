@@ -1,10 +1,10 @@
 """Test the Map initialization."""
 
-from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.map import DOMAIN
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
@@ -15,7 +15,7 @@ from tests.common import MockModule, mock_integration
 
 
 @pytest.fixture
-def mock_onboarding_not_done() -> Generator[MagicMock, None, None]:
+def mock_onboarding_not_done() -> Generator[MagicMock]:
     """Mock that Home Assistant is currently onboarding."""
     with patch(
         "homeassistant.components.onboarding.async_is_onboarded",
@@ -25,7 +25,7 @@ def mock_onboarding_not_done() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
-def mock_onboarding_done() -> Generator[MagicMock, None, None]:
+def mock_onboarding_done() -> Generator[MagicMock]:
     """Mock that Home Assistant is currently onboarding."""
     with patch(
         "homeassistant.components.onboarding.async_is_onboarded",
@@ -35,7 +35,7 @@ def mock_onboarding_done() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
-def mock_create_map_dashboard() -> Generator[MagicMock, None, None]:
+def mock_create_map_dashboard() -> Generator[MagicMock]:
     """Mock the create map dashboard function."""
     with patch(
         "homeassistant.components.map._create_map_dashboard",

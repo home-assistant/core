@@ -1,13 +1,13 @@
 """Test the snapcast config flow."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.snapcast.async_setup_entry", return_value=True
@@ -16,7 +16,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_create_server() -> Generator[AsyncMock, None, None]:
+def mock_create_server() -> Generator[AsyncMock]:
     """Create mock snapcast connection."""
     mock_connection = AsyncMock()
     mock_connection.start = AsyncMock(return_value=None)

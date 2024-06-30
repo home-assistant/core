@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.v2c.sensor import _METER_ERROR_OPTIONS
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -27,9 +28,7 @@ async def test_sensor(
         await init_integration(hass, mock_config_entry)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    from homeassistant.components.v2c.sensor import _METER_ERROR_OPTIONS
-
-    assert [
+    assert _METER_ERROR_OPTIONS == [
         "no_error",
         "communication",
         "reading",
@@ -65,4 +64,4 @@ async def test_sensor(
         "tcp_head_mismatch",
         "empty_message",
         "undefined_error",
-    ] == _METER_ERROR_OPTIONS
+    ]

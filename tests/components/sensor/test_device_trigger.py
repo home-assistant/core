@@ -24,6 +24,8 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import load_json
 
+from .common import UNITS_OF_MEASUREMENT, MockSensor
+
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
@@ -32,7 +34,6 @@ from tests.common import (
     async_mock_service,
     setup_test_component_platform,
 )
-from tests.components.sensor.common import UNITS_OF_MEASUREMENT, MockSensor
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -61,6 +62,7 @@ def test_matches_device_classes(device_class: SensorDeviceClass) -> None:
         SensorDeviceClass.BATTERY: "CONF_BATTERY_LEVEL",
         SensorDeviceClass.CO: "CONF_CO",
         SensorDeviceClass.CO2: "CONF_CO2",
+        SensorDeviceClass.CONDUCTIVITY: "CONF_CONDUCTIVITY",
         SensorDeviceClass.ENERGY_STORAGE: "CONF_ENERGY",
         SensorDeviceClass.VOLUME_STORAGE: "CONF_VOLUME",
     }.get(device_class, f"CONF_{device_class.value.upper()}")
@@ -69,6 +71,7 @@ def test_matches_device_classes(device_class: SensorDeviceClass) -> None:
     # Ensure it has correct value
     constant_value = {
         SensorDeviceClass.BATTERY: "battery_level",
+        SensorDeviceClass.CONDUCTIVITY: "conductivity",
         SensorDeviceClass.ENERGY_STORAGE: "energy",
         SensorDeviceClass.VOLUME_STORAGE: "volume",
     }.get(device_class, device_class.value)
@@ -172,7 +175,7 @@ async def test_get_triggers_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for trigger in ["value"]
+        for trigger in ("value",)
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id

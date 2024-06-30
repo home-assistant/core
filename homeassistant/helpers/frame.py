@@ -218,3 +218,16 @@ def warn_use[_CallableT: Callable](func: _CallableT, what: str) -> _CallableT:
             report(what)
 
     return cast(_CallableT, report_use)
+
+
+def report_non_thread_safe_operation(what: str) -> None:
+    """Report a non-thread safe operation."""
+    report(
+        f"calls {what} from a thread other than the event loop, "
+        "which may cause Home Assistant to crash or data to corrupt. "
+        "For more information, see "
+        "https://developers.home-assistant.io/docs/asyncio_thread_safety/"
+        f"#{what.replace('.', '')}",
+        error_if_core=True,
+        error_if_integration=True,
+    )

@@ -1,6 +1,5 @@
 """The tests for the InfluxDB component."""
 
-from collections.abc import Generator
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus
@@ -8,6 +7,7 @@ import logging
 from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components import influxdb
 from homeassistant.components.influxdb.const import DEFAULT_BUCKET
@@ -54,7 +54,7 @@ def mock_batch_timeout(hass, monkeypatch):
 @pytest.fixture(name="mock_client")
 def mock_client_fixture(
     request: pytest.FixtureRequest,
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Patch the InfluxDBClient object with mock for version under test."""
     if request.param == influxdb.API_VERSION_2:
         client_target = f"{INFLUX_CLIENT_PATH}V2"
@@ -79,7 +79,6 @@ def get_mock_call_fixture(request: pytest.FixtureRequest):
 
     if request.param == influxdb.API_VERSION_2:
         return lambda body, precision=None: v2_call(body, precision)
-    # pylint: disable-next=unnecessary-lambda
     return lambda body, precision=None: call(body, time_precision=precision)
 
 

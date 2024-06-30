@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.season.const import DOMAIN, TYPE_ASTRONOMICAL
 from homeassistant.const import CONF_TYPE
@@ -25,7 +25,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[None, None, None]:
+def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch("homeassistant.components.season.async_setup_entry", return_value=True):
         yield

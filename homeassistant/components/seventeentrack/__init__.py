@@ -1,9 +1,13 @@
 """The seventeentrack component."""
 
+from typing import Final
+
 from py17track import Client as SeventeenTrackClient
 from py17track.errors import SeventeenTrackError
+from py17track.package import PACKAGE_STATUS_MAP
+import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_LOCATION,
@@ -17,8 +21,8 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
@@ -39,6 +43,27 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
+SERVICE_SCHEMA: Final = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY_ID): selector.ConfigEntrySelector(
+            {
+                "integration": DOMAIN,
+            }
+        ),
+        vol.Optional(ATTR_PACKAGE_STATE): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                multiple=True,
+                options=[
+                    value.lower().replace(" ", "_")
+                    for value in PACKAGE_STATUS_MAP.values()
+                ],
+                mode=selector.SelectSelectorMode.DROPDOWN,
+                translation_key=ATTR_PACKAGE_STATE,
+            )
+        ),
+    }
+)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the 17Track component."""
@@ -47,6 +72,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Get packages from 17Track."""
         config_entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
         package_states = call.data.get(ATTR_PACKAGE_STATE, [])
+
+        entry: ConfigEntry | None = hass.config_entries.async_get_entry(config_entry_id)
+
+        if not entry:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_config_entry",
+                translation_placeholders={
+                    "config_entry_id": config_entry_id,
+                },
+            )
+        if entry.state != ConfigEntryState.LOADED:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unloaded_config_entry",
+                translation_placeholders={
+                    "config_entry_id": entry.title,
+                },
+            )
+
         seventeen_coordinator: SeventeenTrackCoordinator = hass.data[DOMAIN][
             config_entry_id
         ]
@@ -75,6 +120,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         SERVICE_GET_PACKAGES,
         get_packages,
+        schema=SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     return True

@@ -28,7 +28,7 @@ async def test_open_cover_intent(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert response.speech["plain"]["speech"] == "Opened garage door"
+    assert response.speech["plain"]["speech"] == "Opening garage door"
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
@@ -51,7 +51,7 @@ async def test_close_cover_intent(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert response.speech["plain"]["speech"] == "Closed garage door"
+    assert response.speech["plain"]["speech"] == "Closing garage door"
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN

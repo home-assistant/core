@@ -319,31 +319,41 @@ async def test_get_trigger_capabilities(
             "name": "group_value_write",
             "optional": True,
             "default": True,
-            "type": "boolean",
+            "selector": {
+                "boolean": {},
+            },
         },
         {
             "name": "group_value_response",
             "optional": True,
             "default": True,
-            "type": "boolean",
+            "selector": {
+                "boolean": {},
+            },
         },
         {
             "name": "group_value_read",
             "optional": True,
             "default": True,
-            "type": "boolean",
+            "selector": {
+                "boolean": {},
+            },
         },
         {
             "name": "incoming",
             "optional": True,
             "default": True,
-            "type": "boolean",
+            "selector": {
+                "boolean": {},
+            },
         },
         {
             "name": "outgoing",
             "optional": True,
             "default": True,
-            "type": "boolean",
+            "selector": {
+                "boolean": {},
+            },
         },
     ]
 
@@ -397,7 +407,7 @@ async def test_invalid_trigger_configuration(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     knx: KNXTestKit,
-):
+) -> None:
     """Test invalid telegram device trigger configuration at attach_trigger."""
     await knx.setup_integration({})
     device_entry = device_registry.async_get_device(

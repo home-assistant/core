@@ -71,7 +71,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         try:
             response = await model.generate_content_async(prompt_parts)
         except (
-            ClientError,
+            GoogleAPICallError,
             ValueError,
             genai_types.BlockedPromptException,
             genai_types.StopCandidateException,

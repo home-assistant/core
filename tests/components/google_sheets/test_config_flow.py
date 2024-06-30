@@ -1,10 +1,10 @@
 """Test the Google Sheets config flow."""
 
-from collections.abc import Generator
 from unittest.mock import Mock, patch
 
 from gspread import GSpreadException
 import pytest
+from typing_extensions import Generator
 
 from homeassistant import config_entries
 from homeassistant.components.application_credentials import (
@@ -41,7 +41,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture(autouse=True)
-async def mock_client() -> Generator[Mock, None, None]:
+async def mock_client() -> Generator[Mock]:
     """Fixture to setup a fake spreadsheet client library."""
     with patch(
         "homeassistant.components.google_sheets.config_flow.Client"

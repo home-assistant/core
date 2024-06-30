@@ -360,6 +360,12 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^RESULT_TYPE_(\w*)$"),
         ),
     ],
+    "homeassistant.helpers.config_validation": [
+        ObsoleteImportMatch(
+            reason="should be imported from homeassistant/components/<platform>",
+            constant=re.compile(r"^PLATFORM_SCHEMA(_BASE)?$"),
+        ),
+    ],
     "homeassistant.helpers.device_registry": [
         ObsoleteImportMatch(
             reason="replaced by DeviceEntryDisabler enum",

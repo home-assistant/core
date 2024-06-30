@@ -3,6 +3,7 @@
 from collections.abc import Callable
 import logging
 import math
+import threading
 from types import NoneType
 from unittest import mock
 from unittest.mock import AsyncMock, patch
@@ -86,6 +87,7 @@ def endpoint(zigpy_coordinator_device):
     type(endpoint_mock.device).skip_configuration = mock.PropertyMock(
         return_value=False
     )
+    endpoint_mock.device.hass.loop_thread_id = threading.get_ident()
     endpoint_mock.id = 1
     return endpoint_mock
 
@@ -345,6 +347,7 @@ def test_cluster_handler_registry() -> None:
     all_quirk_ids = {}
     for cluster_id in CLUSTERS_BY_ID:
         all_quirk_ids[cluster_id] = {None}
+    # pylint: disable-next=too-many-nested-blocks
     for manufacturer in zigpy_quirks._DEVICE_REGISTRY.registry.values():
         for model_quirk_list in manufacturer.values():
             for quirk in model_quirk_list:
@@ -366,6 +369,7 @@ def test_cluster_handler_registry() -> None:
                             all_quirk_ids[cluster_id] = {None}
                         all_quirk_ids[cluster_id].add(quirk_id)
 
+    # pylint: disable-next=undefined-loop-variable
     del quirk, model_quirk_list, manufacturer
 
     for (
@@ -583,7 +587,7 @@ async def test_ep_cluster_handlers_configure(cluster_handler) -> None:
         await endpoint.async_configure()
         await endpoint.async_initialize(mock.sentinel.from_cache)
 
-    for ch in [*claimed.values(), *client_handlers.values()]:
+    for ch in (*claimed.values(), *client_handlers.values()):
         assert ch.async_initialize.call_count == 1
         assert ch.async_initialize.await_count == 1
         assert ch.async_initialize.call_args[0][0] is mock.sentinel.from_cache

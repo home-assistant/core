@@ -79,7 +79,7 @@ _INNER_MATCH_POSSIBILITIES = [i + 1 for i in range(5)]
 _TYPE_HINT_MATCHERS.update(
     {
         f"x_of_y_{i}": re.compile(
-            rf"^(\w+)\[{_INNER_MATCH}" + f", {_INNER_MATCH}" * (i - 1) + r"\]$"
+            rf"^([\w\.]+)\[{_INNER_MATCH}" + f", {_INNER_MATCH}" * (i - 1) + r"\]$"
         )
         for i in _INNER_MATCH_POSSIBILITIES
     }
@@ -102,6 +102,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "area_registry": "AreaRegistry",
     "async_setup_recorder_instance": "RecorderInstanceGenerator",
     "caplog": "pytest.LogCaptureFixture",
+    "capsys": "pytest.CaptureFixture[str]",
     "current_request_with_host": "None",
     "device_registry": "DeviceRegistry",
     "enable_bluetooth": "None",
@@ -125,14 +126,12 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "hass_owner_user": "MockUser",
     "hass_read_only_access_token": "str",
     "hass_read_only_user": "MockUser",
-    "hass_recorder": "Callable[..., HomeAssistant]",
     "hass_storage": "dict[str, Any]",
     "hass_supervisor_access_token": "str",
     "hass_supervisor_user": "MockUser",
     "hass_ws_client": "WebSocketGenerator",
     "init_tts_cache_dir_side_effect": "Any",
     "issue_registry": "IssueRegistry",
-    "legacy_auth": "LegacyApiPasswordAuthProvider",
     "local_auth": "HassAuthProvider",
     "mock_async_zeroconf": "MagicMock",
     "mock_bleak_scanner_start": "MagicMock",
@@ -154,6 +153,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "recorder_mock": "Recorder",
     "request": "pytest.FixtureRequest",
     "requests_mock": "Mocker",
+    "service_calls": "list[ServiceCall]",
     "snapshot": "SnapshotAssertion",
     "socket_enabled": "None",
     "stub_blueprint_populate": "None",
@@ -3117,7 +3117,7 @@ class HassTypeHintChecker(BaseChecker):
             "Used when method return type is incorrect",
         ),
         "W7433": (
-            "Argument %s is of type %s and could be move to "
+            "Argument %s is of type %s and could be moved to "
             "`@pytest.mark.usefixtures` decorator in %s",
             "hass-consider-usefixtures-decorator",
             "Used when an argument type is None and could be a fixture",
@@ -3138,15 +3138,15 @@ class HassTypeHintChecker(BaseChecker):
 
     _class_matchers: list[ClassTypeHintMatch]
     _function_matchers: list[TypeHintMatch]
-    _module_name: str
+    _module_node: nodes.Module
     _in_test_module: bool
 
     def visit_module(self, node: nodes.Module) -> None:
         """Populate matchers for a Module node."""
         self._class_matchers = []
         self._function_matchers = []
-        self._module_name = node.name
-        self._in_test_module = self._module_name.startswith("tests.")
+        self._module_node = node
+        self._in_test_module = node.name.startswith("tests.")
 
         if (
             self._in_test_module
@@ -3230,7 +3230,7 @@ class HassTypeHintChecker(BaseChecker):
         if node.is_method():
             matchers = _METHOD_MATCH
         else:
-            if self._in_test_module:
+            if self._in_test_module and node.parent is self._module_node:
                 if node.name.startswith("test_"):
                     self._check_test_function(node, False)
                     return

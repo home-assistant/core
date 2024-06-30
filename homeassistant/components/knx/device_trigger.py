@@ -21,8 +21,12 @@ from .const import DOMAIN
 from .project import KNXProject
 from .trigger import (
     CONF_KNX_DESTINATION,
+    CONF_KNX_GROUP_VALUE_READ,
+    CONF_KNX_GROUP_VALUE_RESPONSE,
+    CONF_KNX_GROUP_VALUE_WRITE,
+    CONF_KNX_INCOMING,
+    CONF_KNX_OUTGOING,
     PLATFORM_TYPE_TRIGGER_TELEGRAM,
-    TELEGRAM_TRIGGER_OPTIONS,
     TELEGRAM_TRIGGER_SCHEMA,
     TRIGGER_SCHEMA as TRIGGER_TRIGGER_SCHEMA,
 )
@@ -79,7 +83,21 @@ async def async_get_trigger_capabilities(
                         options=options,
                     ),
                 ),
-                **TELEGRAM_TRIGGER_OPTIONS,
+                vol.Optional(
+                    CONF_KNX_GROUP_VALUE_WRITE, default=True
+                ): selector.BooleanSelector(),
+                vol.Optional(
+                    CONF_KNX_GROUP_VALUE_RESPONSE, default=True
+                ): selector.BooleanSelector(),
+                vol.Optional(
+                    CONF_KNX_GROUP_VALUE_READ, default=True
+                ): selector.BooleanSelector(),
+                vol.Optional(
+                    CONF_KNX_INCOMING, default=True
+                ): selector.BooleanSelector(),
+                vol.Optional(
+                    CONF_KNX_OUTGOING, default=True
+                ): selector.BooleanSelector(),
             }
         )
     }
@@ -98,7 +116,7 @@ async def async_attach_trigger(
     } | {CONF_PLATFORM: PLATFORM_TYPE_TRIGGER_TELEGRAM}
 
     try:
-        TRIGGER_TRIGGER_SCHEMA(trigger_config)
+        trigger_config = TRIGGER_TRIGGER_SCHEMA(trigger_config)
     except vol.Invalid as err:
         raise InvalidDeviceAutomationConfig(f"{err}") from err
 
