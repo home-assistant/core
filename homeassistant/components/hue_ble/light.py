@@ -77,8 +77,6 @@ class HaHueBLE(LightEntity):
 
         _LOGGER.debug("Received state notification from light %s", self.name)
 
-        self._name = self._light.name
-        self._address = self._light.address
         self._attr_available = self._light.available
         self._attr_is_on = self._light.power_state
         self._attr_brightness = self._light.brightness
