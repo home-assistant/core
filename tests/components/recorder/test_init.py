@@ -905,16 +905,19 @@ async def test_saving_event_with_oversized_data(
     hass.bus.async_fire("test_event", event_data)
     hass.bus.async_fire("test_event_too_big", massive_dict)
     await async_wait_recording_done(hass)
-    events = {}
 
     with session_scope(hass=hass, read_only=True) as session:
-        for _, data, event_type in (
-            session.query(Events.event_id, EventData.shared_data, EventTypes.event_type)
-            .outerjoin(EventData, Events.data_id == EventData.data_id)
-            .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
-            .where(EventTypes.event_type.in_(["test_event", "test_event_too_big"]))
-        ):
-            events[event_type] = data
+        events = {
+            event_type: data
+            for _, data, event_type in (
+                session.query(
+                    Events.event_id, EventData.shared_data, EventTypes.event_type
+                )
+                .outerjoin(EventData, Events.data_id == EventData.data_id)
+                .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
+                .where(EventTypes.event_type.in_(["test_event", "test_event_too_big"]))
+            )
+        }
 
     assert "test_event_too_big" in caplog.text
 
@@ -932,16 +935,19 @@ async def test_saving_event_invalid_context_ulid(
     event_data = {"test_attr": 5, "test_attr_10": "nice"}
     hass.bus.async_fire("test_event", event_data, context=Context(id="invalid"))
     await async_wait_recording_done(hass)
-    events = {}
 
     with session_scope(hass=hass, read_only=True) as session:
-        for _, data, event_type in (
-            session.query(Events.event_id, EventData.shared_data, EventTypes.event_type)
-            .outerjoin(EventData, Events.data_id == EventData.data_id)
-            .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
-            .where(EventTypes.event_type.in_(["test_event"]))
-        ):
-            events[event_type] = data
+        events = {
+            event_type: data
+            for _, data, event_type in (
+                session.query(
+                    Events.event_id, EventData.shared_data, EventTypes.event_type
+                )
+                .outerjoin(EventData, Events.data_id == EventData.data_id)
+                .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
+                .where(EventTypes.event_type.in_(["test_event"]))
+            )
+        }
 
     assert "invalid" in caplog.text
 
