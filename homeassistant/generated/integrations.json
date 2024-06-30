@@ -2689,7 +2689,7 @@
       "iot_class": "local_polling"
     },
     "hue_ble": {
-      "name": "Hue BLE",
+      "name": "Philips Hue BLE",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
