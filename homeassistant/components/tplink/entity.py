@@ -56,12 +56,20 @@ DEVICETYPES_WITH_SPECIALIZED_PLATFORMS = {
     DeviceType.Thermostat,
 }
 
+# Features to be always included even when the device type has its own platform
+FEATURES_ALLOW_LIST = {
+    # lights have current_consumption and a specialized platform
+    "current_consumption"
+}
+
+
 # Features excluded due to future platform additions
 EXCLUDED_FEATURES = {
     # update
     "current_firmware_version",
     "available_firmware_version",
 }
+
 
 LEGACY_KEY_MAPPING = {
     "current": ATTR_CURRENT_A,
@@ -352,6 +360,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
             and (
                 feat.category is not Feature.Category.Primary
                 or device.device_type not in DEVICETYPES_WITH_SPECIALIZED_PLATFORMS
+                or feat.id in FEATURES_ALLOW_LIST
             )
             and (
                 desc := cls._description_for_feature(
