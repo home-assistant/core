@@ -17,7 +17,7 @@ type MadVRConfigEntry = ConfigEntry[MadVRCoordinator]
 
 
 class MadVRCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """My custom coordinator for push-based API."""
+    """Madvr coordinator for Envy (push-based API)."""
 
     config_entry: MadVRConfigEntry
 
@@ -26,7 +26,7 @@ class MadVRCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         hass: HomeAssistant,
         client: Madvr,
     ) -> None:
-        """Initialize my coordinator."""
+        """Initialize madvr coordinator."""
         super().__init__(hass, _LOGGER, name=DOMAIN)
         self.entry_id = self.config_entry.entry_id
         self.client = client
