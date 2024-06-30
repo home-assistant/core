@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 import logging
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any
 
 from google.cloud import texttospeech
@@ -121,7 +122,7 @@ class GoogleCloudOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
         key_file = self.hass.config.path(self.config_entry.data[CONF_KEY_FILE])
         client: texttospeech.TextToSpeechAsyncClient = (
-            texttospeech.TextToSpeechAsyncClient.from_service_account_json(key_file)
+            texttospeech.TextToSpeechAsyncClient.from_service_account_file(key_file)
         )
         voices = await async_tts_voices(client)
         return self.async_show_form(
@@ -137,7 +138,7 @@ class GoogleCloudOptionsFlowHandler(OptionsFlowWithConfigEntry):
                             mode=SelectSelectorMode.DROPDOWN, options=list(voices)
                         )
                     ),
-                    **tts_options_schema(self.options, voices).schema,
+                    **tts_options_schema(MappingProxyType(self.options), voices).schema,
                     vol.Optional(
                         CONF_STT_MODEL,
                         description={

@@ -51,7 +51,7 @@ async def async_get_engine(hass: HomeAssistant, config, discovery_info=None):
             _LOGGER.error("File %s doesn't exist", key_file)
             return None
     if key_file:
-        client = texttospeech.TextToSpeechAsyncClient.from_service_account_json(
+        client = texttospeech.TextToSpeechAsyncClient.from_service_account_file(
             key_file
         )
     else:
@@ -78,7 +78,7 @@ async def async_setup_entry(
     """Set up Google Cloud text-to-speech."""
     key_file = hass.config.path(config_entry.data[CONF_KEY_FILE])
     client: texttospeech.TextToSpeechAsyncClient = (
-        texttospeech.TextToSpeechAsyncClient.from_service_account_json(key_file)
+        texttospeech.TextToSpeechAsyncClient.from_service_account_file(key_file)
     )
     try:
         voices = await async_tts_voices(client)
@@ -227,8 +227,12 @@ async def _async_get_tts_audio(
         _LOGGER.error("Error: %s when validating options: %s", err, options)
         return None, None
 
-    encoding = texttospeech.AudioEncoding[options[CONF_ENCODING]]
-    gender = texttospeech.SsmlVoiceGender[options[CONF_GENDER]]
+    encoding: texttospeech.AudioEncoding = texttospeech.AudioEncoding[
+        options[CONF_ENCODING]
+    ]  # type: ignore[misc]
+    gender: texttospeech.SsmlVoiceGender | None = texttospeech.SsmlVoiceGender[
+        options[CONF_GENDER]
+    ]  # type: ignore[misc]
     voice = options[CONF_VOICE]
     if voice:
         gender = None

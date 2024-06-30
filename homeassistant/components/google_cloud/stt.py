@@ -42,7 +42,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Google Cloud speech platform via config entry."""
     key_file = hass.config.path(config_entry.data[CONF_KEY_FILE])
-    client = speech_v1.SpeechAsyncClient.from_service_account_json(key_file)
+    client = speech_v1.SpeechAsyncClient.from_service_account_file(key_file)
     async_add_entities([GoogleCloudSpeechToTextEntity(config_entry, client)])
 
 
