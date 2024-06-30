@@ -259,7 +259,11 @@ class GoogleCloudTTSProvider(Provider):
                 vol.Optional(CONF_TEXT_TYPE, default=self._text_type): TEXT_TYPE_SCHEMA,
             }
         )
-        options = options_schema(options)
+        try:
+            options = options_schema(options)
+        except vol.Invalid as err:
+            _LOGGER.error("Error: %s when validating options: %s", err, options)
+            return None, None
 
         _encoding = options[CONF_ENCODING]
         _voice = options[CONF_VOICE]
