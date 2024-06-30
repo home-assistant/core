@@ -79,7 +79,7 @@ _INNER_MATCH_POSSIBILITIES = [i + 1 for i in range(5)]
 _TYPE_HINT_MATCHERS.update(
     {
         f"x_of_y_{i}": re.compile(
-            rf"^(\w+)\[{_INNER_MATCH}" + f", {_INNER_MATCH}" * (i - 1) + r"\]$"
+            rf"^([\w\.]+)\[{_INNER_MATCH}" + f", {_INNER_MATCH}" * (i - 1) + r"\]$"
         )
         for i in _INNER_MATCH_POSSIBILITIES
     }
@@ -102,6 +102,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "area_registry": "AreaRegistry",
     "async_setup_recorder_instance": "RecorderInstanceGenerator",
     "caplog": "pytest.LogCaptureFixture",
+    "capsys": "pytest.CaptureFixture[str]",
     "current_request_with_host": "None",
     "device_registry": "DeviceRegistry",
     "enable_bluetooth": "None",
@@ -125,7 +126,6 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "hass_owner_user": "MockUser",
     "hass_read_only_access_token": "str",
     "hass_read_only_user": "MockUser",
-    "hass_recorder": "Callable[..., HomeAssistant]",
     "hass_storage": "dict[str, Any]",
     "hass_supervisor_access_token": "str",
     "hass_supervisor_user": "MockUser",

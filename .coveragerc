@@ -87,6 +87,7 @@ omit =
     homeassistant/components/aprilaire/climate.py
     homeassistant/components/aprilaire/coordinator.py
     homeassistant/components/aprilaire/entity.py
+    homeassistant/components/aprilaire/select.py
     homeassistant/components/aprilaire/sensor.py
     homeassistant/components/apsystems/__init__.py
     homeassistant/components/apsystems/coordinator.py
@@ -369,7 +370,6 @@ omit =
     homeassistant/components/eq3btsmart/__init__.py
     homeassistant/components/eq3btsmart/climate.py
     homeassistant/components/eq3btsmart/entity.py
-    homeassistant/components/eq3btsmart/models.py
     homeassistant/components/escea/__init__.py
     homeassistant/components/escea/climate.py
     homeassistant/components/escea/discovery.py
@@ -1510,7 +1510,6 @@ omit =
     homeassistant/components/ue_smart_radio/media_player.py
     homeassistant/components/ukraine_alarm/__init__.py
     homeassistant/components/ukraine_alarm/binary_sensor.py
-    homeassistant/components/unifi_direct/__init__.py
     homeassistant/components/unifi_direct/device_tracker.py
     homeassistant/components/unifiled/*
     homeassistant/components/upb/__init__.py
@@ -1650,6 +1649,7 @@ omit =
     homeassistant/components/xiaomi_miio/remote.py
     homeassistant/components/xiaomi_miio/sensor.py
     homeassistant/components/xiaomi_miio/switch.py
+    homeassistant/components/xiaomi_miio/typing.py
     homeassistant/components/xiaomi_tv/media_player.py
     homeassistant/components/xmpp/notify.py
     homeassistant/components/xs1/*
@@ -1688,12 +1688,9 @@ omit =
     homeassistant/components/yolink/siren.py
     homeassistant/components/yolink/switch.py
     homeassistant/components/yolink/valve.py
-    homeassistant/components/youless/__init__.py
-    homeassistant/components/youless/sensor.py
     homeassistant/components/zabbix/*
     homeassistant/components/zamg/coordinator.py
     homeassistant/components/zengge/light.py
-    homeassistant/components/zeroconf/models.py
     homeassistant/components/zeroconf/usage.py
     homeassistant/components/zestimate/sensor.py
     homeassistant/components/zha/core/cluster_handlers/*

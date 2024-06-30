@@ -167,8 +167,9 @@ async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List action capabilities."""
-
-    return {"extra_fields": DEVICE_ACTION_SCHEMAS.get(config[CONF_TYPE], {})}
+    if (fields := DEVICE_ACTION_SCHEMAS.get(config[CONF_TYPE])) is None:
+        return {}
+    return {"extra_fields": fields}
 
 
 async def _execute_service_based_action(

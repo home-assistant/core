@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant.components.number import (
@@ -26,7 +27,7 @@ ENTITY_SMALL_RANGE = "number.small_range"
 
 
 @pytest.fixture
-async def number_only() -> None:
+def number_only() -> Generator[None]:
     """Enable only the number platform."""
     with patch(
         "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
@@ -36,7 +37,7 @@ async def number_only() -> None:
 
 
 @pytest.fixture(autouse=True)
-async def setup_demo_number(hass, number_only):
+async def setup_demo_number(hass: HomeAssistant, number_only: None) -> None:
     """Initialize setup demo Number entity."""
     assert await async_setup_component(hass, DOMAIN, {"number": {"platform": "demo"}})
     await hass.async_block_till_done()

@@ -29,6 +29,7 @@ from uiprotect.data import (
     Viewer,
     WSSubscriptionMessage,
 )
+from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -148,7 +149,14 @@ def mock_entry(
             ufp.ws_subscription = ws_callback
             return Mock()
 
+        def subscribe_websocket_state(
+            ws_state_subscription: Callable[[WebsocketState], None],
+        ) -> Any:
+            ufp.ws_state_subscription = ws_state_subscription
+            return Mock()
+
         ufp_client.subscribe_websocket = subscribe
+        ufp_client.subscribe_websocket_state = subscribe_websocket_state
         yield ufp
 
 
