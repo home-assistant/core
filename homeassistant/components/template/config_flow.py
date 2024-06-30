@@ -45,6 +45,9 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
     """Generate schema."""
     schema: dict[vol.Marker, Any] = {}
 
+    SCHEMA_NAME = {
+        vol.Required(CONF_NAME): selector.TextSelector(),
+    }
     SCHEMA_STATE = {
         vol.Required(CONF_STATE): selector.TemplateSelector(),
     }
@@ -52,32 +55,40 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
     if domain == Platform.BINARY_SENSOR:
         schema = SCHEMA_STATE
         if flow_type == "config":
-            schema = schema | {
-                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=[cls.value for cls in BinarySensorDeviceClass],
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                        translation_key="binary_sensor_device_class",
-                        sort=True,
+            schema = (
+                SCHEMA_NAME
+                | {
+                    vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[cls.value for cls in BinarySensorDeviceClass],
+                            mode=selector.SelectSelectorMode.DROPDOWN,
+                            translation_key="binary_sensor_device_class",
+                            sort=True,
+                        ),
                     ),
-                ),
-            }
+                }
+                | schema
+            )
 
     if domain == Platform.BUTTON:
         schema = {
             vol.Optional(CONF_PRESS): selector.ActionSelector(),
         }
         if flow_type == "config":
-            schema = schema | {
-                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=[cls.value for cls in ButtonDeviceClass],
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                        translation_key="button_device_class",
-                        sort=True,
-                    ),
-                )
-            }
+            schema = (
+                SCHEMA_NAME
+                | {
+                    vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[cls.value for cls in ButtonDeviceClass],
+                            mode=selector.SelectSelectorMode.DROPDOWN,
+                            translation_key="button_device_class",
+                            sort=True,
+                        ),
+                    )
+                }
+                | schema
+            )
 
     if domain == Platform.SENSOR:
         schema = {
@@ -119,6 +130,8 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
                 ),
             ),
         }
+        if flow_type == "config":
+            schema = SCHEMA_NAME | schema
 
     schema[vol.Optional(CONF_DEVICE_ID)] = selector.DeviceSelector()
 
@@ -135,10 +148,7 @@ def options_schema(domain: str) -> vol.Schema:
 def config_schema(domain: str) -> vol.Schema:
     """Generate config schema."""
     return vol.Schema(
-        {
-            vol.Required(CONF_NAME): selector.TextSelector(),
-        }
-        | generate_schema(domain, "config"),
+        generate_schema(domain, "config"),
     )
 
 

@@ -297,6 +297,13 @@ async def async_yaml_patch_helper(hass, filename):
                 "state": "{{1 == 2}}",
             },
         ),
+        (
+            {
+                "template_type": "button",
+                "name": "My template",
+            },
+            {},
+        ),
     ],
 )
 async def test_change_device(
