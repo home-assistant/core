@@ -942,7 +942,7 @@ ifaddr==0.2.0
 imgw_pib==1.0.5
 
 # homeassistant.components.incomfort
-incomfort-client==0.6.2
+incomfort-client==0.6.3
 
 # homeassistant.components.influxdb
 influxdb-client==1.24.0
