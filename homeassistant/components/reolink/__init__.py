@@ -192,22 +192,20 @@ async def async_remove_config_entry_device(
         )
         return False  # Do not remove the host/NVR itself
 
-    ch_model = host.api.camera_model(ch)
-    if ch_model not in [device.model, "Unknown"]:
-        _LOGGER.debug(
-            "Removing Reolink device %s, "
-            "since the camera model connected to channel %s changed from %s to %s",
-            device.name,
-            ch,
-            device.model,
-            ch_model,
-        )
-        return True
-
     if ch not in host.api.channels:
         _LOGGER.debug(
             "Removing Reolink device %s, "
             "since no camera is connected to NVR channel %s anymore",
+            device.name,
+            ch,
+        )
+        return True
+
+    await host.api.get_state(cmd="GetChannelstatus")  # update the camera_online status
+    if not host.api.camera_online(ch):
+        _LOGGER.debug(
+            "Removing Reolink device %s, "
+            "since the camera connected to channel %s is offline",
             device.name,
             ch,
         )
