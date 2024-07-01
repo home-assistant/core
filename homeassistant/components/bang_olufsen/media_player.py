@@ -398,9 +398,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     @property
     def media_image_url(self) -> str | None:
         """Return URL of the currently playing music."""
-        if self._media_image:
-            return self._media_image.url
-        return None
+        return self._media_image.url
 
     @property
     def media_image_remotely_accessible(self) -> bool:
