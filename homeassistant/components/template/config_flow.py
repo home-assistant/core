@@ -83,8 +83,7 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
             } | schema
 
     if domain == Platform.SENSOR:
-        schema = {
-            **SCHEMA_STATE,
+        schema = SCHEMA_STATE | {
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=list(
