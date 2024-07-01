@@ -146,7 +146,7 @@
     'supported_features': 0,
     'translation_key': 'battery_level',
     'unique_id': '123456789ABCDEFGH_battery_level',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_states[sensor.my_device_battery_level-state]
@@ -188,9 +188,6 @@
     }),
     'name': None,
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
@@ -200,7 +197,7 @@
     'supported_features': 0,
     'translation_key': 'current',
     'unique_id': '123456789ABCDEFGH_current_a',
-    'unit_of_measurement': 'A',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_states[sensor.my_device_current-state]
@@ -242,9 +239,6 @@
     }),
     'name': None,
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
@@ -254,7 +248,7 @@
     'supported_features': 0,
     'translation_key': 'current_consumption',
     'unique_id': '123456789ABCDEFGH_current_power_w',
-    'unit_of_measurement': 'W',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_states[sensor.my_device_current_consumption-state]
@@ -338,7 +332,7 @@
     'supported_features': 0,
     'translation_key': 'humidity',
     'unique_id': '123456789ABCDEFGH_humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_states[sensor.my_device_humidity-state]
@@ -420,7 +414,7 @@
     'supported_features': 0,
     'translation_key': 'report_interval',
     'unique_id': '123456789ABCDEFGH_report_interval',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_states[sensor.my_device_signal_level-entry]
@@ -570,7 +564,7 @@
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': '123456789ABCDEFGH_temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_states[sensor.my_device_this_month_s_consumption-entry]
@@ -596,9 +590,6 @@
     }),
     'name': None,
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
@@ -608,7 +599,7 @@
     'supported_features': 0,
     'translation_key': 'consumption_this_month',
     'unique_id': '123456789ABCDEFGH_consumption_this_month',
-    'unit_of_measurement': 'kWh',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_states[sensor.my_device_this_month_s_consumption-state]
@@ -650,9 +641,6 @@
     }),
     'name': None,
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
@@ -662,7 +650,7 @@
     'supported_features': 0,
     'translation_key': 'consumption_today',
     'unique_id': '123456789ABCDEFGH_today_energy_kwh',
-    'unit_of_measurement': 'kWh',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_states[sensor.my_device_today_s_consumption-state]
@@ -704,9 +692,6 @@
     }),
     'name': None,
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
@@ -716,7 +701,7 @@
     'supported_features': 0,
     'translation_key': 'consumption_total',
     'unique_id': '123456789ABCDEFGH_total_energy_kwh',
-    'unit_of_measurement': 'kWh',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_states[sensor.my_device_total_consumption-state]
@@ -758,9 +743,6 @@
     }),
     'name': None,
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
@@ -770,7 +752,7 @@
     'supported_features': 0,
     'translation_key': 'voltage',
     'unique_id': '123456789ABCDEFGH_voltage',
-    'unit_of_measurement': 'v',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_states[sensor.my_device_voltage-state]
@@ -779,7 +761,7 @@
       'device_class': 'voltage',
       'friendly_name': 'my_device Voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'v',
+      'unit_of_measurement': 'V',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_device_voltage',
