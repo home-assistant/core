@@ -20,8 +20,10 @@ from homeassistant.helpers.update_coordinator import (
     BaseDataUpdateCoordinatorProtocol,
 )
 
-from .const import DOMAIN, OUTPUT_TRANSLATION_KEY, STATUS_UPDATE_MAX_TIME_INTERVAL
+from .const import DOMAIN, STATUS_UPDATE_MAX_TIME_INTERVAL
 from .nasweb_data import NASwebData
+
+OUTPUT_TRANSLATION_KEY = "switch_output"
 
 _LOGGER = logging.getLogger(__name__)
 
