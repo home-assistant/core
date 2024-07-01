@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Generator
 from datetime import datetime, timedelta
 from pathlib import Path
 import sqlite3
@@ -14,7 +15,6 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 from sqlalchemy.pool import QueuePool
-from typing_extensions import Generator
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import (

@@ -1,9 +1,9 @@
 """Fixtures for Tankerkoenig integration tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.tankerkoenig import DOMAIN
 from homeassistant.const import CONF_SHOW_ON_MAP
