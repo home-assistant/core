@@ -925,7 +925,6 @@ iaqualink==0.5.0
 ibeacon-ble==1.2.0
 
 # homeassistant.components.google
-# homeassistant.components.husqvarna_automower
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 ical==8.0.1
