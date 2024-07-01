@@ -196,7 +196,6 @@ class TPLinkLightEntity(CoordinatedTPLinkEntity, LightEntity):
     ) -> None:
         """Initialize the light."""
         self._parent = parent
-        super().__init__(device, coordinator, parent=parent)
         self._light_module = light_module
         # If _attr_name is None the entity name will be the device name
         self._attr_name = None if parent is None else device.alias
@@ -214,6 +213,8 @@ class TPLinkLightEntity(CoordinatedTPLinkEntity, LightEntity):
         if len(self._attr_supported_color_modes) == 1:
             # If the light supports only a single color mode, set it now
             self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
+
+        super().__init__(device, coordinator, parent=parent)
 
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""

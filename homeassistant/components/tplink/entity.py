@@ -185,14 +185,11 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
 
         self._attr_unique_id = self._get_unique_id()
 
+        self._async_call_update_attrs()
+
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""
         return legacy_device_id(self._device)
-
-    async def async_added_to_hass(self) -> None:
-        """Handle being added to hass."""
-        self._async_call_update_attrs()
-        await super().async_added_to_hass()
 
     @abstractmethod
     @callback

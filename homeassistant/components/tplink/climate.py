@@ -77,7 +77,8 @@ class TPLinkClimateEntity(CoordinatedTPLinkEntity, ClimateEntity):
         parent: Device,
     ) -> None:
         """Initialize the climate entity."""
-        super().__init__(device, coordinator, parent=parent)
+        self._device: Device = device
+
         self._state_feature = self._device.features["state"]
         self._mode_feature = self._device.features["thermostat_mode"]
         self._temp_feature = self._device.features["temperature"]
@@ -86,6 +87,8 @@ class TPLinkClimateEntity(CoordinatedTPLinkEntity, ClimateEntity):
         self._attr_min_temp = self._target_feature.minimum_value
         self._attr_max_temp = self._target_feature.maximum_value
         self._attr_temperature_unit = UNIT_MAPPING[cast(str, self._temp_feature.unit)]
+
+        super().__init__(device, coordinator, parent=parent)
 
     @async_refresh_after
     async def async_set_temperature(self, **kwargs: Any) -> None:
