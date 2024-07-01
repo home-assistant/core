@@ -1,5 +1,6 @@
 """The tests for the InfluxDB component."""
 
+from collections.abc import Generator
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus
@@ -7,7 +8,6 @@ import logging
 from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import influxdb
 from homeassistant.components.influxdb.const import DEFAULT_BUCKET
