@@ -55,6 +55,7 @@ async def test_if_fires_when_hour_matches(
     async_fire_time_changed(hass, now.replace(year=now.year + 2, day=1, hour=0))
     await hass.async_block_till_done()
     assert len(service_calls) == 1
+    assert service_calls[0].data["id"] == 0
 
     await hass.services.async_call(
         automation.DOMAIN,
@@ -62,11 +63,11 @@ async def test_if_fires_when_hour_matches(
         {ATTR_ENTITY_ID: ENTITY_MATCH_ALL},
         blocking=True,
     )
+    assert len(service_calls) == 2
 
     async_fire_time_changed(hass, now.replace(year=now.year + 1, day=1, hour=0))
     await hass.async_block_till_done()
-    assert len(service_calls) == 1
-    assert service_calls[0].data["id"] == 0
+    assert len(service_calls) == 2
 
 
 async def test_if_fires_when_minute_matches(
@@ -95,12 +96,11 @@ async def test_if_fires_when_minute_matches(
             }
         },
     )
-    assert len(service_calls) == 2
 
     async_fire_time_changed(hass, now.replace(year=now.year + 2, day=1, minute=0))
 
     await hass.async_block_till_done()
-    assert len(service_calls) == 2
+    assert len(service_calls) == 1
 
 
 async def test_if_fires_when_second_matches(
