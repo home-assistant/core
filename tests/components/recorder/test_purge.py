@@ -1,5 +1,6 @@
 """Test data purging."""
 
+from collections.abc import Generator
 from datetime import datetime, timedelta
 import json
 import sqlite3
@@ -9,7 +10,6 @@ from freezegun import freeze_time
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.orm.session import Session
-from typing_extensions import Generator
 from voluptuous.error import MultipleInvalid
 
 from homeassistant.components import recorder
