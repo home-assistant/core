@@ -455,7 +455,7 @@ async def test_error_handling(
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
-        "Sorry, I had a problem talking to Google Generative AI: None some error"
+        "Sorry, I had a problem talking to Google Generative AI: some error"
     )
 
 
