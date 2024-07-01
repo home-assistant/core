@@ -132,7 +132,7 @@ EXCEPTIONS = {
     "airthings-ble",  # https://github.com/Airthings/airthings-ble/pull/42
     "amberelectric",  # https://github.com/madpilot/amberelectric.py/pull/11
     "apple_weatherkit",  # https://github.com/tjhorner/python-weatherkit/pull/3
-    "asyncio",  # Python core
+    "asyncio",  # PSF License
     "chacha20poly1305",  # LGPL
     "commentjson",  # https://github.com/vaidik/commentjson/pull/55
     "crownstone-cloud",  # https://github.com/crownstone/crownstone-lib-python-cloud/pull/5
