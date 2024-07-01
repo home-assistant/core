@@ -23,6 +23,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfElectricCurrent,
     UnitOfLength,
+    UnitOfPressure,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -43,6 +44,8 @@ class BMWSensorEntityDescription(SensorEntityDescription):
     key_class: str | None = None
     is_available: Callable[[MyBMWVehicle], bool] = lambda v: v.is_lsc_enabled
 
+
+TIRES = ["front_left", "front_right", "rear_left", "rear_right"]
 
 SENSOR_TYPES: list[BMWSensorEntityDescription] = [
     BMWSensorEntityDescription(
@@ -153,6 +156,33 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
         ],
         is_available=lambda v: v.is_remote_climate_stop_enabled,
     ),
+    *[
+        BMWSensorEntityDescription(
+            key=f"tires.{tire}.current_pressure",
+            translation_key=f"{tire}_current_pressure",
+            device_class=SensorDeviceClass.PRESSURE,
+            native_unit_of_measurement=UnitOfPressure.KPA,
+            suggested_unit_of_measurement=UnitOfPressure.BAR,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_display_precision=2,
+            is_available=lambda v: v.is_lsc_enabled and v.tires is not None,
+        )
+        for tire in TIRES
+    ],
+    *[
+        BMWSensorEntityDescription(
+            key=f"tires.{tire}.target_pressure",
+            translation_key=f"{tire}_target_pressure",
+            device_class=SensorDeviceClass.PRESSURE,
+            native_unit_of_measurement=UnitOfPressure.KPA,
+            suggested_unit_of_measurement=UnitOfPressure.BAR,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_display_precision=2,
+            entity_registry_enabled_default=False,
+            is_available=lambda v: v.is_lsc_enabled and v.tires is not None,
+        )
+        for tire in TIRES
+    ],
 ]
 
 
