@@ -217,6 +217,17 @@ async def test_protect_loop_open(caplog: pytest.LogCaptureFixture) -> None:
     assert "Detected blocking call to open with args" not in caplog.text
 
 
+async def test_proc_listdir(caplog: pytest.LogCaptureFixture) -> None:
+    """Test listdir in /proc is not reported."""
+    block_async_io.enable()
+    with (
+        contextlib.suppress(FileNotFoundError),
+        os.listdir("/proc/self/pd"),
+    ):
+        pass
+    assert "Detected blocking call to listdir with args" not in caplog.text
+
+
 async def test_protect_open(caplog: pytest.LogCaptureFixture) -> None:
     """Test opening a file in the event loop logs."""
     with patch.object(block_async_io, "_IN_TESTS", False):
