@@ -313,6 +313,57 @@ async def test_reload(
     assert hass.states.get("sensor.second_test")
 
 
+@pytest.mark.parametrize(
+    "yaml_file",
+    [
+        "configuration_error1.yaml",
+        "configuration_error2.yaml",
+    ],
+)
+async def test_reload_invalid(
+    recorder_mock: Recorder, hass: HomeAssistant, yaml_file
+) -> None:
+    """Cover cases with an error on reloading yaml."""
+    hass.state = ha.CoreState.not_running
+    hass.states.async_set("binary_sensor.test_id", "on")
+
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "history_stats": {
+                "entity_id": "binary_sensor.test_id",
+                "name": "test",
+                "state": "on",
+                "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                "duration": "01:00",
+            },
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 2
+
+    assert hass.states.get("sensor.test")
+
+    yaml_path = get_fixture_path(yaml_file, "history_stats")
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 2
+
+    assert hass.states.get("sensor.test")
+    assert hass.states.get("sensor.test_with_error") is None
+
+
 async def test_measure_multiple(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test the history statistics sensor measure for multiple ."""
     start_time = dt_util.utcnow() - timedelta(minutes=60)

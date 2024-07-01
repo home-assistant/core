@@ -81,8 +81,9 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up history_stats from yaml config."""
+
+    await _process_config(hass, config)
     if DOMAIN in config:
-        await _process_config(hass, config)
 
         async def _reload_config(call: Event | ServiceCall) -> None:
             """Reload top-level + platforms."""

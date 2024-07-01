@@ -1,0 +1,7 @@
+history_stats:
+  illegal_key: ~
+  entity_id: binary_sensor.test_id
+  name: test_with_error
+  state: "on"
+  start: "{{ as_timestamp(now()) - 3600 }}"
+  end: "{{ now() }}"
