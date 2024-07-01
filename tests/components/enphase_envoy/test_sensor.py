@@ -1,10 +1,10 @@
 """Test Enphase Envoy sensors."""
 
+from collections.abc import AsyncGenerator
 from unittest.mock import Mock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from typing_extensions import AsyncGenerator
 
 from homeassistant.components.enphase_envoy import DOMAIN
 from homeassistant.components.enphase_envoy.const import Platform

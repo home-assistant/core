@@ -1,11 +1,11 @@
 """The tests for MQTT tag scanner."""
 
+from collections.abc import Generator
 import copy
 import json
 from unittest.mock import ANY, AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN

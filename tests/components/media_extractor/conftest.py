@@ -1,10 +1,10 @@
 """Common fixtures for the Media Extractor tests."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.media_extractor import DOMAIN
 from homeassistant.core import HomeAssistant, ServiceCall

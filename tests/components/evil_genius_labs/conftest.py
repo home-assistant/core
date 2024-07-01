@@ -1,10 +1,10 @@
 """Test helpers for Evil Genius Labs."""
 
+from collections.abc import AsyncGenerator
 from typing import Any
 from unittest.mock import patch
 
 import pytest
-from typing_extensions import AsyncGenerator
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant

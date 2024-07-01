@@ -1131,7 +1131,7 @@ ibmiotf==0.3.4
 # homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==8.0.1
+ical==8.1.1
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -1152,7 +1152,7 @@ ihcsdk==2.8.5
 imgw_pib==1.0.5
 
 # homeassistant.components.incomfort
-incomfort-client==0.6.2
+incomfort-client==0.6.3
 
 # homeassistant.components.influxdb
 influxdb-client==1.24.0
