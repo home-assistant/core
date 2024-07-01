@@ -38,10 +38,17 @@
         }
       },
       "user_confirm_still": {
-        "title": "Preview",
+        "title": "Image Preview",
         "description": "![Camera Still Image Preview]({preview_url})",
         "data": {
           "confirmed_ok": "This image looks good."
+        }
+      },
+      "user_confirm_stream": {
+        "title": "Stream Preview",
+        "description": "Please wait a few seconds for the stream to load\b{video_html}",
+        "data": {
+          "confirmed_ok": "This stream looks good"
         }
       }
     }

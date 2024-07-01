@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 import contextlib
-from datetime import datetime
+from datetime import datetime, timedelta
 from errno import EHOSTUNREACH, EIO
 import io
 import logging
@@ -19,9 +19,11 @@ import yarl
 
 from homeassistant.components.camera import (
     CAMERA_IMAGE_TIMEOUT,
+    DATA_CAMERA_PREFS,
     DynamicStreamSettings,
     _async_get_image,
 )
+from homeassistant.components.camera.prefs import CameraPreferences
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.stream import (
     CONF_RTSP_TRANSPORT,
@@ -48,8 +50,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import UnknownFlow
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import config_validation as cv, template as template_helper
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.util import slugify
 
@@ -305,6 +308,40 @@ def register_preview(hass: HomeAssistant) -> None:
     hass.data[DOMAIN][IMAGE_PREVIEWS_ACTIVE] = True
 
 
+async def register_stream_preview(hass: HomeAssistant, config) -> str:
+    """Set up preview for camera stream during config flow."""
+    hass.data.setdefault("camera", {})
+
+    # Need to load the camera prefs early to avoid errors generating the stream
+    # if the user does not already have the stream component loaded.
+    if hass.data.get(DATA_CAMERA_PREFS) is None:
+        prefs = CameraPreferences(hass)
+        await prefs.async_load()
+        hass.data[DATA_CAMERA_PREFS] = prefs
+
+    # Create a camera but don't add it to the hass object.
+    cam = GenericCamera(hass, config, "stream_preview", "Camera Preview Stream")
+    cam.entity_id = DOMAIN + ".stream_preview"
+    cam.platform = EntityPlatform(
+        hass=hass,
+        logger=_LOGGER,
+        domain=DOMAIN,
+        platform_name="camera",
+        platform=None,
+        scan_interval=timedelta(seconds=1),
+        entity_namespace=None,
+    )
+
+    stream = await cam.async_create_stream()
+    if not stream:
+        raise HomeAssistantError("Failed to create preview stream")
+    stream.add_provider(HLS_PROVIDER)
+    url = stream.endpoint_url(HLS_PROVIDER)
+    _LOGGER.debug("Preview stream URL: %s", url)
+
+    return url
+
+
 class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for generic IP camera."""
 
@@ -361,12 +398,12 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.user_input = user_input
                     self.title = name
 
-                    if still_url is None:
-                        return self.async_create_entry(
-                            title=self.title, data={}, options=self.user_input
-                        )
-                    # temporary preview for user to check the image
                     self.context["preview_cam"] = user_input
+                    if still_url is None:
+                        # based on earlier logic, stream_url is guaranteed
+                        # not to be None, so go ahead and show stream preview
+                        return await self.async_step_user_confirm_stream()
+                    # temporary preview for user to check the image
                     return await self.async_step_user_confirm_still()
         elif self.user_input:
             user_input = self.user_input
@@ -385,9 +422,14 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             if not user_input.get(CONF_CONFIRMED_OK):
                 return await self.async_step_user()
-            return self.async_create_entry(
-                title=self.title, data={}, options=self.user_input
-            )
+            stream_url = self.context["preview_cam"].get(CONF_STREAM_SOURCE)
+            if stream_url is None:
+                return self.async_create_entry(
+                    title=self.title, data={}, options=self.user_input
+                )
+            # temporary preview for user to check the stream
+            return await self.async_step_user_confirm_stream()
+
         register_preview(self.hass)
         preview_url = f"/api/generic/preview_flow_image/{self.flow_id}?t={datetime.now().isoformat()}"
         return self.async_show_form(
@@ -398,6 +440,33 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             description_placeholders={"preview_url": preview_url},
+            errors=None,
+        )
+
+    async def async_step_user_confirm_stream(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle stream preview."""
+        if user_input:
+            if not user_input.get(CONF_CONFIRMED_OK):
+                return await self.async_step_user()
+            return self.async_create_entry(
+                title=self.title, data={}, options=self.user_input
+            )
+
+        stream_preview_url = await register_stream_preview(self.hass, self.user_input)
+        return self.async_show_form(
+            step_id="user_confirm_stream",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_CONFIRMED_OK, default=False): bool,
+                }
+            ),
+            description_placeholders={
+                "video_html": (
+                    f'<ha-hls-player url="{stream_preview_url}" autoplay="" controls="" playsinline=""></ha-hls-player>\n'
+                )
+            },
             errors=None,
         )
 
