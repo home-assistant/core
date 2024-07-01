@@ -23,7 +23,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.freeze_time(datetime.datetime(2023, 6, 5, tzinfo=datetime.UTC))
-async def test_calendar_state(
+async def test_calendar_state_off(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_automower_client: AsyncMock,
@@ -38,7 +38,7 @@ async def test_calendar_state(
 
 
 @pytest.mark.freeze_time(datetime.datetime(2023, 6, 5, 19, tzinfo=datetime.UTC))
-async def test_calendar_state2(
+async def test_calendar_state_on(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_automower_client: AsyncMock,
@@ -74,7 +74,7 @@ async def test_calendar_snapshot(
     start_date: datetime,
     end_date: datetime,
 ) -> None:
-    """Snapshot test of the calendar."""
+    """Snapshot test of the calendar entity."""
     await hass.config.async_set_time_zone("UTC")
     await setup_integration(hass, mock_config_entry)
     events = await hass.services.async_call(

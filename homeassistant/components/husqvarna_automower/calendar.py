@@ -1,6 +1,4 @@
-"""Creates a switch entity for the mower."""
-
-from __future__ import annotations
+"""Creates a calendar entity for the mower."""
 
 from datetime import datetime
 import logging
@@ -43,7 +41,7 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
         mower_id: str,
         coordinator: AutomowerDataUpdateCoordinator,
     ) -> None:
-        """Set up HusqvarnaAutomowerEntity."""
+        """Set up AutomowerCalendarEntity."""
         super().__init__(mower_id, coordinator)
         self._attr_unique_id = mower_id
         self.calendar = Calendar()
@@ -104,7 +102,7 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
 
 
 def _ical_to_calendar_event(event: Event) -> CalendarEvent:
-    """Return a CalendarEvent from an API event."""
+    """Return a CalendarEvent from an ical event."""
 
     return CalendarEvent(
         summary=event.summary,
