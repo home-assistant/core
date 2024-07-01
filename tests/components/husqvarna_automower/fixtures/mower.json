@@ -87,8 +87,7 @@
               "thursday": true,
               "friday": false,
               "saturday": true,
-              "sunday": false,
-              "workAreaId": 654321
+              "sunday": false
             }
           ]
         },

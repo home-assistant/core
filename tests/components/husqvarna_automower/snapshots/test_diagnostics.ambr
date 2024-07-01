@@ -18,7 +18,7 @@
           'rrule': 'FREQ=WEEKLY;BYDAY=MO,TH,SA',
           'start': '2023-06-05T02:00:00+00:00',
           'uid': '120_480_MO,TH,SA',
-          'work_area_id': 654321,
+          'work_area_id': None,
         }),
         dict({
           'end': '2023-06-06T00:00:00+00:00',
@@ -101,7 +101,7 @@
           'thursday': True,
           'tuesday': False,
           'wednesday': False,
-          'work_area_id': 654321,
+          'work_area_id': None,
         }),
       ]),
     }),
