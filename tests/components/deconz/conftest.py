@@ -85,6 +85,11 @@ def fixture_put_request(
 def fixture_get_request(
     aioclient_mock: AiohttpClientMocker,
     config_entry_data: MappingProxyType[str, Any],
+    config_payload: dict[str, Any],
+    alarm_system_payload: dict[str, Any],
+    group_payload: dict[str, Any],
+    light_payload: dict[str, Any],
+    sensor_payload: dict[str, Any],
     deconz_payload: dict[str, Any],
 ) -> Callable[[str], None]:
     """Mock default deCONZ requests responses."""
@@ -92,10 +97,21 @@ def fixture_get_request(
     _port = config_entry_data[CONF_PORT]
     _api_key = config_entry_data[CONF_API_KEY]
 
+    data = deconz_payload
+    data.setdefault("alarmsystems", alarm_system_payload)
+    data.setdefault("config", config_payload)
+    data.setdefault("groups", group_payload)
+    data.setdefault("lights", light_payload)
+    data.setdefault("sensors", sensor_payload)
+
     def __mock_requests(host: str = "") -> None:
         url = f"http://{host or _host}:{_port}/api/{_api_key}"
         aioclient_mock.get(
-            url, json=deconz_payload, headers={"content-type": CONTENT_TYPE_JSON}
+            url,
+            json=deconz_payload | {"config": config_payload},
+            headers={
+                "content-type": CONTENT_TYPE_JSON,
+            },
         )
 
     return __mock_requests
@@ -105,21 +121,9 @@ def fixture_get_request(
 
 
 @pytest.fixture(name="deconz_payload")
-def fixture_data(
-    alarm_system_payload: dict[str, Any],
-    config_payload: dict[str, Any],
-    group_payload: dict[str, Any],
-    light_payload: dict[str, Any],
-    sensor_payload: dict[str, Any],
-) -> dict[str, Any]:
-    """DeCONZ data."""
-    return {
-        "alarmsystems": alarm_system_payload,
-        "config": config_payload,
-        "groups": group_payload,
-        "lights": light_payload,
-        "sensors": sensor_payload,
-    }
+def fixture_data() -> dict[str, Any]:
+    """Combine multiple payloads with one fixture."""
+    return {}
 
 
 @pytest.fixture(name="alarm_system_payload")
