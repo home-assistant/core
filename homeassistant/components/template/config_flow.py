@@ -55,7 +55,7 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
     if domain == Platform.BINARY_SENSOR:
         schema = SCHEMA_STATE
         if flow_type == "config":
-            schema = {
+            schema = schema | {
                 vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         options=[cls.value for cls in BinarySensorDeviceClass],
@@ -64,7 +64,7 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
                         sort=True,
                     ),
                 ),
-            } | schema
+            }
 
     if domain == Platform.BUTTON:
         schema = {
