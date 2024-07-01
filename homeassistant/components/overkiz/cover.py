@@ -79,19 +79,17 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_tilt_command=OverkizCommand.CLOSE_SLATS,
         stop_tilt_command=OverkizCommand.STOP,
     ),
-    ## DynamicVenetianBlind
-    ## Needs override for tilt commands
-    OverkizCoverDescription(
-        key=UIWidget.DYNAMIC_VENETIAN_BLIND,
-        device_class=CoverDeviceClass.BLIND,
-        open_command=OverkizCommand.OPEN,
-        close_command=OverkizCommand.CLOSE,
-        is_closed_fn=is_closed,
-        open_tilt_command=OverkizCommand.TILT_UP,
-        close_tilt_command=OverkizCommand.TILT_DOWN,
-        stop_tilt_command=OverkizCommand.STOP,
-    ),
-    ## Default behavior (via UIClass)
+    ## TiltOnlyVenetianBlind (UIWidget)
+    ## Needs override to remove open/close commands
+    # OverkizCoverDescription(
+    #     key=UIWidget.TILT_ONLY_VENETIAN_BLIND,
+    #     device_class=CoverDeviceClass.BLIND,
+    #     is_closed_fn=is_closed,
+    #     open_tilt_command=OverkizCommand.TILT_POSITIVE,
+    #     close_tilt_command=OverkizCommand.TILT_NEGATIVE,
+    #     stop_tilt_command=OverkizCommand.STOP,
+    # ),
+    ## Default cover behavior (via UIClass)
     OverkizCoverDescription(
         key=UIClass.AWNING,
         device_class=CoverDeviceClass.AWNING,
@@ -204,13 +202,16 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         is_closed_fn=is_closed,
         stop_command=OverkizCommand.STOP,
     ),
-    # OverkizCoverDescription(
-    #     key=UIClass.VENETIAN_BLIND,
-    #     device_class=CoverDeviceClass.BLIND,
-    #     open_tilt_command="tiltUp",
-    #     close_tilt_command="tiltDown",
-    #     stop_tilt_command=OverkizCommand.STOP
-    # )
+    OverkizCoverDescription(
+        key=UIClass.VENETIAN_BLIND,
+        device_class=CoverDeviceClass.BLIND,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        is_closed_fn=is_closed,
+        open_tilt_command=OverkizCommand.TILT_UP,
+        close_tilt_command=OverkizCommand.TILT_DOWN,
+        stop_tilt_command=OverkizCommand.STOP,
+    ),
 ]
 
 SUPPORTED_DEVICES = {description.key: description for description in COVER_DESCRIPTIONS}
@@ -259,28 +260,47 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         # and HA sets by default open/close as supported feature which conflicts
         supported_features = CoverEntityFeature(0)
 
-        if self.entity_description.open_command:
+        if self.entity_description.open_command and self.executor.has_command(
+            self.entity_description.open_command
+        ):
             supported_features |= CoverEntityFeature.OPEN
 
-            if self.entity_description.stop_command:
+            if self.entity_description.stop_command and self.executor.has_command(
+                self.entity_description.stop_command
+            ):
                 supported_features |= CoverEntityFeature.STOP
 
-        if self.entity_description.close_command:
+        if self.entity_description.close_command and self.executor.has_command(
+            self.entity_description.close_command
+        ):
             supported_features |= CoverEntityFeature.CLOSE
 
-        if self.entity_description.open_tilt_command:
+        if self.entity_description.open_tilt_command and self.executor.has_command(
+            self.entity_description.open_tilt_command
+        ):
             supported_features |= CoverEntityFeature.OPEN_TILT
 
-            if self.entity_description.stop_tilt_command:
+            if self.entity_description.stop_tilt_command and self.executor.has_command(
+                self.entity_description.stop_tilt_command
+            ):
                 supported_features |= CoverEntityFeature.STOP_TILT
 
-        if self.entity_description.close_tilt_command:
+        if self.entity_description.close_tilt_command and self.executor.has_command(
+            self.entity_description.close_tilt_command
+        ):
             supported_features |= CoverEntityFeature.CLOSE_TILT
 
-        if self.entity_description.set_tilt_position_command:
+        if (
+            self.entity_description.set_tilt_position_command
+            and self.executor.has_command(
+                self.entity_description.set_tilt_position_command
+            )
+        ):
             supported_features |= CoverEntityFeature.SET_TILT_POSITION
 
-        if self.entity_description.set_position_command:
+        if self.entity_description.set_position_command and self.executor.has_command(
+            self.entity_description.set_position_command
+        ):
             supported_features |= CoverEntityFeature.SET_POSITION
 
         self._attr_supported_features = supported_features
