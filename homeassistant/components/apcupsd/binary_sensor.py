@@ -71,5 +71,5 @@ class OnlineStatus(CoordinatorEntity[APCUPSdCoordinator], BinarySensorEntity):
         # The daemon could either report just a hex ("0x05000008"), or a hex with a "Status Flag"
         # suffix ("0x05000008 Status Flag") in older versions.
         # Here we trim the suffix if it exists to support both.
-        flag = self.coordinator.data[key].removesuffix("Status Flag").strip()
+        flag = self.coordinator.data[key].removesuffix(" Status Flag")
         return int(flag, 16) & _VALUE_ONLINE_MASK != 0
