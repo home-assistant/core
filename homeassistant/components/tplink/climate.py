@@ -77,12 +77,10 @@ class TPLinkClimateEntity(CoordinatedTPLinkEntity, ClimateEntity):
         parent: Device,
     ) -> None:
         """Initialize the climate entity."""
-        self._device: Device = device
-
-        self._state_feature = self._device.features["state"]
-        self._mode_feature = self._device.features["thermostat_mode"]
-        self._temp_feature = self._device.features["temperature"]
-        self._target_feature = self._device.features["target_temperature"]
+        self._state_feature = device.features["state"]
+        self._mode_feature = device.features["thermostat_mode"]
+        self._temp_feature = device.features["temperature"]
+        self._target_feature = device.features["target_temperature"]
 
         self._attr_min_temp = self._target_feature.minimum_value
         self._attr_max_temp = self._target_feature.maximum_value
