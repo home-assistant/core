@@ -108,7 +108,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     )
 
 
-def unload_services(hass: HomeAssistant) -> None:
+async def async_unload_services(hass: HomeAssistant) -> None:
     """Unload Wallbox services."""
     for service in SERVICES:
         hass.services.async_remove(DOMAIN, service)

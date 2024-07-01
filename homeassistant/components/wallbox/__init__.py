@@ -13,7 +13,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_STATION, DOMAIN, UPDATE_INTERVAL
 from .coordinator import InvalidAuth, WallboxCoordinator
-from .services import async_setup_services
+from .services import async_setup_services, async_unload_services
 
 PLATFORMS = [Platform.LOCK, Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
 
@@ -59,5 +59,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
+
+    await async_unload_services(hass)
 
     return unload_ok

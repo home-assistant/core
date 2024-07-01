@@ -1,5 +1,6 @@
 """Tests for Wallbox services."""
 
+import pytest
 import requests_mock
 
 from homeassistant.components.wallbox.const import CONF_STATION, DOMAIN
@@ -119,3 +120,49 @@ async def test_service_set_schedules(
             service_data=data,
             blocking=True,
         )
+
+
+async def test_services_invalid_sn(
+    hass: HomeAssistant, entry: MockConfigEntry, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test that service raises exception if invalid serial is provided."""
+    await setup_integration(hass, entry)
+
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, CONF_STATION)},
+    )
+
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get(
+            "https://user-api.wall-box.com/users/signin",
+            json=authorisation_response,
+            status_code=200,
+        )
+        mock_request.get(
+            "https://api.wall-box.com/chargers/12345/schedules",
+            text=load_fixture("wallbox/schedules.json"),
+        )
+
+        data = {ATTR_CHARGER_ID: "INVALID"}
+
+        with pytest.raises(ValueError):
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_GET_SCHEDULES,
+                service_data=data,
+                return_response=True,
+                blocking=True,
+            )
+
+
+async def test_services_load_and_unload(
+    hass: HomeAssistant, entry: MockConfigEntry, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test being able to unload an entry."""
+    await setup_integration(hass, entry)
+
+    services = hass.services.async_services()[DOMAIN]
+    assert len(services) == 2
+
+    await hass.config_entries.async_unload(entry.entry_id)
