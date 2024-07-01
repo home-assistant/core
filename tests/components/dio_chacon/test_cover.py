@@ -23,10 +23,11 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
-    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+
+from .conftest import MOCK_COVER_DEVICE
 
 from tests.common import MockConfigEntry
 
@@ -41,9 +42,9 @@ async def test_cover(
 ) -> None:
     """Test the creation and values of the Dio Chacon covers."""
 
+    mock_dio_chacon_client.search_all_devices.return_value = MOCK_COVER_DEVICE
     mock_config_entry.add_to_hass(hass)
 
-    # mock_dio_chacon_client.search_all_devices.return_value = MOCK_COVER_DEVICE
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -67,7 +68,7 @@ async def test_cover(
         | CoverEntityFeature.STOP
     )
 
-    # mock_dio_chacon_client.move_shutter_direction.return_value = {}
+    mock_dio_chacon_client.move_shutter_direction.return_value = {}
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_CLOSE_COVER,
@@ -98,7 +99,7 @@ async def test_cover(
     state = hass.states.get("cover.shutter_mock_1")
     assert state.state == STATE_OPENING
 
-    # mock_dio_chacon_client.move_shutter_direction.return_value = {}
+    mock_dio_chacon_client.move_shutter_direction.return_value = {}
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
@@ -156,33 +157,6 @@ async def test_cover(
     assert state
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 60
     assert state.state == STATE_CLOSING
-
-    # Tests coverage for unload actions.
-    # mock_dio_chacon_client.disconnect.return_value = {}
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-
-    # pytest.fail("Fails to display logs of tests")
-
-
-async def test_cover_shutdown_event(
-    hass: HomeAssistant,
-    mock_dio_chacon_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the creation and values of the Dio Chacon covers."""
-
-    mock_config_entry.add_to_hass(hass)
-
-    # mock_dio_chacon_client.search_all_devices.return_value = MOCK_COVER_DEVICE
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Tests coverage for stop action.
-    # mock_dio_chacon_client.disconnect.return_value = {}
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
-
-    # pytest.fail("Fails to display logs of tests")
 
 
 async def test_no_cover_found(

@@ -1,120 +1,136 @@
 """Test the dio_chacon config flow."""
 
 import logging
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from dio_chacon_wifi_api.exceptions import DIOChaconAPIError, DIOChaconInvalidAuthError
+import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.dio_chacon.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_UNIQUE_ID, CONF_USERNAME
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from .conftest import MOCK_COVER_DEVICE
+
+from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def test_show_form(hass: HomeAssistant) -> None:
+async def test_form(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_dio_chacon_client: AsyncMock
+) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == config_entries.SOURCE_USER
+    assert result["step_id"] is SOURCE_USER
 
+    mock_dio_chacon_client.get_user_id.return_value = "dummy-user-id"
 
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test we get the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={
+            CONF_USERNAME: "dummylogin",
+            CONF_PASSWORD: "dummypass",
+        },
+    )
 
-    with patch(
-        "dio_chacon_wifi_api.DIOChaconAPIClient.get_user_id",
-        return_value="dummy-user-id",
-    ) as mock_dio_chacon_client:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={
-                CONF_USERNAME: "dummylogin",
-                CONF_PASSWORD: "dummypass",
-                CONF_UNIQUE_ID: "dummy-user-id",
-            },
-        )
+    _LOGGER.debug("Test result after init : %s", result)
 
-        _LOGGER.debug("Test result after init : %s", result)
-
-    assert len(mock_dio_chacon_client.mock_calls) == 1
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Dio Chacon dummylogin"
+    assert result["result"].unique_id == "dummy-user-id"
     assert result["data"] == {
         CONF_USERNAME: "dummylogin",
         CONF_PASSWORD: "dummypass",
-        CONF_UNIQUE_ID: "dummy-user-id",
     }
 
-    assert len(mock_setup_entry.mock_calls) == 1
 
-
-async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+@pytest.mark.parametrize(
+    ("exception", "expected"),
+    [
+        (Exception("Bad request Boy :) --"), {"base": "unknown"}),
+        (DIOChaconInvalidAuthError, {"base": "invalid_auth"}),
+        (DIOChaconAPIError, {"base": "cannot_connect"}),
+    ],
+)
+async def test_errors(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_dio_chacon_client: AsyncMock,
+    exception,
+    expected,
 ) -> None:
-    """Test we handle cannot connect error."""
-    with patch(
-        "dio_chacon_wifi_api.DIOChaconAPIClient.get_user_id",
-        side_effect=DIOChaconAPIError,
-    ) as mock_dio_chacon_client:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={
-                CONF_USERNAME: "nada",
-                CONF_PASSWORD: "nadap",
-            },
-        )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-    assert len(mock_dio_chacon_client.mock_calls) == 1
-
-
-async def test_form_invalid_auth(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test we handle cannot connect error."""
-    with patch(
-        "dio_chacon_wifi_api.DIOChaconAPIClient.get_user_id",
-        side_effect=DIOChaconInvalidAuthError,
-    ) as mock_dio_chacon_client:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={
-                CONF_USERNAME: "nada",
-                CONF_PASSWORD: "nadap",
-            },
-        )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-    assert len(mock_dio_chacon_client.mock_calls) == 1
-
-
-async def test_other_error(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we handle any error."""
-    with patch(
-        "dio_chacon_wifi_api.DIOChaconAPIClient.get_user_id",
-        side_effect=Exception("Bad request Boy :) --"),
-    ) as mock_dio_chacon_client:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={
-                CONF_USERNAME: "nada",
-                CONF_PASSWORD: "nadap",
-            },
-        )
+    mock_dio_chacon_client.get_user_id.side_effect = exception
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
-    assert len(mock_dio_chacon_client.mock_calls) == 1
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={
+            CONF_USERNAME: "nada",
+            CONF_PASSWORD: "nadap",
+        },
+    )
+
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == expected
+
+    # Test of recover in normal state after correction of the 1st error
+    mock_dio_chacon_client.get_user_id.side_effect = None
+    mock_dio_chacon_client.get_user_id.return_value = "dummy-user-id"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "dummylogin",
+            CONF_PASSWORD: "dummypass",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Dio Chacon dummylogin"
+    assert result["result"].unique_id == "dummy-user-id"
+    assert result["data"] == {
+        CONF_USERNAME: "dummylogin",
+        CONF_PASSWORD: "dummypass",
+    }
+
+
+async def test_duplicate_entry(
+    hass: HomeAssistant,
+    mock_dio_chacon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test abort when setting up duplicate entry."""
+
+    mock_dio_chacon_client.search_all_devices.return_value = MOCK_COVER_DEVICE
+    mock_config_entry.add_to_hass(hass)
+
+    _LOGGER.debug("Test duplicate entry by launching a config flow")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert not result["errors"]
+
+    mock_dio_chacon_client.get_user_id.return_value = "test_entry_unique_id"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "dummylogin",
+            CONF_PASSWORD: "dummypass",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

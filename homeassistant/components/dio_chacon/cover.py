@@ -74,7 +74,7 @@ class DioChaconCover(DioChaconEntity, CoverEntity):
             self._attr_is_closing = True
             self.async_write_ha_state()
 
-            await self.dio_chacon_client.move_shutter_direction(
+            await self.client.move_shutter_direction(
                 self.target_id, ShutterMoveEnum.DOWN
             )
 
@@ -93,9 +93,7 @@ class DioChaconCover(DioChaconEntity, CoverEntity):
             self._attr_is_opening = True
             self.async_write_ha_state()
 
-            await self.dio_chacon_client.move_shutter_direction(
-                self.target_id, ShutterMoveEnum.UP
-            )
+            await self.client.move_shutter_direction(self.target_id, ShutterMoveEnum.UP)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
@@ -106,9 +104,7 @@ class DioChaconCover(DioChaconEntity, CoverEntity):
         self._attr_is_closing = False
         self.async_write_ha_state()
 
-        await self.dio_chacon_client.move_shutter_direction(
-            self.target_id, ShutterMoveEnum.STOP
-        )
+        await self.client.move_shutter_direction(self.target_id, ShutterMoveEnum.STOP)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the cover open position in percentage. Closing or opening status is effective after the server callback that triggers callback_device_state."""
@@ -118,4 +114,4 @@ class DioChaconCover(DioChaconEntity, CoverEntity):
             "Set cover position %i, %s , %s", position, self.target_id, self._attr_name
         )
 
-        await self.dio_chacon_client.move_shutter_percentage(self.target_id, position)
+        await self.client.move_shutter_percentage(self.target_id, position)

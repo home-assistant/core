@@ -24,7 +24,7 @@ class DioChaconEntity(Entity):
     ) -> None:
         """Initialize Dio Chacon entity."""
 
-        self.dio_chacon_client: DIOChaconAPIClient = dio_chacon_client
+        self.client = dio_chacon_client
 
         self.target_id: str = device["id"]
         self._attr_unique_id: str = device["id"]
@@ -44,7 +44,7 @@ class DioChaconEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Register the callback for server side events."""
         await super().async_added_to_hass()
-        self.dio_chacon_client.set_callback_device_state_by_device(
+        self.client.set_callback_device_state_by_device(
             self.target_id, self.callback_device_state
         )
 

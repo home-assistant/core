@@ -3,7 +3,6 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from dio_chacon_wifi_api import DIOChaconAPIClient
 import pytest
 
 from homeassistant.components.dio_chacon.const import DOMAIN
@@ -50,14 +49,16 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_dio_chacon_client() -> Generator[AsyncMock]:
     """Mock a Dio Chacon client."""
 
-    client = AsyncMock(spec=DIOChaconAPIClient)
-    client.search_all_devices.return_value = MOCK_COVER_DEVICE
-    client.move_shutter_direction.return_value = {}
-    client.move_shutter_percentage.return_value = {}
-    client.disconnect.return_value = {}
-
-    with patch(
-        "homeassistant.components.dio_chacon.DIOChaconAPIClient",
-        return_value=client,
+    with (
+        patch(
+            "homeassistant.components.dio_chacon.DIOChaconAPIClient",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.dio_chacon.config_flow.DIOChaconAPIClient",
+            new=mock_client,
+        ),
     ):
+        client = mock_client.return_value
+
         yield client
