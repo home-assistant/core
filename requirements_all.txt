@@ -2031,7 +2031,7 @@ pynuki==1.6.3
 pynws[retry]==1.8.2
 
 # homeassistant.components.nx584
-pynx584==0.5
+pynx584==0.8.2
 
 # homeassistant.components.nzbget
 pynzbgetapi==0.2.0
