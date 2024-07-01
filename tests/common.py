@@ -3,7 +3,14 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Mapping, Sequence
+from collections.abc import (
+    AsyncGenerator,
+    Callable,
+    Coroutine,
+    Generator,
+    Mapping,
+    Sequence,
+)
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
 from enum import Enum
@@ -23,7 +30,6 @@ from unittest.mock import AsyncMock, Mock, patch
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
 import pytest
 from syrupy import SnapshotAssertion
-from typing_extensions import AsyncGenerator, Generator
 import voluptuous as vol
 
 from homeassistant import auth, bootstrap, config_entries, loader

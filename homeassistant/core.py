@@ -159,7 +159,7 @@ class ConfigSource(enum.StrEnum):
 
 
 class EventStateEventData(TypedDict):
-    """Base class for EVENT_STATE_CHANGED and EVENT_STATE_CHANGED data."""
+    """Base class for EVENT_STATE_CHANGED and EVENT_STATE_REPORTED data."""
 
     entity_id: str
     new_state: State | None
@@ -1307,6 +1307,11 @@ class EventOrigin(enum.Enum):
     def __str__(self) -> str:
         """Return the event."""
         return self.value
+
+    @cached_property
+    def idx(self) -> int:
+        """Return the index of the origin."""
+        return next((idx for idx, origin in enumerate(EventOrigin) if origin is self))
 
 
 class Event(Generic[_DataT]):

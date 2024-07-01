@@ -1,9 +1,9 @@
 """Test fixtures for the Aladdin Connect Garage Door integration."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from tests.common import MockConfigEntry
 

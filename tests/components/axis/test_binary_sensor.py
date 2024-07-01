@@ -173,7 +173,7 @@ from .const import NAME
         ),
     ],
 )
-@pytest.mark.usefixtures("setup_config_entry")
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_binary_sensors(
     hass: HomeAssistant,
     mock_rtsp_event: Callable[[str, str, str, str, str, str], None],
@@ -225,7 +225,7 @@ async def test_binary_sensors(
         },
     ],
 )
-@pytest.mark.usefixtures("setup_config_entry")
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_unsupported_events(
     hass: HomeAssistant,
     mock_rtsp_event: Callable[[str, str, str, str, str, str], None],

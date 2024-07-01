@@ -224,15 +224,15 @@ class IgnSismologiaLocationEvent(GeolocationEvent):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        attributes = {}
-        for key, value in (
-            (ATTR_EXTERNAL_ID, self._external_id),
-            (ATTR_TITLE, self._title),
-            (ATTR_REGION, self._region),
-            (ATTR_MAGNITUDE, self._magnitude),
-            (ATTR_PUBLICATION_DATE, self._publication_date),
-            (ATTR_IMAGE_URL, self._image_url),
-        ):
-            if value or isinstance(value, bool):
-                attributes[key] = value
-        return attributes
+        return {
+            key: value
+            for key, value in (
+                (ATTR_EXTERNAL_ID, self._external_id),
+                (ATTR_TITLE, self._title),
+                (ATTR_REGION, self._region),
+                (ATTR_MAGNITUDE, self._magnitude),
+                (ATTR_PUBLICATION_DATE, self._publication_date),
+                (ATTR_IMAGE_URL, self._image_url),
+            )
+            if value or isinstance(value, bool)
+        }

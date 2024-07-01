@@ -1,12 +1,11 @@
 """Test STT component setup."""
 
-from collections.abc import AsyncIterable
+from collections.abc import AsyncIterable, Generator
 from http import HTTPStatus
 from pathlib import Path
 from unittest.mock import AsyncMock
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.stt import (
     DOMAIN,
