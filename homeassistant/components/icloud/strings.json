@@ -6,7 +6,7 @@
         "description": "Enter your credentials",
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]",
+          "password": "App-Specific Password",
           "with_family": "With family"
         }
       },
