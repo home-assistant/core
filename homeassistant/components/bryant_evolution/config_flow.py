@@ -26,7 +26,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 async def _can_reach_device(client: BryantEvolutionLocalClient) -> bool:
     """Return whether we can reach the device at the given filename."""
-    # Verify that we can read S1Z1 to check that the device is valid.
+    # Verify that we can read current temperature to check that the
+    # (filename, system, zone) is valid.
     return await client.read_current_temperature() is not None
 
 
