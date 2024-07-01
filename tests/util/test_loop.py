@@ -17,6 +17,31 @@ def banned_function():
     """Mock banned function."""
 
 
+@contextlib.contextmanager
+def patch_get_current_frame(stack: list[Mock]) -> Generator[None, None, None]:
+    """Patch get_current_frame."""
+    frames = extract_stack_to_frame(stack)
+    with (
+        patch(
+            "homeassistant.helpers.frame.linecache.getline",
+            return_value=stack[1].line,
+        ),
+        patch(
+            "homeassistant.util.loop._get_line_from_cache",
+            return_value="mock_line",
+        ),
+        patch(
+            "homeassistant.util.loop.get_current_frame",
+            return_value=frames,
+        ),
+        patch(
+            "homeassistant.helpers.frame.get_current_frame",
+            return_value=frames,
+        ),
+    ):
+        yield
+
+
 async def test_raise_for_blocking_call_async() -> None:
     """Test raise_for_blocking_call detects when called from event loop without integration context."""
     with pytest.raises(RuntimeError):
@@ -78,31 +103,6 @@ async def test_raise_for_blocking_call_async_non_strict_core(
 
     # no expensive traceback on debug
     assert "Traceback (most recent call last)" not in caplog.text
-
-
-@contextlib.contextmanager
-def patch_get_current_frame(stack: list[Mock]) -> Generator[None, None, None]:
-    """Patch get_current_frame."""
-    frames = extract_stack_to_frame(stack)
-    with (
-        patch(
-            "homeassistant.helpers.frame.linecache.getline",
-            return_value=stack[1].line,
-        ),
-        patch(
-            "homeassistant.util.loop._get_line_from_cache",
-            return_value="mock_line",
-        ),
-        patch(
-            "homeassistant.util.loop.get_current_frame",
-            return_value=frames,
-        ),
-        patch(
-            "homeassistant.helpers.frame.get_current_frame",
-            return_value=frames,
-        ),
-    ):
-        yield
 
 
 async def test_raise_for_blocking_call_async_integration(
