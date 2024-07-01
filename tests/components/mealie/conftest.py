@@ -1,11 +1,11 @@
 """Mealie tests configuration."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 from aiomealie import Mealplan, MealplanResponse, UserInfo
 from mashumaro.codecs.orjson import ORJSONDecoder
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.mealie.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST
