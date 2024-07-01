@@ -100,7 +100,7 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
         return self._remote.available
 
     @property
-    def volume_level(self) -> int | None:
+    def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         return self._remote.volume
 
