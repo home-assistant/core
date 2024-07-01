@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from datetime import datetime
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioaquacell import AquacellApi, Softener
 import pytest
@@ -28,7 +28,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_aquacell_api() -> Generator[AsyncMock]:
+def mock_aquacell_api() -> Generator[MagicMock]:
     """Build a fixture for the Aquacell API that authenticates successfully and returns a single softener."""
     with (
         patch(

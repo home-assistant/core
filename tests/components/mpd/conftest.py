@@ -1,7 +1,7 @@
 """Fixtures for Music Player Daemon integration tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -31,7 +31,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_mpd_client() -> Generator[AsyncMock]:
+def mock_mpd_client() -> Generator[MagicMock]:
     """Return a mock for Music Player Daemon client."""
 
     with patch(
