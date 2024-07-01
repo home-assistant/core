@@ -70,7 +70,7 @@ def mock_http_start_stop() -> Generator[None]:
         yield
 
 
-@patch("homeassistant.bootstrap.async_enable_logging", Mock())
+@patch("homeassistant.bootstrap.async_enable_logging", AsyncMock())
 async def test_home_assistant_core_config_validation(hass: HomeAssistant) -> None:
     """Test if we pass in wrong information for HA conf."""
     # Extensive HA conf validation testing is done
@@ -94,10 +94,10 @@ async def test_async_enable_logging(
             side_effect=OSError,
         ),
     ):
-        bootstrap.async_enable_logging(hass)
+        await bootstrap.async_enable_logging(hass)
         mock_async_activate_log_queue_handler.assert_called_once()
         mock_async_activate_log_queue_handler.reset_mock()
-        bootstrap.async_enable_logging(
+        await bootstrap.async_enable_logging(
             hass,
             log_rotate_days=5,
             log_file="test.log",
@@ -598,7 +598,7 @@ def mock_is_virtual_env() -> Generator[Mock]:
 
 
 @pytest.fixture
-def mock_enable_logging() -> Generator[Mock]:
+def mock_enable_logging() -> Generator[AsyncMock]:
     """Mock enable logging."""
     with patch("homeassistant.bootstrap.async_enable_logging") as enable_logging:
         yield enable_logging
