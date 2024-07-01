@@ -44,7 +44,7 @@ def is_closed(device: Device) -> bool | None:
     return False
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class OverkizCoverDescription(CoverEntityDescription):
     """Class to describe an Overkiz cover."""
 
@@ -79,7 +79,19 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_tilt_command=OverkizCommand.CLOSE_SLATS,
         stop_tilt_command=OverkizCommand.STOP,
     ),
-    ## Default behavior via UIClass
+    ## DynamicVenetianBlind
+    ## Needs override for tilt commands
+    OverkizCoverDescription(
+        key=UIWidget.DYNAMIC_VENETIAN_BLIND,
+        device_class=CoverDeviceClass.BLIND,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        is_closed_fn=is_closed,
+        open_tilt_command=OverkizCommand.TILT_UP,
+        close_tilt_command=OverkizCommand.TILT_DOWN,
+        stop_tilt_command=OverkizCommand.STOP,
+    ),
+    ## Default behavior (via UIClass)
     OverkizCoverDescription(
         key=UIClass.AWNING,
         device_class=CoverDeviceClass.AWNING,
@@ -209,19 +221,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Overkiz covers from a config entry."""
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
-    entities: list[OverkizCover] = []
 
-    for device in data.platforms[Platform.COVER]:
-        if description := SUPPORTED_DEVICES.get(device.widget) or SUPPORTED_DEVICES.get(
-            device.ui_class
-        ):
-            entities.append(
-                OverkizCover(
-                    device.device_url,
-                    data.coordinator,
-                    description,
-                )
-            )
+    entities = [
+        OverkizCover(
+            device.device_url,
+            data.coordinator,
+            description,
+        )
+        for device in data.platforms[Platform.COVER]
+        if (
+            description := SUPPORTED_DEVICES.get(device.widget)
+            or SUPPORTED_DEVICES.get(device.ui_class)
+        )
+    ]
 
     async_add_entities(entities)
 
