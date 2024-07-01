@@ -61,7 +61,7 @@ def fixture_config_entry_options() -> MappingProxyType[str, Any]:
     return {}
 
 
-# deCONZ request mocks
+# Request mocks
 
 
 @pytest.fixture(name="mock_put_request")
