@@ -5,7 +5,7 @@ from __future__ import annotations
 import array
 import asyncio
 from collections import defaultdict, deque
-from collections.abc import AsyncIterable, Callable, Iterable
+from collections.abc import AsyncGenerator, AsyncIterable, Callable, Iterable
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 import logging
@@ -16,7 +16,6 @@ import time
 from typing import TYPE_CHECKING, Any, Final, Literal, cast
 import wave
 
-from typing_extensions import AsyncGenerator
 import voluptuous as vol
 
 if TYPE_CHECKING:

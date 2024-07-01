@@ -1,9 +1,9 @@
 """Test the discovery flow helper."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, call, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant import config_entries
 from homeassistant.core import EVENT_HOMEASSISTANT_STARTED, CoreState, HomeAssistant
