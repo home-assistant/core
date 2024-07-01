@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-async def no_platforms() -> AsyncGenerator[None, None]:
+async def no_platforms() -> AsyncGenerator[None]:
     """Don't enable any platforms."""
     with patch(
         "homeassistant.components.kitchen_sink.COMPONENTS_WITH_DEMO_PLATFORM",

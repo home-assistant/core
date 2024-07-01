@@ -72,7 +72,7 @@ def pyload_config() -> ConfigType:
 
 
 @pytest.fixture
-def mock_pyloadapi() -> Generator[AsyncMock, None, None]:
+def mock_pyloadapi() -> Generator[AsyncMock]:
     """Mock PyLoadAPI."""
     with (
         patch(

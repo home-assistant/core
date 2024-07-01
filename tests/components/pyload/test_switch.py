@@ -38,7 +38,7 @@ API_CALL = {
 
 
 @pytest.fixture(autouse=True)
-async def switch_only() -> AsyncGenerator[None, None]:
+async def switch_only() -> AsyncGenerator[None]:
     """Enable only the switch platform."""
     with patch(
         "homeassistant.components.pyload.PLATFORMS",

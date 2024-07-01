@@ -23,7 +23,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_apsystems() -> Generator[AsyncMock, None, None]:
+def mock_apsystems() -> Generator[AsyncMock]:
     """Mock APSystems lib."""
     with (
         patch(

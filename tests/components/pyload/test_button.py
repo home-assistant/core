@@ -26,7 +26,7 @@ API_CALL = {
 
 
 @pytest.fixture(autouse=True)
-async def button_only() -> AsyncGenerator[None, None]:
+async def button_only() -> AsyncGenerator[None]:
     """Enable only the button platform."""
     with patch(
         "homeassistant.components.pyload.PLATFORMS",
