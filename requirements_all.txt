@@ -39,7 +39,7 @@ Mastodon.py==1.8.1
 Pillow==10.3.0
 
 # homeassistant.components.plex
-PlexAPI==4.15.13
+PlexAPI==4.15.14
 
 # homeassistant.components.progettihwsw
 ProgettiHWSW==0.1.3
@@ -54,7 +54,7 @@ PyChromecast==14.0.1
 PyFlick==0.0.2
 
 # homeassistant.components.flume
-PyFlume==0.8.7
+PyFlume==0.6.5
 
 # homeassistant.components.fronius
 PyFronius==0.7.3
@@ -204,7 +204,7 @@ aioaseko==0.1.1
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.6.3
+aioautomower==2024.6.4
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.1.1
@@ -294,7 +294,7 @@ aiolookin==1.0.0
 aiolyric==1.1.0
 
 # homeassistant.components.mealie
-aiomealie==0.4.0
+aiomealie==0.5.0
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -404,7 +404,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webostv
-aiowebostv==0.4.0
+aiowebostv==0.4.1
 
 # homeassistant.components.withings
 aiowithings==3.0.2
@@ -807,7 +807,7 @@ emulated-roku==0.3.0
 energyflip-client==0.2.2
 
 # homeassistant.components.energyzero
-energyzero==2.1.0
+energyzero==2.1.1
 
 # homeassistant.components.enocean
 enocean==0.50
@@ -924,7 +924,7 @@ gardena-bluetooth==1.4.2
 gassist-text==0.0.11
 
 # homeassistant.components.google
-gcal-sync==6.0.4
+gcal-sync==6.1.3
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
@@ -974,7 +974,7 @@ google-api-python-client==2.71.0
 google-cloud-pubsub==2.13.11
 
 # homeassistant.components.google_cloud
-google-cloud-texttospeech==2.12.3
+google-cloud-texttospeech==2.16.3
 
 # homeassistant.components.google_generative_ai_conversation
 google-generativeai==0.6.0
@@ -1004,7 +1004,7 @@ gpiozero==1.6.2
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==1.4.1
+greeclimate==1.4.6
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==3.0.3
@@ -1013,7 +1013,7 @@ greeneye_monitor==3.0.3
 greenwavereality==0.5.1
 
 # homeassistant.components.pure_energie
-gridnet==5.0.0
+gridnet==5.0.1
 
 # homeassistant.components.growatt_server
 growattServer==1.5.0
@@ -1065,7 +1065,7 @@ hdate==0.10.9
 heatmiserV3==1.1.18
 
 # homeassistant.components.here_travel_time
-here-routing==0.2.0
+here-routing==1.0.1
 
 # homeassistant.components.here_travel_time
 here-transit==1.2.0
@@ -1090,7 +1090,7 @@ hole==0.8.0
 holidays==0.51
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240627.0
+home-assistant-frontend==20240628.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.6.26
@@ -1131,7 +1131,7 @@ ibmiotf==0.3.4
 # homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==8.0.1
+ical==8.1.1
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -1453,7 +1453,7 @@ oauth2client==4.1.3
 objgraph==3.5.0
 
 # homeassistant.components.garages_amsterdam
-odp-amsterdam==6.0.1
+odp-amsterdam==6.0.2
 
 # homeassistant.components.oem
 oemthermostat==1.1.1
@@ -1557,7 +1557,7 @@ pigpio==1.78
 pilight==0.1.1
 
 # homeassistant.components.dominos
-pizzapi==0.0.3
+pizzapi==0.0.6
 
 # homeassistant.components.plex
 plexauth==0.0.6
@@ -1710,7 +1710,7 @@ pyairnow==1.2.1
 pyairvisual==2023.08.1
 
 # homeassistant.components.aprilaire
-pyaprilaire==0.7.0
+pyaprilaire==0.7.4
 
 # homeassistant.components.asuswrt
 pyasuswrt==0.1.21
@@ -1866,7 +1866,7 @@ pyforked-daapd==0.1.14
 pyfreedompro==1.1.0
 
 # homeassistant.components.fritzbox
-pyfritzhome==0.6.11
+pyfritzhome==0.6.12
 
 # homeassistant.components.ifttt
 pyfttt==0.3
@@ -2069,7 +2069,7 @@ pyotgw==2.2.0
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.13.11
+pyoverkiz==1.13.12
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -2296,7 +2296,7 @@ python-mystrom==2.2.0
 python-opendata-transport==0.4.0
 
 # homeassistant.components.opensky
-python-opensky==1.0.0
+python-opensky==1.0.1
 
 # homeassistant.components.otbr
 # homeassistant.components.thread

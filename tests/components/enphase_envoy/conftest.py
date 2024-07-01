@@ -1,5 +1,6 @@
 """Define test fixtures for Enphase Envoy."""
 
+from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, Mock, patch
 
 import jwt
@@ -21,7 +22,6 @@ from pyenphase.models.meters import (
     EnvoyPhaseMode,
 )
 import pytest
-from typing_extensions import AsyncGenerator
 
 from homeassistant.components.enphase_envoy import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
