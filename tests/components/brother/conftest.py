@@ -1,11 +1,11 @@
 """Test fixtures for brother."""
 
+from collections.abc import Generator
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 from brother import BrotherSensors
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.brother.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_TYPE

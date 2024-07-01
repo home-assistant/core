@@ -1,6 +1,6 @@
 """Test Axis device."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from ipaddress import ip_address
 from types import MappingProxyType
 from typing import Any
@@ -9,7 +9,6 @@ from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 import axis as axislib
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import axis, zeroconf
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
