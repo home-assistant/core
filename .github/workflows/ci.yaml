@@ -611,7 +611,7 @@ jobs:
       - name: Run pip-licenses
         run: |
           . venv/bin/activate
-          pip-licenses --format=json --from=meta --output-file=licenses.json
+          pip-licenses --format=json --output-file=licenses.json
       - name: Upload licenses
         uses: actions/upload-artifact@v4.3.3
         with:
