@@ -35,11 +35,10 @@ async def async_setup_entry(
     """Set up a config entry."""
     client = config_entry.runtime_data
     climate = BryantEvolutionClimate(
-        # Suffix with -climate since we expect to add more entities later.
-        f"{config_entry.entry_id}-climate",
+        client,
+        config_entry.entry_id,
         config_entry.data[CONF_SYSTEM_ID],
         config_entry.data[CONF_ZONE_ID],
-        client,
     )
     async_add_entities([climate], update_before_add=True)
 
@@ -73,19 +72,18 @@ class BryantEvolutionClimate(ClimateEntity):
     _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
-        self: ClimateEntity,
+        self,
+        client: BryantEvolutionClient,
         unique_id: str,
         system_id: int,
         zone_id: int,
-        client: BryantEvolutionClient,
     ) -> None:
         """Initialize an entity from parts."""
         self._client = client
 
         self._attr_unique_id = unique_id
-        assert self.unique_id is not None  # Prevent mypy failure on next line
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
+            identifiers={(DOMAIN, unique_id)},
             name=f"Bryant Evolution (System {system_id}, Zone {zone_id})",
         )
 
