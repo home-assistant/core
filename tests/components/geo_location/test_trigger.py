@@ -29,7 +29,7 @@ def calls(hass: HomeAssistant) -> list[ServiceCall]:
 
 
 @pytest.fixture(autouse=True)
-def setup_comp(hass):
+def setup_comp(hass: HomeAssistant) -> None:
     """Initialize components."""
     mock_component(hass, "group")
     hass.loop.run_until_complete(
