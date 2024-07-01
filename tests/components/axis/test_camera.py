@@ -30,7 +30,7 @@ async def test_platform_manually_configured(hass: HomeAssistant) -> None:
     assert AXIS_DOMAIN not in hass.data
 
 
-@pytest.mark.usefixtures("setup_config_entry")
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_camera(hass: HomeAssistant) -> None:
     """Test that Axis camera platform is loaded properly."""
     assert len(hass.states.async_entity_ids(CAMERA_DOMAIN)) == 1
@@ -51,7 +51,7 @@ async def test_camera(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("config_entry_options", [{CONF_STREAM_PROFILE: "profile_1"}])
-@pytest.mark.usefixtures("setup_config_entry")
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_camera_with_stream_profile(hass: HomeAssistant) -> None:
     """Test that Axis camera entity is using the correct path with stream profike."""
     assert len(hass.states.async_entity_ids(CAMERA_DOMAIN)) == 1
@@ -87,8 +87,8 @@ root.Properties.System.SerialNumber={MAC}
 
 @pytest.mark.parametrize("param_properties_payload", [PROPERTY_DATA])
 async def test_camera_disabled(
-    hass: HomeAssistant, prepare_config_entry: Callable[[], ConfigEntry]
+    hass: HomeAssistant, config_entry_factory: Callable[[], ConfigEntry]
 ) -> None:
     """Test that Axis camera platform is loaded properly but does not create camera entity."""
-    await prepare_config_entry()
+    await config_entry_factory()
     assert len(hass.states.async_entity_ids(CAMERA_DOMAIN)) == 0

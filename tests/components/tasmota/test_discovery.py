@@ -340,7 +340,7 @@ async def test_device_remove_multiple_config_entries_1(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is not None
-    assert device_entry.config_entries == [tasmota_entry.entry_id, mock_entry.entry_id]
+    assert device_entry.config_entries == {tasmota_entry.entry_id, mock_entry.entry_id}
 
     async_fire_mqtt_message(
         hass,
@@ -354,7 +354,7 @@ async def test_device_remove_multiple_config_entries_1(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is not None
-    assert device_entry.config_entries == [mock_entry.entry_id]
+    assert device_entry.config_entries == {mock_entry.entry_id}
 
 
 async def test_device_remove_multiple_config_entries_2(
@@ -396,7 +396,7 @@ async def test_device_remove_multiple_config_entries_2(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is not None
-    assert device_entry.config_entries == [tasmota_entry.entry_id, mock_entry.entry_id]
+    assert device_entry.config_entries == {tasmota_entry.entry_id, mock_entry.entry_id}
     assert other_device_entry.id != device_entry.id
 
     # Remove other config entry from the device
@@ -410,7 +410,7 @@ async def test_device_remove_multiple_config_entries_2(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is not None
-    assert device_entry.config_entries == [tasmota_entry.entry_id]
+    assert device_entry.config_entries == {tasmota_entry.entry_id}
     mqtt_mock.async_publish.assert_not_called()
 
     # Remove other config entry from the other device - Tasmota should not do any cleanup

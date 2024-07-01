@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
+from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
 from contextlib import asynccontextmanager, contextmanager
+import datetime
 import functools
 import gc
 import itertools
@@ -33,7 +34,6 @@ import pytest
 import pytest_socket
 import requests_mock
 from syrupy.assertion import SnapshotAssertion
-from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant import block_async_io
 
@@ -55,6 +55,7 @@ from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.config_entries import ConfigEntries, ConfigEntry, ConfigEntryState
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import (
+    Context,
     CoreState,
     HassJob,
     HomeAssistant,
@@ -76,7 +77,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.translation import _TranslationsCacheData
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import BASE_PLATFORMS, async_setup_component
-from homeassistant.util import location
+from homeassistant.util import dt as dt_util, location
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.json import json_loads
 
@@ -384,6 +385,13 @@ def verify_cleanup(
         assert isinstance(thread, threading._DummyThread) or thread.name.startswith(
             "waitpid-"
         )
+
+    try:
+        # Verify the default time zone has been restored
+        assert dt_util.DEFAULT_TIME_ZONE is datetime.UTC
+    finally:
+        # Restore the default time zone to not break subsequent tests
+        dt_util.DEFAULT_TIME_ZONE = datetime.UTC
 
 
 @pytest.fixture(autouse=True)
@@ -884,7 +892,7 @@ def fail_on_log_exception(
         return
 
     def log_exception(format_err, *args):
-        raise  # pylint: disable=misplaced-bare-raise
+        raise  # noqa: PLE0704
 
     monkeypatch.setattr("homeassistant.util.logging.log_exception", log_exception)
 
@@ -1654,7 +1662,7 @@ def label_registry(hass: HomeAssistant) -> lr.LabelRegistry:
 
 
 @pytest.fixture
-def service_calls(hass: HomeAssistant) -> Generator[None, None, list[ServiceCall]]:
+def service_calls(hass: HomeAssistant) -> Generator[list[ServiceCall]]:
     """Track all service calls."""
     calls = []
 
@@ -1665,15 +1673,23 @@ def service_calls(hass: HomeAssistant) -> Generator[None, None, list[ServiceCall
         domain: str,
         service: str,
         service_data: dict[str, Any] | None = None,
-        **kwargs: Any,
+        blocking: bool = False,
+        context: Context | None = None,
+        target: dict[str, Any] | None = None,
+        return_response: bool = False,
     ) -> ServiceResponse:
-        calls.append(ServiceCall(domain, service, service_data))
+        calls.append(
+            ServiceCall(domain, service, service_data, context, return_response)
+        )
         try:
             return await _original_async_call(
                 domain,
                 service,
                 service_data,
-                **kwargs,
+                blocking,
+                context,
+                target,
+                return_response,
             )
         except ha.ServiceNotFound:
             _LOGGER.debug("Ignoring unknown service call to %s.%s", domain, service)
@@ -1690,7 +1706,7 @@ def snapshot(snapshot: SnapshotAssertion) -> SnapshotAssertion:
 
 
 @pytest.fixture
-def disable_block_async_io() -> Generator[Any, Any, None]:
+def disable_block_async_io() -> Generator[None]:
     """Fixture to disable the loop protection from block_async_io."""
     yield
     calls = block_async_io._BLOCKED_CALLS.calls

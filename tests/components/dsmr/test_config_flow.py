@@ -32,7 +32,8 @@ def com_port():
 
 
 async def test_setup_network(
-    hass: HomeAssistant, dsmr_connection_send_validate_fixture
+    hass: HomeAssistant,
+    dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
     """Test we can setup network."""
     result = await hass.config_entries.flow.async_init(
@@ -77,8 +78,10 @@ async def test_setup_network(
 
 async def test_setup_network_rfxtrx(
     hass: HomeAssistant,
-    dsmr_connection_send_validate_fixture,
-    rfxtrx_dsmr_connection_send_validate_fixture,
+    dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
+    rfxtrx_dsmr_connection_send_validate_fixture: tuple[
+        MagicMock, MagicMock, MagicMock
+    ],
 ) -> None:
     """Test we can setup network."""
     (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
@@ -185,7 +188,7 @@ async def test_setup_network_rfxtrx(
 async def test_setup_serial(
     com_mock,
     hass: HomeAssistant,
-    dsmr_connection_send_validate_fixture,
+    dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
     version: str,
     entry_data: dict[str, Any],
 ) -> None:
@@ -225,8 +228,10 @@ async def test_setup_serial(
 async def test_setup_serial_rfxtrx(
     com_mock,
     hass: HomeAssistant,
-    dsmr_connection_send_validate_fixture,
-    rfxtrx_dsmr_connection_send_validate_fixture,
+    dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
+    rfxtrx_dsmr_connection_send_validate_fixture: tuple[
+        MagicMock, MagicMock, MagicMock
+    ],
 ) -> None:
     """Test we can setup serial."""
     (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
@@ -273,7 +278,9 @@ async def test_setup_serial_rfxtrx(
 
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
 async def test_setup_serial_manual(
-    com_mock, hass: HomeAssistant, dsmr_connection_send_validate_fixture
+    com_mock,
+    hass: HomeAssistant,
+    dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
     """Test we can setup serial with manual entry."""
     result = await hass.config_entries.flow.async_init(
@@ -321,7 +328,9 @@ async def test_setup_serial_manual(
 
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
 async def test_setup_serial_fail(
-    com_mock, hass: HomeAssistant, dsmr_connection_send_validate_fixture
+    com_mock,
+    hass: HomeAssistant,
+    dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
     """Test failed serial connection."""
     (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
@@ -369,8 +378,10 @@ async def test_setup_serial_fail(
 async def test_setup_serial_timeout(
     com_mock,
     hass: HomeAssistant,
-    dsmr_connection_send_validate_fixture,
-    rfxtrx_dsmr_connection_send_validate_fixture,
+    dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
+    rfxtrx_dsmr_connection_send_validate_fixture: tuple[
+        MagicMock, MagicMock, MagicMock
+    ],
 ) -> None:
     """Test failed serial connection."""
     (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
@@ -425,8 +436,10 @@ async def test_setup_serial_timeout(
 async def test_setup_serial_wrong_telegram(
     com_mock,
     hass: HomeAssistant,
-    dsmr_connection_send_validate_fixture,
-    rfxtrx_dsmr_connection_send_validate_fixture,
+    dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
+    rfxtrx_dsmr_connection_send_validate_fixture: tuple[
+        MagicMock, MagicMock, MagicMock
+    ],
 ) -> None:
     """Test failed telegram data."""
     (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture

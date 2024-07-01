@@ -21,6 +21,7 @@ from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.typing import VolDictType, VolSchemaType
 
 from .api import (
     async_change_channel,
@@ -126,7 +127,7 @@ def _ensure_list_if_present[_T](value: _T | None) -> list[_T] | list[Any] | None
     return cast("list[_T]", value) if isinstance(value, list) else [value]
 
 
-SERVICE_PERMIT_PARAMS = {
+SERVICE_PERMIT_PARAMS: VolDictType = {
     vol.Optional(ATTR_IEEE): IEEE_SCHEMA,
     vol.Optional(ATTR_DURATION, default=60): vol.All(
         vol.Coerce(int), vol.Range(0, 254)
@@ -138,7 +139,7 @@ SERVICE_PERMIT_PARAMS = {
     vol.Exclusive(ATTR_QR_CODE, "install_code"): vol.All(cv.string, qr_to_install_code),
 }
 
-SERVICE_SCHEMAS = {
+SERVICE_SCHEMAS: dict[str, VolSchemaType] = {
     SERVICE_PERMIT: vol.Schema(
         vol.All(
             cv.deprecated(ATTR_IEEE_ADDRESS, replacement_key=ATTR_IEEE),

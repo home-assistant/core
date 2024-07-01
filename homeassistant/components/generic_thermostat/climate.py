@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     PRESET_ACTIVITY,
     PRESET_AWAY,
     PRESET_COMFORT,
@@ -54,6 +54,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import ConditionError
 from homeassistant.helpers import condition, config_validation as cv
+from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_state_change_event,
@@ -61,16 +62,14 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolDictType
 
-from . import DOMAIN, PLATFORMS
+from . import CONF_HEATER, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TOLERANCE = 0.3
 DEFAULT_NAME = "Generic Thermostat"
-
-CONF_HEATER = "heater"
 CONF_SENSOR = "target_sensor"
 CONF_MIN_TEMP = "min_temp"
 CONF_MAX_TEMP = "max_temp"
@@ -94,6 +93,10 @@ CONF_PRESETS = {
         PRESET_SLEEP,
         PRESET_ACTIVITY,
     )
+}
+
+PRESETS_SCHEMA: VolDictType = {
+    vol.Optional(v): vol.Coerce(float) for v in CONF_PRESETS.values()
 }
 
 PLATFORM_SCHEMA_COMMON = vol.Schema(
@@ -120,12 +123,12 @@ PLATFORM_SCHEMA_COMMON = vol.Schema(
             vol.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE])
         ),
         vol.Optional(CONF_UNIQUE_ID): cv.string,
-        **{vol.Optional(v): vol.Coerce(float) for v in CONF_PRESETS.values()},
+        **PRESETS_SCHEMA,
     }
 )
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_COMMON.schema)
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_COMMON.schema)
 
 
 async def async_setup_entry(
@@ -186,6 +189,7 @@ async def _async_setup_config(
     async_add_entities(
         [
             GenericThermostat(
+                hass,
                 name,
                 heater_entity_id,
                 sensor_entity_id,
@@ -216,6 +220,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         name: str,
         heater_entity_id: str,
         sensor_entity_id: str,
@@ -238,6 +243,10 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self._attr_name = name
         self.heater_entity_id = heater_entity_id
         self.sensor_entity_id = sensor_entity_id
+        self._attr_device_info = async_device_info_to_link_from_entity(
+            hass,
+            heater_entity_id,
+        )
         self.ac_mode = ac_mode
         self.min_cycle_duration = min_cycle_duration
         self._cold_tolerance = cold_tolerance

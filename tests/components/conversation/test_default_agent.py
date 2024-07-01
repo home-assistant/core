@@ -860,13 +860,27 @@ async def test_error_feature_not_supported(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("init_components")
-async def test_error_no_timer_support(hass: HomeAssistant) -> None:
+async def test_error_no_timer_support(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test error message when a device does not support timers (no handler is registered)."""
-    device_id = "test_device"
+    area_kitchen = area_registry.async_create("kitchen")
+
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+    device_kitchen = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections=set(),
+        identifiers={("demo", "device-kitchen")},
+    )
+    device_registry.async_update_device(device_kitchen.id, area_id=area_kitchen.id)
+    device_id = device_kitchen.id
 
     # No timer handler is registered for the device
     result = await conversation.async_converse(
-        hass, "pause timer", None, Context(), None, device_id=device_id
+        hass, "set a 5 minute timer", None, Context(), None, device_id=device_id
     )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR

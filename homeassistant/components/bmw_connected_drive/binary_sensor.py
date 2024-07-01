@@ -17,13 +17,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_system import UnitSystem
 
-from . import BMWBaseEntity
-from .const import DOMAIN, UNIT_MAP
+from . import BMWBaseEntity, BMWConfigEntry
+from .const import UNIT_MAP
 from .coordinator import BMWDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -197,11 +196,11 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BMWConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the BMW binary sensors from config entry."""
-    coordinator: BMWDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data.coordinator
 
     entities = [
         BMWBinarySensor(coordinator, vehicle, description, hass.config.units)

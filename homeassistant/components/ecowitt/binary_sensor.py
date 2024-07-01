@@ -3,19 +3,18 @@
 import dataclasses
 from typing import Final
 
-from aioecowitt import EcoWittListener, EcoWittSensor, EcoWittSensorTypes
+from aioecowitt import EcoWittSensor, EcoWittSensorTypes
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import EcowittConfigEntry
 from .entity import EcowittEntity
 
 ECOWITT_BINARYSENSORS_MAPPING: Final = {
@@ -31,10 +30,12 @@ ECOWITT_BINARYSENSORS_MAPPING: Final = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: EcowittConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add sensors if new."""
-    ecowitt: EcoWittListener = hass.data[DOMAIN][entry.entry_id]
+    ecowitt = entry.runtime_data
 
     def _new_sensor(sensor: EcoWittSensor) -> None:
         """Add new sensor."""

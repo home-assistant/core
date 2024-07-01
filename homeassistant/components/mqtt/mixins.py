@@ -53,6 +53,7 @@ from homeassistant.helpers.typing import (
     ConfigType,
     DiscoveryInfoType,
     UndefinedType,
+    VolSchemaType,
 )
 from homeassistant.util.json import json_loads
 from homeassistant.util.yaml import dump as yaml_dump
@@ -156,7 +157,7 @@ class SetupEntity(Protocol):
 
 @callback
 def async_handle_schema_error(
-    discovery_payload: MQTTDiscoveryPayload, err: vol.MultipleInvalid
+    discovery_payload: MQTTDiscoveryPayload, err: vol.Invalid
 ) -> None:
     """Help handling schema errors on MQTT discovery messages."""
     discovery_topic: str = discovery_payload.discovery_data[ATTR_DISCOVERY_TOPIC]
@@ -247,8 +248,8 @@ def async_setup_entity_entry_helper(
     entity_class: type[MqttEntity] | None,
     domain: str,
     async_add_entities: AddEntitiesCallback,
-    discovery_schema: vol.Schema,
-    platform_schema_modern: vol.Schema,
+    discovery_schema: VolSchemaType,
+    platform_schema_modern: VolSchemaType,
     schema_class_mapping: dict[str, type[MqttEntity]] | None = None,
 ) -> None:
     """Set up entity creation dynamically through MQTT discovery."""
@@ -1187,7 +1188,7 @@ class MqttEntity(
 
     @staticmethod
     @abstractmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
 
     def _set_entity_name(self, config: ConfigType) -> None:

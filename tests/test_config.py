@@ -2,6 +2,7 @@
 
 import asyncio
 from collections import OrderedDict
+from collections.abc import Generator
 import contextlib
 import copy
 import logging
@@ -12,7 +13,6 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from typing_extensions import Generator
 import voluptuous as vol
 from voluptuous import Invalid, MultipleInvalid
 import yaml
@@ -490,9 +490,10 @@ def test_load_yaml_config_preserves_key_order() -> None:
         fp.write("hello: 2\n")
         fp.write("world: 1\n")
 
-    assert [("hello", 2), ("world", 1)] == list(
-        config_util.load_yaml_config_file(YAML_PATH).items()
-    )
+    assert list(config_util.load_yaml_config_file(YAML_PATH).items()) == [
+        ("hello", 2),
+        ("world", 1),
+    ]
 
 
 async def test_create_default_config_returns_none_if_write_error(

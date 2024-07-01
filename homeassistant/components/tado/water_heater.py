@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 
 from . import TadoConnector
 from .const import (
@@ -55,7 +56,7 @@ WATER_HEATER_MAP_TADO = {
 SERVICE_WATER_HEATER_TIMER = "set_water_heater_timer"
 ATTR_TIME_PERIOD = "time_period"
 
-WATER_HEATER_TIMER_SCHEMA = {
+WATER_HEATER_TIMER_SCHEMA: VolDictType = {
     vol.Required(ATTR_TIME_PERIOD, default="01:00:00"): vol.All(
         cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds()
     ),
