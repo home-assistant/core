@@ -11,7 +11,7 @@ from homeassistant.components.bluetooth.api import async_discovered_service_info
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 
-from .const import DOMAIN
+from .const import DISCOVERY_SVC_UUID, DOMAIN
 
 
 class PinecilConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -65,7 +65,7 @@ class PinecilConfigFlow(ConfigFlow, domain=DOMAIN):
         for discovery_info in async_discovered_service_info(self.hass, True):
             address = discovery_info.address
             if (
-                "pinecil" not in discovery_info.name.lower()
+                DISCOVERY_SVC_UUID not in discovery_info.service_uuids
                 or address in current_addresses
                 or address in self._discovered_devices
             ):
