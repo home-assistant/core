@@ -49,7 +49,7 @@ def setup_comp(hass: HomeAssistant) -> None:
 
 
 async def test_if_fires_on_zone_enter(
-    hass: HomeAssistant, calls: list[ServiceCall]
+    hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
     """Test for firing on zone enter."""
     context = Context()
@@ -96,10 +96,10 @@ async def test_if_fires_on_zone_enter(
     )
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].context.parent_id == context.id
+    assert len(service_calls) == 1
+    assert service_calls[0].context.parent_id == context.id
     assert (
-        calls[0].data["some"]
+        service_calls[0].data["some"]
         == "geo_location - geo_location.entity - hello - hello - test - 0"
     )
 
@@ -118,6 +118,8 @@ async def test_if_fires_on_zone_enter(
         blocking=True,
     )
 
+    assert len(service_calls) == 2
+
     hass.states.async_set(
         "geo_location.entity",
         "hello",
@@ -125,7 +127,7 @@ async def test_if_fires_on_zone_enter(
     )
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
+    assert len(service_calls) == 2
 
 
 async def test_if_not_fires_for_enter_on_zone_leave(
