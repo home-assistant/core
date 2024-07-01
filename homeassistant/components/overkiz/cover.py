@@ -26,7 +26,6 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
@@ -236,6 +235,18 @@ async def async_setup_entry(
         )
     ]
 
+    # Cover platform does not support configuring the speed of the cover
+    # For covers where the speed can be configured, we create a separate entity
+    entities += [
+        OverkizLowSpeedCover(device.device_url, data.coordinator, description)
+        for device in data.platforms[Platform.COVER]
+        if (
+            description := SUPPORTED_DEVICES.get(device.widget)
+            or SUPPORTED_DEVICES.get(device.ui_class)
+        )
+        and OverkizCommand.SET_CLOSURE_AND_LINEAR_SPEED in device.definition.commands
+    ]
+
     async_add_entities(entities)
 
 
@@ -248,7 +259,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         self,
         device_url: str,
         coordinator: OverkizDataUpdateCoordinator,
-        description: EntityDescription,
+        description: OverkizCoverDescription,
     ) -> None:
         """Initialize the device."""
         super().__init__(device_url, coordinator, description)
@@ -444,3 +455,43 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
             return None
 
         return cast(int, current_closure.value) - cast(int, target_closure.value)
+
+
+class OverkizLowSpeedCover(OverkizCover):
+    """Representation of an Overkiz Low Speed cover."""
+
+    entity_description: OverkizCoverDescription
+
+    def __init__(
+        self,
+        device_url: str,
+        coordinator: OverkizDataUpdateCoordinator,
+        description: OverkizCoverDescription,
+    ) -> None:
+        """Initialize the device."""
+        super().__init__(device_url, coordinator, description)
+
+        self._attr_name = "Low speed"
+        self._attr_unique_id = f"{self._attr_unique_id}_low_speed"
+
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
+        """Move the cover to a specific position."""
+        await self.async_set_cover_position_low_speed(**kwargs)
+
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open the cover."""
+        await self.async_set_cover_position_low_speed(**{ATTR_POSITION: 100})
+
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close the cover."""
+        await self.async_set_cover_position_low_speed(**{ATTR_POSITION: 0})
+
+    async def async_set_cover_position_low_speed(self, **kwargs: Any) -> None:
+        """Move the cover to a specific position with a low speed."""
+        position = 100 - kwargs.get(ATTR_POSITION, 0)
+
+        await self.executor.async_execute_command(
+            OverkizCommand.SET_CLOSURE_AND_LINEAR_SPEED,
+            position,
+            OverkizCommandParam.LOWSPEED,
+        )
