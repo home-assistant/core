@@ -1,9 +1,9 @@
 """Define fixtures for LaCrosse View tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 
 @pytest.fixture

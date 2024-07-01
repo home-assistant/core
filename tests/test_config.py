@@ -2,6 +2,7 @@
 
 import asyncio
 from collections import OrderedDict
+from collections.abc import Generator
 import contextlib
 import copy
 import logging
@@ -12,7 +13,6 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from typing_extensions import Generator
 import voluptuous as vol
 from voluptuous import Invalid, MultipleInvalid
 import yaml

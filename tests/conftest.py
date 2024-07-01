@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
+from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
 from contextlib import asynccontextmanager, contextmanager
 import datetime
 import functools
@@ -34,7 +34,6 @@ import pytest
 import pytest_socket
 import requests_mock
 from syrupy.assertion import SnapshotAssertion
-from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant import block_async_io
 
@@ -56,6 +55,7 @@ from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.config_entries import ConfigEntries, ConfigEntry, ConfigEntryState
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import (
+    Context,
     CoreState,
     HassJob,
     HomeAssistant,
@@ -1662,7 +1662,7 @@ def label_registry(hass: HomeAssistant) -> lr.LabelRegistry:
 
 
 @pytest.fixture
-def service_calls(hass: HomeAssistant) -> Generator[None, None, list[ServiceCall]]:
+def service_calls(hass: HomeAssistant) -> Generator[list[ServiceCall]]:
     """Track all service calls."""
     calls = []
 
@@ -1673,15 +1673,23 @@ def service_calls(hass: HomeAssistant) -> Generator[None, None, list[ServiceCall
         domain: str,
         service: str,
         service_data: dict[str, Any] | None = None,
-        **kwargs: Any,
+        blocking: bool = False,
+        context: Context | None = None,
+        target: dict[str, Any] | None = None,
+        return_response: bool = False,
     ) -> ServiceResponse:
-        calls.append(ServiceCall(domain, service, service_data))
+        calls.append(
+            ServiceCall(domain, service, service_data, context, return_response)
+        )
         try:
             return await _original_async_call(
                 domain,
                 service,
                 service_data,
-                **kwargs,
+                blocking,
+                context,
+                target,
+                return_response,
             )
         except ha.ServiceNotFound:
             _LOGGER.debug("Ignoring unknown service call to %s.%s", domain, service)
@@ -1698,7 +1706,7 @@ def snapshot(snapshot: SnapshotAssertion) -> SnapshotAssertion:
 
 
 @pytest.fixture
-def disable_block_async_io() -> Generator[Any, Any, None]:
+def disable_block_async_io() -> Generator[None]:
     """Fixture to disable the loop protection from block_async_io."""
     yield
     calls = block_async_io._BLOCKED_CALLS.calls
