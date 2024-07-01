@@ -924,7 +924,7 @@ gardena-bluetooth==1.4.2
 gassist-text==0.0.11
 
 # homeassistant.components.google
-gcal-sync==6.1.3
+gcal-sync==6.1.4
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
