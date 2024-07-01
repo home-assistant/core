@@ -149,7 +149,7 @@ class Remote:
         self._control: RemoteControl | None = None
         self.state: MediaPlayerState | None = None
         self.available: bool = False
-        self.volume: int = 0
+        self.volume: float = 0
         self.muted: bool = False
         self.playing: bool = True
 
