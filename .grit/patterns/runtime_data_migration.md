@@ -6,77 +6,70 @@ tags: [migration, code_quality]
 Migrate an integration from hass.data to entry.runtime_data
 
 ```grit
-engine marzano(0.1)
 language python
 
-pattern refactor_functions($config_entry_type) {
-    function_definition($parameters, $body) where {
-        // change entry type
-        $entry = $parameters[1],
-        $entry <: typed_parameter(name=$entry_name, $type) where {
+pattern refactor_functions($config_entry_type, $file_name, $config_entry_type_defined) {
+    function_definition($parameters, $body) as $func where {
+        // change config entry type
+        $parameters <: contains typed_parameter(name=$entry_name, $type) where {
             $type <: type(type="ConfigEntry"),
             $type => $config_entry_type,
-            //$config_entry_type <: ensure_import_from(source = `.`),
-        },
-
-        // migrate hass.data to entry.runtime_data
-        $body <: maybe contains assignment($left, right=$runtime_data) as $assignment where {
-            $runtime_data <: `hass.data[$_][entry.entry_id]`,
-            $assignment => `$left = $entry_name.runtime_data`
-        },
-    }
-}
-
-pattern refactor_init($config_entry_type) {
-    function_definition(name="async_setup_entry", $parameters, $body) as $func where {
-        // change entry type
-        $entry = $parameters[1],
-        $entry <: typed_parameter(name=$entry_name, $type) where {
-            $type => $config_entry_type
-        },
-
-        // migrate hass.data to entry.runtime_data
-        $body <: contains or {
-            `hass.data.setdefault($...)[entry.entry_id]`,
-            `hass.data[$_][entry.entry_id]`,
-            } as $runtime_data where {
-                $runtime_data => `$entry_name.runtime_data`
+            if ($file_name <: not `__init__`) {
+                //$config_entry_type <: ensure_import_from(source = `.`),
             },
+        },
 
-        $config_entry_type_definition = `# TODO: Please add the correct type\n`,
-        $config_entry_type_definition += `type $config_entry_type = ConfigEntry`,
-        $func => `$config_entry_type_definition\n\n$func`
+        if (and {$file_name <: `__init__`, $config_entry_type_defined <: undefined}) {
+            if ($func <: within decorated_definition() as $decorated) {
+                // we need to insert the new type before all function decorators
+                $func = $decorated,
+            },
+            $config_entry_type_definition = `# TODO: Please add the correct type\n`,
+            $config_entry_type_definition += `type $config_entry_type = ConfigEntry`,
+            $func => `$config_entry_type_definition\n\n$func`,
+            $config_entry_type_defined = true,
+        },
+
+        // migrate hass.data to entry.runtime_data
+        $body <: maybe contains assignment($left, $right) as $assignment where {
+            or {
+                and {
+                    $right <: `hass.data[$_][entry.entry_id]`,
+                    $assignment => `$left = $entry_name.runtime_data`
+                },
+                and {
+                    $left <: or {
+                            `hass.data.setdefault($...)[entry.entry_id]`,
+                            `hass.data[$_][entry.entry_id]`,
+                        } as $runtime_data where {
+                            $runtime_data => `$entry_name.runtime_data`
+                        },
+                }
+            }
+        },
     }
 }
 
 multifile {
     bubble($domain_list) file($name, $body) where {
-        $name <: includes `__init__.py`,
-        $file_parts = split($name, "/"),
-        $components_folder = $file_parts[-3],
-        $components_folder <: includes `components`, // with includes we allow also custom_components
-        $domain = $file_parts[-2],
-        $config_entry_type = capitalize($domain),
-        $config_entry_type += "ConfigEntry",
-        $body <: contains and {
-            refactor_init($config_entry_type),
-            maybe refactor_functions($config_entry_type),
-            if ($domain_list <: undefined) {
-                $domain_list = []
-            },
-            $domain_list += $domain
+        // find all integrations, which can be migrated
+        $filename <: r".*components/([^/]+)/__init__\.py$"($domain),
+        $body <: contains or {
+        `hass.data.setdefault($...)[entry.entry_id]`,
+        `hass.data[$_][entry.entry_id]`,
         },
+        if ($domain_list <: undefined) {
+            $domain_list = []
+        },
+        $domain_list += $domain,
     },
     bubble($domain_list) file($name, $body) where {
-        $name <: not includes `__init__.py`,
-        $file_parts = split($name, "/"),
-        $components_folder = $file_parts[-3],
-        $components_folder <: includes `components`, // with includes we allow also custom_components
-        $domain = $file_parts[-2],
+        // migrate files
+        $filename <: r".*components/([^/]+)/([^/]+)\.py$"($domain, $file_name),
         $domain_list <: includes $domain,
         $config_entry_type = capitalize($domain),
         $config_entry_type += "ConfigEntry",
-        $body <: contains refactor_functions($config_entry_type)
-    }
+        $body <: contains refactor_functions($config_entry_type, $file_name, $config_entry_type_defined),
+    },
 }
 ```
