@@ -41,6 +41,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -65,6 +66,9 @@ TESTDATA_YAML = {
     CONF_NAME: "Yaml Defined Name",
     **TESTDATA,
 }
+
+TESTDATA_ONLYSTREAM = TESTDATA.copy()
+TESTDATA_ONLYSTREAM.pop(CONF_STILL_IMAGE_URL)
 
 
 @respx.mock
@@ -101,9 +105,17 @@ async def test_form(
             user_input={CONF_CONFIRMED_OK: True},
         )
         await hass.async_block_till_done()
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "127_0_0_1"
-    assert result2["options"] == {
+
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["step_id"] == "user_confirm_stream"
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            user_input={CONF_CONFIRMED_OK: True},
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "127_0_0_1"
+    assert result3["options"] == {
         CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
         CONF_STREAM_SOURCE: "http://127.0.0.1/testurl/2",
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
@@ -190,7 +202,26 @@ async def test_form_reject_still_preview(
 
 
 @respx.mock
-@pytest.mark.usefixtures("fakeimg_png")
+async def test_form_reject_stream_preview(
+    hass: HomeAssistant, fakeimgbytes_png, mock_create_stream, user_flow
+) -> None:
+    """Test we go back to the config screen if the user rejects the stream preview."""
+    with mock_create_stream:
+        result1 = await hass.config_entries.flow.async_configure(
+            user_flow["flow_id"],
+            TESTDATA_ONLYSTREAM,
+        )
+    assert result1["type"] is FlowResultType.FORM
+    assert result1["step_id"] == "user_confirm_stream"
+    result2 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"],
+        user_input={CONF_CONFIRMED_OK: False},
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "user"
+
+
+@respx.mock
 async def test_form_still_preview_cam_off(
     hass: HomeAssistant,
     mock_create_stream: _patch[MagicMock],
@@ -389,9 +420,18 @@ async def test_form_rtsp_mode(
             result1["flow_id"],
             user_input={CONF_CONFIRMED_OK: True},
         )
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "127_0_0_1"
-    assert result2["options"] == {
+        await hass.async_block_till_done()
+
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["step_id"] == "user_confirm_stream"
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            user_input={CONF_CONFIRMED_OK: True},
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "127_0_0_1"
+    assert result3["options"] == {
         CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
         CONF_STREAM_SOURCE: "rtsp://127.0.0.1/testurl/2",
@@ -423,9 +463,20 @@ async def test_form_only_stream(
             user_flow["flow_id"],
             data,
         )
-    assert result1["type"] is FlowResultType.CREATE_ENTRY
-    assert result1["title"] == "127_0_0_1"
-    assert result1["options"] == {
+
+        await hass.async_block_till_done()
+
+        assert result1["type"] is FlowResultType.FORM
+        assert result1["step_id"] == "user_confirm_stream"
+        result2 = await hass.config_entries.flow.async_configure(
+            result1["flow_id"],
+            user_input={CONF_CONFIRMED_OK: True},
+        )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "127_0_0_1"
+    assert result2["options"] == {
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
         CONF_STREAM_SOURCE: "rtsp://user:pass@127.0.0.1/testurl/2",
         CONF_USERNAME: "fred_flintstone",
@@ -614,6 +665,24 @@ async def test_form_stream_worker_error(
     assert result2["errors"] == {"stream_source": "Some message"}
 
 
+async def test_form_create_stream_error(
+    hass: HomeAssistant, user_flow, mock_create_stream
+) -> None:
+    """Test we handle async_create_stream returning None."""
+    with (
+        mock_create_stream,
+        patch(
+            "homeassistant.components.camera.Camera.async_create_stream",
+            return_value=None,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.config_entries.flow.async_configure(
+            user_flow["flow_id"],
+            TESTDATA_ONLYSTREAM,
+        )
+
+
 @respx.mock
 async def test_form_stream_permission_error(
     hass: HomeAssistant, fakeimgbytes_png: bytes, user_flow: ConfigFlowResult
@@ -789,14 +858,12 @@ async def test_options_only_stream(
 ) -> None:
     """Test the options flow without a still_image_url."""
     respx.get("http://127.0.0.1/testurl/2").respond(stream=fakeimgbytes_png)
-    data = TESTDATA.copy()
-    data.pop(CONF_STILL_IMAGE_URL)
 
     mock_entry = MockConfigEntry(
         title="Test Camera",
         domain=DOMAIN,
         data={},
-        options=data,
+        options=TESTDATA_ONLYSTREAM,
     )
     mock_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -810,7 +877,7 @@ async def test_options_only_stream(
     with mock_create_stream:
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            user_input=data,
+            user_input=TESTDATA_ONLYSTREAM,
         )
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "confirm_still"
