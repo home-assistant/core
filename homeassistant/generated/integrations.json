@@ -402,7 +402,7 @@
       "iot_class": "cloud_push"
     },
     "aprilaire": {
-      "name": "Aprilaire",
+      "name": "AprilAire",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
