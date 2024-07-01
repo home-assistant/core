@@ -54,7 +54,6 @@ from .const import (
     RPC_RECONNECT_INTERVAL,
     RPC_SENSORS_POLLING_INTERVAL,
     SHBTN_MODELS,
-    SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
     BLEScannerMode,
 )
@@ -229,7 +228,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         """Initialize the Shelly block device coordinator."""
         self.entry = entry
         if self.sleep_period:
-            update_interval = SLEEP_PERIOD_MULTIPLIER * self.sleep_period
+            update_interval = UPDATE_PERIOD_MULTIPLIER * self.sleep_period
         else:
             update_interval = (
                 UPDATE_PERIOD_MULTIPLIER * device.settings["coiot"]["update_period"]
@@ -378,12 +377,13 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
                 eager_start=True,
             )
         elif update_type is BlockUpdateType.COAP_PERIODIC:
+            if self._push_update_failures >= MAX_PUSH_UPDATE_FAILURES:
+                ir.async_delete_issue(
+                    self.hass,
+                    DOMAIN,
+                    PUSH_UPDATE_ISSUE_ID.format(unique=self.mac),
+                )
             self._push_update_failures = 0
-            ir.async_delete_issue(
-                self.hass,
-                DOMAIN,
-                PUSH_UPDATE_ISSUE_ID.format(unique=self.mac),
-            )
         elif update_type is BlockUpdateType.COAP_REPLY:
             self._push_update_failures += 1
             if self._push_update_failures == MAX_PUSH_UPDATE_FAILURES:
@@ -429,7 +429,7 @@ class ShellyRestCoordinator(ShellyCoordinatorBase[BlockDevice]):
             in BATTERY_DEVICES_WITH_PERMANENT_CONNECTION
         ):
             update_interval = (
-                SLEEP_PERIOD_MULTIPLIER * device.settings["coiot"]["update_period"]
+                UPDATE_PERIOD_MULTIPLIER * device.settings["coiot"]["update_period"]
             )
         super().__init__(hass, entry, device, update_interval)
 
@@ -459,7 +459,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         """Initialize the Shelly RPC device coordinator."""
         self.entry = entry
         if self.sleep_period:
-            update_interval = SLEEP_PERIOD_MULTIPLIER * self.sleep_period
+            update_interval = UPDATE_PERIOD_MULTIPLIER * self.sleep_period
         else:
             update_interval = RPC_RECONNECT_INTERVAL
         super().__init__(hass, entry, device, update_interval)
@@ -486,7 +486,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         data[CONF_SLEEP_PERIOD] = wakeup_period
         self.hass.config_entries.async_update_entry(self.entry, data=data)
 
-        update_interval = SLEEP_PERIOD_MULTIPLIER * wakeup_period
+        update_interval = UPDATE_PERIOD_MULTIPLIER * wakeup_period
         self.update_interval = timedelta(seconds=update_interval)
 
         return True

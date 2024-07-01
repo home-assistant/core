@@ -29,7 +29,6 @@ async def test_unload_entry(
         await hass.async_block_till_done()
         assert mock_disconnect.call_count == 2
         assert setup_entry.state is ConfigEntryState.NOT_LOADED
-        assert not hass.data.get(DOMAIN)
 
 
 async def test_config_entry_not_ready(

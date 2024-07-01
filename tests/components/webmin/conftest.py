@@ -1,9 +1,9 @@
 """Fixtures for Webmin integration tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.webmin.const import DEFAULT_PORT, DOMAIN
 from homeassistant.const import (

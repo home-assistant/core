@@ -37,14 +37,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent as intent_helper
 import homeassistant.helpers.device_registry as dr
 
-from .conftest import MockESPHomeDevice
+from .conftest import _ONE_SECOND, MockESPHomeDevice
 
 _TEST_INPUT_TEXT = "This is an input test"
 _TEST_OUTPUT_TEXT = "This is an output test"
 _TEST_OUTPUT_URL = "output.mp3"
 _TEST_MEDIA_ID = "12345"
-
-_ONE_SECOND = 16000 * 2  # 16Khz 16-bit
 
 
 @pytest.fixture
@@ -813,6 +811,7 @@ async def test_wake_word_abort_exception(
 
 async def test_timer_events(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: Callable[
         [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
@@ -831,8 +830,8 @@ async def test_timer_events(
             | VoiceAssistantFeature.TIMERS
         },
     )
-    dev_reg = dr.async_get(hass)
-    dev = dev_reg.async_get_device(
+    await hass.async_block_till_done()
+    dev = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id)}
     )
 
@@ -886,6 +885,7 @@ async def test_timer_events(
 
 async def test_unknown_timer_event(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: Callable[
         [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
@@ -904,8 +904,8 @@ async def test_unknown_timer_event(
             | VoiceAssistantFeature.TIMERS
         },
     )
-    dev_reg = dr.async_get(hass)
-    dev = dev_reg.async_get_device(
+    await hass.async_block_till_done()
+    dev = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id)}
     )
 

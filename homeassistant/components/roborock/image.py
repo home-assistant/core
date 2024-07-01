@@ -13,7 +13,6 @@ from vacuum_map_parser_base.config.size import Sizes
 from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
 
 from homeassistant.components.image import ImageEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -21,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
-from . import RoborockCoordinators
+from . import RoborockConfigEntry
 from .const import DEFAULT_DRAWABLES, DOMAIN, DRAWABLES, IMAGE_CACHE_INTERVAL, MAP_SLEEP
 from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntityV1
@@ -29,12 +28,11 @@ from .device import RoborockCoordinatedEntityV1
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RoborockConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Roborock image platform."""
 
-    coordinators: RoborockCoordinators = hass.data[DOMAIN][config_entry.entry_id]
     drawables = [
         drawable
         for drawable, default_value in DEFAULT_DRAWABLES.items()
@@ -45,7 +43,7 @@ async def async_setup_entry(
             await asyncio.gather(
                 *(
                     create_coordinator_maps(coord, drawables)
-                    for coord in coordinators.v1
+                    for coord in config_entry.runtime_data.v1
                 )
             )
         )

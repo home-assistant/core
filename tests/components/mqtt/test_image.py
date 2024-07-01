@@ -499,7 +499,7 @@ async def test_image_from_url_fails(
         ),
     ],
 )
-@pytest.mark.usesfixtures("hass", "hass_client_no_auth")
+@pytest.mark.usefixtures("hass", "hass_client_no_auth")
 async def test_image_config_fails(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
@@ -573,11 +573,7 @@ async def test_update_with_json_attrs_not_dict(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        image.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, image.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -588,11 +584,7 @@ async def test_update_with_json_attrs_bad_json(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        image.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, image.DOMAIN, DEFAULT_CONFIG
     )
 
 
