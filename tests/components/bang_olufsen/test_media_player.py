@@ -1,7 +1,7 @@
 """Test the Bang & Olufsen media_player entity."""
 
 from contextlib import nullcontext as does_not_raise
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 import pytest
 
@@ -47,7 +47,7 @@ from .const import (
     TEST_MEDIA_PLAYER_ENTITY_ID,
     TEST_OVERLAY_INVALID_OFFSET_VOLUME_TTS,
     TEST_OVERLAY_OFFSET_VOLUME_TTS,
-    # TEST_PLAYBACK_ERROR,
+    TEST_PLAYBACK_ERROR,
     TEST_PLAYBACK_METADATA,
     TEST_PLAYBACK_PROGRESS,
     TEST_PLAYBACK_STATE_PAUSED,
@@ -166,22 +166,28 @@ async def test_async_update_playback_metadata(
     assert states.attributes[ATTR_MEDIA_CHANNEL] == TEST_PLAYBACK_METADATA.organization
 
 
-# async def test_async_update_playback_error(
-#     hass: HomeAssistant, mock_mozart_client, mock_config_entry
-# ) -> None:
-#     """Test _async_update_playback_error."""
+async def test_async_update_playback_error(
+    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+) -> None:
+    """Test _async_update_playback_error."""
 
-#     mock_config_entry.add_to_hass(hass)
-#     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-#     with pytest.raises(HomeAssistantError) as exc_info:
-#         async_dispatcher_send(
-#             hass,
-#             f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.PLAYBACK_ERROR}",
-#             TEST_PLAYBACK_ERROR,
-#         )
+    # The async_dispatcher_send function seems to swallow exceptions, making pytest.raises unusable
+    with patch("homeassistant.helpers.dispatcher._LOGGER.error") as mock_logger:
+        async_dispatcher_send(
+            hass,
+            f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.PLAYBACK_ERROR}",
+            TEST_PLAYBACK_ERROR,
+        )
 
-#     assert exc_info.errisinstance(HomeAssistantError)
+    # The traceback can't be tested, so it is replaced with "ANY"
+    mock_logger.assert_called_once_with(
+        "%s\n%s",
+        "Exception in _async_update_playback_error when dispatching '11111111_playback_error': (PlaybackError(error='Test error', item=None),)",
+        ANY,
+    )
 
 
 async def test_async_update_playback_progress(
