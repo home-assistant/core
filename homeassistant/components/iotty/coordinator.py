@@ -11,7 +11,7 @@ from iottycloud.verbs import RESULT, STATUS
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client, entity_registry as er
+from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -37,7 +37,7 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
     config_entry: ConfigEntry
     _entities: dict[str, Entity]
     _devices: list[Device]
-    _entity_registry: er.EntityRegistry
+    _device_registry: dr.DeivceRegistry
 
     def __init__(
         self, hass: HomeAssistant, entry: ConfigEntry, session: OAuth2Session
@@ -58,7 +58,7 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
         self.iotty = api.IottyProxy(
             hass, aiohttp_client.async_get_clientsession(hass), session
         )
-        self._entity_registry = er.async_get(hass)
+        self._device_registry = dr.async_get(hass)
 
     def set_entity(self, device_id: str, entity: Entity) -> None:
         """Store iotty device within Hass entities."""
@@ -85,15 +85,11 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
             if not any(x.device_id == d.device_id for x in current_devices)
         ]
 
-        entries = er.async_entries_for_config_entry(
-            self._entity_registry, self.config_entry.entry_id
-        )
-
         for device_to_remove in removed_devices:
-            entity_to_remove = [
-                x for x in entries if x.unique_id == device_to_remove.device_id
-            ][0]
-            self._entity_registry.async_remove(entity_to_remove.entity_id)
+            device_to_remove = self._device_registry.async_get_device(
+                {(DOMAIN, device_to_remove.device_id)}
+            )
+            self._device_registry.async_remove_device(device_to_remove.id)
 
         self._devices = current_devices
 

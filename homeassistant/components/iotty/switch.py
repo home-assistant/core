@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from iottycloud.device import Device
 from iottycloud.lightswitch import LightSwitch
@@ -12,6 +12,7 @@ from iottycloud.verbs import LS_DEVICE_TYPE_UID
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -120,6 +121,15 @@ class IottyLightSwitch(SwitchEntity, CoordinatorEntity[Device]):
     def device_id(self) -> str:
         """Get the ID of this iotty Device."""
         return self._iotty_device.device_id
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device info."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, cast(str, self._attr_unique_id))},
+            name=self.name,
+            manufacturer="iotty",
+        )
 
     @property
     def is_on(self) -> bool:
