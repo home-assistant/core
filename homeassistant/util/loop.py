@@ -29,7 +29,7 @@ def _get_line_from_cache(filename: str, lineno: int) -> str:
 
 # Set of previously reported blocking calls
 # (integration, filename, lineno)
-_PREVIOUSLY_REPORTED: set[tuple[str | None, str, int]] = set()
+_PREVIOUSLY_REPORTED: set[tuple[str | None, str, int | Any]] = set()
 
 
 def raise_for_blocking_call(
@@ -48,6 +48,7 @@ def raise_for_blocking_call(
     offender_filename = offender_frame.f_code.co_filename
     offender_lineno = offender_frame.f_lineno
     offender_line = _get_line_from_cache(offender_filename, offender_lineno)
+    report_key: tuple[str | None, str, int | Any]
 
     try:
         integration_frame = get_integration_frame()
