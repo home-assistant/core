@@ -331,7 +331,7 @@ async def test_update_attrs_fails_in_init(
     assert entity
     state = hass.states.get(entity_id)
     assert state.state == STATE_UNAVAILABLE
-    assert "Unable to read data for MockLight None:" in caplog.text
+    assert "Unable to read data for MockLight light.my_light:" in caplog.text
 
 
 async def test_update_attrs_fails_on_update(
