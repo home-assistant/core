@@ -32,8 +32,6 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _remote: RemoteControl | None = None
-
     def __init__(self) -> None:
         """Initialize the Panasonic Viera config flow."""
         self._data: dict[str, Any] = {
@@ -43,6 +41,8 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_ON_ACTION: None,
             ATTR_DEVICE_INFO: None,
         }
+
+        self._remote: RemoteControl | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

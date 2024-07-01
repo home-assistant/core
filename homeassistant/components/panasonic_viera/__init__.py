@@ -126,13 +126,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 class Remote:
     """The Remote class. It stores the TV properties and the remote control connection itself."""
 
-    _control: RemoteControl | None = None
-    state: MediaPlayerState | None = None
-    available: bool = False
-    volume: int = 0
-    muted: bool = False
-    playing: bool = True
-
     def __init__(
         self,
         hass: HomeAssistant,
@@ -152,6 +145,13 @@ class Remote:
 
         self._app_id = app_id
         self._encryption_key = encryption_key
+
+        self._control: RemoteControl | None = None
+        self.state: MediaPlayerState | None = None
+        self.available: bool = False
+        self.volume: int = 0
+        self.muted: bool = False
+        self.playing: bool = True
 
     async def async_create_remote_control(self, during_setup: bool = False) -> None:
         """Create remote control."""
