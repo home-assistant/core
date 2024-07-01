@@ -15,7 +15,8 @@ pattern refactor_functions($config_entry_type) {
         $entry = $parameters[1],
         $entry <: typed_parameter(name=$entry_name, $type) where {
             $type <: type(type="ConfigEntry"),
-            $type => $config_entry_type
+            $type => $config_entry_type,
+            //$config_entry_type <: ensure_import_from(source = `.`),
         },
 
         // migrate hass.data to entry.runtime_data
@@ -49,22 +50,32 @@ pattern refactor_init($config_entry_type) {
 }
 
 multifile {
-    bubble($domain, $config_entry_type) file($name, $body) where {
+    bubble($domain_list) file($name, $body) where {
+        $name <: includes `__init__.py`,
         $file_parts = split($name, "/"),
         $components_folder = $file_parts[-3],
         $components_folder <: includes `components`, // with includes we allow also custom_components
         $domain = $file_parts[-2],
         $config_entry_type = capitalize($domain),
         $config_entry_type += "ConfigEntry",
-        $name <: includes `__init__.py`,
         $body <: contains and {
             refactor_init($config_entry_type),
-            maybe refactor_functions($config_entry_type)
+            maybe refactor_functions($config_entry_type),
+            if ($domain_list <: undefined) {
+                $domain_list = []
+            },
+            $domain_list += $domain
         },
     },
-    bubble($domain, $config_entry_type) file($name, $body) where {
+    bubble($domain_list) file($name, $body) where {
+        $name <: not includes `__init__.py`,
         $file_parts = split($name, "/"),
+        $components_folder = $file_parts[-3],
+        $components_folder <: includes `components`, // with includes we allow also custom_components
         $domain = $file_parts[-2],
+        $domain_list <: includes $domain,
+        $config_entry_type = capitalize($domain),
+        $config_entry_type += "ConfigEntry",
         $body <: contains refactor_functions($config_entry_type)
     }
 }
