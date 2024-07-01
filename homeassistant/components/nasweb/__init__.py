@@ -14,21 +14,18 @@ from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.network import NoURLAvailableError
 
 from .config_flow import MissingNASwebData, MissingNASwebStatus
-from .const import (
-    DOMAIN,
-    DOMAIN_DISPLAY_NAME,
-    ISSUE_INTERNAL_ERROR,
-    ISSUE_INTERNAL_URL_ERROR,
-    ISSUE_INVALID_AUTHENTICATION,
-    ISSUE_NO_STATUS_UPDATE,
-    MANUFACTURER,
-    NASWEB_CONFIG_URL,
-    SUPPORT_EMAIL,
-)
+from .const import DOMAIN, MANUFACTURER, SUPPORT_EMAIL
 from .coordinator import NASwebCoordinator
 from .nasweb_data import NASwebData
 
 PLATFORMS: list[Platform] = [Platform.SWITCH]
+
+DOMAIN_DISPLAY_NAME = "NASweb"
+ISSUE_NO_STATUS_UPDATE = "no_status_update"
+ISSUE_INVALID_AUTHENTICATION = "invalid_authentication"
+ISSUE_INTERNAL_ERROR = "internal_error"
+ISSUE_INTERNAL_URL_ERROR = "internal_url_error"
+NASWEB_CONFIG_URL = "https://{host}/page"
 
 _LOGGER = logging.getLogger(__name__)
 

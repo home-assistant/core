@@ -15,9 +15,13 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.network import NoURLAvailableError
 
-from .const import DOMAIN, NASWEB_SCHEMA_IMG_URL
+from .const import DOMAIN
 from .coordinator import NASwebCoordinator
 from .nasweb_data import NASwebData
+
+NASWEB_SCHEMA_IMG_URL = (
+    "https://home-assistant.io/images/integrations/nasweb/nasweb_scheme.png"
+)
 
 _LOGGER = logging.getLogger(__name__)
 
