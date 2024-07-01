@@ -201,7 +201,6 @@ TODO = {
     "mficlient": AwesomeVersion(
         "0.3.0"
     ),  # No license https://github.com/kk7ds/mficlient/issues/4
-    "pizzapi": AwesomeVersion("0.0.3"),  # Has update available
     "pubnub": AwesomeVersion(
         "8.0.0"
     ),  # Proprietary license https://github.com/pubnub/python/blob/master/LICENSE
