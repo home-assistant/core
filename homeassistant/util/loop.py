@@ -27,7 +27,9 @@ def _get_line_from_cache(filename: str, lineno: int) -> str:
     return (linecache.getline(filename, lineno) or "?").strip()
 
 
-_PREVIOUSLY_REPORTED: set[tuple[str, int]] = set()
+# Set of previously reported blocking calls
+# (integration, filename, lineno)
+_PREVIOUSLY_REPORTED: set[tuple[str | None, str, int]] = set()
 
 
 def raise_for_blocking_call(
@@ -47,14 +49,13 @@ def raise_for_blocking_call(
     offender_lineno = offender_frame.f_lineno
     offender_line = _get_line_from_cache(offender_filename, offender_lineno)
 
-    report_key = (offender_filename, offender_lineno)
-    was_reported = report_key in _PREVIOUSLY_REPORTED
-    _PREVIOUSLY_REPORTED.add(report_key)
-
     try:
         integration_frame = get_integration_frame()
     except MissingIntegrationFrame:
         # Did not source from integration? Hard error.
+        report_key = (None, offender_filename, offender_lineno)
+        was_reported = report_key in _PREVIOUSLY_REPORTED
+        _PREVIOUSLY_REPORTED.add(report_key)
         if not strict_core:
             if was_reported:
                 _LOGGER.debug(
@@ -100,6 +101,10 @@ def raise_for_blocking_call(
                 "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue\n"
                 f"{_dev_help_message(func.__name__)}"
             )
+
+    report_key = (integration_frame.integration, offender_filename, offender_lineno)
+    was_reported = report_key in _PREVIOUSLY_REPORTED
+    _PREVIOUSLY_REPORTED.add(report_key)
 
     report_issue = async_suggest_report_issue(
         async_get_hass_or_none(),
