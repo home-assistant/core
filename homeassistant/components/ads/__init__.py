@@ -3,6 +3,7 @@
 import asyncio
 from asyncio import timeout
 from collections import namedtuple
+from collections.abc import Callable
 import ctypes
 from enum import Enum
 import logging
@@ -61,6 +62,8 @@ DOMAIN = "ads"
 
 SERVICE_WRITE_DATA_BY_NAME = "write_data_by_name"
 
+TASK_HEARTBEAT = "heartbeat"
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -91,6 +94,15 @@ SCHEMA_SERVICE_WRITE_DATA_BY_NAME = vol.Schema(
     }
 )
 
+type PLCDataType = (
+    pyads.PLCTYPE_BOOL
+    | pyads.PLCTYPE_BYTE
+    | pyads.PLCTYPE_DINT
+    | pyads.PLCTYPE_INT
+    | pyads.PLCTYPE_UDINT
+    | pyads.PLCTYPE_UINT
+)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ADS component."""
@@ -115,7 +127,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return False
 
     hass.data[DATA_ADS] = ads
-    hass.async_create_background_task(ads.heartbeat(), "heartbeat")
+    hass.async_create_background_task(ads.heartbeat(), TASK_HEARTBEAT)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, ads.shutdown)
 
     def handle_write_data_by_name(call: ServiceCall) -> None:
@@ -169,7 +181,7 @@ class AdsHub:
         self._notification_items: dict[int, NotificationItem] = {}
         self._lock = threading.Lock()
 
-    def shutdown(self, *args, **kwargs):
+    def shutdown(self, *args, **kwargs) -> None:
         """Shutdown ADS connection."""
 
         _LOGGER.debug("Shutting down ADS")
@@ -182,7 +194,7 @@ class AdsHub:
         except pyads.ADSError as err:
             _LOGGER.error(err)
 
-    def write_by_name(self, name, value, plc_datatype):
+    def write_by_name(self, name: str, value: Any, plc_datatype: PLCDataType) -> None:
         """Write a value to the device."""
 
         with self._lock:
@@ -191,7 +203,7 @@ class AdsHub:
             except pyads.ADSError as err:
                 _LOGGER.error("Error writing %s: %s", name, err)
 
-    def read_by_name(self, name, plc_datatype):
+    def read_by_name(self, name: str, plc_datatype: PLCDataType) -> Any | None:
         """Read a value from the device."""
 
         with self._lock:
@@ -199,8 +211,11 @@ class AdsHub:
                 return self._client.read_by_name(name, plc_datatype)
             except pyads.ADSError as err:
                 _LOGGER.error("Error reading %s: %s", name, err)
+                return None
 
-    def add_device_notification(self, name, plc_datatype, callback):
+    def add_device_notification(
+        self, name: str, plc_datatype: PLCDataType, callback: Callable
+    ) -> None:
         """Add a notification to the ADS devices."""
 
         attr = pyads.NotificationAttrib(ctypes.sizeof(plc_datatype))
@@ -227,7 +242,7 @@ class AdsHub:
         heartbeat_interval: float = 5.0,
         max_wait_time: float = 120.0,
         communication_timeout_while_disconnected_ms: int = 100,
-    ):
+    ) -> None:
         """Periodically checks and handles the connection state of the client.
 
         Adjusts the wait time and communication timeout based on the connection state, with exponential backoff when disconnected.
@@ -283,15 +298,15 @@ class AdsHub:
         else:
             return ConnectionState.Connected
 
-    def _reconnect(self):
+    def _reconnect(self) -> None:
         try:
             self._client.close()
             self._client.open()
-        except pyads.ADSError as reconnect_error:
-            _LOGGER.error(reconnect_error)
+        except pyads.ADSError:
+            _LOGGER.exception("Error during reconnection")
             return
 
-    def _device_notification_callback(self, notification, name):
+    def _device_notification_callback(self, notification: Any, name: str) -> None:
         """Handle device notifications."""
         contents = notification.contents
 
@@ -326,7 +341,7 @@ class AdsHub:
         elif notification_item.plc_datatype == pyads.PLCTYPE_UDINT:
             value = struct.unpack("<I", bytearray(data))[0]
         else:
-            value = bytearray(data)
+            value = data
             _LOGGER.warning("No callback available for this datatype")
 
         notification_item.callback(notification_item.name, value)
