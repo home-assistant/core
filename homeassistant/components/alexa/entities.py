@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Generator, Iterable
 import logging
 from typing import TYPE_CHECKING, Any
-
-from typing_extensions import Generator
 
 from homeassistant.components import (
     alarm_control_panel,

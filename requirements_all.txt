@@ -204,7 +204,7 @@ aioaseko==0.1.1
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.6.3
+aioautomower==2024.6.4
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.1.1
@@ -924,7 +924,7 @@ gardena-bluetooth==1.4.2
 gassist-text==0.0.11
 
 # homeassistant.components.google
-gcal-sync==6.1.3
+gcal-sync==6.1.4
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
@@ -1065,7 +1065,7 @@ hdate==0.10.9
 heatmiserV3==1.1.18
 
 # homeassistant.components.here_travel_time
-here-routing==0.2.0
+here-routing==1.0.1
 
 # homeassistant.components.here_travel_time
 here-transit==1.2.0
@@ -1131,7 +1131,7 @@ ibmiotf==0.3.4
 # homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==8.0.1
+ical==8.1.1
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -1152,7 +1152,7 @@ ihcsdk==2.8.5
 imgw_pib==1.0.5
 
 # homeassistant.components.incomfort
-incomfort-client==0.6.2
+incomfort-client==0.6.3
 
 # homeassistant.components.influxdb
 influxdb-client==1.24.0
@@ -1477,7 +1477,7 @@ open-garage==0.2.0
 open-meteo==0.3.1
 
 # homeassistant.components.openai_conversation
-openai==1.3.8
+openai==1.35.7
 
 # homeassistant.components.openerz
 openerz-api==0.3.0
@@ -2275,7 +2275,7 @@ python-join-api==0.0.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.7.0.1
+python-kasa[speedups]==0.7.0.2
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3

@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun import freeze_time
 from google.ai.generativelanguage_v1beta.types.content import FunctionCall
-from google.api_core.exceptions import GoogleAPICallError
+from google.api_core.exceptions import GoogleAPIError
 import google.generativeai.types as genai_types
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -447,7 +447,7 @@ async def test_error_handling(
     with patch("google.generativeai.GenerativeModel") as mock_model:
         mock_chat = AsyncMock()
         mock_model.return_value.start_chat.return_value = mock_chat
-        mock_chat.send_message_async.side_effect = GoogleAPICallError("some error")
+        mock_chat.send_message_async.side_effect = GoogleAPIError("some error")
         result = await conversation.async_converse(
             hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
         )
@@ -455,7 +455,7 @@ async def test_error_handling(
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
-        "Sorry, I had a problem talking to Google Generative AI: None some error"
+        "Sorry, I had a problem talking to Google Generative AI: some error"
     )
 
 

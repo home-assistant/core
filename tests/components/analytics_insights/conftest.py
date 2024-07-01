@@ -1,11 +1,11 @@
 """Common fixtures for the Homeassistant Analytics tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from python_homeassistant_analytics import CurrentAnalytics
 from python_homeassistant_analytics.models import CustomIntegration, Integration
-from typing_extensions import Generator
 
 from homeassistant.components.analytics_insights.const import (
     CONF_TRACKED_CUSTOM_INTEGRATIONS,

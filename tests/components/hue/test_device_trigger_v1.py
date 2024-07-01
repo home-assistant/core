@@ -92,7 +92,7 @@ async def test_if_fires_on_state_change(
     hass: HomeAssistant,
     mock_bridge_v1,
     device_reg: dr.DeviceRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for button press trigger firing."""
     mock_bridge_v1.mock_sensor_responses.append(REMOTES_RESPONSE)
@@ -158,8 +158,8 @@ async def test_if_fires_on_state_change(
 
     assert len(mock_bridge_v1.mock_requests) == 2
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "B4 - 18"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "B4 - 18"
 
     # Fake another button press.
     new_sensor_response["7"] = dict(new_sensor_response["7"])
@@ -173,4 +173,4 @@ async def test_if_fires_on_state_change(
     await mock_bridge_v1.sensor_manager.coordinator.async_refresh()
     await hass.async_block_till_done()
     assert len(mock_bridge_v1.mock_requests) == 3
-    assert len(calls) == 1
+    assert len(service_calls) == 1
