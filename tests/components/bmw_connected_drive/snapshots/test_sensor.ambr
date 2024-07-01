@@ -31,7 +31,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'ac_current_limit',
-    'unique_id': 'WBY00000000REXI01-ac_current_limit',
+    'unique_id': 'WBY00000000REXI01-charging_profile.ac_current_limit',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -79,7 +79,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charging_end_time',
-    'unique_id': 'WBY00000000REXI01-charging_end_time',
+    'unique_id': 'WBY00000000REXI01-fuel_and_battery.charging_end_time',
     'unit_of_measurement': None,
   })
 # ---
@@ -126,7 +126,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charging_start_time',
-    'unique_id': 'WBY00000000REXI01-charging_start_time',
+    'unique_id': 'WBY00000000REXI01-fuel_and_battery.charging_start_time',
     'unit_of_measurement': None,
   })
 # ---
@@ -188,7 +188,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charging_status',
-    'unique_id': 'WBY00000000REXI01-charging_status',
+    'unique_id': 'WBY00000000REXI01-fuel_and_battery.charging_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -252,7 +252,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charging_target',
-    'unique_id': 'WBY00000000REXI01-charging_target',
+    'unique_id': 'WBY00000000REXI01-fuel_and_battery.charging_target',
     'unit_of_measurement': '%',
   })
 # ---
@@ -359,7 +359,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_battery_percent',
-    'unique_id': 'WBY00000000REXI01-remaining_battery_percent',
+    'unique_id': 'WBY00000000REXI01-fuel_and_battery.remaining_battery_percent',
     'unit_of_measurement': '%',
   })
 # ---
@@ -413,7 +413,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_fuel',
-    'unique_id': 'WBY00000000REXI01-remaining_fuel',
+    'unique_id': 'WBY00000000REXI01-fuel_and_battery.remaining_fuel',
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
@@ -467,7 +467,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_fuel_percent',
-    'unique_id': 'WBY00000000REXI01-remaining_fuel_percent',
+    'unique_id': 'WBY00000000REXI01-fuel_and_battery.remaining_fuel_percent',
     'unit_of_measurement': '%',
   })
 # ---
@@ -520,7 +520,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_electric',
-    'unique_id': 'WBY00000000REXI01-remaining_range_electric',
+    'unique_id': 'WBY00000000REXI01-fuel_and_battery.remaining_range_electric',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -574,7 +574,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_fuel',
-    'unique_id': 'WBY00000000REXI01-remaining_range_fuel',
+    'unique_id': 'WBY00000000REXI01-fuel_and_battery.remaining_range_fuel',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -628,7 +628,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_total',
-    'unique_id': 'WBY00000000REXI01-remaining_range_total',
+    'unique_id': 'WBY00000000REXI01-fuel_and_battery.remaining_range_total',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -680,7 +680,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'ac_current_limit',
-    'unique_id': 'WBA00000000DEMO02-ac_current_limit',
+    'unique_id': 'WBA00000000DEMO02-charging_profile.ac_current_limit',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -728,7 +728,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charging_end_time',
-    'unique_id': 'WBA00000000DEMO02-charging_end_time',
+    'unique_id': 'WBA00000000DEMO02-fuel_and_battery.charging_end_time',
     'unit_of_measurement': None,
   })
 # ---
@@ -775,7 +775,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charging_start_time',
-    'unique_id': 'WBA00000000DEMO02-charging_start_time',
+    'unique_id': 'WBA00000000DEMO02-fuel_and_battery.charging_start_time',
     'unit_of_measurement': None,
   })
 # ---
@@ -837,7 +837,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charging_status',
-    'unique_id': 'WBA00000000DEMO02-charging_status',
+    'unique_id': 'WBA00000000DEMO02-fuel_and_battery.charging_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -901,7 +901,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charging_target',
-    'unique_id': 'WBA00000000DEMO02-charging_target',
+    'unique_id': 'WBA00000000DEMO02-fuel_and_battery.charging_target',
     'unit_of_measurement': '%',
   })
 # ---
@@ -956,7 +956,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_status',
-    'unique_id': 'WBA00000000DEMO02-activity',
+    'unique_id': 'WBA00000000DEMO02-climate.activity',
     'unit_of_measurement': None,
   })
 # ---
@@ -1068,7 +1068,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_battery_percent',
-    'unique_id': 'WBA00000000DEMO02-remaining_battery_percent',
+    'unique_id': 'WBA00000000DEMO02-fuel_and_battery.remaining_battery_percent',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1122,7 +1122,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_electric',
-    'unique_id': 'WBA00000000DEMO02-remaining_range_electric',
+    'unique_id': 'WBA00000000DEMO02-fuel_and_battery.remaining_range_electric',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -1176,7 +1176,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_total',
-    'unique_id': 'WBA00000000DEMO02-remaining_range_total',
+    'unique_id': 'WBA00000000DEMO02-fuel_and_battery.remaining_range_total',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -1228,7 +1228,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'ac_current_limit',
-    'unique_id': 'WBA00000000DEMO01-ac_current_limit',
+    'unique_id': 'WBA00000000DEMO01-charging_profile.ac_current_limit',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1276,7 +1276,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charging_end_time',
-    'unique_id': 'WBA00000000DEMO01-charging_end_time',
+    'unique_id': 'WBA00000000DEMO01-fuel_and_battery.charging_end_time',
     'unit_of_measurement': None,
   })
 # ---
@@ -1323,7 +1323,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charging_start_time',
-    'unique_id': 'WBA00000000DEMO01-charging_start_time',
+    'unique_id': 'WBA00000000DEMO01-fuel_and_battery.charging_start_time',
     'unit_of_measurement': None,
   })
 # ---
@@ -1385,7 +1385,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charging_status',
-    'unique_id': 'WBA00000000DEMO01-charging_status',
+    'unique_id': 'WBA00000000DEMO01-fuel_and_battery.charging_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -1449,7 +1449,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charging_target',
-    'unique_id': 'WBA00000000DEMO01-charging_target',
+    'unique_id': 'WBA00000000DEMO01-fuel_and_battery.charging_target',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1504,7 +1504,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_status',
-    'unique_id': 'WBA00000000DEMO01-activity',
+    'unique_id': 'WBA00000000DEMO01-climate.activity',
     'unit_of_measurement': None,
   })
 # ---
@@ -1616,7 +1616,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_battery_percent',
-    'unique_id': 'WBA00000000DEMO01-remaining_battery_percent',
+    'unique_id': 'WBA00000000DEMO01-fuel_and_battery.remaining_battery_percent',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1670,7 +1670,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_electric',
-    'unique_id': 'WBA00000000DEMO01-remaining_range_electric',
+    'unique_id': 'WBA00000000DEMO01-fuel_and_battery.remaining_range_electric',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -1724,7 +1724,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_total',
-    'unique_id': 'WBA00000000DEMO01-remaining_range_total',
+    'unique_id': 'WBA00000000DEMO01-fuel_and_battery.remaining_range_total',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -1780,7 +1780,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_status',
-    'unique_id': 'WBA00000000DEMO03-activity',
+    'unique_id': 'WBA00000000DEMO03-climate.activity',
     'unit_of_measurement': None,
   })
 # ---
@@ -1892,7 +1892,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_fuel',
-    'unique_id': 'WBA00000000DEMO03-remaining_fuel',
+    'unique_id': 'WBA00000000DEMO03-fuel_and_battery.remaining_fuel',
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
@@ -1946,7 +1946,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_fuel_percent',
-    'unique_id': 'WBA00000000DEMO03-remaining_fuel_percent',
+    'unique_id': 'WBA00000000DEMO03-fuel_and_battery.remaining_fuel_percent',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1999,7 +1999,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_fuel',
-    'unique_id': 'WBA00000000DEMO03-remaining_range_fuel',
+    'unique_id': 'WBA00000000DEMO03-fuel_and_battery.remaining_range_fuel',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -2053,7 +2053,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_total',
-    'unique_id': 'WBA00000000DEMO03-remaining_range_total',
+    'unique_id': 'WBA00000000DEMO03-fuel_and_battery.remaining_range_total',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
