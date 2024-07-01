@@ -154,7 +154,7 @@ class EvoSession:
 
         else:  # force a re-authentication
             client_v2 = self.client_v2
-            client_v2._user_account = {}  # noqa: SLF001
+            client_v2._user_account = None  # noqa: SLF001
 
         await client_v2.login()
         await self.save_auth_tokens()
