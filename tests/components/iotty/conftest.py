@@ -59,9 +59,9 @@ def mock_aioclient() -> Generator[AiohttpClientMocker, None, None]:
 
 
 @pytest.fixture
-def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry[KnownDevicesData]:
+def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return the default mocked config entry."""
-    mock = MockConfigEntry[KnownDevicesData](
+    mock = MockConfigEntry(
         title="IOTTY00001",
         domain=DOMAIN,
         data={
