@@ -2,7 +2,7 @@
 
 DOMAIN = "pinecil"
 
-MANUFACTURER = "Pine64"
+MANUFACTURER = "PINE64"
 MODEL = "Pinecil V2"
 
 OHM = "Ω"
