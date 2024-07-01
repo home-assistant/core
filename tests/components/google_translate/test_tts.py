@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any
@@ -9,7 +10,6 @@ from unittest.mock import MagicMock, patch
 
 from gtts import gTTSError
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import tts
 from homeassistant.components.google_translate.const import CONF_TLD, DOMAIN

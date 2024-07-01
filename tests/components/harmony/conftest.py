@@ -1,10 +1,10 @@
 """Fixtures for harmony tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from aioharmony.const import ClientCallbackType
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.harmony.const import ACTIVITY_POWER_OFF, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
