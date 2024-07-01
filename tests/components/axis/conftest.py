@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from copy import deepcopy
 from types import MappingProxyType
 from typing import Any
@@ -11,7 +11,6 @@ from unittest.mock import AsyncMock, patch
 from axis.rtsp import Signal, State
 import pytest
 import respx
-from typing_extensions import Generator
 
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
 from homeassistant.config_entries import ConfigEntry

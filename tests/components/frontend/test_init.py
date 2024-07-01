@@ -1,6 +1,7 @@
 """The tests for Home Assistant frontend."""
 
 from asyncio import AbstractEventLoop
+from collections.abc import Generator
 from http import HTTPStatus
 from pathlib import Path
 import re
@@ -10,7 +11,6 @@ from unittest.mock import patch
 from aiohttp.test_utils import TestClient
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.frontend import (
     CONF_EXTRA_JS_URL_ES5,
