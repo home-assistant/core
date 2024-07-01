@@ -43,6 +43,11 @@ class Hub:
         """ID for hub."""
         return self._id
 
+    @property
+    def token(self) -> str:
+        """Token for hub."""
+        return self._token
+
     async def test_connection(self) -> bool:
         """Test connectivity to the hub is OK."""
         await asyncio.sleep(1)
@@ -60,7 +65,6 @@ class Switch:
         self._is_on = False
         self._callbacks: set[Callable[[], None]] = set()
         self._loop = asyncio.get_event_loop()
-        # Some static information about this device
         self.firmware_version = "1.0.0"
         self.model = "Trigger Device"
 
