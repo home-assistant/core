@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any, cast
 
 from awesomeversion import AwesomeVersion
-from typing_extensions import Generator
 from zwave_js_server.const import (
     CURRENT_STATE_PROPERTY,
     CURRENT_VALUE_PROPERTY,

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from pathlib import Path
 import re
 import tempfile
@@ -24,7 +25,6 @@ from nio import (
 )
 from PIL import Image
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.matrix import (
     CONF_COMMANDS,
