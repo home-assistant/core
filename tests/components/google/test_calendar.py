@@ -385,6 +385,9 @@ async def test_update_error(
     with patch("homeassistant.util.utcnow", return_value=now):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
+        # Ensure coordinator update completes
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     # Entity is marked uanvailable due to API failure
     state = hass.states.get(TEST_ENTITY)
@@ -413,6 +416,9 @@ async def test_update_error(
 
     with patch("homeassistant.util.utcnow", return_value=now):
         async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+        # Ensure coordinator update completes
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
 
     # State updated with new API response
@@ -485,7 +491,7 @@ async def test_http_api_event(
     assert response.status == HTTPStatus.OK
     events = await response.json()
     assert len(events) == 1
-    assert {k: events[0].get(k) for k in ["summary", "start", "end"]} == {
+    assert {k: events[0].get(k) for k in ("summary", "start", "end")} == {
         "summary": TEST_EVENT["summary"],
         "start": {"dateTime": "2022-03-27T15:05:00+03:00"},
         "end": {"dateTime": "2022-03-27T15:10:00+03:00"},
@@ -513,7 +519,7 @@ async def test_http_api_all_day_event(
     assert response.status == HTTPStatus.OK
     events = await response.json()
     assert len(events) == 1
-    assert {k: events[0].get(k) for k in ["summary", "start", "end"]} == {
+    assert {k: events[0].get(k) for k in ("summary", "start", "end")} == {
         "summary": TEST_EVENT["summary"],
         "start": {"date": "2022-03-27"},
         "end": {"date": "2022-03-28"},
@@ -606,6 +612,9 @@ async def test_future_event_update_behavior(
     freezer.move_to(now)
     async_fire_time_changed(hass, now)
     await hass.async_block_till_done()
+    # Ensure coordinator update completes
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     # Event has started
     state = hass.states.get(TEST_ENTITY)
@@ -642,6 +651,9 @@ async def test_future_event_offset_update_behavior(
     now += datetime.timedelta(minutes=45)
     freezer.move_to(now)
     async_fire_time_changed(hass, now)
+    await hass.async_block_till_done()
+    # Ensure coordinator update completes
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     # Event has not started, but the offset was reached

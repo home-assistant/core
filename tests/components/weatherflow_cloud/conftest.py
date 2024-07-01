@@ -1,10 +1,10 @@
 """Common fixtures for the WeatherflowCloud tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientResponseError
 import pytest
-from typing_extensions import Generator
 
 
 @pytest.fixture

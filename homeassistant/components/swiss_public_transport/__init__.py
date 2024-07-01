@@ -14,8 +14,9 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_DESTINATION, CONF_START, DOMAIN
+from .const import CONF_DESTINATION, CONF_START, CONF_VIA, DOMAIN, PLACEHOLDERS
 from .coordinator import SwissPublicTransportDataUpdateCoordinator
+from .helper import unique_id_from_config
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,19 +34,28 @@ async def async_setup_entry(
     destination = config[CONF_DESTINATION]
 
     session = async_get_clientsession(hass)
-    opendata = OpendataTransport(start, destination, session)
+    opendata = OpendataTransport(start, destination, session, via=config.get(CONF_VIA))
 
     try:
         await opendata.async_get_data()
     except OpendataTransportConnectionError as e:
         raise ConfigEntryNotReady(
-            f"Timeout while connecting for entry '{start} {destination}'"
+            translation_domain=DOMAIN,
+            translation_key="request_timeout",
+            translation_placeholders={
+                "config_title": entry.title,
+                "error": e,
+            },
         ) from e
     except OpendataTransportError as e:
         raise ConfigEntryError(
-            f"Setup failed for entry '{start} {destination}' with invalid data, check "
-            "at http://transport.opendata.ch/examples/stationboard.html if your "
-            "station names are valid"
+            translation_domain=DOMAIN,
+            translation_key="invalid_data",
+            translation_placeholders={
+                **PLACEHOLDERS,
+                "config_title": entry.title,
+                "error": e,
+            },
         ) from e
 
     coordinator = SwissPublicTransportDataUpdateCoordinator(hass, opendata)
@@ -72,15 +82,13 @@ async def async_migrate_entry(
     """Migrate config entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
-    if config_entry.minor_version > 3:
+    if config_entry.version > 2:
         # This means the user has downgraded from a future version
         return False
 
-    if config_entry.minor_version == 1:
+    if config_entry.version == 1 and config_entry.minor_version == 1:
         # Remove wrongly registered devices and entries
-        new_unique_id = (
-            f"{config_entry.data[CONF_START]} {config_entry.data[CONF_DESTINATION]}"
-        )
+        new_unique_id = unique_id_from_config(config_entry.data)
         entity_registry = er.async_get(hass)
         device_registry = dr.async_get(hass)
         device_entries = dr.async_entries_for_config_entry(
@@ -108,6 +116,10 @@ async def async_migrate_entry(
         hass.config_entries.async_update_entry(
             config_entry, unique_id=new_unique_id, minor_version=2
         )
+
+    if config_entry.version < 2:
+        # Via stations now available, which are not backwards compatible if used, changes unique id
+        hass.config_entries.async_update_entry(config_entry, version=2, minor_version=1)
 
     _LOGGER.debug(
         "Migration to version %s.%s successful",

@@ -1,9 +1,9 @@
 """Common fixtures and objects for the LG webOS integration tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.webostv.const import LIVE_TV_APP_ID
 from homeassistant.core import HomeAssistant, ServiceCall

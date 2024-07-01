@@ -423,11 +423,11 @@ async def test_async_get_hass_can_be_called(hass: HomeAssistant) -> None:
         try:
             if ha.async_get_hass() is hass:
                 return True
-            raise Exception
+            raise Exception  # pylint: disable=broad-exception-raised
         except HomeAssistantError:
             return False
 
-        raise Exception
+        raise Exception  # pylint: disable=broad-exception-raised
 
     # Test scheduling a coroutine which calls async_get_hass via hass.async_create_task
     async def _async_create_task() -> None:
@@ -647,7 +647,9 @@ async def test_stage_shutdown_timeouts(hass: HomeAssistant) -> None:
     assert hass.state is CoreState.stopped
 
 
-async def test_stage_shutdown_generic_error(hass: HomeAssistant, caplog) -> None:
+async def test_stage_shutdown_generic_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Simulate a shutdown, test that a generic error at the final stage doesn't prevent it."""
 
     task = asyncio.Future()
@@ -916,6 +918,14 @@ def test_event_repr() -> None:
         str(ha.Event("TestEvent", {"beer": "nice"}, ha.EventOrigin.remote))
         == "<Event TestEvent[R]: beer=nice>"
     )
+
+
+def test_event_origin_idx() -> None:
+    """Test the EventOrigin idx."""
+    assert ha.EventOrigin.remote is ha.EventOrigin.remote
+    assert ha.EventOrigin.local is ha.EventOrigin.local
+    assert ha.EventOrigin.local.idx == 0
+    assert ha.EventOrigin.remote.idx == 1
 
 
 def test_event_as_dict() -> None:
@@ -1835,7 +1845,6 @@ async def test_serviceregistry_return_response_invalid(
             blocking=True,
             return_response=True,
         )
-        await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
@@ -1935,6 +1944,7 @@ async def test_config_defaults() -> None:
     assert config.currency == "EUR"
     assert config.country is None
     assert config.language == "en"
+    assert config.radius == 100
 
 
 async def test_config_path_with_file() -> None:
@@ -1982,6 +1992,7 @@ async def test_config_as_dict() -> None:
         "language": "en",
         "safe_mode": False,
         "debug": False,
+        "radius": 100,
     }
 
     assert expected == config.as_dict()
@@ -1998,7 +2009,7 @@ async def test_config_is_allowed_path() -> None:
         config.allowlist_external_dirs = {os.path.realpath(tmp_dir)}
 
         test_file = os.path.join(tmp_dir, "test.jpg")
-        with open(test_file, "w") as tmp_file:
+        with open(test_file, "w", encoding="utf8") as tmp_file:
             tmp_file.write("test")
 
         valid = [test_file, tmp_dir, os.path.join(tmp_dir, "notfound321")]
@@ -2231,7 +2242,7 @@ async def test_async_run_job_starts_coro_eagerly(hass: HomeAssistant) -> None:
 
 def test_valid_entity_id() -> None:
     """Test valid entity ID."""
-    for invalid in [
+    for invalid in (
         "_light.kitchen",
         ".kitchen",
         ".light.kitchen",
@@ -2244,10 +2255,10 @@ def test_valid_entity_id() -> None:
         "Light.kitchen",
         "light.Kitchen",
         "lightkitchen",
-    ]:
+    ):
         assert not ha.valid_entity_id(invalid), invalid
 
-    for valid in [
+    for valid in (
         "1.a",
         "1light.kitchen",
         "a.1",
@@ -2256,13 +2267,13 @@ def test_valid_entity_id() -> None:
         "light.1kitchen",
         "light.kitchen",
         "light.something_yoo",
-    ]:
+    ):
         assert ha.valid_entity_id(valid), valid
 
 
 def test_valid_domain() -> None:
     """Test valid domain."""
-    for invalid in [
+    for invalid in (
         "_light",
         ".kitchen",
         ".light.kitchen",
@@ -2273,16 +2284,16 @@ def test_valid_domain() -> None:
         "light.kitchen_yo_",
         "light.kitchen.",
         "Light",
-    ]:
+    ):
         assert not ha.valid_domain(invalid), invalid
 
-    for valid in [
+    for valid in (
         "1",
         "1light",
         "a",
         "input_boolean",
         "light",
-    ]:
+    ):
         assert ha.valid_domain(valid), valid
 
 
@@ -3091,14 +3102,14 @@ async def test_get_release_channel(
         assert get_release_channel() == release_channel
 
 
-def test_is_callback_check_partial():
+def test_is_callback_check_partial() -> None:
     """Test is_callback_check_partial matches HassJob."""
 
     @ha.callback
-    def callback_func():
+    def callback_func() -> None:
         pass
 
-    def not_callback_func():
+    def not_callback_func() -> None:
         pass
 
     assert ha.is_callback(callback_func)
@@ -3127,14 +3138,14 @@ def test_is_callback_check_partial():
     )
 
 
-def test_hassjob_passing_job_type():
+def test_hassjob_passing_job_type() -> None:
     """Test passing the job type to HassJob when we already know it."""
 
     @ha.callback
-    def callback_func():
+    def callback_func() -> None:
         pass
 
-    def not_callback_func():
+    def not_callback_func() -> None:
         pass
 
     assert (
@@ -3234,7 +3245,7 @@ async def test_async_run_job_deprecated(
 ) -> None:
     """Test async_run_job warns about its deprecation."""
 
-    async def _test():
+    async def _test() -> None:
         pass
 
     hass.async_run_job(_test)
@@ -3251,7 +3262,7 @@ async def test_async_add_job_deprecated(
 ) -> None:
     """Test async_add_job warns about its deprecation."""
 
-    async def _test():
+    async def _test() -> None:
         pass
 
     hass.async_add_job(_test)
@@ -3268,7 +3279,7 @@ async def test_async_add_hass_job_deprecated(
 ) -> None:
     """Test async_add_hass_job warns about its deprecation."""
 
-    async def _test():
+    async def _test() -> None:
         pass
 
     hass.async_add_hass_job(HassJob(_test))
@@ -3382,24 +3393,24 @@ async def test_statemachine_report_state(hass: HomeAssistant) -> None:
     hass.states.async_set("light.bowl", "on", None, True)
     await hass.async_block_till_done()
     assert len(state_changed_events) == 1
-    assert len(state_reported_events) == 2
+    assert len(state_reported_events) == 1
 
     hass.states.async_set("light.bowl", "off")
     await hass.async_block_till_done()
     assert len(state_changed_events) == 2
-    assert len(state_reported_events) == 3
+    assert len(state_reported_events) == 1
 
     hass.states.async_remove("light.bowl")
     await hass.async_block_till_done()
     assert len(state_changed_events) == 3
-    assert len(state_reported_events) == 4
+    assert len(state_reported_events) == 1
 
     unsub()
 
     hass.states.async_set("light.bowl", "on")
     await hass.async_block_till_done()
     assert len(state_changed_events) == 4
-    assert len(state_reported_events) == 4
+    assert len(state_reported_events) == 1
 
 
 async def test_report_state_listener_restrictions(hass: HomeAssistant) -> None:

@@ -13,8 +13,9 @@ from homeassistant.components.aquacell.const import (
 )
 from homeassistant.const import CONF_EMAIL
 
+from . import TEST_CONFIG_ENTRY
+
 from tests.common import MockConfigEntry, load_json_array_fixture
-from tests.components.aquacell import TEST_CONFIG_ENTRY
 
 
 @pytest.fixture

@@ -98,7 +98,7 @@ def mock_bypass_throttle():
     """Fixture to bypass the throttle decorator in __init__."""
     with patch(
         "homeassistant.components.home_connect.update_all_devices",
-        side_effect=lambda x, y: bypass_throttle(x, y),
+        side_effect=bypass_throttle,
     ):
         yield
 

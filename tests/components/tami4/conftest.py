@@ -1,12 +1,13 @@
 """Common fixutres with default mocks as well as common test helper methods."""
 
+from collections.abc import Generator
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from Tami4EdgeAPI.device import Device
+from Tami4EdgeAPI.device_metadata import DeviceMetadata
 from Tami4EdgeAPI.water_quality import UV, Filter, WaterQuality
-from typing_extensions import Generator
 
 from homeassistant.components.tami4.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.core import HomeAssistant
@@ -32,17 +33,17 @@ async def create_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_api(mock__get_devices, mock_get_water_quality):
+def mock_api(mock__get_devices_metadata, mock_get_device):
     """Fixture to mock all API calls."""
 
 
 @pytest.fixture
-def mock__get_devices(request: pytest.FixtureRequest) -> Generator[None]:
+def mock__get_devices_metadata(request: pytest.FixtureRequest) -> Generator[None]:
     """Fixture to mock _get_devices which makes a call to the API."""
 
     side_effect = getattr(request, "param", None)
 
-    device = Device(
+    device_metadata = DeviceMetadata(
         id=1,
         name="Drink Water",
         connected=True,
@@ -52,38 +53,49 @@ def mock__get_devices(request: pytest.FixtureRequest) -> Generator[None]:
     )
 
     with patch(
-        "Tami4EdgeAPI.Tami4EdgeAPI.Tami4EdgeAPI._get_devices",
-        return_value=[device],
+        "Tami4EdgeAPI.Tami4EdgeAPI.Tami4EdgeAPI._get_devices_metadata",
+        return_value=[device_metadata],
         side_effect=side_effect,
     ):
         yield
 
 
 @pytest.fixture
-def mock_get_water_quality(
+def mock_get_device(
     request: pytest.FixtureRequest,
 ) -> Generator[None]:
-    """Fixture to mock get_water_quality which makes a call to the API."""
+    """Fixture to mock get_device which makes a call to the API."""
 
     side_effect = getattr(request, "param", None)
 
     water_quality = WaterQuality(
         uv=UV(
-            last_replacement=int(datetime.now().timestamp()),
             upcoming_replacement=int(datetime.now().timestamp()),
-            status="on",
+            installed=True,
         ),
         filter=Filter(
-            last_replacement=int(datetime.now().timestamp()),
             upcoming_replacement=int(datetime.now().timestamp()),
-            status="on",
             milli_litters_passed=1000,
+            installed=True,
         ),
     )
 
+    device_metadata = DeviceMetadata(
+        id=1,
+        name="Drink Water",
+        connected=True,
+        psn="psn",
+        type="type",
+        device_firmware="v1.1",
+    )
+
+    device = Device(
+        water_quality=water_quality, device_metadata=device_metadata, drinks=[]
+    )
+
     with patch(
-        "Tami4EdgeAPI.Tami4EdgeAPI.Tami4EdgeAPI.get_water_quality",
-        return_value=water_quality,
+        "Tami4EdgeAPI.Tami4EdgeAPI.Tami4EdgeAPI.get_device",
+        return_value=device,
         side_effect=side_effect,
     ):
         yield

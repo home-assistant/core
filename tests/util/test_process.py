@@ -10,9 +10,9 @@ from homeassistant.util import process
 
 async def test_kill_process() -> None:
     """Test killing a process."""
-    sleeper = subprocess.Popen(
+    sleeper = subprocess.Popen(  # noqa: S602 # shell by design
         "sleep 1000",
-        shell=True,  # noqa: S602 # shell by design
+        shell=True,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )

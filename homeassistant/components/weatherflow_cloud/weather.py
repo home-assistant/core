@@ -98,7 +98,6 @@ class WeatherFlowWeather(
         """Return the Air Pressure @ Station."""
         return self.local_data.weather.current_conditions.station_pressure
 
-    #
     @property
     def humidity(self) -> float | None:
         """Return the humidity."""

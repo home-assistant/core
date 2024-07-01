@@ -319,31 +319,41 @@ async def test_get_trigger_capabilities(
             "name": "group_value_write",
             "optional": True,
             "default": True,
-            "type": "boolean",
+            "selector": {
+                "boolean": {},
+            },
         },
         {
             "name": "group_value_response",
             "optional": True,
             "default": True,
-            "type": "boolean",
+            "selector": {
+                "boolean": {},
+            },
         },
         {
             "name": "group_value_read",
             "optional": True,
             "default": True,
-            "type": "boolean",
+            "selector": {
+                "boolean": {},
+            },
         },
         {
             "name": "incoming",
             "optional": True,
             "default": True,
-            "type": "boolean",
+            "selector": {
+                "boolean": {},
+            },
         },
         {
             "name": "outgoing",
             "optional": True,
             "default": True,
-            "type": "boolean",
+            "selector": {
+                "boolean": {},
+            },
         },
     ]
 

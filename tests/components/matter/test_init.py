@@ -3,15 +3,19 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
-from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
+from matter_server.client.exceptions import (
+    CannotConnect,
+    ServerVersionTooNew,
+    ServerVersionTooOld,
+)
 from matter_server.client.models.node import MatterNode
 from matter_server.common.errors import MatterError
 from matter_server.common.helpers.util import dataclass_from_dict
 from matter_server.common.models import MatterNodeData
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.hassio import HassioAPIError
 from homeassistant.components.matter.const import DOMAIN
@@ -69,7 +73,7 @@ async def test_entry_setup_unload(
 
     assert matter_client.connect.call_count == 1
     assert entry.state is ConfigEntryState.LOADED
-    entity_state = hass.states.get("light.mock_onoff_light")
+    entity_state = hass.states.get("light.mock_onoff_light_light")
     assert entity_state
     assert entity_state.state != STATE_UNAVAILABLE
 
@@ -77,7 +81,7 @@ async def test_entry_setup_unload(
 
     assert matter_client.disconnect.call_count == 1
     assert entry.state is ConfigEntryState.NOT_LOADED
-    entity_state = hass.states.get("light.mock_onoff_light")
+    entity_state = hass.states.get("light.mock_onoff_light_light")
     assert entity_state
     assert entity_state.state == STATE_UNAVAILABLE
 
@@ -362,12 +366,30 @@ async def test_addon_info_failure(
         "backup_calls",
         "update_addon_side_effect",
         "create_backup_side_effect",
+        "connect_side_effect",
     ),
     [
-        ("1.0.0", True, 1, 1, None, None),
-        ("1.0.0", False, 0, 0, None, None),
-        ("1.0.0", True, 1, 1, HassioAPIError("Boom"), None),
-        ("1.0.0", True, 0, 1, None, HassioAPIError("Boom")),
+        ("1.0.0", True, 1, 1, None, None, ServerVersionTooOld("Invalid version")),
+        ("1.0.0", True, 0, 0, None, None, ServerVersionTooNew("Invalid version")),
+        ("1.0.0", False, 0, 0, None, None, ServerVersionTooOld("Invalid version")),
+        (
+            "1.0.0",
+            True,
+            1,
+            1,
+            HassioAPIError("Boom"),
+            None,
+            ServerVersionTooOld("Invalid version"),
+        ),
+        (
+            "1.0.0",
+            True,
+            0,
+            1,
+            None,
+            HassioAPIError("Boom"),
+            ServerVersionTooOld("Invalid version"),
+        ),
     ],
 )
 async def test_update_addon(
@@ -386,13 +408,14 @@ async def test_update_addon(
     backup_calls: int,
     update_addon_side_effect: Exception | None,
     create_backup_side_effect: Exception | None,
+    connect_side_effect: Exception,
 ) -> None:
     """Test update the Matter add-on during entry setup."""
     addon_info.return_value["version"] = addon_version
     addon_info.return_value["update_available"] = update_available
     create_backup.side_effect = create_backup_side_effect
     update_addon.side_effect = update_addon_side_effect
-    matter_client.connect.side_effect = InvalidServerVersion("Invalid version")
+    matter_client.connect.side_effect = connect_side_effect
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Matter",
@@ -413,12 +436,32 @@ async def test_update_addon(
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize(
+    (
+        "connect_side_effect",
+        "issue_raised",
+    ),
+    [
+        (
+            ServerVersionTooOld("Invalid version"),
+            "server_version_version_too_old",
+        ),
+        (
+            ServerVersionTooNew("Invalid version"),
+            "server_version_version_too_new",
+        ),
+    ],
+)
 async def test_issue_registry_invalid_version(
-    hass: HomeAssistant, matter_client: MagicMock, issue_registry: ir.IssueRegistry
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+    connect_side_effect: Exception,
+    issue_raised: str,
 ) -> None:
     """Test issue registry for invalid version."""
     original_connect_side_effect = matter_client.connect.side_effect
-    matter_client.connect.side_effect = InvalidServerVersion("Invalid version")
+    matter_client.connect.side_effect = connect_side_effect
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Matter",
@@ -434,7 +477,7 @@ async def test_issue_registry_invalid_version(
 
     entry_state = entry.state
     assert entry_state is ConfigEntryState.SETUP_RETRY
-    assert issue_registry.async_get_issue(DOMAIN, "invalid_server_version")
+    assert issue_registry.async_get_issue(DOMAIN, issue_raised)
 
     matter_client.connect.side_effect = original_connect_side_effect
 
@@ -442,7 +485,7 @@ async def test_issue_registry_invalid_version(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert not issue_registry.async_get_issue(DOMAIN, "invalid_server_version")
+    assert not issue_registry.async_get_issue(DOMAIN, issue_raised)
 
 
 @pytest.mark.parametrize(
@@ -625,7 +668,7 @@ async def test_remove_config_entry_device(
     device_entry = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     )[0]
-    entity_id = "light.m5stamp_lighting_app"
+    entity_id = "light.m5stamp_lighting_app_light"
 
     assert device_entry
     assert entity_registry.async_get(entity_id)

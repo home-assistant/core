@@ -1,5 +1,7 @@
 """Recorder constants."""
 
+from __future__ import annotations
+
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
@@ -17,7 +19,7 @@ if TYPE_CHECKING:
     from .core import Recorder  # noqa: F401
 
 
-DATA_INSTANCE: HassKey["Recorder"] = HassKey("recorder_instance")
+DATA_INSTANCE: HassKey[Recorder] = HassKey("recorder_instance")
 
 
 SQLITE_URL_PREFIX = "sqlite://"

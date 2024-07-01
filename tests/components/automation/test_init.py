@@ -4,7 +4,7 @@ import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
 
 import pytest
 
@@ -178,7 +178,7 @@ async def test_service_specify_entity_id(
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert ["hello.world"] == calls[0].data.get(ATTR_ENTITY_ID)
+    assert calls[0].data.get(ATTR_ENTITY_ID) == ["hello.world"]
 
 
 async def test_service_specify_entity_id_list(
@@ -202,7 +202,7 @@ async def test_service_specify_entity_id_list(
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert ["hello.world", "hello.world2"] == calls[0].data.get(ATTR_ENTITY_ID)
+    assert calls[0].data.get(ATTR_ENTITY_ID) == ["hello.world", "hello.world2"]
 
 
 async def test_two_triggers(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
@@ -1641,16 +1641,17 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert len(calls) == 1
-    assert ["hello.world"] == calls[0].data.get(ATTR_ENTITY_ID)
+    assert calls[0].data.get(ATTR_ENTITY_ID) == ["hello.world"]
 
 
 @pytest.mark.parametrize(
-    ("broken_config", "problem", "details"),
+    ("broken_config", "problem", "details", "issue"),
     [
         (
             {},
             "could not be validated",
             "required key not provided @ data['action']",
+            "validation_failed_schema",
         ),
         (
             {
@@ -1659,6 +1660,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup triggers",
             "Integration 'automation' does not provide trigger support.",
+            "validation_failed_triggers",
         ),
         (
             {
@@ -1673,6 +1675,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup conditions",
             "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd.",
+            "validation_failed_conditions",
         ),
         (
             {
@@ -1686,15 +1689,19 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup actions",
             "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd.",
+            "validation_failed_actions",
         ),
     ],
 )
 async def test_automation_bad_config_validation(
     hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
-    broken_config,
-    problem,
-    details,
+    hass_admin_user: MockUser,
+    broken_config: dict[str, Any],
+    problem: str,
+    details: str,
+    issue: str,
 ) -> None:
     """Test bad automation configuration which can be detected during validation."""
     assert await async_setup_component(
@@ -1715,11 +1722,22 @@ async def test_automation_bad_config_validation(
         },
     )
 
-    # Check we get the expected error message
+    # Check we get the expected error message and issue
     assert (
         f"Automation with alias 'bad_automation' {problem} and has been disabled:"
         f" {details}"
     ) in caplog.text
+    issues = await get_repairs(hass, hass_ws_client)
+    assert len(issues) == 1
+    assert issues[0]["issue_id"] == f"automation.bad_automation_{issue}"
+    assert issues[0]["translation_key"] == issue
+    assert issues[0]["translation_placeholders"] == {
+        "edit": "/config/automation/edit/None",
+        "entity_id": "automation.bad_automation",
+        "error": ANY,
+        "name": "bad_automation",
+    }
+    assert issues[0]["translation_placeholders"]["error"].startswith(details)
 
     # Make sure both automations are setup
     assert set(hass.states.async_entity_ids("automation")) == {
@@ -1728,6 +1746,30 @@ async def test_automation_bad_config_validation(
     }
     # The automation failing validation should be unavailable
     assert hass.states.get("automation.bad_automation").state == STATE_UNAVAILABLE
+
+    # Reloading the automation with fixed config should clear the issue
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={
+            automation.DOMAIN: {
+                "alias": "bad_automation",
+                "trigger": {"platform": "event", "event_type": "test_event2"},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"event": "{{ trigger.event.event_type }}"},
+                },
+            }
+        },
+    ):
+        await hass.services.async_call(
+            automation.DOMAIN,
+            SERVICE_RELOAD,
+            context=Context(user_id=hass_admin_user.id),
+            blocking=True,
+        )
+    issues = await get_repairs(hass, hass_ws_client)
+    assert len(issues) == 0
 
 
 async def test_automation_with_error_in_script(
@@ -2507,6 +2549,7 @@ async def test_blueprint_automation(
 )
 async def test_blueprint_automation_bad_config(
     hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
     blueprint_inputs,
     problem,
@@ -2528,9 +2571,24 @@ async def test_blueprint_automation_bad_config(
     assert problem in caplog.text
     assert details in caplog.text
 
+    issues = await get_repairs(hass, hass_ws_client)
+    assert len(issues) == 1
+    issue = "validation_failed_blueprint"
+    assert issues[0]["issue_id"] == f"automation.automation_0_{issue}"
+    assert issues[0]["translation_key"] == issue
+    assert issues[0]["translation_placeholders"] == {
+        "edit": "/config/automation/edit/None",
+        "entity_id": "automation.automation_0",
+        "error": ANY,
+        "name": "automation 0",
+    }
+    assert issues[0]["translation_placeholders"]["error"].startswith(details)
+
 
 async def test_blueprint_automation_fails_substitution(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test blueprint automation with bad inputs."""
     with patch(
@@ -2558,6 +2616,18 @@ async def test_blueprint_automation_fails_substitution(
         " inputs {'trigger_event': 'test_event', 'service_to_call': 'test.automation',"
         " 'a_number': 5}: No substitution found for input blah"
     ) in caplog.text
+
+    issues = await get_repairs(hass, hass_ws_client)
+    assert len(issues) == 1
+    issue = "validation_failed_blueprint"
+    assert issues[0]["issue_id"] == f"automation.automation_0_{issue}"
+    assert issues[0]["translation_key"] == issue
+    assert issues[0]["translation_placeholders"] == {
+        "edit": "/config/automation/edit/None",
+        "entity_id": "automation.automation_0",
+        "error": "No substitution found for input blah",
+        "name": "automation 0",
+    }
 
 
 async def test_trigger_service(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
@@ -2771,6 +2841,7 @@ async def test_recursive_automation_starting_script(
                     ],
                     "action": [
                         {"service": "test.automation_started"},
+                        {"delay": 0.001},
                         {"service": "script.script1"},
                     ],
                 }
@@ -2817,7 +2888,10 @@ async def test_recursive_automation_starting_script(
         assert script_warning_msg in caplog.text
 
 
-@pytest.mark.parametrize("automation_mode", SCRIPT_MODE_CHOICES)
+@pytest.mark.parametrize(
+    "automation_mode",
+    [mode for mode in SCRIPT_MODE_CHOICES if mode != SCRIPT_MODE_RESTART],
+)
 @pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
 async def test_recursive_automation(
     hass: HomeAssistant, automation_mode, caplog: pytest.LogCaptureFixture
@@ -2865,6 +2939,68 @@ async def test_recursive_automation(
 
         hass.bus.async_fire("trigger_automation")
         await asyncio.wait_for(service_called.wait(), 1)
+
+        # Trigger 1st stage script shutdown
+        hass.set_state(CoreState.stopping)
+        hass.bus.async_fire("homeassistant_stop")
+        await asyncio.wait_for(stop_scripts_at_shutdown_called.wait(), 1)
+
+        # Trigger 2nd stage script shutdown
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=90))
+        await hass.async_block_till_done()
+
+        assert "Disallowed recursion detected" not in caplog.text
+
+
+@pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
+async def test_recursive_automation_restart_mode(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test automation restarting itself.
+
+    The automation is an infinite loop since it keeps restarting itself
+
+    - Illegal recursion detection should not be triggered
+    - Home Assistant should not hang on shut down
+    """
+    stop_scripts_at_shutdown_called = asyncio.Event()
+    real_stop_scripts_at_shutdown = _async_stop_scripts_at_shutdown
+
+    async def stop_scripts_at_shutdown(*args):
+        await real_stop_scripts_at_shutdown(*args)
+        stop_scripts_at_shutdown_called.set()
+
+    with patch(
+        "homeassistant.helpers.script._async_stop_scripts_at_shutdown",
+        wraps=stop_scripts_at_shutdown,
+    ):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: {
+                    "mode": SCRIPT_MODE_RESTART,
+                    "trigger": [
+                        {"platform": "event", "event_type": "trigger_automation"},
+                    ],
+                    "action": [
+                        {"event": "trigger_automation"},
+                        {"service": "test.automation_done"},
+                    ],
+                }
+            },
+        )
+
+        service_called = asyncio.Event()
+
+        async def async_service_handler(service):
+            if service.service == "automation_done":
+                service_called.set()
+
+        hass.services.async_register("test", "automation_done", async_service_handler)
+
+        hass.bus.async_fire("trigger_automation")
+        await asyncio.sleep(0)
 
         # Trigger 1st stage script shutdown
         hass.set_state(CoreState.stopping)
@@ -3095,3 +3231,72 @@ async def test_two_automations_call_restart_script_same_time(
     await hass.async_block_till_done()
     assert len(events) == 2
     cancel()
+
+
+async def test_two_automation_call_restart_script_right_after_each_other(
+    hass: HomeAssistant,
+) -> None:
+    """Test two automations call a restart script right after each other."""
+
+    events = async_capture_events(hass, "repeat_test_script_finished")
+
+    assert await async_setup_component(
+        hass,
+        input_boolean.DOMAIN,
+        {
+            input_boolean.DOMAIN: {
+                "test_1": None,
+                "test_2": None,
+            }
+        },
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "state",
+                        "entity_id": ["input_boolean.test_1", "input_boolean.test_1"],
+                        "from": "off",
+                        "to": "on",
+                    },
+                    "action": [
+                        {
+                            "repeat": {
+                                "count": 2,
+                                "sequence": [
+                                    {
+                                        "delay": {
+                                            "hours": 0,
+                                            "minutes": 0,
+                                            "seconds": 0,
+                                            "milliseconds": 100,
+                                        }
+                                    }
+                                ],
+                            }
+                        },
+                        {"event": "repeat_test_script_finished", "event_data": {}},
+                    ],
+                    "id": "automation_0",
+                    "mode": "restart",
+                },
+            ]
+        },
+    )
+    hass.states.async_set("input_boolean.test_1", "off")
+    hass.states.async_set("input_boolean.test_2", "off")
+    await hass.async_block_till_done()
+    hass.states.async_set("input_boolean.test_1", "on")
+    hass.states.async_set("input_boolean.test_2", "on")
+    await asyncio.sleep(0)
+    hass.states.async_set("input_boolean.test_1", "off")
+    hass.states.async_set("input_boolean.test_2", "off")
+    await asyncio.sleep(0)
+    hass.states.async_set("input_boolean.test_1", "on")
+    hass.states.async_set("input_boolean.test_2", "on")
+    await hass.async_block_till_done()
+    assert len(events) == 1

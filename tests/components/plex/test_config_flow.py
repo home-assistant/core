@@ -537,7 +537,7 @@ async def test_manual_config(hass: HomeAssistant, mock_plex_calls) -> None:
     class WrongCertValidaitionException(requests.exceptions.SSLError):
         """Mock the exception showing an unmatched error."""
 
-        def __init__(self):
+        def __init__(self):  # pylint: disable=super-init-not-called
             self.__context__ = ssl.SSLCertVerificationError(
                 "some random message that doesn't match"
             )
