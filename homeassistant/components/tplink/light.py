@@ -214,7 +214,6 @@ class TPLinkLightEntity(CoordinatedTPLinkEntity, LightEntity):
         if len(self._attr_supported_color_modes) == 1:
             # If the light supports only a single color mode, set it now
             self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
-        self._async_call_update_attrs()
 
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""

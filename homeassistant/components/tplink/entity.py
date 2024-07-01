@@ -56,7 +56,7 @@ DEVICETYPES_WITH_SPECIALIZED_PLATFORMS = {
     DeviceType.Thermostat,
 }
 
-# Features to be always included even when the device type has its own platform
+# Primary features to always include even when the device type has its own platform
 FEATURES_ALLOW_LIST = {
     # lights have current_consumption and a specialized platform
     "current_consumption"
