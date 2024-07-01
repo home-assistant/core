@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_FILENAME
 
+from . import _can_reach_device
 from .const import CONF_SYSTEM_ID, CONF_ZONE_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,13 +23,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_ZONE_ID, default=1): vol.All(int, vol.Range(min=1)),
     }
 )
-
-
-async def _can_reach_device(client: BryantEvolutionLocalClient) -> bool:
-    """Return whether we can reach the device at the given filename."""
-    # Verify that we can read current temperature to check that the
-    # (filename, system, zone) is valid.
-    return await client.read_current_temperature() is not None
 
 
 class BryantConfigFlow(ConfigFlow, domain=DOMAIN):

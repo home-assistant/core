@@ -20,9 +20,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def _can_reach_device(client: BryantEvolutionLocalClient) -> bool:
-    """Return whether we can reach the device at the given client."""
-    # Verify that we can read S1Z1 to check that the client is valid.
-    return await client.read_hvac_mode() is not None
+    """Return whether we can reach the device at the given filename."""
+    # Verify that we can read current temperature to check that the
+    # (filename, system, zone) is valid.
+    return await client.read_current_temperature() is not None
 
 
 async def async_setup_entry(
