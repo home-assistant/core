@@ -136,7 +136,6 @@ class GeniusHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
 
         except Exception as e:  # pylint: disable=broad-except
-            _LOGGER.error("Error in genius hub client", exc_info=e)
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
