@@ -60,8 +60,8 @@ from .typing import TemplateVarsType
 _TRACK_STATE_CHANGE_DATA: HassKey[_KeyedEventData[EventStateChangedData]] = HassKey(
     "track_state_change_data"
 )
-_TRACK_STATE_REPORTED_DATA: HassKey[_KeyedEventData[EventStateReportedData]] = HassKey(
-    "track_state_reported_data"
+_TRACK_STATE_REPORT_DATA: HassKey[_KeyedEventData[EventStateReportedData]] = HassKey(
+    "track_state_report_data"
 )
 _TRACK_STATE_ADDED_DOMAIN_DATA: HassKey[_KeyedEventData[EventStateChangedData]] = (
     HassKey("track_state_added_domain_data")
@@ -379,15 +379,15 @@ def _async_track_state_change_event(
     )
 
 
-_KEYED_TRACK_STATE_REPORTED = _KeyedEventTracker(
-    key=_TRACK_STATE_REPORTED_DATA,
+_KEYED_TRACK_STATE_REPORT = _KeyedEventTracker(
+    key=_TRACK_STATE_REPORT_DATA,
     event_type=EVENT_STATE_REPORTED,
     dispatcher_callable=_async_dispatch_entity_id_event,
     filter_callable=_async_state_filter,
 )
 
 
-def async_track_state_reported_event(
+def async_track_state_report_event(
     hass: HomeAssistant,
     entity_ids: str | Iterable[str],
     action: Callable[[Event[EventStateReportedData]], Any],
@@ -395,7 +395,7 @@ def async_track_state_reported_event(
 ) -> CALLBACK_TYPE:
     """Track EVENT_STATE_REPORTED by entity_id without lowercasing."""
     return _async_track_event(
-        _KEYED_TRACK_STATE_REPORTED, hass, entity_ids, action, job_type
+        _KEYED_TRACK_STATE_REPORT, hass, entity_ids, action, job_type
     )
 
 

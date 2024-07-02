@@ -1,10 +1,10 @@
 """Common fixtures for Hunter Douglas Powerview tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from aiopvapi.resources.shade import ShadePosition
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 

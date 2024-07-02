@@ -1,11 +1,11 @@
 """Fixtures for Intergas InComfort integration."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from incomfortclient import DisplayCode
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.incomfort import DOMAIN
 from homeassistant.config_entries import ConfigEntry

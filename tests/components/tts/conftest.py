@@ -3,11 +3,11 @@
 From http://doc.pytest.org/en/latest/example/simple.html#making-test-result-information-available-in-fixtures
 """
 
+from collections.abc import Generator
 from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import ConfigFlow

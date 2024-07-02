@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 import logging
 
-from typing_extensions import Generator
 from uiprotect.data import (
     Camera as UFPCamera,
     CameraChannel,
