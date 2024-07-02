@@ -16,6 +16,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "invalid_version": "This firmware version is unsupported. Please upgrade the firmware of the device to at least version 3.1.1."
     },
     "error": {

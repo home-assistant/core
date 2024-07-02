@@ -133,7 +133,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
 
     # If camera WAN blocked, firmware check fails and takes long, do not prevent setup
-    config_entry.async_create_task(hass, firmware_coordinator.async_refresh())
+    config_entry.async_create_background_task(
+        hass,
+        firmware_coordinator.async_refresh(),
+        f"Reolink firmware check {config_entry.entry_id}",
+    )
     # Fetch initial data so we have data when entities subscribe
     try:
         await device_coordinator.async_config_entry_first_refresh()

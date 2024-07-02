@@ -1,5 +1,6 @@
 """Common fixtures for the Ecovacs tests."""
 
+from collections.abc import AsyncGenerator, Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -9,7 +10,6 @@ from deebot_client.device import Device
 from deebot_client.exceptions import ApiError
 from deebot_client.models import Credentials
 import pytest
-from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant.components.ecovacs import PLATFORMS
 from homeassistant.components.ecovacs.const import DOMAIN

@@ -1,7 +1,7 @@
 """Test the bootstrapping."""
 
 import asyncio
-from collections.abc import Iterable
+from collections.abc import Generator, Iterable
 import contextlib
 import glob
 import logging
@@ -11,7 +11,6 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant import bootstrap, loader, runner
 import homeassistant.config as config_util
