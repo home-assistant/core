@@ -15,7 +15,7 @@ pattern refactor_functions($config_entry_type, $file_name, $config_entry_type_de
             $type <: type(type="ConfigEntry"),
             $type => $config_entry_type,
             if ($file_name <: not `__init__`) {
-                //$config_entry_type <: ensure_import_from(source = `.`),
+                $config_entry_type <: ensure_import_from(source = `.`),
             },
         },
 
@@ -63,13 +63,15 @@ multifile {
         },
         $domain_list += $domain,
     },
-    bubble($domain_list) file($name, $body) where {
+    bubble($domain_list) file($name, $body) as $file where {
+        $file <: before_each_file(),
         // migrate files
         $filename <: r".*components/([^/]+)/([^/]+)\.py$"($domain, $file_name),
         $domain_list <: includes $domain,
         $config_entry_type = capitalize($domain),
         $config_entry_type += "ConfigEntry",
         $body <: contains refactor_functions($config_entry_type, $file_name, $config_entry_type_defined),
+        $file <: after_each_file()
     },
 }
 ```
