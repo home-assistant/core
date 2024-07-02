@@ -1,11 +1,11 @@
 """Fixtures for Pure Energie integration tests."""
 
+from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from gridnet import Device as GridNetDevice, SmartBridge
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.pure_energie.const import DOMAIN
 from homeassistant.const import CONF_HOST

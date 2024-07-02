@@ -1,11 +1,11 @@
 """Tests configuration for Govee Local API."""
 
 from asyncio import Event
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from govee_local_api import GoveeLightCapability
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.govee_light_local.coordinator import GoveeController
 

@@ -1048,29 +1048,32 @@ async def _async_process_config(
         automation_configs_with_id: dict[str, tuple[int, AutomationEntityConfig]] = {}
         automation_configs_without_id: list[tuple[int, AutomationEntityConfig]] = []
 
-        for config_idx, config in enumerate(automation_configs):
-            if automation_id := config.config_block.get(CONF_ID):
-                automation_configs_with_id[automation_id] = (config_idx, config)
+        for config_idx, automation_config in enumerate(automation_configs):
+            if automation_id := automation_config.config_block.get(CONF_ID):
+                automation_configs_with_id[automation_id] = (
+                    config_idx,
+                    automation_config,
+                )
                 continue
-            automation_configs_without_id.append((config_idx, config))
+            automation_configs_without_id.append((config_idx, automation_config))
 
         for automation_idx, automation in enumerate(automations):
             if automation.unique_id:
                 if automation.unique_id not in automation_configs_with_id:
                     continue
-                config_idx, config = automation_configs_with_id.pop(
+                config_idx, automation_config = automation_configs_with_id.pop(
                     automation.unique_id
                 )
-                if automation_matches_config(automation, config):
+                if automation_matches_config(automation, automation_config):
                     automation_matches.add(automation_idx)
                     config_matches.add(config_idx)
                 continue
 
-            for config_idx, config in automation_configs_without_id:
+            for config_idx, automation_config in automation_configs_without_id:
                 if config_idx in config_matches:
                     # Only allow an automation config to match at most once
                     continue
-                if automation_matches_config(automation, config):
+                if automation_matches_config(automation, automation_config):
                     automation_matches.add(automation_idx)
                     config_matches.add(config_idx)
                     # Only allow an automation to match at most once

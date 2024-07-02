@@ -8,6 +8,7 @@ mode (e.g. yaml, ConfigEntry, etc) however some tests override and just run in
 relevant modes.
 """
 
+from collections.abc import Generator
 import logging
 from typing import Any
 from unittest.mock import patch
@@ -19,7 +20,6 @@ from google_nest_sdm.exceptions import (
     SubscriberException,
 )
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.nest import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
