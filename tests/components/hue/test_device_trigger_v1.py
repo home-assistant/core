@@ -21,7 +21,7 @@ async def test_get_triggers(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_bridge_v1,
-    device_reg: dr.DeviceRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we get the expected triggers from a hue remote."""
     mock_bridge_v1.mock_sensor_responses.append(REMOTES_RESPONSE)
@@ -32,7 +32,7 @@ async def test_get_triggers(
     assert len(hass.states.async_all()) == 1
 
     # Get triggers for specific tap switch
-    hue_tap_device = device_reg.async_get_device(
+    hue_tap_device = device_registry.async_get_device(
         identifiers={(hue.DOMAIN, "00:00:00:00:00:44:23:08")}
     )
     triggers = await async_get_device_automations(
@@ -53,7 +53,7 @@ async def test_get_triggers(
     assert triggers == unordered(expected_triggers)
 
     # Get triggers for specific dimmer switch
-    hue_dimmer_device = device_reg.async_get_device(
+    hue_dimmer_device = device_registry.async_get_device(
         identifiers={(hue.DOMAIN, "00:17:88:01:10:3e:3a:dc")}
     )
     hue_bat_sensor = entity_registry.async_get(
@@ -91,7 +91,7 @@ async def test_get_triggers(
 async def test_if_fires_on_state_change(
     hass: HomeAssistant,
     mock_bridge_v1,
-    device_reg: dr.DeviceRegistry,
+    device_registry: dr.DeviceRegistry,
     service_calls: list[ServiceCall],
 ) -> None:
     """Test for button press trigger firing."""
@@ -101,7 +101,7 @@ async def test_if_fires_on_state_change(
     assert len(hass.states.async_all()) == 1
 
     # Set an automation with a specific tap switch trigger
-    hue_tap_device = device_reg.async_get_device(
+    hue_tap_device = device_registry.async_get_device(
         identifiers={(hue.DOMAIN, "00:00:00:00:00:44:23:08")}
     )
     assert await async_setup_component(

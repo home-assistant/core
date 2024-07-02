@@ -20,7 +20,7 @@ from homeassistant.setup import async_setup_component
 
 from .const import FAKE_BRIDGE, FAKE_BRIDGE_DEVICE
 
-from tests.common import MockConfigEntry, load_fixture, mock_device_registry
+from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(autouse=True)
@@ -276,9 +276,3 @@ async def setup_platform(
 
     # and make sure it completes before going further
     await hass.async_block_till_done()
-
-
-@pytest.fixture(name="device_reg")
-def get_device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
