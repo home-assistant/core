@@ -390,7 +390,7 @@ def test_initial_outlier(values: list[State]) -> None:
     """Test issue #13363."""
     filt = OutlierFilter(window_size=3, precision=2, entity=None, radius=4.0)
     out = State("sensor.test_monitored", "4000")
-    for state in [out, *values]:
+    for state in (out, *values):
         filtered = filt.filter_state(state)
     assert filtered.state == 21
 
@@ -399,7 +399,7 @@ def test_unknown_state_outlier(values: list[State]) -> None:
     """Test issue #32395."""
     filt = OutlierFilter(window_size=3, precision=2, entity=None, radius=4.0)
     out = State("sensor.test_monitored", "unknown")
-    for state in [out, *values, out]:
+    for state in (out, *values, out):
         try:
             filtered = filt.filter_state(state)
         except ValueError:
@@ -419,7 +419,7 @@ def test_lowpass(values: list[State]) -> None:
     """Test if lowpass filter works."""
     filt = LowPassFilter(window_size=10, precision=2, entity=None, time_constant=10)
     out = State("sensor.test_monitored", "unknown")
-    for state in [out, *values, out]:
+    for state in (out, *values, out):
         try:
             filtered = filt.filter_state(state)
         except ValueError:

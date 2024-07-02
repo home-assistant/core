@@ -1,11 +1,11 @@
 """Test the Google Tasks config flow."""
 
-from collections.abc import Generator
 from unittest.mock import Mock, patch
 
 from googleapiclient.errors import HttpError
 from httplib2 import Response
 import pytest
+from typing_extensions import Generator
 
 from homeassistant import config_entries
 from homeassistant.components.google_tasks.const import (
@@ -32,7 +32,7 @@ def user_identifier() -> str:
 
 
 @pytest.fixture
-def setup_userinfo(user_identifier: str) -> Generator[Mock, None, None]:
+def setup_userinfo(user_identifier: str) -> Generator[Mock]:
     """Set up userinfo."""
     with patch("homeassistant.components.google_tasks.config_flow.build") as mock:
         mock.return_value.userinfo.return_value.get.return_value.execute.return_value = {
@@ -42,11 +42,11 @@ def setup_userinfo(user_identifier: str) -> Generator[Mock, None, None]:
         yield mock
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials,
     setup_userinfo,
 ) -> None:
@@ -97,11 +97,11 @@ async def test_full_flow(
     assert len(mock_setup.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_api_not_enabled(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials,
     setup_userinfo,
 ) -> None:
@@ -158,11 +158,11 @@ async def test_api_not_enabled(
     )
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_general_exception(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials,
     setup_userinfo,
 ) -> None:
@@ -235,11 +235,11 @@ async def test_general_exception(
         ),
     ],
 )
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials,
     setup_userinfo,
     user_identifier: str,

@@ -1,10 +1,10 @@
 """The tests for the Number component."""
 
-from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.number import (
     ATTR_MAX,
@@ -43,6 +43,8 @@ from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
+from . import common
+
 from tests.common import (
     MockConfigEntry,
     MockModule,
@@ -54,7 +56,6 @@ from tests.common import (
     mock_restore_cache_with_extra_data,
     setup_test_component_platform,
 )
-from tests.components.number import common
 
 TEST_DOMAIN = "test"
 
@@ -845,13 +846,10 @@ def test_device_classes_aligned() -> None:
         assert hasattr(NumberDeviceClass, device_class.name)
         assert getattr(NumberDeviceClass, device_class.name).value == device_class.value
 
-    for device_class in SENSOR_DEVICE_CLASS_UNITS:
+    for device_class, unit in SENSOR_DEVICE_CLASS_UNITS.items():
         if device_class in NON_NUMERIC_DEVICE_CLASSES:
             continue
-        assert (
-            SENSOR_DEVICE_CLASS_UNITS[device_class]
-            == NUMBER_DEVICE_CLASS_UNITS[device_class]
-        )
+        assert unit == NUMBER_DEVICE_CLASS_UNITS[device_class]
 
 
 class MockFlow(ConfigFlow):
@@ -859,7 +857,7 @@ class MockFlow(ConfigFlow):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -874,7 +872,7 @@ async def test_name(hass: HomeAssistant) -> None:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
         return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")

@@ -127,16 +127,15 @@ def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
 
     Async friendly.
     """
-    if DATA_INSTANCE not in hass.data:
-        return False
     instance = get_instance(hass)
-    return instance.entity_filter(entity_id)
+    return instance.entity_filter is None or instance.entity_filter(entity_id)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
     conf = config[DOMAIN]
-    entity_filter = convert_include_exclude_filter(conf).get_filter()
+    _filter = convert_include_exclude_filter(conf)
+    entity_filter = None if _filter.empty_filter else _filter.get_filter()
     auto_purge = conf[CONF_AUTO_PURGE]
     auto_repack = conf[CONF_AUTO_REPACK]
     keep_days = conf[CONF_PURGE_KEEP_DAYS]
@@ -165,6 +164,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         entity_filter=entity_filter,
         exclude_event_types=exclude_event_types,
     )
+    get_instance.cache_clear()
     instance.async_initialize()
     instance.async_register()
     instance.start()

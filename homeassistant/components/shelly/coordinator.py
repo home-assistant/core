@@ -54,7 +54,6 @@ from .const import (
     RPC_RECONNECT_INTERVAL,
     RPC_SENSORS_POLLING_INTERVAL,
     SHBTN_MODELS,
-    SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
     BLEScannerMode,
 )
@@ -72,6 +71,7 @@ from .utils import (
 class ShellyEntryData:
     """Class for sharing data within a given config entry."""
 
+    platforms: list[Platform]
     block: ShellyBlockCoordinator | None = None
     rest: ShellyRestCoordinator | None = None
     rpc: ShellyRpcCoordinator | None = None
@@ -167,7 +167,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
             await self.device.initialize()
             update_device_fw_info(self.hass, self.device, self.entry)
         except DeviceConnectionError as err:
-            LOGGER.debug(
+            LOGGER.error(
                 "Error connecting to Shelly device %s, error: %r", self.name, err
             )
             return False
@@ -228,7 +228,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         """Initialize the Shelly block device coordinator."""
         self.entry = entry
         if self.sleep_period:
-            update_interval = SLEEP_PERIOD_MULTIPLIER * self.sleep_period
+            update_interval = UPDATE_PERIOD_MULTIPLIER * self.sleep_period
         else:
             update_interval = (
                 UPDATE_PERIOD_MULTIPLIER * device.settings["coiot"]["update_period"]
@@ -403,9 +403,10 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
                         "ip_address": self.device.ip_address,
                     },
                 )
-        LOGGER.debug(
-            "Push update failures for %s: %s", self.name, self._push_update_failures
-        )
+        if self._push_update_failures:
+            LOGGER.debug(
+                "Push update failures for %s: %s", self.name, self._push_update_failures
+            )
         self.async_set_updated_data(None)
 
     def async_setup(self, pending_platforms: list[Platform] | None = None) -> None:
@@ -427,7 +428,7 @@ class ShellyRestCoordinator(ShellyCoordinatorBase[BlockDevice]):
             in BATTERY_DEVICES_WITH_PERMANENT_CONNECTION
         ):
             update_interval = (
-                SLEEP_PERIOD_MULTIPLIER * device.settings["coiot"]["update_period"]
+                UPDATE_PERIOD_MULTIPLIER * device.settings["coiot"]["update_period"]
             )
         super().__init__(hass, entry, device, update_interval)
 
@@ -457,7 +458,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         """Initialize the Shelly RPC device coordinator."""
         self.entry = entry
         if self.sleep_period:
-            update_interval = SLEEP_PERIOD_MULTIPLIER * self.sleep_period
+            update_interval = UPDATE_PERIOD_MULTIPLIER * self.sleep_period
         else:
             update_interval = RPC_RECONNECT_INTERVAL
         super().__init__(hass, entry, device, update_interval)
@@ -484,7 +485,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         data[CONF_SLEEP_PERIOD] = wakeup_period
         self.hass.config_entries.async_update_entry(self.entry, data=data)
 
-        update_interval = SLEEP_PERIOD_MULTIPLIER * wakeup_period
+        update_interval = UPDATE_PERIOD_MULTIPLIER * wakeup_period
         self.update_interval = timedelta(seconds=update_interval)
 
         return True
@@ -584,11 +585,13 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             raise UpdateFailed(
                 f"Sleeping device did not update within {self.sleep_period} seconds interval"
             )
-        if self.device.connected:
-            return
 
-        if not await self._async_device_connect_task():
-            raise UpdateFailed("Device reconnect error")
+        async with self._connection_lock:
+            if self.device.connected:  # Already connected
+                return
+
+            if not await self._async_device_connect_task():
+                raise UpdateFailed("Device reconnect error")
 
     async def _async_disconnected(self, reconnect: bool) -> None:
         """Handle device disconnected."""
@@ -623,7 +626,13 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             if self.connected:  # Already connected
                 return
             self.connected = True
-            await self._async_run_connected_events()
+            try:
+                await self._async_run_connected_events()
+            except DeviceConnectionError as err:
+                LOGGER.error(
+                    "Error running connected events for device %s: %s", self.name, err
+                )
+                self.last_update_success = False
 
     async def _async_run_connected_events(self) -> None:
         """Run connected events.
@@ -697,10 +706,18 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         if self.device.connected:
             try:
                 await async_stop_scanner(self.device)
+                await super().shutdown()
             except InvalidAuthError:
                 self.entry.async_start_reauth(self.hass)
                 return
-        await super().shutdown()
+            except DeviceConnectionError as err:
+                # If the device is restarting or has gone offline before
+                # the ping/pong timeout happens, the shutdown command
+                # will fail, but we don't care since we are unloading
+                # and if we setup again, we will fix anything that is
+                # in an inconsistent state at that time.
+                LOGGER.debug("Error during shutdown for device %s: %s", self.name, err)
+                return
         await self._async_disconnected(False)
 
 
@@ -737,7 +754,8 @@ def get_block_coordinator_by_device_id(
             entry = hass.config_entries.async_get_entry(config_entry)
             if (
                 entry
-                and entry.state == ConfigEntryState.LOADED
+                and entry.state is ConfigEntryState.LOADED
+                and hasattr(entry, "runtime_data")
                 and isinstance(entry.runtime_data, ShellyEntryData)
                 and (coordinator := entry.runtime_data.block)
             ):
@@ -756,7 +774,8 @@ def get_rpc_coordinator_by_device_id(
             entry = hass.config_entries.async_get_entry(config_entry)
             if (
                 entry
-                and entry.state == ConfigEntryState.LOADED
+                and entry.state is ConfigEntryState.LOADED
+                and hasattr(entry, "runtime_data")
                 and isinstance(entry.runtime_data, ShellyEntryData)
                 and (coordinator := entry.runtime_data.rpc)
             ):

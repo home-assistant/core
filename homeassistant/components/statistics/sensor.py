@@ -17,11 +17,12 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.sensor import (
     DEVICE_CLASS_STATE_CLASSES,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -229,7 +230,7 @@ def valid_keep_last_sample(config: dict[str, Any]) -> dict[str, Any]:
     return config
 
 
-_PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend(
+_PLATFORM_SCHEMA_BASE = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -279,6 +280,42 @@ async def async_setup_platform(
             )
         ],
         update_before_add=True,
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Statistics sensor entry."""
+    sampling_size = entry.options.get(CONF_SAMPLES_MAX_BUFFER_SIZE)
+    if sampling_size:
+        sampling_size = int(sampling_size)
+
+    max_age = None
+    if max_age_input := entry.options.get(CONF_MAX_AGE):
+        max_age = timedelta(
+            hours=max_age_input["hours"],
+            minutes=max_age_input["minutes"],
+            seconds=max_age_input["seconds"],
+        )
+
+    async_add_entities(
+        [
+            StatisticsSensor(
+                source_entity_id=entry.options[CONF_ENTITY_ID],
+                name=entry.options[CONF_NAME],
+                unique_id=entry.entry_id,
+                state_characteristic=entry.options[CONF_STATE_CHARACTERISTIC],
+                samples_max_buffer_size=sampling_size,
+                samples_max_age=max_age,
+                samples_keep_last=entry.options[CONF_KEEP_LAST_SAMPLE],
+                precision=int(entry.options[CONF_PRECISION]),
+                percentile=int(entry.options[CONF_PERCENTILE]),
+            )
+        ],
+        True,
     )
 
 

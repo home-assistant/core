@@ -9,17 +9,18 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
-from .domain_data import DomainData
 from .entity import EsphomeAssistEntity, EsphomeEntity, platform_async_setup_entry
+from .entry_data import ESPHomeConfigEntry
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ESPHomeConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up ESPHome binary sensors based on a config entry."""
     await platform_async_setup_entry(
@@ -31,7 +32,7 @@ async def async_setup_entry(
         state_type=BinarySensorState,
     )
 
-    entry_data = DomainData.get(hass).get_entry_data(entry)
+    entry_data = entry.runtime_data
     assert entry_data.device_info is not None
     if entry_data.device_info.voice_assistant_feature_flags_compat(
         entry_data.api_version

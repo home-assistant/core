@@ -140,5 +140,8 @@
         "default": "mdi:laser-pointer"
       }
     }
+  },
+  "services": {
+    "raw_get_positions": "mdi:map-marker-radius-outline"
   }
 }

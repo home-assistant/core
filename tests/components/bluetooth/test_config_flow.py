@@ -1,8 +1,9 @@
 """Test the bluetooth config flow."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from bluetooth_adapters import DEFAULT_ADDRESS, AdapterDetails
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth.const import (
@@ -19,12 +20,11 @@ from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
 
+@pytest.mark.usefixtures(
+    "macos_adapter", "mock_bleak_scanner_start", "mock_bluetooth_adapters"
+)
 async def test_options_flow_disabled_not_setup(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-    macos_adapter: None,
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test options are disabled if the integration has not been setup."""
     await async_setup_component(hass, "config", {})
@@ -49,7 +49,8 @@ async def test_options_flow_disabled_not_setup(
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_async_step_user_macos(hass: HomeAssistant, macos_adapter: None) -> None:
+@pytest.mark.usefixtures("macos_adapter")
+async def test_async_step_user_macos(hass: HomeAssistant) -> None:
     """Test setting up manually with one adapter on MacOS."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -73,9 +74,8 @@ async def test_async_step_user_macos(hass: HomeAssistant, macos_adapter: None) -
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_async_step_user_linux_one_adapter(
-    hass: HomeAssistant, one_adapter: None
-) -> None:
+@pytest.mark.usefixtures("one_adapter")
+async def test_async_step_user_linux_one_adapter(hass: HomeAssistant) -> None:
     """Test setting up manually with one adapter on Linux."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -117,9 +117,8 @@ async def test_async_step_user_linux_crashed_adapter(
     assert result["reason"] == "no_adapters"
 
 
-async def test_async_step_user_linux_two_adapters(
-    hass: HomeAssistant, two_adapters: None
-) -> None:
+@pytest.mark.usefixtures("two_adapters")
+async def test_async_step_user_linux_two_adapters(hass: HomeAssistant) -> None:
     """Test setting up manually with two adapters on Linux."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -147,9 +146,8 @@ async def test_async_step_user_linux_two_adapters(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_async_step_user_only_allows_one(
-    hass: HomeAssistant, macos_adapter: None
-) -> None:
+@pytest.mark.usefixtures("macos_adapter")
+async def test_async_step_user_only_allows_one(hass: HomeAssistant) -> None:
     """Test setting up manually with an existing entry."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id=DEFAULT_ADDRESS)
     entry.add_to_hass(hass)
@@ -199,8 +197,9 @@ async def test_async_step_integration_discovery(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("one_adapter")
 async def test_async_step_integration_discovery_during_onboarding_one_adapter(
-    hass: HomeAssistant, one_adapter: None
+    hass: HomeAssistant,
 ) -> None:
     """Test setting up from integration discovery during onboarding."""
     details = AdapterDetails(
@@ -232,8 +231,9 @@ async def test_async_step_integration_discovery_during_onboarding_one_adapter(
     assert len(mock_onboarding.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("two_adapters")
 async def test_async_step_integration_discovery_during_onboarding_two_adapters(
-    hass: HomeAssistant, two_adapters: None
+    hass: HomeAssistant,
 ) -> None:
     """Test setting up from integration discovery during onboarding."""
     details1 = AdapterDetails(
@@ -281,8 +281,9 @@ async def test_async_step_integration_discovery_during_onboarding_two_adapters(
     assert len(mock_onboarding.mock_calls) == 2
 
 
+@pytest.mark.usefixtures("macos_adapter")
 async def test_async_step_integration_discovery_during_onboarding(
-    hass: HomeAssistant, macos_adapter: None
+    hass: HomeAssistant,
 ) -> None:
     """Test setting up from integration discovery during onboarding."""
     details = AdapterDetails(
@@ -336,12 +337,10 @@ async def test_async_step_integration_discovery_already_exists(
     assert result["reason"] == "already_configured"
 
 
-async def test_options_flow_linux(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-    one_adapter: None,
-) -> None:
+@pytest.mark.usefixtures(
+    "one_adapter", "mock_bleak_scanner_start", "mock_bluetooth_adapters"
+)
+async def test_options_flow_linux(hass: HomeAssistant) -> None:
     """Test options on Linux."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -390,12 +389,11 @@ async def test_options_flow_linux(
     await hass.config_entries.async_unload(entry.entry_id)
 
 
+@pytest.mark.usefixtures(
+    "macos_adapter", "mock_bleak_scanner_start", "mock_bluetooth_adapters"
+)
 async def test_options_flow_disabled_macos(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-    macos_adapter: None,
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test options are disabled on MacOS."""
     await async_setup_component(hass, "config", {})
@@ -420,12 +418,11 @@ async def test_options_flow_disabled_macos(
     await hass.config_entries.async_unload(entry.entry_id)
 
 
+@pytest.mark.usefixtures(
+    "one_adapter", "mock_bleak_scanner_start", "mock_bluetooth_adapters"
+)
 async def test_options_flow_enabled_linux(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-    one_adapter: None,
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test options are enabled on Linux."""
     await async_setup_component(hass, "config", {})
@@ -453,9 +450,8 @@ async def test_options_flow_enabled_linux(
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_async_step_user_linux_adapter_is_ignored(
-    hass: HomeAssistant, one_adapter: None
-) -> None:
+@pytest.mark.usefixtures("one_adapter")
+async def test_async_step_user_linux_adapter_is_ignored(hass: HomeAssistant) -> None:
     """Test we give a hint that the adapter is ignored."""
     entry = MockConfigEntry(
         domain=DOMAIN,

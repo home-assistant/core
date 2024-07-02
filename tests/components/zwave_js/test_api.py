@@ -533,6 +533,25 @@ async def test_add_node(
     assert msg["event"]["event"] == "inclusion started"
 
     event = Event(
+        type="node found",
+        data={
+            "source": "controller",
+            "event": "node found",
+            "node": {
+                "nodeId": 67,
+            },
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "node found"
+    node_details = {
+        "node_id": 67,
+    }
+    assert msg["event"]["node"] == node_details
+
+    event = Event(
         type="grant security classes",
         data={
             "source": "controller",
@@ -1810,6 +1829,25 @@ async def test_replace_failed_node(
 
     msg = await ws_client.receive_json()
     assert msg["event"]["event"] == "inclusion started"
+
+    event = Event(
+        type="node found",
+        data={
+            "source": "controller",
+            "event": "node found",
+            "node": {
+                "nodeId": 67,
+            },
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "node found"
+    node_details = {
+        "node_id": 67,
+    }
+    assert msg["event"]["node"] == node_details
 
     event = Event(
         type="grant security classes",

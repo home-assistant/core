@@ -12,9 +12,16 @@ import pytest
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+from typing_extensions import AsyncGenerator
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import core, db_schema, migration, statistics
+from homeassistant.components.recorder import (
+    Recorder,
+    core,
+    db_schema,
+    migration,
+    statistics,
+)
 from homeassistant.components.recorder.db_schema import (
     Events,
     EventTypes,
@@ -110,7 +117,9 @@ def db_schema_32():
 
 
 @pytest.fixture(name="legacy_recorder_mock")
-async def legacy_recorder_mock_fixture(recorder_mock):
+async def legacy_recorder_mock_fixture(
+    recorder_mock: Recorder,
+) -> AsyncGenerator[Recorder]:
     """Fixture for legacy recorder mock."""
     with patch.object(recorder_mock.states_meta_manager, "active", False):
         yield recorder_mock

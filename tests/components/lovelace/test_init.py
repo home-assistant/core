@@ -1,10 +1,10 @@
 """Test the Lovelace initialization."""
 
-from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -13,7 +13,7 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
-def mock_onboarding_not_done() -> Generator[MagicMock, None, None]:
+def mock_onboarding_not_done() -> Generator[MagicMock]:
     """Mock that Home Assistant is currently onboarding."""
     with patch(
         "homeassistant.components.onboarding.async_is_onboarded",
@@ -23,7 +23,7 @@ def mock_onboarding_not_done() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
-def mock_onboarding_done() -> Generator[MagicMock, None, None]:
+def mock_onboarding_done() -> Generator[MagicMock]:
     """Mock that Home Assistant is currently onboarding."""
     with patch(
         "homeassistant.components.onboarding.async_is_onboarded",
@@ -33,7 +33,7 @@ def mock_onboarding_done() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
-def mock_add_onboarding_listener() -> Generator[MagicMock, None, None]:
+def mock_add_onboarding_listener() -> Generator[MagicMock]:
     """Mock that Home Assistant is currently onboarding."""
     with patch(
         "homeassistant.components.onboarding.async_add_listener",

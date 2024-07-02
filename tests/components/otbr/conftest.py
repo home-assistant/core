@@ -1,6 +1,6 @@
 """Test fixtures for the Open Thread Border Router integration."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
@@ -73,7 +73,7 @@ async def otbr_config_entry_thread_fixture(hass):
 
 
 @pytest.fixture(autouse=True)
-def use_mocked_zeroconf(mock_async_zeroconf):
+def use_mocked_zeroconf(mock_async_zeroconf: MagicMock) -> None:
     """Mock zeroconf in all tests."""
 
 

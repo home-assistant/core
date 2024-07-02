@@ -1,8 +1,7 @@
 """Test helpers for image."""
 
-from collections.abc import Generator
-
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components import image
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
@@ -125,7 +124,7 @@ class MockImagePlatform:
 
 
 @pytest.fixture(name="config_flow")
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
 
     class MockFlow(ConfigFlow):
@@ -147,14 +146,16 @@ async def mock_image_config_entry_fixture(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, image.DOMAIN)
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [image.DOMAIN]
+        )
         return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Unload test config entry."""
-        await hass.config_entries.async_forward_entry_unload(config_entry, image.DOMAIN)
+        await hass.config_entries.async_unload_platforms(config_entry, [image.DOMAIN])
         return True
 
     mock_integration(

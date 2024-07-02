@@ -17,13 +17,13 @@ from .file import WriteError  # noqa: F401
 _SENTINEL = object()
 _LOGGER = logging.getLogger(__name__)
 
-JsonValueType = (
-    dict[str, "JsonValueType"] | list["JsonValueType"] | str | int | float | bool | None
+type JsonValueType = (
+    dict[str, JsonValueType] | list[JsonValueType] | str | int | float | bool | None
 )
 """Any data that can be returned by the standard JSON deserializing process."""
-JsonArrayType = list[JsonValueType]
+type JsonArrayType = list[JsonValueType]
 """List that can be returned by the standard JSON deserializing process."""
-JsonObjectType = dict[str, JsonValueType]
+type JsonObjectType = dict[str, JsonValueType]
 """Dictionary that can be returned by the standard JSON deserializing process."""
 
 JSON_ENCODE_EXCEPTIONS = (TypeError, ValueError)

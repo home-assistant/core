@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from matter_server.client.models.node import MatterNode
 from matter_server.common.const import SCHEMA_VERSION
 from matter_server.common.models import ServerInfoMessage
 import pytest
+from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant.core import HomeAssistant
 
@@ -22,7 +22,7 @@ MOCK_COMPR_FABRIC_ID = 1234
 
 
 @pytest.fixture(name="matter_client")
-async def matter_client_fixture() -> AsyncGenerator[MagicMock, None]:
+async def matter_client_fixture() -> AsyncGenerator[MagicMock]:
     """Fixture for a Matter client."""
     with patch(
         "homeassistant.components.matter.MatterClient", autospec=True
@@ -70,7 +70,7 @@ async def integration_fixture(
 
 
 @pytest.fixture(name="create_backup")
-def create_backup_fixture() -> Generator[AsyncMock, None, None]:
+def create_backup_fixture() -> Generator[AsyncMock]:
     """Mock Supervisor create backup of add-on."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_create_backup"
@@ -79,7 +79,7 @@ def create_backup_fixture() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture(name="addon_store_info")
-def addon_store_info_fixture() -> Generator[AsyncMock, None, None]:
+def addon_store_info_fixture() -> Generator[AsyncMock]:
     """Mock Supervisor add-on store info."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_get_addon_store_info"
@@ -94,7 +94,7 @@ def addon_store_info_fixture() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture(name="addon_info")
-def addon_info_fixture() -> Generator[AsyncMock, None, None]:
+def addon_info_fixture() -> Generator[AsyncMock]:
     """Mock Supervisor add-on info."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_get_addon_info",
@@ -158,7 +158,7 @@ def addon_running_fixture(
 @pytest.fixture(name="install_addon")
 def install_addon_fixture(
     addon_store_info: AsyncMock, addon_info: AsyncMock
-) -> Generator[AsyncMock, None, None]:
+) -> Generator[AsyncMock]:
     """Mock install add-on."""
 
     async def install_addon_side_effect(hass: HomeAssistant, slug: str) -> None:
@@ -181,7 +181,7 @@ def install_addon_fixture(
 
 
 @pytest.fixture(name="start_addon")
-def start_addon_fixture() -> Generator[AsyncMock, None, None]:
+def start_addon_fixture() -> Generator[AsyncMock]:
     """Mock start add-on."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_start_addon"
@@ -190,7 +190,7 @@ def start_addon_fixture() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture(name="stop_addon")
-def stop_addon_fixture() -> Generator[AsyncMock, None, None]:
+def stop_addon_fixture() -> Generator[AsyncMock]:
     """Mock stop add-on."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_stop_addon"
@@ -199,7 +199,7 @@ def stop_addon_fixture() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture(name="uninstall_addon")
-def uninstall_addon_fixture() -> Generator[AsyncMock, None, None]:
+def uninstall_addon_fixture() -> Generator[AsyncMock]:
     """Mock uninstall add-on."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_uninstall_addon"
@@ -208,7 +208,7 @@ def uninstall_addon_fixture() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture(name="update_addon")
-def update_addon_fixture() -> Generator[AsyncMock, None, None]:
+def update_addon_fixture() -> Generator[AsyncMock]:
     """Mock update add-on."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_update_addon"

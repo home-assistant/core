@@ -4,12 +4,16 @@ from datetime import timedelta
 import logging
 from urllib.parse import ParseResult, urlparse
 
-from requests.exceptions import HTTPError, Timeout
-from sunwatcher.solarlog.solarlog import SolarLog
+from solarlog_cli.solarlog_connector import SolarLogConnector
+from solarlog_cli.solarlog_exceptions import (
+    SolarLogConnectionError,
+    SolarLogUpdateError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import update_coordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,24 +38,23 @@ class SolarlogData(update_coordinator.DataUpdateCoordinator):
         self.name = entry.title
         self.host = url.geturl()
 
+        extended_data = entry.data["extended_data"]
+
+        self.solarlog = SolarLogConnector(
+            self.host, extended_data, hass.config.time_zone
+        )
+
     async def _async_update_data(self):
         """Update the data from the SolarLog device."""
+        _LOGGER.debug("Start data update")
+
         try:
-            data = await self.hass.async_add_executor_job(SolarLog, self.host)
-        except (OSError, Timeout, HTTPError) as err:
+            data = await self.solarlog.update_data()
+        except SolarLogConnectionError as err:
+            raise ConfigEntryNotReady(err) from err
+        except SolarLogUpdateError as err:
             raise update_coordinator.UpdateFailed(err) from err
 
-        if data.time.year == 1999:
-            raise update_coordinator.UpdateFailed(
-                "Invalid data returned (can happen after Solarlog restart)."
-            )
-
-        self.logger.debug(
-            (
-                "Connection to Solarlog successful. Retrieving latest Solarlog update"
-                " of %s"
-            ),
-            data.time,
-        )
+        _LOGGER.debug("Data successfully updated")
 
         return data

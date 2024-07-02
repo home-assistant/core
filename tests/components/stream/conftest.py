@@ -13,13 +13,13 @@ so that it can inspect the output.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Generator
 import logging
 import threading
 from unittest.mock import Mock, patch
 
 from aiohttp import web
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.stream.core import StreamOutput
 from homeassistant.components.stream.worker import StreamState
@@ -175,7 +175,7 @@ def hls_sync():
 
 
 @pytest.fixture(autouse=True)
-def should_retry() -> Generator[Mock, None, None]:
+def should_retry() -> Generator[Mock]:
     """Fixture to disable stream worker retries in tests by default."""
     with patch(
         "homeassistant.components.stream._should_retry", return_value=False

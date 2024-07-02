@@ -59,6 +59,7 @@ SUPPORT_DRY_MODE_DEVICES: set[tuple[int, int]] = {
     # The Matter spec is missing a feature flag if the device supports a dry mode.
     # In the list below specify tuples of (vendorid, productid) of devices that
     # support dry mode.
+    (0x0001, 0x0108),
     (0x1209, 0x8007),
 }
 
@@ -66,6 +67,7 @@ SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
     # The Matter spec is missing a feature flag if the device supports a fan-only mode.
     # In the list below specify tuples of (vendorid, productid) of devices that
     # support fan-only mode.
+    (0x0001, 0x0108),
     (0x1209, 0x8007),
 }
 
@@ -319,7 +321,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.CLIMATE,
         entity_description=ClimateEntityDescription(
             key="MatterThermostat",
-            name=None,
+            translation_key="thermostat",
         ),
         entity_class=MatterClimate,
         required_attributes=(clusters.Thermostat.Attributes.LocalTemperature,),

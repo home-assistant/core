@@ -1,0 +1,10 @@
+{
+  "domain": "ista_ecotrend",
+  "name": "ista EcoTrend",
+  "codeowners": ["@tr4nt0r"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/ista_ecotrend",
+  "iot_class": "cloud_polling",
+  "loggers": ["pyecotrend_ista"],
+  "requirements": ["pyecotrend-ista==3.3.1"]
+}

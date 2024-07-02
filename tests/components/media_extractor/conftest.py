@@ -1,18 +1,19 @@
 """Common fixtures for the Media Extractor tests."""
 
-from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.media_extractor import DOMAIN
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
+from . import MockYoutubeDL
+from .const import AUDIO_QUERY
+
 from tests.common import async_mock_service
-from tests.components.media_extractor import MockYoutubeDL
-from tests.components.media_extractor.const import AUDIO_QUERY
 
 
 @pytest.fixture(autouse=True)
@@ -57,7 +58,7 @@ def audio_media_extractor_config() -> dict[str, Any]:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.media_extractor.async_setup_entry", return_value=True

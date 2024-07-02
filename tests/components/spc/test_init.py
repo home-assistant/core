@@ -2,6 +2,9 @@
 
 from unittest.mock import Mock, PropertyMock, patch
 
+import pyspcwebgw
+from pyspcwebgw.const import AreaMode
+
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.spc import DATA_API
 from homeassistant.const import STATE_ALARM_ARMED_AWAY, STATE_ALARM_DISARMED
@@ -32,8 +35,6 @@ async def test_invalid_device_config(hass: HomeAssistant, monkeypatch) -> None:
 
 async def test_update_alarm_device(hass: HomeAssistant) -> None:
     """Test that alarm panel state changes on incoming websocket data."""
-    import pyspcwebgw
-    from pyspcwebgw.const import AreaMode
 
     config = {"spc": {"api_url": "http://localhost/", "ws_url": "ws://localhost/"}}
 

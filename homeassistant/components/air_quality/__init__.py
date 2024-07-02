@@ -9,18 +9,19 @@ from typing import Final, final
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
 
-from . import group as group_pre_import  # noqa: F401
 from .const import DOMAIN
 
 _LOGGER: Final = logging.getLogger(__name__)
+
+ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL: Final = timedelta(seconds=30)
 
 ATTR_AQI: Final = "air_quality_index"
 ATTR_CO2: Final = "carbon_dioxide"
@@ -33,10 +34,6 @@ ATTR_PM_0_1: Final = "particulate_matter_0_1"
 ATTR_PM_10: Final = "particulate_matter_10"
 ATTR_PM_2_5: Final = "particulate_matter_2_5"
 ATTR_SO2: Final = "sulphur_dioxide"
-
-ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
-
-SCAN_INTERVAL: Final = timedelta(seconds=30)
 
 PROP_TO_ATTR: Final[dict[str, str]] = {
     "air_quality_index": ATTR_AQI,

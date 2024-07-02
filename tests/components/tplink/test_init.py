@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import copy
 from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from kasa.exceptions import AuthenticationException
+from kasa import AuthenticationError, Feature, KasaException, Module
 import pytest
 
 from homeassistant import setup
@@ -21,19 +21,20 @@ from homeassistant.const import (
     CONF_USERNAME,
     STATE_ON,
     STATE_UNAVAILABLE,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import (
     CREATE_ENTRY_DATA_AUTH,
+    CREATE_ENTRY_DATA_LEGACY,
     DEVICE_CONFIG_AUTH,
     IP_ADDRESS,
     MAC_ADDRESS,
-    _mocked_dimmer,
-    _mocked_plug,
+    _mocked_device,
     _patch_connect,
     _patch_discovery,
     _patch_single_discovery,
@@ -100,12 +101,12 @@ async def test_config_entry_retry(hass: HomeAssistant) -> None:
 
 
 async def test_dimmer_switch_unique_id_fix_original_entity_still_exists(
-    hass: HomeAssistant, entity_reg: EntityRegistry
+    hass: HomeAssistant, entity_reg: er.EntityRegistry
 ) -> None:
     """Test no migration happens if the original entity id still exists."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=MAC_ADDRESS)
     config_entry.add_to_hass(hass)
-    dimmer = _mocked_dimmer()
+    dimmer = _mocked_device(alias="My dimmer", modules=[Module.Light])
     rollout_unique_id = MAC_ADDRESS.replace(":", "").upper()
     original_unique_id = tplink.legacy_device_id(dimmer)
     original_dimmer_entity_reg = entity_reg.async_get_or_create(
@@ -129,7 +130,7 @@ async def test_dimmer_switch_unique_id_fix_original_entity_still_exists(
         _patch_connect(device=dimmer),
     ):
         await setup.async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     migrated_dimmer_entity_reg = entity_reg.async_get_or_create(
         config_entry=config_entry,
@@ -238,8 +239,8 @@ async def test_config_entry_device_config_invalid(
 @pytest.mark.parametrize(
     ("error_type", "entry_state", "reauth_flows"),
     [
-        (tplink.AuthenticationException, ConfigEntryState.SETUP_ERROR, True),
-        (tplink.SmartDeviceException, ConfigEntryState.SETUP_RETRY, False),
+        (tplink.AuthenticationError, ConfigEntryState.SETUP_ERROR, True),
+        (tplink.KasaException, ConfigEntryState.SETUP_RETRY, False),
     ],
     ids=["invalid-auth", "unknown-error"],
 )
@@ -275,15 +276,15 @@ async def test_plug_auth_fails(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     config_entry.add_to_hass(hass)
-    plug = _mocked_plug()
-    with _patch_discovery(device=plug), _patch_connect(device=plug):
+    device = _mocked_device(alias="my_plug", features=["state"])
+    with _patch_discovery(device=device), _patch_connect(device=device):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
     entity_id = "switch.my_plug"
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
-    plug.update = AsyncMock(side_effect=AuthenticationException)
+    device.update = AsyncMock(side_effect=AuthenticationError)
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
@@ -298,3 +299,166 @@ async def test_plug_auth_fails(hass: HomeAssistant) -> None:
         )
         == 1
     )
+
+
+async def test_update_attrs_fails_in_init(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a smart plug auth failure."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
+    config_entry.add_to_hass(hass)
+    light = _mocked_device(modules=[Module.Light], alias="my_light")
+    light_module = light.modules[Module.Light]
+    p = PropertyMock(side_effect=KasaException)
+    type(light_module).color_temp = p
+    light.__str__ = lambda _: "MockLight"
+    with _patch_discovery(device=light), _patch_connect(device=light):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_light"
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
+    assert "Unable to read data for MockLight None:" in caplog.text
+
+
+async def test_update_attrs_fails_on_update(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a smart plug auth failure."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
+    config_entry.add_to_hass(hass)
+    light = _mocked_device(modules=[Module.Light], alias="my_light")
+    light_module = light.modules[Module.Light]
+
+    with _patch_discovery(device=light), _patch_connect(device=light):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_light"
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    p = PropertyMock(side_effect=KasaException)
+    type(light_module).color_temp = p
+    light.__str__ = lambda _: "MockLight"
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
+    assert f"Unable to read data for MockLight {entity_id}:" in caplog.text
+    # Check only logs once
+    caplog.clear()
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
+    assert f"Unable to read data for MockLight {entity_id}:" not in caplog.text
+
+
+async def test_feature_no_category(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a strip unique id."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    dev = _mocked_device(
+        alias="my_plug",
+        features=["led"],
+    )
+    dev.features["led"].category = Feature.Category.Unset
+    with _patch_discovery(device=dev), _patch_connect(device=dev):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "switch.my_plug_led"
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+    assert entity.entity_category == EntityCategory.DIAGNOSTIC
+    assert "Unhandled category Category.Unset, fallback to DIAGNOSTIC" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("identifier_base", "expected_message", "expected_count"),
+    [
+        pytest.param("C0:06:C3:42:54:2B", "Replaced", 1, id="success"),
+        pytest.param("123456789", "Unable to replace", 3, id="failure"),
+    ],
+)
+async def test_unlink_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    identifier_base,
+    expected_message,
+    expected_count,
+) -> None:
+    """Test for unlinking child device ids."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**CREATE_ENTRY_DATA_LEGACY},
+        entry_id="123456",
+        unique_id="any",
+        version=1,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+
+    # Setup initial device registry, with linkages
+    mac = "C0:06:C3:42:54:2B"
+    identifiers = [
+        (DOMAIN, identifier_base),
+        (DOMAIN, f"{identifier_base}_0001"),
+        (DOMAIN, f"{identifier_base}_0002"),
+    ]
+    device_registry.async_get_or_create(
+        config_entry_id="123456",
+        connections={
+            (dr.CONNECTION_NETWORK_MAC, mac.lower()),
+        },
+        identifiers=set(identifiers),
+        model="hs300",
+        name="dummy",
+    )
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+
+    assert device_entries[0].connections == {
+        (dr.CONNECTION_NETWORK_MAC, mac.lower()),
+    }
+    assert device_entries[0].identifiers == set(identifiers)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+
+    assert device_entries[0].connections == {(dr.CONNECTION_NETWORK_MAC, mac.lower())}
+    # If expected count is 1 will be the first identifier only
+    expected_identifiers = identifiers[:expected_count]
+    assert device_entries[0].identifiers == set(expected_identifiers)
+    assert entry.version == 1
+    assert entry.minor_version == 3
+
+    msg = f"{expected_message} identifiers for device dummy (hs300): {set(identifiers)}"
+    assert msg in caplog.text

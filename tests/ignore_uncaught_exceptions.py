@@ -14,6 +14,18 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
         "test_track_point_in_time_repr",
     ),
     (
+        # This test explicitly throws an uncaught exception
+        # and should not be removed.
+        "tests.test_config_entries",
+        "test_config_entry_unloaded_during_platform_setups",
+    ),
+    (
+        # This test explicitly throws an uncaught exception
+        # and should not be removed.
+        "tests.test_config_entries",
+        "test_config_entry_unloaded_during_platform_setup",
+    ),
+    (
         "test_homeassistant_bridge",
         "test_homeassistant_bridge_fan_setup",
     ),

@@ -577,6 +577,8 @@ async def test_async_get_users_from_store(tmpdir: py.path.local) -> None:
 
         assert await async_get_users(hass) == ["agent_1"]
 
+        await hass.async_stop()
+
 
 VALID_STORE_DATA = json.dumps(
     {
@@ -653,7 +655,7 @@ async def test_async_get_users(
         )
         path = hass.config.config_dir / ".storage" / GoogleConfigStore._STORAGE_KEY
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w") as f:
+        with open(path, "w", encoding="utf8") as f:
             f.write(store_data)
 
         assert await async_get_users(hass) == expected_users

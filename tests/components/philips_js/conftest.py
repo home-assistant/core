@@ -1,10 +1,10 @@
 """Standard setup for tests."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, create_autospec, patch
 
 from haphilipsjs import PhilipsTV
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.philips_js.const import DOMAIN
 
@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry, mock_device_registry
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Disable component setup."""
     with (
         patch(
