@@ -102,12 +102,9 @@ from .queries import (
 from .statistics import get_start_time
 from .tasks import (
     CommitTask,
-    EntityIDMigrationTask,
-    EventsContextIDMigrationTask,
-    EventTypeIDMigrationTask,
+    EntityIDPostMigrationTask,
     PostSchemaMigrationTask,
     RecorderTask,
-    StatesContextIDMigrationTask,
     StatisticsTimestampMigrationCleanupTask,
 )
 from .util import (
@@ -2001,9 +1998,6 @@ def migrate_event_type_ids(instance: Recorder) -> bool:
         if is_done := not events:
             _mark_migration_done(session, EventTypeIDMigration)
 
-    if is_done:
-        instance.event_type_manager.active = True
-
     _LOGGER.debug("Migrating event_types done=%s", is_done)
     return is_done
 
@@ -2182,13 +2176,36 @@ def initialize_database(session_maker: Callable[[], Session]) -> bool:
         return False
 
 
+@dataclass(slots=True)
+class MigrationTask(RecorderTask):
+    """An object to insert into the recorder queue to migrate states context ids."""
+
+    migrator: BaseRunTimeMigration
+    commit_before = False
+
+    def run(self, instance: Recorder) -> None:
+        """Run migration task."""
+        if not self.migrator.migrate_data(instance):
+            # Schedule a new migration task if this one didn't finish
+            instance.queue_task(MigrationTask(self.migrator))
+        else:
+            self.migrator.migration_done(instance, True)
+
+
+@dataclass(slots=True)
+class CommitBeforeMigrationTask(MigrationTask):
+    """An object to insert into the recorder queue to migrate states context ids."""
+
+    commit_before = True
+
+
 class BaseRunTimeMigration(ABC):
     """Base class for run time migrations."""
 
     required_schema_version = 0
     migration_version = 1
     migration_id: str
-    task: Callable[[], RecorderTask]
+    task = MigrationTask
 
     def __init__(
         self, session: Session, schema_version: int, migration_changes: dict[str, int]
@@ -2197,6 +2214,21 @@ class BaseRunTimeMigration(ABC):
         self.schema_version = schema_version
         self.session = session
         self.migration_changes = migration_changes
+
+    def do_migrate(self, instance: Recorder) -> None:
+        """Start migration if needed."""
+        if self.needs_migrate():
+            instance.queue_task(self.task(self))
+        else:
+            self.migration_done(instance, False)
+
+    @staticmethod
+    @abstractmethod
+    def migrate_data(instance: Recorder) -> bool:
+        """Migrate some data, returns True if migration is completed."""
+
+    def migration_done(self, instance: Recorder, did_migrate: bool) -> None:
+        """Will be called after migrate returns True."""
 
     @abstractmethod
     def needs_migrate_query(self) -> StatementLambdaElement:
@@ -2231,7 +2263,11 @@ class StatesContextIDMigration(BaseRunTimeMigration):
 
     required_schema_version = CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
     migration_id = "state_context_id_as_binary"
-    task = StatesContextIDMigrationTask
+
+    @staticmethod
+    def migrate_data(instance: Recorder) -> bool:
+        """Migrate some data, returns True if migration is completed."""
+        return migrate_states_context_ids(instance)
 
     def needs_migrate_query(self) -> StatementLambdaElement:
         """Return the query to check if the migration needs to run."""
@@ -2243,7 +2279,11 @@ class EventsContextIDMigration(BaseRunTimeMigration):
 
     required_schema_version = CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
     migration_id = "event_context_id_as_binary"
-    task = EventsContextIDMigrationTask
+
+    @staticmethod
+    def migrate_data(instance: Recorder) -> bool:
+        """Migrate some data, returns True if migration is completed."""
+        return migrate_events_context_ids(instance)
 
     def needs_migrate_query(self) -> StatementLambdaElement:
         """Return the query to check if the migration needs to run."""
@@ -2255,7 +2295,20 @@ class EventTypeIDMigration(BaseRunTimeMigration):
 
     required_schema_version = EVENT_TYPE_IDS_SCHEMA_VERSION
     migration_id = "event_type_id_migration"
-    task = EventTypeIDMigrationTask
+    task = CommitBeforeMigrationTask
+    # We have to commit before to make sure there are
+    # no new pending event_types about to be added to
+    # the db since this happens live
+
+    @staticmethod
+    def migrate_data(instance: Recorder) -> bool:
+        """Migrate some data, returns True if migration is completed."""
+        return migrate_event_type_ids(instance)
+
+    def migration_done(self, instance: Recorder, did_migrate: bool) -> None:
+        """Will be called after migrate returns True."""
+        _LOGGER.debug("Activating event_types manager as all data is migrated")
+        instance.event_type_manager.active = True
 
     def needs_migrate_query(self) -> StatementLambdaElement:
         """Check if the data is migrated."""
@@ -2267,7 +2320,39 @@ class EntityIDMigration(BaseRunTimeMigration):
 
     required_schema_version = STATES_META_SCHEMA_VERSION
     migration_id = "entity_id_migration"
-    task = EntityIDMigrationTask
+    task = CommitBeforeMigrationTask
+    # We have to commit before to make sure there are
+    # no new pending states_meta about to be added to
+    # the db since this happens live
+
+    @staticmethod
+    def migrate_data(instance: Recorder) -> bool:
+        """Migrate some data, returns True if migration is completed."""
+        return migrate_entity_ids(instance)
+
+    def migration_done(self, instance: Recorder, did_migrate: bool) -> None:
+        """Will be called after migrate returns True."""
+        # The migration has finished, now we start the post migration
+        # to remove the old entity_id data from the states table
+        # at this point we can also start using the StatesMeta table
+        # so we set active to True
+        _LOGGER.debug("Activating states_meta manager as all data is migrated")
+        instance.states_meta_manager.active = True
+        if did_migrate:
+            instance.queue_task(EntityIDPostMigrationTask())
+        else:
+            with contextlib.suppress(SQLAlchemyError):
+                # If ix_states_entity_id_last_updated_ts still exists
+                # on the states table it means the entity id migration
+                # finished by the EntityIDPostMigrationTask did not
+                # complete because they restarted in the middle of it. We need
+                # to pick back up where we left off.
+                if get_index_by_name(
+                    self.session,
+                    TABLE_STATES,
+                    LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX,
+                ):
+                    instance.queue_task(EntityIDPostMigrationTask())
 
     def needs_migrate_query(self) -> StatementLambdaElement:
         """Check if the data is migrated."""
