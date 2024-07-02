@@ -34,7 +34,7 @@ from tests.common import MockConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 
-async def test_cover(
+async def test_cover_actions(
     hass: HomeAssistant,
     mock_dio_chacon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -109,6 +109,26 @@ async def test_cover(
     await hass.async_block_till_done()
     state = hass.states.get("cover.shutter_mock_1")
     assert state.state == STATE_OPENING
+
+
+async def test_cover_callbacks(
+    hass: HomeAssistant,
+    mock_dio_chacon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the creation and values of the Dio Chacon covers."""
+
+    mock_dio_chacon_client.search_all_devices.return_value = MOCK_COVER_DEVICE
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity = entity_registry.async_get("cover.shutter_mock_1")
+    _LOGGER.debug("Entity cover mock registered : %s", entity)
+    assert entity.unique_id == "L4HActuator_idmock1"
+    assert entity.entity_id == "cover.shutter_mock_1"
 
     # Server side callback tests
     # We find the callback method on the mock client
