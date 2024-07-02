@@ -19,7 +19,7 @@ from homeassistant.components.amberelectric.coordinator import (
     normalize_descriptor,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed, normalize_descriptor
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .helpers import (
     CONTROLLED_LOAD_CHANNEL,
