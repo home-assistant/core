@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Generator
 from datetime import datetime
 from socket import AddressFamily  # pylint: disable=no-name-in-module
 from typing import Any
@@ -19,7 +19,6 @@ from samsungtvws.encrypted.remote import SamsungTVEncryptedWSAsyncRemote
 from samsungtvws.event import ED_INSTALLED_APP_EVENT
 from samsungtvws.exceptions import ResponseError
 from samsungtvws.remote import ChannelEmitCommand
-from typing_extensions import Generator
 
 from homeassistant.components.samsungtv.const import WEBSOCKET_SSL_PORT
 from homeassistant.core import HomeAssistant, ServiceCall

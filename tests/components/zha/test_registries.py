@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from unittest import mock
 
 import pytest
-from typing_extensions import Generator
 import zigpy.quirks as zigpy_quirks
 
 from homeassistant.components.zha.binary_sensor import IASZone

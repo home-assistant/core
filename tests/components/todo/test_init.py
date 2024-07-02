@@ -1,12 +1,12 @@
 """Tests for the todo integration."""
 
+from collections.abc import Generator
 import datetime
 from typing import Any
 from unittest.mock import AsyncMock
 import zoneinfo
 
 import pytest
-from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant.components import conversation

@@ -1,10 +1,10 @@
 """Common fixtures for the Wyoming tests."""
 
+from collections.abc import Generator
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import stt
 from homeassistant.components.wyoming import DOMAIN
