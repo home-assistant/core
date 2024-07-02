@@ -141,7 +141,7 @@ async def test_config_does_not_turn_off_debug(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize("hass_config", [{"frontend": {}}])
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_asyncio_debug_on_turns_hass_debug_on(
-    mock_enable_logging: Mock,
+    mock_enable_logging: AsyncMock,
     mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
@@ -634,7 +634,7 @@ def mock_ensure_config_exists() -> Generator[AsyncMock]:
 @pytest.mark.parametrize("hass_config", [{"browser": {}, "frontend": {}}])
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass(
-    mock_enable_logging: Mock,
+    mock_enable_logging: AsyncMock,
     mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
@@ -687,7 +687,7 @@ async def test_setup_hass(
 @pytest.mark.parametrize("hass_config", [{"browser": {}, "frontend": {}}])
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass_takes_longer_than_log_slow_startup(
-    mock_enable_logging: Mock,
+    mock_enable_logging: AsyncMock,
     mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
@@ -728,7 +728,7 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
 
 
 async def test_setup_hass_invalid_yaml(
-    mock_enable_logging: Mock,
+    mock_enable_logging: AsyncMock,
     mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
@@ -755,7 +755,7 @@ async def test_setup_hass_invalid_yaml(
 
 
 async def test_setup_hass_config_dir_nonexistent(
-    mock_enable_logging: Mock,
+    mock_enable_logging: AsyncMock,
     mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
@@ -781,7 +781,7 @@ async def test_setup_hass_config_dir_nonexistent(
 
 
 async def test_setup_hass_recovery_mode(
-    mock_enable_logging: Mock,
+    mock_enable_logging: AsyncMock,
     mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
@@ -817,7 +817,7 @@ async def test_setup_hass_recovery_mode(
 
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass_safe_mode(
-    mock_enable_logging: Mock,
+    mock_enable_logging: AsyncMock,
     mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
@@ -852,7 +852,7 @@ async def test_setup_hass_safe_mode(
 
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass_recovery_mode_and_safe_mode(
-    mock_enable_logging: Mock,
+    mock_enable_logging: AsyncMock,
     mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
@@ -888,7 +888,7 @@ async def test_setup_hass_recovery_mode_and_safe_mode(
 @pytest.mark.parametrize("hass_config", [{"homeassistant": {"non-existing": 1}}])
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_hass_invalid_core_config(
-    mock_enable_logging: Mock,
+    mock_enable_logging: AsyncMock,
     mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
@@ -927,7 +927,7 @@ async def test_setup_hass_invalid_core_config(
 )
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_setup_recovery_mode_if_no_frontend(
-    mock_enable_logging: Mock,
+    mock_enable_logging: AsyncMock,
     mock_is_virtual_env: Mock,
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
