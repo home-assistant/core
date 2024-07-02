@@ -61,4 +61,11 @@ def mock_dio_chacon_client() -> Generator[AsyncMock]:
     ):
         client = mock_client.return_value
 
+        # Default values for the tests using this mock :
+        client.get_user_id.return_value = "dummy-user-id"
+        client.search_all_devices.return_value = MOCK_COVER_DEVICE
+
+        client.move_shutter_direction.return_value = {}
+        client.disconnect.return_value = {}
+
         yield client

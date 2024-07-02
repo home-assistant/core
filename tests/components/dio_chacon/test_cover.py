@@ -1,7 +1,6 @@
 """Test the Dio Chacon Cover sensor."""
 
 from collections.abc import Callable
-import logging
 from unittest.mock import AsyncMock
 
 from homeassistant.components.cover import (
@@ -27,11 +26,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MOCK_COVER_DEVICE
-
 from tests.common import MockConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def test_cover_actions(
@@ -42,19 +37,16 @@ async def test_cover_actions(
 ) -> None:
     """Test the creation and values of the Dio Chacon covers."""
 
-    mock_dio_chacon_client.search_all_devices.return_value = MOCK_COVER_DEVICE
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity = entity_registry.async_get("cover.shutter_mock_1")
-    _LOGGER.debug("Entity cover mock registered : %s", entity)
     assert entity.unique_id == "L4HActuator_idmock1"
     assert entity.entity_id == "cover.shutter_mock_1"
 
     state = hass.states.get("cover.shutter_mock_1")
-    _LOGGER.debug("Entity cover mock state : %s", state.attributes)
 
     assert state
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 75
@@ -68,7 +60,6 @@ async def test_cover_actions(
         | CoverEntityFeature.STOP
     )
 
-    mock_dio_chacon_client.move_shutter_direction.return_value = {}
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_CLOSE_COVER,
@@ -99,7 +90,6 @@ async def test_cover_actions(
     state = hass.states.get("cover.shutter_mock_1")
     assert state.state == STATE_OPENING
 
-    mock_dio_chacon_client.move_shutter_direction.return_value = {}
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
@@ -119,14 +109,12 @@ async def test_cover_callbacks(
 ) -> None:
     """Test the creation and values of the Dio Chacon covers."""
 
-    mock_dio_chacon_client.search_all_devices.return_value = MOCK_COVER_DEVICE
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity = entity_registry.async_get("cover.shutter_mock_1")
-    _LOGGER.debug("Entity cover mock registered : %s", entity)
     assert entity.unique_id == "L4HActuator_idmock1"
     assert entity.entity_id == "cover.shutter_mock_1"
 
@@ -194,5 +182,4 @@ async def test_no_cover_found(
     await hass.async_block_till_done()
 
     entity = entity_registry.async_get("cover.shutter_mock_1")
-    _LOGGER.debug("Entity cover mock not found : %s", entity)
     assert not entity
