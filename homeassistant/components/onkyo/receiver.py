@@ -10,9 +10,9 @@ from pyeiscp import Connection as Receiver  # noqa: F401
 
 from homeassistant.core import callback
 
-_LOGGER = logging.getLogger(__name__)
+from .const import ZONES
 
-ZONES = {"zone2": "Zone 2", "zone3": "Zone 3", "zone4": "Zone 4"}
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass

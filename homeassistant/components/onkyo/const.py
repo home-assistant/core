@@ -3,12 +3,9 @@
 DOMAIN = "onkyo"
 BRAND_NAME = "Onkyo"
 
-EISCP_IDENTIFIER = "identifier"
-EISCP_MODEL_NAME = "model_name"
-
 CONF_RECEIVER_MAX_VOLUME = "receiver_max_volume"
+CONF_RECEIVER_MAX_VOLUME_DEFAULT = 80
 
-CONF_DEVICE = "device"
 CONF_VOLUME_RESOLUTION = "volume_resolution"
 CONF_VOLUME_RESOLUTION_DEFAULT = 200
 CONF_MAX_VOLUME = "max_volume"
@@ -29,26 +26,6 @@ CONF_SOURCES_DEFAULT = {
     "fm": "Radio",
 }
 
-ATTR_AUDIO_INFORMATION = "audio_information"
-ATTR_HDMI_OUTPUT = "hdmi_output"
-ATTR_PRESET = "preset"
-ATTR_VIDEO_INFORMATION = "video_information"
-ATTR_VIDEO_OUT = "video_out"
+CONF_DEVICE = "device"
 
-DEFAULT_PLAYABLE_SOURCES = ("fm", "am", "tuner")
-
-TIMEOUT_MESSAGE = "Timeout waiting for response."
-MAXIMUM_UPDATE_RETRIES = 3
-
-SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
-HDMI_OUTPUT_ACCEPTED_VALUES = [
-    "no",
-    "analog",
-    "yes",
-    "out",
-    "out-sub",
-    "sub",
-    "hdbaset",
-    "both",
-    "up",
-]
+ZONES = {"zone2": "Zone 2", "zone3": "Zone 3", "zone4": "Zone 4"}

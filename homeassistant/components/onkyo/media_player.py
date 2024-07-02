@@ -28,16 +28,33 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import receiver as rcver
+from .const import (
+    CONF_MAX_VOLUME,
+    CONF_MAX_VOLUME_DEFAULT,
+    CONF_RECEIVER_MAX_VOLUME,
+    CONF_RECEIVER_MAX_VOLUME_DEFAULT,
+    CONF_SOURCES,
+    CONF_SOURCES_DEFAULT,
+    ZONES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SOURCES = "sources"
-CONF_MAX_VOLUME = "max_volume"
-CONF_RECEIVER_MAX_VOLUME = "receiver_max_volume"
-
-SUPPORTED_MAX_VOLUME = 100
-DEFAULT_RECEIVER_MAX_VOLUME = 80
-ZONES = {"zone2": "Zone 2", "zone3": "Zone 3", "zone4": "Zone 4"}
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_MAX_VOLUME, default=CONF_MAX_VOLUME_DEFAULT): vol.All(
+            vol.Coerce(int), vol.Range(min=1, max=100)
+        ),
+        vol.Optional(
+            CONF_RECEIVER_MAX_VOLUME, default=CONF_RECEIVER_MAX_VOLUME_DEFAULT
+        ): cv.positive_int,
+        vol.Optional(CONF_SOURCES, default=CONF_SOURCES_DEFAULT): {
+            cv.string: cv.string
+        },
+    }
+)
 
 SUPPORT_ONKYO_WO_VOLUME = (
     MediaPlayerEntityFeature.TURN_ON
@@ -52,37 +69,7 @@ SUPPORT_ONKYO = (
     | MediaPlayerEntityFeature.VOLUME_STEP
 )
 
-KNOWN_HOSTS: list[str] = []
-
-DEFAULT_SOURCES = {
-    "tv": "TV",
-    "bd": "Bluray",
-    "game": "Game",
-    "aux1": "Aux1",
-    "video1": "Video 1",
-    "video2": "Video 2",
-    "video3": "Video 3",
-    "video4": "Video 4",
-    "video5": "Video 5",
-    "video6": "Video 6",
-    "video7": "Video 7",
-    "fm": "Radio",
-}
 DEFAULT_PLAYABLE_SOURCES = ("fm", "am", "tuner")
-
-PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_MAX_VOLUME, default=SUPPORTED_MAX_VOLUME): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=100)
-        ),
-        vol.Optional(
-            CONF_RECEIVER_MAX_VOLUME, default=DEFAULT_RECEIVER_MAX_VOLUME
-        ): cv.positive_int,
-        vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES): {cv.string: cv.string},
-    }
-)
 
 ATTR_HDMI_OUTPUT = "hdmi_output"
 ATTR_PRESET = "preset"
