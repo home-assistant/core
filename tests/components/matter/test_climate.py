@@ -221,7 +221,7 @@ async def test_thermostat_service_calls(
     )
     matter_client.write_attribute.reset_mock()
 
-    # test dual setpoint temperature adjustments when HEAT_COOL mode is active
+    # test dual setpoint temperature adjustments when heat_cool mode is active
     set_node_attribute(thermostat, 1, 513, 28, 1)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.longan_link_hvac_thermostat")
