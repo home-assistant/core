@@ -124,18 +124,18 @@ def mock_pynecil() -> Generator[AsyncMock, None, None]:
         )
         client.get_live_data.return_value = LiveDataResponse(
             live_temp=298,
-            set_temp=300,
-            dc_input=20.6,
+            setpoint_temp=300,
+            dc_voltage=20.6,
             handle_temp=36.3,
-            power_level=41,
+            pwm_level=41,
             power_src=PowerSource.PD,
-            tip_res=6.2,
+            tip_resistance=6.2,
             uptime=1671,
-            movement=10000,
-            max_temp=460,
-            raw_tip=2212,
+            movement_time=10000,
+            max_tip_temp_ability=460,
+            tip_voltage=2212,
             hall_sensor=0,
-            op_mode=OperatingMode.SOLDERING,
-            est_power=24.8,
+            operating_mode=OperatingMode.SOLDERING,
+            estimated_power=24.8,
         )
         yield client

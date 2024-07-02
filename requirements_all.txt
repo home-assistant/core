@@ -2023,7 +2023,7 @@ pymsteams==0.1.12
 pymysensors==0.24.0
 
 # homeassistant.components.pinecil
-pynecil==0.1.1
+pynecil==0.2.0
 
 # homeassistant.components.netgear
 pynetgear==0.10.10

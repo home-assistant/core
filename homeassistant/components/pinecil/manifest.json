@@ -13,5 +13,5 @@
   "documentation": "https://www.home-assistant.io/integrations/pinecil",
   "iot_class": "local_polling",
   "loggers": ["pynecil"],
-  "requirements": ["pynecil==0.1.1"]
+  "requirements": ["pynecil==0.2.0"]
 }
