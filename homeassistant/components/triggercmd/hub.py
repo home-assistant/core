@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable
 import logging
 
-import httpx
+from triggercmd import client
 
 from homeassistant.core import HomeAssistant
 
@@ -25,9 +25,7 @@ class Hub:
         self._name = "TRIGGERcmd"
         self._id = token
 
-        url = "https://www.triggercmd.com/api/command/simplelist"
-        headers = {"Authorization": "Bearer " + token}
-        r = httpx.get(url, headers=headers)
+        r = client.list(token)
         self.switches = []
         for item in r.json():
             trigger = item["trigger"]

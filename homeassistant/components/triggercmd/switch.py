@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-import httpx
+from triggercmd import client
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -95,9 +95,12 @@ class TRIGGERcmdSwitch(SwitchEntity):
         computer, trigger = self.name.split(" | ")
         computer = computer.strip()
         trigger = trigger.strip()
-
-        data = {"computer": computer, "trigger": trigger, "params": params}
-        url = "https://www.triggercmd.com/api/run/trigger"
-        headers = {"Authorization": "Bearer " + token}
-        r = httpx.post(url, headers=headers, data=data)
+        sender = "Home Assistant"
+        data = {
+            "computer": computer,
+            "trigger": trigger,
+            "params": params,
+            "sender": sender,
+        }
+        r = client.trigger(token, data)
         _LOGGER.info("TRIGGERcmd response for %s: %s", self.name, r.json())
