@@ -8,11 +8,19 @@ from typing import Any, cast
 from aioshelly.block_device import Block
 from aioshelly.const import MODEL_2, MODEL_25, MODEL_WALL_DISPLAY, RPC_GENERATIONS
 
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_PLATFORM,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.const import STATE_ON, EntityCategory, Platform
 from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import RegistryEntry
+from homeassistant.helpers.entity_registry import (
+    RegistryEntry,
+    async_entries_for_device,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import CONF_SLEEP_PERIOD, MOTION_MODELS
@@ -26,6 +34,7 @@ from .entity import (
 )
 from .utils import (
     async_remove_shelly_entity,
+    async_remove_shelly_rpc_entities,
     get_device_entry_gen,
     get_rpc_key_ids,
     get_virtual_component_key_ids,
@@ -158,6 +167,25 @@ def async_setup_rpc_entry(
     switches.extend(
         RpcVirtualSwitch(coordinator, id_) for id_ in virtual_switch_key_ids
     )
+
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+    if devices := device_registry.devices.get_devices_for_config_entry_id(
+        config_entry.entry_id
+    ):
+        entities_to_remove = []
+        device_id = devices[0].id
+        entities = async_entries_for_device(entity_registry, device_id, True)
+        for entity in entities:
+            if not entity.entity_id.startswith(SWITCH_PLATFORM):
+                continue
+            if "boolean" in entity.unique_id:
+                virtual_switch_id = int(entity.unique_id.split(":")[1])
+                if virtual_switch_id not in virtual_switch_key_ids:
+                    entities_to_remove.append(f"boolean:{virtual_switch_id}")
+        async_remove_shelly_rpc_entities(
+            hass, SWITCH_PLATFORM, coordinator.mac, entities_to_remove
+        )
 
     if not switches:
         return
