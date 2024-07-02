@@ -174,10 +174,8 @@ class HaHueBLE(LightEntity):
         """Color mode of the light."""
 
         if self._light.supports_colour_xy:
-            if self._light.supports_colour_temp:
-                if self._light.colour_temp_mode:
-                    return ColorMode.COLOR_TEMP
-
+            if self._light.supports_colour_temp and self._light.colour_temp_mode:
+                return ColorMode.COLOR_TEMP
             return ColorMode.XY
 
         if self._light.supports_brightness:
