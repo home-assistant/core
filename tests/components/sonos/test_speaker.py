@@ -4,11 +4,15 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components import sonos
 from homeassistant.components.sonos.const import DATA_SONOS, SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from .conftest import MockSoCo, SoCoMockFactory, SonosMockEvent
+
+from tests.common import async_fire_time_changed, load_fixture
 
 
 async def test_fallback_to_polling(
@@ -69,14 +73,42 @@ async def test_subscription_creation_fails(
     assert speaker._subscriptions
 
 
-# async def test_group_speakers(
-#     hass: HomeAssistant, soco_factory: SoCoMockFactory, async_setup_sonos
-# ) -> None:
-#     soco_1 = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
-#     soco_2 = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+async def _setup_hass(hass: HomeAssistant):
+    await async_setup_component(
+        hass,
+        sonos.DOMAIN,
+        {
+            "sonos": {
+                "media_player": {
+                    "interface_addr": "127.0.0.1",
+                    "hosts": ["10.10.10.1", "10.10.10.2"],
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
-#     event = SonosMockEvent(soco_1, soco_1.zoneGroupTopology, variables)
-#     subscription: SonosMockSubscribe = soco_1.zoneGroupTopology.subscribe.return_value
-#     sub_callback = await subscription.wait_for_callback_to_be_set()
-#     sub_callback(event)
-#     await hass.async_block_till_done(wait_background_tasks=True)
+
+async def test_zgs_event_group_speakers(
+    hass: HomeAssistant, soco_factory: SoCoMockFactory
+) -> None:
+    """Test grouping two speaker together."""
+    soco_1 = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
+    soco_2 = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+
+    zgs = load_fixture("sonos/zgs_group.xml")
+    variables = {
+        "ZoneGroupState": zgs,
+        "zone_player_uui_ds_in_group": f"{soco_1.uid},{soco_2.uid}",
+    }
+    event = SonosMockEvent(soco_1, soco_1.zoneGroupTopology, variables)
+    event.zone_player_uui_ds_in_group = f"{soco_1.uid},{soco_2.uid}"
+    await _setup_hass(hass)
+    soco_1.zoneGroupTopology.subscribe.return_value._callback(event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get("media_player.living_room")
+    assert state.attributes["group_members"][0] == "media_player.living_room"
+    assert state.attributes["group_members"][1] == "media_player.bedroom"
+    state = hass.states.get("media_player.bedroom")
+    assert state.attributes["group_members"][0] == "media_player.living_room"
+    assert state.attributes["group_members"][1] == "media_player.bedroom"
