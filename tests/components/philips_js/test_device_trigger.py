@@ -79,5 +79,9 @@ async def test_if_fires_on_turn_on_request(
 
     await hass.async_block_till_done()
     assert len(service_calls) == 2
+    assert service_calls[0].domain == "media_player"
+    assert service_calls[0].service == "turn_on"
+    assert service_calls[1].domain == "test"
+    assert service_calls[1].service == "automation"
     assert service_calls[1].data["some"] == mock_device.id
     assert service_calls[1].data["id"] == 0
