@@ -500,15 +500,14 @@ def is_rpc_thermostat_mode(ident: int, status: dict[str, Any]) -> bool:
 
 
 def get_virtual_component_key_ids(
-    components: list[dict[str, Any]], platform: Platform
+    config: dict[str, Any], platform: Platform
 ) -> list[int]:
     """Return a list of virtual component key IDs for a platform."""
     if platform is Platform.SWITCH:
         return [
-            int(component["key"].split(":")[-1])
-            for component in components
-            if "boolean" in component["key"]
-            and component["config"]["meta"]["ui"]["view"] == "toggle"
+            int(k.split(":")[1])
+            for k, v in config.items()
+            if k.startswith("boolean:") and v["meta"]["ui"]["view"] == "toggle"
         ]
 
     return []

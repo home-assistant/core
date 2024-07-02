@@ -153,7 +153,7 @@ def async_setup_rpc_entry(
     switches.extend(RpcRelaySwitch(coordinator, id_) for id_ in switch_ids)
 
     virtual_switch_key_ids = get_virtual_component_key_ids(
-        coordinator.device.dynamic_components, Platform.SWITCH
+        coordinator.device.config, Platform.SWITCH
     )
     switches.extend(
         RpcVirtualSwitch(coordinator, id_) for id_ in virtual_switch_key_ids
