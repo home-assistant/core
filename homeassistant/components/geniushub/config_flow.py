@@ -132,10 +132,7 @@ class GeniusHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except socket.gaierror:
             errors["base"] = "invalid_host"
 
-        except TimeoutError:
-            errors["base"] = "cannot_connect"
-
-        except aiohttp.ClientConnectionError:
+        except (TimeoutError, aiohttp.ClientConnectionError):
             errors["base"] = "cannot_connect"
 
         except Exception as e:  # pylint: disable=broad-except
