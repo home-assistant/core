@@ -1126,7 +1126,10 @@ def _apply_update(  # noqa: C901
                 session_maker,
                 engine,
                 table,
-                [f"{column} {BIG_INTEGER_SQL}" for column in columns],
+                [
+                    f"{column} {BIG_INTEGER_SQL} NOT NULL AUTO_INCREMENT"
+                    for column in columns
+                ],
             )
 
     else:
