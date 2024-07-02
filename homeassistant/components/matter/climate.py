@@ -274,19 +274,13 @@ class MatterClimate(MatterEntity, ClimateEntity):
                     self._attr_hvac_action = HVACAction.FAN
                 case _:
                     self._attr_hvac_action = HVACAction.OFF
-        # update target_temperature
-        if self._attr_hvac_mode == HVACMode.HEAT_COOL:
-            self._attr_target_temperature = None
-        elif self._attr_hvac_mode == HVACMode.COOL:
-            self._attr_target_temperature = self._get_temperature_in_degrees(
-                clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
-            )
-        else:
-            self._attr_target_temperature = self._get_temperature_in_degrees(
-                clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
-            )
         # update target temperature high/low
-        if self._attr_hvac_mode == HVACMode.HEAT_COOL:
+        supports_range = (
+            self._attr_supported_features
+            & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        )
+        if supports_range and self._attr_hvac_mode == HVACMode.HEAT_COOL:
+            self._attr_target_temperature = None
             self._attr_target_temperature_high = self._get_temperature_in_degrees(
                 clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
             )
@@ -296,6 +290,16 @@ class MatterClimate(MatterEntity, ClimateEntity):
         else:
             self._attr_target_temperature_high = None
             self._attr_target_temperature_low = None
+            # update target_temperature
+            if self._attr_hvac_mode == HVACMode.COOL:
+                self._attr_target_temperature = self._get_temperature_in_degrees(
+                    clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
+                )
+            else:
+                self._attr_target_temperature = self._get_temperature_in_degrees(
+                    clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
+                )
+
         # update min_temp
         if self._attr_hvac_mode == HVACMode.COOL:
             attribute = clusters.Thermostat.Attributes.AbsMinCoolSetpointLimit
