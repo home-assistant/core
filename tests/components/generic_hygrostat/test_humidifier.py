@@ -7,6 +7,9 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components import input_boolean, switch
+from homeassistant.components.generic_hygrostat import (
+    DOMAIN as GENERIC_HYDROSTAT_DOMAIN,
+)
 from homeassistant.components.humidifier import (
     ATTR_HUMIDITY,
     DOMAIN,
@@ -32,11 +35,12 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
+    MockConfigEntry,
     assert_setup_component,
     async_fire_time_changed,
     mock_restore_cache,
@@ -471,7 +475,7 @@ async def test_sensor_bad_value(hass: HomeAssistant, setup_comp_2) -> None:
 
 
 async def test_sensor_bad_value_twice(
-    hass: HomeAssistant, setup_comp_2, caplog
+    hass: HomeAssistant, setup_comp_2, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test sensor that the second bad value is not logged as warning."""
     assert hass.states.get(ENTITY).state == STATE_ON
@@ -1782,3 +1786,50 @@ async def test_sensor_stale_duration(
 
     # Not turning on by itself
     assert hass.states.get(humidifier_switch).state == STATE_OFF
+
+
+async def test_device_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test for source entity device."""
+
+    source_config_entry = MockConfigEntry()
+    source_config_entry.add_to_hass(hass)
+    source_device_entry = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={("switch", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    source_entity = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "source",
+        config_entry=source_config_entry,
+        device_id=source_device_entry.id,
+    )
+    await hass.async_block_till_done()
+    assert entity_registry.async_get("switch.test_source") is not None
+
+    helper_config_entry = MockConfigEntry(
+        data={},
+        domain=GENERIC_HYDROSTAT_DOMAIN,
+        options={
+            "device_class": "humidifier",
+            "dry_tolerance": 2.0,
+            "humidifier": "switch.test_source",
+            "name": "Test",
+            "target_sensor": ENT_SENSOR,
+            "wet_tolerance": 4.0,
+        },
+        title="Test",
+    )
+    helper_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(helper_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    helper_entity = entity_registry.async_get("humidifier.test")
+    assert helper_entity is not None
+    assert helper_entity.device_id == source_entity.device_id

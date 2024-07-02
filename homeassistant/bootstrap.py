@@ -8,7 +8,7 @@ import contextlib
 from functools import partial
 from itertools import chain
 import logging
-import logging.handlers
+from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
 import mimetypes
 from operator import contains, itemgetter
 import os
@@ -134,8 +134,15 @@ COOLDOWN_TIME = 60
 
 
 DEBUGGER_INTEGRATIONS = {"debugpy"}
+
+# Core integrations are unconditionally loaded
 CORE_INTEGRATIONS = {"homeassistant", "persistent_notification"}
-LOGGING_INTEGRATIONS = {
+
+# Integrations that are loaded right after the core is set up
+LOGGING_AND_HTTP_DEPS_INTEGRATIONS = {
+    # isal is loaded right away before `http` to ensure if its
+    # enabled, that `isal` is up to date.
+    "isal",
     # Set log levels
     "logger",
     # Error logging
@@ -214,8 +221,8 @@ CRITICAL_INTEGRATIONS = {
 }
 
 SETUP_ORDER = (
-    # Load logging as soon as possible
-    ("logging", LOGGING_INTEGRATIONS),
+    # Load logging and http deps as soon as possible
+    ("logging, http deps", LOGGING_AND_HTTP_DEPS_INTEGRATIONS),
     # Setup frontend and recorder
     ("frontend, recorder", {*FRONTEND_INTEGRATIONS, *RECORDER_INTEGRATIONS}),
     # Start up debuggers. Start these first in case they want to wait.
@@ -249,22 +256,39 @@ async def async_setup_hass(
     runtime_config: RuntimeConfig,
 ) -> core.HomeAssistant | None:
     """Set up Home Assistant."""
-    hass = core.HomeAssistant(runtime_config.config_dir)
 
-    async_enable_logging(
-        hass,
-        runtime_config.verbose,
-        runtime_config.log_rotate_days,
-        runtime_config.log_file,
-        runtime_config.log_no_color,
-    )
+    async def create_hass() -> core.HomeAssistant:
+        """Create the hass object and do basic setup."""
+        hass = core.HomeAssistant(runtime_config.config_dir)
+        loader.async_setup(hass)
 
-    if runtime_config.debug or hass.loop.get_debug():
-        hass.config.debug = True
+        await async_enable_logging(
+            hass,
+            runtime_config.verbose,
+            runtime_config.log_rotate_days,
+            runtime_config.log_file,
+            runtime_config.log_no_color,
+        )
 
-    hass.config.safe_mode = runtime_config.safe_mode
-    hass.config.skip_pip = runtime_config.skip_pip
-    hass.config.skip_pip_packages = runtime_config.skip_pip_packages
+        if runtime_config.debug or hass.loop.get_debug():
+            hass.config.debug = True
+
+        hass.config.safe_mode = runtime_config.safe_mode
+        hass.config.skip_pip = runtime_config.skip_pip
+        hass.config.skip_pip_packages = runtime_config.skip_pip_packages
+
+        return hass
+
+    async def stop_hass(hass: core.HomeAssistant) -> None:
+        """Stop hass."""
+        # Ask integrations to shut down. It's messy but we can't
+        # do a clean stop without knowing what is broken
+        with contextlib.suppress(TimeoutError):
+            async with hass.timeout.async_timeout(10):
+                await hass.async_stop()
+
+    hass = await create_hass()
+
     if runtime_config.skip_pip or runtime_config.skip_pip_packages:
         _LOGGER.warning(
             "Skipping pip installation of required modules. This may cause issues"
@@ -276,7 +300,6 @@ async def async_setup_hass(
 
     _LOGGER.info("Config directory: %s", runtime_config.config_dir)
 
-    loader.async_setup(hass)
     block_async_io.enable()
 
     config_dict = None
@@ -302,27 +325,28 @@ async def async_setup_hass(
 
     if config_dict is None:
         recovery_mode = True
+        await stop_hass(hass)
+        hass = await create_hass()
 
     elif not basic_setup_success:
         _LOGGER.warning("Unable to set up core integrations. Activating recovery mode")
         recovery_mode = True
+        await stop_hass(hass)
+        hass = await create_hass()
 
     elif any(domain not in hass.config.components for domain in CRITICAL_INTEGRATIONS):
         _LOGGER.warning(
             "Detected that %s did not load. Activating recovery mode",
             ",".join(CRITICAL_INTEGRATIONS),
         )
-        # Ask integrations to shut down. It's messy but we can't
-        # do a clean stop without knowing what is broken
-        with contextlib.suppress(TimeoutError):
-            async with hass.timeout.async_timeout(10):
-                await hass.async_stop()
 
-        recovery_mode = True
         old_config = hass.config
         old_logging = hass.data.get(DATA_LOGGING)
 
-        hass = core.HomeAssistant(old_config.config_dir)
+        recovery_mode = True
+        await stop_hass(hass)
+        hass = await create_hass()
+
         if old_logging:
             hass.data[DATA_LOGGING] = old_logging
         hass.config.debug = old_config.debug
@@ -499,8 +523,7 @@ async def async_from_config_dict(
     return hass
 
 
-@core.callback
-def async_enable_logging(
+async def async_enable_logging(
     hass: core.HomeAssistant,
     verbose: bool = False,
     log_rotate_days: int | None = None,
@@ -583,23 +606,9 @@ def async_enable_logging(
     if (err_path_exists and os.access(err_log_path, os.W_OK)) or (
         not err_path_exists and os.access(err_dir, os.W_OK)
     ):
-        err_handler: (
-            logging.handlers.RotatingFileHandler
-            | logging.handlers.TimedRotatingFileHandler
+        err_handler = await hass.async_add_executor_job(
+            _create_log_file, err_log_path, log_rotate_days
         )
-        if log_rotate_days:
-            err_handler = logging.handlers.TimedRotatingFileHandler(
-                err_log_path, when="midnight", backupCount=log_rotate_days
-            )
-        else:
-            err_handler = _RotatingFileHandlerWithoutShouldRollOver(
-                err_log_path, backupCount=1
-            )
-
-        try:
-            err_handler.doRollover()
-        except OSError as err:
-            _LOGGER.error("Error rolling over log file: %s", err)
 
         err_handler.setLevel(logging.INFO if verbose else logging.WARNING)
         err_handler.setFormatter(logging.Formatter(fmt, datefmt=FORMAT_DATETIME))
@@ -616,7 +625,29 @@ def async_enable_logging(
     async_activate_log_queue_handler(hass)
 
 
-class _RotatingFileHandlerWithoutShouldRollOver(logging.handlers.RotatingFileHandler):
+def _create_log_file(
+    err_log_path: str, log_rotate_days: int | None
+) -> RotatingFileHandler | TimedRotatingFileHandler:
+    """Create log file and do roll over."""
+    err_handler: RotatingFileHandler | TimedRotatingFileHandler
+    if log_rotate_days:
+        err_handler = TimedRotatingFileHandler(
+            err_log_path, when="midnight", backupCount=log_rotate_days
+        )
+    else:
+        err_handler = _RotatingFileHandlerWithoutShouldRollOver(
+            err_log_path, backupCount=1
+        )
+
+    try:
+        err_handler.doRollover()
+    except OSError as err:
+        _LOGGER.error("Error rolling over log file: %s", err)
+
+    return err_handler
+
+
+class _RotatingFileHandlerWithoutShouldRollOver(RotatingFileHandler):
     """RotatingFileHandler that does not check if it should roll over on every log."""
 
     def shouldRollover(self, record: logging.LogRecord) -> bool:

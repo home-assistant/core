@@ -244,7 +244,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             websocket_api.async_register_command(hass, websocket_subscribe)
             websocket_api.async_register_command(hass, websocket_mqtt_info)
             hass.data[DATA_MQTT] = mqtt_data = MqttData(config=mqtt_yaml, client=client)
-        client.start(mqtt_data)
+        await client.async_start(mqtt_data)
 
         # Restore saved subscriptions
         if mqtt_data.subscriptions_to_restore:
@@ -535,8 +535,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     registry_hooks = mqtt_data.discovery_registry_hooks
     while registry_hooks:
         registry_hooks.popitem()[1]()
-    # Wait for all ACKs and stop the loop
-    await mqtt_client.async_disconnect()
+    # Wait for all ACKs, stop the loop and disconnect the client
+    await mqtt_client.async_disconnect(disconnect_paho_client=True)
 
     # Cleanup MQTT client availability
     hass.data.pop(DATA_MQTT_AVAILABLE, None)

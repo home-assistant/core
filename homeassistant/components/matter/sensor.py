@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Types import Nullable, NullValue
-from matter_server.client.models.clusters import EveEnergyCluster
+from matter_server.common.custom_clusters import EveCluster
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -36,6 +36,17 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
+
+AIR_QUALITY_MAP = {
+    clusters.AirQuality.Enums.AirQualityEnum.kExtremelyPoor: "extremely_poor",
+    clusters.AirQuality.Enums.AirQualityEnum.kVeryPoor: "very_poor",
+    clusters.AirQuality.Enums.AirQualityEnum.kPoor: "poor",
+    clusters.AirQuality.Enums.AirQualityEnum.kFair: "fair",
+    clusters.AirQuality.Enums.AirQualityEnum.kGood: "good",
+    clusters.AirQuality.Enums.AirQualityEnum.kModerate: "moderate",
+    clusters.AirQuality.Enums.AirQualityEnum.kUnknown: "unknown",
+    clusters.AirQuality.Enums.AirQualityEnum.kUnknownEnumValue: "unknown",
+}
 
 
 async def async_setup_entry(
@@ -159,11 +170,10 @@ DISCOVERY_SCHEMAS = [
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
-        required_attributes=(EveEnergyCluster.Attributes.Watt,),
+        required_attributes=(EveCluster.Attributes.Watt,),
         # Add OnOff Attribute as optional attribute to poll
         # the primary value when the relay is toggled
         optional_attributes=(clusters.OnOff.Attributes.OnOff,),
-        should_poll=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -176,8 +186,7 @@ DISCOVERY_SCHEMAS = [
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
-        required_attributes=(EveEnergyCluster.Attributes.Voltage,),
-        should_poll=True,
+        required_attributes=(EveCluster.Attributes.Voltage,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -190,8 +199,7 @@ DISCOVERY_SCHEMAS = [
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         entity_class=MatterSensor,
-        required_attributes=(EveEnergyCluster.Attributes.WattAccumulated,),
-        should_poll=True,
+        required_attributes=(EveCluster.Attributes.WattAccumulated,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -204,11 +212,10 @@ DISCOVERY_SCHEMAS = [
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
-        required_attributes=(EveEnergyCluster.Attributes.Current,),
+        required_attributes=(EveCluster.Attributes.Current,),
         # Add OnOff Attribute as optional attribute to poll
         # the primary value when the relay is toggled
         optional_attributes=(clusters.OnOff.Attributes.OnOff,),
-        should_poll=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -221,6 +228,19 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSensor,
         required_attributes=(
             clusters.CarbonDioxideConcentrationMeasurement.Attributes.MeasuredValue,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="TotalVolatileOrganicCompoundsSensor",
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement.Attributes.MeasuredValue,
         ),
     ),
     MatterDiscoverySchema(
@@ -260,6 +280,88 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSensor,
         required_attributes=(
             clusters.Pm10ConcentrationMeasurement.Attributes.MeasuredValue,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="AirQuality",
+            translation_key="air_quality",
+            device_class=SensorDeviceClass.ENUM,
+            state_class=None,
+            # convert to set first to remove the duplicate unknown value
+            options=list(set(AIR_QUALITY_MAP.values())),
+            measurement_to_ha=lambda x: AIR_QUALITY_MAP[x],
+            icon="mdi:air-filter",
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.AirQuality.Attributes.AirQuality,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="CarbonMonoxideSensor",
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            device_class=SensorDeviceClass.CO,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.CarbonMonoxideConcentrationMeasurement.Attributes.MeasuredValue,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="NitrogenDioxideSensor",
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.NitrogenDioxideConcentrationMeasurement.Attributes.MeasuredValue,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="OzoneConcentrationSensor",
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            device_class=SensorDeviceClass.OZONE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.OzoneConcentrationMeasurement.Attributes.MeasuredValue,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="HepaFilterCondition",
+            native_unit_of_measurement=PERCENTAGE,
+            device_class=None,
+            state_class=SensorStateClass.MEASUREMENT,
+            translation_key="hepa_filter_condition",
+            icon="mdi:filter-check",
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.HepaFilterMonitoring.Attributes.Condition,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ActivatedCarbonFilterCondition",
+            native_unit_of_measurement=PERCENTAGE,
+            device_class=None,
+            state_class=SensorStateClass.MEASUREMENT,
+            translation_key="activated_carbon_filter_condition",
+            icon="mdi:filter-check",
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.ActivatedCarbonFilterMonitoring.Attributes.Condition,
         ),
     ),
 ]

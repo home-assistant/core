@@ -415,7 +415,7 @@ class PeekIterator(Iterator):
         self._next = self._iterator.__next__
         return self._next()
 
-    def peek(self) -> Generator[av.Packet, None, None]:
+    def peek(self) -> Generator[av.Packet]:
         """Return items without consuming from the iterator."""
         # Items consumed are added to a buffer for future calls to __next__
         # or peek. First iterate over the buffer from previous calls to peek.

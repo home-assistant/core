@@ -98,7 +98,7 @@ def aiohttp_client(
 
 
 @pytest.fixture
-async def auth(aiohttp_client):
+async def auth(aiohttp_client: ClientSessionGenerator) -> FakeAuth:
     """Fixture for an AbstractAuth."""
     auth = FakeAuth()
     app = aiohttp.web.Application()
@@ -196,7 +196,7 @@ def subscriber_id() -> str:
 
 
 @pytest.fixture
-def nest_test_config(request) -> NestTestConfig:
+def nest_test_config() -> NestTestConfig:
     """Fixture that sets up the configuration used for the test."""
     return TEST_CONFIG_APP_CREDS
 
@@ -298,7 +298,7 @@ async def setup_platform(
 
 
 @pytest.fixture(autouse=True)
-def reset_diagnostics() -> Generator[None, None, None]:
+def reset_diagnostics() -> Generator[None]:
     """Fixture to reset client library diagnostic counters."""
     yield
     diagnostics.reset()

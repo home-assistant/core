@@ -14,7 +14,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -33,11 +33,20 @@ async def async_setup_entry(
     """Set up the Smile Thermostats from a config entry."""
     coordinator = entry.runtime_data
 
-    async_add_entities(
-        PlugwiseClimateEntity(coordinator, device_id)
-        for device_id, device in coordinator.data.devices.items()
-        if device["dev_class"] in MASTER_THERMOSTATS
-    )
+    @callback
+    def _add_entities() -> None:
+        """Add Entities."""
+        if not coordinator.new_devices:
+            return
+
+        async_add_entities(
+            PlugwiseClimateEntity(coordinator, device_id)
+            for device_id in coordinator.new_devices
+            if coordinator.data.devices[device_id]["dev_class"] in MASTER_THERMOSTATS
+        )
+
+    _add_entities()
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 
 
 class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
@@ -145,7 +154,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         if "regulation_modes" in self.gateway_data:
             hvac_modes.append(HVACMode.OFF)
 
-        if self.device["available_schedules"] != ["None"]:
+        if "available_schedules" in self.device:
             hvac_modes.append(HVACMode.AUTO)
 
         if self.cdr_gateway["cooling_present"]:

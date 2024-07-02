@@ -21,6 +21,7 @@ import voluptuous as vol
 from homeassistant.components import ssdp
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -163,7 +164,10 @@ class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
                 config_entry = self.reauth_config_entry
                 abort_reason = "reauth_successful"
 
-            if config_entry:
+            if (
+                config_entry is not None
+                and config_entry.state is not ConfigEntryState.NOT_LOADED
+            ):
                 hub = config_entry.runtime_data
 
                 if hub and hub.available:

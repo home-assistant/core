@@ -16,7 +16,7 @@ from homeassistant.components.device_automation.exceptions import (
 )
 from homeassistant.components.zha.core.const import ATTR_ENDPOINT_ID
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -76,7 +76,7 @@ def _same_lists(list_a, list_b):
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -195,7 +195,10 @@ async def test_no_triggers(
 
 
 async def test_if_fires_on_event(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry, mock_devices, calls
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_devices,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for remote triggers firing."""
 
@@ -245,7 +248,10 @@ async def test_if_fires_on_event(
 
 
 async def test_device_offline_fires(
-    hass: HomeAssistant, zigpy_device_mock, zha_device_restored, calls
+    hass: HomeAssistant,
+    zigpy_device_mock,
+    zha_device_restored,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for device offline triggers firing."""
 
@@ -314,7 +320,7 @@ async def test_exception_no_triggers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_devices,
-    calls,
+    calls: list[ServiceCall],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test for exception when validating device triggers."""
@@ -356,7 +362,7 @@ async def test_exception_bad_trigger(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_devices,
-    calls,
+    calls: list[ServiceCall],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test for exception when validating device triggers."""

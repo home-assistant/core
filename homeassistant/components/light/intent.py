@@ -8,10 +8,10 @@ import voluptuous as vol
 
 from homeassistant.const import SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import intent
+from homeassistant.helpers import config_validation as cv, intent
 import homeassistant.util.color as color_util
 
-from . import ATTR_BRIGHTNESS_PCT, ATTR_RGB_COLOR, DOMAIN
+from . import ATTR_BRIGHTNESS_PCT, ATTR_COLOR_TEMP_KELVIN, ATTR_RGB_COLOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,10 +28,12 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             SERVICE_TURN_ON,
             optional_slots={
                 ("color", ATTR_RGB_COLOR): color_util.color_name_to_rgb,
+                ("temperature", ATTR_COLOR_TEMP_KELVIN): cv.positive_int,
                 ("brightness", ATTR_BRIGHTNESS_PCT): vol.All(
                     vol.Coerce(int), vol.Range(0, 100)
                 ),
             },
             description="Sets the brightness or color of a light",
+            platforms={DOMAIN},
         ),
     )

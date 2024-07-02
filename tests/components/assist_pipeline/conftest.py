@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterable, Generator
+from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -34,7 +35,7 @@ _TRANSCRIPT = "test transcript"
 
 
 @pytest.fixture(autouse=True)
-def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir: Path) -> Path:
     """Mock the TTS cache dir with empty dir."""
     return mock_tts_cache_dir
 
@@ -152,7 +153,7 @@ class MockTTSPlatform(MockPlatform):
 
 
 @pytest.fixture
-async def mock_tts_provider(hass) -> MockTTSProvider:
+async def mock_tts_provider() -> MockTTSProvider:
     """Mock TTS provider."""
     return MockTTSProvider()
 
@@ -255,13 +256,13 @@ class MockWakeWordEntity2(wake_word.WakeWordDetectionEntity):
 
 
 @pytest.fixture
-async def mock_wake_word_provider_entity(hass) -> MockWakeWordEntity:
+async def mock_wake_word_provider_entity() -> MockWakeWordEntity:
     """Mock wake word provider."""
     return MockWakeWordEntity()
 
 
 @pytest.fixture
-async def mock_wake_word_provider_entity2(hass) -> MockWakeWordEntity2:
+async def mock_wake_word_provider_entity2() -> MockWakeWordEntity2:
     """Mock wake word provider."""
     return MockWakeWordEntity2()
 
@@ -271,7 +272,7 @@ class MockFlow(ConfigFlow):
 
 
 @pytest.fixture
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, "test.config_flow")
 

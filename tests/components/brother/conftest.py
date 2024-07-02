@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from brother import BrotherSensors
 import pytest
@@ -78,7 +78,7 @@ BROTHER_DATA = BrotherSensors(
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.brother.async_setup_entry", return_value=True
@@ -87,7 +87,16 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_brother_client() -> Generator[AsyncMock, None, None]:
+def mock_unload_entry() -> Generator[AsyncMock]:
+    """Override async_unload_entry."""
+    with patch(
+        "homeassistant.components.brother.async_unload_entry", return_value=True
+    ) as mock_unload_entry:
+        yield mock_unload_entry
+
+
+@pytest.fixture
+def mock_brother_client() -> Generator[MagicMock]:
     """Mock Brother client."""
     with (
         patch("homeassistant.components.brother.Brother", autospec=True) as mock_client,

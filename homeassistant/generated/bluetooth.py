@@ -349,6 +349,10 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "AP-*",
     },
     {
+        "domain": "led_ble",
+        "local_name": "MELK-*",
+    },
+    {
         "domain": "medcom_ble",
         "service_uuid": "39b31fec-b63a-4ef7-b163-a7317872007f",
     },

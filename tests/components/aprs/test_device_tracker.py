@@ -20,7 +20,7 @@ TEST_PASSWORD = "testpass"
 
 
 @pytest.fixture(name="mock_ais")
-def mock_ais() -> Generator[MagicMock, None, None]:
+def mock_ais() -> Generator[MagicMock]:
     """Mock aprslib."""
     with patch("aprslib.IS") as mock_ais:
         yield mock_ais

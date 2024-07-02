@@ -1,5 +1,6 @@
 """Test ZHA select entities."""
 
+from typing import Any
 from unittest.mock import call, patch
 
 import pytest
@@ -90,7 +91,7 @@ async def light(hass, zigpy_device_mock):
 
 
 @pytest.fixture
-def core_rs(hass_storage):
+def core_rs(hass_storage: dict[str, Any]):
     """Core.restore_state fixture."""
 
     def _storage(entity_id, state):

@@ -23,10 +23,9 @@ from wyoming.vad import VoiceStarted, VoiceStopped
 from wyoming.wake import Detect, Detection
 
 from homeassistant.components import assist_pipeline, wyoming
-from homeassistant.components.wyoming.data import WyomingService
 from homeassistant.components.wyoming.devices import SatelliteDevice
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.const import STATE_ON
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import intent as intent_helper
 from homeassistant.setup import async_setup_component
 
@@ -444,16 +443,7 @@ async def test_satellite_muted(hass: HomeAssistant) -> None:
     """Test callback for a satellite that has been muted."""
     on_muted_event = asyncio.Event()
 
-    original_make_satellite = wyoming._make_satellite
     original_on_muted = wyoming.satellite.WyomingSatellite.on_muted
-
-    def make_muted_satellite(
-        hass: HomeAssistant, config_entry: ConfigEntry, service: WyomingService
-    ):
-        satellite = original_make_satellite(hass, config_entry, service)
-        satellite.device.set_is_muted(True)
-
-        return satellite
 
     async def on_muted(self):
         # Trigger original function
@@ -472,7 +462,10 @@ async def test_satellite_muted(hass: HomeAssistant) -> None:
             "homeassistant.components.wyoming.data.load_wyoming_info",
             return_value=SATELLITE_INFO,
         ),
-        patch("homeassistant.components.wyoming._make_satellite", make_muted_satellite),
+        patch(
+            "homeassistant.components.wyoming.switch.WyomingSatelliteMuteSwitch.async_get_last_state",
+            return_value=State("switch.test_mute", STATE_ON),
+        ),
         patch(
             "homeassistant.components.wyoming.satellite.WyomingSatellite.on_muted",
             on_muted,
@@ -1292,3 +1285,104 @@ async def test_timers(hass: HomeAssistant) -> None:
             timer_finished = mock_client.timer_finished
             assert timer_finished is not None
             assert timer_finished.id == timer_started.id
+
+
+async def test_satellite_conversation_id(hass: HomeAssistant) -> None:
+    """Test that the same conversation id is used until timeout."""
+    assert await async_setup_component(hass, assist_pipeline.DOMAIN, {})
+
+    events = [
+        RunPipeline(
+            start_stage=PipelineStage.WAKE,
+            end_stage=PipelineStage.TTS,
+            restart_on_end=True,
+        ).event(),
+    ]
+
+    pipeline_kwargs: dict[str, Any] = {}
+    pipeline_event_callback: Callable[[assist_pipeline.PipelineEvent], None] | None = (
+        None
+    )
+    run_pipeline_called = asyncio.Event()
+
+    async def async_pipeline_from_audio_stream(
+        hass: HomeAssistant,
+        context,
+        event_callback,
+        stt_metadata,
+        stt_stream,
+        **kwargs,
+    ) -> None:
+        nonlocal pipeline_kwargs, pipeline_event_callback
+        pipeline_kwargs = kwargs
+        pipeline_event_callback = event_callback
+
+        run_pipeline_called.set()
+
+    with (
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=SATELLITE_INFO,
+        ),
+        patch(
+            "homeassistant.components.wyoming.satellite.AsyncTcpClient",
+            SatelliteAsyncTcpClient(events),
+        ) as mock_client,
+        patch(
+            "homeassistant.components.wyoming.satellite.assist_pipeline.async_pipeline_from_audio_stream",
+            async_pipeline_from_audio_stream,
+        ),
+        patch(
+            "homeassistant.components.wyoming.satellite.tts.async_get_media_source_audio",
+            return_value=("wav", get_test_wav()),
+        ),
+        patch("homeassistant.components.wyoming.satellite._PING_SEND_DELAY", 0),
+    ):
+        entry = await setup_config_entry(hass)
+        satellite: wyoming.WyomingSatellite = hass.data[wyoming.DOMAIN][
+            entry.entry_id
+        ].satellite
+
+        async with asyncio.timeout(1):
+            await mock_client.connect_event.wait()
+            await mock_client.run_satellite_event.wait()
+
+        async with asyncio.timeout(1):
+            await run_pipeline_called.wait()
+
+        assert pipeline_event_callback is not None
+
+        # A conversation id should have been generated
+        conversation_id = pipeline_kwargs.get("conversation_id")
+        assert conversation_id
+
+        # Reset and run again
+        run_pipeline_called.clear()
+        pipeline_kwargs.clear()
+
+        pipeline_event_callback(
+            assist_pipeline.PipelineEvent(assist_pipeline.PipelineEventType.RUN_END)
+        )
+
+        async with asyncio.timeout(1):
+            await run_pipeline_called.wait()
+
+        # Should be the same conversation id
+        assert pipeline_kwargs.get("conversation_id") == conversation_id
+
+        # Reset and run again, but this time "time out"
+        satellite._conversation_id_time = None
+        run_pipeline_called.clear()
+        pipeline_kwargs.clear()
+
+        pipeline_event_callback(
+            assist_pipeline.PipelineEvent(assist_pipeline.PipelineEventType.RUN_END)
+        )
+
+        async with asyncio.timeout(1):
+            await run_pipeline_called.wait()
+
+        # Should be a different conversation id
+        new_conversation_id = pipeline_kwargs.get("conversation_id")
+        assert new_conversation_id
+        assert new_conversation_id != conversation_id

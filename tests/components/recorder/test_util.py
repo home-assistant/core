@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 from sqlalchemy import lambda_stmt, text
 from sqlalchemy.engine.result import ChunkedIteratorResult
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.sql.elements import TextClause
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 
@@ -73,7 +73,6 @@ async def test_session_scope_not_setup(
 
 async def test_recorder_bad_execute(hass: HomeAssistant, setup_recorder: None) -> None:
     """Bad execute, retry 3 times."""
-    from sqlalchemy.exc import SQLAlchemyError
 
     def to_native(validate_entity_id=True):
         """Raise exception."""
@@ -721,7 +720,7 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(
 
 
 async def test_basic_sanity_check(
-    hass: HomeAssistant, setup_recorder: None, recorder_db_url
+    hass: HomeAssistant, setup_recorder: None, recorder_db_url: str
 ) -> None:
     """Test the basic sanity checks with a missing table."""
     if recorder_db_url.startswith(("mysql://", "postgresql://")):
@@ -742,7 +741,7 @@ async def test_combined_checks(
     hass: HomeAssistant,
     setup_recorder: None,
     caplog: pytest.LogCaptureFixture,
-    recorder_db_url,
+    recorder_db_url: str,
 ) -> None:
     """Run Checks on the open database."""
     if recorder_db_url.startswith(("mysql://", "postgresql://")):
@@ -831,7 +830,7 @@ async def test_end_incomplete_runs(
 
 
 async def test_periodic_db_cleanups(
-    hass: HomeAssistant, setup_recorder: None, recorder_db_url
+    hass: HomeAssistant, setup_recorder: None, recorder_db_url: str
 ) -> None:
     """Test periodic db cleanups."""
     if recorder_db_url.startswith(("mysql://", "postgresql://")):
@@ -854,7 +853,6 @@ async def test_write_lock_db(
     tmp_path: Path,
 ) -> None:
     """Test database write lock."""
-    from sqlalchemy.exc import OperationalError
 
     # Use file DB, in memory DB cannot do write locks.
     config = {

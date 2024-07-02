@@ -122,7 +122,7 @@ async def test_data_caching_error_observation(
     freezer: FrozenDateTimeFactory,
     mock_simple_nws,
     no_sensor,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test caching of data with errors."""
     instance = mock_simple_nws.return_value
@@ -165,7 +165,7 @@ async def test_data_caching_error_observation(
 
 
 async def test_no_data_error_observation(
-    hass: HomeAssistant, mock_simple_nws, no_sensor, caplog
+    hass: HomeAssistant, mock_simple_nws, no_sensor, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test catching NwsNoDataDrror."""
     instance = mock_simple_nws.return_value
@@ -183,7 +183,7 @@ async def test_no_data_error_observation(
 
 
 async def test_no_data_error_forecast(
-    hass: HomeAssistant, mock_simple_nws, no_sensor, caplog
+    hass: HomeAssistant, mock_simple_nws, no_sensor, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test catching NwsNoDataDrror."""
     instance = mock_simple_nws.return_value
@@ -203,7 +203,7 @@ async def test_no_data_error_forecast(
 
 
 async def test_no_data_error_forecast_hourly(
-    hass: HomeAssistant, mock_simple_nws, no_sensor, caplog
+    hass: HomeAssistant, mock_simple_nws, no_sensor, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test catching NwsNoDataDrror."""
     instance = mock_simple_nws.return_value

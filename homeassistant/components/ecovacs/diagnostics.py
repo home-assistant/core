@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from deebot_client.capabilities import Capabilities
-
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -34,7 +32,7 @@ async def async_get_config_entry_diagnostics(
 
     diag["devices"] = [
         async_redact_data(device.device_info, REDACT_DEVICE)
-        for device in controller.devices(Capabilities)
+        for device in controller.devices
     ]
     diag["legacy_devices"] = [
         async_redact_data(device.vacuum, REDACT_DEVICE)

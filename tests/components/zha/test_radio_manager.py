@@ -87,7 +87,7 @@ def com_port(device="/dev/ttyUSB1234"):
 
 
 @pytest.fixture
-def mock_connect_zigpy_app() -> Generator[MagicMock, None, None]:
+def mock_connect_zigpy_app() -> Generator[MagicMock]:
     """Mock the radio connection."""
 
     mock_connect_app = MagicMock()

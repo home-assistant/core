@@ -24,6 +24,7 @@ from homeassistant.core import (
     Context,
     CoreState,
     HomeAssistant,
+    ServiceCall,
     State,
     callback,
     split_entity_id,
@@ -57,7 +58,7 @@ ENTITY_ID = "script.test"
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "script")
 
@@ -374,7 +375,9 @@ async def test_reload_service(hass: HomeAssistant, running) -> None:
         assert hass.services.has_service(script.DOMAIN, "test")
 
 
-async def test_reload_unchanged_does_not_stop(hass: HomeAssistant, calls) -> None:
+async def test_reload_unchanged_does_not_stop(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test that reloading stops any running actions as appropriate."""
     test_entity = "test.entity"
 
@@ -461,7 +464,7 @@ async def test_reload_unchanged_does_not_stop(hass: HomeAssistant, calls) -> Non
     ],
 )
 async def test_reload_unchanged_script(
-    hass: HomeAssistant, calls, script_config
+    hass: HomeAssistant, calls: list[ServiceCall], script_config
 ) -> None:
     """Test an unmodified script is not reloaded."""
     with patch(
@@ -1560,7 +1563,9 @@ async def test_script_service_changed_entity_id(
     assert calls[1].data["entity_id"] == "script.custom_entity_id_2"
 
 
-async def test_blueprint_automation(hass: HomeAssistant, calls) -> None:
+async def test_blueprint_automation(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test blueprint script."""
     assert await async_setup_component(
         hass,

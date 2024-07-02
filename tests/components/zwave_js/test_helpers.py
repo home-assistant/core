@@ -42,4 +42,4 @@ async def test_get_value_state_schema_boolean_config_value(
         aeon_smart_switch_6.values["102-112-0-255"]
     )
     assert isinstance(schema_validator, vol.Coerce)
-    assert schema_validator.type == bool
+    assert schema_validator.type is bool

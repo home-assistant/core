@@ -50,6 +50,7 @@ from .timers import (
     TimerManager,
     TimerStatusIntentHandler,
     UnpauseTimerIntentHandler,
+    async_device_supports_timers,
     async_register_timer_handler,
 )
 
@@ -59,6 +60,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 __all__ = [
     "async_register_timer_handler",
+    "async_device_supports_timers",
     "TimerInfo",
     "TimerEventType",
     "DOMAIN",
@@ -352,6 +354,7 @@ class SetPositionIntentHandler(intent.DynamicServiceIntentHandler):
                 ATTR_POSITION: vol.All(vol.Coerce(int), vol.Range(min=0, max=100))
             },
             description="Sets the position of a device or entity",
+            platforms={COVER_DOMAIN, VALVE_DOMAIN},
         )
 
     def get_domain_and_service(

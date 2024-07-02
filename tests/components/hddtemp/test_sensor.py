@@ -85,7 +85,7 @@ class TelnetMock:
 @pytest.fixture
 def telnetmock():
     """Mock telnet."""
-    with patch("telnetlib.Telnet", new=TelnetMock):
+    with patch("homeassistant.components.hddtemp.sensor.Telnet", new=TelnetMock):
         yield
 
 
@@ -158,11 +158,11 @@ async def test_hddtemp_multiple_disks(hass: HomeAssistant, telnetmock) -> None:
     assert await async_setup_component(hass, "sensor", VALID_CONFIG_MULTIPLE_DISKS)
     await hass.async_block_till_done()
 
-    for sensor in [
+    for sensor in (
         "sensor.hd_temperature_dev_sda1",
         "sensor.hd_temperature_dev_sdb1",
         "sensor.hd_temperature_dev_sdc1",
-    ]:
+    ):
         state = hass.states.get(sensor)
 
         reference = REFERENCE[state.attributes.get("device")]

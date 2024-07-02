@@ -1,5 +1,6 @@
 """The tests for the recorder filter matching the EntityFilter component."""
 
+from collections.abc import AsyncGenerator
 import json
 from unittest.mock import patch
 
@@ -38,7 +39,9 @@ def db_schema_32():
 
 
 @pytest.fixture(name="legacy_recorder_mock")
-async def legacy_recorder_mock_fixture(recorder_mock):
+async def legacy_recorder_mock_fixture(
+    recorder_mock: Recorder,
+) -> AsyncGenerator[Recorder]:
     """Fixture for legacy recorder mock."""
     with patch.object(recorder_mock.states_meta_manager, "active", False):
         yield recorder_mock

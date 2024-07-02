@@ -36,7 +36,7 @@ ACCESS_TOKEN = "superdoublesecret"
 
 
 @pytest.fixture
-def auth_header(hass_access_token):
+def auth_header(hass_access_token: str) -> dict[str, str]:
     """Generate an HTTP header with bearer token authorization."""
     return {AUTHORIZATION: f"Bearer {hass_access_token}"}
 

@@ -16,12 +16,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import DOMAIN
+type Enigma2ConfigEntry = ConfigEntry[OpenWebIfDevice]
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: Enigma2ConfigEntry) -> bool:
     """Set up Enigma2 from a config entry."""
     base_url = URL.build(
         scheme="http" if not entry.data[CONF_SSL] else "https",
@@ -35,14 +35,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, verify_ssl=entry.data[CONF_VERIFY_SSL], base_url=base_url
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = OpenWebIfDevice(session)
+    entry.runtime_data = OpenWebIfDevice(session)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

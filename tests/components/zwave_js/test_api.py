@@ -38,7 +38,6 @@ from zwave_js_server.model.value import ConfigurationValue, get_value_id_str
 
 from homeassistant.components.websocket_api import ERR_INVALID_FORMAT, ERR_NOT_FOUND
 from homeassistant.components.zwave_js.api import (
-    ADDITIONAL_PROPERTIES,
     APPLICATION_VERSION,
     CLIENT_SIDE_AUTH,
     COMMAND_CLASS_ID,
@@ -59,6 +58,7 @@ from homeassistant.components.zwave_js.api import (
     LEVEL,
     LOG_TO_FILE,
     MANUFACTURER_ID,
+    MAX_INCLUSION_REQUEST_INTERVAL,
     NODE_ID,
     OPTED_IN,
     PIN,
@@ -74,7 +74,9 @@ from homeassistant.components.zwave_js.api import (
     SPECIFIC_DEVICE_CLASS,
     STATUS,
     STRATEGY,
+    SUPPORTED_PROTOCOLS,
     TYPE,
+    UUID,
     VALUE,
     VERSION,
 )
@@ -529,6 +531,25 @@ async def test_add_node(
 
     msg = await ws_client.receive_json()
     assert msg["event"]["event"] == "inclusion started"
+
+    event = Event(
+        type="node found",
+        data={
+            "source": "controller",
+            "event": "node found",
+            "node": {
+                "nodeId": 67,
+            },
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "node found"
+    node_details = {
+        "node_id": 67,
+    }
+    assert msg["event"]["node"] == node_details
 
     event = Event(
         type="grant security classes",
@@ -1072,7 +1093,7 @@ async def test_provision_smart_start_node(
                 PRODUCT_TYPE: 1,
                 PRODUCT_ID: 1,
                 APPLICATION_VERSION: "test",
-                ADDITIONAL_PROPERTIES: {"name": "test"},
+                "name": "test",
             },
         }
     )
@@ -1331,14 +1352,7 @@ async def test_get_provisioning_entries(
     msg = await ws_client.receive_json()
     assert msg["success"]
     assert msg["result"] == [
-        {
-            "dsk": "test",
-            "security_classes": [SecurityClass.S2_UNAUTHENTICATED],
-            "requested_security_classes": None,
-            "status": 0,
-            "protocol": None,
-            "additional_properties": {"fake": "test"},
-        }
+        {DSK: "test", SECURITY_CLASSES: [0], STATUS: 0, "fake": "test"}
     ]
 
     assert len(client.async_send_command.call_args_list) == 1
@@ -1414,23 +1428,20 @@ async def test_parse_qr_code_string(
     msg = await ws_client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "version": 0,
-        "security_classes": [SecurityClass.S2_UNAUTHENTICATED],
-        "dsk": "test",
-        "generic_device_class": 1,
-        "specific_device_class": 1,
-        "installer_icon_type": 1,
-        "manufacturer_id": 1,
-        "product_type": 1,
-        "product_id": 1,
-        "protocol": None,
-        "application_version": "test",
-        "max_inclusion_request_interval": 1,
-        "uuid": "test",
-        "supported_protocols": [Protocols.ZWAVE],
-        "status": 0,
-        "requested_security_classes": None,
-        "additional_properties": {},
+        VERSION: 0,
+        SECURITY_CLASSES: [0],
+        DSK: "test",
+        GENERIC_DEVICE_CLASS: 1,
+        SPECIFIC_DEVICE_CLASS: 1,
+        INSTALLER_ICON_TYPE: 1,
+        MANUFACTURER_ID: 1,
+        PRODUCT_TYPE: 1,
+        PRODUCT_ID: 1,
+        APPLICATION_VERSION: "test",
+        MAX_INCLUSION_REQUEST_INTERVAL: 1,
+        UUID: "test",
+        SUPPORTED_PROTOCOLS: [Protocols.ZWAVE],
+        STATUS: 0,
     }
 
     assert len(client.async_send_command.call_args_list) == 1
@@ -1818,6 +1829,25 @@ async def test_replace_failed_node(
 
     msg = await ws_client.receive_json()
     assert msg["event"]["event"] == "inclusion started"
+
+    event = Event(
+        type="node found",
+        data={
+            "source": "controller",
+            "event": "node found",
+            "node": {
+                "nodeId": 67,
+            },
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "node found"
+    node_details = {
+        "node_id": 67,
+    }
+    assert msg["event"]["node"] == node_details
 
     event = Event(
         type="grant security classes",

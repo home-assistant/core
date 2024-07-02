@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
 from homematicip.aio.device import (
     AsyncBrandSwitchMeasuring,
+    AsyncEnergySensorsInterface,
     AsyncFullFlushSwitchMeasuring,
     AsyncHeatingThermostat,
     AsyncHeatingThermostatCompact,
@@ -27,11 +30,13 @@ from homematicip.aio.device import (
     AsyncWeatherSensorPlus,
     AsyncWeatherSensorPro,
 )
-from homematicip.base.enums import ValveState
+from homematicip.base.enums import FunctionalChannelType, ValveState
+from homematicip.base.functionalChannels import FunctionalChannel
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -43,12 +48,16 @@ from homeassistant.const import (
     UnitOfPrecipitationDepth,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .hap import HomematicipHAP
+from .helpers import get_channels_from_device
 
 ATTR_CURRENT_ILLUMINATION = "current_illumination"
 ATTR_LOWEST_ILLUMINATION = "lowest_illumination"
@@ -58,6 +67,18 @@ ATTR_RIGHT_COUNTER = "right_counter"
 ATTR_TEMPERATURE_OFFSET = "temperature_offset"
 ATTR_WIND_DIRECTION = "wind_direction"
 ATTR_WIND_DIRECTION_VARIATION = "wind_direction_variation_in_degree"
+ATTR_ESI_TYPE = "type"
+ESI_TYPE_UNKNOWN = "UNKNOWN"
+ESI_CONNECTED_SENSOR_TYPE_IEC = "ES_IEC"
+ESI_CONNECTED_SENSOR_TYPE_GAS = "ES_GAS"
+ESI_CONNECTED_SENSOR_TYPE_LED = "ES_LED"
+
+ESI_TYPE_CURRENT_POWER_CONSUMPTION = "CurrentPowerConsumption"
+ESI_TYPE_ENERGY_COUNTER_USAGE_HIGH_TARIFF = "ENERGY_COUNTER_USAGE_HIGH_TARIFF"
+ESI_TYPE_ENERGY_COUNTER_USAGE_LOW_TARIFF = "ENERGY_COUNTER_USAGE_LOW_TARIFF"
+ESI_TYPE_ENERGY_COUNTER_INPUT_SINGLE_TARIFF = "ENERGY_COUNTER_INPUT_SINGLE_TARIFF"
+ESI_TYPE_CURRENT_GAS_FLOW = "CurrentGasFlow"
+ESI_TYPE_CURRENT_GAS_VOLUME = "GasVolume"
 
 ILLUMINATION_DEVICE_ATTRIBUTES = {
     "currentIllumination": ATTR_CURRENT_ILLUMINATION,
@@ -138,6 +159,23 @@ async def async_setup_entry(
             entities.append(HomematicpTemperatureExternalSensorCh1(hap, device))
             entities.append(HomematicpTemperatureExternalSensorCh2(hap, device))
             entities.append(HomematicpTemperatureExternalSensorDelta(hap, device))
+        if isinstance(device, AsyncEnergySensorsInterface):
+            for ch in get_channels_from_device(
+                device, FunctionalChannelType.ENERGY_SENSORS_INTERFACE_CHANNEL
+            ):
+                if ch.connectedEnergySensorType not in SENSORS_ESI:
+                    continue
+
+                new_entities = [
+                    HmipEsiSensorEntity(hap, device, ch.index, description)
+                    for description in SENSORS_ESI[ch.connectedEnergySensorType]
+                ]
+
+                entities.extend(
+                    entity
+                    for entity in new_entities
+                    if entity.entity_description.exists_fn(ch)
+                )
 
     async_add_entities(entities)
 
@@ -394,6 +432,134 @@ class HomematicpTemperatureExternalSensorDelta(HomematicipGenericEntity, SensorE
     def native_value(self) -> float:
         """Return the state."""
         return self._device.temperatureExternalDelta
+
+
+@dataclass(kw_only=True, frozen=True)
+class HmipEsiSensorEntityDescription(SensorEntityDescription):
+    """SensorEntityDescription for HmIP Sensors."""
+
+    value_fn: Callable[[AsyncEnergySensorsInterface], StateType]
+    exists_fn: Callable[[FunctionalChannel], bool]
+    type_fn: Callable[[AsyncEnergySensorsInterface], str]
+
+
+SENSORS_ESI = {
+    ESI_CONNECTED_SENSOR_TYPE_IEC: [
+        HmipEsiSensorEntityDescription(
+            key=ESI_TYPE_CURRENT_POWER_CONSUMPTION,
+            native_unit_of_measurement=UnitOfPower.WATT,
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda device: device.functional_channel.currentPowerConsumption,
+            exists_fn=lambda channel: channel.currentPowerConsumption is not None,
+            type_fn=lambda device: "CurrentPowerConsumption",
+        ),
+        HmipEsiSensorEntityDescription(
+            key=ESI_TYPE_ENERGY_COUNTER_USAGE_HIGH_TARIFF,
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            value_fn=lambda device: device.functional_channel.energyCounterOne,
+            exists_fn=lambda channel: channel.energyCounterOneType != ESI_TYPE_UNKNOWN,
+            type_fn=lambda device: device.functional_channel.energyCounterOneType,
+        ),
+        HmipEsiSensorEntityDescription(
+            key=ESI_TYPE_ENERGY_COUNTER_USAGE_LOW_TARIFF,
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            value_fn=lambda device: device.functional_channel.energyCounterTwo,
+            exists_fn=lambda channel: channel.energyCounterTwoType != ESI_TYPE_UNKNOWN,
+            type_fn=lambda device: device.functional_channel.energyCounterTwoType,
+        ),
+        HmipEsiSensorEntityDescription(
+            key=ESI_TYPE_ENERGY_COUNTER_INPUT_SINGLE_TARIFF,
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            value_fn=lambda device: device.functional_channel.energyCounterThree,
+            exists_fn=lambda channel: channel.energyCounterThreeType
+            != ESI_TYPE_UNKNOWN,
+            type_fn=lambda device: device.functional_channel.energyCounterThreeType,
+        ),
+    ],
+    ESI_CONNECTED_SENSOR_TYPE_LED: [
+        HmipEsiSensorEntityDescription(
+            key=ESI_TYPE_CURRENT_POWER_CONSUMPTION,
+            native_unit_of_measurement=UnitOfPower.WATT,
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda device: device.functional_channel.currentPowerConsumption,
+            exists_fn=lambda channel: channel.currentPowerConsumption is not None,
+            type_fn=lambda device: "CurrentPowerConsumption",
+        ),
+        HmipEsiSensorEntityDescription(
+            key=ESI_TYPE_ENERGY_COUNTER_USAGE_HIGH_TARIFF,
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            value_fn=lambda device: device.functional_channel.energyCounterOne,
+            exists_fn=lambda channel: channel.energyCounterOne is not None,
+            type_fn=lambda device: ESI_TYPE_ENERGY_COUNTER_USAGE_HIGH_TARIFF,
+        ),
+    ],
+    ESI_CONNECTED_SENSOR_TYPE_GAS: [
+        HmipEsiSensorEntityDescription(
+            key=ESI_TYPE_CURRENT_GAS_FLOW,
+            native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda device: device.functional_channel.currentGasFlow,
+            exists_fn=lambda channel: channel.currentGasFlow is not None,
+            type_fn=lambda device: "CurrentGasFlow",
+        ),
+        HmipEsiSensorEntityDescription(
+            key=ESI_TYPE_CURRENT_GAS_VOLUME,
+            native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+            device_class=SensorDeviceClass.VOLUME,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            value_fn=lambda device: device.functional_channel.gasVolume,
+            exists_fn=lambda channel: channel.gasVolume is not None,
+            type_fn=lambda device: "GasVolume",
+        ),
+    ],
+}
+
+
+class HmipEsiSensorEntity(HomematicipGenericEntity, SensorEntity):
+    """EntityDescription for HmIP-ESI Sensors."""
+
+    entity_description: HmipEsiSensorEntityDescription
+
+    def __init__(
+        self,
+        hap: HomematicipHAP,
+        device: HomematicipGenericEntity,
+        channel_index: int,
+        entity_description: HmipEsiSensorEntityDescription,
+    ) -> None:
+        """Initialize Sensor Entity."""
+        super().__init__(
+            hap=hap,
+            device=device,
+            channel=channel_index,
+            post=entity_description.key,
+            is_multi_channel=False,
+        )
+        self.entity_description = entity_description
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes of the esi sensor."""
+        state_attr = super().extra_state_attributes
+        state_attr[ATTR_ESI_TYPE] = self.entity_description.type_fn(self)
+
+        return state_attr
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the state of the sensor."""
+        return str(self.entity_description.value_fn(self))
 
 
 class HomematicipPassageDetectorDeltaCounter(HomematicipGenericEntity, SensorEntity):

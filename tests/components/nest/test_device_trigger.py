@@ -1,5 +1,7 @@
 """The tests for Nest device triggers."""
 
+from typing import Any
+
 from google_nest_sdm.event import EventMessage
 import pytest
 from pytest_unordered import unordered
@@ -11,7 +13,7 @@ from homeassistant.components.device_automation.exceptions import (
 )
 from homeassistant.components.nest import DOMAIN
 from homeassistant.components.nest.events import NEST_EVENT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -30,7 +32,9 @@ def platforms() -> list[str]:
     return ["camera"]
 
 
-def make_camera(device_id, name=DEVICE_NAME, traits={}):
+def make_camera(
+    device_id, name: str = DEVICE_NAME, *, traits: dict[str, Any]
+) -> dict[str, Any]:
     """Create a nest camera."""
     traits = traits.copy()
     traits.update(
@@ -80,7 +84,7 @@ async def setup_automation(hass, device_id, trigger_type):
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -244,7 +248,7 @@ async def test_fires_on_camera_motion(
     device_registry: dr.DeviceRegistry,
     create_device: CreateDevice,
     setup_platform: PlatformSetup,
-    calls,
+    calls: list[ServiceCall],
 ) -> None:
     """Test camera_motion triggers firing."""
     create_device.create(
@@ -278,7 +282,7 @@ async def test_fires_on_camera_person(
     device_registry: dr.DeviceRegistry,
     create_device: CreateDevice,
     setup_platform: PlatformSetup,
-    calls,
+    calls: list[ServiceCall],
 ) -> None:
     """Test camera_person triggers firing."""
     create_device.create(
@@ -312,7 +316,7 @@ async def test_fires_on_camera_sound(
     device_registry: dr.DeviceRegistry,
     create_device: CreateDevice,
     setup_platform: PlatformSetup,
-    calls,
+    calls: list[ServiceCall],
 ) -> None:
     """Test camera_sound triggers firing."""
     create_device.create(
@@ -346,7 +350,7 @@ async def test_fires_on_doorbell_chime(
     device_registry: dr.DeviceRegistry,
     create_device: CreateDevice,
     setup_platform: PlatformSetup,
-    calls,
+    calls: list[ServiceCall],
 ) -> None:
     """Test doorbell_chime triggers firing."""
     create_device.create(
@@ -380,7 +384,7 @@ async def test_trigger_for_wrong_device_id(
     device_registry: dr.DeviceRegistry,
     create_device: CreateDevice,
     setup_platform: PlatformSetup,
-    calls,
+    calls: list[ServiceCall],
 ) -> None:
     """Test messages for the wrong device are ignored."""
     create_device.create(
@@ -413,7 +417,7 @@ async def test_trigger_for_wrong_event_type(
     device_registry: dr.DeviceRegistry,
     create_device: CreateDevice,
     setup_platform: PlatformSetup,
-    calls,
+    calls: list[ServiceCall],
 ) -> None:
     """Test that messages for the wrong event type are ignored."""
     create_device.create(
@@ -444,7 +448,7 @@ async def test_trigger_for_wrong_event_type(
 async def test_subscriber_automation(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls: list,
+    calls: list[ServiceCall],
     create_device: CreateDevice,
     setup_platform: PlatformSetup,
     subscriber: FakeSubscriber,

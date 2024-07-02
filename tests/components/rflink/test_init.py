@@ -417,7 +417,9 @@ async def test_keepalive(
     )
 
 
-async def test_keepalive_2(hass, monkeypatch, caplog):
+async def test_keepalive_2(
+    hass: HomeAssistant, monkeypatch, caplog: pytest.LogCaptureFixture
+) -> None:
     """Validate very short keepalive values."""
     keepalive_value = 30
     domain = RFLINK_DOMAIN
@@ -443,7 +445,9 @@ async def test_keepalive_2(hass, monkeypatch, caplog):
     )
 
 
-async def test_keepalive_3(hass, monkeypatch, caplog):
+async def test_keepalive_3(
+    hass: HomeAssistant, monkeypatch, caplog: pytest.LogCaptureFixture
+) -> None:
     """Validate keepalive=0 value."""
     domain = RFLINK_DOMAIN
     config = {

@@ -21,6 +21,7 @@ async def test_file_value_yaml_setup(
     config = {
         "sensor": {
             "platform": "file",
+            "scan_interval": 30,
             "name": "file1",
             "file_path": get_fixture_path("file_value.txt", "file"),
         }

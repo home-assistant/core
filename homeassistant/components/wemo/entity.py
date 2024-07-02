@@ -65,7 +65,7 @@ class WemoEntity(CoordinatorEntity[DeviceCoordinator]):
         return self._device_info
 
     @contextlib.contextmanager
-    def _wemo_call_wrapper(self, message: str) -> Generator[None, None, None]:
+    def _wemo_call_wrapper(self, message: str) -> Generator[None]:
         """Wrap calls to the device that change its state.
 
         1. Takes care of making available=False when communications with the
