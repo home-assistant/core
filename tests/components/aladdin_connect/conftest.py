@@ -1,11 +1,9 @@
 """Test fixtures for the Aladdin Connect Garage Door integration."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
-
-from homeassistant.components.aladdin_connect import DOMAIN
 
 from tests.common import MockConfigEntry
 
@@ -23,7 +21,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_config_entry() -> MockConfigEntry:
     """Return an Aladdin Connect config entry."""
     return MockConfigEntry(
-        domain=DOMAIN,
+        domain="aladdin_connect",
         data={},
         title="test@test.com",
         unique_id="aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",

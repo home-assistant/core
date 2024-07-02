@@ -65,7 +65,7 @@ async def test_migration_device_online_end_to_end(
 
         assert migrated_entry is not None
 
-        assert device.config_entries == [migrated_entry.entry_id]
+        assert device.config_entries == {migrated_entry.entry_id}
         assert light_entity_reg.config_entry_id == migrated_entry.entry_id
         assert er.async_entries_for_config_entry(entity_reg, config_entry) == []
 
@@ -195,7 +195,7 @@ async def test_migration_device_online_end_to_end_after_downgrade(
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
         await hass.async_block_till_done()
 
-        assert device.config_entries == [config_entry.entry_id]
+        assert device.config_entries == {config_entry.entry_id}
         assert light_entity_reg.config_entry_id == config_entry.entry_id
         assert er.async_entries_for_config_entry(entity_reg, config_entry) == []
 
@@ -276,7 +276,7 @@ async def test_migration_device_online_end_to_end_ignores_other_devices(
         assert new_entry is not None
         assert legacy_entry is None
 
-        assert device.config_entries == [legacy_config_entry.entry_id]
+        assert device.config_entries == {legacy_config_entry.entry_id}
         assert light_entity_reg.config_entry_id == legacy_config_entry.entry_id
         assert ignored_entity_reg.config_entry_id == other_domain_config_entry.entry_id
         assert garbage_entity_reg.config_entry_id == legacy_config_entry.entry_id

@@ -578,7 +578,7 @@ async def test_assist_api_prompt(
         "(what comes before the dot in its entity id). "
         "When controlling an area, prefer passing just area name and domain."
     )
-    no_timer_prompt = "This device does not support timers."
+    no_timer_prompt = "This device is not able to start timers."
 
     area_prompt = (
         "When a user asks to turn on all devices of a specific type, "

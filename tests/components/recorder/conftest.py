@@ -1,9 +1,9 @@
 """Fixtures for the recorder component tests."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import recorder
 from homeassistant.core import HomeAssistant
