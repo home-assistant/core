@@ -136,7 +136,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     config_entry.async_create_background_task(
         hass,
         firmware_coordinator.async_refresh(),
-        f"reolink_firmware_check_{config_entry.entry_id}",
+        f"Reolink firmware check {config_entry.entry_id}",
     )
     # Fetch initial data so we have data when entities subscribe
     try:
