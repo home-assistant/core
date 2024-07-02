@@ -83,7 +83,7 @@ async def test_cloud_creates_no_number(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 7
 
     mock_cloud_airgradient_client.get_config.return_value = Config.from_json(
         load_fixture("get_config_cloud.json", DOMAIN)

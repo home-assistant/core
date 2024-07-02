@@ -355,7 +355,7 @@ class AssistAPI(API):
         if not llm_context.device_id or not async_device_supports_timers(
             self.hass, llm_context.device_id
         ):
-            prompt.append("This device does not support timers.")
+            prompt.append("This device is not able to start timers.")
 
         if exposed_entities:
             prompt.append(

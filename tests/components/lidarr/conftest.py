@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Generator
 from http import HTTPStatus
 
 from aiohttp.client_exceptions import ClientError
 from aiopyarr.lidarr_client import LidarrClient
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.lidarr.const import DOMAIN
 from homeassistant.const import (

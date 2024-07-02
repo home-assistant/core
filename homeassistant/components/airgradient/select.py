@@ -79,6 +79,63 @@ LED_BAR_ENTITIES: tuple[AirGradientSelectEntityDescription, ...] = (
     ),
 )
 
+LEARNING_TIME_OFFSET_OPTIONS = [
+    "12",
+    "60",
+    "120",
+    "360",
+    "720",
+]
+
+ABC_DAYS = [
+    "1",
+    "8",
+    "30",
+    "90",
+    "180",
+    "0",
+]
+
+
+def _get_value(value: int, values: list[str]) -> str | None:
+    str_value = str(value)
+    return str_value if str_value in values else None
+
+
+CONTROL_ENTITIES: tuple[AirGradientSelectEntityDescription, ...] = (
+    AirGradientSelectEntityDescription(
+        key="nox_index_learning_time_offset",
+        translation_key="nox_index_learning_time_offset",
+        options=LEARNING_TIME_OFFSET_OPTIONS,
+        entity_category=EntityCategory.CONFIG,
+        value_fn=lambda config: _get_value(
+            config.nox_learning_offset, LEARNING_TIME_OFFSET_OPTIONS
+        ),
+        set_value_fn=lambda client, value: client.set_nox_learning_offset(int(value)),
+    ),
+    AirGradientSelectEntityDescription(
+        key="voc_index_learning_time_offset",
+        translation_key="voc_index_learning_time_offset",
+        options=LEARNING_TIME_OFFSET_OPTIONS,
+        entity_category=EntityCategory.CONFIG,
+        value_fn=lambda config: _get_value(
+            config.tvoc_learning_offset, LEARNING_TIME_OFFSET_OPTIONS
+        ),
+        set_value_fn=lambda client, value: client.set_tvoc_learning_offset(int(value)),
+    ),
+    AirGradientSelectEntityDescription(
+        key="co2_automatic_baseline_calibration",
+        translation_key="co2_automatic_baseline_calibration",
+        options=ABC_DAYS,
+        entity_category=EntityCategory.CONFIG,
+        value_fn=lambda config: _get_value(
+            config.co2_automatic_baseline_calibration_days, ABC_DAYS
+        ),
+        set_value_fn=lambda client,
+        value: client.set_co2_automatic_baseline_calibration(int(value)),
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -104,7 +161,10 @@ async def async_setup_entry(
             coordinator.data.configuration_control is ConfigurationControl.LOCAL
             and not added_entities
         ):
-            entities: list[AirGradientSelect] = []
+            entities: list[AirGradientSelect] = [
+                AirGradientSelect(coordinator, description)
+                for description in CONTROL_ENTITIES
+            ]
             if "I" in model:
                 entities.extend(
                     AirGradientSelect(coordinator, description)
@@ -123,7 +183,9 @@ async def async_setup_entry(
             and added_entities
         ):
             entity_registry = er.async_get(hass)
-            for entity_description in DISPLAY_SELECT_TYPES + LED_BAR_ENTITIES:
+            for entity_description in (
+                DISPLAY_SELECT_TYPES + LED_BAR_ENTITIES + CONTROL_ENTITIES
+            ):
                 unique_id = f"{coordinator.serial_number}-{entity_description.key}"
                 if entity_id := entity_registry.async_get_entity_id(
                     SELECT_DOMAIN, DOMAIN, unique_id

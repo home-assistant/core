@@ -1,6 +1,6 @@
 """Tests for the Knocki event platform."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock
 
 from knocki import Event, EventType, Trigger, TriggerDetails
@@ -89,10 +89,39 @@ async def test_adding_runtime_entities(
     assert not hass.states.get("event.knc1_w_00000214_aaaa")
 
     add_trigger_function: Callable[[Event], None] = (
-        mock_knocki_client.register_listener.call_args[0][1]
+        mock_knocki_client.register_listener.call_args_list[0][0][1]
     )
     trigger = Trigger.from_dict(load_json_array_fixture("triggers.json", DOMAIN)[0])
 
     add_trigger_function(Event(EventType.CREATED, trigger))
 
     assert hass.states.get("event.knc1_w_00000214_aaaa") is not None
+
+
+async def test_removing_runtime_entities(
+    hass: HomeAssistant,
+    mock_knocki_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test we can create devices on runtime."""
+    mock_knocki_client.get_triggers.return_value = [
+        Trigger.from_dict(trigger)
+        for trigger in load_json_array_fixture("more_triggers.json", DOMAIN)
+    ]
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("event.knc1_w_00000214_aaaa") is not None
+    assert hass.states.get("event.knc1_w_00000214_bbbb") is not None
+
+    remove_trigger_function: Callable[[Event], Awaitable[None]] = (
+        mock_knocki_client.register_listener.call_args_list[1][0][1]
+    )
+    trigger = Trigger.from_dict(load_json_array_fixture("triggers.json", DOMAIN)[0])
+
+    mock_knocki_client.get_triggers.return_value = [trigger]
+
+    await remove_trigger_function(Event(EventType.DELETED, trigger))
+
+    assert hass.states.get("event.knc1_w_00000214_aaaa") is not None
+    assert hass.states.get("event.knc1_w_00000214_bbbb") is None

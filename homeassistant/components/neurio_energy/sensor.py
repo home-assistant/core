@@ -10,7 +10,7 @@ import requests.exceptions
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
@@ -38,7 +38,7 @@ DAILY_TYPE = "daily"
 MIN_TIME_BETWEEN_DAILY_UPDATES = timedelta(seconds=150)
 MIN_TIME_BETWEEN_ACTIVE_UPDATES = timedelta(seconds=10)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_API_SECRET): cv.string,

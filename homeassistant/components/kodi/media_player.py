@@ -15,7 +15,7 @@ import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     BrowseError,
     BrowseMedia,
     MediaPlayerEntity,
@@ -118,7 +118,7 @@ MAP_KODI_MEDIA_TYPES: dict[MediaType | str, str] = {
 }
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME): cv.string,

@@ -20,6 +20,8 @@ ATTR_TODAY_ENERGY_KWH: Final = "today_energy_kwh"
 ATTR_TOTAL_ENERGY_KWH: Final = "total_energy_kwh"
 
 CONF_DEVICE_CONFIG: Final = "device_config"
+CONF_CREDENTIALS_HASH: Final = "credentials_hash"
+CONF_CONNECTION_TYPE: Final = "connection_type"
 
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,

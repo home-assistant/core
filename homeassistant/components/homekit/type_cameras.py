@@ -16,7 +16,7 @@ from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components import camera
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
-from homeassistant.const import STATE_ON
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import (
     Event,
     EventStateChangedData,
@@ -234,30 +234,35 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
 
         self._char_doorbell_detected = None
         self._char_doorbell_detected_switch = None
-        self.linked_doorbell_sensor = self.config.get(CONF_LINKED_DOORBELL_SENSOR)
-        if self.linked_doorbell_sensor:
-            state = self.hass.states.get(self.linked_doorbell_sensor)
-            if state:
-                serv_doorbell = self.add_preload_service(SERV_DOORBELL)
-                self.set_primary_service(serv_doorbell)
-                self._char_doorbell_detected = serv_doorbell.configure_char(
-                    CHAR_PROGRAMMABLE_SWITCH_EVENT,
-                    value=0,
-                )
-                serv_stateless_switch = self.add_preload_service(
-                    SERV_STATELESS_PROGRAMMABLE_SWITCH
-                )
-                self._char_doorbell_detected_switch = (
-                    serv_stateless_switch.configure_char(
-                        CHAR_PROGRAMMABLE_SWITCH_EVENT,
-                        value=0,
-                        valid_values={"SinglePress": DOORBELL_SINGLE_PRESS},
-                    )
-                )
-                serv_speaker = self.add_preload_service(SERV_SPEAKER)
-                serv_speaker.configure_char(CHAR_MUTE, value=0)
+        linked_doorbell_sensor: str | None = self.config.get(
+            CONF_LINKED_DOORBELL_SENSOR
+        )
+        self.linked_doorbell_sensor = linked_doorbell_sensor
+        self.doorbell_is_event = False
+        if not linked_doorbell_sensor:
+            return
+        self.doorbell_is_event = linked_doorbell_sensor.startswith("event.")
+        if not (state := self.hass.states.get(linked_doorbell_sensor)):
+            return
+        serv_doorbell = self.add_preload_service(SERV_DOORBELL)
+        self.set_primary_service(serv_doorbell)
+        self._char_doorbell_detected = serv_doorbell.configure_char(
+            CHAR_PROGRAMMABLE_SWITCH_EVENT,
+            value=0,
+        )
+        serv_stateless_switch = self.add_preload_service(
+            SERV_STATELESS_PROGRAMMABLE_SWITCH
+        )
+        self._char_doorbell_detected_switch = serv_stateless_switch.configure_char(
+            CHAR_PROGRAMMABLE_SWITCH_EVENT,
+            value=0,
+            valid_values={"SinglePress": DOORBELL_SINGLE_PRESS},
+        )
+        serv_speaker = self.add_preload_service(SERV_SPEAKER)
+        serv_speaker.configure_char(CHAR_MUTE, value=0)
 
-                self._async_update_doorbell_state(state)
+        if not self.doorbell_is_event:
+            self._async_update_doorbell_state(state)
 
     @pyhap_callback  # type: ignore[misc]
     @callback
@@ -271,7 +276,7 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
             self._subscriptions.append(
                 async_track_state_change_event(
                     self.hass,
-                    [self.linked_motion_sensor],
+                    self.linked_motion_sensor,
                     self._async_update_motion_state_event,
                     job_type=HassJobType.Callback,
                 )
@@ -282,7 +287,7 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
             self._subscriptions.append(
                 async_track_state_change_event(
                     self.hass,
-                    [self.linked_doorbell_sensor],
+                    self.linked_doorbell_sensor,
                     self._async_update_doorbell_state_event,
                     job_type=HassJobType.Callback,
                 )
@@ -322,18 +327,20 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
         self, event: Event[EventStateChangedData]
     ) -> None:
         """Handle state change event listener callback."""
-        if not state_changed_event_is_same_state(event):
-            self._async_update_doorbell_state(event.data["new_state"])
+        if not state_changed_event_is_same_state(event) and (
+            new_state := event.data["new_state"]
+        ):
+            self._async_update_doorbell_state(new_state)
 
     @callback
-    def _async_update_doorbell_state(self, new_state: State | None) -> None:
+    def _async_update_doorbell_state(self, new_state: State) -> None:
         """Handle link doorbell sensor state change to update HomeKit value."""
-        if not new_state:
-            return
-
         assert self._char_doorbell_detected
         assert self._char_doorbell_detected_switch
-        if new_state.state == STATE_ON:
+        state = new_state.state
+        if state == STATE_ON or (
+            self.doorbell_is_event and state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+        ):
             self._char_doorbell_detected.set_value(DOORBELL_SINGLE_PRESS)
             self._char_doorbell_detected_switch.set_value(DOORBELL_SINGLE_PRESS)
             _LOGGER.debug(
