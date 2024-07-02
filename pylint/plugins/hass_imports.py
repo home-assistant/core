@@ -398,6 +398,18 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^save_json|find_paths_unserializable_data$"),
         ),
     ],
+    "typing": [
+        ObsoleteImportMatch(
+            reason="should be imported from collections.abc",
+            constant=re.compile(r"^(Async)?Generator$"),
+        ),
+    ],
+    "typing_extensions": [
+        ObsoleteImportMatch(
+            reason="should be imported from collections.abc",
+            constant=re.compile(r"^(Async)?Generator$"),
+        ),
+    ],
 }
 
 
