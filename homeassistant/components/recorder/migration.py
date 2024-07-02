@@ -68,6 +68,7 @@ from .db_schema import (
     Base,
     Events,
     EventTypes,
+    LegacyBase,
     MigrationChanges,
     SchemaChanges,
     States,
@@ -242,6 +243,23 @@ def _find_schema_errors(
 def live_migration(schema_status: SchemaValidationStatus) -> bool:
     """Check if live migration is possible."""
     return schema_status.current_version >= LIVE_MIGRATION_MIN_SCHEMA_VERSION
+
+
+def pre_migrate_schema(engine: Engine) -> None:
+    """Prepare for migration.
+
+    This function is called before calling Base.metadata.create_all.
+    """
+    inspector = sqlalchemy.inspect(engine)
+
+    if inspector.has_table("statistics_meta") and not inspector.has_table(
+        "statistics_short_term"
+    ):
+        # Prepare for migration from schema with statistics_meta table but no
+        # statistics_short_term table
+        LegacyBase.metadata.create_all(
+            engine, (LegacyBase.metadata.tables["statistics_short_term"],)
+        )
 
 
 def migrate_schema(
@@ -1096,6 +1114,8 @@ def _apply_update(  # noqa: C901
         foreign_columns = (
             ("events", ("data_id", "event_type_id")),
             ("states", ("event_id", "old_state_id", "attributes_id", "metadata_id")),
+            ("statistics", ("metadata_id",)),
+            ("statistics_short_term", ("metadata_id",)),
         )
         for table, columns in foreign_columns:
             for column in columns:
@@ -1111,6 +1131,7 @@ def _apply_update(  # noqa: C901
             ("states_meta", ("metadata_id",)),
             ("statistics", ("id",)),
             ("statistics_short_term", ("id",)),
+            ("statistics_meta", ("id",)),
             ("recorder_runs", ("run_id",)),
             ("schema_changes", ("change_id",)),
             ("statistics_runs", ("run_id",)),

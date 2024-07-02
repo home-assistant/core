@@ -73,6 +73,10 @@ class Base(DeclarativeBase):
     """Base class for tables."""
 
 
+class LegacyBase(DeclarativeBase):
+    """Base class for tables, used for schema migration."""
+
+
 SCHEMA_VERSION = 44
 
 _LOGGER = logging.getLogger(__name__)
@@ -742,10 +746,16 @@ class Statistics(Base, StatisticsBase):
     __tablename__ = TABLE_STATISTICS
 
 
-class StatisticsShortTerm(Base, StatisticsBase):
+class _StatisticsShortTerm(StatisticsBase):
     """Short term statistics."""
 
     duration = timedelta(minutes=5)
+
+    __tablename__ = TABLE_STATISTICS_SHORT_TERM
+
+
+class StatisticsShortTerm(Base, _StatisticsShortTerm):
+    """Short term statistics."""
 
     __table_args__ = (
         # Used for fetching statistics for a certain entity at a specific time
@@ -757,15 +767,35 @@ class StatisticsShortTerm(Base, StatisticsBase):
         ),
         _DEFAULT_TABLE_ARGS,
     )
-    __tablename__ = TABLE_STATISTICS_SHORT_TERM
 
 
-class StatisticsMeta(Base):
+class LegacyStatisticsShortTerm(LegacyBase, _StatisticsShortTerm):
+    """Short term statistics with 32-bit index, used for schema migration."""
+
+    __table_args__ = (
+        # Used for fetching statistics for a certain entity at a specific time
+        Index(
+            "ix_statistics_short_term_statistic_id_start_ts",
+            "metadata_id",
+            "start_ts",
+            unique=True,
+        ),
+        _DEFAULT_TABLE_ARGS,
+    )
+
+    metadata_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
+        use_existing_column=True,
+    )
+
+
+class _StatisticsMeta:
     """Statistics meta data."""
 
     __table_args__ = (_DEFAULT_TABLE_ARGS,)
     __tablename__ = TABLE_STATISTICS_META
-    id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
+    id: Mapped[int] = mapped_column(ID_TYPE, Identity(), primary_key=True)
     statistic_id: Mapped[str | None] = mapped_column(
         String(255), index=True, unique=True
     )
@@ -779,6 +809,21 @@ class StatisticsMeta(Base):
     def from_meta(meta: StatisticMetaData) -> StatisticsMeta:
         """Create object from meta data."""
         return StatisticsMeta(**meta)
+
+
+class StatisticsMeta(Base, _StatisticsMeta):
+    """Statistics meta data."""
+
+
+class LegacyStatisticsMeta(LegacyBase, _StatisticsMeta):
+    """Statistics meta data with 32-bit index, used for schema migration."""
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        Identity(),
+        primary_key=True,
+        use_existing_column=True,
+    )
 
 
 class RecorderRuns(Base):
