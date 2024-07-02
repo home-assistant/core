@@ -186,7 +186,6 @@ MOCK_CONFIG = {
         "device": {"name": "Test name"},
     },
     "wifi": {"sta": {"enable": True}, "sta1": {"enable": False}},
-    "boolean:200": {"name": "Virtual Switch", "meta": {"ui": {"view": "toggle"}}},
 }
 
 MOCK_SHELLY_COAP = {

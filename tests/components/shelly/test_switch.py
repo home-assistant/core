@@ -439,8 +439,15 @@ async def test_rpc_device_virtual_switch(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test RPC device turn on/off services."""
-    entity_id = "switch.virtual_switch"
+    """Test virtual switch for RPC device."""
+    config = deepcopy(mock_rpc_device.config)
+    config["boolean:200"] = {
+        "name": "Virtual switch",
+        "meta": {"ui": {"view": "toggle"}},
+    }
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    entity_id = "switch.test_name_virtual_switch"
 
     await init_integration(hass, 3)
 
