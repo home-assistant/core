@@ -56,7 +56,7 @@ async def test_init(hass: HomeAssistant) -> None:
 
 async def test_add_device(hass: HomeAssistant) -> None:
     """Test adding a device to the hausbus gateway."""
-    gateway, _ = await create_gateway(hass)
+    gateway = await create_gateway(hass)
 
     # Add a new device
     device_id = "device_1"
@@ -70,7 +70,7 @@ async def test_add_device(hass: HomeAssistant) -> None:
 
 async def test_get_device(hass: HomeAssistant) -> None:
     """Test getting a device from to the hausbus gateway."""
-    gateway, _ = await create_gateway(hass)
+    gateway = await create_gateway(hass)
 
     # Add a new device
     device_id = "1"
@@ -87,7 +87,7 @@ async def test_get_device(hass: HomeAssistant) -> None:
 
 async def test_get_channel_list(hass: HomeAssistant) -> None:
     """Test getting a channel list."""
-    gateway, _ = await create_gateway(hass)
+    gateway = await create_gateway(hass)
 
     # Add a new device
     device_id = "1"
@@ -104,7 +104,7 @@ async def test_get_channel_list(hass: HomeAssistant) -> None:
 
 async def test_get_channel_id(hass: HomeAssistant) -> None:
     """Test getting a channel id."""
-    gateway, _ = await create_gateway(hass)
+    gateway = await create_gateway(hass)
 
     # Get the device by ObjectId
     object_id = ObjectId(
@@ -118,7 +118,7 @@ async def test_get_channel_id(hass: HomeAssistant) -> None:
 
 async def test_get_channel(hass: HomeAssistant) -> None:
     """Test adding and getting a Dimmer channel."""
-    gateway, _ = await create_gateway(hass)
+    gateway = await create_gateway(hass)
 
     # get mock config entry with id "1"
     config_entry = hass.config_entries.async_get_entry("1")
@@ -149,7 +149,7 @@ async def test_get_channel(hass: HomeAssistant) -> None:
 
 async def test_get_unknown_channel(hass: HomeAssistant) -> None:
     """Test getting a channel that is not defined."""
-    gateway, _ = await create_gateway(hass)
+    gateway = await create_gateway(hass)
 
     # Get the device by ObjectId
     object_id = ObjectId(
@@ -162,7 +162,7 @@ async def test_get_unknown_channel(hass: HomeAssistant) -> None:
 
 async def test_own_bus_data_received(hass: HomeAssistant) -> None:
     """Test handling of own bus data."""
-    gateway, _ = await create_gateway(hass)
+    gateway = await create_gateway(hass)
 
     mock_controller = Mock(Spec=Controller)
 
@@ -182,7 +182,7 @@ async def test_own_bus_data_received(hass: HomeAssistant) -> None:
 
 async def test_module_id_received(hass: HomeAssistant) -> None:
     """Test handling of own bus data."""
-    gateway, _ = await create_gateway(hass)
+    gateway = await create_gateway(hass)
 
     mock_controller = Mock(Spec=Controller)
 
@@ -206,7 +206,7 @@ async def test_module_id_received(hass: HomeAssistant) -> None:
 
 async def test_configuration_received(hass: HomeAssistant) -> None:
     """Test handling of own bus data."""
-    gateway, _ = await create_gateway(hass)
+    gateway = await create_gateway(hass)
 
     # Add a new device
     device_id = "1"
@@ -252,7 +252,7 @@ async def test_configuration_received(hass: HomeAssistant) -> None:
 
 async def test_remote_objects_received(hass: HomeAssistant) -> None:
     """Test handling of own bus data."""
-    gateway, mock_home_server = await create_gateway(hass)
+    gateway = await create_gateway(hass)
     mock_controller = Mock(Spec=Controller)
 
     sender = 66051  # = 0x00 01 02 03, with class_id = 0x02 and instance_id = 0x03
@@ -264,7 +264,7 @@ async def test_remote_objects_received(hass: HomeAssistant) -> None:
 
     feature = ABusFeature(sender)
     attrs = {"getDeviceInstances.return_value": [feature]}
-    mock_home_server.configure_mock(**attrs)
+    gateway.home_server.configure_mock(**attrs)
 
     with patch(
         "homeassistant.components.hausbus.gateway.Controller",
@@ -274,4 +274,4 @@ async def test_remote_objects_received(hass: HomeAssistant) -> None:
 
     # controller should not be called
     assert len(mock_controller.mock_calls) == 0
-    mock_home_server.getDeviceInstances.assert_called_with(sender, data)
+    gateway.home_server.getDeviceInstances.assert_called_with(sender, data)

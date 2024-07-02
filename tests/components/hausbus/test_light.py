@@ -1,4 +1,5 @@
 """Test the hausbus light class."""
+
 from unittest.mock import patch
 
 from pyhausbus.ABusFeature import ABusFeature
@@ -176,7 +177,7 @@ async def test_get_rgbdimmer_status() -> None:
 
 async def test_generic_channel_event_received(hass: HomeAssistant) -> None:
     """Test that an event that was received by a channel that is not a HausBusLight, will not be handled."""
-    gateway, _ = await create_gateway(hass)
+    gateway = await create_gateway(hass)
 
     # Add a new device to hold the dimmer channel
     device_id = "1"

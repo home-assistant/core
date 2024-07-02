@@ -8,15 +8,12 @@ from homeassistant.components.hausbus import async_setup_entry, async_unload_ent
 from homeassistant.components.hausbus.const import DOMAIN as HAUSBUS_DOMAIN
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from .helpers import setup_hausbus_integration
 
 
 async def test_init(hass: HomeAssistant) -> None:
     """Test initialization of the hausbus component."""
-    config_entry = MockConfigEntry(
-        domain=HAUSBUS_DOMAIN,
-        entry_id="1",
-    )
+    config_entry = await setup_hausbus_integration(hass)
 
     # Create a mock HomeServer
     mock_home_server = Mock(Spec=HomeServer)
@@ -36,10 +33,7 @@ async def test_init(hass: HomeAssistant) -> None:
 
 async def test_unload(hass: HomeAssistant) -> None:
     """Test initialization of the hausbus component."""
-    config_entry = MockConfigEntry(
-        domain=HAUSBUS_DOMAIN,
-        entry_id="1",
-    )
+    config_entry = await setup_hausbus_integration(hass)
 
     # Create a mock HomeServer
     mock_home_server = Mock(Spec=HomeServer)

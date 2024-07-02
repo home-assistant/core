@@ -50,19 +50,8 @@ async def setup_hausbus_integration(hass: HomeAssistant, *, entry_id="1"):
     )
 
     config_entry.add_to_hass(hass)
-    config_entry.add_to_manager(hass.config_entries)
 
     hass.data.setdefault(HAUSBUS_DOMAIN, {})
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    return config_entry
-
-
-async def create_gateway(hass: HomeAssistant):
-    """Create a hausbus gateway."""
-    config_entry = await setup_hausbus_integration(hass)
 
     # Create a mock HomeServer
     mock_home_server = Mock(Spec=HomeServer)
@@ -72,13 +61,18 @@ async def create_gateway(hass: HomeAssistant):
         "homeassistant.components.hausbus.gateway.HomeServer",
         return_value=mock_home_server,
     ):
-        # Create a HausbusGateway instance
-        gateway = HausbusGateway(hass, config_entry)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    # add gateway to hass
-    hass.data[HAUSBUS_DOMAIN][config_entry.entry_id] = gateway
+    return config_entry
 
-    return gateway, mock_home_server
+
+async def create_gateway(hass: HomeAssistant):
+    """Create a hausbus gateway."""
+    config_entry = await setup_hausbus_integration(hass)
+
+    # return gateway that was added ti the config entry
+    return hass.data[HAUSBUS_DOMAIN][config_entry.entry_id]
 
 
 async def add_channel_from_thread(
@@ -100,7 +94,7 @@ async def add_channel_from_thread(
 
 async def create_light_channel(hass: HomeAssistant, instance):
     """Add a light channel to the gateway via a different thread."""
-    gateway, _ = await create_gateway(hass)
+    gateway = await create_gateway(hass)
 
     # get mock config entry with id "1"
     config_entry = hass.config_entries.async_get_entry("1")
