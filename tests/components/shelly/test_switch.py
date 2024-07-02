@@ -25,6 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -430,3 +431,23 @@ async def test_wall_display_relay_mode(
     entry = entity_registry.async_get(switch_entity_id)
     assert entry
     assert entry.unique_id == "123456789ABC-switch:0"
+
+
+async def test_rpc_device_virtual_switch(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC device turn on/off services."""
+    entity_id = "switch.virtual_switch"
+
+    await init_integration(hass, 3)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-boolean:200"
