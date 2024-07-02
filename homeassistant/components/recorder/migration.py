@@ -1091,22 +1091,18 @@ def _apply_update(  # noqa: C901
             [f"last_reported_ts {_column_types.timestamp_type}"],
         )
     elif new_version == 44:
-        # First do foreign columns
+        # First drop foreign key constraints
         foreign_columns = (
             ("events", ("data_id", "event_type_id")),
-            ("states", ("old_state_id", "attributes_id", "metadata_id")),
+            ("states", ("event_id", "old_state_id", "attributes_id", "metadata_id")),
             ("statistics", ("metadata_id",)),
             ("statistics_short_term", ("metadata_id",)),
         )
         for table, columns in foreign_columns:
-            _modify_columns(
-                session_maker,
-                engine,
-                table,
-                [f"{column} {BIG_INTEGER_SQL}" for column in columns],
-            )
+            for column in columns:
+                _drop_foreign_key_constraints(session_maker, engine, table, [column])
 
-        # Then the ID columns
+        # Then modify the ID columns
         id_columns = (
             ("events", ("event_id",)),
             ("event_data", ("data_id",)),
