@@ -1221,7 +1221,7 @@ lacrosse-view==1.0.1
 lakeside==0.13
 
 # homeassistant.components.laundrify
-laundrify-aio==1.1.2
+laundrify-aio==1.2.1
 
 # homeassistant.components.ld2410_ble
 ld2410-ble==0.1.1
