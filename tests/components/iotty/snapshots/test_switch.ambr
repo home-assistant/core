@@ -1,0 +1,7 @@
+# serializer version: 1
+# name: test_devices_creaction_ok
+  list([
+    'switch.test_light_switch_0_test_serial_0_test_light_switch_0_test_serial_0',
+    'switch.test_light_switch_1_test_serial_1_test_light_switch_1_test_serial_1',
+  ])
+# ---

@@ -175,6 +175,6 @@ class IottyLightSwitch(SwitchEntity, CoordinatorEntity[Device]):
             self.async_write_ha_state()
         except StopIteration:
             _LOGGER.debug(
-                "Device with id [%s] is no longer handled by iotty, please remove it from hass",
+                "Device with id [%s] is no longer handled by iotty",
                 self._iotty_device.device_id,
             )

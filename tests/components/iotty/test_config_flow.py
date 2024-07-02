@@ -54,13 +54,12 @@ async def test_config_flow_no_credentials(hass: HomeAssistant) -> None:
     assert result.get("reason") == "missing_credentials"
 
 
+@pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_setup_entry: AsyncMock,
-    setup_credentials: None,
-    current_request_with_host: None,
 ) -> None:
     """Check full flow."""
 
