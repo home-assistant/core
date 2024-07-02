@@ -26,7 +26,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-Cloud_API_SCHEMA = vol.Schema(
+CLOUD_API_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TOKEN): cv.string,
         vol.Required(CONF_MAC): cv.string,  # vol.Match(MAC_ADDRESS_REGEXP),
@@ -34,7 +34,7 @@ Cloud_API_SCHEMA = vol.Schema(
 )
 
 
-Local_API_SCHEMA = vol.Schema(
+LOCAL_API_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
@@ -66,7 +66,7 @@ class GeniusHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("ConfigFlow.async_step_local_api: ", extra=user_input)
         if user_input is None:
             return self.async_show_form(
-                step_id="local_api", data_schema=Local_API_SCHEMA
+                step_id="local_api", data_schema=LOCAL_API_SCHEMA
             )
 
         self._async_abort_entries_match(user_input)
@@ -114,7 +114,7 @@ class GeniusHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("ConfigFlow.async_step_cloud_api: ", extra=user_input)
         if user_input is None:
             return self.async_show_form(
-                step_id="cloud_api", data_schema=Cloud_API_SCHEMA
+                step_id="cloud_api", data_schema=CLOUD_API_SCHEMA
             )
 
         self._async_abort_entries_match(user_input)
