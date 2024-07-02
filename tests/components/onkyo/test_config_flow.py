@@ -9,8 +9,8 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.onkyo.const import (
-    CONF_LEGACY_MAXIMUM_VOLUME,
-    CONF_LEGACY_RECEIVER_MAXIMUM_VOLUME,
+    CONF_MAX_VOLUME,
+    CONF_RECEIVER_MAX_VOLUME,
     CONF_SOURCES,
     DOMAIN,
     EISCP_IDENTIFIER,
@@ -337,8 +337,8 @@ async def test_import_success(
             data={
                 CONF_HOST: "127.0.0.1",
                 CONF_NAME: "Receiver test name",
-                CONF_LEGACY_MAXIMUM_VOLUME: 42,
-                CONF_LEGACY_RECEIVER_MAXIMUM_VOLUME: 69,
+                CONF_MAX_VOLUME: 42,
+                CONF_RECEIVER_MAX_VOLUME: 69,
                 CONF_SOURCES: {
                     "Key_one": "Value-A",
                     "Key_two": "Value-B",

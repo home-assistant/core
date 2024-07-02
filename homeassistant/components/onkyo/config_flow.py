@@ -3,7 +3,6 @@
 import logging
 from typing import Any
 
-import eiscp
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -13,27 +12,23 @@ from homeassistant.config_entries import (
     OptionsFlow,
     OptionsFlowWithConfigEntry,
 )
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import ObjectSelector
-from homeassistant.util.network import is_ip_address
 
+from . import receiver as rcver
 from .const import (
     BRAND_NAME,
     CONF_DEVICE,
-    CONF_LEGACY_MAXIMUM_VOLUME,
-    CONF_LEGACY_RECEIVER_MAXIMUM_VOLUME,
-    CONF_MAXIMUM_VOLUME,
-    CONF_MAXIMUM_VOLUME_DEFAULT,
-    CONF_PORT_DEFAULT,
-    CONF_RECEIVER_MAXIMUM_VOLUME,
-    CONF_RECEIVER_MAXIMUM_VOLUME_DEFAULT,
+    CONF_MAX_VOLUME,
+    CONF_MAX_VOLUME_DEFAULT,
+    CONF_RECEIVER_MAX_VOLUME,
     CONF_SOURCES,
     CONF_SOURCES_DEFAULT,
+    CONF_VOLUME_RESOLUTION,
+    CONF_VOLUME_RESOLUTION_DEFAULT,
     DOMAIN,
-    EISCP_IDENTIFIER,
-    EISCP_MODEL_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,27 +39,16 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._discovered_devices: dict[str, eiscp.eISCP] = {}
+        self._discovered_infos: dict[str, rcver.Receiver] = {}
 
-    def _get_receiver_name(self, model_name: str, identifier: str):
-        return f"{model_name} {identifier}"
-
-    def _createOnkyoEntry(self, receiver: eiscp.eISCP):
-        name = self._get_receiver_name(
-            receiver.info[EISCP_MODEL_NAME], receiver.info[EISCP_IDENTIFIER]
-        )
-        entry = self.async_create_entry(
-            title=name,
+    def _createOnkyoEntry(self, info: rcver.ReceiverInfo, options=None):
+        return self.async_create_entry(
+            title=info.model_name,
             data={
-                CONF_HOST: receiver.host,
-                CONF_PORT: receiver.port,
-                CONF_NAME: name,
-                CONF_MODEL: receiver.info[EISCP_MODEL_NAME],
-                CONF_MAC: receiver.info[EISCP_IDENTIFIER],
+                CONF_HOST: info.host,
             },
+            options=options,
         )
-        receiver.disconnect()
-        return entry
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -82,38 +66,28 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            if not is_ip_address(user_input[CONF_HOST]):
-                errors["base"] = "no_ip"
-            else:
-                info = None
-                try:
-                    receiver = eiscp.eISCP(user_input[CONF_HOST], user_input[CONF_PORT])
-                    info = receiver.info
-                except Exception:
-                    _LOGGER.exception("Unexpected exception")
-                    errors["base"] = "unknown"
-                finally:
-                    if receiver:
-                        receiver.disconnect()
+            info = None
+            try:
+                info = await rcver.async_interview(user_input[CONF_HOST])
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
 
-                # Info is None when connection fails
-                if info:
-                    unique_id = info[EISCP_IDENTIFIER]
-                    await self.async_set_unique_id(unique_id, raise_on_progress=False)
-                    self._abort_if_unique_id_configured(
-                        updates={CONF_HOST: user_input[CONF_HOST]}
-                    )
-                    return self._createOnkyoEntry(receiver)
+            if info is not None:
+                await self.async_set_unique_id(info.identifier, raise_on_progress=False)
+                self._abort_if_unique_id_configured(
+                    updates={CONF_HOST: user_input[CONF_HOST]}
+                )
+                return self._createOnkyoEntry(info)
 
-                if "base" not in errors:
-                    errors["base"] = "cannot_connect"
+            if "base" not in errors:
+                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="manual",
             data_schema=vol.Schema(
                 {
                     vol.Optional(CONF_HOST, default=""): str,
-                    vol.Optional(CONF_PORT, default=CONF_PORT_DEFAULT): cv.port,
                 }
             ),
             errors=errors,
@@ -125,32 +99,28 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the step to discover or pick discovered device."""
 
         if user_input is not None:
-            receiver = self._discovered_devices[user_input[CONF_DEVICE]]
-            await self.async_set_unique_id(
-                receiver.info[EISCP_IDENTIFIER], raise_on_progress=False
-            )
+            info = self._discovered_infos[user_input[CONF_DEVICE]]
+            await self.async_set_unique_id(info.identifier, raise_on_progress=False)
 
-            return self._createOnkyoEntry(receiver)
+            return self._createOnkyoEntry(info)
 
         current_unique_ids = self._async_current_ids()
         current_hosts = {
             entry.data[CONF_HOST]
             for entry in self._async_current_entries(include_ignore=False)
         }
-        discovered_devices = eiscp.eISCP.discover()
-        _LOGGER.debug("eISCP discovery result: %s", discovered_devices)
+        infos = await rcver.async_discover()
 
-        self._discovered_devices = {}
+        self._discovered_infos = {}
         devices_names = {}
-        for device in discovered_devices:
-            info = device.info
-            identifier = info[EISCP_IDENTIFIER]
-            host = device.host
-
-            self._discovered_devices[identifier] = device
-            if identifier not in current_unique_ids and host not in current_hosts:
-                devices_names[identifier] = (
-                    f"{BRAND_NAME} {device.info[EISCP_MODEL_NAME]} ({host}:{device.port})"
+        for info in infos:
+            self._discovered_infos[info.identifier] = info
+            if (
+                info.identifier not in current_unique_ids
+                and info.host not in current_hosts
+            ):
+                devices_names[info.identifier] = (
+                    f"{BRAND_NAME} {info.model_name} ({info.host}:{info.port})"
                 )
 
         # Check if there is at least one device
@@ -171,32 +141,24 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         info = None
         try:
-            receiver = eiscp.eISCP(host, CONF_PORT_DEFAULT)
-            info = receiver.info
-        finally:
-            if receiver:
-                receiver.disconnect()
+            info = await rcver.async_interview(host)
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="cannot_connect")
 
         if info is None:
             # Info is None when connection fails
             return self.async_abort(reason="cannot_connect")
 
-        unique_id = info[EISCP_IDENTIFIER]
+        unique_id = info.identifier
         await self.async_set_unique_id(unique_id, raise_on_progress=False)
         self._abort_if_unique_id_configured()
 
-        title = self._get_receiver_name(info[EISCP_MODEL_NAME], unique_id)
-        return self.async_create_entry(
-            title=title,
-            data={
-                CONF_MODEL: info[EISCP_MODEL_NAME],
-                CONF_MAC: unique_id,
-            },
+        return self._createOnkyoEntry(
+            info,
             options={
-                CONF_MAXIMUM_VOLUME: user_input[CONF_LEGACY_MAXIMUM_VOLUME],
-                CONF_RECEIVER_MAXIMUM_VOLUME: user_input[
-                    CONF_LEGACY_RECEIVER_MAXIMUM_VOLUME
-                ],
+                CONF_MAX_VOLUME: user_input[CONF_MAX_VOLUME],
+                CONF_VOLUME_RESOLUTION: user_input[CONF_RECEIVER_MAX_VOLUME],
                 CONF_SOURCES: user_input[CONF_SOURCES],
             },
         )
@@ -230,12 +192,12 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
         options_schema = vol.Schema(
             {
+                vol.Required(CONF_MAX_VOLUME, default=CONF_MAX_VOLUME_DEFAULT): vol.All(
+                    cv.positive_int, vol.Range(min=0, max=100)
+                ),
                 vol.Required(
-                    CONF_MAXIMUM_VOLUME, default=CONF_MAXIMUM_VOLUME_DEFAULT
-                ): vol.All(cv.positive_int, vol.Range(min=0, max=100)),
-                vol.Required(
-                    CONF_RECEIVER_MAXIMUM_VOLUME,
-                    default=CONF_RECEIVER_MAXIMUM_VOLUME_DEFAULT,
+                    CONF_VOLUME_RESOLUTION,
+                    default=CONF_VOLUME_RESOLUTION_DEFAULT,
                 ): vol.All(cv.positive_int, vol.Range(min=0, max=200)),
                 vol.Required(
                     CONF_SOURCES, default=CONF_SOURCES_DEFAULT
