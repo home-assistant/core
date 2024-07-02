@@ -10,14 +10,8 @@ from homeassistant.components.tasmota.const import (
     DEFAULT_PREFIX,
     DOMAIN,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
 
-from tests.common import (
-    MockConfigEntry,
-    async_mock_service,
-    mock_device_registry,
-    mock_registry,
-)
+from tests.common import MockConfigEntry, mock_device_registry, mock_registry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
@@ -31,12 +25,6 @@ def device_reg(hass):
 def entity_reg(hass):
     """Return an empty, loaded, registry."""
     return mock_registry(hass)
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 @pytest.fixture(autouse=True)
