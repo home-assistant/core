@@ -1782,7 +1782,7 @@ async def test_ttsentity_subclass_properties(
     await mock_config_entry_setup(hass, TestClass3())
 
     assert (
-        "You need to either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
+        "TTS entities must either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
         in [
             str(record.exc_info[1])
             for record in caplog.records
@@ -1797,7 +1797,7 @@ async def test_ttsentity_subclass_properties(
     await mock_config_entry_setup(hass, TestClass4())
 
     assert (
-        "You need to either set the '_attr_default_language' attribute or override the 'default_language' property"
+        "TTS entities must either set the '_attr_default_language' attribute or override the 'default_language' property"
         in [
             str(record.exc_info[1])
             for record in caplog.records
@@ -1814,7 +1814,7 @@ async def test_ttsentity_subclass_properties(
     await mock_config_entry_setup(hass, TestClass5())
 
     assert (
-        "You need to either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
+        "TTS entities must either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
         in [
             str(record.exc_info[1])
             for record in caplog.records
@@ -1831,7 +1831,7 @@ async def test_ttsentity_subclass_properties(
     await mock_config_entry_setup(hass, TestClass6())
 
     assert (
-        "You need to either set the '_attr_default_language' attribute or override the 'default_language' property"
+        "TTS entities must either set the '_attr_default_language' attribute or override the 'default_language' property"
         in [
             str(record.exc_info[1])
             for record in caplog.records
