@@ -67,3 +67,16 @@ async def test_subscription_creation_fails(
         await hass.async_block_till_done()
 
     assert speaker._subscriptions
+
+
+# async def test_group_speakers(
+#     hass: HomeAssistant, soco_factory: SoCoMockFactory, async_setup_sonos
+# ) -> None:
+#     soco_1 = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
+#     soco_2 = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+
+#     event = SonosMockEvent(soco_1, soco_1.zoneGroupTopology, variables)
+#     subscription: SonosMockSubscribe = soco_1.zoneGroupTopology.subscribe.return_value
+#     sub_callback = await subscription.wait_for_callback_to_be_set()
+#     sub_callback(event)
+#     await hass.async_block_till_done(wait_background_tasks=True)
