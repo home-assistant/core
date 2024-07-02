@@ -74,7 +74,7 @@ async def test_thermostat_base(
         HVACMode.OFF,
         HVACMode.HEAT,
         HVACMode.COOL,
-        HVACMode.HEAT_COOL,
+        HVACMode.AUTO,
     ]
 
     # test system mode update from device
@@ -221,12 +221,12 @@ async def test_thermostat_service_calls(
     )
     matter_client.write_attribute.reset_mock()
 
-    # test dual setpoint temperature adjustments when heat_cool mode is active
+    # test dual setpoint temperature adjustments when AUTO mode is active
     set_node_attribute(thermostat, 1, 513, 28, 1)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.longan_link_hvac_thermostat")
     assert state
-    assert state.state == HVACMode.HEAT_COOL
+    assert state.state == HVACMode.AUTO
 
     await hass.services.async_call(
         "climate",
@@ -330,7 +330,7 @@ async def test_room_airconditioner(
         HVACMode.COOL,
         HVACMode.DRY,
         HVACMode.FAN_ONLY,
-        HVACMode.HEAT_COOL,
+        HVACMode.AUTO,
     ]
     # test fan-only hvac mode
     set_node_attribute(room_airconditioner, 1, 513, 28, 7)
