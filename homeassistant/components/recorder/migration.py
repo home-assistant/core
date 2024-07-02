@@ -1110,6 +1110,11 @@ def _apply_update(  # noqa: C901
         )
     elif new_version == 44:
         columns: tuple[str, ...]
+        identity_sql = (
+            "NOT NULL AUTO_INCREMENT"
+            if engine.dialect.name == SupportedDialect.MYSQL
+            else ""
+        )
         # First drop foreign key constraints
         foreign_columns = (
             ("events", ("data_id", "event_type_id")),
@@ -1141,10 +1146,7 @@ def _apply_update(  # noqa: C901
                 session_maker,
                 engine,
                 table,
-                [
-                    f"{column} {BIG_INTEGER_SQL} NOT NULL AUTO_INCREMENT"
-                    for column in columns
-                ],
+                [f"{column} {BIG_INTEGER_SQL} {identity_sql}" for column in columns],
             )
 
     else:
