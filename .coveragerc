@@ -58,11 +58,6 @@ omit =
     homeassistant/components/airvisual/sensor.py
     homeassistant/components/airvisual_pro/__init__.py
     homeassistant/components/airvisual_pro/sensor.py
-    homeassistant/components/aladdin_connect/__init__.py
-    homeassistant/components/aladdin_connect/api.py
-    homeassistant/components/aladdin_connect/application_credentials.py
-    homeassistant/components/aladdin_connect/cover.py
-    homeassistant/components/aladdin_connect/sensor.py
     homeassistant/components/alarmdecoder/__init__.py
     homeassistant/components/alarmdecoder/alarm_control_panel.py
     homeassistant/components/alarmdecoder/binary_sensor.py
