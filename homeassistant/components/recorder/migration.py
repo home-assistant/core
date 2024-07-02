@@ -1119,7 +1119,7 @@ def _apply_update(  # noqa: C901
             ("statistics_meta", ("id",)),
             ("recorder_runs", ("run_id",)),
             ("schema_changes", ("change_id",)),
-            ("statistics_runs", ("change_id",)),
+            ("statistics_runs", ("run_id",)),
         )
         for table, columns in id_columns:
             _modify_columns(
