@@ -272,10 +272,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
             self._attr_supported_features
             & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         )
-        if supports_range and self._attr_hvac_mode in (
-            HVACMode.HEAT_COOL,
-            HVACMode.HEAT_COOL,
-        ):
+        if supports_range and self._attr_hvac_mode == HVACMode.HEAT_COOL:
             self._attr_target_temperature = None
             self._attr_target_temperature_high = self._get_temperature_in_degrees(
                 clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
