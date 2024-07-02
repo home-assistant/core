@@ -60,6 +60,11 @@
         "name": "Preheater"
       }
     },
+    "switch": {
+      "breeze": {
+        "name": "Breeze"
+      }
+    },
     "sensor": {
       "co2_quality_category": {
         "name": "CO2 quality category",

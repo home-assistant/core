@@ -1,4 +1,5 @@
 """Diagnostics support for Kostal Plenticore."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -9,7 +10,7 @@ from homeassistant.const import ATTR_IDENTIFIERS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .helper import Plenticore
+from .coordinator import Plenticore
 
 TO_REDACT = {CONF_PASSWORD}
 

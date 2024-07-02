@@ -1,12 +1,18 @@
 """Manufacturer specific cluster handlers module for Zigbee Home Automation."""
+
 from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING, Any
 
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
-from zhaquirks.quirk_ids import TUYA_PLUG_MANUFACTURER, XIAOMI_AQARA_VIBRATION_AQ1
+from zhaquirks.quirk_ids import (
+    DANFOSS_ALLY_THERMOSTAT,
+    TUYA_PLUG_MANUFACTURER,
+    XIAOMI_AQARA_VIBRATION_AQ1,
+)
 import zigpy.zcl
+from zigpy.zcl import clusters
 from zigpy.zcl.clusters.closures import DoorLock
 
 from homeassistant.core import callback
@@ -25,7 +31,9 @@ from ..const import (
     UNKNOWN,
 )
 from . import AttrReportConfig, ClientClusterHandler, ClusterHandler
-from .general import MultistateInput
+from .general import MultistateInputClusterHandler
+from .homeautomation import DiagnosticClusterHandler
+from .hvac import ThermostatClusterHandler, UserInterfaceClusterHandler
 
 if TYPE_CHECKING:
     from ..endpoint import Endpoint
@@ -36,7 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     registries.SMARTTHINGS_HUMIDITY_CLUSTER
 )
-class SmartThingsHumidity(ClusterHandler):
+class SmartThingsHumidityClusterHandler(ClusterHandler):
     """Smart Things Humidity cluster handler."""
 
     REPORT_CONFIG = (
@@ -49,7 +57,7 @@ class SmartThingsHumidity(ClusterHandler):
 
 @registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(0xFD00)
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(0xFD00)
-class OsramButton(ClusterHandler):
+class OsramButtonClusterHandler(ClusterHandler):
     """Osram button cluster handler."""
 
     REPORT_CONFIG = ()
@@ -57,7 +65,7 @@ class OsramButton(ClusterHandler):
 
 @registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(registries.PHILLIPS_REMOTE_CLUSTER)
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(registries.PHILLIPS_REMOTE_CLUSTER)
-class PhillipsRemote(ClusterHandler):
+class PhillipsRemoteClusterHandler(ClusterHandler):
     """Phillips remote cluster handler."""
 
     REPORT_CONFIG = ()
@@ -84,7 +92,7 @@ class TuyaClusterHandler(ClusterHandler):
 
 @registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(0xFCC0)
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(0xFCC0)
-class OppleRemote(ClusterHandler):
+class OppleRemoteClusterHandler(ClusterHandler):
     """Opple cluster handler."""
 
     REPORT_CONFIG = ()
@@ -160,6 +168,14 @@ class OppleRemote(ClusterHandler):
                 "startup_on_off": True,
                 "decoupled_mode": True,
             }
+        elif self.cluster.endpoint.model == "lumi.curtain.agl001":
+            self.ZCL_INIT_ATTRS = {
+                "hooks_state": True,
+                "hooks_lock": True,
+                "positions_stored": True,
+                "light_level": True,
+                "hand_open": True,
+            }
 
     async def async_initialize_cluster_handler_specific(self, from_cache: bool) -> None:
         """Initialize cluster handler specific."""
@@ -173,7 +189,7 @@ class OppleRemote(ClusterHandler):
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     registries.SMARTTHINGS_ACCELERATION_CLUSTER
 )
-class SmartThingsAcceleration(ClusterHandler):
+class SmartThingsAccelerationClusterHandler(ClusterHandler):
     """Smart Things Acceleration cluster handler."""
 
     REPORT_CONFIG = (
@@ -220,7 +236,7 @@ class SmartThingsAcceleration(ClusterHandler):
 
 
 @registries.CLIENT_CLUSTER_HANDLER_REGISTRY.register(0xFC31)
-class InovelliNotificationClusterHandler(ClientClusterHandler):
+class InovelliNotificationClientClusterHandler(ClientClusterHandler):
     """Inovelli Notification cluster handler."""
 
     @callback
@@ -412,7 +428,7 @@ class IkeaAirPurifierClusterHandler(ClusterHandler):
 
 @registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(0xFC80)
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(0xFC80)
-class IkeaRemote(ClusterHandler):
+class IkeaRemoteClusterHandler(ClusterHandler):
     """Ikea Matter remote cluster handler."""
 
     REPORT_CONFIG = ()
@@ -421,5 +437,79 @@ class IkeaRemote(ClusterHandler):
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     DoorLock.cluster_id, XIAOMI_AQARA_VIBRATION_AQ1
 )
-class XiaomiVibrationAQ1ClusterHandler(MultistateInput):
+class XiaomiVibrationAQ1ClusterHandler(MultistateInputClusterHandler):
     """Xiaomi DoorLock Cluster is in fact a MultiStateInput Cluster."""
+
+
+@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(0xFC11)
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(0xFC11)
+class SonoffPresenceSenorClusterHandler(ClusterHandler):
+    """SonoffPresenceSensor cluster handler."""
+
+    def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
+        """Initialize SonoffPresenceSensor cluster handler."""
+        super().__init__(cluster, endpoint)
+        if self.cluster.endpoint.model == "SNZB-06P":
+            self.ZCL_INIT_ATTRS = {"last_illumination_state": True}
+
+
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
+    clusters.hvac.Thermostat.cluster_id, DANFOSS_ALLY_THERMOSTAT
+)
+class DanfossThermostatClusterHandler(ThermostatClusterHandler):
+    """Thermostat cluster handler for the Danfoss TRV and derivatives."""
+
+    REPORT_CONFIG = (
+        *ThermostatClusterHandler.REPORT_CONFIG,
+        AttrReportConfig(attr="open_window_detection", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="heat_required", config=REPORT_CONFIG_ASAP),
+        AttrReportConfig(attr="mounting_mode_active", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="load_estimate", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="adaptation_run_status", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="preheat_status", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="preheat_time", config=REPORT_CONFIG_DEFAULT),
+    )
+
+    ZCL_INIT_ATTRS = {
+        **ThermostatClusterHandler.ZCL_INIT_ATTRS,
+        "external_open_window_detected": True,
+        "window_open_feature": True,
+        "exercise_day_of_week": True,
+        "exercise_trigger_time": True,
+        "mounting_mode_control": False,  # Can change
+        "orientation": True,
+        "external_measured_room_sensor": False,  # Can change
+        "radiator_covered": True,
+        "heat_available": True,
+        "load_balancing_enable": True,
+        "load_room_mean": False,  # Can change
+        "control_algorithm_scale_factor": True,
+        "regulation_setpoint_offset": True,
+        "adaptation_run_control": True,
+        "adaptation_run_settings": True,
+    }
+
+
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
+    clusters.hvac.UserInterface.cluster_id, DANFOSS_ALLY_THERMOSTAT
+)
+class DanfossUserInterfaceClusterHandler(UserInterfaceClusterHandler):
+    """Interface cluster handler for the Danfoss TRV and derivatives."""
+
+    ZCL_INIT_ATTRS = {
+        **UserInterfaceClusterHandler.ZCL_INIT_ATTRS,
+        "viewing_direction": True,
+    }
+
+
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
+    clusters.homeautomation.Diagnostic.cluster_id, DANFOSS_ALLY_THERMOSTAT
+)
+class DanfossDiagnosticClusterHandler(DiagnosticClusterHandler):
+    """Diagnostic cluster handler for the Danfoss TRV and derivatives."""
+
+    REPORT_CONFIG = (
+        *DiagnosticClusterHandler.REPORT_CONFIG,
+        AttrReportConfig(attr="sw_error_code", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="motor_step_counter", config=REPORT_CONFIG_DEFAULT),
+    )

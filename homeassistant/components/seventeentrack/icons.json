@@ -1,0 +1,33 @@
+{
+  "entity": {
+    "sensor": {
+      "not_found": {
+        "default": "mdi:package"
+      },
+      "in_transit": {
+        "default": "mdi:package"
+      },
+      "expired": {
+        "default": "mdi:package"
+      },
+      "ready_to_be_picked_up": {
+        "default": "mdi:package"
+      },
+      "undelivered": {
+        "default": "mdi:package"
+      },
+      "delivered": {
+        "default": "mdi:package"
+      },
+      "returned": {
+        "default": "mdi:package"
+      },
+      "package": {
+        "default": "mdi:package"
+      }
+    }
+  },
+  "services": {
+    "get_packages": "mdi:package"
+  }
+}

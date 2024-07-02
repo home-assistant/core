@@ -1,4 +1,5 @@
 """Home Assistant extension for Syrupy."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -158,6 +159,8 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         )
         if serialized["via_device_id"] is not None:
             serialized["via_device_id"] = ANY
+        if serialized["primary_config_entry"] is not None:
+            serialized["primary_config_entry"] = ANY
         return serialized
 
     @classmethod
@@ -165,7 +168,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         cls, data: er.RegistryEntry
     ) -> SerializableData:
         """Prepare a Home Assistant entity registry entry for serialization."""
-        return EntityRegistryEntrySnapshot(
+        serialized = EntityRegistryEntrySnapshot(
             attrs.asdict(data)
             | {
                 "config_entry_id": ANY,
@@ -174,6 +177,8 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
                 "options": {k: dict(v) for k, v in data.options.items()},
             }
         )
+        serialized.pop("categories")
+        return serialized
 
     @classmethod
     def _serializable_flow_result(cls, data: FlowResult) -> SerializableData:
@@ -195,6 +200,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             | {
                 "context": ANY,
                 "last_changed": ANY,
+                "last_reported": ANY,
                 "last_updated": ANY,
             }
         )

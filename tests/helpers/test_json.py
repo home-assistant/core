@@ -1,4 +1,5 @@
 """Test Home Assistant remote methods and classes."""
+
 import datetime
 from functools import partial
 import json
@@ -6,7 +7,7 @@ import math
 import os
 from pathlib import Path
 import time
-from typing import NamedTuple
+from typing import Any, NamedTuple
 from unittest.mock import Mock, patch
 
 import pytest
@@ -33,7 +34,7 @@ TEST_JSON_A = {"a": 1, "B": "two"}
 TEST_JSON_B = {"a": "one", "B": 2}
 
 
-@pytest.mark.parametrize("encoder", (DefaultHASSJSONEncoder, ExtendedJSONEncoder))
+@pytest.mark.parametrize("encoder", [DefaultHASSJSONEncoder, ExtendedJSONEncoder])
 def test_json_encoder(hass: HomeAssistant, encoder: type[json.JSONEncoder]) -> None:
     """Test the JSON encoders."""
     ha_json_enc = encoder()
@@ -324,10 +325,10 @@ def test_find_unserializable_data() -> None:
     ) == {"$[0](Event: bad_event).data.bad_attribute": bad_data}
 
     class BadData:
-        def __init__(self):
+        def __init__(self) -> None:
             self.bla = bad_data
 
-        def as_dict(self):
+        def as_dict(self) -> dict[str, Any]:
             return {"bla": self.bla}
 
     assert find_paths_unserializable_data(

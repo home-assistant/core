@@ -76,6 +76,7 @@
   "entity": {
     "event": {
       "button": {
+        "name": "Button {button_id}",
         "state_attributes": {
           "event_type": {
             "state": {

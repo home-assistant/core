@@ -1,0 +1,195 @@
+# serializer version: 1
+# name: test_binary_sensor[binary_sensor.river_name_station_name_flood_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.river_name_station_name_flood_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
+    'original_icon': None,
+    'original_name': 'Flood alarm',
+    'platform': 'imgw_pib',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'flood_alarm',
+    'unique_id': '123_flood_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.river_name_station_name_flood_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by IMGW-PIB',
+      'device_class': 'safety',
+      'friendly_name': 'River Name (Station Name) Flood alarm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.river_name_station_name_flood_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.river_name_station_name_flood_warning-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.river_name_station_name_flood_warning',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
+    'original_icon': None,
+    'original_name': 'Flood warning',
+    'platform': 'imgw_pib',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'flood_warning',
+    'unique_id': '123_flood_warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.river_name_station_name_flood_warning-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by IMGW-PIB',
+      'device_class': 'safety',
+      'friendly_name': 'River Name (Station Name) Flood warning',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.river_name_station_name_flood_warning',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.station_name_flood_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.station_name_flood_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
+    'original_icon': None,
+    'original_name': 'Flood alarm',
+    'platform': 'imgw_pib',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'flood_alarm',
+    'unique_id': '123_flood_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.station_name_flood_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'alarm_level': 630.0,
+      'attribution': 'Data provided by IMGW-PIB',
+      'device_class': 'safety',
+      'friendly_name': 'Station Name Flood alarm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.station_name_flood_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.station_name_flood_warning-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.station_name_flood_warning',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
+    'original_icon': None,
+    'original_name': 'Flood warning',
+    'platform': 'imgw_pib',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'flood_warning',
+    'unique_id': '123_flood_warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.station_name_flood_warning-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by IMGW-PIB',
+      'device_class': 'safety',
+      'friendly_name': 'Station Name Flood warning',
+      'warning_level': 590.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.station_name_flood_warning',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

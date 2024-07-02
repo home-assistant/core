@@ -1,4 +1,5 @@
 """Tests for Steam integration."""
+
 import random
 import string
 from unittest.mock import patch
@@ -6,8 +7,11 @@ import urllib.parse
 
 import steam
 
-from homeassistant.components.steam_online import DOMAIN
-from homeassistant.components.steam_online.const import CONF_ACCOUNT, CONF_ACCOUNTS
+from homeassistant.components.steam_online.const import (
+    CONF_ACCOUNT,
+    CONF_ACCOUNTS,
+    DOMAIN,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
@@ -68,10 +72,10 @@ class MockedInterface(dict):
     def GetFriendList(self, steamid: str) -> dict:
         """Get friend list."""
         fake_friends = [{"steamid": ACCOUNT_2}]
-        for _i in range(0, 4):
-            fake_friends.append(
-                {"steamid": "".join(random.choices(string.digits, k=len(ACCOUNT_1)))}
-            )
+        fake_friends.extend(
+            {"steamid": "".join(random.choices(string.digits, k=len(ACCOUNT_1)))}
+            for _ in range(4)
+        )
         return {"friendslist": {"friends": fake_friends}}
 
     def GetPlayerSummaries(self, steamids: str | list[str]) -> dict:

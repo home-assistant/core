@@ -1,4 +1,5 @@
 """Platform for sensor integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -39,18 +40,11 @@ from . import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class HeatMeterSensorEntityDescriptionMixin:
-    """Mixin for additional Heat Meter sensor description attributes ."""
+@dataclass(frozen=True, kw_only=True)
+class HeatMeterSensorEntityDescription(SensorEntityDescription):
+    """Heat Meter sensor description."""
 
     value_fn: Callable[[HeatMeterResponse], StateType | datetime]
-
-
-@dataclass(frozen=True)
-class HeatMeterSensorEntityDescription(
-    SensorEntityDescription, HeatMeterSensorEntityDescriptionMixin
-):
-    """Heat Meter sensor description."""
 
 
 HEAT_METER_SENSOR_TYPES = (
@@ -292,11 +286,10 @@ async def async_setup_entry(
         name="Landis+Gyr Heat Meter",
     )
 
-    sensors = []
-    for description in HEAT_METER_SENSOR_TYPES:
-        sensors.append(HeatMeterSensor(coordinator, description, device))
-
-    async_add_entities(sensors)
+    async_add_entities(
+        HeatMeterSensor(coordinator, description, device)
+        for description in HEAT_METER_SENSOR_TYPES
+    )
 
 
 class HeatMeterSensor(

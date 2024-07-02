@@ -1,4 +1,5 @@
 """Support for Elgato switches."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -8,13 +9,12 @@ from typing import Any
 from elgato import Elgato, ElgatoError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import ElgatorConfigEntry
 from .coordinator import ElgatoData, ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
 
@@ -32,7 +32,6 @@ SWITCHES = [
     ElgatoSwitchEntityDescription(
         key="bypass",
         translation_key="bypass",
-        icon="mdi:battery-off-outline",
         entity_category=EntityCategory.CONFIG,
         has_fn=lambda x: x.battery is not None,
         is_on_fn=lambda x: x.settings.battery.bypass if x.settings.battery else None,
@@ -41,7 +40,6 @@ SWITCHES = [
     ElgatoSwitchEntityDescription(
         key="energy_saving",
         translation_key="energy_saving",
-        icon="mdi:leaf",
         entity_category=EntityCategory.CONFIG,
         has_fn=lambda x: x.battery is not None,
         is_on_fn=lambda x: (
@@ -54,11 +52,11 @@ SWITCHES = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ElgatorConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Elgato switches based on a config entry."""
-    coordinator: ElgatoDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         ElgatoSwitchEntity(

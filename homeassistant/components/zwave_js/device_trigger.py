@@ -1,4 +1,5 @@
 """Provides device triggers for Z-Wave JS."""
+
 from __future__ import annotations
 
 from typing import Any

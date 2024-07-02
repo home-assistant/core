@@ -1,4 +1,5 @@
 """Configuration for VeSync tests."""
+
 from __future__ import annotations
 
 from unittest.mock import Mock, patch
@@ -70,15 +71,13 @@ def manager_fixture() -> VeSync:
 @pytest.fixture(name="fan")
 def fan_fixture():
     """Create a mock VeSync fan fixture."""
-    mock_fixture = Mock(VeSyncAirBypass)
-    return mock_fixture
+    return Mock(VeSyncAirBypass)
 
 
 @pytest.fixture(name="bulb")
 def bulb_fixture():
     """Create a mock VeSync bulb fixture."""
-    mock_fixture = Mock(VeSyncBulb)
-    return mock_fixture
+    return Mock(VeSyncBulb)
 
 
 @pytest.fixture(name="switch")
@@ -100,5 +99,4 @@ def dimmable_switch_fixture():
 @pytest.fixture(name="outlet")
 def outlet_fixture():
     """Create a mock VeSync outlet fixture."""
-    mock_fixture = Mock(VeSyncOutlet)
-    return mock_fixture
+    return Mock(VeSyncOutlet)

@@ -1,4 +1,5 @@
 """Test the Fronius integration."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -11,7 +12,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import mock_responses, remove_device, setup_fronius_integration
+from . import mock_responses, setup_fronius_integration
 
 from tests.common import async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -158,11 +159,8 @@ async def test_device_remove_devices(
     )
 
     inverter_1 = device_registry.async_get_device(identifiers={(DOMAIN, "12345678")})
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), inverter_1.id, config_entry.entry_id
-        )
-        is True
-    )
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(inverter_1.id, config_entry.entry_id)
+    assert response["success"]
 
     assert not device_registry.async_get_device(identifiers={(DOMAIN, "12345678")})

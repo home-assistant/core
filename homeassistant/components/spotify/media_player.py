@@ -1,10 +1,12 @@
 """Support for interacting with Spotify Connect."""
+
 from __future__ import annotations
 
 from asyncio import run_coroutine_threadsafe
+from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, Concatenate
 
 import requests
 from spotipy import SpotifyException
@@ -20,7 +22,6 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -28,9 +29,10 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from . import HomeAssistantSpotifyData
+from . import SpotifyConfigEntry
 from .browse_media import async_browse_media_internal
 from .const import DOMAIN, MEDIA_PLAYER_PREFIX, PLAYABLE_MEDIA_TYPES, SPOTIFY_SCOPES
+from .models import HomeAssistantSpotifyData
 from .util import fetch_image_url
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,38 +70,42 @@ SPOTIFY_DJ_PLAYLIST = {"uri": "spotify:playlist:37i9dQZF1EYkqdzj48dyYq", "name":
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SpotifyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Spotify based on a config entry."""
     spotify = SpotifyMediaPlayer(
-        hass.data[DOMAIN][entry.entry_id],
+        entry.runtime_data,
         entry.data[CONF_ID],
         entry.title,
     )
     async_add_entities([spotify], True)
 
 
-def spotify_exception_handler(func):
+def spotify_exception_handler[_SpotifyMediaPlayerT: SpotifyMediaPlayer, **_P, _R](
+    func: Callable[Concatenate[_SpotifyMediaPlayerT, _P], _R],
+) -> Callable[Concatenate[_SpotifyMediaPlayerT, _P], _R | None]:
     """Decorate Spotify calls to handle Spotify exception.
 
     A decorator that wraps the passed in function, catches Spotify errors,
     aiohttp exceptions and handles the availability of the media player.
     """
 
-    def wrapper(self, *args, **kwargs):
-        # pylint: disable=protected-access
+    def wrapper(
+        self: _SpotifyMediaPlayerT, *args: _P.args, **kwargs: _P.kwargs
+    ) -> _R | None:
         try:
             result = func(self, *args, **kwargs)
-            self._attr_available = True
-            return result
         except requests.RequestException:
             self._attr_available = False
+            return None
         except SpotifyException as exc:
             self._attr_available = False
             if exc.reason == "NO_ACTIVE_DEVICE":
                 raise HomeAssistantError("No active playback device found") from None
             raise HomeAssistantError(f"Spotify error: {exc.reason}") from exc
+        self._attr_available = True
+        return result
 
     return wrapper
 
@@ -108,9 +114,9 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     """Representation of a Spotify controller."""
 
     _attr_has_entity_name = True
-    _attr_icon = "mdi:spotify"
     _attr_media_image_remotely_accessible = False
     _attr_name = None
+    _attr_translation_key = "spotify"
 
     def __init__(
         self,
@@ -367,7 +373,8 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
                 raise ValueError(
                     f"Media type {media_type} is not supported when enqueue is ADD"
                 )
-            return self.data.client.add_to_queue(media_id, kwargs.get("device_id"))
+            self.data.client.add_to_queue(media_id, kwargs.get("device_id"))
+            return
 
         self.data.client.start_playback(**kwargs)
 

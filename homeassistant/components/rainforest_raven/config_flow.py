@@ -1,4 +1,5 @@
 """Config flow for Rainforest RAVEn devices."""
+
 from __future__ import annotations
 
 import asyncio
@@ -11,10 +12,9 @@ import serial.tools.list_ports
 from serial.tools.list_ports_common import ListPortInfo
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import usb
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_MAC, CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
@@ -38,7 +38,7 @@ def _generate_unique_id(info: ListPortInfo | usb.UsbServiceInfo) -> str:
     )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class RainforestRavenConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Rainforest RAVEn devices."""
 
     def __init__(self) -> None:
@@ -66,7 +66,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_meters(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Connect to device and discover meters."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -98,7 +98,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="meters", data_schema=schema, errors=errors)
 
-    async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
+    async def async_step_usb(
+        self, discovery_info: usb.UsbServiceInfo
+    ) -> ConfigFlowResult:
         """Handle USB Discovery."""
         device = discovery_info.device
         dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
@@ -106,7 +108,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id)
         try:
             await self._validate_device(dev_path)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return self.async_abort(reason="timeout_connect")
         except RAVEnConnectionError:
             return self.async_abort(reason="cannot_connect")
@@ -114,7 +116,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if self._async_in_progress():
             return self.async_abort(reason="already_in_progress")
@@ -147,7 +149,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(unique_id)
             try:
                 await self._validate_device(dev_path)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 errors[CONF_DEVICE] = "timeout_connect"
             except RAVEnConnectionError:
                 errors[CONF_DEVICE] = "cannot_connect"

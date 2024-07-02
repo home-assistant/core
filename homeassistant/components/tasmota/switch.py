@@ -1,4 +1,5 @@
 """Support for Tasmota switches."""
+
 from typing import Any
 
 from hatasmota import relay as tasmota_relay
@@ -37,12 +38,12 @@ async def async_setup_entry(
             ]
         )
 
-    hass.data[
-        DATA_REMOVE_DISCOVER_COMPONENT.format(switch.DOMAIN)
-    ] = async_dispatcher_connect(
-        hass,
-        TASMOTA_DISCOVERY_ENTITY_NEW.format(switch.DOMAIN),
-        async_discover,
+    hass.data[DATA_REMOVE_DISCOVER_COMPONENT.format(switch.DOMAIN)] = (
+        async_dispatcher_connect(
+            hass,
+            TASMOTA_DISCOVERY_ENTITY_NEW.format(switch.DOMAIN),
+            async_discover,
+        )
     )
 
 

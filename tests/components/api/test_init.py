@@ -1,4 +1,5 @@
 """The tests for the Home Assistant API component."""
+
 import asyncio
 from http import HTTPStatus
 import json
@@ -11,9 +12,6 @@ import voluptuous as vol
 
 from homeassistant import const
 from homeassistant.auth.models import Credentials
-from homeassistant.auth.providers.legacy_api_password import (
-    LegacyApiPasswordAuthProvider,
-)
 from homeassistant.bootstrap import DATA_LOGGING
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
@@ -254,16 +252,20 @@ async def test_api_get_config(hass: HomeAssistant, mock_api_client: TestClient) 
     """Test the return of the configuration."""
     resp = await mock_api_client.get(const.URL_API_CONFIG)
     result = await resp.json()
-    if "components" in result:
-        result["components"] = set(result["components"])
-    if "whitelist_external_dirs" in result:
-        result["whitelist_external_dirs"] = set(result["whitelist_external_dirs"])
-    if "allowlist_external_dirs" in result:
-        result["allowlist_external_dirs"] = set(result["allowlist_external_dirs"])
-    if "allowlist_external_urls" in result:
-        result["allowlist_external_urls"] = set(result["allowlist_external_urls"])
+    ignore_order_keys = (
+        "components",
+        "allowlist_external_dirs",
+        "whitelist_external_dirs",
+        "allowlist_external_urls",
+    )
+    config = hass.config.as_dict()
 
-    assert hass.config.as_dict() == result
+    for key in ignore_order_keys:
+        if key in result:
+            result[key] = set(result[key])
+            config[key] = set(config[key])
+
+    assert result == config
 
 
 async def test_api_get_components(
@@ -301,7 +303,7 @@ async def test_api_get_services(
     for serv_domain in data:
         local = local_services.pop(serv_domain["domain"])
 
-        assert serv_domain["services"] == local
+        assert serv_domain["services"].keys() == local.keys()
 
 
 async def test_api_call_service_no_data(
@@ -584,7 +586,7 @@ async def test_api_fire_event_context(
     )
     await hass.async_block_till_done()
 
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
 
     assert len(test_value) == 1
     assert test_value[0].context.user_id == refresh_token.user.id
@@ -602,7 +604,7 @@ async def test_api_call_service_context(
     )
     await hass.async_block_till_done()
 
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
 
     assert len(calls) == 1
     assert calls[0].context.user_id == refresh_token.user.id
@@ -618,7 +620,7 @@ async def test_api_set_state_context(
         headers={"authorization": f"Bearer {hass_access_token}"},
     )
 
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
 
     state = hass.states.get("light.kitchen")
     assert state.context.user_id == refresh_token.user.id
@@ -684,6 +686,8 @@ async def test_get_entity_state_read_perm(
 ) -> None:
     """Test getting a state requires read permission."""
     hass_admin_user.mock_policy({})
+    hass_admin_user.groups = []
+    assert hass_admin_user.is_admin is False
     resp = await mock_api_client.get("/api/states/light.test")
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
@@ -721,22 +725,6 @@ async def test_rendering_template_admin(
     """Test rendering a template requires admin."""
     hass_admin_user.groups = []
     resp = await mock_api_client.post(const.URL_API_TEMPLATE)
-    assert resp.status == HTTPStatus.UNAUTHORIZED
-
-
-async def test_rendering_template_legacy_user(
-    hass: HomeAssistant,
-    mock_api_client: TestClient,
-    aiohttp_client: ClientSessionGenerator,
-    legacy_auth: LegacyApiPasswordAuthProvider,
-) -> None:
-    """Test rendering a template with legacy API password."""
-    hass.states.async_set("sensor.temperature", 10)
-    client = await aiohttp_client(hass.http.app)
-    resp = await client.post(
-        const.URL_API_TEMPLATE,
-        json={"template": "{{ states.sensor.temperature.state }}"},
-    )
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 

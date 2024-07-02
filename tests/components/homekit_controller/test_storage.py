@@ -1,4 +1,5 @@
 """Basic checks for entity map storage."""
+
 from typing import Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes

@@ -1,4 +1,5 @@
 """The tests for RFXCOM RFXtrx device actions."""
+
 from __future__ import annotations
 
 from typing import Any, NamedTuple
@@ -7,7 +8,7 @@ import pytest
 from pytest_unordered import unordered
 import RFXtrx
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -66,15 +67,15 @@ def _get_expected_actions(data):
 @pytest.mark.parametrize(
     ("device", "expected"),
     [
-        [
+        (
             DEVICE_LIGHTING_1,
             list(_get_expected_actions(RFXtrx.lowlevel.Lighting1.COMMANDS)),
-        ],
-        [
+        ),
+        (
             DEVICE_BLINDS_1,
             list(_get_expected_actions(RFXtrx.lowlevel.RollerTrol.COMMANDS)),
-        ],
-        [DEVICE_TEMPHUM_1, []],
+        ),
+        (DEVICE_TEMPHUM_1, []),
     ],
 )
 async def test_get_actions(
@@ -114,21 +115,21 @@ async def test_get_actions(
 @pytest.mark.parametrize(
     ("device", "config", "expected"),
     [
-        [
+        (
             DEVICE_LIGHTING_1,
             {"type": "send_command", "subtype": "On"},
             "0710000045050100",
-        ],
-        [
+        ),
+        (
             DEVICE_LIGHTING_1,
             {"type": "send_command", "subtype": "Off"},
             "0710000045050000",
-        ],
-        [
+        ),
+        (
             DEVICE_BLINDS_1,
             {"type": "send_command", "subtype": "Stop"},
             "09190000009ba8010200",
-        ],
+        ),
     ],
 )
 async def test_action(

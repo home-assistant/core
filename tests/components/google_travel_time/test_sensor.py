@@ -9,8 +9,9 @@ from homeassistant.components.google_travel_time.const import (
     CONF_ARRIVAL_TIME,
     CONF_DEPARTURE_TIME,
     DOMAIN,
+    UNITS_IMPERIAL,
+    UNITS_METRIC,
 )
-from homeassistant.const import CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
@@ -26,9 +27,12 @@ from tests.common import MockConfigEntry
 @pytest.fixture(name="mock_update")
 def mock_update_fixture():
     """Mock an update to the sensor."""
-    with patch("homeassistant.components.google_travel_time.sensor.Client"), patch(
-        "homeassistant.components.google_travel_time.sensor.distance_matrix"
-    ) as distance_matrix_mock:
+    with (
+        patch("homeassistant.components.google_travel_time.sensor.Client"),
+        patch(
+            "homeassistant.components.google_travel_time.sensor.distance_matrix"
+        ) as distance_matrix_mock,
+    ):
         distance_matrix_mock.return_value = {
             "rows": [
                 {
@@ -205,8 +209,8 @@ async def test_sensor_arrival_time_custom_timestamp(hass: HomeAssistant) -> None
 @pytest.mark.parametrize(
     ("unit_system", "expected_unit_option"),
     [
-        (METRIC_SYSTEM, CONF_UNIT_SYSTEM_METRIC),
-        (US_CUSTOMARY_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL),
+        (METRIC_SYSTEM, UNITS_METRIC),
+        (US_CUSTOMARY_SYSTEM, UNITS_IMPERIAL),
     ],
 )
 async def test_sensor_unit_system(
@@ -224,9 +228,12 @@ async def test_sensor_unit_system(
         entry_id="test",
     )
     config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.google_travel_time.sensor.Client"), patch(
-        "homeassistant.components.google_travel_time.sensor.distance_matrix"
-    ) as distance_matrix_mock:
+    with (
+        patch("homeassistant.components.google_travel_time.sensor.Client"),
+        patch(
+            "homeassistant.components.google_travel_time.sensor.distance_matrix"
+        ) as distance_matrix_mock,
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 

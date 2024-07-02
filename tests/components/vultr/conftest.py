@@ -1,8 +1,10 @@
 """Test configuration for the Vultr tests."""
+
 import json
 from unittest.mock import patch
 
 import pytest
+from requests_mock import Mocker
 
 from homeassistant.components import vultr
 from homeassistant.core import HomeAssistant
@@ -13,7 +15,7 @@ from tests.common import load_fixture
 
 
 @pytest.fixture(name="valid_config")
-def valid_config(hass: HomeAssistant, requests_mock):
+def valid_config(hass: HomeAssistant, requests_mock: Mocker) -> None:
     """Load a valid config."""
     requests_mock.get(
         "https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567",

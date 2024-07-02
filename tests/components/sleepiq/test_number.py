@@ -1,4 +1,5 @@
 """The tests for SleepIQ number platform."""
+
 from homeassistant.components.number import (
     ATTR_MAX,
     ATTR_MIN,
@@ -25,10 +26,11 @@ from .conftest import (
 )
 
 
-async def test_firmness(hass: HomeAssistant, mock_asyncsleepiq) -> None:
+async def test_firmness(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_asyncsleepiq
+) -> None:
     """Test the SleepIQ firmness number values for a bed with two sides."""
     entry = await setup_platform(hass, DOMAIN)
-    entity_registry = er.async_get(hass)
 
     state = hass.states.get(
         f"number.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_firmness"
@@ -83,10 +85,11 @@ async def test_firmness(hass: HomeAssistant, mock_asyncsleepiq) -> None:
     mock_asyncsleepiq.beds[BED_ID].sleepers[0].set_sleepnumber.assert_called_with(42)
 
 
-async def test_actuators(hass: HomeAssistant, mock_asyncsleepiq) -> None:
+async def test_actuators(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_asyncsleepiq
+) -> None:
     """Test the SleepIQ actuator position values for a bed with adjustable head and foot."""
     entry = await setup_platform(hass, DOMAIN)
-    entity_registry = er.async_get(hass)
 
     state = hass.states.get(f"number.sleepnumber_{BED_NAME_LOWER}_right_head_position")
     assert state.state == "60.0"
@@ -158,10 +161,11 @@ async def test_actuators(hass: HomeAssistant, mock_asyncsleepiq) -> None:
     ].set_position.assert_called_with(42)
 
 
-async def test_foot_warmer_timer(hass: HomeAssistant, mock_asyncsleepiq) -> None:
+async def test_foot_warmer_timer(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_asyncsleepiq
+) -> None:
     """Test the SleepIQ foot warmer number values for a bed with two sides."""
     entry = await setup_platform(hass, DOMAIN)
-    entity_registry = er.async_get(hass)
 
     state = hass.states.get(
         f"number.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_foot_warming_timer"

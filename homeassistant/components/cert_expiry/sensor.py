@@ -1,18 +1,20 @@
 """Counter for the days until an HTTPS (TLS) certificate will expire."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_START
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -20,12 +22,12 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CertExpiryDataUpdateCoordinator
+from . import CertExpiryConfigEntry, CertExpiryDataUpdateCoordinator
 from .const import DEFAULT_PORT, DOMAIN
 
 SCAN_INTERVAL = timedelta(hours=12)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
@@ -42,12 +44,12 @@ async def async_setup_platform(
     """Set up certificate expiry sensor."""
 
     @callback
-    def schedule_import(_):
+    def schedule_import(_: Event) -> None:
         """Schedule delayed import after HA is fully started."""
         async_call_later(hass, 10, do_import)
 
     @callback
-    def do_import(_):
+    def do_import(_: datetime) -> None:
         """Process YAML import."""
         hass.async_create_task(
             hass.config_entries.flow.async_init(
@@ -60,15 +62,13 @@ async def async_setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: CertExpiryConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add cert-expiry entry."""
-    coordinator: CertExpiryDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
-    sensors = [
-        SSLCertificateTimestamp(coordinator),
-    ]
+    sensors = [SSLCertificateTimestamp(coordinator)]
 
     async_add_entities(sensors, True)
 
@@ -76,11 +76,10 @@ async def async_setup_entry(
 class CertExpiryEntity(CoordinatorEntity[CertExpiryDataUpdateCoordinator]):
     """Defines a base Cert Expiry entity."""
 
-    _attr_icon = "mdi:certificate"
     _attr_has_entity_name = True
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return additional sensor state attributes."""
         return {
             "is_valid": self.coordinator.is_cert_valid,

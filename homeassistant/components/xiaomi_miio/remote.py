@@ -1,4 +1,5 @@
 """Support for the Xiaomi IR Remote (Chuangmi IR)."""
+
 from __future__ import annotations
 
 import asyncio
@@ -15,7 +16,7 @@ from homeassistant.components.remote import (
     ATTR_DELAY_SECS,
     ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as REMOTE_PLATFORM_SCHEMA,
     RemoteEntity,
 )
 from homeassistant.const import (
@@ -48,7 +49,7 @@ COMMAND_SCHEMA = vol.Schema(
     {vol.Required(CONF_COMMAND): vol.All(cv.ensure_list, [cv.string])}
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = REMOTE_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_HOST): cv.string,
@@ -137,8 +138,8 @@ async def async_setup_platform(
             message = await hass.async_add_executor_job(device.read, slot)
             _LOGGER.debug("Message received from device: '%s'", message)
 
-            if "code" in message and message["code"]:
-                log_msg = "Received command is: {}".format(message["code"])
+            if code := message.get("code"):
+                log_msg = f"Received command is: {code}"
                 _LOGGER.info(log_msg)
                 persistent_notification.async_create(
                     hass, log_msg, title="Xiaomi Miio Remote"
@@ -224,9 +225,9 @@ class XiaomiMiioRemote(RemoteEntity):
         """Return False if device is unreachable, else True."""
         try:
             self.device.info()
-            return True
         except DeviceException:
             return False
+        return True
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""

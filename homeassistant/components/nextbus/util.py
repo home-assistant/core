@@ -1,4 +1,5 @@
 """Utils for NextBus integration module."""
+
 from typing import Any
 
 

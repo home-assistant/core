@@ -25,12 +25,27 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "motionmount_is_moving": {
+        "name": "Moving"
+      }
+    },
     "number": {
       "motionmount_extension": {
         "name": "Extension"
       },
       "motionmount_turn": {
         "name": "Turn"
+      }
+    },
+    "sensor": {
+      "motionmount_error_status": {
+        "name": "Error Status",
+        "state": {
+          "none": "None",
+          "motor": "Motor",
+          "internal": "Internal"
+        }
       }
     },
     "select": {

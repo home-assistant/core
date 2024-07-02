@@ -1,4 +1,5 @@
 """JSON utility functions."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -16,13 +17,13 @@ from .file import WriteError  # noqa: F401
 _SENTINEL = object()
 _LOGGER = logging.getLogger(__name__)
 
-JsonValueType = (
-    dict[str, "JsonValueType"] | list["JsonValueType"] | str | int | float | bool | None
+type JsonValueType = (
+    dict[str, JsonValueType] | list[JsonValueType] | str | int | float | bool | None
 )
 """Any data that can be returned by the standard JSON deserializing process."""
-JsonArrayType = list[JsonValueType]
+type JsonArrayType = list[JsonValueType]
 """List that can be returned by the standard JSON deserializing process."""
-JsonObjectType = dict[str, JsonValueType]
+type JsonObjectType = dict[str, JsonValueType]
 """Dictionary that can be returned by the standard JSON deserializing process."""
 
 JSON_ENCODE_EXCEPTIONS = (TypeError, ValueError)
@@ -66,7 +67,7 @@ def json_loads_object(__obj: bytes | bytearray | memoryview | str) -> JsonObject
 
 
 def load_json(
-    filename: str | PathLike,
+    filename: str | PathLike[str],
     default: JsonValueType = _SENTINEL,  # type: ignore[assignment]
 ) -> JsonValueType:
     """Load JSON data from a file.
@@ -74,22 +75,22 @@ def load_json(
     Defaults to returning empty dict if file is not found.
     """
     try:
-        with open(filename, encoding="utf-8") as fdesc:
+        with open(filename, mode="rb") as fdesc:
             return orjson.loads(fdesc.read())  # type: ignore[no-any-return]
     except FileNotFoundError:
         # This is not a fatal error
         _LOGGER.debug("JSON file not found: %s", filename)
-    except ValueError as error:
+    except JSON_DECODE_EXCEPTIONS as error:
         _LOGGER.exception("Could not parse JSON content: %s", filename)
-        raise HomeAssistantError(error) from error
+        raise HomeAssistantError(f"Error while loading {filename}: {error}") from error
     except OSError as error:
         _LOGGER.exception("JSON file reading failed: %s", filename)
-        raise HomeAssistantError(error) from error
+        raise HomeAssistantError(f"Error while loading {filename}: {error}") from error
     return {} if default is _SENTINEL else default
 
 
 def load_json_array(
-    filename: str | PathLike,
+    filename: str | PathLike[str],
     default: JsonArrayType = _SENTINEL,  # type: ignore[assignment]
 ) -> JsonArrayType:
     """Load JSON data from a file and return as list.
@@ -109,7 +110,7 @@ def load_json_array(
 
 
 def load_json_object(
-    filename: str | PathLike,
+    filename: str | PathLike[str],
     default: JsonObjectType = _SENTINEL,  # type: ignore[assignment]
 ) -> JsonObjectType:
     """Load JSON data from a file and return as dict.

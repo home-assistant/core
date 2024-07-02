@@ -1,4 +1,5 @@
 """Support for EufyHome devices."""
+
 import lakeside
 import voluptuous as vol
 

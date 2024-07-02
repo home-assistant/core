@@ -1,0 +1,27 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:weather-partly-cloudy",
+      "state": {
+        "clear-night": "mdi:weather-night",
+        "cloudy": "mdi:weather-cloudy",
+        "exceptional": "mdi:alert-circle-outline",
+        "fog": "mdi:weather-fog",
+        "hail": "mdi:weather-hail",
+        "lightning": "mdi:weather-lightning",
+        "lightning-rainy": "mdi:weather-lightning-rainy",
+        "pouring": "mdi:weather-pouring",
+        "rainy": "mdi:weather-rainy",
+        "snowy": "mdi:weather-snowy",
+        "snowy-rainy": "mdi:weather-snowy-rainy",
+        "sunny": "mdi:weather-sunny",
+        "windy": "mdi:weather-windy",
+        "windy-variant": "mdi:weather-windy-variant"
+      }
+    }
+  },
+  "services": {
+    "get_forecast": "mdi:weather-cloudy-clock",
+    "get_forecasts": "mdi:weather-cloudy-clock"
+  }
+}

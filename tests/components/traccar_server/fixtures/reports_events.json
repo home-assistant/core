@@ -1,0 +1,12 @@
+[
+  {
+    "id": 0,
+    "type": "deviceMoving",
+    "eventTime": "2019-08-24T14:15:22Z",
+    "deviceId": 0,
+    "positionId": 0,
+    "geofenceId": 0,
+    "maintenanceId": 0,
+    "attributes": {}
+  }
+]

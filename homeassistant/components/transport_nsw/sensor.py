@@ -1,4 +1,5 @@
 """Support for Transport NSW (AU) to query next leave event."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -7,7 +8,7 @@ from TransportNSW import TransportNSW
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
@@ -43,7 +44,7 @@ ICONS = {
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STOP_ID): cv.string,
         vol.Required(CONF_API_KEY): cv.string,

@@ -1,4 +1,5 @@
 """Support for Steamist switches."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -14,7 +15,6 @@ from .entity import SteamistEntity
 
 ACTIVE_SWITCH = SwitchEntityDescription(
     key="active",
-    icon="mdi:pot-steam",
     translation_key="steam_active",
 )
 

@@ -1,4 +1,5 @@
 """Test EQ3 Max! Window Shutters."""
+
 from datetime import timedelta
 
 from maxcube.cube import MaxCube
@@ -42,7 +43,7 @@ async def test_window_shuttler(
 
     windowshutter.is_open = False
     async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
@@ -67,12 +68,12 @@ async def test_window_shuttler_battery(
 
     windowshutter.battery = 1  # maxcube-api MAX_DEVICE_BATTERY_LOW
     async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get(BATTERY_ENTITY_ID)
     assert state.state == STATE_ON  # on means low
 
     windowshutter.battery = 0  # maxcube-api MAX_DEVICE_BATTERY_OK
     async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get(BATTERY_ENTITY_ID)
     assert state.state == STATE_OFF  # off means normal

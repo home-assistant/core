@@ -1,0 +1,7 @@
+{
+  "services": {
+    "publish": "mdi:publish",
+    "dump": "mdi:database-export",
+    "reload": "mdi:reload"
+  }
+}

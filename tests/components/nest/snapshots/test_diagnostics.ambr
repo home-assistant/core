@@ -1,0 +1,89 @@
+# serializer version: 1
+# name: test_camera_diagnostics
+  dict({
+    'camera': dict({
+      'camera.camera': dict({
+      }),
+    }),
+    'devices': list([
+      dict({
+        'data': dict({
+          'name': '**REDACTED**',
+          'parentRelations': list([
+          ]),
+          'traits': dict({
+            'sdm.devices.traits.CameraLiveStream': dict({
+              'audioCodecs': list([
+              ]),
+              'maxVideoResolution': dict({
+                'height': None,
+                'width': None,
+              }),
+              'supportedProtocols': list([
+                'RTSP',
+              ]),
+              'videoCodecs': list([
+                'H264',
+              ]),
+            }),
+          }),
+          'type': 'sdm.devices.types.CAMERA',
+        }),
+      }),
+    ]),
+  })
+# ---
+# name: test_device_diagnostics
+  dict({
+    'data': dict({
+      'name': '**REDACTED**',
+      'parentRelations': list([
+        dict({
+          'displayName': '**REDACTED**',
+          'parent': '**REDACTED**',
+        }),
+      ]),
+      'traits': dict({
+        'sdm.devices.traits.Humidity': dict({
+          'ambient_humidity_percent': 35.0,
+        }),
+        'sdm.devices.traits.Info': dict({
+          'custom_name': '**REDACTED**',
+        }),
+        'sdm.devices.traits.Temperature': dict({
+          'ambient_temperature_celsius': 25.1,
+        }),
+      }),
+      'type': 'sdm.devices.types.THERMOSTAT',
+    }),
+  })
+# ---
+# name: test_entry_diagnostics
+  dict({
+    'devices': list([
+      dict({
+        'data': dict({
+          'name': '**REDACTED**',
+          'parentRelations': list([
+            dict({
+              'displayName': '**REDACTED**',
+              'parent': '**REDACTED**',
+            }),
+          ]),
+          'traits': dict({
+            'sdm.devices.traits.Humidity': dict({
+              'ambient_humidity_percent': 35.0,
+            }),
+            'sdm.devices.traits.Info': dict({
+              'custom_name': '**REDACTED**',
+            }),
+            'sdm.devices.traits.Temperature': dict({
+              'ambient_temperature_celsius': 25.1,
+            }),
+          }),
+          'type': 'sdm.devices.types.THERMOSTAT',
+        }),
+      }),
+    ]),
+  })
+# ---

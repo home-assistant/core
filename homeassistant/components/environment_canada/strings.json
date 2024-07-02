@@ -52,9 +52,6 @@
       "pop": {
         "name": "Chance of precipitation"
       },
-      "precip_yesterday": {
-        "name": "Precipitation yesterday"
-      },
       "pressure": {
         "name": "Barometric pressure"
       },
@@ -110,9 +107,6 @@
       }
     },
     "weather": {
-      "hourly_forecast": {
-        "name": "Hourly forecast"
-      },
       "forecast": {
         "name": "Forecast"
       }

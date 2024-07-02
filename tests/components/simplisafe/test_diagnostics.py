@@ -1,4 +1,5 @@
 """Test SimpliSafe diagnostics."""
+
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.core import HomeAssistant
 
@@ -245,7 +246,7 @@ async def test_entry_diagnostics(
                                 "battery": [],
                                 "dbm": 0,
                                 "vmUse": 161592,
-                                "resSet": 10540,
+                                "resSet": 10540,  # codespell:ignore resset
                                 "uptime": 810043.74,
                                 "wifiDisconnects": 1,
                                 "wifiDriverReloads": 1,

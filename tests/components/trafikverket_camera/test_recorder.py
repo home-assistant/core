@@ -1,4 +1,5 @@
 """The tests for Trafikcerket Camera recorder."""
+
 from __future__ import annotations
 
 import pytest
@@ -14,9 +15,9 @@ from tests.components.recorder.common import async_wait_recording_done
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_exclude_attributes(
     recorder_mock: Recorder,
-    entity_registry_enabled_by_default: None,
     hass: HomeAssistant,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,

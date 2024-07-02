@@ -1,4 +1,5 @@
 """Test different accessory types: Locks."""
+
 import pytest
 
 from homeassistant.components.homekit.const import ATTR_VALUE
@@ -31,7 +32,7 @@ async def test_lock_unlock(hass: HomeAssistant, hk_driver, events) -> None:
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = Lock(hass, hk_driver, "Lock", entity_id, 2, config)
-    await acc.run()
+    acc.run()
 
     assert acc.aid == 2
     assert acc.category == 6  # DoorLock

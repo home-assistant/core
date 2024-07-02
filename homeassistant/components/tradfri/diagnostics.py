@@ -1,4 +1,5 @@
 """Diagnostics support for IKEA Tradfri."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -25,9 +26,10 @@ async def async_get_config_entry_diagnostics(
         ),
     )
 
-    device_data: list = []
-    for coordinator in coordinator_data[COORDINATOR_LIST]:
-        device_data.append(coordinator.device.device_info.model_number)
+    device_data: list = [
+        coordinator.device.device_info.model_number
+        for coordinator in coordinator_data[COORDINATOR_LIST]
+    ]
 
     return {
         "gateway_version": device.sw_version,

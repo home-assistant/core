@@ -1,4 +1,5 @@
 """Support for the DirecTV receivers."""
+
 from __future__ import annotations
 
 import logging
@@ -59,18 +60,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up the DirecTV config entry."""
     dtv = hass.data[DOMAIN][entry.entry_id]
-    entities = []
 
-    for location in dtv.device.locations:
-        entities.append(
+    async_add_entities(
+        (
             DIRECTVMediaPlayer(
                 dtv=dtv,
                 name=str.title(location.name),
                 address=location.address,
             )
-        )
-
-    async_add_entities(entities, True)
+            for location in dtv.device.locations
+        ),
+        True,
+    )
 
 
 class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
@@ -277,7 +278,7 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
     async def async_turn_on(self) -> None:
         """Turn on the receiver."""
         if self._is_client:
-            raise NotImplementedError()
+            raise NotImplementedError
 
         _LOGGER.debug("Turn on %s", self.name)
         await self.dtv.remote("poweron", self._address)
@@ -285,7 +286,7 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
     async def async_turn_off(self) -> None:
         """Turn off the receiver."""
         if self._is_client:
-            raise NotImplementedError()
+            raise NotImplementedError
 
         _LOGGER.debug("Turn off %s", self.name)
         await self.dtv.remote("poweroff", self._address)

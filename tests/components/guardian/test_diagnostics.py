@@ -1,4 +1,5 @@
 """Test Guardian diagnostics."""
+
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.guardian import DOMAIN, GuardianData
 from homeassistant.core import HomeAssistant

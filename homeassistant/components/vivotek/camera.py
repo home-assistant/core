@@ -1,10 +1,15 @@
 """Support for Vivotek IP Cameras."""
+
 from __future__ import annotations
 
 from libpyvivotek import VivotekCamera
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera, CameraEntityFeature
+from homeassistant.components.camera import (
+    PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
+    Camera,
+    CameraEntityFeature,
+)
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_IP_ADDRESS,
@@ -31,7 +36,7 @@ DEFAULT_EVENT_0_KEY = "event_i0_enable"
 DEFAULT_SECURITY_LEVEL = "admin"
 DEFAULT_STREAM_SOURCE = "live.sdp"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_IP_ADDRESS): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

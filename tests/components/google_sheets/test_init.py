@@ -25,7 +25,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_SHEET_ID = "google-sheet-it"
 
-ComponentSetup = Callable[[], Awaitable[None]]
+type ComponentSetup = Callable[[], Awaitable[None]]
 
 
 @pytest.fixture(name="scopes")
@@ -229,9 +229,12 @@ async def test_append_sheet_api_error(
     response = Response()
     response.status_code = 503
 
-    with pytest.raises(HomeAssistantError), patch(
-        "homeassistant.components.google_sheets.Client.request",
-        side_effect=APIError(response),
+    with (
+        pytest.raises(HomeAssistantError),
+        patch(
+            "homeassistant.components.google_sheets.Client.request",
+            side_effect=APIError(response),
+        ),
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -291,7 +294,7 @@ async def test_append_sheet_invalid_config_entry(
     await hass.async_block_till_done()
     assert config_entry2.state is ConfigEntryState.NOT_LOADED
 
-    with pytest.raises(ValueError, match="Config entry not loaded"):
+    with pytest.raises(ValueError, match="Invalid config entry"):
         await hass.services.async_call(
             DOMAIN,
             "append_sheet",

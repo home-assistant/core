@@ -40,16 +40,32 @@
       ]),
       'max_temp': 32,
       'min_temp': 16,
-      'supported_features': <ClimateEntityFeature: 11>,
+      'preset_mode': 'MyAuto',
+      'preset_modes': list([
+        'MyZone',
+        'MyTemp',
+        'MyAuto',
+      ]),
+      'supported_features': <ClimateEntityFeature: 410>,
       'target_temp_high': 24,
       'target_temp_low': 20,
       'target_temp_step': 1,
-      'temperature': 24,
     }),
     'context': <ANY>,
     'entity_id': 'climate.myauto',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'heat_cool',
+  })
+# ---
+# name: test_climate_myzone_main[climate.myzone-preset]
+  dict({
+    'ac1': dict({
+      'info': dict({
+        'climateControlModeEnabled': False,
+        'myAutoModeEnabled': True,
+      }),
+    }),
   })
 # ---

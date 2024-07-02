@@ -1,0 +1,86 @@
+# serializer version: 1
+# name: test_discovered_via_zeroconf
+  dict({
+    'host': '192.168.1.5',
+    'mac': list([
+      '00-11-32-XX-XX-59',
+      '00-11-32-XX-XX-5A',
+    ]),
+    'password': 'password',
+    'port': 5001,
+    'ssl': True,
+    'username': 'Home_Assistant',
+    'verify_ssl': False,
+  })
+# ---
+# name: test_form_ssdp
+  dict({
+    'host': '192.168.1.5',
+    'mac': list([
+      '00-11-32-XX-XX-59',
+      '00-11-32-XX-XX-5A',
+    ]),
+    'password': 'password',
+    'port': 5001,
+    'ssl': True,
+    'username': 'Home_Assistant',
+    'verify_ssl': False,
+  })
+# ---
+# name: test_user
+  dict({
+    'host': 'nas.meontheinternet.com',
+    'mac': list([
+      '00-11-32-XX-XX-59',
+      '00-11-32-XX-XX-5A',
+    ]),
+    'password': 'password',
+    'port': 1234,
+    'ssl': True,
+    'username': 'Home_Assistant',
+    'verify_ssl': False,
+  })
+# ---
+# name: test_user.1
+  dict({
+    'host': 'nas.meontheinternet.com',
+    'mac': list([
+      '00-11-32-XX-XX-59',
+      '00-11-32-XX-XX-5A',
+    ]),
+    'password': 'password',
+    'port': 5000,
+    'ssl': False,
+    'username': 'Home_Assistant',
+    'verify_ssl': False,
+  })
+# ---
+# name: test_user_2sa
+  dict({
+    'device_token': 'Dév!cè_T0k€ñ',
+    'host': 'nas.meontheinternet.com',
+    'mac': list([
+      '00-11-32-XX-XX-59',
+      '00-11-32-XX-XX-5A',
+    ]),
+    'password': 'password',
+    'port': 5001,
+    'ssl': True,
+    'username': 'Home_Assistant',
+    'verify_ssl': False,
+  })
+# ---
+# name: test_user_vdsm
+  dict({
+    'host': 'nas.meontheinternet.com',
+    'mac': list([
+      '00-11-32-XX-XX-59',
+      '00-11-32-XX-XX-5A',
+    ]),
+    'password': 'password',
+    'port': 1234,
+    'ssl': True,
+    'username': 'Home_Assistant',
+    'verify_ssl': False,
+  })
+# ---

@@ -1,27 +1,32 @@
 """Tests for the DSMR integration."""
+
 import datetime
 from decimal import Decimal
+from unittest.mock import MagicMock
+
+from dsmr_parser.obis_references import (
+    BELGIUM_MBUS1_DEVICE_TYPE,
+    BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
+    BELGIUM_MBUS1_METER_READING2,
+)
+from dsmr_parser.objects import CosemObject, MBusObject
 
 from homeassistant.components.dsmr.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
 
 async def test_migrate_gas_to_mbus(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, dsmr_connection_fixture
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
     """Test migration of unique_id."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
-
-    from dsmr_parser.obis_references import (
-        BELGIUM_MBUS1_DEVICE_TYPE,
-        BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS1_METER_READING2,
-    )
-    from dsmr_parser.objects import CosemObject, MBusObject
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -41,7 +46,6 @@ async def test_migrate_gas_to_mbus(
 
     old_unique_id = "37464C4F32313139303333373331_belgium_5min_gas_meter_reading"
 
-    device_registry = hass.helpers.device_registry.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=mock_entry.entry_id,
         identifiers={(DOMAIN, mock_entry.entry_id)},
@@ -107,17 +111,13 @@ async def test_migrate_gas_to_mbus(
 
 
 async def test_migrate_gas_to_mbus_exists(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, dsmr_connection_fixture
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
     """Test migration of unique_id."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
-
-    from dsmr_parser.obis_references import (
-        BELGIUM_MBUS1_DEVICE_TYPE,
-        BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
-        BELGIUM_MBUS1_METER_READING2,
-    )
-    from dsmr_parser.objects import CosemObject, MBusObject
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -137,7 +137,6 @@ async def test_migrate_gas_to_mbus_exists(
 
     old_unique_id = "37464C4F32313139303333373331_belgium_5min_gas_meter_reading"
 
-    device_registry = hass.helpers.device_registry.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=mock_entry.entry_id,
         identifiers={(DOMAIN, mock_entry.entry_id)},

@@ -1,4 +1,5 @@
 """deCONZ device automation tests."""
+
 from unittest.mock import Mock, patch
 
 import pytest
@@ -26,26 +27,20 @@ from homeassistant.const import (
     CONF_TYPE,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.setup import async_setup_component
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
-from tests.common import async_get_device_automations, async_mock_service
+from tests.common import async_get_device_automations
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
 def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
     """Stub copying the blueprints to the config folder."""
-
-
-@pytest.fixture
-def automation_calls(hass):
-    """Track automation calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 async def test_get_triggers(
@@ -299,7 +294,7 @@ async def test_functional_device_trigger(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_deconz_websocket,
-    automation_calls,
+    service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test proper matching and attachment of device trigger automation."""
@@ -368,8 +363,8 @@ async def test_functional_device_trigger(
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
 
-    assert len(automation_calls) == 1
-    assert automation_calls[0].data["some"] == "test_trigger_button_press"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "test_trigger_button_press"
 
 
 @pytest.mark.skip(reason="Temporarily disabled until automation validation is improved")

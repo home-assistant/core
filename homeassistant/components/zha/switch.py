@@ -1,11 +1,14 @@
 """Switches on Zigbee Home Automation networks."""
+
 from __future__ import annotations
 
 import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
-from zhaquirks.quirk_ids import TUYA_PLUG_ONOFF
+from zhaquirks.quirk_ids import DANFOSS_ALLY_THERMOSTAT, TUYA_PLUG_ONOFF
+from zigpy.quirks.v2 import SwitchMetadata
+from zigpy.zcl.clusters.closures import ConfigStatus, WindowCovering, WindowCoveringMode
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.foundation import Status
 
@@ -19,8 +22,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .core import discovery
 from .core.const import (
     CLUSTER_HANDLER_BASIC,
+    CLUSTER_HANDLER_COVER,
     CLUSTER_HANDLER_INOVELLI,
     CLUSTER_HANDLER_ON_OFF,
+    CLUSTER_HANDLER_THERMOSTAT,
+    ENTITY_METADATA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -171,6 +177,8 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
     _attribute_name: str
     _inverter_attribute_name: str | None = None
     _force_inverted: bool = False
+    _off_value: int = 0
+    _on_value: int = 1
 
     @classmethod
     def create_entity(
@@ -185,7 +193,7 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
         Return entity if it is a supported configuration, otherwise return None
         """
         cluster_handler = cluster_handlers[0]
-        if (
+        if ENTITY_METADATA not in kwargs and (
             cls._attribute_name in cluster_handler.cluster.unsupported_attributes
             or cls._attribute_name not in cluster_handler.cluster.attributes_by_name
             or cluster_handler.cluster.get(cls._attribute_name) is None
@@ -208,7 +216,20 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
     ) -> None:
         """Init this number configuration entity."""
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
+        if ENTITY_METADATA in kwargs:
+            self._init_from_quirks_metadata(kwargs[ENTITY_METADATA])
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+
+    def _init_from_quirks_metadata(self, entity_metadata: SwitchMetadata) -> None:
+        """Init this entity from the quirks metadata."""
+        super()._init_from_quirks_metadata(entity_metadata)
+        self._attribute_name = entity_metadata.attribute_name
+        if entity_metadata.invert_attribute_name:
+            self._inverter_attribute_name = entity_metadata.invert_attribute_name
+        if entity_metadata.force_inverted:
+            self._force_inverted = entity_metadata.force_inverted
+        self._off_value = entity_metadata.off_value
+        self._on_value = entity_metadata.on_value
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
@@ -234,14 +255,25 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return if the switch is on based on the statemachine."""
-        val = bool(self._cluster_handler.cluster.get(self._attribute_name))
+        if self._on_value != 1:
+            val = self._cluster_handler.cluster.get(self._attribute_name)
+            val = val == self._on_value
+        else:
+            val = bool(self._cluster_handler.cluster.get(self._attribute_name))
         return (not val) if self.inverted else val
 
     async def async_turn_on_off(self, state: bool) -> None:
         """Turn the entity on or off."""
-        await self._cluster_handler.write_attributes_safe(
-            {self._attribute_name: not state if self.inverted else state}
-        )
+        if self.inverted:
+            state = not state
+        if state:
+            await self._cluster_handler.write_attributes_safe(
+                {self._attribute_name: self._on_value}
+            )
+        else:
+            await self._cluster_handler.write_attributes_safe(
+                {self._attribute_name: self._off_value}
+            )
         self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -481,7 +513,6 @@ class AqaraPetFeederLEDIndicator(ZHASwitchConfigurationEntity):
     _attribute_name = "disable_led_indicator"
     _attr_translation_key = "led_indicator"
     _force_inverted = True
-    _attr_icon: str = "mdi:led-on"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -493,7 +524,6 @@ class AqaraPetFeederChildLock(ZHASwitchConfigurationEntity):
     _unique_id_suffix = "child_lock"
     _attribute_name = "child_lock"
     _attr_translation_key = "child_lock"
-    _attr_icon: str = "mdi:account-lock"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -505,7 +535,6 @@ class TuyaChildLockSwitch(ZHASwitchConfigurationEntity):
     _unique_id_suffix = "child_lock"
     _attribute_name = "child_lock"
     _attr_translation_key = "child_lock"
-    _attr_icon: str = "mdi:account-lock"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -539,7 +568,6 @@ class AqaraThermostatChildLock(ZHASwitchConfigurationEntity):
     _unique_id_suffix = "child_lock"
     _attribute_name = "child_lock"
     _attr_translation_key = "child_lock"
-    _attr_icon: str = "mdi:account-lock"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -551,7 +579,6 @@ class AqaraHeartbeatIndicator(ZHASwitchConfigurationEntity):
     _unique_id_suffix = "heartbeat_indicator"
     _attribute_name = "heartbeat_indicator"
     _attr_translation_key = "heartbeat_indicator"
-    _attr_icon: str = "mdi:heart-flash"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -563,7 +590,6 @@ class AqaraLinkageAlarm(ZHASwitchConfigurationEntity):
     _unique_id_suffix = "linkage_alarm"
     _attribute_name = "linkage_alarm"
     _attr_translation_key = "linkage_alarm"
-    _attr_icon: str = "mdi:shield-link-variant"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -575,7 +601,6 @@ class AqaraBuzzerManualMute(ZHASwitchConfigurationEntity):
     _unique_id_suffix = "buzzer_manual_mute"
     _attribute_name = "buzzer_manual_mute"
     _attr_translation_key = "buzzer_manual_mute"
-    _attr_icon: str = "mdi:volume-off"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -587,4 +612,200 @@ class AqaraBuzzerManualAlarm(ZHASwitchConfigurationEntity):
     _unique_id_suffix = "buzzer_manual_alarm"
     _attribute_name = "buzzer_manual_alarm"
     _attr_translation_key = "buzzer_manual_alarm"
-    _attr_icon: str = "mdi:bullhorn"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_COVER)
+class WindowCoveringInversionSwitch(ZHASwitchConfigurationEntity):
+    """Representation of a switch that controls inversion for window covering devices.
+
+    This is necessary because this cluster uses 2 attributes to control inversion.
+    """
+
+    _unique_id_suffix = "inverted"
+    _attribute_name = WindowCovering.AttributeDefs.config_status.name
+    _attr_translation_key = "inverted"
+
+    @classmethod
+    def create_entity(
+        cls,
+        unique_id: str,
+        zha_device: ZHADevice,
+        cluster_handlers: list[ClusterHandler],
+        **kwargs: Any,
+    ) -> Self | None:
+        """Entity Factory.
+
+        Return entity if it is a supported configuration, otherwise return None
+        """
+        cluster_handler = cluster_handlers[0]
+        window_covering_mode_attr = (
+            WindowCovering.AttributeDefs.window_covering_mode.name
+        )
+        # this entity needs 2 attributes to function
+        if (
+            cls._attribute_name in cluster_handler.cluster.unsupported_attributes
+            or cls._attribute_name not in cluster_handler.cluster.attributes_by_name
+            or cluster_handler.cluster.get(cls._attribute_name) is None
+            or window_covering_mode_attr
+            in cluster_handler.cluster.unsupported_attributes
+            or window_covering_mode_attr
+            not in cluster_handler.cluster.attributes_by_name
+            or cluster_handler.cluster.get(window_covering_mode_attr) is None
+        ):
+            _LOGGER.debug(
+                "%s is not supported - skipping %s entity creation",
+                cls._attribute_name,
+                cls.__name__,
+            )
+            return None
+
+        return cls(unique_id, zha_device, cluster_handlers, **kwargs)
+
+    @property
+    def is_on(self) -> bool:
+        """Return if the switch is on based on the statemachine."""
+        config_status = ConfigStatus(
+            self._cluster_handler.cluster.get(self._attribute_name)
+        )
+        return ConfigStatus.Open_up_commands_reversed in config_status
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the entity on."""
+        await self._async_on_off(True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
+        await self._async_on_off(False)
+
+    async def async_update(self) -> None:
+        """Attempt to retrieve the state of the entity."""
+        self.debug("Polling current state")
+        await self._cluster_handler.get_attributes(
+            [
+                self._attribute_name,
+                WindowCovering.AttributeDefs.window_covering_mode.name,
+            ],
+            from_cache=False,
+            only_cache=False,
+        )
+        self.async_write_ha_state()
+
+    async def _async_on_off(self, invert: bool) -> None:
+        """Turn the entity on or off."""
+        name: str = WindowCovering.AttributeDefs.window_covering_mode.name
+        current_mode: WindowCoveringMode = WindowCoveringMode(
+            self._cluster_handler.cluster.get(name)
+        )
+        send_command: bool = False
+        if invert and WindowCoveringMode.Motor_direction_reversed not in current_mode:
+            current_mode |= WindowCoveringMode.Motor_direction_reversed
+            send_command = True
+        elif not invert and WindowCoveringMode.Motor_direction_reversed in current_mode:
+            current_mode &= ~WindowCoveringMode.Motor_direction_reversed
+            send_command = True
+        if send_command:
+            await self._cluster_handler.write_attributes_safe({name: current_mode})
+            await self.async_update()
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="opple_cluster", models={"lumi.curtain.agl001"}
+)
+class AqaraE1CurtainMotorHooksLockedSwitch(ZHASwitchConfigurationEntity):
+    """Representation of a switch that controls whether the curtain motor hooks are locked."""
+
+    _unique_id_suffix = "hooks_lock"
+    _attribute_name = "hooks_lock"
+    _attr_translation_key = "hooks_locked"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+class DanfossExternalOpenWindowDetected(ZHASwitchConfigurationEntity):
+    """Danfoss proprietary attribute for communicating an open window."""
+
+    _unique_id_suffix = "external_open_window_detected"
+    _attribute_name: str = "external_open_window_detected"
+    _attr_translation_key: str = "external_window_sensor"
+    _attr_icon: str = "mdi:window-open"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+class DanfossWindowOpenFeature(ZHASwitchConfigurationEntity):
+    """Danfoss proprietary attribute enabling open window detection."""
+
+    _unique_id_suffix = "window_open_feature"
+    _attribute_name: str = "window_open_feature"
+    _attr_translation_key: str = "use_internal_window_detection"
+    _attr_icon: str = "mdi:window-open"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+class DanfossMountingModeControl(ZHASwitchConfigurationEntity):
+    """Danfoss proprietary attribute for switching to mounting mode."""
+
+    _unique_id_suffix = "mounting_mode_control"
+    _attribute_name: str = "mounting_mode_control"
+    _attr_translation_key: str = "mounting_mode"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+class DanfossRadiatorCovered(ZHASwitchConfigurationEntity):
+    """Danfoss proprietary attribute for communicating full usage of the external temperature sensor."""
+
+    _unique_id_suffix = "radiator_covered"
+    _attribute_name: str = "radiator_covered"
+    _attr_translation_key: str = "prioritize_external_temperature_sensor"
+    _attr_icon: str = "mdi:thermometer"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+class DanfossHeatAvailable(ZHASwitchConfigurationEntity):
+    """Danfoss proprietary attribute for communicating available heat."""
+
+    _unique_id_suffix = "heat_available"
+    _attribute_name: str = "heat_available"
+    _attr_translation_key: str = "heat_available"
+    _attr_icon: str = "mdi:water-boiler"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+class DanfossLoadBalancingEnable(ZHASwitchConfigurationEntity):
+    """Danfoss proprietary attribute for enabling load balancing."""
+
+    _unique_id_suffix = "load_balancing_enable"
+    _attribute_name: str = "load_balancing_enable"
+    _attr_translation_key: str = "use_load_balancing"
+    _attr_icon: str = "mdi:scale-balance"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+class DanfossAdaptationRunSettings(ZHASwitchConfigurationEntity):
+    """Danfoss proprietary attribute for enabling daily adaptation run.
+
+    Actually a bitmap, but only the first bit is used.
+    """
+
+    _unique_id_suffix = "adaptation_run_settings"
+    _attribute_name: str = "adaptation_run_settings"
+    _attr_translation_key: str = "adaptation_run_enabled"

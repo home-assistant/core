@@ -1,0 +1,41 @@
+[
+  {
+    "type": "gateway",
+    "mac": "AA-BB-CC-DD-EE-FF",
+    "name": "Test Router",
+    "model": "ER7212PC",
+    "compoundModel": "ER7212PC v1.0",
+    "showModel": "ER7212PC v1.0",
+    "firmwareVersion": "1.1.1 Build 20230901 Rel.55651",
+    "version": "1.1.1",
+    "hwVersion": "ER7212PC v1.0",
+    "uptime": "32day(s) 5h 39m 27s",
+    "uptimeLong": 2785167,
+    "cpuUtil": 16,
+    "memUtil": 47,
+    "status": 14,
+    "statusCategory": 1,
+    "site": "Test",
+    "needUpgrade": false
+  },
+  {
+    "type": "switch",
+    "mac": "54-AF-97-00-00-01",
+    "name": "Test PoE Switch",
+    "model": "TL-SG3210XHP-M2",
+    "modelVersion": "1.0",
+    "compoundModel": "TL-SG3210XHP-M2 v1.0",
+    "showModel": "TL-SG3210XHP-M2 v1.0",
+    "firmwareVersion": "1.0.12 Build 20230203 Rel.36545",
+    "version": "1.0.12",
+    "hwVersion": "1.0",
+    "uptime": "1day(s) 8h 27m 26s",
+    "uptimeLong": 116846,
+    "cpuUtil": 10,
+    "memUtil": 20,
+    "status": 14,
+    "statusCategory": 1,
+    "needUpgrade": false,
+    "fwDownload": false
+  }
+]

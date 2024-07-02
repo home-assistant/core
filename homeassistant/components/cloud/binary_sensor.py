@@ -1,4 +1,5 @@
 """Support for Home Assistant Cloud binary sensors."""
+
 from __future__ import annotations
 
 import asyncio
@@ -17,7 +18,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .client import CloudClient
-from .const import DISPATCHER_REMOTE_UPDATE, DOMAIN
+from .const import DATA_CLOUD, DISPATCHER_REMOTE_UPDATE
 
 WAIT_UNTIL_CHANGE = 3
 
@@ -28,7 +29,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Home Assistant Cloud binary sensors."""
-    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    cloud = hass.data[DATA_CLOUD]
     async_add_entities([CloudRemoteBinary(cloud)])
 
 

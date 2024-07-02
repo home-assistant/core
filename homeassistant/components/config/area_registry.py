@@ -1,14 +1,18 @@
 """HTTP views to interact with the area registry."""
+
+from __future__ import annotations
+
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.area_registry import async_get
+from homeassistant.helpers import area_registry as ar
 
 
-async def async_setup(hass):
+@callback
+def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Area Registry views."""
     websocket_api.async_register_command(hass, websocket_list_areas)
     websocket_api.async_register_command(hass, websocket_create_area)
@@ -25,10 +29,10 @@ def websocket_list_areas(
     msg: dict[str, Any],
 ) -> None:
     """Handle list areas command."""
-    registry = async_get(hass)
+    registry = ar.async_get(hass)
     connection.send_result(
         msg["id"],
-        [_entry_dict(entry) for entry in registry.async_list_areas()],
+        [entry.json_fragment for entry in registry.async_list_areas()],
     )
 
 
@@ -36,6 +40,9 @@ def websocket_list_areas(
     {
         vol.Required("type"): "config/area_registry/create",
         vol.Optional("aliases"): list,
+        vol.Optional("floor_id"): str,
+        vol.Optional("icon"): str,
+        vol.Optional("labels"): [str],
         vol.Required("name"): str,
         vol.Optional("picture"): vol.Any(str, None),
     }
@@ -48,7 +55,7 @@ def websocket_create_area(
     msg: dict[str, Any],
 ) -> None:
     """Create area command."""
-    registry = async_get(hass)
+    registry = ar.async_get(hass)
 
     data = dict(msg)
     data.pop("type")
@@ -58,12 +65,16 @@ def websocket_create_area(
         # Convert aliases to a set
         data["aliases"] = set(data["aliases"])
 
+    if "labels" in data:
+        # Convert labels to a set
+        data["labels"] = set(data["labels"])
+
     try:
         entry = registry.async_create(**data)
     except ValueError as err:
         connection.send_error(msg["id"], "invalid_info", str(err))
     else:
-        connection.send_result(msg["id"], _entry_dict(entry))
+        connection.send_result(msg["id"], entry.json_fragment)
 
 
 @websocket_api.websocket_command(
@@ -80,7 +91,7 @@ def websocket_delete_area(
     msg: dict[str, Any],
 ) -> None:
     """Delete area command."""
-    registry = async_get(hass)
+    registry = ar.async_get(hass)
 
     try:
         registry.async_delete(msg["area_id"])
@@ -95,6 +106,9 @@ def websocket_delete_area(
         vol.Required("type"): "config/area_registry/update",
         vol.Optional("aliases"): list,
         vol.Required("area_id"): str,
+        vol.Optional("floor_id"): vol.Any(str, None),
+        vol.Optional("icon"): vol.Any(str, None),
+        vol.Optional("labels"): [str],
         vol.Optional("name"): str,
         vol.Optional("picture"): vol.Any(str, None),
     }
@@ -107,7 +121,7 @@ def websocket_update_area(
     msg: dict[str, Any],
 ) -> None:
     """Handle update area websocket command."""
-    registry = async_get(hass)
+    registry = ar.async_get(hass)
 
     data = dict(msg)
     data.pop("type")
@@ -117,20 +131,13 @@ def websocket_update_area(
         # Convert aliases to a set
         data["aliases"] = set(data["aliases"])
 
+    if "labels" in data:
+        # Convert labels to a set
+        data["labels"] = set(data["labels"])
+
     try:
         entry = registry.async_update(**data)
     except ValueError as err:
         connection.send_error(msg["id"], "invalid_info", str(err))
     else:
-        connection.send_result(msg["id"], _entry_dict(entry))
-
-
-@callback
-def _entry_dict(entry):
-    """Convert entry to API format."""
-    return {
-        "aliases": entry.aliases,
-        "area_id": entry.id,
-        "name": entry.name,
-        "picture": entry.picture,
-    }
+        connection.send_result(msg["id"], entry.json_fragment)

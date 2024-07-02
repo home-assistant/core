@@ -1,4 +1,5 @@
 """Test different accessory types: Remotes."""
+
 from unittest.mock import patch
 
 import pytest
@@ -47,7 +48,7 @@ async def test_activity_remote(
     )
     await hass.async_block_till_done()
     acc = ActivityRemote(hass, hk_driver, "ActivityRemote", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -132,7 +133,6 @@ async def test_activity_remote(
 
     with pytest.raises(ValueError):
         acc.char_remote_key.client_update_value(20)
-        await hass.async_block_till_done()
 
     acc.char_remote_key.client_update_value(7)
     await hass.async_block_till_done()
@@ -171,7 +171,7 @@ async def test_activity_remote_bad_names(
     )
     await hass.async_block_till_done()
     acc = ActivityRemote(hass, hk_driver, "ActivityRemote", entity_id, 2, None)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2

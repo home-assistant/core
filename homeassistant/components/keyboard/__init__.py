@@ -1,4 +1,5 @@
 """Support to emulate keyboard presses on host machine."""
+
 from pykeyboard import PyKeyboard
 import voluptuous as vol
 

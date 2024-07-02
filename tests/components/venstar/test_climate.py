@@ -1,4 +1,5 @@
 """The climate tests for the venstar integration."""
+
 from unittest.mock import patch
 
 from homeassistant.components.climate import ClimateEntityFeature
@@ -10,6 +11,8 @@ EXPECTED_BASE_SUPPORTED_FEATURES = (
     ClimateEntityFeature.TARGET_TEMPERATURE
     | ClimateEntityFeature.FAN_MODE
     | ClimateEntityFeature.PRESET_MODE
+    | ClimateEntityFeature.TURN_OFF
+    | ClimateEntityFeature.TURN_ON
 )
 
 
@@ -17,7 +20,7 @@ EXPECTED_BASE_SUPPORTED_FEATURES = (
 async def test_colortouch(hass: HomeAssistant) -> None:
     """Test interfacing with a venstar colortouch with attached humidifier."""
 
-    with patch("homeassistant.components.venstar.VENSTAR_SLEEP", new=0):
+    with patch("homeassistant.components.venstar.coordinator.VENSTAR_SLEEP", new=0):
         await async_init_integration(hass)
 
     state = hass.states.get("climate.colortouch")
@@ -53,7 +56,7 @@ async def test_colortouch(hass: HomeAssistant) -> None:
 async def test_t2000(hass: HomeAssistant) -> None:
     """Test interfacing with a venstar T2000 presently turned off."""
 
-    with patch("homeassistant.components.venstar.VENSTAR_SLEEP", new=0):
+    with patch("homeassistant.components.venstar.coordinator.VENSTAR_SLEEP", new=0):
         await async_init_integration(hass)
 
     state = hass.states.get("climate.t2000")

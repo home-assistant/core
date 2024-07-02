@@ -1,6 +1,5 @@
 """Alexa Resources and Assets."""
 
-
 from typing import Any
 
 
@@ -225,7 +224,7 @@ class AlexaCapabilityResource:
 
         Return ModeResources, PresetResources friendlyNames serialized.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def serialize_labels(self, resources: list[str]) -> dict[str, list[dict[str, Any]]]:
         """Return serialized labels for an API response.
@@ -292,9 +291,9 @@ class AlexaPresetResource(AlexaCapabilityResource):
     def __init__(
         self,
         labels: list[str],
-        min_value: int | float,
-        max_value: int | float,
-        precision: int | float,
+        min_value: float,
+        max_value: float,
+        precision: float,
         unit: str | None = None,
     ) -> None:
         """Initialize an Alexa presetResource."""
@@ -307,7 +306,7 @@ class AlexaPresetResource(AlexaCapabilityResource):
         if unit in AlexaGlobalCatalog.__dict__.values():
             self._unit_of_measure = unit
 
-    def add_preset(self, value: int | float, labels: list[str]) -> None:
+    def add_preset(self, value: float, labels: list[str]) -> None:
         """Add preset to configuration presets array."""
         self._presets.append({"value": value, "labels": labels})
 
@@ -406,7 +405,7 @@ class AlexaSemantics:
         )
 
     def add_states_to_range(
-        self, states: list[str], min_value: int | float, max_value: int | float
+        self, states: list[str], min_value: float, max_value: float
     ) -> None:
         """Add StatesToRange stateMappings."""
         self._add_state_mapping(

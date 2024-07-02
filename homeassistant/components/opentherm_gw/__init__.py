@@ -1,4 +1,5 @@
 """Support for OpenTherm Gateway devices."""
+
 import asyncio
 from datetime import date, datetime
 import logging
@@ -35,6 +36,8 @@ from .const import (
     ATTR_DHW_OVRD,
     ATTR_GW_ID,
     ATTR_LEVEL,
+    ATTR_TRANSP_ARG,
+    ATTR_TRANSP_CMD,
     CONF_CLIMATE,
     CONF_FLOOR_TEMP,
     CONF_PRECISION,
@@ -45,6 +48,7 @@ from .const import (
     DATA_OPENTHERM_GW,
     DOMAIN,
     SERVICE_RESET_GATEWAY,
+    SERVICE_SEND_TRANSP_CMD,
     SERVICE_SET_CH_OVRD,
     SERVICE_SET_CLOCK,
     SERVICE_SET_CONTROL_SETPOINT,
@@ -114,7 +118,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     try:
         async with asyncio.timeout(CONNECTION_TIMEOUT):
             await gateway.connect_and_subscribe()
-    except (asyncio.TimeoutError, ConnectionError, SerialException) as ex:
+    except (TimeoutError, ConnectionError, SerialException) as ex:
         await gateway.cleanup()
         raise ConfigEntryNotReady(
             f"Could not connect to gateway at {gateway.device_path}: {ex}"
@@ -253,6 +257,19 @@ def register_services(hass: HomeAssistant) -> None:
             ),
         }
     )
+    service_send_transp_cmd_schema = vol.Schema(
+        {
+            vol.Required(ATTR_GW_ID): vol.All(
+                cv.string, vol.In(hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS])
+            ),
+            vol.Required(ATTR_TRANSP_CMD): vol.All(
+                cv.string, vol.Length(min=2, max=2), vol.Coerce(str.upper)
+            ),
+            vol.Required(ATTR_TRANSP_ARG): vol.All(
+                cv.string, vol.Length(min=1, max=12)
+            ),
+        }
+    )
 
     async def reset_gateway(call: ServiceCall) -> None:
         """Reset the OpenTherm Gateway."""
@@ -374,6 +391,20 @@ def register_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_SB_TEMP, set_setback_temp, service_set_sb_temp_schema
+    )
+
+    async def send_transparent_cmd(call: ServiceCall) -> None:
+        """Send a transparent OpenTherm Gateway command."""
+        gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]]
+        transp_cmd = call.data[ATTR_TRANSP_CMD]
+        transp_arg = call.data[ATTR_TRANSP_ARG]
+        await gw_dev.gateway.send_transparent_command(transp_cmd, transp_arg)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SEND_TRANSP_CMD,
+        send_transparent_cmd,
+        service_send_transp_cmd_schema,
     )
 
 

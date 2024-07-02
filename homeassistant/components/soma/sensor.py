@@ -1,4 +1,5 @@
 """Support for Soma sensors."""
+
 from datetime import timedelta
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity

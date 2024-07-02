@@ -1,4 +1,5 @@
 """Support for BT Smart Hub (Sometimes referred to as BT Home Hub 6)."""
+
 from __future__ import annotations
 
 from collections import namedtuple
@@ -9,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST
@@ -22,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_DEFAULT_IP = "192.168.1.254"
 CONF_SMARTHUB_MODEL = "smarthub_model"
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
         vol.Optional(CONF_SMARTHUB_MODEL): vol.In([1, 2]),

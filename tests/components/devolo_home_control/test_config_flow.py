@@ -1,4 +1,5 @@
 """Test the devolo_home_control config flow."""
+
 from unittest.mock import patch
 
 import pytest
@@ -24,7 +25,7 @@ async def test_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["step_id"] == "user"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     await _setup(hass, result)
@@ -38,7 +39,7 @@ async def test_form_invalid_credentials_user(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["step_id"] == "user"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
@@ -61,7 +62,7 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_USER},
             data={"username": "test-username", "password": "test-password"},
         )
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -71,15 +72,18 @@ async def test_form_advanced_options(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.devolo_home_control.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.devolo_home_control.Mydevolo.uuid",
-        return_value="123456",
+    with (
+        patch(
+            "homeassistant.components.devolo_home_control.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.devolo_home_control.Mydevolo.uuid",
+            return_value="123456",
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -91,7 +95,7 @@ async def test_form_advanced_options(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "devolo Home Control"
     assert result2["data"] == {
         "username": "test-username",
@@ -111,7 +115,7 @@ async def test_form_zeroconf(hass: HomeAssistant) -> None:
     )
 
     assert result["step_id"] == "zeroconf_confirm"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     await _setup(hass, result)
 
@@ -127,7 +131,7 @@ async def test_form_invalid_credentials_zeroconf(hass: HomeAssistant) -> None:
     )
 
     assert result["step_id"] == "zeroconf_confirm"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -146,7 +150,7 @@ async def test_zeroconf_wrong_device(hass: HomeAssistant) -> None:
     )
 
     assert result["reason"] == "Not a devolo Home Control gateway."
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -155,7 +159,7 @@ async def test_zeroconf_wrong_device(hass: HomeAssistant) -> None:
     )
 
     assert result["reason"] == "Not a devolo Home Control gateway."
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
 
 
 async def test_form_reauth(hass: HomeAssistant) -> None:
@@ -176,14 +180,17 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
     )
 
     assert result["step_id"] == "reauth_confirm"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
-    with patch(
-        "homeassistant.components.devolo_home_control.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.devolo_home_control.Mydevolo.uuid",
-        return_value="123456",
+    with (
+        patch(
+            "homeassistant.components.devolo_home_control.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.devolo_home_control.Mydevolo.uuid",
+            return_value="123456",
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -191,7 +198,7 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -239,14 +246,17 @@ async def test_form_uuid_change_reauth(hass: HomeAssistant) -> None:
     )
 
     assert result["step_id"] == "reauth_confirm"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
-    with patch(
-        "homeassistant.components.devolo_home_control.async_setup_entry",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.devolo_home_control.Mydevolo.uuid",
-        return_value="789123",
+    with (
+        patch(
+            "homeassistant.components.devolo_home_control.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.devolo_home_control.Mydevolo.uuid",
+            return_value="789123",
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -254,18 +264,21 @@ async def test_form_uuid_change_reauth(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "reauth_failed"}
 
 
 async def _setup(hass: HomeAssistant, result: FlowResult) -> None:
     """Finish configuration steps."""
-    with patch(
-        "homeassistant.components.devolo_home_control.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.devolo_home_control.Mydevolo.uuid",
-        return_value="123456",
+    with (
+        patch(
+            "homeassistant.components.devolo_home_control.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.devolo_home_control.Mydevolo.uuid",
+            return_value="123456",
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -273,7 +286,7 @@ async def _setup(hass: HomeAssistant, result: FlowResult) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "devolo Home Control"
     assert result2["data"] == {
         "username": "test-username",

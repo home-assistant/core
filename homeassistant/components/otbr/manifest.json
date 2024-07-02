@@ -8,5 +8,5 @@
   "documentation": "https://www.home-assistant.io/integrations/otbr",
   "integration_type": "service",
   "iot_class": "local_polling",
-  "requirements": ["python-otbr-api==2.5.0"]
+  "requirements": ["python-otbr-api==2.6.0"]
 }

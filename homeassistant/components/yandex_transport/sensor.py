@@ -1,4 +1,5 @@
 """Service for obtaining information about closer bus from Transport Yandex Service."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -8,7 +9,7 @@ from aioymaps import CaptchaError, YandexMapsRequester
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
 )
@@ -33,7 +34,7 @@ DEFAULT_NAME = "Yandex Transport"
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STOP_ID): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

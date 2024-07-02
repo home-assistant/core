@@ -1,28 +1,45 @@
 {
   "config": {
     "step": {
-      "user": {
+      "api": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
-        }
+        },
+        "description": "Get your API key from [here]({api_key_url})."
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "Your current API key: {api_key} is no longer valid. Please enter a new valid API key."
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "options": {
     "step": {
       "init": {
         "data": {
-          "prompt": "Prompt Template",
-          "model": "[%key:common::generic::model%]",
+          "recommended": "Recommended model settings",
+          "prompt": "Instructions",
+          "chat_model": "[%key:common::generic::model%]",
           "temperature": "Temperature",
           "top_p": "Top P",
           "top_k": "Top K",
-          "max_tokens": "Maximum tokens to return in response"
+          "max_tokens": "Maximum tokens to return in response",
+          "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
+          "harassment_block_threshold": "Negative or harmful comments targeting identity and/or protected attributes",
+          "hate_block_threshold": "Content that is rude, disrespectful, or profane",
+          "sexual_block_threshold": "Contains references to sexual acts or other lewd content",
+          "dangerous_block_threshold": "Promotes, facilitates, or encourages harmful acts"
+        },
+        "data_description": {
+          "prompt": "Instruct how the LLM should respond. This can be a template."
         }
       }
     }
@@ -35,7 +52,7 @@
         "prompt": {
           "name": "Prompt",
           "description": "The prompt",
-          "example": "Describe what you see in these images:"
+          "example": "Describe what you see in these images"
         },
         "image_filename": {
           "name": "Image filename",

@@ -1,4 +1,5 @@
 """Support for interfacing with an instance of getchannels.com."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -7,7 +8,7 @@ from pychannels import Channels
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -25,7 +26,7 @@ DATA_CHANNELS = "channels"
 DEFAULT_NAME = "Channels"
 DEFAULT_PORT = 57000
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -166,8 +167,7 @@ class ChannelsPlayer(MediaPlayerEntity):
     @property
     def source_list(self):
         """List of favorite channels."""
-        sources = [channel["name"] for channel in self.favorite_channels]
-        return sources
+        return [channel["name"] for channel in self.favorite_channels]
 
     @property
     def is_volume_muted(self):

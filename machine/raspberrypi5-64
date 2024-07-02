@@ -4,5 +4,4 @@ ARG \
 FROM $BUILD_FROM
 
 RUN apk --no-cache add \
-        raspberrypi-userland \
-        raspberrypi-userland-libs
+        raspberrypi-utils

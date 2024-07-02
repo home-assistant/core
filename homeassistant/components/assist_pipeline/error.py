@@ -38,6 +38,17 @@ class SpeechToTextError(PipelineError):
     """Error in speech-to-text portion of pipeline."""
 
 
+class DuplicateWakeUpDetectedError(WakeWordDetectionError):
+    """Error when multiple voice assistants wake up at the same time (same wake word)."""
+
+    def __init__(self, wake_up_phrase: str) -> None:
+        """Set error message."""
+        super().__init__(
+            "duplicate_wake_up_detected",
+            f"Duplicate wake-up detected for {wake_up_phrase}",
+        )
+
+
 class IntentRecognitionError(PipelineError):
     """Error in intent recognition portion of pipeline."""
 

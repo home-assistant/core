@@ -101,7 +101,7 @@
 # ---
 # name: test_get_agent_info
   dict({
-    'id': 'homeassistant',
+    'id': 'conversation.home_assistant',
     'name': 'Home Assistant',
   })
 # ---
@@ -113,21 +113,15 @@
 # ---
 # name: test_get_agent_info.2
   dict({
-    'id': 'homeassistant',
+    'id': 'conversation.home_assistant',
     'name': 'Home Assistant',
-  })
-# ---
-# name: test_get_agent_info.3
-  dict({
-    'id': 'mock-entry',
-    'name': 'test',
   })
 # ---
 # name: test_get_agent_list
   dict({
     'agents': list([
       dict({
-        'id': 'homeassistant',
+        'id': 'conversation.home_assistant',
         'name': 'Home Assistant',
         'supported_languages': list([
           'af',
@@ -207,7 +201,7 @@
   dict({
     'agents': list([
       dict({
-        'id': 'homeassistant',
+        'id': 'conversation.home_assistant',
         'name': 'Home Assistant',
         'supported_languages': list([
         ]),
@@ -231,7 +225,7 @@
   dict({
     'agents': list([
       dict({
-        'id': 'homeassistant',
+        'id': 'conversation.home_assistant',
         'name': 'Home Assistant',
         'supported_languages': list([
           'en',
@@ -255,7 +249,7 @@
   dict({
     'agents': list([
       dict({
-        'id': 'homeassistant',
+        'id': 'conversation.home_assistant',
         'name': 'Home Assistant',
         'supported_languages': list([
           'en',
@@ -279,7 +273,7 @@
   dict({
     'agents': list([
       dict({
-        'id': 'homeassistant',
+        'id': 'conversation.home_assistant',
         'name': 'Home Assistant',
         'supported_languages': list([
           'de',
@@ -304,7 +298,7 @@
   dict({
     'agents': list([
       dict({
-        'id': 'homeassistant',
+        'id': 'conversation.home_assistant',
         'name': 'Home Assistant',
         'supported_languages': list([
           'de-CH',
@@ -339,7 +333,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'An unexpected error occurred while handling the intent',
+          'speech': 'An unexpected error occurred',
         }),
       }),
     }),
@@ -352,14 +346,14 @@
       'card': dict({
       }),
       'data': dict({
-        'code': 'no_valid_targets',
+        'code': 'no_intent_match',
       }),
       'language': 'en',
       'response_type': 'error',
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No device or entity named do something',
+          'speech': "Sorry, I couldn't understand that",
         }),
       }),
     }),
@@ -379,13 +373,43 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'An unexpected error occurred while handling the intent',
+          'speech': 'An unexpected error occurred',
         }),
       }),
     }),
   })
 # ---
 # name: test_http_processing_intent[None]
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen',
+            'type': 'entity',
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_processing_intent[conversation.home_assistant]
   dict({
     'conversation_id': None,
     'response': dict({
@@ -519,7 +543,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No device or entity named late added alias',
+          'speech': 'Sorry, I am not aware of any device called late added alias',
         }),
       }),
     }),
@@ -539,7 +563,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No area named kitchen',
+          'speech': 'Sorry, I am not aware of any device called kitchen light',
         }),
       }),
     }),
@@ -679,7 +703,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No area named late added',
+          'speech': 'Sorry, I am not aware of any device called late added light',
         }),
       }),
     }),
@@ -759,7 +783,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No area named kitchen',
+          'speech': 'Sorry, I am not aware of any device called kitchen light',
         }),
       }),
     }),
@@ -779,7 +803,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No area named my cool',
+          'speech': 'Sorry, I am not aware of any device called my cool light',
         }),
       }),
     }),
@@ -919,7 +943,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No area named kitchen',
+          'speech': 'Sorry, I am not aware of any device called kitchen light',
         }),
       }),
     }),
@@ -969,7 +993,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No area named renamed',
+          'speech': 'Sorry, I am not aware of any device called renamed light',
         }),
       }),
     }),
@@ -1006,6 +1030,36 @@
   })
 # ---
 # name: test_turn_on_intent[None-turn kitchen on-None]
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_turn_on_intent[None-turn kitchen on-conversation.home_assistant]
   dict({
     'conversation_id': None,
     'response': dict({
@@ -1095,6 +1149,36 @@
     }),
   })
 # ---
+# name: test_turn_on_intent[None-turn on kitchen-conversation.home_assistant]
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
 # name: test_turn_on_intent[None-turn on kitchen-homeassistant]
   dict({
     'conversation_id': None,
@@ -1126,6 +1210,36 @@
   })
 # ---
 # name: test_turn_on_intent[my_new_conversation-turn kitchen on-None]
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_turn_on_intent[my_new_conversation-turn kitchen on-conversation.home_assistant]
   dict({
     'conversation_id': None,
     'response': dict({
@@ -1215,6 +1329,36 @@
     }),
   })
 # ---
+# name: test_turn_on_intent[my_new_conversation-turn on kitchen-conversation.home_assistant]
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
 # name: test_turn_on_intent[my_new_conversation-turn on kitchen-homeassistant]
   dict({
     'conversation_id': None,
@@ -1252,14 +1396,14 @@
       'card': dict({
       }),
       'data': dict({
-        'code': 'no_valid_targets',
+        'code': 'no_intent_match',
       }),
       'language': 'en',
       'response_type': 'error',
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No device or entity named test text',
+          'speech': "Sorry, I couldn't understand that",
         }),
       }),
     }),
@@ -1292,14 +1436,14 @@
       'card': dict({
       }),
       'data': dict({
-        'code': 'no_valid_targets',
+        'code': 'no_intent_match',
       }),
       'language': 'en',
       'response_type': 'error',
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No device or entity named test text',
+          'speech': "Sorry, I couldn't understand that",
         }),
       }),
     }),
@@ -1312,14 +1456,14 @@
       'card': dict({
       }),
       'data': dict({
-        'code': 'no_valid_targets',
+        'code': 'no_intent_match',
       }),
       'language': 'en',
       'response_type': 'error',
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No device or entity named test text',
+          'speech': "Sorry, I couldn't understand that",
         }),
       }),
     }),
@@ -1352,41 +1496,17 @@
       'card': dict({
       }),
       'data': dict({
-        'code': 'no_valid_targets',
+        'code': 'no_intent_match',
       }),
       'language': 'en',
       'response_type': 'error',
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'No device or entity named test text',
+          'speech': "Sorry, I couldn't understand that",
         }),
       }),
     }),
-  })
-# ---
-# name: test_ws_get_agent_info
-  dict({
-    'attribution': None,
-  })
-# ---
-# name: test_ws_get_agent_info.1
-  dict({
-    'attribution': None,
-  })
-# ---
-# name: test_ws_get_agent_info.2
-  dict({
-    'attribution': dict({
-      'name': 'Mock assistant',
-      'url': 'https://assist.me',
-    }),
-  })
-# ---
-# name: test_ws_get_agent_info.3
-  dict({
-    'code': 'invalid_format',
-    'message': "invalid agent ID for dictionary value @ data['agent_id']. Got 'not_exist'",
   })
 # ---
 # name: test_ws_hass_agent_debug
@@ -1403,13 +1523,18 @@
         'intent': dict({
           'name': 'HassTurnOn',
         }),
+        'match': True,
+        'sentence_template': '<turn> on (<area> <name>|<name> [in <area>])',
         'slots': dict({
           'name': 'my cool light',
         }),
+        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
           }),
+        }),
+        'unmatched_slots': dict({
         }),
       }),
       dict({
@@ -1423,13 +1548,18 @@
         'intent': dict({
           'name': 'HassTurnOff',
         }),
+        'match': True,
+        'sentence_template': '[<turn>] (<area> <name>|<name> [in <area>]) [to] off',
         'slots': dict({
           'name': 'my cool light',
         }),
+        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
           }),
+        }),
+        'unmatched_slots': dict({
         }),
       }),
       dict({
@@ -1448,14 +1578,19 @@
         'intent': dict({
           'name': 'HassTurnOn',
         }),
+        'match': True,
+        'sentence_template': '<turn> on [all] <light> in <area>',
         'slots': dict({
           'area': 'kitchen',
           'domain': 'light',
         }),
+        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
           }),
+        }),
+        'unmatched_slots': dict({
         }),
       }),
       dict({
@@ -1479,43 +1614,136 @@
         'intent': dict({
           'name': 'HassGetState',
         }),
+        'match': True,
+        'sentence_template': '[tell me] how many {on_off_domains:domain} (is|are) {on_off_states:state} [in <area>]',
         'slots': dict({
           'area': 'kitchen',
-          'domain': 'light',
+          'domain': 'lights',
           'state': 'on',
         }),
+        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': False,
           }),
         }),
+        'unmatched_slots': dict({
+        }),
       }),
+      None,
+    ]),
+  })
+# ---
+# name: test_ws_hass_agent_debug_custom_sentence
+  dict({
+    'results': list([
       dict({
         'details': dict({
-          'domain': dict({
-            'name': 'domain',
-            'text': '',
-            'value': 'script',
+          'beer_style': dict({
+            'name': 'beer_style',
+            'text': 'lager',
+            'value': 'lager',
           }),
         }),
+        'file': 'en/beer.yaml',
         'intent': dict({
-          'name': 'HassTurnOn',
+          'name': 'OrderBeer',
         }),
+        'match': True,
+        'sentence_template': "I'd like to order a {beer_style} [please]",
         'slots': dict({
-          'domain': 'script',
+          'beer_style': 'lager',
         }),
+        'source': 'custom',
         'targets': dict({
+        }),
+        'unmatched_slots': dict({
         }),
       }),
     ]),
   })
 # ---
-# name: test_ws_hass_agent_debug.1
+# name: test_ws_hass_agent_debug_null_result
   dict({
-    'name': dict({
-      'name': 'name',
-      'text': 'my cool light',
-      'value': 'my cool light',
-    }),
+    'results': list([
+      None,
+    ]),
+  })
+# ---
+# name: test_ws_hass_agent_debug_out_of_range
+  dict({
+    'results': list([
+      dict({
+        'details': dict({
+          'brightness': dict({
+            'name': 'brightness',
+            'text': '100%',
+            'value': 100,
+          }),
+          'name': dict({
+            'name': 'name',
+            'text': 'test light',
+            'value': 'test light',
+          }),
+        }),
+        'intent': dict({
+          'name': 'HassLightSet',
+        }),
+        'match': True,
+        'sentence_template': '[<numeric_value_set>] <name> brightness [to] <brightness>',
+        'slots': dict({
+          'brightness': '100%',
+          'name': 'test light',
+        }),
+        'source': 'builtin',
+        'targets': dict({
+          'light.demo_1234': dict({
+            'matched': True,
+          }),
+        }),
+        'unmatched_slots': dict({
+        }),
+      }),
+    ]),
+  })
+# ---
+# name: test_ws_hass_agent_debug_out_of_range.1
+  dict({
+    'results': list([
+      dict({
+        'details': dict({
+          'name': dict({
+            'name': 'name',
+            'text': 'test light',
+            'value': 'test light',
+          }),
+        }),
+        'intent': dict({
+          'name': 'HassLightSet',
+        }),
+        'match': False,
+        'sentence_template': '[<numeric_value_set>] <name> brightness [to] <brightness>',
+        'slots': dict({
+          'name': 'test light',
+        }),
+        'source': 'builtin',
+        'targets': dict({
+        }),
+        'unmatched_slots': dict({
+          'brightness': 1001,
+        }),
+      }),
+    ]),
+  })
+# ---
+# name: test_ws_hass_agent_debug_sentence_trigger
+  dict({
+    'results': list([
+      dict({
+        'match': True,
+        'sentence_template': 'hello[ world]',
+        'source': 'trigger',
+      }),
+    ]),
   })
 # ---

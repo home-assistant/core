@@ -1,4 +1,5 @@
 """Platform allowing several fans to be grouped into one fan."""
+
 from __future__ import annotations
 
 from functools import reduce
@@ -14,7 +15,7 @@ from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PERCENTAGE_STEP,
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as FAN_PLATFORM_SCHEMA,
     SERVICE_OSCILLATE,
     SERVICE_SET_DIRECTION,
     SERVICE_SET_PERCENTAGE,
@@ -39,7 +40,7 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import GroupEntity
+from .entity import GroupEntity
 from .util import attribute_equal, most_frequent_attribute, reduce_attribute
 
 SUPPORTED_FLAGS = {
@@ -53,7 +54,7 @@ DEFAULT_NAME = "Fan Group"
 # No limit on parallel updates to enable a group calling another group
 PARALLEL_UPDATES = 0
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = FAN_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITIES): cv.entities_domain(DOMAIN),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -91,7 +92,9 @@ async def async_setup_entry(
 
 
 @callback
-def async_create_preview_fan(name: str, validated_config: dict[str, Any]) -> FanGroup:
+def async_create_preview_fan(
+    hass: HomeAssistant, name: str, validated_config: dict[str, Any]
+) -> FanGroup:
     """Create a preview sensor."""
     return FanGroup(
         None,

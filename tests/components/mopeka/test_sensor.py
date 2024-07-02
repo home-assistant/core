@@ -1,4 +1,5 @@
 """Test the Mopeka sensors."""
+
 from homeassistant.components.mopeka.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import (

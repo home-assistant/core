@@ -1,4 +1,5 @@
 """Subscriber for devolo home control API publisher."""
+
 from collections.abc import Callable
 import logging
 

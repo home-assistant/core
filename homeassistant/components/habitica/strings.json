@@ -19,6 +19,51 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "display_name": {
+        "name": "Display name"
+      },
+      "health": {
+        "name": "Health"
+      },
+      "health_max": {
+        "name": "Max. health"
+      },
+      "mana": {
+        "name": "Mana"
+      },
+      "mana_max": {
+        "name": "Max. mana"
+      },
+      "experience": {
+        "name": "Experience"
+      },
+      "experience_max": {
+        "name": "Next level"
+      },
+      "level": {
+        "name": "Level"
+      },
+      "gold": {
+        "name": "Gold"
+      },
+      "class": {
+        "name": "Class",
+        "state": {
+          "warrior": "Warrior",
+          "healer": "Healer",
+          "wizard": "Mage",
+          "rogue": "Rogue"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "setup_rate_limit_exception": {
+      "message": "Currently rate limited, try again later"
+    }
+  },
   "services": {
     "api_call": {
       "name": "API name",

@@ -1,0 +1,31 @@
+{
+  "entity": {
+    "sensor": {
+      "individual_address": {
+        "default": "mdi:router-network"
+      },
+      "telegrams_incoming": {
+        "default": "mdi:upload-network"
+      },
+      "telegrams_incoming_error": {
+        "default": "mdi:help-network"
+      },
+      "telegrams_outgoing": {
+        "default": "mdi:download-network"
+      },
+      "telegrams_outgoing_error": {
+        "default": "mdi:close-network"
+      },
+      "telegram_count": {
+        "default": "mdi:plus-network"
+      }
+    }
+  },
+  "services": {
+    "send": "mdi:email-arrow-right",
+    "read": "mdi:email-search",
+    "event_register": "mdi:home-import-outline",
+    "exposure_register": "mdi:home-export-outline",
+    "reload": "mdi:reload"
+  }
+}

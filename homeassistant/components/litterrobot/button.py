@@ -1,4 +1,5 @@
 """Support for Litter-Robot button."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -9,23 +10,21 @@ from typing import Any, Generic
 from pylitterbot import FeederRobot, LitterRobot3
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import LitterRobotConfigEntry
 from .entity import LitterRobotEntity, _RobotT
-from .hub import LitterRobotHub
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: LitterRobotConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot cleaner using config entry."""
-    hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
+    hub = entry.runtime_data
     entities: list[LitterRobotButtonEntity] = list(
         itertools.chain(
             (
@@ -61,14 +60,12 @@ class RobotButtonEntityDescription(ButtonEntityDescription, RequiredKeysMixin[_R
 LITTER_ROBOT_BUTTON = RobotButtonEntityDescription[LitterRobot3](
     key="reset_waste_drawer",
     translation_key="reset_waste_drawer",
-    icon="mdi:delete-variant",
     entity_category=EntityCategory.CONFIG,
     press_fn=lambda robot: robot.reset_waste_drawer(),
 )
 FEEDER_ROBOT_BUTTON = RobotButtonEntityDescription[FeederRobot](
     key="give_snack",
     translation_key="give_snack",
-    icon="mdi:candy-outline",
     press_fn=lambda robot: robot.give_snack(),
 )
 

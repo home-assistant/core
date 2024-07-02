@@ -1,4 +1,5 @@
 """Matter to Home Assistant adapter."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
@@ -52,11 +53,27 @@ class MatterAdapter:
 
     async def setup_nodes(self) -> None:
         """Set up all existing nodes and subscribe to new nodes."""
+        initialized_nodes: set[int] = set()
         for node in self.matter_client.get_nodes():
+            if not node.available:
+                # ignore un-initialized nodes at startup
+                # catch them later when they become available.
+                continue
+            initialized_nodes.add(node.node_id)
             self._setup_node(node)
 
         def node_added_callback(event: EventType, node: MatterNode) -> None:
             """Handle node added event."""
+            initialized_nodes.add(node.node_id)
+            self._setup_node(node)
+
+        def node_updated_callback(event: EventType, node: MatterNode) -> None:
+            """Handle node updated event."""
+            if node.node_id in initialized_nodes:
+                return
+            if not node.available:
+                return
+            initialized_nodes.add(node.node_id)
             self._setup_node(node)
 
         def endpoint_added_callback(event: EventType, data: dict[str, int]) -> None:
@@ -116,6 +133,11 @@ class MatterAdapter:
                 callback=node_added_callback, event_filter=EventType.NODE_ADDED
             )
         )
+        self.config_entry.async_on_unload(
+            self.matter_client.subscribe_events(
+                callback=node_updated_callback, event_filter=EventType.NODE_UPDATED
+            )
+        )
 
     def _setup_node(self, node: MatterNode) -> None:
         """Set up an node."""
@@ -163,10 +185,14 @@ class MatterAdapter:
             endpoint,
         )
         identifiers = {(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
+        serial_number: str | None = None
         # if available, we also add the serialnumber as identifier
-        if basic_info.serialNumber and "test" not in basic_info.serialNumber.lower():
+        if (
+            basic_info_serial_number := basic_info.serialNumber
+        ) and "test" not in basic_info_serial_number.lower():
             # prefix identifier with 'serial_' to be able to filter it
-            identifiers.add((DOMAIN, f"{ID_TYPE_SERIAL}_{basic_info.serialNumber}"))
+            identifiers.add((DOMAIN, f"{ID_TYPE_SERIAL}_{basic_info_serial_number}"))
+            serial_number = basic_info_serial_number
 
         model = (
             get_clean_name(basic_info.productName) or device_type.__name__
@@ -181,6 +207,7 @@ class MatterAdapter:
             sw_version=basic_info.softwareVersionString,
             manufacturer=basic_info.vendorName or endpoint.node.device_info.vendorName,
             model=model,
+            serial_number=serial_number,
             via_device=(DOMAIN, bridge_device_id) if bridge_device_id else None,
         )
 

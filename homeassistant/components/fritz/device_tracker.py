@@ -1,4 +1,5 @@
 """Support for FRITZ!Box devices."""
+
 from __future__ import annotations
 
 import datetime
@@ -10,14 +11,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import (
+from .const import DATA_FRITZ, DOMAIN
+from .coordinator import (
     AvmWrapper,
     FritzData,
     FritzDevice,
-    FritzDeviceBase,
     device_filter_out_from_trackers,
 )
-from .const import DATA_FRITZ, DOMAIN
+from .entity import FritzDeviceBase
 
 _LOGGER = logging.getLogger(__name__)
 

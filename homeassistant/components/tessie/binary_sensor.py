@@ -1,4 +1,5 @@
 """Binary Sensor platform for Tessie integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -9,14 +10,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, TessieStatus
-from .coordinator import TessieStateUpdateCoordinator
+from . import TessieConfigEntry
+from .const import TessieState
 from .entity import TessieEntity
+from .models import TessieVehicleData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -30,10 +31,10 @@ DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
     TessieBinarySensorEntityDescription(
         key="state",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        is_on=lambda x: x == TessieStatus.ONLINE,
+        is_on=lambda x: x == TessieState.ONLINE,
     ),
     TessieBinarySensorEntityDescription(
-        key="charge_state_battery_heater_on",
+        key="climate_state_battery_heater",
         device_class=BinarySensorDeviceClass.HEAT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -41,6 +42,7 @@ DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
         key="charge_state_charging_state",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
         is_on=lambda x: x == "Charging",
+        entity_registry_enabled_default=False,
     ),
     TessieBinarySensorEntityDescription(
         key="charge_state_preconditioning_enabled",
@@ -55,18 +57,21 @@ DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TessieBinarySensorEntityDescription(
+        key="charge_state_conn_charge_cable",
+        is_on=lambda x: x != "<invalid>",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    ),
+    TessieBinarySensorEntityDescription(
         key="climate_state_auto_seat_climate_left",
-        device_class=BinarySensorDeviceClass.HEAT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TessieBinarySensorEntityDescription(
         key="climate_state_auto_seat_climate_right",
-        device_class=BinarySensorDeviceClass.HEAT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TessieBinarySensorEntityDescription(
         key="climate_state_auto_steering_wheel_heat",
-        device_class=BinarySensorDeviceClass.HEAT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TessieBinarySensorEntityDescription(
@@ -88,7 +93,7 @@ DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
     ),
     TessieBinarySensorEntityDescription(
         key="vehicle_state_is_user_present",
-        device_class=BinarySensorDeviceClass.PRESENCE,
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
     ),
     TessieBinarySensorEntityDescription(
         key="vehicle_state_tpms_soft_warning_fl",
@@ -130,20 +135,41 @@ DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.WINDOW,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    TessieBinarySensorEntityDescription(
+        key="vehicle_state_df",
+        device_class=BinarySensorDeviceClass.DOOR,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieBinarySensorEntityDescription(
+        key="vehicle_state_dr",
+        device_class=BinarySensorDeviceClass.DOOR,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieBinarySensorEntityDescription(
+        key="vehicle_state_pf",
+        device_class=BinarySensorDeviceClass.DOOR,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieBinarySensorEntityDescription(
+        key="vehicle_state_pr",
+        device_class=BinarySensorDeviceClass.DOOR,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TessieConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Tessie binary sensor platform from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     async_add_entities(
-        TessieBinarySensorEntity(vehicle.state_coordinator, description)
-        for vehicle in data
+        TessieBinarySensorEntity(vehicle, description)
+        for vehicle in data.vehicles
         for description in DESCRIPTIONS
-        if description.key in vehicle.state_coordinator.data
     )
 
 
@@ -154,11 +180,11 @@ class TessieBinarySensorEntity(TessieEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        coordinator: TessieStateUpdateCoordinator,
+        vehicle: TessieVehicleData,
         description: TessieBinarySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, description.key)
+        super().__init__(vehicle, description.key)
         self.entity_description = description
 
     @property

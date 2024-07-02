@@ -1,6 +1,5 @@
 """Tests for the SensorPro integration."""
 
-
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 NOT_SENSORPRO_SERVICE_INFO = BluetoothServiceInfo(

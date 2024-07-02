@@ -1,7 +1,7 @@
 """Alexa state report code."""
+
 from __future__ import annotations
 
-import asyncio
 from asyncio import timeout
 from http import HTTPStatus
 import json
@@ -13,10 +13,16 @@ from uuid import uuid4
 import aiohttp
 
 from homeassistant.components import event
-from homeassistant.const import MATCH_ALL, STATE_ON
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
+from homeassistant.const import EVENT_STATE_CHANGED, STATE_ON
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.significant_change import create_checker
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import JsonObjectType, json_loads_object
@@ -35,7 +41,7 @@ from .const import (
     Cause,
 )
 from .diagnostics import async_redact_auth_data
-from .entities import ENTITY_ADAPTERS, AlexaEntity, generate_alexa_id
+from .entities import ENTITY_ADAPTERS, AlexaEntity
 from .errors import AlexaInvalidEndpointError, NoTokenAvailable, RequireRelink
 
 if TYPE_CHECKING:
@@ -265,28 +271,35 @@ async def async_enable_proactive_mode(
 
     checker = await create_checker(hass, DOMAIN, extra_significant_check)
 
-    async def async_entity_state_listener(
-        changed_entity: str,
-        old_state: State | None,
-        new_state: State | None,
-    ) -> None:
+    @callback
+    def _async_entity_state_filter(data: EventStateChangedData) -> bool:
         if not hass.is_running:
-            return
+            return False
 
-        if not new_state:
-            return
+        if not (new_state := data["new_state"]):
+            return False
 
         if new_state.domain not in ENTITY_ADAPTERS:
-            return
+            return False
 
+        changed_entity = data["entity_id"]
         if not smart_home_config.should_expose(changed_entity):
             _LOGGER.debug("Not exposing %s because filtered by config", changed_entity)
-            return
+            return False
+
+        return True
+
+    async def _async_entity_state_listener(
+        event_: Event[EventStateChangedData],
+    ) -> None:
+        data = event_.data
+        new_state = data["new_state"]
+        if TYPE_CHECKING:
+            assert new_state is not None
 
         alexa_changed_entity: AlexaEntity = ENTITY_ADAPTERS[new_state.domain](
             hass, smart_home_config, new_state
         )
-
         # Determine how entity should be reported on
         should_report = False
         should_doorbell = False
@@ -303,6 +316,7 @@ async def async_enable_proactive_mode(
             return
 
         if should_doorbell:
+            old_state = data["old_state"]
             if (
                 new_state.domain == event.DOMAIN
                 or new_state.state == STATE_ON
@@ -324,7 +338,11 @@ async def async_enable_proactive_mode(
             hass, smart_home_config, alexa_changed_entity, alexa_properties
         )
 
-    return async_track_state_change(hass, MATCH_ALL, async_entity_state_listener)
+    return hass.bus.async_listen(
+        EVENT_STATE_CHANGED,
+        _async_entity_state_listener,
+        event_filter=_async_entity_state_filter,
+    )
 
 
 async def async_send_changereport_message(
@@ -375,7 +393,7 @@ async def async_send_changereport_message(
                 allow_redirects=True,
             )
 
-    except (asyncio.TimeoutError, aiohttp.ClientError):
+    except (TimeoutError, aiohttp.ClientError):
         _LOGGER.error("Timeout sending report to Alexa for %s", alexa_entity.entity_id)
         return
 
@@ -397,13 +415,14 @@ async def async_send_changereport_message(
         if invalidate_access_token:
             # Invalidate the access token and try again
             config.async_invalidate_access_token()
-            return await async_send_changereport_message(
+            await async_send_changereport_message(
                 hass,
                 config,
                 alexa_entity,
                 alexa_properties,
                 invalidate_access_token=False,
             )
+            return
         await config.set_authorized(False)
 
     _LOGGER.error(
@@ -474,7 +493,7 @@ async def async_send_delete_message(
         if domain not in ENTITY_ADAPTERS:
             continue
 
-        endpoints.append({"endpointId": generate_alexa_id(entity_id)})
+        endpoints.append({"endpointId": config.generate_alexa_id(entity_id)})
 
     payload: dict[str, Any] = {
         "endpoints": endpoints,
@@ -531,7 +550,7 @@ async def async_send_doorbell_event_message(
                 allow_redirects=True,
             )
 
-    except (asyncio.TimeoutError, aiohttp.ClientError):
+    except (TimeoutError, aiohttp.ClientError):
         _LOGGER.error("Timeout sending report to Alexa for %s", alexa_entity.entity_id)
         return
 

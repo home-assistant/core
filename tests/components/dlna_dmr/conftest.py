@@ -1,4 +1,5 @@
 """Fixtures for DLNA tests."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -71,6 +72,7 @@ def domain_data_mock(hass: HomeAssistant) -> Iterable[Mock]:
             service_id="urn:upnp-org:serviceId:RenderingControl",
         ),
     }
+    upnp_device.all_services = list(upnp_device.services.values())
     seal(upnp_device)
     domain_data.upnp_factory.async_create_device.return_value = upnp_device
 
@@ -81,7 +83,7 @@ def domain_data_mock(hass: HomeAssistant) -> Iterable[Mock]:
 @pytest.fixture
 def config_entry_mock() -> MockConfigEntry:
     """Mock a config entry for this platform."""
-    mock_entry = MockConfigEntry(
+    return MockConfigEntry(
         unique_id=MOCK_DEVICE_UDN,
         domain=DLNA_DOMAIN,
         data={
@@ -93,13 +95,12 @@ def config_entry_mock() -> MockConfigEntry:
         title=MOCK_DEVICE_NAME,
         options={},
     )
-    return mock_entry
 
 
 @pytest.fixture
 def config_entry_mock_no_mac() -> MockConfigEntry:
     """Mock a config entry that does not already contain a MAC address."""
-    mock_entry = MockConfigEntry(
+    return MockConfigEntry(
         unique_id=MOCK_DEVICE_UDN,
         domain=DLNA_DOMAIN,
         data={
@@ -110,7 +111,6 @@ def config_entry_mock_no_mac() -> MockConfigEntry:
         title=MOCK_DEVICE_NAME,
         options={},
     )
-    return mock_entry
 
 
 @pytest.fixture
@@ -159,8 +159,3 @@ def async_get_local_ip_mock() -> Iterable[Mock]:
     ) as func:
         func.return_value = AddressFamily.AF_INET, LOCAL_IP
         yield func
-
-
-@pytest.fixture(autouse=True)
-def dlna_dmr_mock_get_source_ip(mock_get_source_ip):
-    """Mock network util's async_get_source_ip."""

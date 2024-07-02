@@ -1,4 +1,5 @@
 """Binary sensor platform support for wiffi devices."""
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback

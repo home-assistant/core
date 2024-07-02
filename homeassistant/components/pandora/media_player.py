@@ -1,4 +1,5 @@
 """Component for controlling Pandora stations through the pianobar client."""
+
 from __future__ import annotations
 
 from datetime import timedelta

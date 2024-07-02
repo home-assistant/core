@@ -1,4 +1,5 @@
 """Tedee sensor entities."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -10,12 +11,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import TedeeConfigEntry
 from .entity import TedeeDescriptionEntity
 
 
@@ -52,27 +52,23 @@ ENTITIES: tuple[TedeeBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TedeeConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Tedee sensor entity."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
-    for entity_description in ENTITIES:
-        async_add_entities(
-            [
-                TedeeBinarySensorEntity(lock, coordinator, entity_description)
-                for lock in coordinator.data.values()
-            ]
-        )
+    async_add_entities(
+        TedeeBinarySensorEntity(lock, coordinator, entity_description)
+        for lock in coordinator.data.values()
+        for entity_description in ENTITIES
+    )
 
     def _async_add_new_lock(lock_id: int) -> None:
         lock = coordinator.data[lock_id]
         async_add_entities(
-            [
-                TedeeBinarySensorEntity(lock, coordinator, entity_description)
-                for entity_description in ENTITIES
-            ]
+            TedeeBinarySensorEntity(lock, coordinator, entity_description)
+            for entity_description in ENTITIES
         )
 
     coordinator.new_lock_callbacks.append(_async_add_new_lock)

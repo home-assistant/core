@@ -1,0 +1,8 @@
+{
+  "services": {
+    "update": "mdi:update",
+    "play_sound": "mdi:speaker-wireless",
+    "display_message": "mdi:message-alert",
+    "lost_device": "mdi:devices"
+  }
+}

@@ -1,4 +1,5 @@
 """Constants used for LG webOS Smart TV."""
+
 import asyncio
 
 from aiowebostv import WebOsTvCommandError
@@ -32,6 +33,6 @@ WEBOSTV_EXCEPTIONS = (
     ConnectionClosedOK,
     ConnectionRefusedError,
     WebOsTvCommandError,
-    asyncio.TimeoutError,
+    TimeoutError,
     asyncio.CancelledError,
 )

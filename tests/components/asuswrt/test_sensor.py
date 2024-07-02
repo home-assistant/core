@@ -1,7 +1,8 @@
 """Tests for the AsusWrt sensor."""
+
 from datetime import timedelta
 
-from pyasuswrt.asuswrt import AsusWrtError
+from pyasuswrt.exceptions import AsusWrtError, AsusWrtNotAvailableInfoError
 import pytest
 
 from homeassistant.components import device_tracker, sensor
@@ -224,6 +225,29 @@ async def test_loadavg_sensors_legacy(hass: HomeAssistant, connect_legacy) -> No
 async def test_loadavg_sensors_http(hass: HomeAssistant, connect_http) -> None:
     """Test creating an AsusWRT load average sensors."""
     await _test_loadavg_sensors(hass, CONFIG_DATA_HTTP)
+
+
+async def test_loadavg_sensors_unaivalable_http(
+    hass: HomeAssistant, connect_http
+) -> None:
+    """Test load average sensors no available using http."""
+    config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA_HTTP, SENSORS_LOAD_AVG)
+    config_entry.add_to_hass(hass)
+
+    connect_http.return_value.async_get_loadavg.side_effect = (
+        AsusWrtNotAvailableInfoError
+    )
+
+    # initial devices setup
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+
+    # assert load average sensors not available
+    assert not hass.states.get(f"{sensor_prefix}_sensor_load_avg1")
+    assert not hass.states.get(f"{sensor_prefix}_sensor_load_avg5")
+    assert not hass.states.get(f"{sensor_prefix}_sensor_load_avg15")
 
 
 async def test_temperature_sensors_http_fail(

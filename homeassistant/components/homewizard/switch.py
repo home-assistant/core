@@ -1,4 +1,5 @@
 """Creates HomeWizard Energy switch entities."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -29,7 +30,6 @@ class HomeWizardSwitchEntityDescription(SwitchEntityDescription):
 
     available_fn: Callable[[DeviceResponseEntry], bool]
     create_fn: Callable[[HWEnergyDeviceUpdateCoordinator], bool]
-    icon_off: str | None = None
     is_on_fn: Callable[[DeviceResponseEntry], bool | None]
     set_fn: Callable[[HomeWizardEnergy, bool], Awaitable[Any]]
 
@@ -48,8 +48,6 @@ SWITCHES = [
         key="switch_lock",
         translation_key="switch_lock",
         entity_category=EntityCategory.CONFIG,
-        icon="mdi:lock",
-        icon_off="mdi:lock-open",
         create_fn=lambda coordinator: coordinator.supports_state(),
         available_fn=lambda data: data.state is not None,
         is_on_fn=lambda data: data.state.switch_lock if data.state else None,
@@ -59,9 +57,7 @@ SWITCHES = [
         key="cloud_connection",
         translation_key="cloud_connection",
         entity_category=EntityCategory.CONFIG,
-        icon="mdi:cloud",
-        icon_off="mdi:cloud-off-outline",
-        create_fn=lambda coordinator: coordinator.supports_system(),
+        create_fn=lambda _: True,
         available_fn=lambda data: data.system is not None,
         is_on_fn=lambda data: data.system.cloud_enabled if data.system else None,
         set_fn=lambda api, active: api.system_set(cloud_enabled=active),
@@ -98,13 +94,6 @@ class HomeWizardSwitchEntity(HomeWizardEntity, SwitchEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon."""
-        if self.entity_description.icon_off and self.is_on is False:
-            return self.entity_description.icon_off
-        return super().icon
 
     @property
     def available(self) -> bool:

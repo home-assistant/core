@@ -1,4 +1,5 @@
 """The A. O. Smith integration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

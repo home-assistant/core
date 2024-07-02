@@ -1,4 +1,5 @@
 """Tests for fan platforms."""
+
 import pytest
 
 from homeassistant.components import fan
@@ -15,8 +16,13 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import help_test_all, import_and_test_deprecated_constant_enum
-from tests.testing_config.custom_components.test.fan import MockFan
+from .common import MockFan
+
+from tests.common import (
+    help_test_all,
+    import_and_test_deprecated_constant_enum,
+    setup_test_component_platform,
+)
 
 
 class BaseFan(FanEntity):
@@ -102,19 +108,19 @@ async def test_preset_mode_validation(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
 ) -> None:
     """Test preset mode validation."""
-
     await hass.async_block_till_done()
 
-    platform = getattr(hass.components, "test.fan")
-    platform.init(empty=False)
+    test_fan = MockFan(
+        name="Support fan with preset_mode support",
+        supported_features=FanEntityFeature.PRESET_MODE,
+        unique_id="unique_support_preset_mode",
+        preset_modes=["auto", "eco"],
+    )
+    setup_test_component_platform(hass, "fan", [test_fan])
 
     assert await async_setup_component(hass, "fan", {"fan": {"platform": "test"}})
-    await hass.async_block_till_done()
-
-    test_fan: MockFan = platform.ENTITIES["support_preset_mode"]
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.support_fan_with_preset_mode_support")
@@ -143,7 +149,7 @@ async def test_preset_mode_validation(
             },
             blocking=True,
         )
-        assert exc.value.translation_key == "not_valid_preset_mode"
+    assert exc.value.translation_key == "not_valid_preset_mode"
 
     with pytest.raises(NotValidPresetModeError) as exc:
         await test_fan._valid_preset_mode_or_raise("invalid")

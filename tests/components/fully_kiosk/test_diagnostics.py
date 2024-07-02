@@ -1,4 +1,5 @@
 """Test the Fully Kiosk Browser diagnostics."""
+
 from unittest.mock import MagicMock
 
 from homeassistant.components.diagnostics import REDACTED

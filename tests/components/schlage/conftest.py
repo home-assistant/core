@@ -1,4 +1,5 @@
 """Common fixtures for the Schlage tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, create_autospec, patch
 
@@ -45,7 +46,7 @@ async def mock_added_config_entry(
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.schlage.async_setup_entry", return_value=True

@@ -1,4 +1,5 @@
 """Tests for the Bluetooth integration manager."""
+
 from collections.abc import Generator
 from datetime import timedelta
 import time
@@ -7,6 +8,8 @@ from unittest.mock import patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import AdvertisementHistory
+
+# pylint: disable-next=no-name-in-module
 from habluetooth.advertisement_tracker import TRACKER_BUFFERING_WOBBLE_SECONDS
 import pytest
 
@@ -53,7 +56,7 @@ from tests.common import async_fire_time_changed, load_fixture
 
 
 @pytest.fixture
-def register_hci0_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
+def register_hci0_scanner(hass: HomeAssistant) -> Generator[None]:
     """Register an hci0 scanner."""
     hci0_scanner = FakeScanner("hci0", "hci0")
     cancel = bluetooth.async_register_scanner(hass, hci0_scanner)
@@ -62,7 +65,7 @@ def register_hci0_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def register_hci1_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
+def register_hci1_scanner(hass: HomeAssistant) -> Generator[None]:
     """Register an hci1 scanner."""
     hci1_scanner = FakeScanner("hci1", "hci1")
     cancel = bluetooth.async_register_scanner(hass, hci1_scanner)
@@ -70,9 +73,9 @@ def register_hci1_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
     cancel()
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_advertisements_do_not_switch_adapters_for_no_reason(
     hass: HomeAssistant,
-    enable_bluetooth: None,
     register_hci0_scanner: None,
     register_hci1_scanner: None,
 ) -> None:
@@ -127,9 +130,9 @@ async def test_advertisements_do_not_switch_adapters_for_no_reason(
     )
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_switching_adapters_based_on_rssi(
     hass: HomeAssistant,
-    enable_bluetooth: None,
     register_hci0_scanner: None,
     register_hci1_scanner: None,
 ) -> None:
@@ -188,9 +191,9 @@ async def test_switching_adapters_based_on_rssi(
     )
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_switching_adapters_based_on_zero_rssi(
     hass: HomeAssistant,
-    enable_bluetooth: None,
     register_hci0_scanner: None,
     register_hci1_scanner: None,
 ) -> None:
@@ -249,9 +252,9 @@ async def test_switching_adapters_based_on_zero_rssi(
     )
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_switching_adapters_based_on_stale(
     hass: HomeAssistant,
-    enable_bluetooth: None,
     register_hci0_scanner: None,
     register_hci1_scanner: None,
 ) -> None:
@@ -316,9 +319,9 @@ async def test_switching_adapters_based_on_stale(
     )
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_switching_adapters_based_on_stale_with_discovered_interval(
     hass: HomeAssistant,
-    enable_bluetooth: None,
     register_hci0_scanner: None,
     register_hci1_scanner: None,
 ) -> None:
@@ -399,8 +402,9 @@ async def test_switching_adapters_based_on_stale_with_discovered_interval(
     )
 
 
+@pytest.mark.usefixtures("one_adapter")
 async def test_restore_history_from_dbus(
-    hass: HomeAssistant, one_adapter: None, disable_new_discovery_flows
+    hass: HomeAssistant, disable_new_discovery_flows
 ) -> None:
     """Test we can restore history from dbus."""
     address = "AA:BB:CC:CC:CC:FF"
@@ -422,9 +426,9 @@ async def test_restore_history_from_dbus(
     assert bluetooth.async_ble_device_from_address(hass, address) is ble_device
 
 
+@pytest.mark.usefixtures("one_adapter")
 async def test_restore_history_from_dbus_and_remote_adapters(
     hass: HomeAssistant,
-    one_adapter: None,
     hass_storage: dict[str, Any],
     disable_new_discovery_flows,
 ) -> None:
@@ -462,9 +466,9 @@ async def test_restore_history_from_dbus_and_remote_adapters(
     assert disable_new_discovery_flows.call_count > 1
 
 
+@pytest.mark.usefixtures("one_adapter")
 async def test_restore_history_from_dbus_and_corrupted_remote_adapters(
     hass: HomeAssistant,
-    one_adapter: None,
     hass_storage: dict[str, Any],
     disable_new_discovery_flows,
 ) -> None:
@@ -500,9 +504,9 @@ async def test_restore_history_from_dbus_and_corrupted_remote_adapters(
     assert disable_new_discovery_flows.call_count >= 1
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_switching_adapters_based_on_rssi_connectable_to_non_connectable(
     hass: HomeAssistant,
-    enable_bluetooth: None,
     register_hci0_scanner: None,
     register_hci1_scanner: None,
 ) -> None:
@@ -588,15 +592,15 @@ async def test_switching_adapters_based_on_rssi_connectable_to_non_connectable(
     )
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_connectable_advertisement_can_be_retrieved_with_best_path_is_non_connectable(
     hass: HomeAssistant,
-    enable_bluetooth: None,
     register_hci0_scanner: None,
     register_hci1_scanner: None,
 ) -> None:
     """Test we can still get a connectable BLEDevice when the best path is non-connectable.
 
-    In this case the the device is closer to a non-connectable scanner, but the
+    In this case the device is closer to a non-connectable scanner, but the
     at least one connectable scanner has the device in range.
     """
 
@@ -639,8 +643,9 @@ async def test_connectable_advertisement_can_be_retrieved_with_best_path_is_non_
     )
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_switching_adapters_when_one_goes_away(
-    hass: HomeAssistant, enable_bluetooth: None, register_hci0_scanner: None
+    hass: HomeAssistant, register_hci0_scanner: None
 ) -> None:
     """Test switching adapters when one goes away."""
     cancel_hci2 = bluetooth.async_register_scanner(hass, FakeScanner("hci2", "hci2"))
@@ -688,8 +693,9 @@ async def test_switching_adapters_when_one_goes_away(
     )
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_switching_adapters_when_one_stop_scanning(
-    hass: HomeAssistant, enable_bluetooth: None, register_hci0_scanner: None
+    hass: HomeAssistant, register_hci0_scanner: None
 ) -> None:
     """Test switching adapters when stops scanning."""
     hci2_scanner = FakeScanner("hci2", "hci2")
@@ -740,8 +746,9 @@ async def test_switching_adapters_when_one_stop_scanning(
     cancel_hci2()
 
 
+@pytest.mark.usefixtures("mock_bluetooth_adapters")
 async def test_goes_unavailable_connectable_only_and_recovers(
-    hass: HomeAssistant, mock_bluetooth_adapters: None
+    hass: HomeAssistant,
 ) -> None:
     """Test all connectable scanners go unavailable, and than recover when there is a non-connectable scanner."""
     assert await async_setup_component(hass, bluetooth.DOMAIN, {})
@@ -903,8 +910,9 @@ async def test_goes_unavailable_connectable_only_and_recovers(
     unsetup_not_connectable_scanner()
 
 
+@pytest.mark.usefixtures("mock_bluetooth_adapters")
 async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
-    hass: HomeAssistant, mock_bluetooth_adapters: None
+    hass: HomeAssistant,
 ) -> None:
     """Test that unavailable will dismiss any active discoveries and make device discoverable again."""
     mock_bt = [
@@ -1027,14 +1035,16 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
         not in non_connectable_scanner.discovered_devices_and_advertisement_data
     )
     monotonic_now = time.monotonic()
-    with patch.object(
-        hass.config_entries.flow,
-        "async_progress_by_init_data_type",
-        return_value=[{"flow_id": "mock_flow_id"}],
-    ) as mock_async_progress_by_init_data_type, patch.object(
-        hass.config_entries.flow, "async_abort"
-    ) as mock_async_abort, patch_bluetooth_time(
-        monotonic_now + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+    with (
+        patch.object(
+            hass.config_entries.flow,
+            "async_progress_by_init_data_type",
+            return_value=[{"flow_id": "mock_flow_id"}],
+        ) as mock_async_progress_by_init_data_type,
+        patch.object(hass.config_entries.flow, "async_abort") as mock_async_abort,
+        patch_bluetooth_time(
+            monotonic_now + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+        ),
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
@@ -1073,9 +1083,9 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
     cancel_connectable_scanner()
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_debug_logging(
     hass: HomeAssistant,
-    enable_bluetooth: None,
     register_hci0_scanner: None,
     register_hci1_scanner: None,
     caplog: pytest.LogCaptureFixture,
@@ -1132,12 +1142,8 @@ async def test_debug_logging(
     assert "wohand_good_signal_hci0" not in caplog.text
 
 
-async def test_set_fallback_interval_small(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    enable_bluetooth: None,
-    macos_adapter: None,
-) -> None:
+@pytest.mark.usefixtures("enable_bluetooth", "macos_adapter")
+async def test_set_fallback_interval_small(hass: HomeAssistant) -> None:
     """Test we can set the fallback advertisement interval."""
     assert async_get_fallback_availability_interval(hass, "44:44:33:11:23:12") is None
 
@@ -1190,12 +1196,8 @@ async def test_set_fallback_interval_small(
     assert async_get_fallback_availability_interval(hass, "44:44:33:11:23:12") is None
 
 
-async def test_set_fallback_interval_big(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    enable_bluetooth: None,
-    macos_adapter: None,
-) -> None:
+@pytest.mark.usefixtures("enable_bluetooth", "macos_adapter")
+async def test_set_fallback_interval_big(hass: HomeAssistant) -> None:
     """Test we can set the fallback advertisement interval."""
     assert async_get_fallback_availability_interval(hass, "44:44:33:11:23:12") is None
 

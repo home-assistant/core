@@ -1,4 +1,5 @@
 """Support for sending Wake-On-LAN magic packets."""
+
 from functools import partial
 import logging
 

@@ -1,11 +1,10 @@
 """The Tesla Powerwall integration."""
+
 from __future__ import annotations
 
-import asyncio
 from contextlib import AsyncExitStack
 from datetime import timedelta
 import logging
-from typing import Optional
 
 from aiohttp import CookieJar
 from tesla_powerwall import (
@@ -21,6 +20,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -88,7 +88,7 @@ class PowerwallDataManager:
                 if attempt == 1:
                     await self._recreate_powerwall_login()
                 data = await _fetch_powerwall_data(self.power_wall)
-            except (asyncio.TimeoutError, PowerwallUnreachableError) as err:
+            except (TimeoutError, PowerwallUnreachableError) as err:
                 raise UpdateFailed("Unable to fetch data from powerwall") from err
             except MissingAttributeError as err:
                 _LOGGER.error("The powerwall api has changed: %s", str(err))
@@ -135,7 +135,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
             # Cancel closing power_wall on success
             stack.pop_all()
-        except (asyncio.TimeoutError, PowerwallUnreachableError) as err:
+        except (TimeoutError, PowerwallUnreachableError) as err:
             raise ConfigEntryNotReady from err
         except MissingAttributeError as err:
             # The error might include some important information about what exactly changed.
@@ -151,7 +151,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise ConfigEntryNotReady from err
 
     gateway_din = base_info.gateway_din
-    if gateway_din and entry.unique_id is not None and is_ip_address(entry.unique_id):
+    if entry.unique_id is not None and is_ip_address(entry.unique_id):
         hass.config_entries.async_update_entry(entry, unique_id=gateway_din)
 
     runtime_data = PowerwallRuntimeData(
@@ -178,9 +178,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = runtime_data
 
+    await async_migrate_entity_unique_ids(hass, entry, base_info)
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+async def async_migrate_entity_unique_ids(
+    hass: HomeAssistant, entry: ConfigEntry, base_info: PowerwallBaseInfo
+) -> None:
+    """Migrate old entity unique ids to use gateway_din."""
+    old_base_unique_id = "_".join(base_info.serial_numbers)
+    new_base_unique_id = base_info.gateway_din
+
+    dev_reg = dr.async_get(hass)
+    if device := dev_reg.async_get_device(identifiers={(DOMAIN, old_base_unique_id)}):
+        dev_reg.async_update_device(
+            device.id, new_identifiers={(DOMAIN, new_base_unique_id)}
+        )
+
+    ent_reg = er.async_get(hass)
+    for ent_entry in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
+        current_unique_id = ent_entry.unique_id
+        if current_unique_id.startswith(old_base_unique_id):
+            unique_id_postfix = current_unique_id.removeprefix(old_base_unique_id)
+            new_unique_id = f"{new_base_unique_id}{unique_id_postfix}"
+            ent_reg.async_update_entity(
+                ent_entry.entity_id, new_unique_id=new_unique_id
+            )
 
 
 async def _login_and_fetch_base_info(
@@ -194,34 +220,30 @@ async def _login_and_fetch_base_info(
 
 async def _call_base_info(power_wall: Powerwall, host: str) -> PowerwallBaseInfo:
     """Return PowerwallBaseInfo for the device."""
-
-    (
-        gateway_din,
-        site_info,
-        status,
-        device_type,
-        serial_numbers,
-    ) = await asyncio.gather(
-        power_wall.get_gateway_din(),
-        power_wall.get_site_info(),
-        power_wall.get_status(),
-        power_wall.get_device_type(),
-        power_wall.get_serial_numbers(),
-    )
-
+    # We await each call individually since the powerwall
+    # supports http keep-alive and we want to reuse the connection
+    # as its faster than establishing a new connection when
+    # run concurrently.
+    gateway_din = await power_wall.get_gateway_din()
+    site_info = await power_wall.get_site_info()
+    status = await power_wall.get_status()
+    device_type = await power_wall.get_device_type()
+    serial_numbers = await power_wall.get_serial_numbers()
+    batteries = await power_wall.get_batteries()
     # Serial numbers MUST be sorted to ensure the unique_id is always the same
     # for backwards compatibility.
     return PowerwallBaseInfo(
-        gateway_din=gateway_din.upper(),
+        gateway_din=gateway_din,
         site_info=site_info,
         status=status,
         device_type=device_type,
         serial_numbers=sorted(serial_numbers),
         url=f"https://{host}",
+        batteries={battery.serial_number: battery for battery in batteries},
     )
 
 
-async def get_backup_reserve_percentage(power_wall: Powerwall) -> Optional[float]:
+async def get_backup_reserve_percentage(power_wall: Powerwall) -> float | None:
     """Return the backup reserve percentage."""
     try:
         return await power_wall.get_backup_reserve_percentage()
@@ -231,22 +253,17 @@ async def get_backup_reserve_percentage(power_wall: Powerwall) -> Optional[float
 
 async def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
     """Process and update powerwall data."""
-    (
-        backup_reserve,
-        charge,
-        site_master,
-        meters,
-        grid_services_active,
-        grid_status,
-    ) = await asyncio.gather(
-        get_backup_reserve_percentage(power_wall),
-        power_wall.get_charge(),
-        power_wall.get_sitemaster(),
-        power_wall.get_meters(),
-        power_wall.is_grid_services_active(),
-        power_wall.get_grid_status(),
-    )
-
+    # We await each call individually since the powerwall
+    # supports http keep-alive and we want to reuse the connection
+    # as its faster than establishing a new connection when
+    # run concurrently.
+    backup_reserve = await get_backup_reserve_percentage(power_wall)
+    charge = await power_wall.get_charge()
+    site_master = await power_wall.get_sitemaster()
+    meters = await power_wall.get_meters()
+    grid_services_active = await power_wall.is_grid_services_active()
+    grid_status = await power_wall.get_grid_status()
+    batteries = await power_wall.get_batteries()
     return PowerwallData(
         charge=charge,
         site_master=site_master,
@@ -254,6 +271,7 @@ async def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
         grid_services_active=grid_services_active,
         grid_status=grid_status,
         backup_reserve=backup_reserve,
+        batteries={battery.serial_number: battery for battery in batteries},
     )
 
 

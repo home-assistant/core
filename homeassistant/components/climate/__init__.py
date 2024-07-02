@@ -1,10 +1,13 @@
 """Provides functionality to interact with climate devices."""
+
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import functools as ft
+from functools import cached_property
 import logging
-from typing import TYPE_CHECKING, Any, Literal, final
+from typing import Any, Literal, final
 
 import voluptuous as vol
 
@@ -13,6 +16,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
+    SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -21,12 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-    make_entity_service_schema,
-)
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.deprecation import (
     all_with_deprecated_constants,
     check_if_deprecated_constant,
@@ -34,8 +33,10 @@ from homeassistant.helpers.deprecation import (
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import async_get_issue_tracker, async_suggest_report_issue
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (  # noqa: F401
@@ -110,29 +111,25 @@ from .const import (  # noqa: F401
     HVACMode,
 )
 
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
+_LOGGER = logging.getLogger(__name__)
+
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=60)
 
 DEFAULT_MIN_TEMP = 7
 DEFAULT_MAX_TEMP = 35
 DEFAULT_MIN_HUMIDITY = 30
 DEFAULT_MAX_HUMIDITY = 99
 
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
-SCAN_INTERVAL = timedelta(seconds=60)
-
 CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE, ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH]
-
-_LOGGER = logging.getLogger(__name__)
-
 
 SET_TEMPERATURE_SCHEMA = vol.All(
     cv.has_at_least_one_key(
         ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW
     ),
-    make_entity_service_schema(
+    cv.make_entity_service_schema(
         {
             vol.Exclusive(ATTR_TEMPERATURE, "temperature"): vol.Coerce(float),
             vol.Inclusive(ATTR_TARGET_TEMP_HIGH, "temperature"): vol.Coerce(float),
@@ -152,8 +149,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await component.async_setup(config)
 
-    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
-    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
+    component.async_register_entity_service(
+        SERVICE_TURN_ON,
+        {},
+        "async_turn_on",
+        [ClimateEntityFeature.TURN_ON],
+    )
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF,
+        {},
+        "async_turn_off",
+        [ClimateEntityFeature.TURN_OFF],
+    )
+    component.async_register_entity_service(
+        SERVICE_TOGGLE,
+        {},
+        "async_toggle",
+        [ClimateEntityFeature.TURN_OFF, ClimateEntityFeature.TURN_ON],
+    )
     component.async_register_entity_service(
         SERVICE_SET_HVAC_MODE,
         {vol.Required(ATTR_HVAC_MODE): vol.Coerce(HVACMode)},
@@ -271,9 +284,9 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_hvac_mode: HVACMode | None
     _attr_hvac_modes: list[HVACMode]
     _attr_is_aux_heat: bool | None
-    _attr_max_humidity: int = DEFAULT_MAX_HUMIDITY
+    _attr_max_humidity: float = DEFAULT_MAX_HUMIDITY
     _attr_max_temp: float
-    _attr_min_humidity: int = DEFAULT_MIN_HUMIDITY
+    _attr_min_humidity: float = DEFAULT_MIN_HUMIDITY
     _attr_min_temp: float
     _attr_precision: float
     _attr_preset_mode: str | None
@@ -281,12 +294,162 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_supported_features: ClimateEntityFeature = ClimateEntityFeature(0)
     _attr_swing_mode: str | None
     _attr_swing_modes: list[str] | None
-    _attr_target_humidity: int | None = None
+    _attr_target_humidity: float | None = None
     _attr_target_temperature_high: float | None
     _attr_target_temperature_low: float | None
     _attr_target_temperature_step: float | None = None
     _attr_target_temperature: float | None = None
     _attr_temperature_unit: str
+
+    __climate_reported_legacy_aux = False
+
+    __mod_supported_features: ClimateEntityFeature = ClimateEntityFeature(0)
+    # Integrations should set `_enable_turn_on_off_backwards_compatibility` to False
+    # once migrated and set the feature flags TURN_ON/TURN_OFF as needed.
+    _enable_turn_on_off_backwards_compatibility: bool = True
+
+    def __getattribute__(self, __name: str) -> Any:
+        """Get attribute.
+
+        Modify return of `supported_features` to
+        include `_mod_supported_features` if attribute is set.
+        """
+        if __name != "supported_features":
+            return super().__getattribute__(__name)
+
+        # Convert the supported features to ClimateEntityFeature.
+        # Remove this compatibility shim in 2025.1 or later.
+        _supported_features: ClimateEntityFeature = super().__getattribute__(
+            "supported_features"
+        )
+        _mod_supported_features: ClimateEntityFeature = super().__getattribute__(
+            "_ClimateEntity__mod_supported_features"
+        )
+        if type(_supported_features) is int:  # noqa: E721
+            _features = ClimateEntityFeature(_supported_features)
+            self._report_deprecated_supported_features_values(_features)
+        else:
+            _features = _supported_features
+
+        if not _mod_supported_features:
+            return _features
+
+        # Add automatically calculated ClimateEntityFeature.TURN_OFF/TURN_ON to
+        # supported features and return it
+        return _features | _mod_supported_features
+
+    @callback
+    def add_to_platform_start(
+        self,
+        hass: HomeAssistant,
+        platform: EntityPlatform,
+        parallel_updates: asyncio.Semaphore | None,
+    ) -> None:
+        """Start adding an entity to a platform."""
+        super().add_to_platform_start(hass, platform, parallel_updates)
+
+        def _report_turn_on_off(feature: str, method: str) -> None:
+            """Log warning not implemented turn on/off feature."""
+            report_issue = self._suggest_report_issue()
+            if feature.startswith("TURN"):
+                message = (
+                    "Entity %s (%s) does not set ClimateEntityFeature.%s"
+                    " but implements the %s method. Please %s"
+                )
+            else:
+                message = (
+                    "Entity %s (%s) implements HVACMode(s): %s and therefore implicitly"
+                    " supports the %s methods without setting the proper"
+                    " ClimateEntityFeature. Please %s"
+                )
+            _LOGGER.warning(
+                message,
+                self.entity_id,
+                type(self),
+                feature,
+                method,
+                report_issue,
+            )
+
+        # Adds ClimateEntityFeature.TURN_OFF/TURN_ON depending on service calls implemented
+        # This should be removed in 2025.1.
+        if self._enable_turn_on_off_backwards_compatibility is False:
+            # Return if integration has migrated already
+            return
+
+        supported_features = self.supported_features
+        if not supported_features & ClimateEntityFeature.TURN_OFF and (
+            type(self).async_turn_off is not ClimateEntity.async_turn_off
+            or type(self).turn_off is not ClimateEntity.turn_off
+        ):
+            # turn_off implicitly supported by implementing turn_off method
+            _report_turn_on_off("TURN_OFF", "turn_off")
+            self.__mod_supported_features |= (  # pylint: disable=unused-private-member
+                ClimateEntityFeature.TURN_OFF
+            )
+
+        if not supported_features & ClimateEntityFeature.TURN_ON and (
+            type(self).async_turn_on is not ClimateEntity.async_turn_on
+            or type(self).turn_on is not ClimateEntity.turn_on
+        ):
+            # turn_on implicitly supported by implementing turn_on method
+            _report_turn_on_off("TURN_ON", "turn_on")
+            self.__mod_supported_features |= (  # pylint: disable=unused-private-member
+                ClimateEntityFeature.TURN_ON
+            )
+
+        if (modes := self.hvac_modes) and len(modes) >= 2 and HVACMode.OFF in modes:
+            # turn_on/off implicitly supported by including more modes than 1 and one of these
+            # are HVACMode.OFF
+            _modes = [_mode for _mode in modes if _mode is not None]
+            _report_turn_on_off(", ".join(_modes or []), "turn_on/turn_off")
+            self.__mod_supported_features |= (  # pylint: disable=unused-private-member
+                ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+            )
+
+    def _report_legacy_aux(self) -> None:
+        """Log warning and create an issue if the entity implements legacy auxiliary heater."""
+
+        report_issue = async_suggest_report_issue(
+            self.hass,
+            integration_domain=self.platform.platform_name,
+            module=type(self).__module__,
+        )
+        _LOGGER.warning(
+            (
+                "%s::%s implements the `is_aux_heat` property or uses the auxiliary  "
+                "heater methods in a subclass of ClimateEntity which is "
+                "deprecated and will be unsupported from Home Assistant 2024.10."
+                " Please %s"
+            ),
+            self.platform.platform_name,
+            self.__class__.__name__,
+            report_issue,
+        )
+
+        translation_placeholders = {"platform": self.platform.platform_name}
+        translation_key = "deprecated_climate_aux_no_url"
+        issue_tracker = async_get_issue_tracker(
+            self.hass,
+            integration_domain=self.platform.platform_name,
+            module=type(self).__module__,
+        )
+        if issue_tracker:
+            translation_placeholders["issue_tracker"] = issue_tracker
+            translation_key = "deprecated_climate_aux_url_custom"
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_climate_aux_{self.platform.platform_name}",
+            breaks_in_ha_version="2024.10.0",
+            is_fixable=False,
+            is_persistent=False,
+            issue_domain=self.platform.platform_name,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=translation_key,
+            translation_placeholders=translation_placeholders,
+        )
+        self.__climate_reported_legacy_aux = True
 
     @final
     @property
@@ -312,7 +475,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return the capability attributes."""
-        supported_features = self.supported_features_compat
+        supported_features = self.supported_features
         temperature_unit = self.temperature_unit
         precision = self.precision
         hass = self.hass
@@ -345,7 +508,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
-        supported_features = self.supported_features_compat
+        supported_features = self.supported_features
         temperature_unit = self.temperature_unit
         precision = self.precision
         hass = self.hass
@@ -392,6 +555,11 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         if ClimateEntityFeature.AUX_HEAT in supported_features:
             data[ATTR_AUX_HEAT] = STATE_ON if self.is_aux_heat else STATE_OFF
+            if (
+                self.__climate_reported_legacy_aux is False
+                and "custom_components" in type(self).__module__
+            ):
+                self._report_legacy_aux()
 
         return data
 
@@ -401,12 +569,12 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_temperature_unit
 
     @cached_property
-    def current_humidity(self) -> int | None:
+    def current_humidity(self) -> float | None:
         """Return the current humidity."""
         return self._attr_current_humidity
 
     @cached_property
-    def target_humidity(self) -> int | None:
+    def target_humidity(self) -> float | None:
         """Return the humidity we try to reach."""
         return self._attr_target_humidity
 
@@ -531,8 +699,6 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         elif mode_type == "fan":
             translation_key = "not_valid_fan_mode"
         raise ServiceValidationError(
-            f"The {mode_type}_mode {mode} is not a valid {mode_type}_mode:"
-            f" {modes_str}",
             translation_domain=DOMAIN,
             translation_key=translation_key,
             translation_placeholders={
@@ -543,7 +709,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -553,7 +719,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
@@ -567,7 +733,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
@@ -575,7 +741,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
@@ -589,7 +755,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
@@ -603,7 +769,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
@@ -611,7 +777,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
@@ -619,15 +785,20 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
         await self.hass.async_add_executor_job(self.turn_aux_heat_off)
 
+    def turn_on(self) -> None:
+        """Turn the entity on."""
+        raise NotImplementedError
+
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
-        if hasattr(self, "turn_on"):
+        # Forward to self.turn_on if it's been overridden.
+        if type(self).turn_on is not ClimateEntity.turn_on:
             await self.hass.async_add_executor_job(self.turn_on)
             return
 
@@ -644,35 +815,49 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             if mode not in self.hvac_modes:
                 continue
             await self.async_set_hvac_mode(mode)
-            break
+            return
+
+        raise NotImplementedError
+
+    def turn_off(self) -> None:
+        """Turn the entity off."""
+        raise NotImplementedError
 
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
-        if hasattr(self, "turn_off"):
+        # Forward to self.turn_on if it's been overridden.
+        if type(self).turn_off is not ClimateEntity.turn_off:
             await self.hass.async_add_executor_job(self.turn_off)
             return
 
         # Fake turn off
         if HVACMode.OFF in self.hvac_modes:
             await self.async_set_hvac_mode(HVACMode.OFF)
+            return
+
+        raise NotImplementedError
+
+    def toggle(self) -> None:
+        """Toggle the entity."""
+        raise NotImplementedError
+
+    async def async_toggle(self) -> None:
+        """Toggle the entity."""
+        # Forward to self.toggle if it's been overridden.
+        if type(self).toggle is not ClimateEntity.toggle:
+            await self.hass.async_add_executor_job(self.toggle)
+            return
+
+        # We assume that since turn_off is supported, HVACMode.OFF is as well.
+        if self.hvac_mode == HVACMode.OFF:
+            await self.async_turn_on()
+        else:
+            await self.async_turn_off()
 
     @cached_property
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
-
-    @property
-    def supported_features_compat(self) -> ClimateEntityFeature:
-        """Return the supported features as ClimateEntityFeature.
-
-        Remove this compatibility shim in 2025.1 or later.
-        """
-        features = self.supported_features
-        if type(features) is int:  # noqa: E721
-            new_features = ClimateEntityFeature(features)
-            self._report_deprecated_supported_features_values(new_features)
-            return new_features
-        return features
 
     @cached_property
     def min_temp(self) -> float:
@@ -693,12 +878,12 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_max_temp
 
     @cached_property
-    def min_humidity(self) -> int:
+    def min_humidity(self) -> float:
         """Return the minimum humidity."""
         return self._attr_min_humidity
 
     @cached_property
-    def max_humidity(self) -> int:
+    def max_humidity(self) -> float:
         """Return the maximum humidity."""
         return self._attr_max_humidity
 

@@ -1,4 +1,5 @@
 """The Anthem A/V Receivers integration."""
+
 from __future__ import annotations
 
 import logging

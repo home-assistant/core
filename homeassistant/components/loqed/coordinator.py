@@ -1,4 +1,5 @@
 """Provides the coordinator for a LOQED lock."""
+
 import asyncio
 import logging
 from typing import TypedDict

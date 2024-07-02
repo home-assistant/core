@@ -1,11 +1,12 @@
 """The tests for the hassio component."""
-import asyncio
+
 from http import HTTPStatus
 from unittest.mock import patch
 
 from aiohttp import StreamReader
 import pytest
 
+from tests.common import MockUser
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -19,7 +20,7 @@ def mock_not_onboarded():
 
 
 @pytest.fixture
-def hassio_user_client(hassio_client, hass_admin_user):
+def hassio_user_client(hassio_client, hass_admin_user: MockUser):
     """Return a Hass.io HTTP client tied to a non-admin user."""
     hass_admin_user.groups = []
     return hassio_client
@@ -396,7 +397,7 @@ async def test_bad_gateway_when_cannot_find_supervisor(
     hassio_client, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we get a bad gateway error if we can't find supervisor."""
-    aioclient_mock.get("http://127.0.0.1/app/entrypoint.js", exc=asyncio.TimeoutError)
+    aioclient_mock.get("http://127.0.0.1/app/entrypoint.js", exc=TimeoutError)
 
     resp = await hassio_client.get("/api/hassio/app/entrypoint.js")
     assert resp.status == HTTPStatus.BAD_GATEWAY

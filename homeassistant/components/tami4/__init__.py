@@ -1,4 +1,5 @@
 """The Tami4Edge integration."""
+
 from __future__ import annotations
 
 from Tami4EdgeAPI import Tami4EdgeAPI, exceptions
@@ -9,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 from .const import API, CONF_REFRESH_TOKEN, COORDINATOR, DOMAIN
-from .coordinator import Tami4EdgeWaterQualityCoordinator
+from .coordinator import Tami4EdgeCoordinator
 
 PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.SENSOR]
 
@@ -25,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except exceptions.TokenRefreshFailedException as ex:
         raise ConfigEntryNotReady("Error connecting to API") from ex
 
-    coordinator = Tami4EdgeWaterQualityCoordinator(hass, api)
+    coordinator = Tami4EdgeCoordinator(hass, api)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {

@@ -1,4 +1,5 @@
 """Test the Switcher switch platform."""
+
 from unittest.mock import patch
 
 from aioswitcher.api import Command, SwitcherBaseResponse

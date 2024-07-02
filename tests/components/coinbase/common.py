@@ -1,4 +1,5 @@
 """Collection of helpers."""
+
 from homeassistant.components.coinbase.const import (
     CONF_CURRENCIES,
     CONF_EXCHANGE_RATES,

@@ -1,4 +1,5 @@
 """Tests for the LaMetric helpers."""
+
 from unittest.mock import MagicMock
 
 import pytest

@@ -1,7 +1,8 @@
 """Valves for the Elexa Guardian integration."""
+
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine, Mapping
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
@@ -21,13 +22,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import GuardianData, ValveControllerEntity, ValveControllerEntityDescription
 from .const import API_VALVE_STATUS, DOMAIN
 from .util import convert_exceptions_to_homeassistant_error
-
-ATTR_AVG_CURRENT = "average_current"
-ATTR_CONNECTED_CLIENTS = "connected_clients"
-ATTR_INST_CURRENT = "instantaneous_current"
-ATTR_INST_CURRENT_DDT = "instantaneous_current_ddt"
-ATTR_STATION_CONNECTED = "station_connected"
-ATTR_TRAVEL_COUNT = "travel_count"
 
 VALVE_KIND_VALVE = "valve"
 
@@ -51,7 +45,6 @@ class ValveControllerValveDescription(
 ):
     """Describe a Guardian valve controller valve."""
 
-    extra_state_attributes_fn: Callable[[dict[str, Any]], Mapping[str, Any]]
     is_closed_fn: Callable[[dict[str, Any]], bool]
     is_closing_fn: Callable[[dict[str, Any]], bool]
     is_opening_fn: Callable[[dict[str, Any]], bool]
@@ -104,12 +97,6 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
         translation_key="valve_controller",
         device_class=ValveDeviceClass.WATER,
         api_category=API_VALVE_STATUS,
-        extra_state_attributes_fn=lambda data: {
-            ATTR_AVG_CURRENT: data["average_current"],
-            ATTR_INST_CURRENT: data["instantaneous_current"],
-            ATTR_INST_CURRENT_DDT: data["instantaneous_current_ddt"],
-            ATTR_TRAVEL_COUNT: data["travel_count"],
-        },
         is_closed_fn=lambda data: data["state"] == GuardianValveState.CLOSED,
         is_closing_fn=is_closing,
         is_opening_fn=is_opening,
@@ -150,11 +137,6 @@ class ValveControllerValve(ValveControllerEntity, ValveEntity):
         super().__init__(entry, data.valve_controller_coordinators, description)
 
         self._client = data.client
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return entity specific state attributes."""
-        return self.entity_description.extra_state_attributes_fn(self.coordinator.data)
 
     @property
     def is_closing(self) -> bool:
