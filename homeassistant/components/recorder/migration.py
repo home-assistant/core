@@ -55,6 +55,7 @@ from .const import (
     SupportedDialect,
 )
 from .db_schema import (
+    BIG_INTEGER_SQL,
     CONTEXT_ID_BIN_MAX_LENGTH,
     DOUBLE_PRECISION_TYPE_SQL,
     LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX,
@@ -1089,6 +1090,45 @@ def _apply_update(  # noqa: C901
             "states",
             [f"last_reported_ts {_column_types.timestamp_type}"],
         )
+    elif new_version == 44:
+        # First do foreign columns
+        foreign_columns = (
+            ("events", ("data_id", "event_type_id")),
+            ("states", ("old_state_id", "attributes_id", "metadata_id")),
+            ("statistics", ("metadata_id",)),
+            ("statistics_short_term", ("metadata_id",)),
+        )
+        for table, columns in foreign_columns:
+            _modify_columns(
+                session_maker,
+                engine,
+                table,
+                [f"{column} {BIG_INTEGER_SQL}" for column in columns],
+            )
+
+        # Then the ID columns
+        id_columns = (
+            ("events", ("event_id",)),
+            ("event_data", ("data_id",)),
+            ("event_types", ("event_type_id",)),
+            ("states", ("state_id",)),
+            ("state_attributes", ("attributes_id",)),
+            ("states_meta", ("metadata_id",)),
+            ("statistics", ("id",)),
+            ("statistics_short_term", ("id",)),
+            ("statistics_meta", ("id",)),
+            ("recorder_runs", ("run_id",)),
+            ("schema_changes", ("change_id",)),
+            ("statistics_runs", ("change_id",)),
+        )
+        for table, columns in id_columns:
+            _modify_columns(
+                session_maker,
+                engine,
+                table,
+                [f"{column} {BIG_INTEGER_SQL}" for column in columns],
+            )
+
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 

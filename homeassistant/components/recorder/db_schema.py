@@ -73,7 +73,7 @@ class Base(DeclarativeBase):
     """Base class for tables."""
 
 
-SCHEMA_VERSION = 43
+SCHEMA_VERSION = 44
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -187,6 +187,9 @@ class NativeLargeBinary(LargeBinary):
         return None
 
 
+# Although all integers are same in SQLite, it does not allow an identity column to be BIGINT
+# https://sqlite.org/forum/info/2dfa968a702e1506e885cb06d92157d492108b22bf39459506ab9f7125bca7fd
+ID_TYPE = BigInteger().with_variant(sqlite.INTEGER, "sqlite")
 # For MariaDB and MySQL we can use an unsigned integer type since it will fit 2**32
 # for sqlite and postgresql we use a bigint
 UINT_32_TYPE = BigInteger().with_variant(
@@ -217,6 +220,7 @@ UNUSED_LEGACY_COLUMN = Unused(0)
 UNUSED_LEGACY_DATETIME_COLUMN = UnusedDateTime(timezone=True)
 UNUSED_LEGACY_INTEGER_COLUMN = SmallInteger()
 DOUBLE_PRECISION_TYPE_SQL = "DOUBLE PRECISION"
+BIG_INTEGER_SQL = "BIGINT"
 CONTEXT_BINARY_TYPE = LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH).with_variant(
     NativeLargeBinary(CONTEXT_ID_BIN_MAX_LENGTH), "mysql", "mariadb", "sqlite"
 )
@@ -258,7 +262,7 @@ class Events(Base):
         _DEFAULT_TABLE_ARGS,
     )
     __tablename__ = TABLE_EVENTS
-    event_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
+    event_id: Mapped[int] = mapped_column(ID_TYPE, Identity(), primary_key=True)
     event_type: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
     event_data: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
     origin: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
@@ -269,13 +273,13 @@ class Events(Base):
     context_user_id: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
     context_parent_id: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
     data_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("event_data.data_id"), index=True
+        ID_TYPE, ForeignKey("event_data.data_id"), index=True
     )
     context_id_bin: Mapped[bytes | None] = mapped_column(CONTEXT_BINARY_TYPE)
     context_user_id_bin: Mapped[bytes | None] = mapped_column(CONTEXT_BINARY_TYPE)
     context_parent_id_bin: Mapped[bytes | None] = mapped_column(CONTEXT_BINARY_TYPE)
     event_type_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("event_types.event_type_id")
+        ID_TYPE, ForeignKey("event_types.event_type_id")
     )
     event_data_rel: Mapped[EventData | None] = relationship("EventData")
     event_type_rel: Mapped[EventTypes | None] = relationship("EventTypes")
@@ -347,7 +351,7 @@ class EventData(Base):
 
     __table_args__ = (_DEFAULT_TABLE_ARGS,)
     __tablename__ = TABLE_EVENT_DATA
-    data_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
+    data_id: Mapped[int] = mapped_column(ID_TYPE, Identity(), primary_key=True)
     hash: Mapped[int | None] = mapped_column(UINT_32_TYPE, index=True)
     # Note that this is not named attributes to avoid confusion with the states table
     shared_data: Mapped[str | None] = mapped_column(
@@ -403,7 +407,7 @@ class EventTypes(Base):
 
     __table_args__ = (_DEFAULT_TABLE_ARGS,)
     __tablename__ = TABLE_EVENT_TYPES
-    event_type_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
+    event_type_id: Mapped[int] = mapped_column(ID_TYPE, Identity(), primary_key=True)
     event_type: Mapped[str | None] = mapped_column(
         String(MAX_LENGTH_EVENT_EVENT_TYPE), index=True, unique=True
     )
@@ -433,7 +437,7 @@ class States(Base):
         _DEFAULT_TABLE_ARGS,
     )
     __tablename__ = TABLE_STATES
-    state_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
+    state_id: Mapped[int] = mapped_column(ID_TYPE, Identity(), primary_key=True)
     entity_id: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
     state: Mapped[str | None] = mapped_column(String(MAX_LENGTH_STATE_STATE))
     attributes: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
@@ -446,10 +450,10 @@ class States(Base):
         TIMESTAMP_TYPE, default=time.time, index=True
     )
     old_state_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("states.state_id"), index=True
+        ID_TYPE, ForeignKey("states.state_id"), index=True
     )
     attributes_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("state_attributes.attributes_id"), index=True
+        ID_TYPE, ForeignKey("state_attributes.attributes_id"), index=True
     )
     context_id: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
     context_user_id: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
@@ -463,7 +467,7 @@ class States(Base):
     context_user_id_bin: Mapped[bytes | None] = mapped_column(CONTEXT_BINARY_TYPE)
     context_parent_id_bin: Mapped[bytes | None] = mapped_column(CONTEXT_BINARY_TYPE)
     metadata_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("states_meta.metadata_id")
+        ID_TYPE, ForeignKey("states_meta.metadata_id")
     )
     states_meta_rel: Mapped[StatesMeta | None] = relationship("StatesMeta")
 
@@ -573,7 +577,7 @@ class StateAttributes(Base):
 
     __table_args__ = (_DEFAULT_TABLE_ARGS,)
     __tablename__ = TABLE_STATE_ATTRIBUTES
-    attributes_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
+    attributes_id: Mapped[int] = mapped_column(ID_TYPE, Identity(), primary_key=True)
     hash: Mapped[int | None] = mapped_column(UINT_32_TYPE, index=True)
     # Note that this is not named attributes to avoid confusion with the states table
     shared_attrs: Mapped[str | None] = mapped_column(
@@ -647,7 +651,7 @@ class StatesMeta(Base):
 
     __table_args__ = (_DEFAULT_TABLE_ARGS,)
     __tablename__ = TABLE_STATES_META
-    metadata_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
+    metadata_id: Mapped[int] = mapped_column(ID_TYPE, Identity(), primary_key=True)
     entity_id: Mapped[str | None] = mapped_column(
         String(MAX_LENGTH_STATE_ENTITY_ID), index=True, unique=True
     )
@@ -664,11 +668,11 @@ class StatesMeta(Base):
 class StatisticsBase:
     """Statistics base class."""
 
-    id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
+    id: Mapped[int] = mapped_column(ID_TYPE, Identity(), primary_key=True)
     created: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
     created_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE, default=time.time)
     metadata_id: Mapped[int | None] = mapped_column(
-        Integer,
+        ID_TYPE,
         ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
     )
     start: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
@@ -761,7 +765,7 @@ class StatisticsMeta(Base):
 
     __table_args__ = (_DEFAULT_TABLE_ARGS,)
     __tablename__ = TABLE_STATISTICS_META
-    id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
+    id: Mapped[int] = mapped_column(ID_TYPE, Identity(), primary_key=True)
     statistic_id: Mapped[str | None] = mapped_column(
         String(255), index=True, unique=True
     )
@@ -785,7 +789,7 @@ class RecorderRuns(Base):
         _DEFAULT_TABLE_ARGS,
     )
     __tablename__ = TABLE_RECORDER_RUNS
-    run_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
+    run_id: Mapped[int] = mapped_column(ID_TYPE, Identity(), primary_key=True)
     start: Mapped[datetime] = mapped_column(DATETIME_TYPE, default=dt_util.utcnow)
     end: Mapped[datetime | None] = mapped_column(DATETIME_TYPE)
     closed_incorrect: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -824,7 +828,7 @@ class SchemaChanges(Base):
     __tablename__ = TABLE_SCHEMA_CHANGES
     __table_args__ = (_DEFAULT_TABLE_ARGS,)
 
-    change_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
+    change_id: Mapped[int] = mapped_column(ID_TYPE, Identity(), primary_key=True)
     schema_version: Mapped[int | None] = mapped_column(Integer)
     changed: Mapped[datetime] = mapped_column(DATETIME_TYPE, default=dt_util.utcnow)
 
@@ -844,7 +848,7 @@ class StatisticsRuns(Base):
     __tablename__ = TABLE_STATISTICS_RUNS
     __table_args__ = (_DEFAULT_TABLE_ARGS,)
 
-    run_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
+    run_id: Mapped[int] = mapped_column(ID_TYPE, Identity(), primary_key=True)
     start: Mapped[datetime] = mapped_column(DATETIME_TYPE, index=True)
 
     def __repr__(self) -> str:
