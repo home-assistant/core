@@ -3,6 +3,8 @@
 from collections.abc import Callable
 from unittest.mock import AsyncMock
 
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
@@ -14,19 +16,12 @@ from homeassistant.components.cover import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
-    CoverDeviceClass,
-    CoverEntityFeature,
 )
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
-    ATTR_SUPPORTED_FEATURES,
-)
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_cover_actions(
@@ -34,6 +29,7 @@ async def test_cover_actions(
     mock_dio_chacon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the creation and values of the Dio Chacon covers."""
 
@@ -42,23 +38,9 @@ async def test_cover_actions(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
     entity = entity_registry.async_get("cover.shutter_mock_1")
-    assert entity.unique_id == "L4HActuator_idmock1"
-    assert entity.entity_id == "cover.shutter_mock_1"
-
-    state = hass.states.get("cover.shutter_mock_1")
-
-    assert state
-    assert state.attributes.get(ATTR_CURRENT_POSITION) == 75
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == CoverDeviceClass.SHUTTER
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Shutter mock 1"
-    assert (
-        state.attributes.get(ATTR_SUPPORTED_FEATURES)
-        == CoverEntityFeature.OPEN
-        | CoverEntityFeature.CLOSE
-        | CoverEntityFeature.SET_POSITION
-        | CoverEntityFeature.STOP
-    )
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -123,44 +105,38 @@ async def test_cover_callbacks(
     callback_device_state_function: Callable = (
         mock_dio_chacon_client.set_callback_device_state_by_device.call_args[0][1]
     )
-    # And calls it to effectively launch the callback as the server would do
-    callback_device_state_function(
-        {
-            "id": "L4HActuator_idmock1",
-            "connected": True,
-            "openlevel": 79,
-            "movement": "stop",
-        }
-    )
-    await hass.async_block_till_done()
+
+    # Define a method to simply call it
+    async def _callback_device_state_function(
+        openlevel: int,
+        movement: str,
+        id: str = "L4HActuator_idmock1",
+        connected: bool = True,
+    ) -> None:
+        callback_device_state_function(
+            {
+                "id": id,
+                "connected": connected,
+                "openlevel": openlevel,
+                "movement": movement,
+            }
+        )
+        await hass.async_block_till_done()
+
+    # And call it to effectively launch the callback as the server would do
+    await _callback_device_state_function(79, "stop")
     state = hass.states.get("cover.shutter_mock_1")
     assert state
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 79
     assert state.state == STATE_OPEN
 
-    callback_device_state_function(
-        {
-            "id": "L4HActuator_idmock1",
-            "connected": True,
-            "openlevel": 90,
-            "movement": "up",
-        }
-    )
-    await hass.async_block_till_done()
+    await _callback_device_state_function(90, "up")
     state = hass.states.get("cover.shutter_mock_1")
     assert state
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 90
     assert state.state == STATE_OPENING
 
-    callback_device_state_function(
-        {
-            "id": "L4HActuator_idmock1",
-            "connected": True,
-            "openlevel": 60,
-            "movement": "down",
-        }
-    )
-    await hass.async_block_till_done()
+    await _callback_device_state_function(60, "down")
     state = hass.states.get("cover.shutter_mock_1")
     assert state
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 60
