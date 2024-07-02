@@ -404,7 +404,7 @@ airtouch4pyapi==1.0.5
 airtouch5py==0.2.10
 
 # homeassistant.components.amberelectric
-amberelectric==1.1.0
+amberelectric==1.1.1
 
 # homeassistant.components.androidtv
 androidtv[async]==0.0.73
