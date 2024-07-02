@@ -451,3 +451,23 @@ async def test_rpc_device_virtual_switch(
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "123456789ABC-boolean:200"
+
+    monkeypatch.setitem(mock_rpc_device.status["boolean:200"], "value", False)
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_rpc_device.mock_update()
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    monkeypatch.setitem(mock_rpc_device.status["boolean:200"], "value", True)
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_rpc_device.mock_update()
+    assert hass.states.get(entity_id).state == STATE_ON
