@@ -183,7 +183,7 @@ aioaseko==0.1.1
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.6.3
+aioautomower==2024.6.4
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.1.1
@@ -335,7 +335,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==10.0.1
+aioshelly==11.0.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -386,7 +386,7 @@ aiowithings==3.0.2
 aioymaps==1.2.4
 
 # homeassistant.components.airgradient
-airgradient==0.6.0
+airgradient==0.6.1
 
 # homeassistant.components.airly
 airly==1.1.0
@@ -404,7 +404,7 @@ airtouch4pyapi==1.0.5
 airtouch5py==0.2.10
 
 # homeassistant.components.amberelectric
-amberelectric==1.1.0
+amberelectric==1.1.1
 
 # homeassistant.components.androidtv
 androidtv[async]==0.0.73
@@ -762,7 +762,7 @@ gardena-bluetooth==1.4.2
 gassist-text==0.0.11
 
 # homeassistant.components.google
-gcal-sync==6.1.3
+gcal-sync==6.1.4
 
 # homeassistant.components.geocaching
 geocachingapi==0.2.1
@@ -876,7 +876,7 @@ hassil==1.7.1
 hdate==0.10.9
 
 # homeassistant.components.here_travel_time
-here-routing==0.2.0
+here-routing==1.0.1
 
 # homeassistant.components.here_travel_time
 here-transit==1.2.0
@@ -895,7 +895,7 @@ hole==0.8.0
 holidays==0.51
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240628.0
+home-assistant-frontend==20240702.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.6.26
@@ -927,7 +927,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==8.0.1
+ical==8.1.1
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -942,7 +942,7 @@ ifaddr==0.2.0
 imgw_pib==1.0.5
 
 # homeassistant.components.incomfort
-incomfort-client==0.6.2
+incomfort-client==0.6.3
 
 # homeassistant.components.influxdb
 influxdb-client==1.24.0
@@ -1198,7 +1198,7 @@ open-garage==0.2.0
 open-meteo==0.3.1
 
 # homeassistant.components.openai_conversation
-openai==1.3.8
+openai==1.35.7
 
 # homeassistant.components.openerz
 openerz-api==0.3.0
@@ -1775,7 +1775,7 @@ python-izone==1.2.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.7.0.1
+python-kasa[speedups]==0.7.0.2
 
 # homeassistant.components.matter
 python-matter-server==6.2.0b1
@@ -1924,7 +1924,7 @@ renault-api==0.2.4
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.9.3
+reolink-aio==0.9.4
 
 # homeassistant.components.rflink
 rflink==0.0.66
@@ -2307,7 +2307,7 @@ youless-api==2.1.0
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp==2024.05.27
+yt-dlp==2024.07.01
 
 # homeassistant.components.zamg
 zamg==0.3.6

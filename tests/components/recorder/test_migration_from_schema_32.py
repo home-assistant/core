@@ -1,5 +1,6 @@
 """The tests for the recorder filter matching the EntityFilter component."""
 
+from collections.abc import AsyncGenerator
 import datetime
 import importlib
 import sys
@@ -12,7 +13,6 @@ import pytest
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-from typing_extensions import AsyncGenerator
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import (

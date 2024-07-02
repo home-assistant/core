@@ -6,7 +6,7 @@ from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Generator, Iterable
 from contextlib import AbstractContextManager
 from contextvars import ContextVar
 from datetime import date, datetime, time, timedelta
@@ -34,7 +34,6 @@ from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 from lru import LRU
 import orjson
-from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant.const import (
