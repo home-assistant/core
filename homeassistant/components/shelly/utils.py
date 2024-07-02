@@ -321,7 +321,12 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
             return f"{device_name} {key.replace(':', '_')}"
         if key.startswith("em1"):
             return f"{device_name} EM{key.split(':')[-1]}"
+        if key.startswith("boolean"):
+            return f"{device_name} Boolean {key.split(':')[-1]}"
         return device_name
+
+    if key.startswith("boolean"):
+        return f"{device_name} {entity_name}"
 
     return entity_name
 
