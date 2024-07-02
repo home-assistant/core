@@ -1,22 +1,18 @@
 get_schedules:
   fields:
-    charger_id:
+    device_id:
       required: true
       selector:
         device:
           integration: wallbox
-      example: >-
-        1234567
 
 set_schedules:
   fields:
-    charger_id:
+    device_id:
       required: true
       selector:
         device:
           integration: wallbox
-      example: >-
-        1234567
     schedules:
       required: true
       selector:

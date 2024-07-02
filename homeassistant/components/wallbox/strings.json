@@ -92,19 +92,19 @@
       "name": "Get Wallbox charge schedules",
       "description": "Gets Wallbox charging schedules",
       "fields": {
-        "charger_id": {
-          "name": "Charger id",
-          "description": "Wallbox charger serial number"
+        "device_id": {
+          "name": "Charger device id",
+          "description": "Wallbox charger device id"
         }
       }
     },
     "set_schedules": {
       "name": "Set Wallbox charge schedules",
-      "description": "sets Wallbox charging schedules",
+      "description": "Sets Wallbox charging schedules",
       "fields": {
-        "charger_id": {
-          "name": "Charger id",
-          "description": "Wallbox charger serial number"
+        "device_id": {
+          "name": "Charger device id",
+          "description": "Wallbox charger device id"
         },
         "schedules": {
           "name": "Input schedule data",

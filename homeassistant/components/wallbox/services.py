@@ -15,7 +15,7 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from .const import DOMAIN
 from .coordinator import WallboxCoordinator
 
-ATTR_CHARGER_ID = "charger_id"
+ATTR_DEVICE_ID = "device_id"
 
 LOGGER = logging.getLogger(__name__)
 
@@ -47,14 +47,14 @@ SERVICE_SCHEDULE_SCHEMA = vol.Schema(
 
 SERVICE_SCHEDULES_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_CHARGER_ID): cv.string,
+        vol.Required(ATTR_DEVICE_ID): cv.string,
         vol.Required(ATTR_SCHEDULES): vol.All(
             cv.ensure_list, [SERVICE_SCHEDULE_SCHEMA]
         ),
     }
 )
 
-SERVICE_GET_SCHEDULES_SCHEMA = vol.Schema({vol.Required(ATTR_CHARGER_ID): cv.string})
+SERVICE_GET_SCHEDULES_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_ID): cv.string})
 
 SERVICE_GET_SCHEDULES = "get_schedules"
 SERVICE_SET_SCHEDULES = "set_schedules"
@@ -76,22 +76,18 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
     async def get_coordinator(service_call_data: Mapping) -> WallboxCoordinator:
         device_registry = dr.async_get(hass)
-        device_id = service_call_data[ATTR_CHARGER_ID]
-        device_entry: dr.DeviceEntry | None = device_registry.async_get_device(
-            {(DOMAIN, device_id)}, set()
-        )
+        device_id = service_call_data[ATTR_DEVICE_ID]
+        device_entry: dr.DeviceEntry | None = device_registry.async_get(device_id)
 
         if device_entry is None:
-            raise ValueError(f"Unable to find a charger with SN: {device_id}")
+            raise ValueError(f"Unable to find a charger with id: {device_id}")
 
         coordinator: WallboxCoordinator = hass.data.get(DOMAIN, {})[
             list(device_entry.config_entries)[0]  # only one config entry for the device
         ]
 
         if coordinator is None:
-            raise ValueError(
-                f"Unable to get coordinator for for charger with SN: {device_id}"
-            )
+            raise ValueError(f"Unable to get coordinator for charger id: {device_id}")
 
         return coordinator
 

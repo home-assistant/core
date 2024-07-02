@@ -5,7 +5,7 @@ import requests_mock
 
 from homeassistant.components.wallbox.const import CONF_STATION, DOMAIN
 from homeassistant.components.wallbox.services import (
-    ATTR_CHARGER_ID,
+    ATTR_DEVICE_ID,
     ATTR_SCHEDULES,
     SERVICE_GET_SCHEDULES,
     SERVICE_SET_SCHEDULES,
@@ -24,7 +24,7 @@ async def test_service_get_schedules(
     """Test that service invokes wallbox get schedules API with correct data and handles result conversion to local properly."""
     await setup_integration(hass, entry)
 
-    device_registry.async_get_or_create(
+    device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, CONF_STATION)},
     )
@@ -40,7 +40,7 @@ async def test_service_get_schedules(
             text=load_fixture("wallbox/schedules.json"),
         )
 
-        data = {ATTR_CHARGER_ID: CONF_STATION}
+        data = {ATTR_DEVICE_ID: device.id}
 
         result = await hass.services.async_call(
             DOMAIN,
@@ -73,7 +73,7 @@ async def test_service_set_schedules(
     """Test that service invokes wallbox set schedules API with correct data."""
     await setup_integration(hass, entry)
 
-    device_registry.async_get_or_create(
+    device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, CONF_STATION)},
     )
@@ -110,7 +110,7 @@ async def test_service_set_schedules(
         ]
 
         data = {
-            ATTR_CHARGER_ID: CONF_STATION,
+            ATTR_DEVICE_ID: device.id,
             ATTR_SCHEDULES: schedules,
         }
 
@@ -144,7 +144,7 @@ async def test_services_invalid_sn(
             text=load_fixture("wallbox/schedules.json"),
         )
 
-        data = {ATTR_CHARGER_ID: "INVALID"}
+        data = {ATTR_DEVICE_ID: "INVALID"}
 
         with pytest.raises(ValueError):
             await hass.services.async_call(
