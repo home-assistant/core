@@ -231,11 +231,11 @@ async def test_removing_disconnected_cams(
         assert await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    expected_succes = TEST_CAM_MODEL not in expected_models
+    expected_success = TEST_CAM_MODEL not in expected_models
     for device in device_entries:
         if device.model == TEST_CAM_MODEL:
             response = await client.remove_device(device.id, config_entry.entry_id)
-            assert response["success"] == expected_succes
+            assert response["success"] == expected_success
 
     device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
