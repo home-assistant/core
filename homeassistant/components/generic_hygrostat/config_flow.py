@@ -8,6 +8,7 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.components.humidifier import HumidifierDeviceClass
+from homeassistant.components.input_boolean import DOMAIN as INPUT_BOOLEAN_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import CONF_NAME, PERCENTAGE
@@ -28,6 +29,8 @@ from . import (
     DOMAIN,
 )
 
+ALLOWED_DOMAINS_HUMIDIFIER = [INPUT_BOOLEAN_DOMAIN, SWITCH_DOMAIN]
+
 OPTIONS_SCHEMA = {
     vol.Required(CONF_DEVICE_CLASS): selector.SelectSelector(
         selector.SelectSelectorConfig(
@@ -45,7 +48,7 @@ OPTIONS_SCHEMA = {
         )
     ),
     vol.Required(CONF_HUMIDIFIER): selector.EntitySelector(
-        selector.EntitySelectorConfig(domain=SWITCH_DOMAIN)
+        selector.EntitySelectorConfig(domain=ALLOWED_DOMAINS_HUMIDIFIER)
     ),
     vol.Required(
         CONF_DRY_TOLERANCE, default=DEFAULT_TOLERANCE
