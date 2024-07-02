@@ -1091,12 +1091,11 @@ def _apply_update(  # noqa: C901
             [f"last_reported_ts {_column_types.timestamp_type}"],
         )
     elif new_version == 44:
+        columns: tuple[str, ...]
         # First drop foreign key constraints
         foreign_columns = (
             ("events", ("data_id", "event_type_id")),
             ("states", ("event_id", "old_state_id", "attributes_id", "metadata_id")),
-            ("statistics", ("metadata_id",)),
-            ("statistics_short_term", ("metadata_id",)),
         )
         for table, columns in foreign_columns:
             for column in columns:
@@ -1112,7 +1111,6 @@ def _apply_update(  # noqa: C901
             ("states_meta", ("metadata_id",)),
             ("statistics", ("id",)),
             ("statistics_short_term", ("id",)),
-            ("statistics_meta", ("id",)),
             ("recorder_runs", ("run_id",)),
             ("schema_changes", ("change_id",)),
             ("statistics_runs", ("run_id",)),

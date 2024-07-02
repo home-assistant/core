@@ -672,7 +672,7 @@ class StatisticsBase:
     created: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
     created_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE, default=time.time)
     metadata_id: Mapped[int | None] = mapped_column(
-        ID_TYPE,
+        Integer,
         ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
     )
     start: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
@@ -765,7 +765,7 @@ class StatisticsMeta(Base):
 
     __table_args__ = (_DEFAULT_TABLE_ARGS,)
     __tablename__ = TABLE_STATISTICS_META
-    id: Mapped[int] = mapped_column(ID_TYPE, Identity(), primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
     statistic_id: Mapped[str | None] = mapped_column(
         String(255), index=True, unique=True
     )
