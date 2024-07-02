@@ -227,6 +227,13 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self._attr_current_temperature = self._get_temperature_in_degrees(
             clusters.Thermostat.Attributes.LocalTemperature
         )
+        if self.get_matter_attribute_value(clusters.OnOff.Attributes.OnOff) is False:
+            # special case: the appliance has a dedicated Power switch on the OnOff cluster
+            # if the mains power is off - treat it as if the HVAC mode is off
+            self._attr_hvac_mode = HVACMode.OFF
+            self._attr_hvac_action = None
+            return
+
         # update hvac_mode from SystemMode
         system_mode_value = int(
             self.get_matter_attribute_value(clusters.Thermostat.Attributes.SystemMode)
