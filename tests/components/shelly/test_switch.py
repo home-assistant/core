@@ -433,13 +433,13 @@ async def test_wall_display_relay_mode(
     assert entry.unique_id == "123456789ABC-switch:0"
 
 
-async def test_rpc_device_virtual_switch(
+async def test_rpc_device_virtual_switch_with_name(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test virtual switch for RPC device."""
+    """Test a virtual switch for RPC device."""
     config = deepcopy(mock_rpc_device.config)
     config["boolean:200"] = {
         "name": "Virtual switch",
@@ -478,3 +478,45 @@ async def test_rpc_device_virtual_switch(
     )
     mock_rpc_device.mock_update()
     assert hass.states.get(entity_id).state == STATE_ON
+
+
+async def test_rpc_device_virtual_switch_without_name(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a virtual switch for RPC device."""
+    config = deepcopy(mock_rpc_device.config)
+    config["boolean:200"] = {"name": None, "meta": {"ui": {"view": "toggle"}}}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    entity_id = "switch.test_name_boolean_200"
+
+    await init_integration(hass, 3)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-boolean:200"
+
+
+async def test_rpc_device_virtual_binary_sensor(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test that a switch entity has not been created for a virtual binary sensor."""
+    config = deepcopy(mock_rpc_device.config)
+    config["boolean:200"] = {"name": None, "meta": {"ui": {"view": "label"}}}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    entity_id = "switch.test_name_boolean_200"
+
+    await init_integration(hass, 3)
+
+    state = hass.states.get(entity_id)
+    assert not state
