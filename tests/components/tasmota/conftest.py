@@ -11,20 +11,8 @@ from homeassistant.components.tasmota.const import (
     DOMAIN,
 )
 
-from tests.common import MockConfigEntry, mock_device_registry, mock_registry
+from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
-
-
-@pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def entity_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 @pytest.fixture(autouse=True)

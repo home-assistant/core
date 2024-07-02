@@ -30,8 +30,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 async def test_get_triggers_btn(
     hass: HomeAssistant,
-    device_reg,
-    entity_reg,
+    device_registry: dr.DeviceRegistry,
     mqtt_mock: MqttMockHAClient,
     setup_tasmota,
 ) -> None:
@@ -46,7 +45,7 @@ async def test_get_triggers_btn(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device(
+    device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     expected_triggers = [
@@ -77,8 +76,7 @@ async def test_get_triggers_btn(
 
 async def test_get_triggers_swc(
     hass: HomeAssistant,
-    device_reg,
-    entity_reg,
+    device_registry: dr.DeviceRegistry,
     mqtt_mock: MqttMockHAClient,
     setup_tasmota,
 ) -> None:
@@ -90,7 +88,7 @@ async def test_get_triggers_swc(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device(
+    device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     expected_triggers = [
@@ -112,8 +110,7 @@ async def test_get_triggers_swc(
 
 async def test_get_unknown_triggers(
     hass: HomeAssistant,
-    device_reg,
-    entity_reg,
+    device_registry: dr.DeviceRegistry,
     mqtt_mock: MqttMockHAClient,
     setup_tasmota,
 ) -> None:
@@ -126,7 +123,7 @@ async def test_get_unknown_triggers(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device(
+    device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
 
@@ -161,8 +158,7 @@ async def test_get_unknown_triggers(
 
 async def test_get_non_existing_triggers(
     hass: HomeAssistant,
-    device_reg,
-    entity_reg,
+    device_registry: dr.DeviceRegistry,
     mqtt_mock: MqttMockHAClient,
     setup_tasmota,
 ) -> None:
@@ -175,7 +171,7 @@ async def test_get_non_existing_triggers(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config1))
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device(
+    device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     triggers = await async_get_device_automations(
@@ -187,8 +183,7 @@ async def test_get_non_existing_triggers(
 @pytest.mark.no_fail_on_log_exception
 async def test_discover_bad_triggers(
     hass: HomeAssistant,
-    device_reg,
-    entity_reg,
+    device_registry: dr.DeviceRegistry,
     mqtt_mock: MqttMockHAClient,
     setup_tasmota,
 ) -> None:
@@ -207,7 +202,7 @@ async def test_discover_bad_triggers(
         )
         await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device(
+    device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     triggers = await async_get_device_automations(
@@ -243,7 +238,7 @@ async def test_discover_bad_triggers(
         )
         await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device(
+    device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     triggers = await async_get_device_automations(
@@ -274,8 +269,7 @@ async def test_discover_bad_triggers(
 
 async def test_update_remove_triggers(
     hass: HomeAssistant,
-    device_reg,
-    entity_reg,
+    device_registry: dr.DeviceRegistry,
     mqtt_mock: MqttMockHAClient,
     setup_tasmota,
 ) -> None:
@@ -296,7 +290,7 @@ async def test_update_remove_triggers(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config1))
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device(
+    device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
 
@@ -351,7 +345,7 @@ async def test_update_remove_triggers(
 
 async def test_if_fires_on_mqtt_message_btn(
     hass: HomeAssistant,
-    device_reg,
+    device_registry: dr.DeviceRegistry,
     service_calls: list[ServiceCall],
     mqtt_mock: MqttMockHAClient,
     setup_tasmota,
@@ -366,7 +360,7 @@ async def test_if_fires_on_mqtt_message_btn(
 
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
-    device_entry = device_reg.async_get_device(
+    device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
 
@@ -426,7 +420,7 @@ async def test_if_fires_on_mqtt_message_btn(
 
 async def test_if_fires_on_mqtt_message_swc(
     hass: HomeAssistant,
-    device_reg,
+    device_registry: dr.DeviceRegistry,
     service_calls: list[ServiceCall],
     mqtt_mock: MqttMockHAClient,
     setup_tasmota,
@@ -442,7 +436,7 @@ async def test_if_fires_on_mqtt_message_swc(
 
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
-    device_entry = device_reg.async_get_device(
+    device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
 
@@ -524,7 +518,7 @@ async def test_if_fires_on_mqtt_message_swc(
 
 async def test_if_fires_on_mqtt_message_late_discover(
     hass: HomeAssistant,
-    device_reg,
+    device_registry: dr.DeviceRegistry,
     service_calls: list[ServiceCall],
     mqtt_mock: MqttMockHAClient,
     setup_tasmota,
@@ -544,7 +538,7 @@ async def test_if_fires_on_mqtt_message_late_discover(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config1))
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device(
+    device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
 
@@ -607,7 +601,7 @@ async def test_if_fires_on_mqtt_message_late_discover(
 
 async def test_if_fires_on_mqtt_message_after_update(
     hass: HomeAssistant,
-    device_reg,
+    device_registry: dr.DeviceRegistry,
     service_calls: list[ServiceCall],
     mqtt_mock: MqttMockHAClient,
     setup_tasmota,
@@ -624,7 +618,7 @@ async def test_if_fires_on_mqtt_message_after_update(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config1))
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device(
+    device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
 
@@ -692,7 +686,10 @@ async def test_if_fires_on_mqtt_message_after_update(
 
 
 async def test_no_resubscribe_same_topic(
-    hass: HomeAssistant, device_reg, mqtt_mock: MqttMockHAClient, setup_tasmota
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
 ) -> None:
     """Test subscription to topics without change."""
     # Discover a device with device trigger
@@ -705,7 +702,7 @@ async def test_no_resubscribe_same_topic(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device(
+    device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
 
@@ -741,7 +738,7 @@ async def test_no_resubscribe_same_topic(
 
 async def test_not_fires_on_mqtt_message_after_remove_by_mqtt(
     hass: HomeAssistant,
-    device_reg,
+    device_registry: dr.DeviceRegistry,
     service_calls: list[ServiceCall],
     mqtt_mock: MqttMockHAClient,
     setup_tasmota,
@@ -757,7 +754,7 @@ async def test_not_fires_on_mqtt_message_after_remove_by_mqtt(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device(
+    device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
 
@@ -817,7 +814,7 @@ async def test_not_fires_on_mqtt_message_after_remove_by_mqtt(
 async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    device_reg,
+    device_registry: dr.DeviceRegistry,
     service_calls: list[ServiceCall],
     mqtt_mock: MqttMockHAClient,
     setup_tasmota,
@@ -834,7 +831,7 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device(
+    device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
 
@@ -880,7 +877,10 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
 
 
 async def test_attach_remove(
-    hass: HomeAssistant, device_reg, mqtt_mock: MqttMockHAClient, setup_tasmota
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
 ) -> None:
     """Test attach and removal of trigger."""
     # Discover a device with device trigger
@@ -893,7 +893,7 @@ async def test_attach_remove(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device(
+    device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
 
@@ -941,7 +941,10 @@ async def test_attach_remove(
 
 
 async def test_attach_remove_late(
-    hass: HomeAssistant, device_reg, mqtt_mock: MqttMockHAClient, setup_tasmota
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
 ) -> None:
     """Test attach and removal of trigger."""
     # Discover a device without device triggers
@@ -956,7 +959,7 @@ async def test_attach_remove_late(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config1))
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device(
+    device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
 
@@ -1014,7 +1017,10 @@ async def test_attach_remove_late(
 
 
 async def test_attach_remove_late2(
-    hass: HomeAssistant, device_reg, mqtt_mock: MqttMockHAClient, setup_tasmota
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
 ) -> None:
     """Test attach and removal of trigger."""
     # Discover a device without device triggers
@@ -1029,7 +1035,7 @@ async def test_attach_remove_late2(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config1))
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device(
+    device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
 
@@ -1072,7 +1078,10 @@ async def test_attach_remove_late2(
 
 
 async def test_attach_remove_unknown1(
-    hass: HomeAssistant, device_reg, mqtt_mock: MqttMockHAClient, setup_tasmota
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
 ) -> None:
     """Test attach and removal of unknown trigger."""
     # Discover a device without device triggers
@@ -1083,7 +1092,7 @@ async def test_attach_remove_unknown1(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config1))
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device(
+    device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
 
@@ -1113,7 +1122,7 @@ async def test_attach_remove_unknown1(
 async def test_attach_unknown_remove_device_from_registry(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    device_reg,
+    device_registry: dr.DeviceRegistry,
     mqtt_mock: MqttMockHAClient,
     setup_tasmota,
 ) -> None:
@@ -1136,7 +1145,7 @@ async def test_attach_unknown_remove_device_from_registry(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config1))
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device(
+    device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
 
@@ -1164,7 +1173,10 @@ async def test_attach_unknown_remove_device_from_registry(
 
 
 async def test_attach_remove_config_entry(
-    hass: HomeAssistant, device_reg, mqtt_mock: MqttMockHAClient, setup_tasmota
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
 ) -> None:
     """Test trigger cleanup when removing a Tasmota config entry."""
     # Discover a device with device trigger
@@ -1177,7 +1189,7 @@ async def test_attach_remove_config_entry(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device(
+    device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
 
