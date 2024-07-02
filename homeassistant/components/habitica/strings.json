@@ -46,6 +46,45 @@
       },
       "revive": {
         "name": "Revive from death"
+      },
+      "fireball": {
+        "name": "Cast burst of flames"
+      },
+      "mpheal": {
+        "name": "Cast ethereal surge"
+      },
+      "earth": {
+        "name": "Cast earthquake"
+      },
+      "frost": {
+        "name": "Cast chilling frost"
+      },
+      "defensive_stance": {
+        "name": "Cast defensive stance"
+      },
+      "valorous_presence": {
+        "name": "Cast valorous presence"
+      },
+      "intimidate": {
+        "name": "Cast intimidating gaze"
+      },
+      "tools_of_trade": {
+        "name": "Cast tools of trade"
+      },
+      "stealth": {
+        "name": "Cast stealth"
+      },
+      "heal": {
+        "name": "Cast healing light"
+      },
+      "brightness": {
+        "name": "Cast searing brightness"
+      },
+      "protect_aura": {
+        "name": "Cast protective aura"
+      },
+      "heal_all": {
+        "name": "Cast blessing"
       }
     },
     "sensor": {
