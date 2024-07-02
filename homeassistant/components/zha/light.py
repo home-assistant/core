@@ -19,10 +19,11 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .entity import ZHAEntity
 from .helpers import (
@@ -53,7 +54,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-class Light(LightEntity, ZHAEntity):
+class Light(LightEntity, RestoreEntity, ZHAEntity):
     """Representation of a ZHA or ZLL light."""
 
     def __init__(self, entity_data: Any) -> None:
@@ -156,3 +157,20 @@ class Light(LightEntity, ZHAEntity):
             transition=kwargs.get(ATTR_TRANSITION)
         )
         self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Restore entity state."""
+        await super().async_added_to_hass()
+
+        if (state := await self.async_get_last_state()) is None:
+            return
+
+        # Some light operations rely on extra state that is not maintained in the ZCL
+        # attribute cache. Until ZHA is able to maintain its own persistent state (or
+        # provides a more generic hook to utilize HA to do this), we directly restore
+        # them.
+        self.entity_data.entity.restore_external_state_attributes(
+            state=(state.state == STATE_ON),
+            off_with_transition=state.attributes.get("off_with_transition"),
+            off_brightness=state.attributes.get("off_brightness"),
+        )
