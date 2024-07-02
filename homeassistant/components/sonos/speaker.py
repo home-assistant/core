@@ -807,13 +807,12 @@ class SonosSpeaker:
     @callback
     def async_update_groups(self, event: SonosEvent) -> None:
         """Handle callback for topology change event."""
-        _LOGGER.debug("async_update_groups enter self [%s]", self.soco.uid)
         if xml := event.variables.get("zone_group_state"):
             zgs = ET.fromstring(xml)
             _LOGGER.debug(
                 "async_update_groups zone_group_state self [%s] zgs [%s]",
                 self.soco.uid,
-                zgs,
+                xml,
             )
             for vanished_device in zgs.find("VanishedDevices") or []:
                 if (
@@ -827,11 +826,6 @@ class SonosSpeaker:
                     )
                     continue
                 uid = vanished_device.get("UUID")
-                _LOGGER.debug(
-                    "async_update_groups vanished self [%s] vanished [%s]",
-                    self.soco.uid,
-                    uid,
-                )
                 async_dispatcher_send(
                     self.hass,
                     f"{SONOS_VANISHED}-{uid}",
@@ -839,15 +833,11 @@ class SonosSpeaker:
                 )
 
         self.event_stats.process(event)
-        _LOGGER.debug(
-            "async_update_groups create background task self [%s]", self.soco.uid
-        )
         self.hass.async_create_background_task(
             self.create_update_groups_coro(event),
             name=f"sonos group update {self.zone_name}",
             eager_start=True,
         )
-        _LOGGER.debug("async_update_groups exit self [%s]", self.soco.uid)
 
     def create_update_groups_coro(self, event: SonosEvent | None = None) -> Coroutine:
         """Handle callback for topology change event."""
@@ -899,11 +889,6 @@ class SonosSpeaker:
                 and self.sonos_group_entities
             ):
                 # Skip updating existing single speakers in polling mode
-                _LOGGER.debug(
-                    "_async_regroup skip update self [%s] group [%s]",
-                    self.soco.uid,
-                    group,
-                )
                 return
 
             entity_registry = er.async_get(self.hass)
@@ -931,9 +916,6 @@ class SonosSpeaker:
             if self.sonos_group_entities == sonos_group_entities:
                 # Useful in polling mode for speakers with stereo pairs or surrounds
                 # as those "invisible" speakers will bypass the single speaker check
-                _LOGGER.debug(
-                    "_async_regroup return_2 self [%s] group [%s]", self.soco.uid, group
-                )
                 return
 
             self.coordinator = None
@@ -959,6 +941,7 @@ class SonosSpeaker:
                         sonos_group,
                     )
                     joined_speaker.async_write_entity_states()
+
             _LOGGER.debug("Regrouped %s: %s", self.zone_name, self.sonos_group_entities)
 
         async def _async_handle_group_event(event: SonosEvent | None) -> None:
