@@ -33,6 +33,11 @@ _LOGGER = logging.getLogger(__name__.rpartition(".")[0])
 class EvoBroker:
     """Broker for evohome client broker."""
 
+    loc_idx: int
+    loc: evo.Location
+    loc_utc_offset: timedelta
+    tcs: evo.ControlSystem
+
     def __init__(self, sess: EvoSession) -> None:
         """Initialize the evohome broker and its data structure."""
 
@@ -43,12 +48,6 @@ class EvoBroker:
 
         self.client = sess.client_v2
         self.client_v1 = sess.client_v1
-
-        self.loc_idx: int = None  # type: ignore[assignment]
-        self.loc: evo.Location = None  # type: ignore[assignment]
-
-        self.loc_utc_offset: timedelta = None  # type: ignore[assignment]
-        self.tcs: evo.ControlSystem = None  # type: ignore[assignment]
 
         self.temps: dict[str, float | None] = {}
 
