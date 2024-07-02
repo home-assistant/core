@@ -30,7 +30,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(autouse=True)
-def mock_tv() -> Generator[PhilipsTV]:
+def mock_tv():
     """Disable component actual use."""
     tv = create_autospec(PhilipsTV)
     tv.sources = {}
