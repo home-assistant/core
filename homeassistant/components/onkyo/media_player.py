@@ -70,7 +70,7 @@ DEFAULT_SOURCES = {
 }
 DEFAULT_PLAYABLE_SOURCES = ("fm", "am", "tuner")
 
-MEDIA_PLAYER_PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
