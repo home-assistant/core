@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from asyncio import AbstractEventLoop
+from collections.abc import Generator
 import copy
 import shutil
 import time
@@ -15,7 +16,6 @@ from google_nest_sdm import diagnostics
 from google_nest_sdm.auth import AbstractAuth
 from google_nest_sdm.device_manager import DeviceManager
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.application_credentials import (
     async_import_client_credential,

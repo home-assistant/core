@@ -42,8 +42,8 @@ async def test_adam_change_select_entity(
     mock_smile_adam.set_select.assert_called_with(
         "select_schedule",
         "c50f167537524366a5af7aa3942feb1e",
-        "on",
         "Badkamer Schema",
+        "on",
     )
 
 
@@ -74,6 +74,6 @@ async def test_adam_select_regulation_mode(
     mock_smile_adam_3.set_select.assert_called_with(
         "select_regulation_mode",
         "bc93488efab249e5bc54fd7e175a6f91",
-        "on",
         "heating",
+        "on",
     )

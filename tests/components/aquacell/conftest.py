@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from datetime import datetime
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioaquacell import AquacellApi, Softener
 import pytest
@@ -19,7 +19,7 @@ from tests.common import MockConfigEntry, load_json_array_fixture
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.aquacell.async_setup_entry", return_value=True
@@ -28,7 +28,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_aquacell_api() -> Generator[AsyncMock, None, None]:
+def mock_aquacell_api() -> Generator[MagicMock]:
     """Build a fixture for the Aquacell API that authenticates successfully and returns a single softener."""
     with (
         patch(

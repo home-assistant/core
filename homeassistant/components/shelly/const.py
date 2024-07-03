@@ -83,11 +83,9 @@ REST_SENSORS_UPDATE_INTERVAL: Final = 60
 # Refresh interval for RPC polling sensors
 RPC_SENSORS_POLLING_INTERVAL: Final = 60
 
-# Multiplier used to calculate the "update_interval" for sleeping devices.
-SLEEP_PERIOD_MULTIPLIER: Final = 1.2
 CONF_SLEEP_PERIOD: Final = "sleep_period"
 
-# Multiplier used to calculate the "update_interval" for non-sleeping devices.
+# Multiplier used to calculate the "update_interval" for shelly devices.
 UPDATE_PERIOD_MULTIPLIER: Final = 2.2
 
 # Reconnect interval for GEN2 devices

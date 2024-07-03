@@ -93,6 +93,13 @@ class TimerInfo:
     This agent will be used to execute the conversation command.
     """
 
+    _created_seconds: int = 0
+    """Number of seconds on the timer when it was created."""
+
+    def __post_init__(self) -> None:
+        """Post initialization."""
+        self._created_seconds = self.seconds
+
     @property
     def seconds_left(self) -> int:
         """Return number of seconds left on the timer."""
@@ -102,6 +109,15 @@ class TimerInfo:
         now = time.monotonic_ns()
         seconds_running = int((now - self.updated_at) / 1e9)
         return max(0, self.seconds - seconds_running)
+
+    @property
+    def created_seconds(self) -> int:
+        """Return number of seconds on the timer when it was created.
+
+        This value is increased if time is added to the timer, exceeding its
+        original created_seconds.
+        """
+        return self._created_seconds
 
     @cached_property
     def name_normalized(self) -> str:
@@ -131,6 +147,7 @@ class TimerInfo:
         Seconds may be negative to remove time instead.
         """
         self.seconds = max(0, self.seconds_left + seconds)
+        self._created_seconds = max(self._created_seconds, self.seconds)
         self.updated_at = time.monotonic_ns()
 
     def finish(self) -> None:

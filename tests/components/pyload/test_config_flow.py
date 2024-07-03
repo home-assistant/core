@@ -262,7 +262,7 @@ async def test_reconfiguration(
     config_entry: MockConfigEntry,
     mock_pyloadapi: AsyncMock,
 ) -> None:
-    """Test reauth flow."""
+    """Test reconfiguration flow."""
 
     config_entry.add_to_hass(hass)
 
@@ -304,7 +304,7 @@ async def test_reconfigure_errors(
     side_effect: Exception,
     error_text: str,
 ) -> None:
-    """Test reauth flow."""
+    """Test reconfiguration flow."""
 
     config_entry.add_to_hass(hass)
 

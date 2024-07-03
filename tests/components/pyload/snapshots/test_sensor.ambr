@@ -4,7 +4,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -29,13 +31,15 @@
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.ACTIVE: 'active'>,
     'unique_id': 'XXXXXXXXXXXXXX_active',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'downloads',
   })
 # ---
 # name: test_sensor_update_exceptions[CannotConnect][sensor.pyload_active_downloads-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'pyLoad Active downloads',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'downloads',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pyload_active_downloads',
@@ -50,7 +54,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -75,13 +81,15 @@
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.QUEUE: 'queue'>,
     'unique_id': 'XXXXXXXXXXXXXX_queue',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'downloads',
   })
 # ---
 # name: test_sensor_update_exceptions[CannotConnect][sensor.pyload_downloads_in_queue-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'pyLoad Downloads in queue',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'downloads',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pyload_downloads_in_queue',
@@ -96,7 +104,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -121,13 +131,15 @@
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.TOTAL: 'total'>,
     'unique_id': 'XXXXXXXXXXXXXX_total',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'downloads',
   })
 # ---
 # name: test_sensor_update_exceptions[CannotConnect][sensor.pyload_finished_downloads-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'pyLoad Finished downloads',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'downloads',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pyload_finished_downloads',
@@ -250,7 +262,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -275,13 +289,15 @@
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.ACTIVE: 'active'>,
     'unique_id': 'XXXXXXXXXXXXXX_active',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'downloads',
   })
 # ---
 # name: test_sensor_update_exceptions[InvalidAuth][sensor.pyload_active_downloads-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'pyLoad Active downloads',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'downloads',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pyload_active_downloads',
@@ -296,7 +312,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -321,13 +339,15 @@
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.QUEUE: 'queue'>,
     'unique_id': 'XXXXXXXXXXXXXX_queue',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'downloads',
   })
 # ---
 # name: test_sensor_update_exceptions[InvalidAuth][sensor.pyload_downloads_in_queue-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'pyLoad Downloads in queue',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'downloads',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pyload_downloads_in_queue',
@@ -342,7 +362,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -367,13 +389,15 @@
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.TOTAL: 'total'>,
     'unique_id': 'XXXXXXXXXXXXXX_total',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'downloads',
   })
 # ---
 # name: test_sensor_update_exceptions[InvalidAuth][sensor.pyload_finished_downloads-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'pyLoad Finished downloads',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'downloads',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pyload_finished_downloads',
@@ -496,7 +520,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -521,13 +547,15 @@
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.ACTIVE: 'active'>,
     'unique_id': 'XXXXXXXXXXXXXX_active',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'downloads',
   })
 # ---
 # name: test_sensor_update_exceptions[ParserError][sensor.pyload_active_downloads-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'pyLoad Active downloads',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'downloads',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pyload_active_downloads',
@@ -542,7 +570,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -567,13 +597,15 @@
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.QUEUE: 'queue'>,
     'unique_id': 'XXXXXXXXXXXXXX_queue',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'downloads',
   })
 # ---
 # name: test_sensor_update_exceptions[ParserError][sensor.pyload_downloads_in_queue-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'pyLoad Downloads in queue',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'downloads',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pyload_downloads_in_queue',
@@ -588,7 +620,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -613,13 +647,15 @@
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.TOTAL: 'total'>,
     'unique_id': 'XXXXXXXXXXXXXX_total',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'downloads',
   })
 # ---
 # name: test_sensor_update_exceptions[ParserError][sensor.pyload_finished_downloads-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'pyLoad Finished downloads',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'downloads',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pyload_finished_downloads',
@@ -742,7 +778,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -767,13 +805,15 @@
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.ACTIVE: 'active'>,
     'unique_id': 'XXXXXXXXXXXXXX_active',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'downloads',
   })
 # ---
 # name: test_setup[sensor.pyload_active_downloads-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'pyLoad Active downloads',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'downloads',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pyload_active_downloads',
@@ -788,7 +828,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -813,13 +855,15 @@
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.QUEUE: 'queue'>,
     'unique_id': 'XXXXXXXXXXXXXX_queue',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'downloads',
   })
 # ---
 # name: test_setup[sensor.pyload_downloads_in_queue-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'pyLoad Downloads in queue',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'downloads',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pyload_downloads_in_queue',
@@ -834,7 +878,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -859,13 +905,15 @@
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.TOTAL: 'total'>,
     'unique_id': 'XXXXXXXXXXXXXX_total',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'downloads',
   })
 # ---
 # name: test_setup[sensor.pyload_finished_downloads-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'pyLoad Finished downloads',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'downloads',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pyload_finished_downloads',

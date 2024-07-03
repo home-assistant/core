@@ -27,7 +27,7 @@
     'platform': 'pyload',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <PyLoadSwitchEntity.RECONNECT: 'reconnect'>,
+    'translation_key': <PyLoadSwitch.RECONNECT: 'reconnect'>,
     'unique_id': 'XXXXXXXXXXXXXX_reconnect',
     'unit_of_measurement': None,
   })
@@ -74,7 +74,7 @@
     'platform': 'pyload',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <PyLoadSwitchEntity.PAUSE_RESUME_QUEUE: 'download'>,
+    'translation_key': <PyLoadSwitch.PAUSE_RESUME_QUEUE: 'download'>,
     'unique_id': 'XXXXXXXXXXXXXX_download',
     'unit_of_measurement': None,
   })

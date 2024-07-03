@@ -109,5 +109,5 @@ class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):
         self.device[LOCATION] and STATE_ON are required for the thermostat-schedule select.
         """
         await self.coordinator.api.set_select(
-            self.entity_description.key, self.device[LOCATION], STATE_ON, option
+            self.entity_description.key, self.device[LOCATION], option, STATE_ON
         )
