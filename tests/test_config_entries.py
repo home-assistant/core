@@ -1850,6 +1850,26 @@ async def test_entry_cannot_be_loaded_twice(
     assert entry.state is state
 
 
+async def test_entry_with_no_domain(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, snapshot: SnapshotAssertion
+) -> None:
+    """Test that a config entry cannot be loaded twice."""
+    entry = MockConfigEntry(domain="comp")
+    entry.add_to_hass(hass)
+
+    with pytest.raises(loader.IntegrationNotFound):
+        await entry.async_setup(hass)
+
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue(HA_DOMAIN, "integration_not_found.comp")
+    assert issue is not None
+    assert issue.translation_key == "integration_not_found"
+    assert issue.translation_placeholders == {
+        "entry_title": "Mock Title",
+        "domain": "comp",
+    }
+
+
 async def test_entry_setup_without_lock_raises(hass: HomeAssistant) -> None:
     """Test trying to setup a config entry without the lock."""
     entry = MockConfigEntry(

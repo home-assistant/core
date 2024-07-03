@@ -58,8 +58,15 @@
       "description": "Reauthentication is needed"
     },
     "integration_not_found": {
-      "title": "Could not set up {entry_title}",
-      "description": "Home Assistant could not set up {entry_title} because its integration (`{domain}`) could not be found."
+      "title": "Could not set up {domain}",
+      "fix_flow": {
+        "step": {
+          "remove_entries": {
+            "title": "[%key:component::homeassistant::issues::integration_not_found::title%]",
+            "description": "Home Assistant could not set up {domain} because its integration (`{domain}`) could not be found."
+          }
+        }
+      }
     }
   },
   "system_health": {

@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-from homeassistant import data_entry_flow
+import voluptuous as vol
+
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResult
 
 
 class IntegrationNotFoundFlow(RepairsFlow):
@@ -12,16 +14,23 @@ class IntegrationNotFoundFlow(RepairsFlow):
 
     def __init__(self, data: dict[str, str]) -> None:
         """Initialize."""
-        self.description_placeholders: dict[str, str] = {
-            "device_name": data["device_name"]
-        }
+        self.description_placeholders: dict[str, str] = data
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> FlowResult:
         """Handle the first step of a fix flow."""
-        return self.async_show_menu(
-            menu_options=["confirm", "ignore"],
+        return await self.async_step_remove_entries()
+
+    async def async_step_remove_entries(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
+        """Handle the remove entries step of a fix flow."""
+        if user_input is not None:
+            return self.async_create_entry(data={})
+        return self.async_show_form(
+            step_id="remove_entries",
+            data_schema=vol.Schema({}),
             description_placeholders=self.description_placeholders,
         )
 
