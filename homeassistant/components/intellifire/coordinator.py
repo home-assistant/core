@@ -51,7 +51,7 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntelliFirePollData
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
 
-        data = self.fireplace._fireplace_data  # pylint: disable=protected-access
+        data = self.fireplace._fireplace_data  # noqa: SLF001
 
         return DeviceInfo(
             manufacturer="Hearth and Home",
