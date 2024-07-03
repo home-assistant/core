@@ -12,10 +12,11 @@ from zha.application.platforms import EntityCategory as ZHAEntityCategory
 from zha.mixins import LogMixin
 
 from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, ATTR_NAME, EntityCategory
-from homeassistant.core import callback
-from homeassistant.helpers import entity
+from homeassistant.core import State, callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DOMAIN
 from .helpers import SIGNAL_REMOVE_ENTITIES, EntityData
@@ -23,7 +24,7 @@ from .helpers import SIGNAL_REMOVE_ENTITIES, EntityData
 _LOGGER = logging.getLogger(__name__)
 
 
-class ZHAEntity(LogMixin, entity.Entity):
+class ZHAEntity(LogMixin, RestoreEntity, Entity):
     """ZHA eitity."""
 
     _attr_has_entity_name = True
@@ -125,6 +126,20 @@ class ZHAEntity(LogMixin, entity.Entity):
             self.device_info,
             self.remove_future,
         )
+
+        if (state := await self.async_get_last_state()) is None:
+            return
+
+        self.restore_external_state_attributes(state)
+
+    @callback
+    def restore_external_state_attributes(self, state: State) -> None:
+        """Restore ephemeral external state from Home Assistant back into ZHA."""
+
+        # Some operations rely on extra state that is not maintained in the ZCL
+        # attribute cache. Until ZHA is able to maintain its own persistent state (or
+        # provides a more generic hook to utilize HA to do this), we directly restore
+        # them.
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""
