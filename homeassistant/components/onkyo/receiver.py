@@ -6,7 +6,7 @@ import logging
 from typing import Any, TypedDict
 
 import pyeiscp
-from pyeiscp import Connection as Receiver  # noqa: F401
+from pyeiscp import Connection as Receiver
 
 from .const import ZONES
 
