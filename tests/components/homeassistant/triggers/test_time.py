@@ -156,17 +156,40 @@ async def test_if_fires_using_at_input_datetime(
     )
 
 
+@pytest.mark.parametrize(
+    ("conf_at", "trigger_deltas"),
+    [
+        (["5:00:00", "6:00:00"], [timedelta(0), timedelta(hours=1)]),
+        (
+            [
+                "5:00:05",
+                {"entity_id": "sensor.next_alarm", "offset": "00:00:10"},
+                {"entity_id": "sensor.next_alarm"},
+            ],
+            [timedelta(seconds=5), timedelta(seconds=10), timedelta(0)],
+        ),
+    ],
+)
 async def test_if_fires_using_multiple_at(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     service_calls: list[ServiceCall],
+    conf_at: list[str | dict[str, int | str]],
+    trigger_deltas: list[timedelta],
 ) -> None:
-    """Test for firing at."""
+    """Test for firing at multiple trigger times."""
 
     now = dt_util.now()
 
-    trigger_dt = now.replace(hour=5, minute=0, second=0, microsecond=0) + timedelta(2)
-    time_that_will_not_match_right_away = trigger_dt - timedelta(minutes=1)
+    start_dt = now.replace(hour=5, minute=0, second=0, microsecond=0) + timedelta(2)
+
+    hass.states.async_set(
+        "sensor.next_alarm",
+        start_dt.isoformat(),
+        {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
+    )
+
+    time_that_will_not_match_right_away = start_dt - timedelta(minutes=1)
 
     freezer.move_to(dt_util.as_utc(time_that_will_not_match_right_away))
     assert await async_setup_component(
@@ -174,7 +197,7 @@ async def test_if_fires_using_multiple_at(
         automation.DOMAIN,
         {
             automation.DOMAIN: {
-                "trigger": {"platform": "time", "at": ["5:00:00", "6:00:00"]},
+                "trigger": {"platform": "time", "at": conf_at},
                 "action": {
                     "service": "test.automation",
                     "data_template": {
@@ -186,17 +209,14 @@ async def test_if_fires_using_multiple_at(
     )
     await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
-    await hass.async_block_till_done()
+    for count, delta in enumerate(trigger_deltas):
+        async_fire_time_changed(hass, start_dt + delta + timedelta(seconds=1))
+        await hass.async_block_till_done()
 
-    assert len(service_calls) == 1
-    assert service_calls[0].data["some"] == "time - 5"
-
-    async_fire_time_changed(hass, trigger_dt + timedelta(hours=1, seconds=1))
-    await hass.async_block_till_done()
-
-    assert len(service_calls) == 2
-    assert service_calls[1].data["some"] == "time - 6"
+        assert len(service_calls) == count + 1
+        assert (
+            service_calls[count].data["some"] == f"time - {5 + (delta.seconds // 3600)}"
+        )
 
 
 async def test_if_not_fires_using_wrong_at(
