@@ -56,6 +56,10 @@
     "config_entry_reauth": {
       "title": "[%key:common::config_flow::title::reauth%]",
       "description": "Reauthentication is needed"
+    },
+    "integration_not_found": {
+      "title": "Could not set up {entry_title}",
+      "description": "Home Assistant could not set up {entry_title} because its integration (`{domain}`) could not be found."
     }
   },
   "system_health": {

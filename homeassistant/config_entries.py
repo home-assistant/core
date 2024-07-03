@@ -544,6 +544,23 @@ class ConfigEntry(Generic[_DataT]):
         try:
             component = await integration.async_get_component()
         except ImportError as err:
+            ir.async_create_issue(
+                hass,
+                HA_DOMAIN,
+                f"integration_not_found.{self.domain}",
+                is_fixable=False,
+                issue_domain=HA_DOMAIN,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="integration_not_found",
+                translation_placeholders={
+                    "entry_title": self.title,
+                    "domain": self.domain,
+                },
+                data={
+                    "domain": self.domain,
+                    "entry_id": self.entry_id,
+                }
+            )
             _LOGGER.error(
                 "Error importing integration %s to set up %s configuration entry: %s",
                 integration.domain,
