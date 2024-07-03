@@ -516,3 +516,30 @@ def get_virtual_component_key_ids(
         ]
 
     return []
+
+
+@callback
+def async_get_orphaned_virtual_entities(
+    hass: HomeAssistant,
+    config_entry_id: str,
+    platform: str,
+    virt_comp_type: str,
+    virt_comp_ids: list[int],
+) -> list[str]:
+    """Return a list of keys of orphaned virtual entities."""
+    orphaned_entities = []
+    entity_reg = er.async_get(hass)
+    device_reg = dr.async_get(hass)
+
+    if devices := device_reg.devices.get_devices_for_config_entry_id(config_entry_id):
+        device_id = devices[0].id
+        entities = er.async_entries_for_device(entity_reg, device_id, True)
+        for entity in entities:
+            if not entity.entity_id.startswith(platform):
+                continue
+            if virt_comp_type in entity.unique_id:
+                virtual_switch_id = int(entity.unique_id.split(":")[1])
+                if virtual_switch_id not in virt_comp_ids:
+                    orphaned_entities.append(f"{virt_comp_type}:{virtual_switch_id}")
+
+    return orphaned_entities
