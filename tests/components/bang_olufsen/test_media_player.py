@@ -68,6 +68,7 @@ from .const import (
 )
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 
 async def test_initialization(
@@ -919,3 +920,65 @@ async def test_async_play_media_url_m3u(
     assert exc_info.errisinstance(HomeAssistantError)
 
     mock_mozart_client.post_uri_source.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("child", "present"),
+    [
+        # Audio source expected
+        (
+            {
+                "title": "test.mp3",
+                "media_class": "music",
+                "media_content_type": "audio/mpeg",
+                "media_content_id": "media-source://media_source/local/test.mp3",
+                "can_play": True,
+                "can_expand": False,
+                "thumbnail": None,
+                "children_media_class": None,
+            },
+            True,
+        ),
+        # Video source not expected
+        (
+            {
+                "title": "test.mp4",
+                "media_class": "video",
+                "media_content_type": "video/mp4",
+                "media_content_id": ("media-source://media_source/local/test.mp4"),
+                "can_play": True,
+                "can_expand": False,
+                "thumbnail": None,
+                "children_media_class": None,
+            },
+            False,
+        ),
+    ],
+)
+async def test_async_browse_media(
+    child,
+    present,
+    hass: HomeAssistant,
+    mock_mozart_client,
+    mock_config_entry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test async_browse_media with audio and video source."""
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    await async_setup_component(hass, "media_source", {"media_source": {}})
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": TEST_MEDIA_PLAYER_ENTITY_ID,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    assert (child in response["result"]["children"]) is present
