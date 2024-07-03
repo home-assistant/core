@@ -262,7 +262,7 @@ async def async_setup_entry(
     for channel_type in actuals:
         description = SensorEntityDescription(
             key="actuals",
-            name=f"{entry.title} - {friendly_channel_type(channel_type)} Actual",
+            name=f"{entry.title} - {friendly_channel_type(channel_type)} Previous",
             native_unit_of_measurement=UNIT,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key=channel_type,
