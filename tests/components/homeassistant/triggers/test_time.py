@@ -548,7 +548,7 @@ async def test_if_fires_using_at_sensor(
 )
 async def test_if_fires_using_at_sensor_with_offset(
     hass: HomeAssistant,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     freezer: FrozenDateTimeFactory,
     offset: str | dict[str, int],
     delta: timedelta,
@@ -594,9 +594,9 @@ async def test_if_fires_using_at_sensor_with_offset(
     async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
+    assert len(service_calls) == 1
     assert (
-        calls[0].data["some"]
+        service_calls[0].data["some"]
         == f"time-{trigger_dt.day}-{trigger_dt.hour}-{trigger_dt.minute}-{trigger_dt.second}-sensor.next_alarm"
     )
 
@@ -613,9 +613,9 @@ async def test_if_fires_using_at_sensor_with_offset(
     async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
     await hass.async_block_till_done()
 
-    assert len(calls) == 2
+    assert len(service_calls) == 2
     assert (
-        calls[1].data["some"]
+        service_calls[1].data["some"]
         == f"time-{trigger_dt.day}-{trigger_dt.hour}-{trigger_dt.minute}-{trigger_dt.second}-sensor.next_alarm"
     )
 
