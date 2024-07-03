@@ -27,7 +27,7 @@ class DioChaconEntity(Entity):
         self.client = dio_chacon_client
 
         self.target_id: str = device["id"]
-        self._attr_unique_id: str = device["id"]
+        self._attr_unique_id = self.target_id
         self._attr_device_info: DeviceInfo | None = DeviceInfo(
             identifiers={(DOMAIN, self.target_id)},
             manufacturer=MANUFACTURER,
@@ -39,7 +39,6 @@ class DioChaconEntity(Entity):
 
     def _update_attr(self, data: dict[str, Any]) -> None:
         """Recomputes the attributes values."""
-        # method to be overridden by the child class.
 
     async def async_added_to_hass(self) -> None:
         """Register the callback for server side events."""

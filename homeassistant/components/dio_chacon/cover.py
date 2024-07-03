@@ -60,7 +60,10 @@ class DioChaconCover(DioChaconEntity, CoverEntity):
         self._attr_is_closed = self._attr_current_cover_position == 0
 
     async def async_close_cover(self, **kwargs: Any) -> None:
-        """Close the cover. Closed status is effective after the server callback that triggers callback_device_state."""
+        """Close the cover.
+
+        Closed status is effective after the server callback that triggers callback_device_state.
+        """
 
         _LOGGER.debug(
             "Close cover %s , %s, %s",
@@ -79,7 +82,10 @@ class DioChaconCover(DioChaconEntity, CoverEntity):
             )
 
     async def async_open_cover(self, **kwargs: Any) -> None:
-        """Open the cover. Opened status is effective after the server callback that triggers callback_device_state."""
+        """Open the cover.
+
+        Opened status is effective after the server callback that triggers callback_device_state.
+        """
 
         _LOGGER.debug(
             "Open cover %s , %s, %s",
@@ -107,7 +113,10 @@ class DioChaconCover(DioChaconEntity, CoverEntity):
         await self.client.move_shutter_direction(self.target_id, ShutterMoveEnum.STOP)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
-        """Set the cover open position in percentage. Closing or opening status is effective after the server callback that triggers callback_device_state."""
+        """Set the cover open position in percentage.
+
+        Closing or opening status is effective after the server callback that triggers callback_device_state.
+        """
         position: int = kwargs[ATTR_POSITION]
 
         _LOGGER.debug(

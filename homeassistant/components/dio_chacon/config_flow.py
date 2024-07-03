@@ -35,7 +35,6 @@ class DioChaconConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Validate the user name and password and retrieve the technical user id.
             client = DIOChaconAPIClient(
                 user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
             )
@@ -50,7 +49,6 @@ class DioChaconConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             else:
-                # Check if already configured
                 await self.async_set_unique_id(_user_id)
                 self._abort_if_unique_id_configured()
 
@@ -62,7 +60,6 @@ class DioChaconConfigFlow(ConfigFlow, domain=DOMAIN):
             finally:
                 await client.disconnect()
 
-        # User input is None or an error happened, show the form to the user.
         return self.async_show_form(
             step_id="user",
             data_schema=DATA_SCHEMA,
