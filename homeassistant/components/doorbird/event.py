@@ -41,13 +41,9 @@ async def async_setup_entry(
     config_entry_id = config_entry.entry_id
     door_bird_data: DoorBirdData = hass.data[DOMAIN][config_entry_id]
     async_add_entities(
-        DoorBirdEventEntity(
-            door_bird_data,
-            doorbird_event,
-            EVENT_DESCRIPTIONS[doorbird_event.event_type],
-        )
+        DoorBirdEventEntity(door_bird_data, doorbird_event, description)
         for doorbird_event in door_bird_data.door_station.event_descriptions
-        if doorbird_event.event_type in EVENT_DESCRIPTIONS
+        if (description := EVENT_DESCRIPTIONS.get(doorbird_event.event_type))
     )
 
 
