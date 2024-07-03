@@ -2273,7 +2273,14 @@ class StateMachine:
 
         This method must be run in the event loop.
         """
-        if (old_state := self._states_data.get(entity_id)) is None:
+        # Most cases the key will be in the dict
+        # so we optimize for the happy path as
+        # python 3.11+ has near zero overhead for
+        # try when it does not raise an exception.
+        try:
+            old_state = self._states_data[entity_id]
+        except KeyError:
+            old_state = None
             same_state = False
             same_attr = False
             last_changed = None
