@@ -138,7 +138,6 @@ def async_setup_rpc_entry(
     coordinator = config_entry.runtime_data.rpc
     assert coordinator
     switch_key_ids = get_rpc_key_ids(coordinator.device.status, "switch")
-    switches: list[ShellyRpcEntity] = []
 
     switch_ids = []
     for id_ in switch_key_ids:
@@ -173,10 +172,10 @@ def async_setup_rpc_entry(
         RpcVirtualSwitch,
     )
 
-    if not switches:
+    if not switch_ids:
         return
 
-    async_add_entities(switches)
+    async_add_entities(RpcRelaySwitch(coordinator, id_) for id_ in switch_ids)
 
 
 class BlockSleepingMotionSwitch(
