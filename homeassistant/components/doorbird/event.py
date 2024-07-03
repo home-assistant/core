@@ -1,6 +1,6 @@
 """Support for doorbird events."""
 
-from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from homeassistant.components.event import (
     EventDeviceClass,
@@ -16,26 +16,18 @@ from .device import DoorbirdEvent
 from .entity import DoorBirdEntity
 from .models import DoorBirdData
 
-
-@dataclass(kw_only=True, frozen=True)
-class DoorBirdEventEntityDescription(EventEntityDescription):
-    """Describes a DoorBird event entity."""
-
-    event_type: str
-
-
 EVENT_DESCRIPTIONS = {
-    "doorbell": DoorBirdEventEntityDescription(
+    "doorbell": EventEntityDescription(
         key="doorbell",
         translation_key="doorbell",
         device_class=EventDeviceClass.DOORBELL,
-        event_type="ring",
+        event_types=["ring"],
     ),
-    "motion": DoorBirdEventEntityDescription(
+    "motion": EventEntityDescription(
         key="motion",
         translation_key="motion",
         device_class=EventDeviceClass.MOTION,
-        event_type="motion",
+        event_types=["motion"],
     ),
 }
 
@@ -62,14 +54,14 @@ async def async_setup_entry(
 class DoorBirdEventEntity(DoorBirdEntity, EventEntity):
     """A relay in a DoorBird device."""
 
-    entity_description: DoorBirdEventEntityDescription
+    entity_description: EventEntityDescription
     _attr_has_entity_name = True
 
     def __init__(
         self,
         door_bird_data: DoorBirdData,
         doorbird_event: DoorbirdEvent,
-        entity_description: DoorBirdEventEntityDescription,
+        entity_description: EventEntityDescription,
     ) -> None:
         """Initialize an event for a doorbird device."""
         super().__init__(door_bird_data)
@@ -90,5 +82,8 @@ class DoorBirdEventEntity(DoorBirdEntity, EventEntity):
     @callback
     def _async_handle_event(self, event: Event) -> None:
         """Handle a device event."""
-        self._trigger_event(event_type=self.entity_description.event_type)
+        event_types = self.entity_description.event_types
+        if TYPE_CHECKING:
+            assert event_types is not None
+        self._trigger_event(event_type=event_types[0])
         self.async_write_ha_state()
