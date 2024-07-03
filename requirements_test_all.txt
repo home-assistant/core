@@ -460,7 +460,7 @@ auroranoaa==0.0.3
 aurorapy==0.2.7
 
 # homeassistant.components.axis
-axis==61
+axis==62
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
