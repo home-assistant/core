@@ -447,6 +447,10 @@ async def test_rpc_device_virtual_switch_with_name(
     }
     monkeypatch.setattr(mock_rpc_device, "config", config)
 
+    status = deepcopy(mock_rpc_device.status)
+    status["boolean:200"] = {"value": True}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
     entity_id = "switch.test_name_virtual_switch"
 
     await init_integration(hass, 3)
@@ -457,7 +461,7 @@ async def test_rpc_device_virtual_switch_with_name(
 
     entry = entity_registry.async_get(entity_id)
     assert entry
-    assert entry.unique_id == "123456789ABC-boolean:200"
+    assert entry.unique_id == "123456789ABC-boolean:200-boolean"
 
     monkeypatch.setitem(mock_rpc_device.status["boolean:200"], "value", False)
     await hass.services.async_call(
@@ -491,6 +495,10 @@ async def test_rpc_device_virtual_switch_without_name(
     config["boolean:200"] = {"name": None, "meta": {"ui": {"view": "toggle"}}}
     monkeypatch.setattr(mock_rpc_device, "config", config)
 
+    status = deepcopy(mock_rpc_device.status)
+    status["boolean:200"] = {"value": True}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
     entity_id = "switch.test_name_boolean_200"
 
     await init_integration(hass, 3)
@@ -514,6 +522,10 @@ async def test_rpc_device_virtual_binary_sensor(
     config["boolean:200"] = {"name": None, "meta": {"ui": {"view": "label"}}}
     monkeypatch.setattr(mock_rpc_device, "config", config)
 
+    status = deepcopy(mock_rpc_device.status)
+    status["boolean:200"] = {"value": True}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
     entity_id = "switch.test_name_boolean_200"
 
     await init_integration(hass, 3)
@@ -533,6 +545,10 @@ async def test_rpc_device_remove_orphaned_virtual_component(
     config = deepcopy(mock_rpc_device.config)
     config["boolean:200"] = {"name": None, "meta": {"ui": {"view": "label"}}}
     monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["boolean:200"] = {"value": True}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
 
     config_entry = await init_integration(hass, 3, skip_setup=True)
     device_entry = register_device(device_registry, config_entry)

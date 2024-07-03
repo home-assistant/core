@@ -269,7 +269,6 @@ MOCK_STATUS_RPC = {
     },
     "voltmeter": {"voltage": 4.321},
     "wifi": {"rssi": -63},
-    "boolean:200": {"value": True},
 }
 
 
