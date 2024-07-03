@@ -960,6 +960,7 @@ class Recorder(threading.Thread):
             tries += 1
 
             if tries <= self.db_max_retries:
+                self._close_connection()
                 time.sleep(self.db_retry_wait)
 
         return False
@@ -1452,6 +1453,7 @@ class Recorder(threading.Thread):
         if self._using_file_sqlite:
             validate_or_move_away_sqlite_database(self.db_url)
 
+        assert not self.engine
         self.engine = create_engine(self.db_url, **kwargs, future=True)
         self._dialect_name = try_parse_enum(SupportedDialect, self.engine.dialect.name)
         self.__dict__.pop("dialect_name", None)
