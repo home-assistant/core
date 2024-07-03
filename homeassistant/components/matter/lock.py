@@ -150,6 +150,9 @@ class MatterLock(MatterEntity, LockEntity):
                 self._attr_is_unlocking = True
             elif self.is_locked is False:
                 self._attr_is_locking = True
+            # always mark the lock as not locked because some locks (e.g. switchbot)
+            # use this state to indicate they are not locked.
+            self._attr_is_locked = False
         else:
             # According to the matter docs a null state can happen during device startup.
             self._attr_is_locked = None
