@@ -171,9 +171,6 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(EveCluster.Attributes.Watt,),
-        # Add OnOff Attribute as optional attribute to poll
-        # the primary value when the relay is toggled
-        optional_attributes=(clusters.OnOff.Attributes.OnOff,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -213,9 +210,6 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(EveCluster.Attributes.Current,),
-        # Add OnOff Attribute as optional attribute to poll
-        # the primary value when the relay is toggled
-        optional_attributes=(clusters.OnOff.Attributes.OnOff,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
