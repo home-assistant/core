@@ -50,13 +50,10 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntelliFirePollData
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
-
-        data = self.fireplace._fireplace_data  # noqa: SLF001
-
         return DeviceInfo(
             manufacturer="Hearth and Home",
             model="IFT-WFM",
             name="IntelliFire",
-            identifiers={("IntelliFire", f"{data.serial}]")},
-            configuration_url=f"http://{data.ip_address}/poll",
+            identifiers={("IntelliFire", f"{self.fireplace.serial}]")},
+            configuration_url=f"http://{self.fireplace.ip_address}/poll",
         )
