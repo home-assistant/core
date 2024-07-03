@@ -1137,7 +1137,7 @@ nettigo-air-monitor==3.2.0
 nexia==2.0.8
 
 # homeassistant.components.nextcloud
-nextcloudmonitor==1.5.0
+nextcloudmonitor==1.5.1
 
 # homeassistant.components.discord
 nextcord==2.6.0
