@@ -163,6 +163,7 @@ BATTERY_CHARGING_SENSOR = (
     BinarySensorDeviceClass.BATTERY_CHARGING,
 )
 BATTERY_SENSOR = (SENSOR_DOMAIN, SensorDeviceClass.BATTERY)
+MOTION_EVENT_SENSOR = (EVENT_DOMAIN, EventDeviceClass.MOTION)
 MOTION_SENSOR = (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.MOTION)
 DOORBELL_EVENT_SENSOR = (EVENT_DOMAIN, EventDeviceClass.DOORBELL)
 DOORBELL_BINARY_SENSOR = (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.OCCUPANCY)
@@ -1121,6 +1122,10 @@ class HomeKit:
             )
 
         if domain == CAMERA_DOMAIN:
+            if motion_event_entity_id := lookup.get(MOTION_EVENT_SENSOR):
+                config[entity_id].setdefault(
+                    CONF_LINKED_MOTION_SENSOR, motion_event_entity_id
+                )
             if motion_binary_sensor_entity_id := lookup.get(MOTION_SENSOR):
                 config[entity_id].setdefault(
                     CONF_LINKED_MOTION_SENSOR, motion_binary_sensor_entity_id

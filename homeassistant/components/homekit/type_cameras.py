@@ -222,15 +222,19 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
         )
 
         self._char_motion_detected = None
-        self.linked_motion_sensor = self.config.get(CONF_LINKED_MOTION_SENSOR)
-        if self.linked_motion_sensor:
-            state = self.hass.states.get(self.linked_motion_sensor)
-            if state:
+        self.linked_motion_sensor: str | None = self.config.get(
+            CONF_LINKED_MOTION_SENSOR
+        )
+        self.motion_is_event = False
+        if linked_motion_sensor := self.linked_motion_sensor:
+            self.motion_is_event = linked_motion_sensor.startswith("event.")
+            if state := self.hass.states.get(linked_motion_sensor):
                 serv_motion = self.add_preload_service(SERV_MOTION_SENSOR)
                 self._char_motion_detected = serv_motion.configure_char(
                     CHAR_MOTION_DETECTED, value=False
                 )
-                self._async_update_motion_state(state)
+                if not self.motion_is_event:
+                    self._async_update_motion_state(state)
 
         self._char_doorbell_detected = None
         self._char_doorbell_detected_switch = None
@@ -309,12 +313,26 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
         if not new_state:
             return
 
-        detected = new_state.state == STATE_ON
-        assert self._char_motion_detected
-        if self._char_motion_detected.value == detected:
+        state = new_state.state
+        char = self._char_motion_detected
+        assert char is not None
+        if self.motion_is_event:
+            if state in (STATE_ON, STATE_UNAVAILABLE):
+                return
+            _LOGGER.debug(
+                "%s: Set linked motion %s sensor to True/False",
+                self.entity_id,
+                self.linked_motion_sensor,
+            )
+            char.set_value(True)
+            char.set_value(False)
             return
 
-        self._char_motion_detected.set_value(detected)
+        detected = state == STATE_ON
+        if char.value == detected:
+            return
+
+        char.set_value(detected)
         _LOGGER.debug(
             "%s: Set linked motion %s sensor to %d",
             self.entity_id,
