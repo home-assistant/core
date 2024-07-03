@@ -22,8 +22,8 @@ from homeassistant.components.siren import (
     SirenEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON, Platform
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -94,10 +94,3 @@ class ZHASiren(ZHAEntity, SirenEntity):
         """Turn off siren."""
         await self.entity_data.entity.async_turn_off()
         self.async_write_ha_state()
-
-    @callback
-    def restore_external_state_attributes(self, state: State) -> None:
-        """Restore entity state."""
-        self.entity_data.entity.restore_external_state_attributes(
-            is_on=(state.state == STATE_ON),
-        )
