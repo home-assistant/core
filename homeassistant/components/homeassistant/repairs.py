@@ -14,6 +14,7 @@ class IntegrationNotFoundFlow(RepairsFlow):
 
     def __init__(self, data: dict[str, str]) -> None:
         """Initialize."""
+        self.domain = data["domain"]
         self.description_placeholders: dict[str, str] = data
 
     async def async_step_init(
@@ -27,6 +28,9 @@ class IntegrationNotFoundFlow(RepairsFlow):
     ) -> FlowResult:
         """Handle the remove entries step of a fix flow."""
         if user_input is not None:
+            entries = self.hass.config_entries.async_entries(self.domain)
+            for entry in entries:
+                await self.hass.config_entries.async_remove(entry.entry_id)
             return self.async_create_entry(data={})
         return self.async_show_form(
             step_id="remove_entries",
