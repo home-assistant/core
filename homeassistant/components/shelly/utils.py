@@ -508,14 +508,15 @@ def get_virtual_component_key_ids(
     config: dict[str, Any], platform: Platform
 ) -> list[int]:
     """Return a list of virtual component key IDs for a platform."""
+    ids: list[int] = []
     if platform is Platform.SWITCH:
-        return [
+        ids.extend(
             int(k.split(":")[1])
             for k, v in config.items()
             if k.startswith("boolean:") and v["meta"]["ui"]["view"] == "toggle"
-        ]
+        )
 
-    return []
+    return ids
 
 
 @callback
