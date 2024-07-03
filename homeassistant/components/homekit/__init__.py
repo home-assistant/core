@@ -1126,7 +1126,7 @@ class HomeKit:
                 config[entity_id].setdefault(
                     CONF_LINKED_MOTION_SENSOR, motion_event_entity_id
                 )
-            if motion_binary_sensor_entity_id := lookup.get(MOTION_SENSOR):
+            elif motion_binary_sensor_entity_id := lookup.get(MOTION_SENSOR):
                 config[entity_id].setdefault(
                     CONF_LINKED_MOTION_SENSOR, motion_binary_sensor_entity_id
                 )
