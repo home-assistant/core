@@ -413,7 +413,7 @@ aiowithings==3.0.2
 aioymaps==1.2.4
 
 # homeassistant.components.airgradient
-airgradient==0.6.0
+airgradient==0.6.1
 
 # homeassistant.components.airly
 airly==1.1.0
@@ -434,7 +434,7 @@ airtouch5py==0.2.10
 alpha-vantage==2.3.1
 
 # homeassistant.components.amberelectric
-amberelectric==1.1.0
+amberelectric==1.1.1
 
 # homeassistant.components.amcrest
 amcrest==1.9.8
@@ -1090,7 +1090,7 @@ hole==0.8.0
 holidays==0.51
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240628.0
+home-assistant-frontend==20240702.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.6.26
@@ -2460,7 +2460,7 @@ renault-api==0.2.4
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.9.3
+reolink-aio==0.9.4
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2951,7 +2951,7 @@ youless-api==2.1.0
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp==2024.05.27
+yt-dlp==2024.07.01
 
 # homeassistant.components.zamg
 zamg==0.3.6
