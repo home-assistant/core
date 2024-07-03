@@ -423,8 +423,7 @@ async def test_schema_migrate(
             "homeassistant.components.recorder.Recorder._pre_process_startup_events",
         ),
     ):
-        recorder_helper.async_initialize_recorder(hass)
-        hass.async_create_task(async_setup_recorder_instance(hass))
+        await async_setup_recorder_instance(hass, wait_recorder=False)
         await recorder_helper.async_wait_recorder(hass)
 
         assert recorder.util.async_migration_in_progress(hass) is True
