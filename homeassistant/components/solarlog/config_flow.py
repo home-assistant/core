@@ -58,7 +58,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
         except SolarLogConnectionError:
             self._errors = {CONF_HOST: "cannot_connect"}
             return False
-        except SolarLogError:  # pylint: disable=broad-except
+        except SolarLogError:
             self._errors = {CONF_HOST: "unknown"}
             return False
         finally:

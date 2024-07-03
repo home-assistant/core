@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from google.api_core.exceptions import ClientError, DeadlineExceeded
-from google.rpc.error_details_pb2 import ErrorInfo
+from google.rpc.error_details_pb2 import ErrorInfo  # pylint: disable=no-name-in-module
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -254,5 +254,4 @@ async def test_config_entry_error(
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         assert mock_config_entry.state == state
-        mock_config_entry.async_get_active_flows(hass, {"reauth"})
         assert any(mock_config_entry.async_get_active_flows(hass, {"reauth"})) == reauth

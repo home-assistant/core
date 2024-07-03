@@ -920,6 +920,14 @@ def test_event_repr() -> None:
     )
 
 
+def test_event_origin_idx() -> None:
+    """Test the EventOrigin idx."""
+    assert ha.EventOrigin.remote is ha.EventOrigin.remote
+    assert ha.EventOrigin.local is ha.EventOrigin.local
+    assert ha.EventOrigin.local.idx == 0
+    assert ha.EventOrigin.remote.idx == 1
+
+
 def test_event_as_dict() -> None:
     """Test an Event as dictionary."""
     event_type = "some_type"
@@ -3385,24 +3393,24 @@ async def test_statemachine_report_state(hass: HomeAssistant) -> None:
     hass.states.async_set("light.bowl", "on", None, True)
     await hass.async_block_till_done()
     assert len(state_changed_events) == 1
-    assert len(state_reported_events) == 2
+    assert len(state_reported_events) == 1
 
     hass.states.async_set("light.bowl", "off")
     await hass.async_block_till_done()
     assert len(state_changed_events) == 2
-    assert len(state_reported_events) == 3
+    assert len(state_reported_events) == 1
 
     hass.states.async_remove("light.bowl")
     await hass.async_block_till_done()
     assert len(state_changed_events) == 3
-    assert len(state_reported_events) == 4
+    assert len(state_reported_events) == 1
 
     unsub()
 
     hass.states.async_set("light.bowl", "on")
     await hass.async_block_till_done()
     assert len(state_changed_events) == 4
-    assert len(state_reported_events) == 4
+    assert len(state_reported_events) == 1
 
 
 async def test_report_state_listener_restrictions(hass: HomeAssistant) -> None:

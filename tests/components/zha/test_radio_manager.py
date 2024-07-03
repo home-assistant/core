@@ -1,10 +1,10 @@
 """Tests for ZHA config flow."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 
 import pytest
 import serial.tools.list_ports
-from typing_extensions import Generator
 from zha.application.const import RadioType
 from zigpy.backups import BackupManager
 import zigpy.config

@@ -142,6 +142,13 @@ _DEFAULT_TABLE_ARGS = {
     "mariadb_engine": MYSQL_ENGINE,
 }
 
+_MATCH_ALL_KEEP = {
+    ATTR_DEVICE_CLASS,
+    ATTR_STATE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+    ATTR_FRIENDLY_NAME,
+}
+
 
 class UnusedDateTime(DateTime):
     """An unused column type that behaves like a datetime."""
@@ -231,7 +238,6 @@ class JSONLiteral(JSON):
 
 
 EVENT_ORIGIN_ORDER = [EventOrigin.local, EventOrigin.remote]
-EVENT_ORIGIN_TO_IDX = {origin: idx for idx, origin in enumerate(EVENT_ORIGIN_ORDER)}
 
 
 class Events(Base):
@@ -298,18 +304,19 @@ class Events(Base):
     @staticmethod
     def from_event(event: Event) -> Events:
         """Create an event database object from a native event."""
+        context = event.context
         return Events(
             event_type=None,
             event_data=None,
-            origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
+            origin_idx=event.origin.idx,
             time_fired=None,
             time_fired_ts=event.time_fired_timestamp,
             context_id=None,
-            context_id_bin=ulid_to_bytes_or_none(event.context.id),
+            context_id_bin=ulid_to_bytes_or_none(context.id),
             context_user_id=None,
-            context_user_id_bin=uuid_hex_to_bytes_or_none(event.context.user_id),
+            context_user_id_bin=uuid_hex_to_bytes_or_none(context.user_id),
             context_parent_id=None,
-            context_parent_id_bin=ulid_to_bytes_or_none(event.context.parent_id),
+            context_parent_id_bin=ulid_to_bytes_or_none(context.parent_id),
         )
 
     def to_native(self, validate_entity_id: bool = True) -> Event | None:
@@ -485,41 +492,42 @@ class States(Base):
     @staticmethod
     def from_event(event: Event[EventStateChangedData]) -> States:
         """Create object from a state_changed event."""
-        entity_id = event.data["entity_id"]
         state = event.data["new_state"]
-        dbstate = States(
-            entity_id=entity_id,
-            attributes=None,
-            context_id=None,
-            context_id_bin=ulid_to_bytes_or_none(event.context.id),
-            context_user_id=None,
-            context_user_id_bin=uuid_hex_to_bytes_or_none(event.context.user_id),
-            context_parent_id=None,
-            context_parent_id_bin=ulid_to_bytes_or_none(event.context.parent_id),
-            origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
-            last_updated=None,
-            last_changed=None,
-        )
         # None state means the state was removed from the state machine
         if state is None:
-            dbstate.state = ""
-            dbstate.last_updated_ts = event.time_fired_timestamp
-            dbstate.last_changed_ts = None
-            dbstate.last_reported_ts = None
-            return dbstate
-
-        dbstate.state = state.state
-        dbstate.last_updated_ts = state.last_updated_timestamp
-        if state.last_updated == state.last_changed:
-            dbstate.last_changed_ts = None
+            state_value = ""
+            last_updated_ts = event.time_fired_timestamp
+            last_changed_ts = None
+            last_reported_ts = None
         else:
-            dbstate.last_changed_ts = state.last_changed_timestamp
-        if state.last_updated == state.last_reported:
-            dbstate.last_reported_ts = None
-        else:
-            dbstate.last_reported_ts = state.last_reported_timestamp
-
-        return dbstate
+            state_value = state.state
+            last_updated_ts = state.last_updated_timestamp
+            if state.last_updated == state.last_changed:
+                last_changed_ts = None
+            else:
+                last_changed_ts = state.last_changed_timestamp
+            if state.last_updated == state.last_reported:
+                last_reported_ts = None
+            else:
+                last_reported_ts = state.last_reported_timestamp
+        context = event.context
+        return States(
+            state=state_value,
+            entity_id=event.data["entity_id"],
+            attributes=None,
+            context_id=None,
+            context_id_bin=ulid_to_bytes_or_none(context.id),
+            context_user_id=None,
+            context_user_id_bin=uuid_hex_to_bytes_or_none(context.user_id),
+            context_parent_id=None,
+            context_parent_id_bin=ulid_to_bytes_or_none(context.parent_id),
+            origin_idx=event.origin.idx,
+            last_updated=None,
+            last_changed=None,
+            last_updated_ts=last_updated_ts,
+            last_changed_ts=last_changed_ts,
+            last_reported_ts=last_reported_ts,
+        )
 
     def to_native(self, validate_entity_id: bool = True) -> State | None:
         """Convert to an HA state object."""
@@ -597,19 +605,8 @@ class StateAttributes(Base):
             if MATCH_ALL in unrecorded_attributes:
                 # Don't exclude device class, state class, unit of measurement
                 # or friendly name when using the MATCH_ALL exclude constant
-                _exclude_attributes = {
-                    k: v
-                    for k, v in state.attributes.items()
-                    if k
-                    not in (
-                        ATTR_DEVICE_CLASS,
-                        ATTR_STATE_CLASS,
-                        ATTR_UNIT_OF_MEASUREMENT,
-                        ATTR_FRIENDLY_NAME,
-                    )
-                }
-                exclude_attrs.update(_exclude_attributes)
-
+                exclude_attrs.update(state.attributes)
+                exclude_attrs -= _MATCH_ALL_KEEP
         else:
             exclude_attrs = ALL_DOMAIN_EXCLUDE_ATTRS
         encoder = json_bytes_strip_null if dialect == PSQL_DIALECT else json_bytes

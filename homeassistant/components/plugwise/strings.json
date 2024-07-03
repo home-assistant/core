@@ -55,6 +55,11 @@
         "name": "Plugwise notification"
       }
     },
+    "button": {
+      "reboot": {
+        "name": "Reboot"
+      }
+    },
     "climate": {
       "plugwise": {
         "state_attributes": {

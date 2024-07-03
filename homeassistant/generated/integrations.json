@@ -180,12 +180,6 @@
         }
       }
     },
-    "aladdin_connect": {
-      "name": "Aladdin Connect",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "alarmdecoder": {
       "name": "AlarmDecoder",
       "integration_type": "device",
@@ -2126,12 +2120,6 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
-    },
-    "generic_hygrostat": {
-      "name": "Generic hygrostat",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
     },
     "geniushub": {
       "name": "Genius Hub",
@@ -4249,7 +4237,7 @@
       "name": "Onkyo",
       "integration_type": "hub",
       "config_flow": false,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "onvif": {
       "name": "ONVIF",
@@ -4781,7 +4769,7 @@
     "pyload": {
       "name": "pyLoad",
       "integration_type": "service",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "python_script": {
@@ -5777,12 +5765,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
-    },
-    "statistics": {
-      "name": "Statistics",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
     },
     "statsd": {
       "name": "StatsD",
@@ -7160,6 +7142,11 @@
       "config_flow": true,
       "iot_class": "calculated"
     },
+    "generic_hygrostat": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "generic_thermostat": {
       "integration_type": "helper",
       "config_flow": true,
@@ -7214,6 +7201,12 @@
       "integration_type": "helper",
       "config_flow": false
     },
+    "statistics": {
+      "name": "Statistics",
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "switch_as_x": {
       "integration_type": "helper",
       "config_flow": true,
@@ -7265,6 +7258,7 @@
     "filesize",
     "garages_amsterdam",
     "generic",
+    "generic_hygrostat",
     "generic_thermostat",
     "google_travel_time",
     "group",

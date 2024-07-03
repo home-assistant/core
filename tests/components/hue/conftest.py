@@ -16,17 +16,11 @@ from homeassistant.components import hue
 from homeassistant.components.hue.v1 import sensor_base as hue_sensor_base
 from homeassistant.components.hue.v2.device import async_setup_devices
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
 from .const import FAKE_BRIDGE, FAKE_BRIDGE_DEVICE
 
-from tests.common import (
-    MockConfigEntry,
-    async_mock_service,
-    load_fixture,
-    mock_device_registry,
-)
+from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(autouse=True)
@@ -282,15 +276,3 @@ async def setup_platform(
 
     # and make sure it completes before going further
     await hass.async_block_till_done()
-
-
-@pytest.fixture(name="device_reg")
-def get_device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture(name="calls")
-def track_calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from contextlib import suppress
 from enum import StrEnum
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -90,7 +90,7 @@ async def _async_validate_config_item(  # noqa: C901
     def _humanize(err: Exception, config: ConfigType) -> str:
         """Humanize vol.Invalid, stringify other exceptions."""
         if isinstance(err, vol.Invalid):
-            return cast(str, humanize_error(config, err))
+            return humanize_error(config, err)
         return str(err)
 
     def _log_invalid_automation(

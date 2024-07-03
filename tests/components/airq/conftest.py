@@ -1,9 +1,9 @@
 """Test fixtures for air-Q."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 
 @pytest.fixture

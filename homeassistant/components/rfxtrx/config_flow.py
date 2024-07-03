@@ -38,6 +38,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.typing import VolDictType
 
 from . import (
     DOMAIN,
@@ -245,9 +246,10 @@ class RfxtrxOptionsFlow(OptionsFlow):
 
         device_data = self._selected_device
 
-        data_schema = {}
+        data_schema: VolDictType = {}
 
         if binary_supported(self._selected_device_object):
+            off_delay_schema: VolDictType
             if device_data.get(CONF_OFF_DELAY):
                 off_delay_schema = {
                     vol.Optional(

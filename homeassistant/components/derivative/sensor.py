@@ -9,7 +9,11 @@ from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, RestoreSensor, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    RestoreSensor,
+    SensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -62,7 +66,7 @@ UNIT_TIME = {
 DEFAULT_ROUND = 3
 DEFAULT_TIME_WINDOW = 0
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_SOURCE): cv.entity_id,

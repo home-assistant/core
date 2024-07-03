@@ -10,7 +10,7 @@ from pyemoncms import EmoncmsClient
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
@@ -54,7 +54,7 @@ DEFAULT_UNIT = UnitOfPower.WATT
 
 ONLY_INCL_EXCL_NONE = "only_include_exclude_or_none"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_URL): cv.string,

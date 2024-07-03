@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 import socket
 from unittest.mock import AsyncMock, Mock, NonCallableMock, patch
 
 from psutil import NoSuchProcess, Process
 from psutil._common import sdiskpart, sdiskusage, shwtemp, snetio, snicaddr, sswap
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.systemmonitor.const import DOMAIN
 from homeassistant.components.systemmonitor.coordinator import VirtualMemory

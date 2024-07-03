@@ -1,11 +1,11 @@
 """Tests for the water heater platform of the A. O. Smith integration."""
 
+from collections.abc import AsyncGenerator
 from unittest.mock import MagicMock, patch
 
 from py_aosmith.models import OperationMode
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from typing_extensions import AsyncGenerator
 
 from homeassistant.components.water_heater import (
     ATTR_AWAY_MODE,
