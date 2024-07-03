@@ -97,7 +97,7 @@ async def test_scanner_v2(
 
 
 async def test_scanner_ignores_non_ble_events(
-    hass: HomeAssistant, mock_rpc_device, monkeypatch
+    hass: HomeAssistant, mock_rpc_device, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test injecting non ble data into the scanner."""
     await init_integration(
