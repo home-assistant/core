@@ -520,7 +520,9 @@ async def test_default_keepalive(
 
 
 async def test_unique_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, monkeypatch
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Validate the device unique_id."""
 
