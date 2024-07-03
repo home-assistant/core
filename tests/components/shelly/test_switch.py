@@ -187,7 +187,7 @@ async def test_block_device_unique_ids(
 
 
 async def test_block_set_state_connection_error(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant, mock_block_device, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test block device set state connection error."""
     monkeypatch.setattr(
