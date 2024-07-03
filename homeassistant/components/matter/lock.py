@@ -123,7 +123,6 @@ class MatterLock(MatterEntity, LockEntity):
         # optimistically signal unlocking to state machine
         self._attr_is_unlocking = True
         self.async_write_ha_state()
-        self._attr_is_unlocking = None
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
         await self.send_device_command(
