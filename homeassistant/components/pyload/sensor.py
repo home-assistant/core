@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from enum import StrEnum
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
@@ -22,39 +25,88 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     UnitOfDataRate,
+    UnitOfInformation,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PyLoadConfigEntry
-from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN, ISSUE_PLACEHOLDER
-from .coordinator import PyLoadCoordinator
+from .const import (
+    DEFAULT_HOST,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    DOMAIN,
+    ISSUE_PLACEHOLDER,
+    UNIT_DOWNLOADS,
+)
+from .coordinator import PyLoadData
+from .entity import BasePyLoadEntity
 
 
 class PyLoadSensorEntity(StrEnum):
     """pyLoad Sensor Entities."""
 
+    ACTIVE = "active"
+    FREE_SPACE = "free_space"
+    QUEUE = "queue"
     SPEED = "speed"
+    TOTAL = "total"
 
 
-SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+@dataclass(kw_only=True, frozen=True)
+class PyLoadSensorEntityDescription(SensorEntityDescription):
+    """Describes pyLoad switch entity."""
+
+    value_fn: Callable[[PyLoadData], StateType]
+
+
+SENSOR_DESCRIPTIONS: tuple[PyLoadSensorEntityDescription, ...] = (
+    PyLoadSensorEntityDescription(
         key=PyLoadSensorEntity.SPEED,
         translation_key=PyLoadSensorEntity.SPEED,
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         suggested_display_precision=1,
+        value_fn=lambda data: data.speed,
+    ),
+    PyLoadSensorEntityDescription(
+        key=PyLoadSensorEntity.ACTIVE,
+        translation_key=PyLoadSensorEntity.ACTIVE,
+        native_unit_of_measurement=UNIT_DOWNLOADS,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.active,
+    ),
+    PyLoadSensorEntityDescription(
+        key=PyLoadSensorEntity.QUEUE,
+        translation_key=PyLoadSensorEntity.QUEUE,
+        native_unit_of_measurement=UNIT_DOWNLOADS,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.queue,
+    ),
+    PyLoadSensorEntityDescription(
+        key=PyLoadSensorEntity.TOTAL,
+        translation_key=PyLoadSensorEntity.TOTAL,
+        native_unit_of_measurement=UNIT_DOWNLOADS,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.total,
+    ),
+    PyLoadSensorEntityDescription(
+        key=PyLoadSensorEntity.FREE_SPACE,
+        translation_key=PyLoadSensorEntity.FREE_SPACE,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.free_space,
     ),
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_MONITORED_VARIABLES, default=["speed"]): vol.All(
@@ -90,7 +142,7 @@ async def async_setup_platform(
             f"deprecated_yaml_{DOMAIN}",
             is_fixable=False,
             issue_domain=DOMAIN,
-            breaks_in_ha_version="2025.2.0",
+            breaks_in_ha_version="2025.1.0",
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_yaml",
             translation_placeholders={
@@ -103,7 +155,7 @@ async def async_setup_platform(
             hass,
             DOMAIN,
             f"deprecated_yaml_import_issue_{error}",
-            breaks_in_ha_version="2025.2.0",
+            breaks_in_ha_version="2025.1.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
@@ -132,32 +184,12 @@ async def async_setup_entry(
     )
 
 
-class PyLoadSensor(CoordinatorEntity[PyLoadCoordinator], SensorEntity):
+class PyLoadSensor(BasePyLoadEntity, SensorEntity):
     """Representation of a pyLoad sensor."""
 
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: PyLoadCoordinator,
-        entity_description: SensorEntityDescription,
-    ) -> None:
-        """Initialize a new pyLoad sensor."""
-        super().__init__(coordinator)
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.entry_id}_{entity_description.key}"
-        )
-        self.entity_description = entity_description
-        self.device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            manufacturer="PyLoad Team",
-            model="pyLoad",
-            configuration_url=coordinator.pyload.api_url,
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            sw_version=coordinator.version,
-        )
+    entity_description: PyLoadSensorEntityDescription
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return getattr(self.coordinator.data, self.entity_description.key)
+        return self.entity_description.value_fn(self.coordinator.data)

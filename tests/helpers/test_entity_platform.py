@@ -1187,6 +1187,7 @@ async def test_device_info_called(
     assert device.manufacturer == "test-manuf"
     assert device.model == "test-model"
     assert device.name == "test-name"
+    assert device.primary_config_entry == config_entry.entry_id
     assert device.suggested_area == "Heliport"
     assert device.sw_version == "test-sw"
     assert device.hw_version == "test-hw"

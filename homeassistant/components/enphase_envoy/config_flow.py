@@ -21,6 +21,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     DOMAIN,
@@ -69,7 +70,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_generate_schema(self) -> vol.Schema:
         """Generate schema."""
-        schema = {}
+        schema: VolDictType = {}
 
         if self.ip_address:
             schema[vol.Required(CONF_HOST, default=self.ip_address)] = vol.In(

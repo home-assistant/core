@@ -1,8 +1,9 @@
 """The tests for Valve."""
 
+from collections.abc import Generator
+
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from typing_extensions import Generator
 
 from homeassistant.components.valve import (
     DOMAIN,

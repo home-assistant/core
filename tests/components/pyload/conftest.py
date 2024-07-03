@@ -1,7 +1,7 @@
 """Fixtures for pyLoad integration tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyloadapi.types import LoginResponse, StatusServerResponse
 import pytest
@@ -41,6 +41,19 @@ YAML_INPUT = {
     CONF_SSL: True,
     CONF_USERNAME: "test-username",
 }
+REAUTH_INPUT = {
+    CONF_PASSWORD: "new-password",
+    CONF_USERNAME: "new-username",
+}
+
+NEW_INPUT = {
+    CONF_HOST: "pyload.local",
+    CONF_PASSWORD: "new-password",
+    CONF_PORT: 8000,
+    CONF_SSL: True,
+    CONF_USERNAME: "new-username",
+    CONF_VERIFY_SSL: False,
+}
 
 
 @pytest.fixture
@@ -59,7 +72,7 @@ def pyload_config() -> ConfigType:
 
 
 @pytest.fixture
-def mock_pyloadapi() -> Generator[AsyncMock, None, None]:
+def mock_pyloadapi() -> Generator[MagicMock]:
     """Mock PyLoadAPI."""
     with (
         patch(

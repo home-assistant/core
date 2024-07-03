@@ -1,5 +1,7 @@
 """Test binary sensors of APCUPSd integration."""
 
+import pytest
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
@@ -31,3 +33,22 @@ async def test_no_binary_sensor(hass: HomeAssistant) -> None:
     device_slug = slugify(MOCK_STATUS["UPSNAME"])
     state = hass.states.get(f"binary_sensor.{device_slug}_online_status")
     assert state is None
+
+
+@pytest.mark.parametrize(
+    ("override", "expected"),
+    [
+        ("0x008", "on"),
+        ("0x02040010 Status Flag", "off"),
+    ],
+)
+async def test_statflag(hass: HomeAssistant, override: str, expected: str) -> None:
+    """Test binary sensor for different STATFLAG values."""
+    status = MOCK_STATUS.copy()
+    status["STATFLAG"] = override
+    await async_init_integration(hass, status=status)
+
+    device_slug = slugify(MOCK_STATUS["UPSNAME"])
+    assert (
+        hass.states.get(f"binary_sensor.{device_slug}_online_status").state == expected
+    )

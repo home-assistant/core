@@ -75,7 +75,7 @@ class MotionBlindsFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the Motionblinds flow."""
         self._host: str | None = None
         self._ips: list[str] = []
-        self._config_settings = None
+        self._config_settings: vol.Schema | None = None
 
     @staticmethod
     @callback

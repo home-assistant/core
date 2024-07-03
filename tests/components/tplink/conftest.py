@@ -1,10 +1,10 @@
 """tplink conftest."""
 
+from collections.abc import Generator
 import copy
 from unittest.mock import DEFAULT, AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.tplink import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -17,10 +17,10 @@ from . import (
     IP_ADDRESS2,
     MAC_ADDRESS,
     MAC_ADDRESS2,
-    _mocked_bulb,
+    _mocked_device,
 )
 
-from tests.common import MockConfigEntry, mock_device_registry, mock_registry
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -31,13 +31,13 @@ def mock_discovery():
         discover=DEFAULT,
         discover_single=DEFAULT,
     ) as mock_discovery:
-        device = _mocked_bulb(
+        device = _mocked_device(
             device_config=copy.deepcopy(DEVICE_CONFIG_AUTH),
             credentials_hash=CREDENTIALS_HASH_AUTH,
             alias=None,
         )
         devices = {
-            "127.0.0.1": _mocked_bulb(
+            "127.0.0.1": _mocked_device(
                 device_config=copy.deepcopy(DEVICE_CONFIG_AUTH),
                 credentials_hash=CREDENTIALS_HASH_AUTH,
                 alias=None,
@@ -52,12 +52,12 @@ def mock_discovery():
 @pytest.fixture
 def mock_connect():
     """Mock python-kasa connect."""
-    with patch("homeassistant.components.tplink.SmartDevice.connect") as mock_connect:
+    with patch("homeassistant.components.tplink.Device.connect") as mock_connect:
         devices = {
-            IP_ADDRESS: _mocked_bulb(
+            IP_ADDRESS: _mocked_device(
                 device_config=DEVICE_CONFIG_AUTH, credentials_hash=CREDENTIALS_HASH_AUTH
             ),
-            IP_ADDRESS2: _mocked_bulb(
+            IP_ADDRESS2: _mocked_device(
                 device_config=DEVICE_CONFIG_AUTH,
                 credentials_hash=CREDENTIALS_HASH_AUTH,
                 mac=MAC_ADDRESS2,
@@ -70,18 +70,6 @@ def mock_connect():
 
         mock_connect.side_effect = get_device
         yield {"connect": mock_connect, "mock_devices": devices}
-
-
-@pytest.fixture(name="device_reg")
-def device_reg_fixture(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture(name="entity_reg")
-def entity_reg_fixture(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 @pytest.fixture

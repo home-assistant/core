@@ -1,0 +1,125 @@
+{
+  "response": {
+    "id": "1233-abcd",
+    "site_name": "Site",
+    "backup_reserve_percent": 0,
+    "default_real_mode": "self_consumption",
+    "installation_date": "2022-01-01T00:00:00+00:00",
+    "user_settings": {
+      "go_off_grid_test_banner_enabled": false,
+      "storm_mode_enabled": true,
+      "powerwall_onboarding_settings_set": true,
+      "powerwall_tesla_electric_interested_in": false,
+      "vpp_tour_enabled": true,
+      "sync_grid_alert_enabled": true,
+      "breaker_alert_enabled": false
+    },
+    "components": {
+      "solar": true,
+      "solar_type": "pv_panel",
+      "battery": true,
+      "grid": true,
+      "backup": true,
+      "gateway": "teg",
+      "load_meter": true,
+      "tou_capable": true,
+      "storm_mode_capable": true,
+      "flex_energy_request_capable": false,
+      "car_charging_data_supported": false,
+      "off_grid_vehicle_charging_reserve_supported": true,
+      "vehicle_charging_performance_view_enabled": false,
+      "vehicle_charging_solar_offset_view_enabled": false,
+      "battery_solar_offset_view_enabled": true,
+      "solar_value_enabled": true,
+      "energy_value_header": "Energy Value",
+      "energy_value_subheader": "Estimated Value",
+      "energy_service_self_scheduling_enabled": true,
+      "show_grid_import_battery_source_cards": true,
+      "set_islanding_mode_enabled": true,
+      "wifi_commissioning_enabled": true,
+      "backup_time_remaining_enabled": true,
+      "battery_type": "ac_powerwall",
+      "configurable": true,
+      "grid_services_enabled": false,
+      "gateways": [
+        {
+          "device_id": "gateway-id",
+          "din": "gateway-din",
+          "serial_number": "CN00000000J50D",
+          "part_number": "1152100-14-J",
+          "part_type": 10,
+          "part_name": "Tesla Backup Gateway 2",
+          "is_active": true,
+          "site_id": "1234-abcd",
+          "firmware_version": "24.4.0 0fe780c9",
+          "updated_datetime": "2024-05-14T00:00:00.000Z"
+        }
+      ],
+      "batteries": [
+        {
+          "device_id": "battery-1-id",
+          "din": "battery-1-din",
+          "serial_number": "TG000000001DA5",
+          "part_number": "3012170-10-B",
+          "part_type": 2,
+          "part_name": "Powerwall 2",
+          "nameplate_max_charge_power": 5000,
+          "nameplate_max_discharge_power": 5000,
+          "nameplate_energy": 13500
+        },
+        {
+          "device_id": "battery-2-id",
+          "din": "battery-2-din",
+          "serial_number": "TG000000002DA5",
+          "part_number": "3012170-05-C",
+          "part_type": 2,
+          "part_name": "Powerwall 2",
+          "nameplate_max_charge_power": 5000,
+          "nameplate_max_discharge_power": 5000,
+          "nameplate_energy": 13500
+        }
+      ],
+      "wall_connectors": [
+        {
+          "device_id": "123abc",
+          "din": "abc123",
+          "is_active": true
+        },
+        {
+          "device_id": "234bcd",
+          "din": "bcd234",
+          "is_active": true
+        }
+      ],
+      "disallow_charge_from_grid_with_solar_installed": true,
+      "customer_preferred_export_rule": "pv_only",
+      "net_meter_mode": "battery_ok",
+      "system_alerts_enabled": true
+    },
+    "version": "23.44.0 eb113390",
+    "battery_count": 2,
+    "tou_settings": {
+      "optimization_strategy": "economics",
+      "schedule": [
+        {
+          "target": "off_peak",
+          "week_days": [1, 0],
+          "start_seconds": 0,
+          "end_seconds": 3600
+        },
+        {
+          "target": "peak",
+          "week_days": [1, 0],
+          "start_seconds": 3600,
+          "end_seconds": 0
+        }
+      ]
+    },
+    "nameplate_power": 15000,
+    "nameplate_energy": 40500,
+    "installation_time_zone": "",
+    "max_site_meter_power_ac": 1000000000,
+    "min_site_meter_power_ac": -1000000000,
+    "vpp_backup_reserve_percent": 0
+  }
+}

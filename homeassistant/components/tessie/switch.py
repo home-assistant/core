@@ -29,8 +29,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TessieConfigEntry
-from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
+from .models import TessieVehicleData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -84,7 +84,7 @@ async def async_setup_entry(
                 TessieSwitchEntity(vehicle, description)
                 for vehicle in entry.runtime_data.vehicles
                 for description in DESCRIPTIONS
-                if description.key in vehicle.data
+                if description.key in vehicle.data_coordinator.data
             ),
             (
                 TessieChargeSwitchEntity(vehicle, CHARGE_DESCRIPTION)
@@ -102,11 +102,11 @@ class TessieSwitchEntity(TessieEntity, SwitchEntity):
 
     def __init__(
         self,
-        coordinator: TessieStateUpdateCoordinator,
+        vehicle: TessieVehicleData,
         description: TessieSwitchEntityDescription,
     ) -> None:
         """Initialize the Switch."""
-        super().__init__(coordinator, description.key)
+        super().__init__(vehicle, description.key)
         self.entity_description = description
 
     @property
