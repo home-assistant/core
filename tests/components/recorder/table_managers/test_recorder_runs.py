@@ -59,7 +59,7 @@ async def test_run_history(recorder_mock: Recorder, hass: HomeAssistant) -> None
 
 
 async def test_run_history_while_recorder_is_not_yet_started(
-    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     recorder_db_url: str,
 ) -> None:
@@ -73,7 +73,7 @@ async def test_run_history_while_recorder_is_not_yet_started(
     with patch(
         "homeassistant.components.recorder.table_managers.recorder_runs.RecorderRunsManager.start",
     ):
-        instance = await async_setup_recorder_instance_legacy(hass)
+        instance = await async_setup_recorder_instance(hass)
     run_history = instance.recorder_runs_manager
     assert run_history.current.start == run_history.recording_start
 

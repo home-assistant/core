@@ -23,7 +23,7 @@ from tests.typing import RecorderInstanceGenerator
 @pytest.mark.parametrize("enable_schema_validation", [True])
 @pytest.mark.parametrize("db_engine", ["mysql", "postgresql"])
 async def test_validate_db_schema(
-    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     db_engine: str,
@@ -33,7 +33,7 @@ async def test_validate_db_schema(
 
     Note: The test uses SQLite, the purpose is only to exercise the code.
     """
-    await async_setup_recorder_instance_legacy(hass)
+    await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
     assert "Schema validation failed" not in caplog.text
     assert "Detected statistics schema errors" not in caplog.text
@@ -41,7 +41,7 @@ async def test_validate_db_schema(
 
 
 async def test_validate_db_schema_fix_utf8_issue_good_schema(
-    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     recorder_db_url: str,
     caplog: pytest.LogCaptureFixture,
@@ -50,7 +50,7 @@ async def test_validate_db_schema_fix_utf8_issue_good_schema(
     if not recorder_db_url.startswith("mysql://"):
         # This problem only happens on MySQL
         return
-    await async_setup_recorder_instance_legacy(hass)
+    await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
     instance = get_instance(hass)
     schema_errors = await instance.async_add_executor_job(
@@ -60,7 +60,7 @@ async def test_validate_db_schema_fix_utf8_issue_good_schema(
 
 
 async def test_validate_db_schema_fix_utf8_issue_with_broken_schema(
-    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     recorder_db_url: str,
     caplog: pytest.LogCaptureFixture,
@@ -69,7 +69,7 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema(
     if not recorder_db_url.startswith("mysql://"):
         # This problem only happens on MySQL
         return
-    await async_setup_recorder_instance_legacy(hass)
+    await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
     instance = get_instance(hass)
     session_maker = instance.get_session
@@ -103,7 +103,7 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema(
 
 
 async def test_validate_db_schema_fix_incorrect_collation(
-    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     recorder_db_url: str,
     caplog: pytest.LogCaptureFixture,
@@ -112,7 +112,7 @@ async def test_validate_db_schema_fix_incorrect_collation(
     if not recorder_db_url.startswith("mysql://"):
         # This problem only happens on MySQL
         return
-    await async_setup_recorder_instance_legacy(hass)
+    await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
     instance = get_instance(hass)
     session_maker = instance.get_session
@@ -145,7 +145,7 @@ async def test_validate_db_schema_fix_incorrect_collation(
 
 
 async def test_validate_db_schema_precision_correct_collation(
-    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     recorder_db_url: str,
     caplog: pytest.LogCaptureFixture,
@@ -154,7 +154,7 @@ async def test_validate_db_schema_precision_correct_collation(
     if not recorder_db_url.startswith("mysql://"):
         # This problem only happens on MySQL
         return
-    await async_setup_recorder_instance_legacy(hass)
+    await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
     instance = get_instance(hass)
     schema_errors = await instance.async_add_executor_job(
@@ -166,7 +166,7 @@ async def test_validate_db_schema_precision_correct_collation(
 
 
 async def test_validate_db_schema_fix_utf8_issue_with_broken_schema_unrepairable(
-    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     recorder_db_url: str,
     caplog: pytest.LogCaptureFixture,
@@ -175,7 +175,7 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema_unrepairable
     if not recorder_db_url.startswith("mysql://"):
         # This problem only happens on MySQL
         return
-    await async_setup_recorder_instance_legacy(hass)
+    await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
     instance = get_instance(hass)
     session_maker = instance.get_session
@@ -207,7 +207,7 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema_unrepairable
 
 
 async def test_validate_db_schema_precision_good_schema(
-    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     recorder_db_url: str,
     caplog: pytest.LogCaptureFixture,
@@ -216,7 +216,7 @@ async def test_validate_db_schema_precision_good_schema(
     if not recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This problem only happens on MySQL and PostgreSQL
         return
-    await async_setup_recorder_instance_legacy(hass)
+    await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
     instance = get_instance(hass)
     schema_errors = await instance.async_add_executor_job(
@@ -228,7 +228,7 @@ async def test_validate_db_schema_precision_good_schema(
 
 
 async def test_validate_db_schema_precision_with_broken_schema(
-    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     recorder_db_url: str,
     caplog: pytest.LogCaptureFixture,
@@ -237,7 +237,7 @@ async def test_validate_db_schema_precision_with_broken_schema(
     if not recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This problem only happens on MySQL and PostgreSQL
         return
-    await async_setup_recorder_instance_legacy(hass)
+    await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
     instance = get_instance(hass)
     session_maker = instance.get_session
@@ -276,7 +276,7 @@ async def test_validate_db_schema_precision_with_broken_schema(
 
 
 async def test_validate_db_schema_precision_with_unrepairable_broken_schema(
-    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     recorder_db_url: str,
     caplog: pytest.LogCaptureFixture,
@@ -285,7 +285,7 @@ async def test_validate_db_schema_precision_with_unrepairable_broken_schema(
     if not recorder_db_url.startswith("mysql://"):
         # This problem only happens on MySQL
         return
-    await async_setup_recorder_instance_legacy(hass)
+    await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
     instance = get_instance(hass)
     session_maker = instance.get_session

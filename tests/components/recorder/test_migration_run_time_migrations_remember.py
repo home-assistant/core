@@ -64,7 +64,7 @@ def _create_engine_test(*args, **kwargs):
 
 @pytest.mark.parametrize("enable_migrate_context_ids", [True])
 async def test_migration_changes_prevent_trying_to_migrate_again(
-    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     tmp_path: Path,
     recorder_db_url: str,
 ) -> None:
@@ -104,7 +104,7 @@ async def test_migration_changes_prevent_trying_to_migrate_again(
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
     ):
         async with async_test_home_assistant() as hass:
-            await async_setup_recorder_instance_legacy(hass, config)
+            await async_setup_recorder_instance(hass, config)
             await hass.async_block_till_done()
             await async_wait_recording_done(hass)
             await _async_wait_migration_done(hass)
@@ -114,7 +114,7 @@ async def test_migration_changes_prevent_trying_to_migrate_again(
 
     # Now start again with current db schema
     async with async_test_home_assistant() as hass:
-        await async_setup_recorder_instance_legacy(hass, config)
+        await async_setup_recorder_instance(hass, config)
         await hass.async_block_till_done()
         await async_wait_recording_done(hass)
         await _async_wait_migration_done(hass)
@@ -150,7 +150,7 @@ async def test_migration_changes_prevent_trying_to_migrate_again(
                 side_effect=RuntimeError("Should not be called"),
             ),
         ):
-            await async_setup_recorder_instance_legacy(hass, config)
+            await async_setup_recorder_instance(hass, config)
             await hass.async_block_till_done()
             await async_wait_recording_done(hass)
             await _async_wait_migration_done(hass)

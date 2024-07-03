@@ -12,10 +12,10 @@ from tests.typing import RecorderInstanceGenerator
 
 
 async def test_passing_mutually_exclusive_options_to_get_many(
-    async_setup_recorder_instance_legacy: RecorderInstanceGenerator, hass: HomeAssistant
+    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
 ) -> None:
     """Test passing mutually exclusive options to get_many."""
-    instance = await async_setup_recorder_instance_legacy(
+    instance = await async_setup_recorder_instance(
         hass, {recorder.CONF_COMMIT_INTERVAL: 0}
     )
     with session_scope(session=instance.get_session()) as session:
@@ -39,10 +39,10 @@ async def test_passing_mutually_exclusive_options_to_get_many(
 
 
 async def test_unsafe_calls_to_statistics_meta_manager(
-    async_setup_recorder_instance_legacy: RecorderInstanceGenerator, hass: HomeAssistant
+    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
 ) -> None:
     """Test we raise when trying to call non-threadsafe functions on statistics_meta_manager."""
-    instance = await async_setup_recorder_instance_legacy(
+    instance = await async_setup_recorder_instance(
         hass, {recorder.CONF_COMMIT_INTERVAL: 0}
     )
     with (

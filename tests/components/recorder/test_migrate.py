@@ -40,7 +40,7 @@ from tests.typing import RecorderInstanceGenerator
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceGenerator,
 ) -> None:
     """Set up recorder."""
 
@@ -57,7 +57,7 @@ def _get_native_states(hass, entity_id):
 
 
 async def test_schema_update_calls(
-    hass: HomeAssistant, async_setup_recorder_instance_legacy: RecorderInstanceGenerator
+    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
 ) -> None:
     """Test that schema migrations occur in correct order."""
     assert recorder.util.async_migration_in_progress(hass) is False
@@ -72,7 +72,7 @@ async def test_schema_update_calls(
             wraps=migration._apply_update,
         ) as update,
     ):
-        await async_setup_recorder_instance_legacy(hass)
+        await async_setup_recorder_instance(hass)
         await async_wait_recording_done(hass)
 
     assert recorder.util.async_migration_in_progress(hass) is False
@@ -90,7 +90,7 @@ async def test_schema_update_calls(
 async def test_migration_in_progress(
     hass: HomeAssistant,
     recorder_db_url: str,
-    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
 ) -> None:
     """Test that we can check for migration in progress."""
     if recorder_db_url.startswith("mysql://"):
@@ -109,7 +109,7 @@ async def test_migration_in_progress(
             new=create_engine_test,
         ),
     ):
-        await async_setup_recorder_instance_legacy(hass, wait_recorder=False)
+        await async_setup_recorder_instance(hass, wait_recorder=False)
         await recorder.get_instance(hass).async_migration_event.wait()
         assert recorder.util.async_migration_in_progress(hass) is True
         await async_wait_recording_done(hass)
@@ -119,7 +119,7 @@ async def test_migration_in_progress(
 
 
 async def test_database_migration_failed(
-    hass: HomeAssistant, async_setup_recorder_instance_legacy: RecorderInstanceGenerator
+    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
 ) -> None:
     """Test we notify if the migration fails."""
     assert recorder.util.async_migration_in_progress(hass) is False
@@ -142,7 +142,7 @@ async def test_database_migration_failed(
             side_effect=pn.dismiss,
         ) as mock_dismiss,
     ):
-        await async_setup_recorder_instance_legacy(hass, wait_recorder=False)
+        await async_setup_recorder_instance(hass, wait_recorder=False)
         hass.states.async_set("my.entity", "on", {})
         hass.states.async_set("my.entity", "off", {})
         await hass.async_block_till_done()
@@ -157,7 +157,7 @@ async def test_database_migration_failed(
 async def test_database_migration_encounters_corruption(
     hass: HomeAssistant,
     recorder_db_url: str,
-    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
 ) -> None:
     """Test we move away the database if its corrupt."""
     if recorder_db_url.startswith(("mysql://", "postgresql://")):
@@ -183,7 +183,7 @@ async def test_database_migration_encounters_corruption(
             "homeassistant.components.recorder.core.move_away_broken_database"
         ) as move_away,
     ):
-        await async_setup_recorder_instance_legacy(hass)
+        await async_setup_recorder_instance(hass)
         hass.states.async_set("my.entity", "on", {})
         hass.states.async_set("my.entity", "off", {})
         await async_wait_recording_done(hass)
@@ -193,7 +193,7 @@ async def test_database_migration_encounters_corruption(
 
 
 async def test_database_migration_encounters_corruption_not_sqlite(
-    hass: HomeAssistant, async_setup_recorder_instance_legacy: RecorderInstanceGenerator
+    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
 ) -> None:
     """Test we fail on database error when we cannot recover."""
     assert recorder.util.async_migration_in_progress(hass) is False
@@ -219,7 +219,7 @@ async def test_database_migration_encounters_corruption_not_sqlite(
             side_effect=pn.dismiss,
         ) as mock_dismiss,
     ):
-        await async_setup_recorder_instance_legacy(hass, wait_recorder=False)
+        await async_setup_recorder_instance(hass, wait_recorder=False)
         hass.states.async_set("my.entity", "on", {})
         hass.states.async_set("my.entity", "off", {})
         await hass.async_block_till_done()
@@ -233,7 +233,7 @@ async def test_database_migration_encounters_corruption_not_sqlite(
 
 
 async def test_events_during_migration_are_queued(
-    hass: HomeAssistant, async_setup_recorder_instance_legacy: RecorderInstanceGenerator
+    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
 ) -> None:
     """Test that events during migration are queued."""
 
@@ -245,7 +245,7 @@ async def test_events_during_migration_are_queued(
             new=create_engine_test,
         ),
     ):
-        await async_setup_recorder_instance_legacy(hass, {"commit_interval": 0})
+        await async_setup_recorder_instance(hass, {"commit_interval": 0})
         hass.states.async_set("my.entity", "on", {})
         hass.states.async_set("my.entity", "off", {})
         await hass.async_block_till_done()
@@ -263,7 +263,7 @@ async def test_events_during_migration_are_queued(
 
 
 async def test_events_during_migration_queue_exhausted(
-    hass: HomeAssistant, async_setup_recorder_instance_legacy: RecorderInstanceGenerator
+    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
 ) -> None:
     """Test that events during migration takes so long the queue is exhausted."""
 
@@ -277,7 +277,7 @@ async def test_events_during_migration_queue_exhausted(
         patch.object(recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1),
         patch.object(recorder.core, "QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY", 0),
     ):
-        await async_setup_recorder_instance_legacy(
+        await async_setup_recorder_instance(
             hass, {"commit_interval": 0}, wait_recorder=False
         )
         hass.states.async_set("my.entity", "on", {})
@@ -310,7 +310,7 @@ async def test_events_during_migration_queue_exhausted(
 async def test_schema_migrate(
     hass: HomeAssistant,
     recorder_db_url: str,
-    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     start_version,
     live,
 ) -> None:
@@ -423,7 +423,7 @@ async def test_schema_migrate(
             "homeassistant.components.recorder.Recorder._pre_process_startup_events",
         ),
     ):
-        await async_setup_recorder_instance_legacy(hass, wait_recorder=False)
+        await async_setup_recorder_instance(hass, wait_recorder=False)
         await recorder_helper.async_wait_recorder(hass)
 
         assert recorder.util.async_migration_in_progress(hass) is True

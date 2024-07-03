@@ -1385,7 +1385,7 @@ async def _async_init_recorder_component(
 
 
 @pytest.fixture
-async def async_setup_recorder_instance(
+async def async_test_recorder(
     recorder_db_url: str,
     enable_nightly_purge: bool,
     enable_statistics: bool,
@@ -1478,7 +1478,7 @@ async def async_setup_recorder_instance(
     ):
 
         @asynccontextmanager
-        async def async_setup_recorder(
+        async def async_test_recorder(
             hass: HomeAssistant,
             config: ConfigType | None = None,
             *,
@@ -1497,12 +1497,12 @@ async def async_setup_recorder_instance(
                 if instance.is_alive():
                     await instance._async_shutdown(None)
 
-        yield async_setup_recorder
+        yield async_test_recorder
 
 
 @pytest.fixture
-async def async_setup_recorder_instance_legacy(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+async def async_setup_recorder_instance(
+    async_test_recorder: RecorderInstanceGenerator,
 ) -> AsyncGenerator[RecorderInstanceGenerator]:
     """Yield callable to setup recorder instance."""
 
@@ -1520,9 +1520,7 @@ async def async_setup_recorder_instance_legacy(
 
         # Store the context manager to prevent it from being garbage collected
         nonlocal context_manager
-        context_manager = async_setup_recorder_instance(
-            hass, config, wait_recorder=wait_recorder
-        )
+        context_manager = async_test_recorder(hass, config, wait_recorder=wait_recorder)
         # pylint: disable-next=unnecessary-dunder-call
         return await context_manager.__aenter__()
 
@@ -1532,11 +1530,11 @@ async def async_setup_recorder_instance_legacy(
 @pytest.fixture
 async def recorder_mock(
     recorder_config: dict[str, Any] | None,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceGenerator,
     hass: HomeAssistant,
 ) -> AsyncGenerator[recorder.Recorder]:
     """Fixture with in-memory recorder."""
-    async with async_setup_recorder_instance(hass, recorder_config) as instance:
+    async with async_test_recorder(hass, recorder_config) as instance:
         yield instance
 
 

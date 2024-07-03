@@ -2224,14 +2224,14 @@ async def test_event_stream_bad_end_time(
 
 
 async def test_live_stream_with_one_second_commit_interval(
-    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test the recorder with a 1s commit interval."""
     config = {recorder.CONF_COMMIT_INTERVAL: 0.5}
-    await async_setup_recorder_instance_legacy(hass, config)
+    await async_setup_recorder_instance(hass, config)
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
