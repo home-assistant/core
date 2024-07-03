@@ -22,8 +22,8 @@ from homeassistant.components.siren import (
     SirenEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import STATE_ON, Platform
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -58,20 +58,21 @@ async def async_setup_entry(
 class ZHASiren(ZHAEntity, SirenEntity):
     """Representation of a ZHA siren."""
 
+    _attr_available_tones: list[int | str] | dict[int, str] | None = {
+        WARNING_DEVICE_MODE_BURGLAR: "Burglar",
+        WARNING_DEVICE_MODE_FIRE: "Fire",
+        WARNING_DEVICE_MODE_EMERGENCY: "Emergency",
+        WARNING_DEVICE_MODE_POLICE_PANIC: "Police Panic",
+        WARNING_DEVICE_MODE_FIRE_PANIC: "Fire Panic",
+        WARNING_DEVICE_MODE_EMERGENCY_PANIC: "Emergency Panic",
+    }
+
     def __init__(self, entity_data: EntityData, **kwargs: Any) -> None:
         """Initialize the ZHA siren."""
         super().__init__(entity_data, **kwargs)
         self._attr_supported_features = SirenEntityFeature(
             self.entity_data.entity._attr_supported_features.value  # noqa: SLF001
         )
-        self._attr_available_tones: list[int | str] | dict[int, str] | None = {
-            WARNING_DEVICE_MODE_BURGLAR: "Burglar",
-            WARNING_DEVICE_MODE_FIRE: "Fire",
-            WARNING_DEVICE_MODE_EMERGENCY: "Emergency",
-            WARNING_DEVICE_MODE_POLICE_PANIC: "Police Panic",
-            WARNING_DEVICE_MODE_FIRE_PANIC: "Fire Panic",
-            WARNING_DEVICE_MODE_EMERGENCY_PANIC: "Emergency Panic",
-        }
 
     @property
     def is_on(self) -> bool:
@@ -93,3 +94,10 @@ class ZHASiren(ZHAEntity, SirenEntity):
         """Turn off siren."""
         await self.entity_data.entity.async_turn_off()
         self.async_write_ha_state()
+
+    @callback
+    def restore_external_state_attributes(self, state: State) -> None:
+        """Restore entity state."""
+        self.entity_data.entity.restore_external_state_attributes(
+            is_on=(state.state == STATE_ON),
+        )
