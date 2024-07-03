@@ -26,4 +26,4 @@ async def test_entry_without_mac_address(hass: HomeAssistant) -> None:
 
     entry = await async_init_integration(hass, False)
 
-    assert hass.data[DOMAIN][entry.entry_id].unique_id == entry.entry_id
+    assert entry.runtime_data.unique_id == entry.entry_id
