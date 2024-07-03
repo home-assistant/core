@@ -38,9 +38,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .channel import HausbusChannel
 from .const import ATTR_ON_STATE, DOMAIN as HAUSBUSDOMAIN
 from .device import HausbusDevice
+from .entity import HausbusEntity
 from .event_handler import IEventHandler
 
 
@@ -53,7 +53,7 @@ async def async_setup_entry(
     gateway = cast(IEventHandler, hass.data[HAUSBUSDOMAIN][config_entry.entry_id])
 
     @callback
-    async def async_add_light(channel: HausbusChannel) -> None:
+    async def async_add_light(channel: HausbusEntity) -> None:
         """Add light from Haus-Bus."""
         if isinstance(channel, HausbusLight):
             async_add_entities([channel])
@@ -61,7 +61,7 @@ async def async_setup_entry(
     gateway.register_platform_add_channel_callback(async_add_light, DOMAIN)
 
 
-class HausbusLight(HausbusChannel, LightEntity):
+class HausbusLight(HausbusEntity, LightEntity):
     """Representation of a Haus-Bus light."""
 
     def __init__(
@@ -130,7 +130,7 @@ class HausbusLight(HausbusChannel, LightEntity):
         self.async_update_callback(**params)
 
     @staticmethod
-    def handle_light_event(data: Any, channel: HausbusChannel) -> None:
+    def handle_light_event(data: Any, channel: HausbusEntity) -> None:
         """Handle light events from Haus-Bus."""
         if not isinstance(channel, HausbusLight):
             return

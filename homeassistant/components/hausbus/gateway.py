@@ -22,8 +22,8 @@ from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .channel import HausbusChannel
 from .device import HausbusDevice
+from .entity import HausbusEntity
 from .event_handler import IEventHandler
 from .light import HausbusLight
 
@@ -37,14 +37,14 @@ class HausbusGateway(IBusDataListener, IEventHandler):
         self.config_entry = config_entry
         self.bridge_id = "1"
         self.devices: dict[str, HausbusDevice] = {}
-        self.channels: dict[str, dict[tuple[str, str], HausbusChannel]] = {}
+        self.channels: dict[str, dict[tuple[str, str], HausbusEntity]] = {}
         self.home_server = HomeServer()
         self.home_server.addBusEventListener(self)
         self._new_channel_listeners: dict[
-            str, Callable[[HausbusChannel], Coroutine[Any, Any, None]]
+            str, Callable[[HausbusEntity], Coroutine[Any, Any, None]]
         ] = {}
 
-    def add_device(self, device_id: str, module: ModuleId):
+    def add_device(self, device_id: str, module: ModuleId) -> None:
         """Add a new Haus-Bus Device to this gateways devices list."""
         device = HausbusDevice(
             self.bridge_id,
@@ -68,7 +68,7 @@ class HausbusGateway(IBusDataListener, IEventHandler):
 
     def get_channel_list(
         self, object_id: ObjectId
-    ) -> dict[tuple[str, str], HausbusChannel] | None:
+    ) -> dict[tuple[str, str], HausbusEntity] | None:
         """Get the channel list of a device referenced by ObjectId."""
         return self.channels.get(str(object_id.getDeviceId()), None)
 
@@ -76,7 +76,7 @@ class HausbusGateway(IBusDataListener, IEventHandler):
         """Get the channel identifier from an ObjectId."""
         return (str(object_id.getClassId()), str(object_id.getInstanceId()))
 
-    def get_channel(self, object_id: ObjectId) -> HausbusChannel | None:
+    def get_channel(self, object_id: ObjectId) -> HausbusEntity | None:
         """Get channel from channel list."""
         channels = self.get_channel_list(object_id)
         if channels is not None:
@@ -84,7 +84,7 @@ class HausbusGateway(IBusDataListener, IEventHandler):
             return channels.get(channel_id, None)
         return None
 
-    def add_light_channel(self, instance: ABusFeature, object_id: ObjectId):
+    def add_light_channel(self, instance: ABusFeature, object_id: ObjectId) -> None:
         """Add a new Haus-Bus Light Channel to this gateways channel list."""
         device = self.get_device(object_id)
         if device is not None:
@@ -101,7 +101,7 @@ class HausbusGateway(IBusDataListener, IEventHandler):
                 ).result()
                 light.get_hardware_status()
 
-    def add_channel(self, instance: ABusFeature):
+    def add_channel(self, instance: ABusFeature) -> None:
         """Add a new Haus-Bus Channel to this gateways channel list."""
         object_id = ObjectId(instance.getObjectId())
         channel_list = self.get_channel_list(object_id)
@@ -112,7 +112,7 @@ class HausbusGateway(IBusDataListener, IEventHandler):
             if HausbusLight.is_light_channel(object_id.getClassId()):
                 self.add_light_channel(instance, object_id)
 
-    def busDataReceived(self, busDataMessage: BusDataMessage):
+    def busDataReceived(self, busDataMessage: BusDataMessage) -> None:
         """Handle Haus-Bus messages."""
         object_id = ObjectId(busDataMessage.getSenderObjectId())
         data = busDataMessage.getData()
@@ -149,8 +149,8 @@ class HausbusGateway(IBusDataListener, IEventHandler):
 
     def register_platform_add_channel_callback(
         self,
-        add_channel_callback: Callable[[HausbusChannel], Coroutine[Any, Any, None]],
+        add_channel_callback: Callable[[HausbusEntity], Coroutine[Any, Any, None]],
         platform: str,
-    ):
+    ) -> None:
         """Register add channel callbacks."""
         self._new_channel_listeners[platform] = add_channel_callback

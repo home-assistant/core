@@ -1,4 +1,5 @@
 """Representation of a Haus-Bus device."""
+
 from pyhausbus.de.hausbus.homeassistant.proxy.controller.params.EFirmwareId import (
     EFirmwareId,
 )
@@ -50,109 +51,63 @@ class HausbusDevice:
             via_device=(DOMAIN, self.bridge_id),
         )
 
-    def set_type(self, type_id: int):
+    def set_type(self, type_id: int) -> None:
         """Set device name and model_id according to device type."""
-        match self.firmware_id:
-            case EFirmwareId.ESP32:
-                match type_id:
-                    case 0x65:
-                        self.model_id = "LAN-RS485 Brückenmodul"
-                    case 0x18:
-                        self.model_id = "6-fach Taster"
-                    case 0x19:
-                        self.model_id = "4-fach Taster"
-                    case 0x1A:
-                        self.model_id = "2-fach Taster"
-                    case 0x1B:
-                        self.model_id = "1-fach Taster"
-                    case 0x1C:
-                        self.model_id = "6-fach Taster Gira"
-                    case 0x20:
-                        self.model_id = "32-fach IO"
-                    case 0x0C:
-                        self.model_id = "16-fach Relais"
-                    case 0x08:
-                        self.model_id = "8-fach Relais"
-                    case 0x10:
-                        self.model_id = "22-fach UP-IO"
-                    case 0x28:
-                        self.model_id = "8-fach Dimmer"
-                    case 0x30:
-                        self.model_id = "2-fach RGB Dimmer"
-                    case 0x00:
-                        self.model_id = "4-fach 0-10V Dimmer"
-                    case 0x01:
-                        self.model_id = "4-fach 1-10V Dimmer"
-                    case _:
-                        self.model_id = "Controller"
-            case EFirmwareId.HBC:
-                match type_id:
-                    case 0x18:
-                        self.model_id = "6-fach Taster"
-                    case 0x19:
-                        self.model_id = "4-fach Taster"
-                    case 0x1A:
-                        self.model_id = "2-fach Taster"
-                    case 0x1B:
-                        self.model_id = "1-fach Taster"
-                    case 0x1C:
-                        self.model_id = "6-fach Taster Gira"
-                    case 0x20:
-                        self.model_id = "32-fach IO"
-                    case 0x0C:
-                        self.model_id = "16-fach Relais"
-                    case 0x08:
-                        self.model_id = "8-fach Relais"
-                    case 0x10:
-                        self.model_id = "24-fach UP-IO"
-                    case 0x28:
-                        self.model_id = "8-fach Dimmer"
-                    case 0x29:
-                        self.model_id = "8-fach Dimmer"
-                    case 0x30:
-                        self.model_id = "2-fach RGB Dimmer"
-                    case 0x00:
-                        self.model_id = "4-fach 0-10V Dimmer"
-                    case 0x01:
-                        self.model_id = "4-fach 1-10V Dimmer"
-                    case _:
-                        self.model_id = "Controller"
-            case EFirmwareId.SD485:
-                match type_id:
-                    case 0x28:
-                        self.model_id = "24-fach UP-IO"
-                    case 0x1E:
-                        self.model_id = "6-fach Taster"
-                    case 0x2E:
-                        self.model_id = "6-fach Taster"
-                    case 0x2F:
-                        self.model_id = "6-fach Taster"
-                    case 0x2B:
-                        self.model_id = "4-fach 0-10V Dimmer"
-                    case 0x2C:
-                        self.model_id = "4-fach Taster"
-                    case 0x2D:
-                        self.model_id = "4-fach 1-10V Dimmer"
-                    case 0x2A:
-                        self.model_id = "2-fach Taster"
-                    case 0x29:
-                        self.model_id = "1-fach Taster"
-                    case _:
-                        self.model_id = "Controller"
-            case EFirmwareId.AR8:
-                match type_id:
-                    case 0x28:
-                        self.model_id = "LAN Brückenmodul"
-                    case 0x30:
-                        self.model_id = "8-fach Relais"
-                    case _:
-                        self.model_id = "Controller"
-            case EFirmwareId.SD6:
-                match type_id:
-                    case 0x14:
-                        self.model_id = "Multitaster"
-                    case 0x1E:
-                        self.model_id = "Multitaster"
-                    case _:
-                        self.model_id = "Controller"
+        model_ids = {
+            EFirmwareId.ESP32: {
+                int("0x65", 16): "LAN-RS485 Brückenmodul",
+                int("0x18", 16): "6-fach Taster",
+                int("0x19", 16): "4-fach Taster",
+                int("0x1A", 16): "2-fach Taster",
+                int("0x1B", 16): "1-fach Taster",
+                int("0x1C", 16): "6-fach Taster Gira",
+                int("0x20", 16): "32-fach IO",
+                int("0x0C", 16): "16-fach Relais",
+                int("0x08", 16): "8-fach Relais",
+                int("0x10", 16): "22-fach UP-IO",
+                int("0x28", 16): "8-fach Dimmer",
+                int("0x30", 16): "2-fach RGB Dimmer",
+                int("0x00", 16): "4-fach 0-10V Dimmer",
+                int("0x01", 16): "4-fach 1-10V Dimmer",
+            },
+            EFirmwareId.HBC: {
+                int("0x18", 16): "6-fach Taster",
+                int("0x19", 16): "4-fach Taster",
+                int("0x1A", 16): "2-fach Taster",
+                int("0x1B", 16): "1-fach Taster",
+                int("0x1C", 16): "6-fach Taster Gira",
+                int("0x20", 16): "32-fach IO",
+                int("0x0C", 16): "16-fach Relais",
+                int("0x08", 16): "8-fach Relais",
+                int("0x10", 16): "22-fach UP-IO",
+                int("0x28", 16): "8-fach Dimmer",
+                int("0x30", 16): "2-fach RGB Dimmer",
+                int("0x00", 16): "4-fach 0-10V Dimmer",
+                int("0x01", 16): "4-fach 1-10V Dimmer",
+            },
+            EFirmwareId.SD485: {
+                int("0x28", 16): "24-fach UP-IO",
+                int("0x1E", 16): "6-fach Taster",
+                int("0x2E", 16): "6-fach Taster",
+                int("0x2F", 16): "6-fach Taster",
+                int("0x2B", 16): "4-fach 0-10V Dimmer",
+                int("0x2C", 16): "4-fach Taster",
+                int("0x2D", 16): "4-fach 1-10V Dimmer",
+                int("0x2A", 16): "2-fach Taster",
+                int("0x29", 16): "1-fach Taster",
+            },
+            EFirmwareId.AR8: {
+                int("0x28", 16): "LAN Brückenmodul",
+                int("0x30", 16): "8-fach Relais",
+            },
+            EFirmwareId.SD6: {
+                int("0x14", 16): "Multitaster",
+                int("0x1E", 16): "Multitaster",
+            },
+        }
+        firmware_model_id = model_ids.get(self.firmware_id, {})
+        if len(firmware_model_id) == 0:
+            self.model_id = "Controller"
+        else:
+            self.model_id = firmware_model_id.get(type_id, "Controller")
         self.name = f"{self.model_id} ID {self._device_id}"
