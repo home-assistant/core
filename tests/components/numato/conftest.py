@@ -1,6 +1,7 @@
 """Fixtures for numato tests."""
 
 from copy import deepcopy
+from typing import Any
 
 import pytest
 
@@ -11,7 +12,7 @@ from .numato_mock import NumatoModuleMock
 
 
 @pytest.fixture
-def config():
+def config() -> dict[str, Any]:
     """Provide a copy of the numato domain's test configuration.
 
     This helps to quickly change certain aspects of the configuration scoped
