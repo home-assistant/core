@@ -38,6 +38,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .config_entry import HausbusConfigEntry
 from .const import ATTR_ON_STATE, DOMAIN as HAUSBUSDOMAIN
 from .device import HausbusDevice
 from .entity import HausbusEntity
@@ -46,11 +47,12 @@ from .event_handler import IEventHandler
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HausbusConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Haus-Bus lights from a config entry."""
-    gateway = cast(IEventHandler, hass.data[HAUSBUSDOMAIN][config_entry.entry_id])
+    # gateway = cast(IEventHandler, hass.data[HAUSBUSDOMAIN][config_entry.entry_id])
+    gateway = config_entry.runtime_data.gateway
 
     @callback
     async def async_add_light(channel: HausbusEntity) -> None:

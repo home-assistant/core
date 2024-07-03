@@ -25,7 +25,6 @@ from homeassistant.core import HomeAssistant
 from .device import HausbusDevice
 from .entity import HausbusEntity
 from .event_handler import IEventHandler
-from .light import HausbusLight
 
 
 class HausbusGateway(IBusDataListener, IEventHandler):
@@ -86,6 +85,8 @@ class HausbusGateway(IBusDataListener, IEventHandler):
 
     def add_light_channel(self, instance: ABusFeature, object_id: ObjectId) -> None:
         """Add a new Haus-Bus Light Channel to this gateways channel list."""
+        from .light import HausbusLight
+
         device = self.get_device(object_id)
         if device is not None:
             light = HausbusLight(
@@ -103,6 +104,8 @@ class HausbusGateway(IBusDataListener, IEventHandler):
 
     def add_channel(self, instance: ABusFeature) -> None:
         """Add a new Haus-Bus Channel to this gateways channel list."""
+        from .light import HausbusLight
+
         object_id = ObjectId(instance.getObjectId())
         channel_list = self.get_channel_list(object_id)
         if (
@@ -114,6 +117,8 @@ class HausbusGateway(IBusDataListener, IEventHandler):
 
     def busDataReceived(self, busDataMessage: BusDataMessage) -> None:
         """Handle Haus-Bus messages."""
+        from .light import HausbusLight
+
         object_id = ObjectId(busDataMessage.getSenderObjectId())
         data = busDataMessage.getData()
 
