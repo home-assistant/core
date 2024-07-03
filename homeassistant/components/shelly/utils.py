@@ -26,7 +26,7 @@ from aioshelly.rpc_device import RpcDevice, WsServer
 from homeassistant.components import network
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     device_registry as dr,
@@ -502,45 +502,3 @@ def async_remove_shelly_rpc_entities(
 def is_rpc_thermostat_mode(ident: int, status: dict[str, Any]) -> bool:
     """Return True if 'thermostat:<IDent>' is present in the status."""
     return f"thermostat:{ident}" in status
-
-
-def get_virtual_component_key_ids(
-    config: dict[str, Any], platform: Platform
-) -> list[int]:
-    """Return a list of virtual component key IDs for a platform."""
-    ids: list[int] = []
-    if platform is Platform.SWITCH:
-        ids.extend(
-            int(k.split(":")[1])
-            for k, v in config.items()
-            if k.startswith("boolean:") and v["meta"]["ui"]["view"] == "toggle"
-        )
-
-    return ids
-
-
-@callback
-def async_get_orphaned_virtual_entities(
-    hass: HomeAssistant,
-    config_entry_id: str,
-    platform: str,
-    virt_comp_type: str,
-    virt_comp_ids: list[int],
-) -> list[str]:
-    """Return a list of keys of orphaned virtual entities."""
-    orphaned_entities = []
-    entity_reg = er.async_get(hass)
-    device_reg = dr.async_get(hass)
-
-    if devices := device_reg.devices.get_devices_for_config_entry_id(config_entry_id):
-        device_id = devices[0].id
-        entities = er.async_entries_for_device(entity_reg, device_id, True)
-        for entity in entities:
-            if not entity.entity_id.startswith(platform):
-                continue
-            if virt_comp_type in entity.unique_id:
-                virtual_switch_id = int(entity.unique_id.split(":")[1])
-                if virtual_switch_id not in virt_comp_ids:
-                    orphaned_entities.append(f"{virt_comp_type}:{virtual_switch_id}")
-
-    return orphaned_entities

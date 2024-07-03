@@ -8,12 +8,8 @@ from typing import Any, cast
 from aioshelly.block_device import Block
 from aioshelly.const import MODEL_2, MODEL_25, MODEL_WALL_DISPLAY, RPC_GENERATIONS
 
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_PLATFORM,
-    SwitchEntity,
-    SwitchEntityDescription,
-)
-from homeassistant.const import STATE_ON, EntityCategory, Platform
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
@@ -23,18 +19,18 @@ from .const import CONF_SLEEP_PERIOD, MOTION_MODELS
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
+    RpcEntityDescription,
     ShellyBlockEntity,
+    ShellyRpcAttributeEntity,
     ShellyRpcEntity,
     ShellySleepingBlockAttributeEntity,
     async_setup_entry_attribute_entities,
+    async_setup_rpc_attribute_entities,
 )
 from .utils import (
-    async_get_orphaned_virtual_entities,
     async_remove_shelly_entity,
-    async_remove_shelly_rpc_entities,
     get_device_entry_gen,
     get_rpc_key_ids,
-    get_virtual_component_key_ids,
     is_block_channel_type_light,
     is_rpc_channel_type_light,
     is_rpc_thermostat_internal_actuator,
@@ -51,6 +47,19 @@ MOTION_SWITCH = BlockSwitchDescription(
     key="sensor|motionActive",
     name="Motion detection",
     entity_category=EntityCategory.CONFIG,
+)
+
+
+@dataclass(frozen=True, kw_only=True)
+class RpcSwitchDescription(RpcEntityDescription, SwitchEntityDescription):
+    """Class to describe a RPC virtual switch."""
+
+
+RPC_VIRTUAL_SWITCH = RpcSwitchDescription(
+    key="boolean",
+    sub_key="value",
+    removal_condition=lambda config, _, key: config[key]["meta"]["ui"]["view"]
+    != "toggle",
 )
 
 
@@ -156,21 +165,13 @@ def async_setup_rpc_entry(
         unique_id = f"{coordinator.mac}-switch:{id_}"
         async_remove_shelly_entity(hass, "light", unique_id)
 
-    switches.extend(RpcRelaySwitch(coordinator, id_) for id_ in switch_ids)
-
-    virtual_switch_key_ids = get_virtual_component_key_ids(
-        coordinator.device.config, Platform.SWITCH
+    async_setup_rpc_attribute_entities(
+        hass,
+        config_entry,
+        async_add_entities,
+        {"boolean": RPC_VIRTUAL_SWITCH},
+        RpcVirtualSwitch,
     )
-    switches.extend(
-        RpcVirtualSwitch(coordinator, id_) for id_ in virtual_switch_key_ids
-    )
-
-    if orphaned_entities := async_get_orphaned_virtual_entities(
-        hass, config_entry.entry_id, SWITCH_PLATFORM, "boolean", virtual_switch_key_ids
-    ):
-        async_remove_shelly_rpc_entities(
-            hass, SWITCH_PLATFORM, coordinator.mac, orphaned_entities
-        )
 
     if not switches:
         return
@@ -281,18 +282,15 @@ class RpcRelaySwitch(ShellyRpcEntity, SwitchEntity):
         await self.call_rpc("Switch.Set", {"id": self._id, "on": False})
 
 
-class RpcVirtualSwitch(ShellyRpcEntity, SwitchEntity):
+class RpcVirtualSwitch(ShellyRpcAttributeEntity, SwitchEntity):
     """Entity that controls a virtual boolean component on RPC based Shelly devices."""
 
-    def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
-        """Initialize relay switch."""
-        super().__init__(coordinator, f"boolean:{id_}")
-        self._id = id_
+    entity_description: RpcSwitchDescription
 
     @property
     def is_on(self) -> bool:
         """If switch is on."""
-        return bool(self.status["value"])
+        return bool(self.attribute_value)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on relay."""
