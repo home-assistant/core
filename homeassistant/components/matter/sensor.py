@@ -6,7 +6,11 @@ from dataclasses import dataclass
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Types import Nullable, NullValue
-from matter_server.common.custom_clusters import EveCluster, ThirdRealityMeteringCluster
+from matter_server.common.custom_clusters import (
+    EveCluster,
+    NeoCluster,
+    ThirdRealityMeteringCluster,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -389,5 +393,59 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             ThirdRealityMeteringCluster.Attributes.CurrentSummationDelivered,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="NeoEnergySensorWatt",
+            device_class=SensorDeviceClass.POWER,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfPower.WATT,
+            suggested_display_precision=2,
+            state_class=SensorStateClass.MEASUREMENT,
+            measurement_to_ha=lambda x: x / 10,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(NeoCluster.Attributes.Watt,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="NeoEnergySensorWattAccumulated",
+            device_class=SensorDeviceClass.ENERGY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+            suggested_display_precision=1,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(NeoCluster.Attributes.WattAccumulated,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="NeoEnergySensorVoltage",
+            device_class=SensorDeviceClass.VOLTAGE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+            suggested_display_precision=0,
+            state_class=SensorStateClass.MEASUREMENT,
+            measurement_to_ha=lambda x: x / 10,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(NeoCluster.Attributes.Voltage,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="NeoEnergySensorWattCurrent",
+            device_class=SensorDeviceClass.CURRENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+            suggested_display_precision=0,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(NeoCluster.Attributes.Current,),
     ),
 ]
