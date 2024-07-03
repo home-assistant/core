@@ -139,7 +139,7 @@ def _create_engine_28(*args, **kwargs):
 
 
 async def test_delete_metadata_duplicates(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
     tmp_path: Path,
 ) -> None:
@@ -206,7 +206,7 @@ async def test_delete_metadata_duplicates(
         ),
     ):
         async with async_test_home_assistant() as hass:
-            await async_setup_recorder_instance(hass, {"db_url": dburl})
+            await async_setup_recorder_instance_legacy(hass, {"db_url": dburl})
             await async_wait_recording_done(hass)
             await async_wait_recording_done(hass)
 
@@ -226,7 +226,7 @@ async def test_delete_metadata_duplicates(
 
     # Test that the duplicates are removed during migration from schema 28
     async with async_test_home_assistant() as hass:
-        await async_setup_recorder_instance(hass, {"db_url": dburl})
+        await async_setup_recorder_instance_legacy(hass, {"db_url": dburl})
         await hass.async_start()
         await async_wait_recording_done(hass)
         await async_wait_recording_done(hass)
@@ -244,7 +244,7 @@ async def test_delete_metadata_duplicates(
 
 
 async def test_delete_metadata_duplicates_many(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
     tmp_path: Path,
 ) -> None:
@@ -323,7 +323,7 @@ async def test_delete_metadata_duplicates_many(
         ),
     ):
         async with async_test_home_assistant() as hass:
-            await async_setup_recorder_instance(hass, {"db_url": dburl})
+            await async_setup_recorder_instance_legacy(hass, {"db_url": dburl})
             await async_wait_recording_done(hass)
             await async_wait_recording_done(hass)
 
@@ -334,7 +334,7 @@ async def test_delete_metadata_duplicates_many(
 
     # Test that the duplicates are removed during migration from schema 28
     async with async_test_home_assistant() as hass:
-        await async_setup_recorder_instance(hass, {"db_url": dburl})
+        await async_setup_recorder_instance_legacy(hass, {"db_url": dburl})
         await hass.async_start()
         await async_wait_recording_done(hass)
         await async_wait_recording_done(hass)

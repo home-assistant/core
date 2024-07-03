@@ -1394,7 +1394,7 @@ async def async_setup_recorder_instance(
     enable_migrate_event_type_ids: bool,
     enable_migrate_entity_ids: bool,
 ) -> AsyncGenerator[RecorderInstanceGenerator]:
-    """Yield callable to setup recorder instance."""
+    """Yield context manager to setup recorder instance."""
     # pylint: disable-next=import-outside-toplevel
     from homeassistant.components import recorder
 
@@ -1477,12 +1477,13 @@ async def async_setup_recorder_instance(
         ),
     ):
 
+        @asynccontextmanager
         async def async_setup_recorder(
             hass: HomeAssistant,
             config: ConfigType | None = None,
             *,
             wait_recorder: bool = True,
-        ) -> recorder.Recorder:
+        ) -> AsyncGenerator[recorder.Recorder]:
             """Setup and return recorder instance."""  # noqa: D401
             await _async_init_recorder_component(hass, config, recorder_db_url)
             await hass.async_block_till_done()
@@ -1490,9 +1491,42 @@ async def async_setup_recorder_instance(
             # The recorder's worker is not started until Home Assistant is running
             if hass.state is CoreState.running and wait_recorder:
                 await async_recorder_block_till_done(hass)
-            return instance
+            try:
+                yield instance
+            finally:
+                if instance.is_alive():
+                    await instance._async_shutdown(None)
 
         yield async_setup_recorder
+
+
+@pytest.fixture
+async def async_setup_recorder_instance_legacy(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+) -> AsyncGenerator[RecorderInstanceGenerator]:
+    """Yield callable to setup recorder instance."""
+
+    # pylint: disable-next=import-outside-toplevel
+
+    context_manager = None
+
+    async def async_setup_recorder(
+        hass: HomeAssistant,
+        config: ConfigType | None = None,
+        *,
+        wait_recorder: bool = True,
+    ) -> AsyncGenerator[recorder.Recorder]:
+        """Setup and return recorder instance."""  # noqa: D401
+
+        # Store the context manager to prevent it from being garbage collected
+        nonlocal context_manager
+        context_manager = async_setup_recorder_instance(
+            hass, config, wait_recorder=wait_recorder
+        )
+        # pylint: disable-next=unnecessary-dunder-call
+        return await context_manager.__aenter__()
+
+    return async_setup_recorder
 
 
 @pytest.fixture
@@ -1500,9 +1534,10 @@ async def recorder_mock(
     recorder_config: dict[str, Any] | None,
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
-) -> recorder.Recorder:
+) -> AsyncGenerator[recorder.Recorder]:
     """Fixture with in-memory recorder."""
-    return await async_setup_recorder_instance(hass, recorder_config)
+    async with async_setup_recorder_instance(hass, recorder_config) as instance:
+        yield instance
 
 
 @pytest.fixture

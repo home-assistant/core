@@ -127,10 +127,10 @@ async def legacy_recorder_mock_fixture(
 
 @pytest.mark.parametrize("enable_migrate_context_ids", [True])
 async def test_migrate_events_context_ids(
-    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator, hass: HomeAssistant
 ) -> None:
     """Test we can migrate old uuid context ids and ulid context ids to binary format."""
-    instance = await async_setup_recorder_instance(hass)
+    instance = await async_setup_recorder_instance_legacy(hass)
     await async_wait_recording_done(hass)
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
@@ -340,10 +340,10 @@ async def test_migrate_events_context_ids(
 
 @pytest.mark.parametrize("enable_migrate_context_ids", [True])
 async def test_migrate_states_context_ids(
-    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator, hass: HomeAssistant
 ) -> None:
     """Test we can migrate old uuid context ids and ulid context ids to binary format."""
-    instance = await async_setup_recorder_instance(hass)
+    instance = await async_setup_recorder_instance_legacy(hass)
     await async_wait_recording_done(hass)
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
@@ -533,10 +533,10 @@ async def test_migrate_states_context_ids(
 
 @pytest.mark.parametrize("enable_migrate_event_type_ids", [True])
 async def test_migrate_event_type_ids(
-    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator, hass: HomeAssistant
 ) -> None:
     """Test we can migrate event_types to the EventTypes table."""
-    instance = await async_setup_recorder_instance(hass)
+    instance = await async_setup_recorder_instance_legacy(hass)
     await async_wait_recording_done(hass)
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
@@ -622,10 +622,10 @@ async def test_migrate_event_type_ids(
 
 @pytest.mark.parametrize("enable_migrate_entity_ids", [True])
 async def test_migrate_entity_ids(
-    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator, hass: HomeAssistant
 ) -> None:
     """Test we can migrate entity_ids to the StatesMeta table."""
-    instance = await async_setup_recorder_instance(hass)
+    instance = await async_setup_recorder_instance_legacy(hass)
     await async_wait_recording_done(hass)
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
@@ -696,10 +696,10 @@ async def test_migrate_entity_ids(
 
 @pytest.mark.parametrize("enable_migrate_entity_ids", [True])
 async def test_post_migrate_entity_ids(
-    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator, hass: HomeAssistant
 ) -> None:
     """Test we can migrate entity_ids to the StatesMeta table."""
-    instance = await async_setup_recorder_instance(hass)
+    instance = await async_setup_recorder_instance_legacy(hass)
     await async_wait_recording_done(hass)
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
@@ -750,10 +750,10 @@ async def test_post_migrate_entity_ids(
 
 @pytest.mark.parametrize("enable_migrate_entity_ids", [True])
 async def test_migrate_null_entity_ids(
-    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator, hass: HomeAssistant
 ) -> None:
     """Test we can migrate entity_ids to the StatesMeta table."""
-    instance = await async_setup_recorder_instance(hass)
+    instance = await async_setup_recorder_instance_legacy(hass)
     await async_wait_recording_done(hass)
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
@@ -831,10 +831,10 @@ async def test_migrate_null_entity_ids(
 
 @pytest.mark.parametrize("enable_migrate_event_type_ids", [True])
 async def test_migrate_null_event_type_ids(
-    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator, hass: HomeAssistant
 ) -> None:
     """Test we can migrate event_types to the EventTypes table when the event_type is NULL."""
-    instance = await async_setup_recorder_instance(hass)
+    instance = await async_setup_recorder_instance_legacy(hass)
     await async_wait_recording_done(hass)
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
@@ -916,11 +916,11 @@ async def test_migrate_null_event_type_ids(
 
 
 async def test_stats_timestamp_conversion_is_reentrant(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
     hass: HomeAssistant,
 ) -> None:
     """Test stats migration is reentrant."""
-    instance = await async_setup_recorder_instance(hass)
+    instance = await async_setup_recorder_instance_legacy(hass)
     await async_wait_recording_done(hass)
     await async_attach_db_engine(hass)
     importlib.import_module(SCHEMA_MODULE)
@@ -1070,11 +1070,11 @@ async def test_stats_timestamp_conversion_is_reentrant(
 
 
 async def test_stats_timestamp_with_one_by_one(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
     hass: HomeAssistant,
 ) -> None:
     """Test stats migration with one by one."""
-    instance = await async_setup_recorder_instance(hass)
+    instance = await async_setup_recorder_instance_legacy(hass)
     await async_wait_recording_done(hass)
     await async_attach_db_engine(hass)
     importlib.import_module(SCHEMA_MODULE)
@@ -1291,11 +1291,11 @@ async def test_stats_timestamp_with_one_by_one(
 
 
 async def test_stats_timestamp_with_one_by_one_removes_duplicates(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
     hass: HomeAssistant,
 ) -> None:
     """Test stats migration with one by one removes duplicates."""
-    instance = await async_setup_recorder_instance(hass)
+    instance = await async_setup_recorder_instance_legacy(hass)
     await async_wait_recording_done(hass)
     await async_attach_db_engine(hass)
     importlib.import_module(SCHEMA_MODULE)

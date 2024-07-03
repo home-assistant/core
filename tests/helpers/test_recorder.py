@@ -9,7 +9,7 @@ from tests.typing import RecorderInstanceGenerator
 
 
 async def test_async_migration_in_progress(
-    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator, hass: HomeAssistant
 ) -> None:
     """Test async_migration_in_progress wraps the recorder."""
     with patch(
@@ -25,7 +25,7 @@ async def test_async_migration_in_progress(
     ):
         assert recorder.async_migration_in_progress(hass) is False
 
-    await async_setup_recorder_instance(hass)
+    await async_setup_recorder_instance_legacy(hass)
 
     # The recorder is now loaded
     with patch(

@@ -117,7 +117,7 @@ def test_validate_or_move_away_sqlite_database(
 
 
 async def test_last_run_was_recently_clean(
-    async_setup_recorder_instance: RecorderInstanceGenerator, tmp_path: Path
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator, tmp_path: Path
 ) -> None:
     """Test we can check if the last recorder run was recently clean."""
     config = {
@@ -137,7 +137,7 @@ async def test_last_run_was_recently_clean(
             "homeassistant.components.recorder.util.last_run_was_recently_clean",
             wraps=_last_run_was_recently_clean,
         ) as last_run_was_recently_clean_mock:
-            await async_setup_recorder_instance(hass, config)
+            await async_setup_recorder_instance_legacy(hass, config)
             await hass.async_block_till_done()
             last_run_was_recently_clean_mock.assert_not_called()
 
@@ -151,7 +151,7 @@ async def test_last_run_was_recently_clean(
             "homeassistant.components.recorder.util.last_run_was_recently_clean",
             wraps=_last_run_was_recently_clean,
         ) as last_run_was_recently_clean_mock:
-            await async_setup_recorder_instance(hass, config)
+            await async_setup_recorder_instance_legacy(hass, config)
             last_run_was_recently_clean_mock.assert_called_once()
             assert return_values[-1] is True
 
@@ -173,7 +173,7 @@ async def test_last_run_was_recently_clean(
                 return_value=thirty_min_future_time,
             ),
         ):
-            await async_setup_recorder_instance(hass, config)
+            await async_setup_recorder_instance_legacy(hass, config)
             last_run_was_recently_clean_mock.assert_called_once()
             assert return_values[-1] is False
 
@@ -848,7 +848,7 @@ async def test_periodic_db_cleanups(
 
 
 async def test_write_lock_db(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
     hass: HomeAssistant,
     tmp_path: Path,
 ) -> None:
@@ -858,7 +858,7 @@ async def test_write_lock_db(
     config = {
         recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db?timeout=0.1")
     }
-    instance = await async_setup_recorder_instance(hass, config)
+    instance = await async_setup_recorder_instance_legacy(hass, config)
     await hass.async_block_till_done()
 
     def _drop_table():

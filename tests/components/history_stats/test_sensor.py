@@ -1442,7 +1442,7 @@ async def test_measure_cet(recorder_mock: Recorder, hass: HomeAssistant) -> None
 @pytest.mark.parametrize("time_zone", ["Europe/Berlin", "America/Chicago", "US/Hawaii"])
 async def test_end_time_with_microseconds_zeroed(
     time_zone: str,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
     hass: HomeAssistant,
 ) -> None:
     """Test the history statistics sensor that has the end time microseconds zeroed out."""
@@ -1451,7 +1451,7 @@ async def test_end_time_with_microseconds_zeroed(
         day=9, month=7, year=1986, hour=0, minute=0, second=0, microsecond=0
     )
     with freeze_time(start_of_today):
-        await async_setup_recorder_instance(hass)
+        await async_setup_recorder_instance_legacy(hass)
         await hass.async_block_till_done()
         await async_wait_recording_done(hass)
 

@@ -142,7 +142,7 @@ def _default_recorder(hass):
 
 async def test_shutdown_before_startup_finishes(
     hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
     recorder_db_url: str,
     tmp_path: Path,
 ) -> None:
@@ -158,7 +158,7 @@ async def test_shutdown_before_startup_finishes(
     hass.set_state(CoreState.not_running)
 
     recorder_helper.async_initialize_recorder(hass)
-    hass.async_create_task(async_setup_recorder_instance(hass, config))
+    hass.async_create_task(async_setup_recorder_instance_legacy(hass, config))
     await recorder_helper.async_wait_recorder(hass)
     instance = get_instance(hass)
 
@@ -186,13 +186,13 @@ async def test_shutdown_before_startup_finishes(
 
 async def test_canceled_before_startup_finishes(
     hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test recorder shuts down when its startup future is canceled out from under it."""
     hass.set_state(CoreState.not_running)
     recorder_helper.async_initialize_recorder(hass)
-    hass.async_create_task(async_setup_recorder_instance(hass))
+    hass.async_create_task(async_setup_recorder_instance_legacy(hass))
     await recorder_helper.async_wait_recorder(hass)
 
     instance = get_instance(hass)
@@ -237,14 +237,14 @@ async def test_shutdown_closes_connections(
 
 
 async def test_state_gets_saved_when_set_before_start_event(
-    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
+    hass: HomeAssistant, async_setup_recorder_instance_legacy: RecorderInstanceGenerator
 ) -> None:
     """Test we can record an event when starting with not running."""
 
     hass.set_state(CoreState.not_running)
 
     recorder_helper.async_initialize_recorder(hass)
-    hass.async_create_task(async_setup_recorder_instance(hass))
+    hass.async_create_task(async_setup_recorder_instance_legacy(hass))
     await recorder_helper.async_wait_recorder(hass)
 
     entity_id = "test.recorder"
@@ -337,10 +337,10 @@ async def test_saving_state_with_nul(
 
 
 async def test_saving_many_states(
-    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
+    hass: HomeAssistant, async_setup_recorder_instance_legacy: RecorderInstanceGenerator
 ) -> None:
     """Test we expire after many commits."""
-    instance = await async_setup_recorder_instance(
+    instance = await async_setup_recorder_instance_legacy(
         hass, {recorder.CONF_COMMIT_INTERVAL: 0}
     )
 
@@ -477,11 +477,11 @@ async def test_saving_state_with_sqlalchemy_exception(
 
 async def test_force_shutdown_with_queue_of_writes_that_generate_exceptions(
     hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test forcing shutdown."""
-    instance = await async_setup_recorder_instance(hass)
+    instance = await async_setup_recorder_instance_legacy(hass)
 
     entity_id = "test.recorder"
     attributes = {"test_attr": 5, "test_attr_10": "nice"}
@@ -565,10 +565,10 @@ async def test_saving_event(hass: HomeAssistant, setup_recorder: None) -> None:
 
 async def test_saving_state_with_commit_interval_zero(
     hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
 ) -> None:
     """Test saving a state with a commit interval of zero."""
-    await async_setup_recorder_instance(hass, {"commit_interval": 0})
+    await async_setup_recorder_instance_legacy(hass, {"commit_interval": 0})
     assert get_instance(hass).commit_interval == 0
 
     entity_id = "test.recorder"
@@ -624,10 +624,10 @@ async def test_setup_without_migration(
 
 async def test_saving_state_include_domains(
     hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
 ) -> None:
     """Test saving and restoring a state."""
-    await async_setup_recorder_instance(hass, {"include": {"domains": "test2"}})
+    await async_setup_recorder_instance_legacy(hass, {"include": {"domains": "test2"}})
     states = await _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
     assert _state_with_context(hass, "test2.recorder").as_dict() == states[0].as_dict()
@@ -635,10 +635,10 @@ async def test_saving_state_include_domains(
 
 async def test_saving_state_include_domains_globs(
     hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
 ) -> None:
     """Test saving and restoring a state."""
-    await async_setup_recorder_instance(
+    await async_setup_recorder_instance_legacy(
         hass, {"include": {"domains": "test2", "entity_globs": "*.included_*"}}
     )
     states = await _add_entities(
@@ -659,10 +659,10 @@ async def test_saving_state_include_domains_globs(
 
 async def test_saving_state_incl_entities(
     hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
 ) -> None:
     """Test saving and restoring a state."""
-    await async_setup_recorder_instance(
+    await async_setup_recorder_instance_legacy(
         hass, {"include": {"entities": "test2.recorder"}}
     )
     states = await _add_entities(hass, ["test.recorder", "test2.recorder"])
@@ -672,7 +672,7 @@ async def test_saving_state_incl_entities(
 
 async def test_saving_event_exclude_event_type(
     hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
 ) -> None:
     """Test saving and restoring an event."""
     config = {
@@ -687,7 +687,7 @@ async def test_saving_event_exclude_event_type(
             ]
         }
     }
-    instance = await async_setup_recorder_instance(hass, config)
+    instance = await async_setup_recorder_instance_legacy(hass, config)
     events = ["test", "test2"]
     for event_type in events:
         hass.bus.async_fire(event_type)
@@ -723,10 +723,10 @@ async def test_saving_event_exclude_event_type(
 
 async def test_saving_state_exclude_domains(
     hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
 ) -> None:
     """Test saving and restoring a state."""
-    await async_setup_recorder_instance(hass, {"exclude": {"domains": "test"}})
+    await async_setup_recorder_instance_legacy(hass, {"exclude": {"domains": "test"}})
     states = await _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
     assert _state_with_context(hass, "test2.recorder").as_dict() == states[0].as_dict()
@@ -734,10 +734,10 @@ async def test_saving_state_exclude_domains(
 
 async def test_saving_state_exclude_domains_globs(
     hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
 ) -> None:
     """Test saving and restoring a state."""
-    await async_setup_recorder_instance(
+    await async_setup_recorder_instance_legacy(
         hass, {"exclude": {"domains": "test", "entity_globs": "*.excluded_*"}}
     )
     states = await _add_entities(
@@ -749,10 +749,10 @@ async def test_saving_state_exclude_domains_globs(
 
 async def test_saving_state_exclude_entities(
     hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
 ) -> None:
     """Test saving and restoring a state."""
-    await async_setup_recorder_instance(
+    await async_setup_recorder_instance_legacy(
         hass, {"exclude": {"entities": "test.recorder"}}
     )
     states = await _add_entities(hass, ["test.recorder", "test2.recorder"])
@@ -762,10 +762,10 @@ async def test_saving_state_exclude_entities(
 
 async def test_saving_state_exclude_domain_include_entity(
     hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
 ) -> None:
     """Test saving and restoring a state."""
-    await async_setup_recorder_instance(
+    await async_setup_recorder_instance_legacy(
         hass,
         {
             "include": {"entities": "test.recorder"},
@@ -778,10 +778,10 @@ async def test_saving_state_exclude_domain_include_entity(
 
 async def test_saving_state_exclude_domain_glob_include_entity(
     hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
 ) -> None:
     """Test saving and restoring a state."""
-    await async_setup_recorder_instance(
+    await async_setup_recorder_instance_legacy(
         hass,
         {
             "include": {"entities": ["test.recorder", "test.excluded_entity"]},
@@ -796,10 +796,10 @@ async def test_saving_state_exclude_domain_glob_include_entity(
 
 async def test_saving_state_include_domain_exclude_entity(
     hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
 ) -> None:
     """Test saving and restoring a state."""
-    await async_setup_recorder_instance(
+    await async_setup_recorder_instance_legacy(
         hass,
         {
             "exclude": {"entities": "test.recorder"},
@@ -814,10 +814,10 @@ async def test_saving_state_include_domain_exclude_entity(
 
 async def test_saving_state_include_domain_glob_exclude_entity(
     hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
 ) -> None:
     """Test saving and restoring a state."""
-    await async_setup_recorder_instance(
+    await async_setup_recorder_instance_legacy(
         hass,
         {
             "exclude": {"entities": ["test.recorder", "test2.included_entity"]},
@@ -1138,12 +1138,12 @@ async def test_auto_purge_auto_repack_on_second_sunday(
 @pytest.mark.parametrize("enable_nightly_purge", [True])
 async def test_auto_purge_auto_repack_disabled_on_second_sunday(
     hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
 ) -> None:
     """Test periodic purge scheduling does not auto repack on the 2nd sunday if disabled."""
     timezone = "Europe/Copenhagen"
     await hass.config.async_set_time_zone(timezone)
-    await async_setup_recorder_instance(hass, {CONF_AUTO_REPACK: False})
+    await async_setup_recorder_instance_legacy(hass, {CONF_AUTO_REPACK: False})
     tz = dt_util.get_time_zone(timezone)
 
     # Purging is scheduled to happen at 4:12am every day. Exercise this behavior by
@@ -1226,12 +1226,12 @@ async def test_auto_purge_no_auto_repack_on_not_second_sunday(
 @pytest.mark.parametrize("enable_nightly_purge", [True])
 async def test_auto_purge_disabled(
     hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
 ) -> None:
     """Test periodic db cleanup still run when auto purge is disabled."""
     timezone = "Europe/Copenhagen"
     await hass.config.async_set_time_zone(timezone)
-    await async_setup_recorder_instance(hass, {CONF_AUTO_PURGE: False})
+    await async_setup_recorder_instance_legacy(hass, {CONF_AUTO_PURGE: False})
     tz = dt_util.get_time_zone(timezone)
 
     # Purging is scheduled to happen at 4:12am every day. We want
@@ -1350,14 +1350,14 @@ async def test_auto_statistics(
 
 
 async def test_statistics_runs_initiated(
-    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
+    hass: HomeAssistant, async_setup_recorder_instance_legacy: RecorderInstanceGenerator
 ) -> None:
     """Test statistics_runs is initiated when DB is created."""
     now = dt_util.utcnow()
     with patch(
         "homeassistant.components.recorder.core.dt_util.utcnow", return_value=now
     ):
-        await async_setup_recorder_instance(hass)
+        await async_setup_recorder_instance_legacy(hass)
 
         await async_wait_recording_done(hass)
 
@@ -1766,10 +1766,10 @@ async def test_database_corruption_while_running(
 
 async def test_entity_id_filter(
     hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
 ) -> None:
     """Test that entity ID filtering filters string and list."""
-    await async_setup_recorder_instance(
+    await async_setup_recorder_instance_legacy(
         hass,
         {
             "include": {"domains": "hello"},
@@ -1817,7 +1817,7 @@ async def test_entity_id_filter(
 
 async def test_database_lock_and_unlock(
     hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
     recorder_db_url: str,
     tmp_path: Path,
 ) -> None:
@@ -1833,7 +1833,7 @@ async def test_database_lock_and_unlock(
         recorder.CONF_COMMIT_INTERVAL: 0,
         recorder.CONF_DB_URL: recorder_db_url,
     }
-    await async_setup_recorder_instance(hass, config)
+    await async_setup_recorder_instance_legacy(hass, config)
     await hass.async_block_till_done()
     event_type = "EVENT_TEST"
     event_types = (event_type,)
@@ -1871,7 +1871,7 @@ async def test_database_lock_and_unlock(
 
 async def test_database_lock_and_overflow(
     hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
     recorder_db_url: str,
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
@@ -1904,7 +1904,7 @@ async def test_database_lock_and_overflow(
         patch.object(recorder.core, "DB_LOCK_QUEUE_CHECK_TIMEOUT", 0.01),
         patch.object(recorder.core, "QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY", 0),
     ):
-        await async_setup_recorder_instance(hass, config)
+        await async_setup_recorder_instance_legacy(hass, config)
         await hass.async_block_till_done()
         event_type = "EVENT_TEST"
         event_types = (event_type,)
@@ -1937,7 +1937,7 @@ async def test_database_lock_and_overflow(
 
 async def test_database_lock_and_overflow_checks_available_memory(
     hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
     recorder_db_url: str,
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
@@ -1964,7 +1964,7 @@ async def test_database_lock_and_overflow_checks_available_memory(
                 )
             )
 
-    await async_setup_recorder_instance(hass, config)
+    await async_setup_recorder_instance_legacy(hass, config)
     await hass.async_block_till_done()
     event_type = "EVENT_TEST"
     event_types = (event_type,)
@@ -2082,11 +2082,11 @@ async def test_in_memory_database(
 async def test_database_connection_keep_alive(
     hass: HomeAssistant,
     recorder_dialect_name: None,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test we keep alive socket based dialects."""
-    instance = await async_setup_recorder_instance(hass)
+    instance = await async_setup_recorder_instance_legacy(hass)
     # We have to mock this since we don't have a mock
     # MySQL server available in tests.
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -2101,7 +2101,7 @@ async def test_database_connection_keep_alive(
 
 async def test_database_connection_keep_alive_disabled_on_sqlite(
     hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
     recorder_db_url: str,
 ) -> None:
@@ -2110,7 +2110,7 @@ async def test_database_connection_keep_alive_disabled_on_sqlite(
         # This test is specific for SQLite, keepalive runs on other engines
         return
 
-    instance = await async_setup_recorder_instance(hass)
+    instance = await async_setup_recorder_instance_legacy(hass)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await instance.async_recorder_ready.wait()
 
@@ -2179,10 +2179,10 @@ async def test_deduplication_state_attributes_inside_commit_interval(
 
 
 async def test_async_block_till_done(
-    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
+    hass: HomeAssistant, async_setup_recorder_instance_legacy: RecorderInstanceGenerator
 ) -> None:
     """Test we can block until recordering is done."""
-    instance = await async_setup_recorder_instance(hass)
+    instance = await async_setup_recorder_instance_legacy(hass)
     await async_wait_recording_done(hass)
 
     entity_id = "test.recorder"
@@ -2600,10 +2600,10 @@ async def test_clean_shutdown_when_schema_migration_fails(hass: HomeAssistant) -
 
 async def test_events_are_recorded_until_final_write(
     hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
 ) -> None:
     """Test that events are recorded until the final write."""
-    instance = await async_setup_recorder_instance(hass, {})
+    instance = await async_setup_recorder_instance_legacy(hass, {})
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
@@ -2646,7 +2646,7 @@ async def test_events_are_recorded_until_final_write(
 
 async def test_commit_before_commits_pending_writes(
     hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_setup_recorder_instance_legacy: RecorderInstanceGenerator,
     recorder_db_url: str,
     tmp_path: Path,
 ) -> None:
@@ -2661,7 +2661,7 @@ async def test_commit_before_commits_pending_writes(
     }
 
     recorder_helper.async_initialize_recorder(hass)
-    hass.async_create_task(async_setup_recorder_instance(hass, config))
+    hass.async_create_task(async_setup_recorder_instance_legacy(hass, config))
     await recorder_helper.async_wait_recorder(hass)
     instance = get_instance(hass)
     assert instance.commit_interval == 60
