@@ -14,16 +14,16 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_form(
+async def test_full_flow(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_dio_chacon_client: AsyncMock
 ) -> None:
-    """Test we get the form."""
+    """Test the full flow."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] is SOURCE_USER
+    assert result["step_id"] == "user"
     assert not result["errors"]
 
     result = await hass.config_entries.flow.async_init(
@@ -71,9 +71,8 @@ async def test_errors(
         },
     )
 
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] is SOURCE_USER
+    assert result["step_id"] == "user"
     assert result["errors"] == expected
 
     # Test of recover in normal state after correction of the 1st error
@@ -85,7 +84,6 @@ async def test_errors(
             CONF_PASSWORD: "dummypass",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Dio Chacon dummylogin"

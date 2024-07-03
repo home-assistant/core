@@ -2,8 +2,11 @@
 
 from unittest.mock import AsyncMock
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+
+from . import setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -15,13 +18,15 @@ async def test_cover_unload_entry(
 ) -> None:
     """Test the creation and values of the Dio Chacon covers."""
 
-    mock_config_entry.add_to_hass(hass)
+    await setup_integration(hass, mock_config_entry)
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Tests coverage for unload actions.
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_dio_chacon_client.disconnect.assert_called()
 
 
 async def test_cover_shutdown_event(
@@ -31,11 +36,8 @@ async def test_cover_shutdown_event(
 ) -> None:
     """Test the creation and values of the Dio Chacon covers."""
 
-    mock_config_entry.add_to_hass(hass)
+    await setup_integration(hass, mock_config_entry)
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Tests coverage for stop action.
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
+    mock_dio_chacon_client.disconnect.assert_called()
