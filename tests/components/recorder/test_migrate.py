@@ -154,16 +154,18 @@ async def test_database_migration_failed(
     assert len(mock_dismiss.mock_calls) == 1
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_database_migration_encounters_corruption(
     hass: HomeAssistant,
     recorder_db_url: str,
     async_setup_recorder_instance: RecorderInstanceGenerator,
 ) -> None:
-    """Test we move away the database if its corrupt."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test is specific for SQLite, wiping the database on error only happens
-        # with SQLite.
-        return
+    """Test we move away the database if its corrupt.
+
+    This test is specific for SQLite, wiping the database on error only happens
+    with SQLite.
+    """
 
     assert recorder.util.async_migration_in_progress(hass) is False
 
@@ -610,12 +612,13 @@ def test_raise_if_exception_missing_empty_cause_str() -> None:
         migration.raise_if_exception_missing_str(programming_exc, ["not present"])
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 def test_rebuild_sqlite_states_table(recorder_db_url: str) -> None:
-    """Test that we can rebuild the states table in SQLite."""
-    if not recorder_db_url.startswith("sqlite://"):
-        # This test is specific for SQLite
-        return
+    """Test that we can rebuild the states table in SQLite.
 
+    This test is specific for SQLite.
+    """
     engine = create_engine(recorder_db_url)
     session_maker = scoped_session(sessionmaker(bind=engine, future=True))
     with session_scope(session=session_maker()) as session:
@@ -633,14 +636,15 @@ def test_rebuild_sqlite_states_table(recorder_db_url: str) -> None:
     engine.dispose()
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 def test_rebuild_sqlite_states_table_missing_fails(
     recorder_db_url: str, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test handling missing states table when attempting rebuild."""
-    if not recorder_db_url.startswith("sqlite://"):
-        # This test is specific for SQLite
-        return
+    """Test handling missing states table when attempting rebuild.
 
+    This test is specific for SQLite.
+    """
     engine = create_engine(recorder_db_url)
     session_maker = scoped_session(sessionmaker(bind=engine, future=True))
     with session_scope(session=session_maker()) as session:
@@ -667,14 +671,15 @@ def test_rebuild_sqlite_states_table_missing_fails(
     engine.dispose()
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 def test_rebuild_sqlite_states_table_extra_columns(
     recorder_db_url: str, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test handling extra columns when rebuilding the states table."""
-    if not recorder_db_url.startswith("sqlite://"):
-        # This test is specific for SQLite
-        return
+    """Test handling extra columns when rebuilding the states table.
 
+    This test is specific for SQLite.
+    """
     engine = create_engine(recorder_db_url)
     session_maker = scoped_session(sessionmaker(bind=engine, future=True))
     with session_scope(session=session_maker()) as session:

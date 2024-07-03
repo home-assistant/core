@@ -62,6 +62,8 @@ def _create_engine_test(*args, **kwargs):
     return engine
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 @pytest.mark.parametrize("enable_migrate_context_ids", [True])
 async def test_migration_changes_prevent_trying_to_migrate_again(
     async_setup_recorder_instance: RecorderInstanceGenerator,
@@ -75,11 +77,9 @@ async def test_migration_changes_prevent_trying_to_migrate_again(
     1. With schema 32 to populate the data
     2. With current schema so the migration happens
     3. With current schema to verify we do not have to query to see if the migration is done
+
+    This test uses a test database between runs so its SQLite specific.  WHY, this makes no sense.???
     """
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test uses a test database between runs so its
-        # SQLite specific
-        return
 
     config = {
         recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
