@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Types import Nullable, NullValue
-from matter_server.common.custom_clusters import EveCluster
+from matter_server.common.custom_clusters import EveCluster, ThirdRealityMeteringCluster
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -362,6 +362,38 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSensor,
         required_attributes=(
             clusters.ActivatedCarbonFilterMonitoring.Attributes.Condition,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ThirdRealityEnergySensorWatt",
+            device_class=SensorDeviceClass.POWER,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfPower.WATT,
+            suggested_display_precision=2,
+            state_class=SensorStateClass.MEASUREMENT,
+            measurement_to_ha=lambda x: x / 1000,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            ThirdRealityMeteringCluster.Attributes.InstantaneousDemand,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ThirdRealityEnergySensorWattAccumulated",
+            device_class=SensorDeviceClass.ENERGY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            suggested_display_precision=3,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            measurement_to_ha=lambda x: x / 1000,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            ThirdRealityMeteringCluster.Attributes.CurrentSummationDelivered,
         ),
     ),
 ]
