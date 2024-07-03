@@ -19,13 +19,11 @@ from .models import DoorBirdData
 EVENT_DESCRIPTIONS = {
     "doorbell": EventEntityDescription(
         key="doorbell",
-        translation_key="doorbell",
         device_class=EventDeviceClass.DOORBELL,
         event_types=["ring"],
     ),
     "motion": EventEntityDescription(
         key="motion",
-        translation_key="motion",
         device_class=EventDeviceClass.MOTION,
         event_types=["motion"],
     ),
@@ -63,8 +61,10 @@ class DoorBirdEventEntity(DoorBirdEntity, EventEntity):
         super().__init__(door_bird_data)
         self._doorbird_event = doorbird_event
         self.entity_description = entity_description
-        self._attr_unique_id = f"{self._mac_addr}_{doorbird_event.event}"
-        self._attr_name = doorbird_event.event.title()
+        event = doorbird_event.event
+        self._attr_unique_id = f"{self._mac_addr}_{event}"
+        bare_name = event.removeprefix(self._door_station.slug).strip("_")
+        self._attr_name = bare_name[0:1].capitalize() + bare_name[1:]
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to device events."""

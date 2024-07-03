@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import cached_property
 import logging
 from typing import Any, cast
 
@@ -114,7 +115,7 @@ class ConfiguredDoorBird:
 
         self.event_descriptions = events
 
-    @property
+    @cached_property
     def slug(self) -> str:
         """Get device slug."""
         return slugify(self._name)
