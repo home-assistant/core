@@ -134,10 +134,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Import the yaml config."""
-
-        host = user_input.get(CONF_HOST)
-        if host is None:
-            return self.async_abort(reason="no_host_defined")
+        host: str = user_input[CONF_HOST]
 
         info = None
         try:
@@ -150,9 +147,10 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             # Info is None when connection fails
             return self.async_abort(reason="cannot_connect")
 
-        unique_id = info.identifier
-        await self.async_set_unique_id(unique_id, raise_on_progress=False)
+        await self.async_set_unique_id(info.identifier, raise_on_progress=False)
         self._abort_if_unique_id_configured()
+
+        # TODO: validate the user yaml: volume_resolution and sources
 
         return self._createOnkyoEntry(
             info,
