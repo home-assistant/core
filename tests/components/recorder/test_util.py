@@ -719,14 +719,15 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(
     assert database_engine.optimizer.slow_range_in_select is False
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_basic_sanity_check(
     hass: HomeAssistant, setup_recorder: None, recorder_db_url: str
 ) -> None:
-    """Test the basic sanity checks with a missing table."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test is specific for SQLite
-        return
+    """Test the basic sanity checks with a missing table.
 
+    This test is specific for SQLite.
+    """
     cursor = util.get_instance(hass).engine.raw_connection().cursor()
 
     assert util.basic_sanity_check(cursor) is True
@@ -737,17 +738,18 @@ async def test_basic_sanity_check(
         util.basic_sanity_check(cursor)
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_combined_checks(
     hass: HomeAssistant,
     setup_recorder: None,
     caplog: pytest.LogCaptureFixture,
     recorder_db_url: str,
 ) -> None:
-    """Run Checks on the open database."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test is specific for SQLite
-        return
+    """Run Checks on the open database.
 
+    This test is specific for SQLite.
+    """
     instance = util.get_instance(hass)
     instance.db_retry_wait = 0
 
@@ -829,14 +831,15 @@ async def test_end_incomplete_runs(
     assert "Ended unfinished session" in caplog.text
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_periodic_db_cleanups(
     hass: HomeAssistant, setup_recorder: None, recorder_db_url: str
 ) -> None:
-    """Test periodic db cleanups."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test is specific for SQLite
-        return
+    """Test periodic db cleanups.
 
+    This test is specific for SQLite.
+    """
     with patch.object(util.get_instance(hass).engine, "connect") as connect_mock:
         util.periodic_db_cleanups(util.get_instance(hass))
 

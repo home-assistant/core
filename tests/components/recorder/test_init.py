@@ -1815,16 +1815,18 @@ async def test_entity_id_filter(
             assert len(db_events) == idx + 1, data
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_database_lock_and_unlock(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
     recorder_db_url: str,
     tmp_path: Path,
 ) -> None:
-    """Test writing events during lock getting written after unlocking."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # Database locking is only used for SQLite
-        return
+    """Test writing events during lock getting written after unlocking.
+
+    This test is specific for SQLite: Locking is not implemented for other engines.
+    """
 
     if recorder_db_url == "sqlite://":
         # Use file DB, in memory DB cannot do write locks.
@@ -1869,6 +1871,8 @@ async def test_database_lock_and_unlock(
     assert len(db_events) == 1
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_database_lock_and_overflow(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
@@ -1877,10 +1881,10 @@ async def test_database_lock_and_overflow(
     caplog: pytest.LogCaptureFixture,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test writing events during lock leading to overflow the queue causes the database to unlock."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # Database locking is only used for SQLite
-        return pytest.skip("Database locking is only used for SQLite")
+    """Test writing events during lock leading to overflow the queue causes the database to unlock.
+
+    This test is specific for SQLite: Locking is not implemented for other engines.
+    """
 
     # Use file DB, in memory DB cannot do write locks.
     if recorder_db_url == "sqlite://":
@@ -1935,6 +1939,8 @@ async def test_database_lock_and_overflow(
     assert start_time.count(":") == 2
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_database_lock_and_overflow_checks_available_memory(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
@@ -1943,9 +1949,10 @@ async def test_database_lock_and_overflow_checks_available_memory(
     caplog: pytest.LogCaptureFixture,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test writing events during lock leading to overflow the queue causes the database to unlock."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        return pytest.skip("Database locking is only used for SQLite")
+    """Test writing events during lock leading to overflow the queue causes the database to unlock.
+
+    This test is specific for SQLite: Locking is not implemented for other engines.
+    """
 
     # Use file DB, in memory DB cannot do write locks.
     if recorder_db_url == "sqlite://":
@@ -2025,13 +2032,15 @@ async def test_database_lock_and_overflow_checks_available_memory(
     assert start_time.count(":") == 2
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_database_lock_timeout(
     hass: HomeAssistant, setup_recorder: None, recorder_db_url: str
 ) -> None:
-    """Test locking database timeout when recorder stopped."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test is specific for SQLite: Locking is not implemented for other engines
-        return
+    """Test locking database timeout when recorder stopped.
+
+    This test is specific for SQLite: Locking is not implemented for other engines.
+    """
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
 
@@ -2099,16 +2108,18 @@ async def test_database_connection_keep_alive(
     assert "Sending keepalive" in caplog.text
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_database_connection_keep_alive_disabled_on_sqlite(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
     recorder_db_url: str,
 ) -> None:
-    """Test we do not do keep alive for sqlite."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test is specific for SQLite, keepalive runs on other engines
-        return
+    """Test we do not do keep alive for sqlite.
+
+    This test is specific for SQLite, keepalive runs on other engines.
+    """
 
     instance = await async_setup_recorder_instance(hass)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
