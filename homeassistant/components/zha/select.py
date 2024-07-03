@@ -8,8 +8,8 @@ from typing import Any
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -63,3 +63,11 @@ class ZHAEnumSelectEntity(ZHAEntity, SelectEntity):
         """Change the selected option."""
         await self.entity_data.entity.async_select_option(option=option)
         self.async_write_ha_state()
+
+    @callback
+    def restore_external_state_attributes(self, state: State) -> None:
+        """Restore entity state."""
+        if state.state and state.state != STATE_UNKNOWN:
+            self.entity_data.entity.restore_external_state_attributes(
+                state=state.state,
+            )
