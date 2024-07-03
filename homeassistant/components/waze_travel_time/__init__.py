@@ -160,15 +160,17 @@ async def async_get_travel_times(
         def should_include_route(route: CalcRoutesResponse) -> bool:
             if len(incl_filters) < 1:
                 return True
-            for street_name in route.street_names:
-                for incl_filter in incl_filters:
-                    if incl_filter in {"", street_name}:
-                        return True
-            _LOGGER.debug(
-                "Excluding route [%s], because no inclusive filter matched any streetname",
-                route.name,
+            should_include = any(
+                street_name in incl_filters or "" in incl_filters
+                for street_name in route.street_names
             )
-            return False
+            if not should_include:
+                _LOGGER.debug(
+                    "Excluding route [%s], because no inclusive filter matched any streetname",
+                    route.name,
+                )
+                return False
+            return True
 
         incl_routes = [route for route in routes if should_include_route(route)]
 
