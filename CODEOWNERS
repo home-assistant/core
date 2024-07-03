@@ -80,8 +80,6 @@ build.json @home-assistant/supervisor
 /tests/components/airzone/ @Noltari
 /homeassistant/components/airzone_cloud/ @Noltari
 /tests/components/airzone_cloud/ @Noltari
-/homeassistant/components/aladdin_connect/ @swcloudgenie
-/tests/components/aladdin_connect/ @swcloudgenie
 /homeassistant/components/alarm_control_panel/ @home-assistant/core
 /tests/components/alarm_control_panel/ @home-assistant/core
 /homeassistant/components/alert/ @home-assistant/core @frenck
