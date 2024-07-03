@@ -12,13 +12,7 @@ from typing import TYPE_CHECKING, Any, Final
 import orjson
 
 from homeassistant.util.file import write_utf8_file, write_utf8_file_atomic
-from homeassistant.util.json import (  # noqa: F401
-    JSON_DECODE_EXCEPTIONS,
-    JSON_ENCODE_EXCEPTIONS,
-    SerializationError,
-    format_unserializable_data,
-    json_loads,
-)
+from homeassistant.util.json import SerializationError, format_unserializable_data
 
 _LOGGER = logging.getLogger(__name__)
 
