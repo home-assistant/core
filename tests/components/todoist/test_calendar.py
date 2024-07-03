@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 import urllib
 import zoneinfo
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from todoist_api_python.models import Due
 
@@ -146,6 +147,7 @@ async def test_update_entity_for_custom_project_no_due_date_on(
 )
 async def test_update_entity_for_calendar_with_due_date_in_the_future(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     api: AsyncMock,
 ) -> None:
     """Test that a task with a due date in the future has on state and correct end_time."""
@@ -362,6 +364,73 @@ async def test_task_due_datetime(
     )
     assert response.status == HTTPStatus.OK
     assert await response.json() == []
+
+
+@pytest.mark.parametrize(
+    ("todoist_config", "due", "start", "end", "expected_response"),
+    [
+        (
+            {"custom_projects": [{"name": "Test", "labels": ["Label1"]}]},
+            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            "2023-03-28T00:00:00.000Z",
+            "2023-04-01T00:00:00.000Z",
+            [get_events_response({"date": "2023-03-30"}, {"date": "2023-03-31"})],
+        ),
+        (
+            {"custom_projects": [{"name": "Test", "labels": ["custom"]}]},
+            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            "2023-03-28T00:00:00.000Z",
+            "2023-04-01T00:00:00.000Z",
+            [],
+        ),
+        (
+            {"custom_projects": [{"name": "Test", "include_projects": ["Name"]}]},
+            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            "2023-03-28T00:00:00.000Z",
+            "2023-04-01T00:00:00.000Z",
+            [get_events_response({"date": "2023-03-30"}, {"date": "2023-03-31"})],
+        ),
+        (
+            {"custom_projects": [{"name": "Test", "due_date_days": 1}]},
+            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            "2023-03-28T00:00:00.000Z",
+            "2023-04-01T00:00:00.000Z",
+            [get_events_response({"date": "2023-03-30"}, {"date": "2023-03-31"})],
+        ),
+        (
+            {"custom_projects": [{"name": "Test", "due_date_days": 1}]},
+            Due(
+                date=(dt_util.now() + timedelta(days=2)).strftime("%Y-%m-%d"),
+                is_recurring=False,
+                string="Mar 30",
+            ),
+            dt_util.now().isoformat(),
+            (dt_util.now() + timedelta(days=5)).isoformat(),
+            [],
+        ),
+    ],
+    ids=[
+        "in_labels_whitelist",
+        "not_in_labels_whitelist",
+        "in_include_projects",
+        "in_due_date_days",
+        "not_in_due_date_days",
+    ],
+)
+async def test_events_filtered_for_custom_projects(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    start: str,
+    end: str,
+    expected_response: dict[str, Any],
+) -> None:
+    """Test we filter out tasks from custom projects based on their config."""
+    client = await hass_client()
+    response = await client.get(
+        get_events_url("calendar.test", start, end),
+    )
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == expected_response
 
 
 @pytest.mark.parametrize(

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from functools import lru_cache
+from functools import lru_cache, partial
 from typing import TYPE_CHECKING, Any, cast
 
 from aioesphomeapi import (
@@ -29,9 +29,7 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import callback
 
 from .entity import (
     EsphomeEntity,
@@ -41,20 +39,6 @@ from .entity import (
 )
 
 FLASH_LENGTHS = {FLASH_SHORT: 2, FLASH_LONG: 10}
-
-
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Set up ESPHome lights based on a config entry."""
-    await platform_async_setup_entry(
-        hass,
-        entry,
-        async_add_entities,
-        info_type=LightInfo,
-        entity_type=EsphomeLight,
-        state_type=LightState,
-    )
 
 
 _COLOR_MODE_MAPPING = {
@@ -435,3 +419,11 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         if ColorMode.COLOR_TEMP in supported:
             self._attr_min_color_temp_kelvin = _mired_to_kelvin(static_info.max_mireds)
             self._attr_max_color_temp_kelvin = _mired_to_kelvin(static_info.min_mireds)
+
+
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=LightInfo,
+    entity_type=EsphomeLight,
+    state_type=LightState,
+)

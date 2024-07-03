@@ -2,6 +2,7 @@
 
 from asyncio import AbstractEventLoop
 from http import HTTPStatus
+from pathlib import Path
 import re
 from typing import Any
 from unittest.mock import patch
@@ -18,10 +19,12 @@ from homeassistant.components.frontend import (
     DOMAIN,
     EVENT_PANELS_UPDATED,
     THEMES_STORAGE_KEY,
+    add_extra_js_url,
     async_register_built_in_panel,
     async_remove_panel,
+    remove_extra_js_url,
 )
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
@@ -109,14 +112,16 @@ async def mock_http_client(
 
 @pytest.fixture
 async def themes_ws_client(
-    hass: HomeAssistant, hass_ws_client: ClientSessionGenerator, frontend_themes
-) -> TestClient:
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, frontend_themes
+) -> MockHAClientWebSocket:
     """Start the Home Assistant HTTP component."""
     return await hass_ws_client(hass)
 
 
 @pytest.fixture
-async def ws_client(hass, hass_ws_client, frontend):
+async def ws_client(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, frontend
+) -> MockHAClientWebSocket:
     """Start the Home Assistant HTTP component."""
     return await hass_ws_client(hass)
 
@@ -403,31 +408,97 @@ async def test_missing_themes(hass: HomeAssistant, ws_client) -> None:
     assert msg["result"]["themes"] == {}
 
 
+@pytest.mark.usefixtures("mock_onboarded")
 async def test_extra_js(
-    hass: HomeAssistant, mock_http_client_with_extra_js, mock_onboarded
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_http_client_with_extra_js,
+) -> None:
     """Test that extra javascript is loaded."""
-    resp = await mock_http_client_with_extra_js.get("")
-    assert resp.status == 200
-    assert "cache-control" not in resp.headers
 
-    text = await resp.text()
+    async def get_response():
+        resp = await mock_http_client_with_extra_js.get("")
+        assert resp.status == 200
+        assert "cache-control" not in resp.headers
+
+        return await resp.text()
+
+    text = await get_response()
     assert '"/local/my_module.js"' in text
     assert '"/local/my_es5.js"' in text
 
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "frontend/subscribe_extra_js"})
+    msg = await client.receive_json()
+
+    assert msg["success"] is True
+    subscription_id = msg["id"]
+
+    # Test dynamically adding and removing extra javascript
+    add_extra_js_url(hass, "/local/my_module_2.js", False)
+    add_extra_js_url(hass, "/local/my_es5_2.js", True)
+    text = await get_response()
+    assert '"/local/my_module_2.js"' in text
+    assert '"/local/my_es5_2.js"' in text
+
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["event"] == {
+        "change_type": "added",
+        "item": {"type": "module", "url": "/local/my_module_2.js"},
+    }
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["event"] == {
+        "change_type": "added",
+        "item": {"type": "es5", "url": "/local/my_es5_2.js"},
+    }
+
+    remove_extra_js_url(hass, "/local/my_module_2.js", False)
+    remove_extra_js_url(hass, "/local/my_es5_2.js", True)
+    text = await get_response()
+    assert '"/local/my_module_2.js"' not in text
+    assert '"/local/my_es5_2.js"' not in text
+
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["event"] == {
+        "change_type": "removed",
+        "item": {"type": "module", "url": "/local/my_module_2.js"},
+    }
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["event"] == {
+        "change_type": "removed",
+        "item": {"type": "es5", "url": "/local/my_es5_2.js"},
+    }
+
+    # Remove again should not raise
+    remove_extra_js_url(hass, "/local/my_module_2.js", False)
+    remove_extra_js_url(hass, "/local/my_es5_2.js", True)
+    text = await get_response()
+    assert '"/local/my_module_2.js"' not in text
+    assert '"/local/my_es5_2.js"' not in text
+
     # safe mode
     hass.config.safe_mode = True
-    resp = await mock_http_client_with_extra_js.get("")
-    assert resp.status == 200
-    assert "cache-control" not in resp.headers
-
-    text = await resp.text()
+    text = await get_response()
     assert '"/local/my_module.js"' not in text
     assert '"/local/my_es5.js"' not in text
 
+    # Test dynamically adding extra javascript
+    add_extra_js_url(hass, "/local/my_module_2.js", False)
+    add_extra_js_url(hass, "/local/my_es5_2.js", True)
+    text = await get_response()
+    assert '"/local/my_module_2.js"' not in text
+    assert '"/local/my_es5_2.js"' not in text
+
 
 async def test_get_panels(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, mock_http_client
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_http_client,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test get_panels command."""
     events = async_capture_events(hass, EVENT_PANELS_UPDATED)
@@ -464,6 +535,15 @@ async def test_get_panels(
     assert resp.status == HTTPStatus.NOT_FOUND
 
     assert len(events) == 2
+
+    # Remove again, will warn but not trigger event
+    async_remove_panel(hass, "map")
+    assert "Removing unknown panel map" in caplog.text
+    caplog.clear()
+
+    # Remove again, without warning
+    async_remove_panel(hass, "map", warn_if_unknown=False)
+    assert "Removing unknown panel map" not in caplog.text
 
 
 async def test_get_panels_non_admin(
@@ -757,3 +837,23 @@ async def test_get_icons_for_single_integration(
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {"resources": {"http": {}}}
+
+
+async def test_www_local_dir(
+    hass: HomeAssistant, tmp_path: Path, hass_client: ClientSessionGenerator
+) -> None:
+    """Test local www folder."""
+    hass.config.config_dir = str(tmp_path)
+    tmp_path_www = tmp_path / "www"
+    x_txt_file = tmp_path_www / "x.txt"
+
+    def _create_www_and_x_txt():
+        tmp_path_www.mkdir()
+        x_txt_file.write_text("any")
+
+    await hass.async_add_executor_job(_create_www_and_x_txt)
+
+    assert await async_setup_component(hass, "frontend", {})
+    client = await hass_client()
+    resp = await client.get("/local/x.txt")
+    assert resp.status == HTTPStatus.OK

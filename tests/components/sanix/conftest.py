@@ -1,6 +1,5 @@
 """Sanix tests configuration."""
 
-from collections.abc import Generator
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
 from zoneinfo import ZoneInfo
@@ -17,6 +16,7 @@ from sanix import (
     ATTR_API_TIME,
 )
 from sanix.models import Measurement
+from typing_extensions import Generator
 
 from homeassistant.components.sanix.const import CONF_SERIAL_NUMBER, DOMAIN
 from homeassistant.const import CONF_TOKEN
@@ -67,7 +67,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.sanix.async_setup_entry",

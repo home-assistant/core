@@ -119,7 +119,6 @@ NO_DIAGNOSTICS = [
     "dlna_dms",
     "gdacs",
     "geonetnz_quakes",
-    "google_assistant_sdk",
     "hyperion",
     # Modbus is excluded because it doesn't have to have a config flow
     # according to ADR-0010, since it's a protocol integration. This

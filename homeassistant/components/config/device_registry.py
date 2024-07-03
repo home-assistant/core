@@ -42,7 +42,7 @@ def websocket_list_devices(
     registry = dr.async_get(hass)
     # Build start of response message
     msg_json_prefix = (
-        f'{{"id":{msg["id"]},"type": "{websocket_api.const.TYPE_RESULT}",'
+        f'{{"id":{msg["id"]},"type": "{websocket_api.TYPE_RESULT}",'
         f'"success":true,"result": ['
     ).encode()
     # Concatenate cached entity registry item JSON serializations

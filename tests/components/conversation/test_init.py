@@ -1,19 +1,22 @@
 """The tests for the Conversation component."""
 
 from http import HTTPStatus
+import os
+import tempfile
 from typing import Any
 from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
+import yaml
 
 from homeassistant.components import conversation
 from homeassistant.components.conversation import default_agent
 from homeassistant.components.conversation.models import ConversationInput
 from homeassistant.components.cover import SERVICE_OPEN_COVER
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_ON
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -24,7 +27,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from . import expose_entity, expose_new
+from . import MockAgent, expose_entity, expose_new
 
 from tests.common import (
     MockConfigEntry,
@@ -94,7 +97,7 @@ async def test_http_processing_intent_target_ha_agent(
     init_components,
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
-    mock_conversation_agent,
+    mock_conversation_agent: MockAgent,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -269,7 +272,7 @@ async def test_http_processing_intent_entity_renamed(
     We want to ensure that renaming an entity later busts the cache
     so that the new name is used.
     """
-    entity = MockLight("kitchen light", "on")
+    entity = MockLight("kitchen light", STATE_ON)
     entity._attr_unique_id = "1234"
     entity.entity_id = "light.kitchen"
     setup_test_component_platform(hass, LIGHT_DOMAIN, [entity])
@@ -357,7 +360,7 @@ async def test_http_processing_intent_entity_exposed(
     We want to ensure that manually exposing an entity later busts the cache
     so that the new setting is used.
     """
-    entity = MockLight("kitchen light", "on")
+    entity = MockLight("kitchen light", STATE_ON)
     entity._attr_unique_id = "1234"
     entity.entity_id = "light.kitchen"
     setup_test_component_platform(hass, LIGHT_DOMAIN, [entity])
@@ -458,7 +461,7 @@ async def test_http_processing_intent_conversion_not_expose_new(
     # Disable exposing new entities to the default agent
     expose_new(hass, False)
 
-    entity = MockLight("kitchen light", "on")
+    entity = MockLight("kitchen light", STATE_ON)
     entity._attr_unique_id = "1234"
     entity.entity_id = "light.kitchen"
     setup_test_component_platform(hass, LIGHT_DOMAIN, [entity])
@@ -663,7 +666,7 @@ async def test_custom_agent(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
-    mock_conversation_agent,
+    mock_conversation_agent: MockAgent,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test a custom conversation agent."""
@@ -1081,8 +1084,8 @@ async def test_agent_id_validator_invalid_agent(
 async def test_get_agent_list(
     hass: HomeAssistant,
     init_components,
-    mock_conversation_agent,
-    mock_agent_support_all,
+    mock_conversation_agent: MockAgent,
+    mock_agent_support_all: MockAgent,
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -1139,7 +1142,7 @@ async def test_get_agent_list(
 async def test_get_agent_info(
     hass: HomeAssistant,
     init_components,
-    mock_conversation_agent,
+    mock_conversation_agent: MockAgent,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test get agent info."""
@@ -1389,3 +1392,103 @@ async def test_ws_hass_agent_debug_sentence_trigger(
 
     # Trigger should not have been executed
     assert len(calls) == 0
+
+
+async def test_custom_sentences_priority(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that user intents from custom_sentences have priority over builtin intents/sentences."""
+    with tempfile.NamedTemporaryFile(
+        mode="w+",
+        encoding="utf-8",
+        suffix=".yaml",
+        dir=os.path.join(hass.config.config_dir, "custom_sentences", "en"),
+    ) as custom_sentences_file:
+        # Add a custom sentence that would match a builtin sentence.
+        # Custom sentences have priority.
+        yaml.dump(
+            {
+                "language": "en",
+                "intents": {
+                    "CustomIntent": {"data": [{"sentences": ["turn on the lamp"]}]}
+                },
+            },
+            custom_sentences_file,
+        )
+        custom_sentences_file.flush()
+        custom_sentences_file.seek(0)
+
+        assert await async_setup_component(hass, "homeassistant", {})
+        assert await async_setup_component(hass, "conversation", {})
+        assert await async_setup_component(hass, "light", {})
+        assert await async_setup_component(hass, "intent", {})
+        assert await async_setup_component(
+            hass,
+            "intent_script",
+            {
+                "intent_script": {
+                    "CustomIntent": {"speech": {"text": "custom response"}}
+                }
+            },
+        )
+
+        # Ensure that a "lamp" exists so that we can verify the custom intent
+        # overrides the builtin sentence.
+        hass.states.async_set("light.lamp", "off")
+
+        client = await hass_client()
+        resp = await client.post(
+            "/api/conversation/process",
+            json={
+                "text": "turn on the lamp",
+                "language": hass.config.language,
+            },
+        )
+        assert resp.status == HTTPStatus.OK
+        data = await resp.json()
+        assert data["response"]["response_type"] == "action_done"
+        assert data["response"]["speech"]["plain"]["speech"] == "custom response"
+
+
+async def test_config_sentences_priority(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that user intents from configuration.yaml have priority over builtin intents/sentences."""
+    # Add a custom sentence that would match a builtin sentence.
+    # Custom sentences have priority.
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(
+        hass,
+        "conversation",
+        {"conversation": {"intents": {"CustomIntent": ["turn on the lamp"]}}},
+    )
+    assert await async_setup_component(hass, "light", {})
+    assert await async_setup_component(
+        hass,
+        "intent_script",
+        {"intent_script": {"CustomIntent": {"speech": {"text": "custom response"}}}},
+    )
+
+    # Ensure that a "lamp" exists so that we can verify the custom intent
+    # overrides the builtin sentence.
+    hass.states.async_set("light.lamp", "off")
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process",
+        json={
+            "text": "turn on the lamp",
+            "language": hass.config.language,
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data["response"]["response_type"] == "action_done"
+    assert data["response"]["speech"]["plain"]["speech"] == "custom response"

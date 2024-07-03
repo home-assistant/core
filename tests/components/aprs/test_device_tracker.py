@@ -1,11 +1,11 @@
 """Test APRS device tracker."""
 
-from collections.abc import Generator
 from unittest.mock import MagicMock, Mock, patch
 
 import aprslib
 from aprslib import IS
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.aprs import device_tracker
 from homeassistant.core import HomeAssistant
@@ -20,7 +20,7 @@ TEST_PASSWORD = "testpass"
 
 
 @pytest.fixture(name="mock_ais")
-def mock_ais() -> Generator[MagicMock, None, None]:
+def mock_ais() -> Generator[MagicMock]:
     """Mock aprslib."""
     with patch("aprslib.IS") as mock_ais:
         yield mock_ais

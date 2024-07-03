@@ -168,20 +168,6 @@
         }
       }
     },
-    "set_default_doorbell_text": {
-      "name": "Set default doorbell text",
-      "description": "Sets the default doorbell message. This will be the message that is automatically selected when a message \"expires\".",
-      "fields": {
-        "device_id": {
-          "name": "[%key:component::unifiprotect::services::add_doorbell_text::fields::device_id::name%]",
-          "description": "[%key:component::unifiprotect::services::add_doorbell_text::fields::device_id::description%]"
-        },
-        "message": {
-          "name": "Default message",
-          "description": "The default message for your doorbell. Must be less than 30 characters."
-        }
-      }
-    },
     "set_chime_paired_doorbells": {
       "name": "Set chime paired doorbells",
       "description": "Use to set the paired doorbell(s) with a smart chime.",

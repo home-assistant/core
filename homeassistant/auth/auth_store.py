@@ -296,6 +296,14 @@ class AuthStore:
             refresh_token.expire_at = None
             self._async_schedule_save()
 
+    @callback
+    def async_update_user_credentials_data(
+        self, credentials: models.Credentials, data: dict[str, Any]
+    ) -> None:
+        """Update credentials data."""
+        credentials.data = data
+        self._async_schedule_save()
+
     async def async_load(self) -> None:  # noqa: C901
         """Load the users."""
         if self._loaded:

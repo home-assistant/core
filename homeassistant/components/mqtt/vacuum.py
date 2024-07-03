@@ -35,7 +35,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.json import json_dumps
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolSchemaType
 from homeassistant.util.json import json_loads_object
 
 from . import subscription
@@ -170,6 +170,15 @@ def _fail_legacy_config(discovery: bool) -> Callable[[ConfigType], ConfigType]:
             )
 
         if discovery:
+            _LOGGER.warning(
+                "The `schema` option is deprecated for MQTT %s, but "
+                "it was used in a discovery payload. Please contact the maintainer "
+                "of the integration or service that supplies the config, and suggest "
+                "to remove the option. Got %s at discovery topic %s",
+                vacuum.DOMAIN,
+                config,
+                getattr(config, "discovery_data")["discovery_topic"],
+            )
             return config
 
         translation_key = "deprecation_mqtt_schema_vacuum_yaml"
@@ -272,7 +281,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 

@@ -20,11 +20,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-    CONDUCTIVITY,
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfConductivity,
     UnitOfElectricPotential,
     UnitOfMass,
     UnitOfPressure,
@@ -53,7 +53,7 @@ SENSOR_DESCRIPTIONS = {
     (DeviceClass.CONDUCTIVITY, Units.CONDUCTIVITY): SensorEntityDescription(
         key=str(Units.CONDUCTIVITY),
         device_class=None,
-        native_unit_of_measurement=CONDUCTIVITY,
+        native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (

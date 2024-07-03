@@ -1,6 +1,6 @@
 """Test configuration for the ZHA component."""
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable
 import itertools
 import time
 from typing import Any
@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 import warnings
 
 import pytest
+from typing_extensions import Generator
 import zigpy
 from zigpy.application import ControllerApplication
 import zigpy.backups
@@ -28,6 +29,7 @@ import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.device as zha_core_device
 from homeassistant.components.zha.core.gateway import ZHAGateway
 from homeassistant.components.zha.core.helpers import get_zha_gateway
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import restore_state
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -62,7 +64,7 @@ def globally_load_quirks():
     run.
     """
 
-    import zhaquirks
+    import zhaquirks  # pylint: disable=import-outside-toplevel
 
     zhaquirks.setup()
 
@@ -197,7 +199,7 @@ async def zigpy_app_controller():
 
 
 @pytest.fixture(name="config_entry")
-async def config_entry_fixture(hass) -> MockConfigEntry:
+async def config_entry_fixture() -> MockConfigEntry:
     """Fixture representing a config entry."""
     return MockConfigEntry(
         version=3,
@@ -225,7 +227,7 @@ async def config_entry_fixture(hass) -> MockConfigEntry:
 @pytest.fixture
 def mock_zigpy_connect(
     zigpy_app_controller: ControllerApplication,
-) -> Generator[ControllerApplication, None, None]:
+) -> Generator[ControllerApplication]:
     """Patch the zigpy radio connection with our mock application."""
     with (
         patch(
@@ -242,7 +244,9 @@ def mock_zigpy_connect(
 
 @pytest.fixture
 def setup_zha(
-    hass, config_entry: MockConfigEntry, mock_zigpy_connect: ControllerApplication
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_zigpy_connect: ControllerApplication,
 ):
     """Set up ZHA component."""
     zha_config = {zha_const.CONF_ENABLE_QUIRKS: False}
@@ -385,7 +389,7 @@ def zha_device_restored(hass, zigpy_app_controller, setup_zha):
 
 
 @pytest.fixture(params=["zha_device_joined", "zha_device_restored"])
-def zha_device_joined_restored(request):
+def zha_device_joined_restored(request: pytest.FixtureRequest):
     """Join or restore ZHA device."""
     named_method = request.getfixturevalue(request.param)
     named_method.name = request.param
@@ -394,7 +398,7 @@ def zha_device_joined_restored(request):
 
 @pytest.fixture
 def zha_device_mock(
-    hass, config_entry, zigpy_device_mock
+    hass: HomeAssistant, config_entry, zigpy_device_mock
 ) -> Callable[..., zha_core_device.ZHADevice]:
     """Return a ZHA Device factory."""
 
@@ -519,10 +523,10 @@ def network_backup() -> zigpy.backups.NetworkBackup:
 
 
 @pytest.fixture
-def core_rs(hass_storage):
+def core_rs(hass_storage: dict[str, Any]) -> Callable[[str, Any, dict[str, Any]], None]:
     """Core.restore_state fixture."""
 
-    def _storage(entity_id, state, attributes={}):
+    def _storage(entity_id: str, state: str, attributes: dict[str, Any]) -> None:
         now = dt_util.utcnow().isoformat()
 
         hass_storage[restore_state.STORAGE_KEY] = {

@@ -1,9 +1,9 @@
 """Fixtures for Vogel's MotionMount integration tests."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.motionmount.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -25,7 +25,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.motionmount.async_setup_entry", return_value=True
@@ -34,7 +34,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_motionmount_config_flow() -> Generator[None, MagicMock, None]:
+def mock_motionmount_config_flow() -> Generator[MagicMock]:
     """Return a mocked MotionMount config flow."""
 
     with patch(

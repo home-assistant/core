@@ -136,7 +136,9 @@ from tests.common import async_fire_time_changed, get_fixture_path
 
 
 @pytest.fixture(name="mock_modbus_with_pymodbus")
-async def mock_modbus_with_pymodbus_fixture(hass, caplog, do_config, mock_pymodbus):
+async def mock_modbus_with_pymodbus_fixture(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, do_config, mock_pymodbus
+):
     """Load integration modbus using mocked pymodbus."""
     caplog.clear()
     caplog.set_level(logging.ERROR)
@@ -1361,12 +1363,12 @@ async def test_pb_service_write(
 
 @pytest.fixture(name="mock_modbus_read_pymodbus")
 async def mock_modbus_read_pymodbus_fixture(
-    hass,
+    hass: HomeAssistant,
     do_group,
     do_type,
     do_scan_interval,
     do_return,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     mock_pymodbus,
     freezer: FrozenDateTimeFactory,
 ):

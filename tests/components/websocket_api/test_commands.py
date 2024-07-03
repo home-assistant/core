@@ -2391,7 +2391,7 @@ async def test_execute_script_complex_response(
             "type": "execute_script",
             "sequence": [
                 {
-                    "service": "calendar.list_events",
+                    "service": "calendar.get_events",
                     "data": {"duration": {"hours": 24, "minutes": 0, "seconds": 0}},
                     "target": {"entity_id": "calendar.calendar_1"},
                     "response_variable": "service_result",
@@ -2405,15 +2405,17 @@ async def test_execute_script_complex_response(
     assert msg_no_var["type"] == const.TYPE_RESULT
     assert msg_no_var["success"]
     assert msg_no_var["result"]["response"] == {
-        "events": [
-            {
-                "start": ANY,
-                "end": ANY,
-                "summary": "Future Event",
-                "description": "Future Description",
-                "location": "Future Location",
-            }
-        ]
+        "calendar.calendar_1": {
+            "events": [
+                {
+                    "start": ANY,
+                    "end": ANY,
+                    "summary": "Future Event",
+                    "description": "Future Description",
+                    "location": "Future Location",
+                }
+            ]
+        }
     }
 
 

@@ -149,19 +149,19 @@ async def test_get_actions(
                 "entity_id": entity_id,
                 "metadata": {"secondary": True},
             }
-            for action in [
+            for action in (
                 "select_first",
                 "select_last",
                 "select_next",
                 "select_option",
                 "select_previous",
-            ]
-            for entity_id in [
+            )
+            for entity_id in (
                 siren_level_select.id,
                 siren_tone_select.id,
                 strobe_level_select.id,
                 strobe_select.id,
-            ]
+            )
         ]
     )
 

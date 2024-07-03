@@ -226,14 +226,16 @@ class MotionEyeOptionsFlow(OptionsFlow):
         if self.show_advanced_options:
             # The input URL is not validated as being a URL, to allow for the possibility
             # the template input won't be a valid URL until after it's rendered
-            stream_kwargs = {}
+            description: dict[str, str] | None = None
             if CONF_STREAM_URL_TEMPLATE in self._config_entry.options:
-                stream_kwargs["description"] = {
+                description = {
                     "suggested_value": self._config_entry.options[
                         CONF_STREAM_URL_TEMPLATE
                     ]
                 }
 
-            schema[vol.Optional(CONF_STREAM_URL_TEMPLATE, **stream_kwargs)] = str
+            schema[vol.Optional(CONF_STREAM_URL_TEMPLATE, description=description)] = (
+                str
+            )
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(schema))

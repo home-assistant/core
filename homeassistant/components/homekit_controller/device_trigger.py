@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.characteristics.const import InputEventValues
 from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.utils import clamp_enum_to_char
+from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
@@ -88,7 +89,7 @@ class TriggerSource:
             for event_handler in self._callbacks.get(trigger_key, []):
                 event_handler(ev)
 
-    def async_get_triggers(self) -> Generator[tuple[str, str], None, None]:
+    def async_get_triggers(self) -> Generator[tuple[str, str]]:
         """List device triggers for HomeKit devices."""
         yield from self._triggers
 

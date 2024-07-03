@@ -2,6 +2,7 @@
 
 from unittest.mock import ANY
 
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components import bluetooth
@@ -14,11 +15,11 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
-    enable_bluetooth: None,
     mock_dashboard,
     snapshot: SnapshotAssertion,
 ) -> None:

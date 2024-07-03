@@ -1,10 +1,10 @@
 """Test the SFR Box sensors."""
 
-from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from typing_extensions import Generator
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -15,7 +15,7 @@ pytestmark = pytest.mark.usefixtures("system_get_info", "dsl_get_info", "wan_get
 
 
 @pytest.fixture(autouse=True)
-def override_platforms() -> Generator[None, None, None]:
+def override_platforms() -> Generator[None]:
     """Override PLATFORMS."""
     with patch("homeassistant.components.sfr_box.PLATFORMS", [Platform.SENSOR]):
         yield

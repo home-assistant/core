@@ -16,6 +16,8 @@ from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from .common import MockLight
+
 from tests.common import (
     MockConfigEntry,
     async_get_device_automation_capabilities,
@@ -23,7 +25,6 @@ from tests.common import (
     async_mock_service,
     setup_test_component_platform,
 )
-from tests.components.light.common import MockLight
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -61,7 +62,7 @@ async def test_get_conditions(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
-        for condition in ["is_off", "is_on"]
+        for condition in ("is_off", "is_on")
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
@@ -109,7 +110,7 @@ async def test_get_conditions_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for condition in ["is_off", "is_on"]
+        for condition in ("is_off", "is_on")
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
@@ -180,12 +181,12 @@ async def test_get_condition_capabilities_legacy(
         assert capabilities == expected_capabilities
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_if_state(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls: list[ServiceCall],
-    enable_custom_integrations: None,
 ) -> None:
     """Test for turn_on and turn_off conditions."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -267,12 +268,12 @@ async def test_if_state(
     assert calls[1].data["some"] == "is_off event - test_event2"
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_if_state_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls: list[ServiceCall],
-    enable_custom_integrations: None,
 ) -> None:
     """Test for turn_on and turn_off conditions."""
     config_entry = MockConfigEntry(domain="test", data={})

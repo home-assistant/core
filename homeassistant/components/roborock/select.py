@@ -14,9 +14,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
+from . import RoborockCoordinators
 from .const import DOMAIN
 from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockCoordinatedEntity
+from .device import RoborockCoordinatedEntityV1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -69,14 +70,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up Roborock select platform."""
 
-    coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinators: RoborockCoordinators = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
-        RoborockSelectEntity(
-            f"{description.key}_{slugify(device_id)}", coordinator, description, options
-        )
-        for device_id, coordinator in coordinators.items()
+        RoborockSelectEntity(coordinator, description, options)
+        for coordinator in coordinators.v1
         for description in SELECT_DESCRIPTIONS
         if (
             options := description.options_lambda(
@@ -87,21 +84,24 @@ async def async_setup_entry(
     )
 
 
-class RoborockSelectEntity(RoborockCoordinatedEntity, SelectEntity):
+class RoborockSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
     """A class to let you set options on a Roborock vacuum where the potential options are fixed."""
 
     entity_description: RoborockSelectDescription
 
     def __init__(
         self,
-        unique_id: str,
         coordinator: RoborockDataUpdateCoordinator,
         entity_description: RoborockSelectDescription,
         options: list[str],
     ) -> None:
         """Create a select entity."""
         self.entity_description = entity_description
-        super().__init__(unique_id, coordinator, entity_description.protocol_listener)
+        super().__init__(
+            f"{entity_description.key}_{slugify(coordinator.duid)}",
+            coordinator,
+            entity_description.protocol_listener,
+        )
         self._attr_options = options
 
     async def async_select_option(self, option: str) -> None:

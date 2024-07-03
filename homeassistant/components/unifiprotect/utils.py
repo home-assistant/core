@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator, Iterable
+from collections.abc import Iterable
 import contextlib
-from enum import Enum
 from pathlib import Path
 import socket
-from typing import Any
+from typing import TYPE_CHECKING
 
 from aiohttp import CookieJar
+from typing_extensions import Generator
 from uiprotect import ProtectApiClient
 from uiprotect.data import (
     Bootstrap,
@@ -20,7 +20,6 @@ from uiprotect.data import (
     ProtectAdoptableDeviceModel,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -36,24 +35,11 @@ from .const import (
     CONF_ALL_UPDATES,
     CONF_OVERRIDE_CHOST,
     DEVICES_FOR_SUBSCRIBE,
-    DOMAIN,
     ModelType,
 )
 
-_SENTINEL = object()
-
-
-def get_nested_attr(obj: Any, attrs: tuple[str, ...]) -> Any:
-    """Fetch a nested attribute."""
-    if len(attrs) == 1:
-        value = getattr(obj, attrs[0], None)
-    else:
-        value = obj
-        for key in attrs:
-            if (value := getattr(value, key, _SENTINEL)) is _SENTINEL:
-                return None
-
-    return value.value if isinstance(value, Enum) else value
+if TYPE_CHECKING:
+    from .data import UFPConfigEntry
 
 
 @callback
@@ -97,7 +83,7 @@ def async_get_devices_by_type(
 @callback
 def async_get_devices(
     bootstrap: Bootstrap, model_type: Iterable[ModelType]
-) -> Generator[ProtectAdoptableDeviceModel, None, None]:
+) -> Generator[ProtectAdoptableDeviceModel]:
     """Return all device by type."""
     return (
         device
@@ -119,15 +105,8 @@ def async_get_light_motion_current(obj: Light) -> str:
 
 
 @callback
-def async_dispatch_id(entry: ConfigEntry, dispatch: str) -> str:
-    """Generate entry specific dispatch ID."""
-
-    return f"{DOMAIN}.{entry.entry_id}.{dispatch}"
-
-
-@callback
 def async_create_api_client(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: UFPConfigEntry
 ) -> ProtectApiClient:
     """Create ProtectApiClient from config entry."""
 
@@ -154,6 +133,6 @@ def get_camera_base_name(channel: CameraChannel) -> str:
 
     camera_name = channel.name
     if channel.name != "Package Camera":
-        camera_name = f"{channel.name} Resolution Channel"
+        camera_name = f"{channel.name} resolution channel"
 
     return camera_name

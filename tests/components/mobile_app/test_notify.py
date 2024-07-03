@@ -110,7 +110,9 @@ async def setup_push_receiver(
 
 
 @pytest.fixture
-async def setup_websocket_channel_only_push(hass, hass_admin_user):
+async def setup_websocket_channel_only_push(
+    hass: HomeAssistant, hass_admin_user: MockUser
+) -> None:
     """Set up local push."""
     entry = MockConfigEntry(
         data={

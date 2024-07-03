@@ -241,9 +241,7 @@ def test_density_to_air_quality() -> None:
     assert density_to_air_quality(200) == 5
 
 
-async def test_async_show_setup_msg(
-    hass: HomeAssistant, hk_driver, mock_get_source_ip
-) -> None:
+async def test_async_show_setup_msg(hass: HomeAssistant, hk_driver) -> None:
     """Test show setup message as persistence notification."""
     pincode = b"123-45-678"
 

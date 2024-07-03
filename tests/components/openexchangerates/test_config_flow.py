@@ -1,7 +1,6 @@
 """Test the Open Exchange Rates config flow."""
 
 import asyncio
-from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -10,6 +9,7 @@ from aioopenexchangerates import (
     OpenExchangeRatesClientError,
 )
 import pytest
+from typing_extensions import Generator
 
 from homeassistant import config_entries
 from homeassistant.components.openexchangerates.const import DOMAIN
@@ -20,7 +20,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="currencies", autouse=True)
-def currencies_fixture(hass: HomeAssistant) -> Generator[AsyncMock, None, None]:
+def currencies_fixture(hass: HomeAssistant) -> Generator[AsyncMock]:
     """Mock currencies."""
     with patch(
         "homeassistant.components.openexchangerates.config_flow.Client.get_currencies",

@@ -1,9 +1,9 @@
 """Test Device Tracker config entry things."""
 
-from collections.abc import Generator
 from typing import Any
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.device_tracker import (
     ATTR_HOST_NAME,
@@ -55,7 +55,7 @@ class MockFlow(ConfigFlow):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 

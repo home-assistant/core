@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from contextlib import asynccontextmanager
 from contextvars import ContextVar
 from copy import copy
@@ -16,6 +16,7 @@ from types import MappingProxyType
 from typing import Any, Literal, TypedDict, cast
 
 import async_interrupt
+from typing_extensions import AsyncGenerator
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -190,7 +191,7 @@ async def trace_action(
     script_run: _ScriptRun,
     stop: asyncio.Future[None],
     variables: dict[str, Any],
-) -> AsyncGenerator[TraceElement, None]:
+) -> AsyncGenerator[TraceElement]:
     """Trace action execution."""
     path = trace_path_get()
     trace_element = action_trace_append(variables, path)

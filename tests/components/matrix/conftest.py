@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 import re
 import tempfile
 from unittest.mock import patch
@@ -23,6 +24,7 @@ from nio import (
 )
 from PIL import Image
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.matrix import (
     CONF_COMMANDS,
@@ -304,9 +306,9 @@ def command_events(hass: HomeAssistant):
 
 
 @pytest.fixture
-def image_path(tmp_path):
+def image_path(tmp_path: Path) -> Generator[tempfile._TemporaryFileWrapper]:
     """Provide the Path to a mock image."""
     image = Image.new("RGBA", size=(50, 50), color=(256, 0, 0))
-    image_file = tempfile.NamedTemporaryFile(dir=tmp_path)
-    image.save(image_file, "PNG")
-    return image_file
+    with tempfile.NamedTemporaryFile(dir=tmp_path) as image_file:
+        image.save(image_file, "PNG")
+        yield image_file

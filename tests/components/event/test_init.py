@@ -1,10 +1,10 @@
 """The tests for the event integration."""
 
-from collections.abc import Generator
 from typing import Any
 
 from freezegun import freeze_time
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.event import (
     ATTR_EVENT_TYPE,
@@ -238,7 +238,7 @@ class MockFlow(ConfigFlow):
 
 
 @pytest.fixture
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -254,7 +254,7 @@ async def test_name(hass: HomeAssistant) -> None:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
         return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")

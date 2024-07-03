@@ -76,13 +76,15 @@
           'components_wall_connectors': list([
             dict({
               'device_id': '123abc',
-              'din': 'abc123',
+              'din': 'abd-123',
               'is_active': True,
+              'part_name': 'Gen 3 Wall Connector',
             }),
             dict({
               'device_id': '234bcd',
-              'din': 'bcd234',
+              'din': 'bcd-234',
               'is_active': True,
+              'part_name': 'Gen 3 Wall Connector',
             }),
           ]),
           'components_wifi_commissioning_enabled': True,
@@ -307,7 +309,7 @@
           'vehicle_config_car_special_type': 'base',
           'vehicle_config_car_type': 'model3',
           'vehicle_config_charge_port_type': 'CCS',
-          'vehicle_config_cop_user_set_temp_supported': False,
+          'vehicle_config_cop_user_set_temp_supported': True,
           'vehicle_config_dashcam_clip_save_supported': True,
           'vehicle_config_default_charge_to_max': False,
           'vehicle_config_driver_assist': 'TeslaAP3',
