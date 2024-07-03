@@ -1478,14 +1478,17 @@ async def async_setup_recorder_instance(
     ):
 
         async def async_setup_recorder(
-            hass: HomeAssistant, config: ConfigType | None = None
+            hass: HomeAssistant,
+            config: ConfigType | None = None,
+            *,
+            wait_recorder: bool = True,
         ) -> recorder.Recorder:
             """Setup and return recorder instance."""  # noqa: D401
             await _async_init_recorder_component(hass, config, recorder_db_url)
             await hass.async_block_till_done()
             instance = hass.data[recorder.DATA_INSTANCE]
             # The recorder's worker is not started until Home Assistant is running
-            if hass.state is CoreState.running:
+            if hass.state is CoreState.running and wait_recorder:
                 await async_recorder_block_till_done(hass)
             return instance
 
