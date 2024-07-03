@@ -158,7 +158,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
             self._attr_name,
         )
 
-        self.coordinator.device.target_temperature = round(temperature)
+        self.coordinator.device.target_temperature = temperature
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 

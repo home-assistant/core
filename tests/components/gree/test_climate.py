@@ -474,7 +474,11 @@ async def test_send_target_temperature_with_hvac_mode(
 
 @pytest.mark.parametrize(
     ("units", "temperature"),
-    [(UnitOfTemperature.CELSIUS, 25), (UnitOfTemperature.FAHRENHEIT, 73)],
+    [
+        (UnitOfTemperature.CELSIUS, 25),
+        (UnitOfTemperature.FAHRENHEIT, 73),
+        (UnitOfTemperature.FAHRENHEIT, 74),
+    ],
 )
 async def test_send_target_temperature_device_timeout(
     hass: HomeAssistant, discovery, device, units, temperature
@@ -504,7 +508,11 @@ async def test_send_target_temperature_device_timeout(
 
 @pytest.mark.parametrize(
     ("units", "temperature"),
-    [(UnitOfTemperature.CELSIUS, 25), (UnitOfTemperature.FAHRENHEIT, 73)],
+    [
+        (UnitOfTemperature.CELSIUS, 25),
+        (UnitOfTemperature.FAHRENHEIT, 73),
+        (UnitOfTemperature.FAHRENHEIT, 74),
+    ],
 )
 async def test_update_target_temperature(
     hass: HomeAssistant, discovery, device, units, temperature
