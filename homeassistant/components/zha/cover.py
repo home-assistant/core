@@ -15,7 +15,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -63,6 +63,18 @@ class ZhaCover(ZHAEntity, CoverEntity):
         self._attr_supported_features: CoverEntityFeature = CoverEntityFeature(
             self.entity_data.entity._attr_supported_features  # noqa: SLF001
         )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return state attributes."""
+        return {
+            "target_lift_position": self.entity_data.entity.state[
+                "target_lift_position"
+            ],
+            "target_tilt_position": self.entity_data.entity.state[
+                "target_tilt_position"
+            ],
+        }
 
     @property
     def is_closed(self) -> bool | None:
@@ -132,3 +144,13 @@ class ZhaCover(ZHAEntity, CoverEntity):
         """Stop the cover tilt."""
         await self.entity_data.entity.async_stop_cover_tilt()
         await self.async_update_ha_state()
+
+    @callback
+    def restore_external_state_attributes(self, state: State) -> None:
+        """Restore entity state."""
+        # Same as `light`, some entity state is not derived from ZCL attributes
+        self.entity_data.entity.restore_external_state_attributes(
+            state=state.state,
+            target_lift_position=state.attributes.get("target_lift_position"),
+            target_tilt_position=state.attributes.get("target_tilt_position"),
+        )
