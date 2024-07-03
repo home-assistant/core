@@ -996,7 +996,7 @@ krakenex==2.1.0
 lacrosse-view==1.0.1
 
 # homeassistant.components.laundrify
-laundrify-aio==1.2.1
+laundrify-aio==1.2.2
 
 # homeassistant.components.ld2410_ble
 ld2410-ble==0.1.1
