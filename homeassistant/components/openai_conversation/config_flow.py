@@ -15,7 +15,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API
+from homeassistant.const import CONF_API_KEY, CONF_AZURE_ENDPOINT, CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
@@ -46,6 +46,7 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): str,
+        vol.Optional(CONF_AZURE_ENDPOINT): str,
     }
 )
 
@@ -61,7 +62,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    client = openai.AsyncOpenAI(api_key=data[CONF_API_KEY])
+    if data[CONF_AZURE_ENDPOINT] is not None:
+        client = openai.AsyncAzureOpenAI(api_key=data[CONF_API_KEY], azure_endpoint=data[CONF_AZURE_ENDPOINT])
+    else:
+        client = openai.AsyncOpenAI(api_key=data[CONF_API_KEY])
     await hass.async_add_executor_job(client.with_options(timeout=10.0).models.list)
 
 

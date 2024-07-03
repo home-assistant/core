@@ -8,7 +8,7 @@ import openai
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.const import CONF_API_KEY, CONF_AZURE_ENDPOINT, Platform
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -33,7 +33,7 @@ SERVICE_GENERATE_IMAGE = "generate_image"
 PLATFORMS = (Platform.CONVERSATION,)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-type OpenAIConfigEntry = ConfigEntry[openai.AsyncClient]
+type OpenAIConfigEntry = ConfigEntry[openai.AsyncClient | openai.AsyncAzureOpenAI]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -115,7 +115,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bool:
     """Set up OpenAI Conversation from a config entry."""
-    client = openai.AsyncOpenAI(api_key=entry.data[CONF_API_KEY])
+    if entry.data[CONF_AZURE_ENDPOINT] is not None:
+        client = openai.AsyncAzureOpenAI(api_key=entry.data[CONF_API_KEY], azure_endpoint=entry.data[CONF_AZURE_ENDPOINT])
+    else:
+        client = openai.AsyncOpenAI(api_key=entry.data[CONF_API_KEY])
     try:
         await hass.async_add_executor_job(client.with_options(timeout=10.0).models.list)
     except openai.AuthenticationError as err:
