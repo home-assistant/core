@@ -6,6 +6,8 @@ import functools
 import logging
 from typing import Any
 
+from zha.application.platforms.light.const import ColorMode as ZhaColorMode
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -62,9 +64,9 @@ class Light(LightEntity, ZHAEntity):
         color_modes: set[ColorMode] = set()
         has_brightness = False
         for color_mode in self.entity_data.entity.supported_color_modes:
-            if color_mode == ColorMode.BRIGHTNESS.value:
+            if color_mode == ZhaColorMode.BRIGHTNESS:
                 has_brightness = True
-            if color_mode not in (ColorMode.BRIGHTNESS.value, ColorMode.ONOFF.value):
+            if color_mode not in (ZhaColorMode.BRIGHTNESS, ZhaColorMode.ONOFF):
                 color_modes.add(ColorMode(color_mode))
         if color_modes:
             self._attr_supported_color_modes = color_modes
