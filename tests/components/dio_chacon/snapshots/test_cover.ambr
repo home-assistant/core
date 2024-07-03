@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_cover_actions[cover.shutter_mock_1-entry]
+# name: test_entities[cover.shutter_mock_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -32,7 +32,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_actions[cover.shutter_mock_1-state]
+# name: test_entities[cover.shutter_mock_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 75,
