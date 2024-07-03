@@ -97,7 +97,10 @@ async def test_notify_not_connected(
 
 
 async def test_icon_not_found(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, client, monkeypatch
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    client,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test notify icon not found error."""
     await setup_webostv(hass)

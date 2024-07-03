@@ -144,7 +144,7 @@ async def test_media_play_pause(hass: HomeAssistant, client) -> None:
     ],
 )
 async def test_media_next_previous_track(
-    hass: HomeAssistant, client, service, client_call, monkeypatch
+    hass: HomeAssistant, client, service, client_call, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test media next/previous track services."""
     await setup_webostv(hass)
@@ -389,7 +389,7 @@ async def test_play_media(hass: HomeAssistant, client, media_id, ch_id) -> None:
 
 
 async def test_update_sources_live_tv_find(
-    hass: HomeAssistant, client, monkeypatch
+    hass: HomeAssistant, client, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test finding live TV app id in update sources."""
     await setup_webostv(hass)
@@ -485,7 +485,10 @@ async def test_client_disconnected(
 
 
 async def test_control_error_handling(
-    hass: HomeAssistant, client, caplog: pytest.LogCaptureFixture, monkeypatch
+    hass: HomeAssistant,
+    client,
+    caplog: pytest.LogCaptureFixture,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test control errors handling."""
     await setup_webostv(hass)
@@ -575,7 +578,7 @@ async def test_supported_features(
 
 
 async def test_cached_supported_features(
-    hass: HomeAssistant, client, monkeypatch
+    hass: HomeAssistant, client, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test test supported features."""
     monkeypatch.setattr(client, "is_on", False)
@@ -682,7 +685,7 @@ async def test_cached_supported_features(
 
 
 async def test_supported_features_no_cache(
-    hass: HomeAssistant, client, monkeypatch
+    hass: HomeAssistant, client, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test supported features if device is off and no cache."""
     monkeypatch.setattr(client, "is_on", False)
