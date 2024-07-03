@@ -1,5 +1,6 @@
 """Tests for Shelly binary sensor platform."""
 
+from copy import deepcopy
 from unittest.mock import Mock
 
 from aioshelly.const import MODEL_MOTION
@@ -10,6 +11,7 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.shelly.const import UPDATE_PERIOD_MULTIPLIER
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -353,3 +355,66 @@ async def test_rpc_restored_sleeping_binary_sensor_no_last_state(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_OFF
+
+
+async def test_rpc_device_virtual_binary_sensor_with_name(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a virtual binary sensor for RPC device."""
+    config = deepcopy(mock_rpc_device.config)
+    config["boolean:203"] = {
+        "name": "Virtual binary sensor",
+        "meta": {"ui": {"view": "label"}},
+    }
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["boolean:203"] = {"value": True}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    entity_id = "binary_sensor.test_name_virtual_binary_sensor"
+
+    await init_integration(hass, 3)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-boolean:203-boolean"
+
+    monkeypatch.setitem(mock_rpc_device.status["boolean:203"], "value", False)
+    mock_rpc_device.mock_update()
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+
+async def test_rpc_device_virtual_binary_sensor_without_name(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a virtual binary sensor for RPC device."""
+    config = deepcopy(mock_rpc_device.config)
+    config["boolean:203"] = {"name": None, "meta": {"ui": {"view": "label"}}}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["boolean:203"] = {"value": True}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    entity_id = "binary_sensor.test_name_boolean_203"
+
+    await init_integration(hass, 3)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-boolean:203-boolean"
