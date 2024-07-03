@@ -2264,7 +2264,7 @@ class StateMachine:
         state_info: StateInfo | None,
         timestamp: float,
     ) -> None:
-        """Set the state of an entity.
+        """Set the state of an entity, add entity if it does not exist.
 
         This method is intended to only be used by core internally
         and should not be considered a stable API. We will make
