@@ -7,6 +7,7 @@ import logging
 from typing import Any
 
 from zha.application.platforms.light.const import ColorMode as ZhaColorMode
+from zha.const import UNDEFINED as ZHA_UNDEFINED
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -162,19 +163,21 @@ class Light(LightEntity, ZHAEntity):
     @callback
     def restore_external_state_attributes(self, state: State) -> None:
         """Restore entity state."""
-        color_mode = state.attributes.get("color_mode")
+        color_mode = state.attributes.get("color_mode", ZHA_UNDEFINED)
 
-        if color_mode is not None:
+        if color_mode is not None and color_mode is not ZHA_UNDEFINED:
             color_mode = ZhaColorMode(color_mode)
 
         self.entity_data.entity.restore_external_state_attributes(
             state=(state.state == STATE_ON),
-            off_with_transition=state.attributes.get("off_with_transition"),
-            off_brightness=state.attributes.get("off_brightness"),
-            brightness=state.attributes.get("brightness"),
-            color_temp=state.attributes.get("color_temp"),
-            xy_color=state.attributes.get("xy_color"),
-            hs_color=state.attributes.get("hs_color"),
+            off_with_transition=state.attributes.get(
+                "off_with_transition", ZHA_UNDEFINED
+            ),
+            off_brightness=state.attributes.get("off_brightness", ZHA_UNDEFINED),
+            brightness=state.attributes.get("brightness", ZHA_UNDEFINED),
+            color_temp=state.attributes.get("color_temp", ZHA_UNDEFINED),
+            xy_color=state.attributes.get("xy_color", ZHA_UNDEFINED),
+            hs_color=state.attributes.get("hs_color", ZHA_UNDEFINED),
             color_mode=color_mode,
-            effect=state.attributes.get("effect"),
+            effect=state.attributes.get("effect", ZHA_UNDEFINED),
         )

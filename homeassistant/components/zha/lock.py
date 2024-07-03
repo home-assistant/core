@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import (
@@ -124,3 +124,10 @@ class ZhaDoorLock(ZHAEntity, LockEntity):
         """Clear the user_code at index X on the lock."""
         await self.entity_data.entity.async_clear_lock_user_code(code_slot=code_slot)
         self.async_write_ha_state()
+
+    @callback
+    def restore_external_state_attributes(self, state: State) -> None:
+        """Restore entity state."""
+        self.entity_data.entity.restore_external_state_attributes(
+            state=state.state,
+        )
