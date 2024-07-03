@@ -164,7 +164,7 @@ async def test_if_fires_using_at_input_datetime(
             [
                 "5:00:05",
                 {"entity_id": "sensor.next_alarm", "offset": "00:00:10"},
-                {"entity_id": "sensor.next_alarm"},
+                "sensor.next_alarm",
             ],
             [timedelta(seconds=5), timedelta(seconds=10), timedelta(0)],
         ),
