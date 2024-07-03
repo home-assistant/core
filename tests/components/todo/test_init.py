@@ -1,12 +1,12 @@
 """Tests for the todo integration."""
 
-from collections.abc import Generator
 import datetime
 from typing import Any
 from unittest.mock import AsyncMock
 import zoneinfo
 
 import pytest
+from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant.components import conversation
@@ -78,7 +78,7 @@ class MockTodoListEntity(TodoListEntity):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -94,7 +94,7 @@ def mock_setup_integration(hass: HomeAssistant) -> None:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
         return True
 
     async def async_unload_entry_init(

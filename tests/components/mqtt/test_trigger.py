@@ -10,6 +10,7 @@ from homeassistant.core import HassJobType, HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_fire_mqtt_message, async_mock_service, mock_component
+from tests.typing import MqttMockHAClient, MqttMockHAClientGenerator
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -24,7 +25,9 @@ def calls(hass: HomeAssistant) -> list[ServiceCall]:
 
 
 @pytest.fixture(autouse=True)
-async def setup_comp(hass: HomeAssistant, mqtt_mock_entry):
+async def setup_comp(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> MqttMockHAClient:
     """Initialize components."""
     mock_component(hass, "group")
     return await mqtt_mock_entry()

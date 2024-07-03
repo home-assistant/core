@@ -1,6 +1,7 @@
 """Tests for the tag component."""
 
 import logging
+from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -20,7 +21,7 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
-def storage_setup(hass: HomeAssistant, hass_storage):
+def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
     """Storage setup."""
 
     async def _storage(items=None):
@@ -52,7 +53,7 @@ def storage_setup(hass: HomeAssistant, hass_storage):
 
 
 @pytest.fixture
-def storage_setup_1_1(hass: HomeAssistant, hass_storage):
+def storage_setup_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]):
     """Storage version 1.1 setup."""
 
     async def _storage(items=None):
@@ -84,7 +85,7 @@ async def test_migration(
     hass_ws_client: WebSocketGenerator,
     storage_setup_1_1,
     freezer: FrozenDateTimeFactory,
-    hass_storage,
+    hass_storage: dict[str, Any],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test migrating tag store."""

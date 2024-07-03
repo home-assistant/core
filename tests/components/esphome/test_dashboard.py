@@ -1,5 +1,6 @@
 """Test ESPHome dashboard features."""
 
+from typing import Any
 from unittest.mock import patch
 
 from aioesphomeapi import DeviceInfo, InvalidAuthAPIError
@@ -15,7 +16,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_dashboard_storage(
-    hass: HomeAssistant, init_integration, mock_dashboard, hass_storage
+    hass: HomeAssistant, init_integration, mock_dashboard, hass_storage: dict[str, Any]
 ) -> None:
     """Test dashboard storage."""
     assert hass_storage[dashboard.STORAGE_KEY]["data"] == {
@@ -28,8 +29,10 @@ async def test_dashboard_storage(
 
 
 async def test_restore_dashboard_storage(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, hass_storage
-) -> MockConfigEntry:
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    hass_storage: dict[str, Any],
+) -> None:
     """Restore dashboard url and slug from storage."""
     hass_storage[dashboard.STORAGE_KEY] = {
         "version": dashboard.STORAGE_VERSION,
@@ -46,8 +49,10 @@ async def test_restore_dashboard_storage(
 
 
 async def test_restore_dashboard_storage_end_to_end(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, hass_storage
-) -> MockConfigEntry:
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    hass_storage: dict[str, Any],
+) -> None:
     """Restore dashboard url and slug from storage."""
     hass_storage[dashboard.STORAGE_KEY] = {
         "version": dashboard.STORAGE_VERSION,
@@ -65,8 +70,10 @@ async def test_restore_dashboard_storage_end_to_end(
 
 
 async def test_setup_dashboard_fails(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, hass_storage
-) -> MockConfigEntry:
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    hass_storage: dict[str, Any],
+) -> None:
     """Test that nothing is stored on failed dashboard setup when there was no dashboard before."""
     with patch.object(
         coordinator.ESPHomeDashboardAPI, "get_devices", side_effect=TimeoutError
@@ -83,8 +90,10 @@ async def test_setup_dashboard_fails(
 
 
 async def test_setup_dashboard_fails_when_already_setup(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, hass_storage
-) -> MockConfigEntry:
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    hass_storage: dict[str, Any],
+) -> None:
     """Test failed dashboard setup still reloads entries if one existed before."""
     with patch.object(
         coordinator.ESPHomeDashboardAPI, "get_devices"

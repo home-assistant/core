@@ -31,8 +31,35 @@
   },
   "entity": {
     "sensor": {
+      "build_id": {
+        "name": "{definition_name} latest build id"
+      },
+      "finish_time": {
+        "name": "{definition_name} latest build finish time"
+      },
       "latest_build": {
         "name": "{definition_name} latest build"
+      },
+      "queue_time": {
+        "name": "{definition_name} latest build queue time"
+      },
+      "reason": {
+        "name": "{definition_name} latest build reason"
+      },
+      "result": {
+        "name": "{definition_name} latest build result"
+      },
+      "source_branch": {
+        "name": "{definition_name} latest build source branch"
+      },
+      "source_version": {
+        "name": "{definition_name} latest build source version"
+      },
+      "start_time": {
+        "name": "{definition_name} latest build start time"
+      },
+      "url": {
+        "name": "{definition_name} latest build url"
       }
     }
   }

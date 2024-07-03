@@ -46,7 +46,7 @@ HLS_CONFIG = {
 
 
 @pytest.fixture
-async def setup_component(hass) -> None:
+async def setup_component(hass: HomeAssistant) -> None:
     """Test fixture to setup the stream component."""
     await async_setup_component(hass, "stream", HLS_CONFIG)
 
@@ -309,6 +309,7 @@ async def test_stream_retries(
 
     def av_open_side_effect(*args, **kwargs):
         hass.loop.call_soon_threadsafe(futures.pop().set_result, None)
+        # pylint: disable-next=c-extension-no-member
         raise av.error.InvalidDataError(-2, "error")
 
     with (

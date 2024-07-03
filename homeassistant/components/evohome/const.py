@@ -1,26 +1,60 @@
-"""Support for (EMEA/EU-based) Honeywell TCC climate systems."""
+"""The constants of the Evohome integration."""
 
-DOMAIN = "evohome"
+from __future__ import annotations
 
-STORAGE_VER = 1
-STORAGE_KEY = DOMAIN
+from datetime import timedelta
+from enum import StrEnum, unique
+from typing import Final
 
-# The Parent's (i.e. TCS, Controller's) operating mode is one of:
-EVO_RESET = "AutoWithReset"
-EVO_AUTO = "Auto"
-EVO_AUTOECO = "AutoWithEco"
-EVO_AWAY = "Away"
-EVO_DAYOFF = "DayOff"
-EVO_CUSTOM = "Custom"
-EVO_HEATOFF = "HeatingOff"
+DOMAIN: Final = "evohome"
 
-# The Children's operating mode is one of:
-EVO_FOLLOW = "FollowSchedule"  # the operating mode is 'inherited' from the TCS
-EVO_TEMPOVER = "TemporaryOverride"
-EVO_PERMOVER = "PermanentOverride"
+STORAGE_VER: Final = 1
+STORAGE_KEY: Final = DOMAIN
 
-# These are used only to help prevent E501 (line too long) violations
-GWS = "gateways"
-TCS = "temperatureControlSystems"
+# The Parent's (i.e. TCS, Controller) operating mode is one of:
+EVO_RESET: Final = "AutoWithReset"
+EVO_AUTO: Final = "Auto"
+EVO_AUTOECO: Final = "AutoWithEco"
+EVO_AWAY: Final = "Away"
+EVO_DAYOFF: Final = "DayOff"
+EVO_CUSTOM: Final = "Custom"
+EVO_HEATOFF: Final = "HeatingOff"
 
-UTC_OFFSET = "currentOffsetMinutes"
+# The Children's (i.e. Dhw, Zone) operating mode is one of:
+EVO_FOLLOW: Final = "FollowSchedule"  # the operating mode is 'inherited' from the TCS
+EVO_TEMPOVER: Final = "TemporaryOverride"
+EVO_PERMOVER: Final = "PermanentOverride"
+
+# These two are used only to help prevent E501 (line too long) violations
+GWS: Final = "gateways"
+TCS: Final = "temperatureControlSystems"
+
+UTC_OFFSET: Final = "currentOffsetMinutes"
+
+CONF_LOCATION_IDX: Final = "location_idx"
+
+ACCESS_TOKEN: Final = "access_token"
+ACCESS_TOKEN_EXPIRES: Final = "access_token_expires"
+REFRESH_TOKEN: Final = "refresh_token"
+USER_DATA: Final = "user_data"
+
+SCAN_INTERVAL_DEFAULT: Final = timedelta(seconds=300)
+SCAN_INTERVAL_MINIMUM: Final = timedelta(seconds=60)
+
+ATTR_SYSTEM_MODE: Final = "mode"
+ATTR_DURATION_DAYS: Final = "period"
+ATTR_DURATION_HOURS: Final = "duration"
+
+ATTR_ZONE_TEMP: Final = "setpoint"
+ATTR_DURATION_UNTIL: Final = "duration"
+
+
+@unique
+class EvoService(StrEnum):
+    """The Evohome services."""
+
+    REFRESH_SYSTEM: Final = "refresh_system"
+    SET_SYSTEM_MODE: Final = "set_system_mode"
+    RESET_SYSTEM: Final = "reset_system"
+    SET_ZONE_OVERRIDE: Final = "set_zone_override"
+    RESET_ZONE_OVERRIDE: Final = "clear_zone_override"

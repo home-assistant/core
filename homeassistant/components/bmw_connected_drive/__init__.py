@@ -72,7 +72,10 @@ def _async_migrate_options_from_data_if_missing(
     options = dict(entry.options)
 
     if CONF_READ_ONLY in data or list(options) != list(DEFAULT_OPTIONS):
-        options = dict(DEFAULT_OPTIONS, **options)
+        options = dict(
+            DEFAULT_OPTIONS,
+            **{k: v for k, v in options.items() if k in DEFAULT_OPTIONS},
+        )
         options[CONF_READ_ONLY] = data.pop(CONF_READ_ONLY, False)
 
         hass.config_entries.async_update_entry(entry, data=data, options=options)

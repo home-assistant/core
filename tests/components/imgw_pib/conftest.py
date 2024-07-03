@@ -1,11 +1,11 @@
 """Common fixtures for the IMGW-PIB tests."""
 
-from collections.abc import Generator
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 from imgw_pib import HydrologicalData, SensorData
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.imgw_pib.const import DOMAIN
 
@@ -27,7 +27,7 @@ HYDROLOGICAL_DATA = HydrologicalData(
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.imgw_pib.async_setup_entry", return_value=True
@@ -36,7 +36,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_imgw_pib_client() -> Generator[AsyncMock, None, None]:
+def mock_imgw_pib_client() -> Generator[AsyncMock]:
     """Mock a ImgwPib client."""
     with (
         patch(

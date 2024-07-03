@@ -163,6 +163,7 @@ homeassistant.components.easyenergy.*
 homeassistant.components.ecovacs.*
 homeassistant.components.ecowitt.*
 homeassistant.components.efergy.*
+homeassistant.components.electrasmart.*
 homeassistant.components.electric_kiwi.*
 homeassistant.components.elgato.*
 homeassistant.components.elkm1.*
@@ -260,6 +261,7 @@ homeassistant.components.jellyfin.*
 homeassistant.components.jewish_calendar.*
 homeassistant.components.jvc_projector.*
 homeassistant.components.kaleidescape.*
+homeassistant.components.knocki.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
 homeassistant.components.lacrosse.*
@@ -368,6 +370,7 @@ homeassistant.components.rhasspy.*
 homeassistant.components.ridwell.*
 homeassistant.components.ring.*
 homeassistant.components.rituals_perfume_genie.*
+homeassistant.components.roborock.*
 homeassistant.components.roku.*
 homeassistant.components.romy.*
 homeassistant.components.rpi_power.*

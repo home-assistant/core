@@ -22,13 +22,13 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 
 DOMAIN = "input_button"
 
 _LOGGER = logging.getLogger(__name__)
 
-STORAGE_FIELDS = {
+STORAGE_FIELDS: VolDictType = {
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Optional(CONF_ICON): cv.icon,
 }
@@ -58,9 +58,9 @@ class InputButtonStorageCollection(collection.DictStorageCollection):
 
     CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
 
-    async def _process_create_data(self, data: dict) -> vol.Schema:
+    async def _process_create_data(self, data: dict) -> dict[str, str]:
         """Validate the config is valid."""
-        return self.CREATE_UPDATE_SCHEMA(data)
+        return self.CREATE_UPDATE_SCHEMA(data)  # type: ignore[no-any-return]
 
     @callback
     def _get_suggested_id(self, info: dict) -> str:

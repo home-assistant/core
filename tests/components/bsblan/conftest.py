@@ -1,10 +1,10 @@
 """Fixtures for BSBLAN integration tests."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from bsblan import Device, Info, State
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -31,7 +31,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.bsblan.async_setup_entry", return_value=True
@@ -40,7 +40,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_bsblan(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None]:
+def mock_bsblan() -> Generator[MagicMock]:
     """Return a mocked BSBLAN client."""
 
     with (

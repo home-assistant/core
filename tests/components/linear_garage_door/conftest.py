@@ -1,9 +1,9 @@
 """Common fixtures for the Linear Garage Door tests."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.linear_garage_door import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -16,7 +16,7 @@ from tests.common import (
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.linear_garage_door.async_setup_entry",
@@ -26,7 +26,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_linear() -> Generator[AsyncMock, None, None]:
+def mock_linear() -> Generator[AsyncMock]:
     """Mock a Linear Garage Door client."""
     with (
         patch(

@@ -1,6 +1,7 @@
 """The tests for the counter component."""
 
 import logging
+from typing import Any
 
 import pytest
 
@@ -37,7 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def storage_setup(hass, hass_storage):
+def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
     """Storage setup."""
 
     async def _storage(items=None, config=None):

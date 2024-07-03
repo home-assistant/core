@@ -13,7 +13,7 @@ from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from .const import MOCK_FB_SERVICES, MOCK_USER_DATA
@@ -89,6 +89,7 @@ GUEST_WIFI_DISABLED: dict[str, dict] = {
 async def test_image_entity(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     fc_class_mock,
     fh_class_mock,
@@ -122,7 +123,6 @@ async def test_image_entity(
         "friendly_name": "Mock Title GuestWifi",
     }
 
-    entity_registry = async_get_entity_registry(hass)
     entity_entry = entity_registry.async_get("image.mock_title_guestwifi")
     assert entity_entry.unique_id == "1c_ed_6f_12_34_11_guestwifi_qr_code"
 

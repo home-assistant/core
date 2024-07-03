@@ -6,13 +6,14 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
 
+from roborock.code_mappings import DyadError, RoborockDyadStateCode
 from roborock.containers import (
     RoborockDockErrorCode,
     RoborockDockTypeCode,
     RoborockErrorCode,
     RoborockStateCode,
 )
-from roborock.roborock_message import RoborockDataProtocol
+from roborock.roborock_message import RoborockDataProtocol, RoborockDyadDataProtocol
 from roborock.roborock_typing import DeviceProp
 
 from homeassistant.components.sensor import (
@@ -32,9 +33,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import slugify
 
+from . import RoborockCoordinators
 from .const import DOMAIN
-from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockCoordinatedEntity
+from .coordinator import RoborockDataUpdateCoordinator, RoborockDataUpdateCoordinatorA01
+from .device import RoborockCoordinatedEntityA01, RoborockCoordinatedEntityV1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -44,6 +46,13 @@ class RoborockSensorDescription(SensorEntityDescription):
     value_fn: Callable[[DeviceProp], StateType | datetime.datetime]
 
     protocol_listener: RoborockDataProtocol | None = None
+
+
+@dataclass(frozen=True, kw_only=True)
+class RoborockSensorDescriptionA01(SensorEntityDescription):
+    """A class that describes Roborock sensors."""
+
+    data_protocol: RoborockDyadDataProtocol
 
 
 def _dock_error_value_fn(properties: DeviceProp) -> str | None:
@@ -193,41 +202,101 @@ SENSOR_DESCRIPTIONS = [
 ]
 
 
+A01_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
+    RoborockSensorDescriptionA01(
+        key="status",
+        data_protocol=RoborockDyadDataProtocol.STATUS,
+        translation_key="a01_status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENUM,
+        options=RoborockDyadStateCode.keys(),
+    ),
+    RoborockSensorDescriptionA01(
+        key="battery",
+        data_protocol=RoborockDyadDataProtocol.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+    ),
+    RoborockSensorDescriptionA01(
+        key="filter_time_left",
+        data_protocol=RoborockDyadDataProtocol.MESH_LEFT,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=SensorDeviceClass.DURATION,
+        translation_key="filter_time_left",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescriptionA01(
+        key="brush_remaining",
+        data_protocol=RoborockDyadDataProtocol.BRUSH_LEFT,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=SensorDeviceClass.DURATION,
+        translation_key="brush_remaining",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescriptionA01(
+        key="error",
+        data_protocol=RoborockDyadDataProtocol.ERROR,
+        device_class=SensorDeviceClass.ENUM,
+        translation_key="a01_error",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=DyadError.keys(),
+    ),
+    RoborockSensorDescriptionA01(
+        key="total_cleaning_time",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        data_protocol=RoborockDyadDataProtocol.TOTAL_RUN_TIME,
+        device_class=SensorDeviceClass.DURATION,
+        translation_key="total_cleaning_time",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Roborock vacuum sensors."""
-    coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinators: RoborockCoordinators = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
         RoborockSensorEntity(
-            f"{description.key}_{slugify(device_id)}",
             coordinator,
             description,
         )
-        for device_id, coordinator in coordinators.items()
+        for coordinator in coordinators.v1
         for description in SENSOR_DESCRIPTIONS
         if description.value_fn(coordinator.roborock_device_info.props) is not None
     )
+    async_add_entities(
+        RoborockSensorEntityA01(
+            coordinator,
+            description,
+        )
+        for coordinator in coordinators.a01
+        for description in A01_SENSOR_DESCRIPTIONS
+        if description.data_protocol in coordinator.data
+    )
 
 
-class RoborockSensorEntity(RoborockCoordinatedEntity, SensorEntity):
+class RoborockSensorEntity(RoborockCoordinatedEntityV1, SensorEntity):
     """Representation of a Roborock sensor."""
 
     entity_description: RoborockSensorDescription
 
     def __init__(
         self,
-        unique_id: str,
         coordinator: RoborockDataUpdateCoordinator,
         description: RoborockSensorDescription,
     ) -> None:
         """Initialize the entity."""
         self.entity_description = description
-        super().__init__(unique_id, coordinator, description.protocol_listener)
+        super().__init__(
+            f"{description.key}_{slugify(coordinator.duid)}",
+            coordinator,
+            description.protocol_listener,
+        )
 
     @property
     def native_value(self) -> StateType | datetime.datetime:
@@ -235,3 +304,23 @@ class RoborockSensorEntity(RoborockCoordinatedEntity, SensorEntity):
         return self.entity_description.value_fn(
             self.coordinator.roborock_device_info.props
         )
+
+
+class RoborockSensorEntityA01(RoborockCoordinatedEntityA01, SensorEntity):
+    """Representation of a A01 Roborock sensor."""
+
+    entity_description: RoborockSensorDescriptionA01
+
+    def __init__(
+        self,
+        coordinator: RoborockDataUpdateCoordinatorA01,
+        description: RoborockSensorDescriptionA01,
+    ) -> None:
+        """Initialize the entity."""
+        self.entity_description = description
+        super().__init__(f"{description.key}_{slugify(coordinator.duid)}", coordinator)
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the value reported by the sensor."""
+        return self.coordinator.data[self.entity_description.data_protocol]
