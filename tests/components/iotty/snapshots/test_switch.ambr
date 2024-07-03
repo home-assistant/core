@@ -5,3 +5,7 @@
     'switch.test_light_switch_1_test_serial_1_test_light_switch_1_test_serial_1',
   ])
 # ---
+# name: test_devices_deletion_ok
+  list([
+  ])
+# ---

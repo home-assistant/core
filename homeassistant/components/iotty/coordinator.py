@@ -60,11 +60,6 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
         )
         self._device_registry = dr.async_get(hass)
 
-    def set_entity(self, device_id: str, entity: Entity) -> None:
-        """Store iotty device within Hass entities."""
-        _LOGGER.debug("Storing device '%s' in entities", device_id)
-        self._entities[device_id] = entity
-
     async def async_config_entry_first_refresh(self) -> None:
         """Override the first refresh to also fetch iotty devices list."""
         _LOGGER.debug("Fetching devices list from iottyCloud")

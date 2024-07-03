@@ -35,6 +35,10 @@ test_ls = [
     ),
 ]
 
+test_ls_one_removed = [
+    LightSwitch("TestLS", "TEST_SERIAL_0", LS_DEVICE_TYPE_UID, "[TEST] Light switch 0"),
+]
+
 
 @pytest.fixture
 async def local_oauth_impl(hass: HomeAssistant):
@@ -122,16 +126,6 @@ def mock_coordinator() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
-def mock_coordinator_set_entity() -> Generator[AsyncMock, None, None]:
-    """Mock coordinator's set_entity fn."""
-
-    with patch(
-        "homeassistant.components.iotty.coordinator.IottyDataUpdateCoordinator.set_entity"
-    ) as mock_fn:
-        yield mock_fn
-
-
-@pytest.fixture
 def mock_iotty_command_fn() -> Generator[AsyncMock, None, None]:
     """Mock iottyProxy to simulate cmd issuing."""
 
@@ -143,14 +137,6 @@ def mock_iotty_command_fn() -> Generator[AsyncMock, None, None]:
 def mock_devices() -> Generator[None, MagicMock, None]:
     """Fixture for two LS Devices."""
     return test_devices
-
-
-@pytest.fixture
-def mock_set_entity() -> Generator[None, MagicMock, None]:
-    """To check if we correctly inject iottyCloud into device classes."""
-
-    with patch("homeassistant.components.iotty.api.IottyProxy.set_entity") as mock_fn:
-        yield mock_fn
 
 
 @pytest.fixture
@@ -179,6 +165,21 @@ def mock_get_devices_twolightswitches() -> Generator[AsyncMock, None, None]:
         "iottycloud.cloudapi.CloudApi.get_devices", return_value=test_ls
     ) as mock_fn:
         yield mock_fn
+
+
+@pytest.fixture
+def mock_get_devices_twolightswitches_then_one() -> Generator[AsyncMock, None, None]:
+    """Mock for get_devices, returning two objects at the first call, and only one afterwards."""
+
+    with patch(
+        "homeassistant.components.iotty.api.IottyProxy", autospec=True
+    ) as mock_proxy:
+        mock_proxy.return_value.get_devices.side_effect = [
+            test_ls,
+            test_ls_one_removed,
+            test_ls_one_removed,
+        ]
+        yield mock_proxy
 
 
 @pytest.fixture

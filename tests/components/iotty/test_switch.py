@@ -3,12 +3,14 @@
 from unittest.mock import AsyncMock
 
 from aiohttp import ClientSession
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.iotty.api import IottyProxy
 from homeassistant.components.iotty.const import DOMAIN
 from homeassistant.components.iotty.coordinator import (
+    UPDATE_INTERVAL,
     IottyData,
     IottyDataUpdateCoordinator,
 )
@@ -19,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .conftest import test_ls
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_turn_on_ok(
@@ -139,5 +141,31 @@ async def test_devices_creaction_ok(
     )
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert hass.states.async_entity_ids() == snapshot
+
+
+async def test_devices_deletion_ok(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    local_oauth_impl: ClientSession,
+    mock_get_devices_twolightswitches_then_one,
+    mock_get_status_filled,
+    snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test iotty switch deletion."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, DOMAIN, local_oauth_impl
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     assert hass.states.async_entity_ids() == snapshot
