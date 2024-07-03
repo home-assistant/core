@@ -2273,13 +2273,11 @@ class StateMachine:
 
         This method must be run in the event loop.
         """
-        if entity_id not in self._states_data:
-            old_state = None
+        if (old_state := self._states_data.get(entity_id)) is None:
             same_state = False
             same_attr = False
             last_changed = None
         else:
-            old_state = self._states_data[entity_id]
             same_state = old_state.state == new_state and not force_update
             same_attr = old_state.attributes == attributes
             last_changed = old_state.last_changed if same_state else None
