@@ -39,7 +39,7 @@ def get_system_unique_id(entity: er.RegistryEntry, entity_unique_id: str) -> str
     return f"{entity.platform}.{entity.domain}.{entity_unique_id}"
 
 
-def _generate_aids(unique_id: str | None, entity_id: str) -> Generator[int, None, None]:
+def _generate_aids(unique_id: str | None, entity_id: str) -> Generator[int]:
     """Generate accessory aid."""
 
     if unique_id:

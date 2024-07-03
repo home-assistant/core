@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Iterable
 import dataclasses
 from functools import cached_property
@@ -19,7 +20,7 @@ from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryItems,
     normalize_name,
 )
-from .registry import BaseRegistry
+from .registry import BaseRegistry, RegistryIndexType
 from .singleton import singleton
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
@@ -135,15 +136,15 @@ class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
     def __init__(self) -> None:
         """Initialize the area registry items."""
         super().__init__()
-        self._labels_index: dict[str, dict[str, Literal[True]]] = {}
-        self._floors_index: dict[str, dict[str, Literal[True]]] = {}
+        self._labels_index: RegistryIndexType = defaultdict(dict)
+        self._floors_index: RegistryIndexType = defaultdict(dict)
 
     def _index_entry(self, key: str, entry: AreaEntry) -> None:
         """Index an entry."""
         if entry.floor_id is not None:
-            self._floors_index.setdefault(entry.floor_id, {})[key] = True
+            self._floors_index[entry.floor_id][key] = True
         for label in entry.labels:
-            self._labels_index.setdefault(label, {})[key] = True
+            self._labels_index[label][key] = True
         super()._index_entry(key, entry)
 
     def _unindex_entry(
@@ -314,17 +315,17 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         """Update name of area."""
         old = self.areas[area_id]
 
-        new_values = {}
-
-        for attr_name, value in (
-            ("aliases", aliases),
-            ("icon", icon),
-            ("labels", labels),
-            ("picture", picture),
-            ("floor_id", floor_id),
-        ):
-            if value is not UNDEFINED and value != getattr(old, attr_name):
-                new_values[attr_name] = value
+        new_values = {
+            attr_name: value
+            for attr_name, value in (
+                ("aliases", aliases),
+                ("icon", icon),
+                ("labels", labels),
+                ("picture", picture),
+                ("floor_id", floor_id),
+            )
+            if value is not UNDEFINED and value != getattr(old, attr_name)
+        }
 
         if name is not UNDEFINED and name != old.name:
             new_values["name"] = name

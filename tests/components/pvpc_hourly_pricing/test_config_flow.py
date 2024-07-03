@@ -30,6 +30,7 @@ _MOCK_TIME_BAD_AUTH_RESPONSES = datetime(2023, 1, 8, 12, 0, tzinfo=dt_util.UTC)
 
 async def test_config_flow(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     pvpc_aioclient_mock: AiohttpClientMocker,
 ) -> None:
@@ -82,8 +83,7 @@ async def test_config_flow(
     assert pvpc_aioclient_mock.call_count == 1
 
     # Check removal
-    registry = er.async_get(hass)
-    registry_entity = registry.async_get("sensor.esios_pvpc")
+    registry_entity = entity_registry.async_get("sensor.esios_pvpc")
     assert await hass.config_entries.async_remove(registry_entity.config_entry_id)
 
     # and add it again with UI

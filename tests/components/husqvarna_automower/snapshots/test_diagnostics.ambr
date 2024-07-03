@@ -64,8 +64,11 @@
       'error_datetime': None,
       'error_datetime_naive': None,
       'error_key': None,
+      'inactive_reason': 'NONE',
+      'is_error_confirmable': False,
       'mode': 'MAIN_AREA',
       'state': 'RESTRICTED',
+      'work_area_id': 123456,
     }),
     'planner': dict({
       'next_start_datetime': '2023-06-05T19:00:00+00:00',
@@ -98,6 +101,10 @@
         '81C6EEA2-D139-4FEA-B134-F22A6B3EA403': dict({
           'enabled': True,
           'name': 'Springflowers',
+        }),
+        'AAAAAAAA-BBBB-CCCC-DDDD-123456789101': dict({
+          'enabled': False,
+          'name': 'Danger Zone',
         }),
       }),
     }),

@@ -14,7 +14,7 @@ from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_entry_oauth2_flow, event
 
-from .const import DOMAIN
+from .const import DATA_CLOUD, DOMAIN
 
 DATA_SERVICES = "cloud_account_link_services"
 CACHE_TIMEOUT = 3600
@@ -68,7 +68,9 @@ async def _get_services(hass: HomeAssistant) -> list[dict[str, Any]]:
         return services  # noqa: RET504
 
     try:
-        services = await account_link.async_fetch_available_services(hass.data[DOMAIN])
+        services = await account_link.async_fetch_available_services(
+            hass.data[DATA_CLOUD]
+        )
     except (aiohttp.ClientError, TimeoutError):
         return []
 
@@ -105,7 +107,7 @@ class CloudOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implement
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate a url for the user to authorize."""
         helper = account_link.AuthorizeAccountHelper(
-            self.hass.data[DOMAIN], self.service
+            self.hass.data[DATA_CLOUD], self.service
         )
         authorize_url = await helper.async_get_authorize_url()
 
@@ -138,6 +140,6 @@ class CloudOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implement
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh a token."""
         new_token = await account_link.async_fetch_access_token(
-            self.hass.data[DOMAIN], self.service, token["refresh_token"]
+            self.hass.data[DATA_CLOUD], self.service, token["refresh_token"]
         )
         return {**token, **new_token}

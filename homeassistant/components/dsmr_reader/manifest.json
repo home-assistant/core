@@ -1,7 +1,7 @@
 {
   "domain": "dsmr_reader",
   "name": "DSMR Reader",
-  "codeowners": ["@sorted-bits", "@glodenox"],
+  "codeowners": ["@sorted-bits", "@glodenox", "@erwindouna"],
   "config_flow": true,
   "dependencies": ["mqtt"],
   "documentation": "https://www.home-assistant.io/integrations/dsmr_reader",

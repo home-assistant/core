@@ -125,6 +125,45 @@
       "lte_uplink_frequency": {
         "name": "LTE uplink frequency"
       },
+      "nrbler": {
+        "name": "5G block error rate"
+      },
+      "nrcqi0": {
+        "name": "5G CQI 0"
+      },
+      "nrcqi1": {
+        "name": "5G CQI 1"
+      },
+      "nrdlbandwidth": {
+        "name": "5G downlink bandwidth"
+      },
+      "nrdlmcs": {
+        "name": "5G downlink MCS"
+      },
+      "nrearfcn": {
+        "name": "5G EARFCN"
+      },
+      "nrrank": {
+        "name": "5G rank"
+      },
+      "nrrsrp": {
+        "name": "5G RSRP"
+      },
+      "nrrsrq": {
+        "name": "5G RSRQ"
+      },
+      "nrsinr": {
+        "name": "5G SINR"
+      },
+      "nrtxpower": {
+        "name": "5G transmit power"
+      },
+      "nrulbandwidth": {
+        "name": "5G uplink bandwidth"
+      },
+      "nrulmcs": {
+        "name": "5G uplink MCS"
+      },
       "pci": {
         "name": "PCI"
       },

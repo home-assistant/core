@@ -12,7 +12,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_form_create_success(
-    hass: HomeAssistant, mock_setup_entry, mock_apsystems
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_apsystems: AsyncMock
 ) -> None:
     """Test we handle creatinw with success."""
     result = await hass.config_entries.flow.async_init(
@@ -28,11 +28,11 @@ async def test_form_create_success(
 
 
 async def test_form_cannot_connect_and_recover(
-    hass: HomeAssistant, mock_apsystems: AsyncMock, mock_setup_entry
+    hass: HomeAssistant, mock_apsystems: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test we handle cannot connect error."""
 
-    mock_apsystems.return_value.get_device_info.side_effect = TimeoutError
+    mock_apsystems.get_device_info.side_effect = TimeoutError
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -44,7 +44,7 @@ async def test_form_cannot_connect_and_recover(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    mock_apsystems.return_value.get_device_info.side_effect = None
+    mock_apsystems.get_device_info.side_effect = None
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -58,13 +58,13 @@ async def test_form_cannot_connect_and_recover(
 
 
 async def test_form_unique_id_already_configured(
-    hass: HomeAssistant, mock_setup_entry, mock_apsystems
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_apsystems: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we handle cannot connect error."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_IP_ADDRESS: "127.0.0.2"}, unique_id="MY_SERIAL_NUMBER"
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

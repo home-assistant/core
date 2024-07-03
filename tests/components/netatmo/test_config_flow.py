@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import patch
 
 from pyatmo.const import ALL_SCOPES
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
@@ -59,11 +60,11 @@ async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Check full flow."""
 
@@ -226,11 +227,11 @@ async def test_option_flow_wrong_coordinates(hass: HomeAssistant) -> None:
         assert config_entry.options[CONF_WEATHER_AREAS]["Home"][k] == v
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Test initialization of the reauth flow."""
 

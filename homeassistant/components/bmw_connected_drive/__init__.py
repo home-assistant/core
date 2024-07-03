@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -18,10 +19,9 @@ from homeassistant.helpers import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_VIN, ATTRIBUTION, CONF_READ_ONLY, DATA_HASS_CONFIG, DOMAIN
+from .const import ATTR_VIN, ATTRIBUTION, CONF_READ_ONLY, DOMAIN
 from .coordinator import BMWDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,13 +55,14 @@ PLATFORMS = [
 SERVICE_UPDATE_STATE = "update_state"
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the BMW Connected Drive component from configuration.yaml."""
-    # Store full yaml config in data for platform.NOTIFY
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][DATA_HASS_CONFIG] = config
+type BMWConfigEntry = ConfigEntry[BMWData]
 
-    return True
+
+@dataclass
+class BMWData:
+    """Class to store BMW runtime data."""
+
+    coordinator: BMWDataUpdateCoordinator
 
 
 @callback
@@ -72,14 +73,17 @@ def _async_migrate_options_from_data_if_missing(
     options = dict(entry.options)
 
     if CONF_READ_ONLY in data or list(options) != list(DEFAULT_OPTIONS):
-        options = dict(DEFAULT_OPTIONS, **options)
+        options = dict(
+            DEFAULT_OPTIONS,
+            **{k: v for k, v in options.items() if k in DEFAULT_OPTIONS},
+        )
         options[CONF_READ_ONLY] = data.pop(CONF_READ_ONLY, False)
 
         hass.config_entries.async_update_entry(entry, data=data, options=options)
 
 
 async def _async_migrate_entries(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: BMWConfigEntry
 ) -> bool:
     """Migrate old entry."""
     entity_registry = er.async_get(hass)
@@ -131,8 +135,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = BMWData(coordinator)
 
     # Set up all platforms except notify
     await hass.config_entries.async_forward_entry_setups(
@@ -147,7 +150,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             Platform.NOTIFY,
             DOMAIN,
             {CONF_NAME: DOMAIN, CONF_ENTITY_ID: entry.entry_id},
-            hass.data[DOMAIN][DATA_HASS_CONFIG],
+            {},
         )
     )
 
@@ -168,14 +171,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
+
+    return await hass.config_entries.async_unload_platforms(
         entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
     )
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
 
 
 class BMWBaseEntity(CoordinatorEntity[BMWDataUpdateCoordinator]):

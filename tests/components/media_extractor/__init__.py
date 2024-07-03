@@ -2,8 +2,7 @@
 
 from typing import Any
 
-from tests.common import load_json_object_fixture
-from tests.components.media_extractor.const import (
+from .const import (
     AUDIO_QUERY,
     NO_FORMATS_RESPONSE,
     SOUNDCLOUD_TRACK,
@@ -11,6 +10,8 @@ from tests.components.media_extractor.const import (
     YOUTUBE_PLAYLIST,
     YOUTUBE_VIDEO,
 )
+
+from tests.common import load_json_object_fixture
 
 
 def _get_base_fixture(url: str) -> str:

@@ -31,12 +31,12 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.parametrize("hass_config", [{}])
+@pytest.mark.usefixtures("mock_hass_config")
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     knx: KNXTestKit,
-    mock_hass_config: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
@@ -51,9 +51,9 @@ async def test_diagnostics(
 
 
 @pytest.mark.parametrize("hass_config", [{"knx": {"wrong_key": {}}}])
+@pytest.mark.usefixtures("mock_hass_config")
 async def test_diagnostic_config_error(
     hass: HomeAssistant,
-    mock_hass_config: None,
     hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     knx: KNXTestKit,
@@ -72,10 +72,10 @@ async def test_diagnostic_config_error(
 
 
 @pytest.mark.parametrize("hass_config", [{}])
+@pytest.mark.usefixtures("mock_hass_config")
 async def test_diagnostic_redact(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_hass_config: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics redacting data."""
@@ -107,12 +107,12 @@ async def test_diagnostic_redact(
 
 
 @pytest.mark.parametrize("hass_config", [{}])
+@pytest.mark.usefixtures("mock_hass_config")
 async def test_diagnostics_project(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     knx: KNXTestKit,
-    mock_hass_config: None,
     load_knxproj: None,
     snapshot: SnapshotAssertion,
 ) -> None:

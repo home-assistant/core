@@ -61,7 +61,7 @@ async def test_press_button(hass: HomeAssistant) -> None:
     button.async_assert_service_values(
         ServicesTypes.OUTLET,
         {
-            CharacteristicsTypes.VENDOR_HAA_SETUP: "#HAA@trcmd",
+            CharacteristicsTypes.VENDOR_HAA_SETUP: "#HAA@trcmd",  # codespell:ignore haa
         },
     )
 

@@ -1,5 +1,6 @@
 """Tests for IPMA config flow."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 from pyipma import IPMAException
@@ -11,11 +12,11 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.components.ipma import MockLocation
+from . import MockLocation
 
 
 @pytest.fixture(name="ipma_setup", autouse=True)
-def ipma_setup_fixture(request):
+def ipma_setup_fixture() -> Generator[None]:
     """Patch ipma setup entry."""
     with patch("homeassistant.components.ipma.async_setup_entry", return_value=True):
         yield

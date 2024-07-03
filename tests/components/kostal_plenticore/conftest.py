@@ -27,7 +27,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_plenticore() -> Generator[Plenticore, None, None]:
+def mock_plenticore() -> Generator[Plenticore]:
     """Set up a Plenticore mock with some default values."""
     with patch(
         "homeassistant.components.kostal_plenticore.Plenticore", autospec=True

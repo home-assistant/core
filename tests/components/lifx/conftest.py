@@ -8,8 +8,6 @@ from homeassistant.components.lifx import config_flow, coordinator, util
 
 from . import _patch_discovery
 
-from tests.common import mock_device_registry, mock_registry
-
 
 @pytest.fixture
 def mock_discovery():
@@ -42,11 +40,6 @@ def mock_effect_conductor():
 
 
 @pytest.fixture(autouse=True)
-def lifx_mock_get_source_ip(mock_get_source_ip):
-    """Mock network util's async_get_source_ip."""
-
-
-@pytest.fixture(autouse=True)
 def lifx_no_wait_for_timeouts():
     """Avoid waiting for timeouts in tests."""
     with (
@@ -66,15 +59,3 @@ def lifx_mock_async_get_ipv4_broadcast_addresses():
         return_value=["255.255.255.255"],
     ):
         yield
-
-
-@pytest.fixture(name="device_reg")
-def device_reg_fixture(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture(name="entity_reg")
-def entity_reg_fixture(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)

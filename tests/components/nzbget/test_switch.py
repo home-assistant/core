@@ -15,16 +15,17 @@ from homeassistant.helpers.entity_component import async_update_entity
 from . import init_integration
 
 
-async def test_download_switch(hass: HomeAssistant, nzbget_api) -> None:
+async def test_download_switch(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, nzbget_api
+) -> None:
     """Test the creation and values of the download switch."""
     instance = nzbget_api.return_value
 
     entry = await init_integration(hass)
     assert entry
 
-    registry = er.async_get(hass)
     entity_id = "switch.nzbgettest_download"
-    entity_entry = registry.async_get(entity_id)
+    entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
     assert entity_entry.unique_id == f"{entry.entry_id}_download"
 

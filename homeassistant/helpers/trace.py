@@ -248,7 +248,7 @@ def script_execution_get() -> str | None:
 
 
 @contextmanager
-def trace_path(suffix: str | list[str]) -> Generator[None, None, None]:
+def trace_path(suffix: str | list[str]) -> Generator[None]:
     """Go deeper in the config tree.
 
     Can not be used as a decorator on couroutine functions.

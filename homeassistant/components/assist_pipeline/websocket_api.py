@@ -165,7 +165,7 @@ async def websocket_run(
         elif start_stage == PipelineStage.STT:
             wake_word_phrase = msg["input"].get("wake_word_phrase")
 
-        async def stt_stream() -> AsyncGenerator[bytes, None]:
+        async def stt_stream() -> AsyncGenerator[bytes]:
             state = None
 
             # Yield until we receive an empty chunk
@@ -352,7 +352,7 @@ def websocket_get_run(
     if pipeline_id not in pipeline_data.pipeline_debug:
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_FOUND,
+            websocket_api.ERR_NOT_FOUND,
             f"pipeline_id {pipeline_id} not found",
         )
         return
@@ -362,7 +362,7 @@ def websocket_get_run(
     if pipeline_run_id not in pipeline_debug:
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_FOUND,
+            websocket_api.ERR_NOT_FOUND,
             f"pipeline_run_id {pipeline_run_id} not found",
         )
         return

@@ -5,6 +5,7 @@ from __future__ import annotations
 from http import HTTPStatus
 from unittest.mock import Mock
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.repairs.websocket_api import (
@@ -22,10 +23,10 @@ from tests.common import ANY, MockConfigEntry
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_migrate_process_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_os: Mock,
     hass_client: ClientSessionGenerator,
@@ -120,11 +121,11 @@ async def test_migrate_process_sensor(
     assert hass.config_entries.async_entries(DOMAIN) == snapshot(name="after_migration")
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_other_fixable_issues(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
-    entity_registry_enabled_by_default: None,
     mock_added_config_entry: ConfigEntry,
 ) -> None:
     """Test fixing other issues."""

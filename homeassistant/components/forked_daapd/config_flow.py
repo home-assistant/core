@@ -111,7 +111,7 @@ class ForkedDaapdFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize."""
-        self.discovery_schema = None
+        self.discovery_schema: vol.Schema | None = None
 
     @staticmethod
     @callback

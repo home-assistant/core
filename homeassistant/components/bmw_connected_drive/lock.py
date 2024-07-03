@@ -10,13 +10,11 @@ from bimmer_connected.vehicle import MyBMWVehicle
 from bimmer_connected.vehicle.doors_windows import LockState
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BMWBaseEntity
-from .const import DOMAIN
+from . import BMWBaseEntity, BMWConfigEntry
 from .coordinator import BMWDataUpdateCoordinator
 
 DOOR_LOCK_STATE = "door_lock_state"
@@ -25,11 +23,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BMWConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the MyBMW lock from config entry."""
-    coordinator: BMWDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data.coordinator
 
     if not coordinator.read_only:
         async_add_entities(
@@ -65,11 +63,13 @@ class BMWLock(BMWBaseEntity, LockEntity):
         try:
             await self.vehicle.remote_services.trigger_remote_door_lock()
         except MyBMWAPIError as ex:
-            self._attr_is_locked = False
+            # Set the state to unknown if the command fails
+            self._attr_is_locked = None
             self.async_write_ha_state()
             raise HomeAssistantError(ex) from ex
-
-        self.coordinator.async_update_listeners()
+        finally:
+            # Always update the listeners to get the latest state
+            self.coordinator.async_update_listeners()
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the car."""
@@ -83,11 +83,13 @@ class BMWLock(BMWBaseEntity, LockEntity):
         try:
             await self.vehicle.remote_services.trigger_remote_door_unlock()
         except MyBMWAPIError as ex:
-            self._attr_is_locked = True
+            # Set the state to unknown if the command fails
+            self._attr_is_locked = None
             self.async_write_ha_state()
             raise HomeAssistantError(ex) from ex
-
-        self.coordinator.async_update_listeners()
+        finally:
+            # Always update the listeners to get the latest state
+            self.coordinator.async_update_listeners()
 
     @callback
     def _handle_coordinator_update(self) -> None:

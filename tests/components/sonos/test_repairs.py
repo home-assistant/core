@@ -10,7 +10,7 @@ from homeassistant.components.sonos.const import (
     SUB_FAIL_ISSUE_ID,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.issue_registry import async_get as async_get_issue_registry
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
 
 from .conftest import SonosMockEvent, SonosMockSubscribe
@@ -19,11 +19,13 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_subscription_repair_issues(
-    hass: HomeAssistant, config_entry: MockConfigEntry, soco: SoCo, zgs_discovery
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    soco: SoCo,
+    zgs_discovery,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test repair issues handling for failed subscriptions."""
-    issue_registry = async_get_issue_registry(hass)
-
     subscription: SonosMockSubscribe = soco.zoneGroupTopology.subscribe.return_value
     subscription.event_listener = Mock(address=("192.168.4.2", 1400))
 

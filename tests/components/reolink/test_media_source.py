@@ -51,11 +51,14 @@ TEST_DAY2 = 15
 TEST_HOUR = 13
 TEST_MINUTE = 12
 TEST_FILE_NAME = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}{TEST_HOUR}{TEST_MINUTE}00"
+TEST_FILE_NAME_MP4 = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}{TEST_HOUR}{TEST_MINUTE}00.mp4"
 TEST_STREAM = "main"
 TEST_CHANNEL = "0"
 
 TEST_MIME_TYPE = "application/x-mpegURL"
-TEST_URL = "http:test_url"
+TEST_MIME_TYPE_MP4 = "video/mp4"
+TEST_URL = "http:test_url&user=admin&password=test"
+TEST_URL2 = "http:test_url&token=test"
 
 
 @pytest.fixture(autouse=True)
@@ -85,18 +88,35 @@ async def test_resolve(
     """Test resolving Reolink media items."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-
-    reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE, TEST_URL)
     caplog.set_level(logging.DEBUG)
 
     file_id = (
         f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}"
     )
+    reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE, TEST_URL)
 
     play_media = await async_resolve_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
     )
+    assert play_media.mime_type == TEST_MIME_TYPE
 
+    file_id = f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME_MP4}"
+    reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE_MP4, TEST_URL2)
+
+    play_media = await async_resolve_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
+    )
+    assert play_media.mime_type == TEST_MIME_TYPE_MP4
+
+    file_id = (
+        f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}"
+    )
+    reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE, TEST_URL)
+    reolink_connect.is_nvr = False
+
+    play_media = await async_resolve_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
+    )
     assert play_media.mime_type == TEST_MIME_TYPE
 
 
@@ -136,11 +156,15 @@ async def test_browsing(
     browse_resolution_id = f"RESs|{entry_id}|{TEST_CHANNEL}"
     browse_res_sub_id = f"RES|{entry_id}|{TEST_CHANNEL}|sub"
     browse_res_main_id = f"RES|{entry_id}|{TEST_CHANNEL}|main"
+    browse_res_AT_sub_id = f"RES|{entry_id}|{TEST_CHANNEL}|autotrack_sub"
+    browse_res_AT_main_id = f"RES|{entry_id}|{TEST_CHANNEL}|autotrack_main"
     assert browse.domain == DOMAIN
     assert browse.title == TEST_NVR_NAME
     assert browse.identifier == browse_resolution_id
     assert browse.children[0].identifier == browse_res_sub_id
     assert browse.children[1].identifier == browse_res_main_id
+    assert browse.children[2].identifier == browse_res_AT_sub_id
+    assert browse.children[3].identifier == browse_res_AT_main_id
 
     # browse camera recording days
     mock_status = MagicMock()
@@ -148,6 +172,22 @@ async def test_browsing(
     mock_status.month = TEST_MONTH
     mock_status.days = (TEST_DAY, TEST_DAY2)
     reolink_connect.request_vod_files.return_value = ([mock_status], [])
+
+    browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_res_sub_id}")
+    assert browse.domain == DOMAIN
+    assert browse.title == f"{TEST_NVR_NAME} Low res."
+
+    browse = await async_browse_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/{browse_res_AT_sub_id}"
+    )
+    assert browse.domain == DOMAIN
+    assert browse.title == f"{TEST_NVR_NAME} Autotrack low res."
+
+    browse = await async_browse_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/{browse_res_AT_main_id}"
+    )
+    assert browse.domain == DOMAIN
+    assert browse.title == f"{TEST_NVR_NAME} Autotrack high res."
 
     browse = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{browse_res_main_id}"
@@ -205,6 +245,7 @@ async def test_browsing_unsupported_encoding(
     reolink_connect.request_vod_files.return_value = ([mock_status], [])
     reolink_connect.time.return_value = None
     reolink_connect.get_encoding.return_value = "h265"
+    reolink_connect.supported.return_value = False
 
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_root_id}")
 
