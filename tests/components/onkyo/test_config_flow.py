@@ -13,8 +13,6 @@ from homeassistant.components.onkyo.const import (
     CONF_RECEIVER_MAX_VOLUME,
     CONF_SOURCES,
     DOMAIN,
-    EISCP_IDENTIFIER,
-    EISCP_MODEL_NAME,
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
@@ -28,8 +26,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import setup_integration
+
 from tests.common import MockConfigEntry
-from tests.components.onkyo import setup_integration
 
 
 async def test_no_manual_entry_and_no_devices_discovered(hass: HomeAssistant) -> None:
@@ -116,7 +115,7 @@ async def test_manual_entry_valid_ip(
     client = mock_receiver.return_value
     client.host = "fake_host"
     client.port = 1337
-    client.info = {EISCP_IDENTIFIER: "001122334455", EISCP_MODEL_NAME: "fake_model"}
+    client.info = {"identifier": "001122334455", "model_name": "fake_model"}
 
     menu_result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -188,7 +187,7 @@ async def test_show_initial_menu(hass: HomeAssistant) -> None:
 async def test_select_manually_discovered_device(hass: HomeAssistant) -> None:
     """Test the full user configuration flow."""
 
-    info = {EISCP_IDENTIFIER: "004815162342", EISCP_MODEL_NAME: "fake_model"}
+    info = {"identifier": "004815162342", "model_name": "fake_model"}
     receiver = MagicMock()
     receiver.host = "fake_host"
     receiver.port = 12345
@@ -328,7 +327,7 @@ async def test_import_success(
     """Test import flow."""
 
     client = mock_receiver.return_value
-    client.info = {EISCP_IDENTIFIER: "001122334455", EISCP_MODEL_NAME: "Test model"}
+    client.info = {"identifier": "001122334455", "model_name": "Test model"}
 
     with patch("homeassistant.components.onkyo.config_flow"):
         result = await hass.config_entries.flow.async_init(
