@@ -34,7 +34,7 @@ async def user_flow(hass: HomeAssistant) -> str:
 
 
 @pytest.mark.parametrize(
-    "fixture", ("webmin_update_without_mac.json", "webmin_update.json")
+    "fixture", ["webmin_update_without_mac.json", "webmin_update.json"]
 )
 async def test_form_user(
     hass: HomeAssistant, user_flow: str, mock_setup_entry: AsyncMock, fixture: str
