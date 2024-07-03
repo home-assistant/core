@@ -215,6 +215,12 @@ RPC_SENSORS: Final = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    "boolean": RpcBinarySensorDescription(
+        key="boolean",
+        sub_key="value",
+        removal_condition=lambda config, _, key: config[key]["meta"]["ui"]["view"]
+        != "label",
+    ),
 }
 
 
