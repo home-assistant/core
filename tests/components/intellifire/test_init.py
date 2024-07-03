@@ -13,7 +13,7 @@ async def test_pseudo_migration_good(
     mock_local_poll_data,
     mock_cloud_poll,
     mock_connectivity_test_pass_pass,
-):
+) -> None:
     """Test entity update from old Version1 to newer Versio1."""
     mock_config_entry_old.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry_old.entry_id)
@@ -36,7 +36,7 @@ async def test_connectivity_bad(
     mock_login_with_credentials,
     mock_cloud_api_interface_user_data_1,
     mock_connectivity_test_fail_fail,
-):
+) -> None:
     """Test entity update from older Version1 to a newer Version1 with serial that can't be detected."""
     mock_config_entry_current.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry_current.entry_id)
@@ -54,7 +54,7 @@ async def test_pseudo_migration_bad_title(
     mock_local_poll_data,
     mock_cloud_poll,
     mock_connectivity_test_pass_pass,
-):
+) -> None:
     """Test entity update from older Version1 to a newer Version1 with serial that can't be detected."""
     mock_config_entry_v1_bad_title.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry_v1_bad_title.entry_id)
@@ -77,7 +77,7 @@ async def test_reauth_flow(
     mock_login_with_credentials,
     mock_cloud_api_interface_user_data_1,
     mock_connectivity_test_fail_fail_then_pass_pass,
-):
+) -> None:
     """Test reauth."""
     mock_config_entry_current.add_to_hass(hass)
 

@@ -18,7 +18,7 @@ async def test_standard_config_with_single_fireplace(
     mock_login_with_credentials: AsyncMock,
     mock_cloud_api_interface_user_data_1,
     mock_connectivity_test_pass_pass,
-):
+) -> None:
     """Test standard flow with a user who has only a single fireplace."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -52,7 +52,7 @@ async def test_standard_config_with_pre_configured_fireplace(
     mock_config_entry_current,
     mock_cloud_api_interface_user_data_1,
     mock_connectivity_test_pass_pass,
-):
+) -> None:
     """What if we try to configure an already configured fireplace."""
     # Configure an existing entry
     mock_config_entry_current.add_to_hass(hass)
@@ -80,7 +80,7 @@ async def test_standard_config_with_single_fireplace_and_bad_credentials(
     mock_login_with_bad_credentials: AsyncMock,
     mock_cloud_api_interface_user_data_1,
     mock_connectivity_test_pass_pass,
-):
+) -> None:
     """Run a test against bad crednetials."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -121,7 +121,7 @@ async def test_standard_config_with_multiple_fireplace(
     mock_login_with_credentials: AsyncMock,
     mock_cloud_api_interface_user_data_3,
     mock_connectivity_test_pass_pass,
-):
+) -> None:
     """Test multi-fireplace user who must be very rich."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
