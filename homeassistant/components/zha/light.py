@@ -162,8 +162,19 @@ class Light(LightEntity, ZHAEntity):
     @callback
     def restore_external_state_attributes(self, state: State) -> None:
         """Restore entity state."""
+        color_mode = state.attributes.get("color_mode")
+
+        if color_mode is not None:
+            color_mode = ZhaColorMode(color_mode)
+
         self.entity_data.entity.restore_external_state_attributes(
             state=(state.state == STATE_ON),
             off_with_transition=state.attributes.get("off_with_transition"),
             off_brightness=state.attributes.get("off_brightness"),
+            brightness=state.attributes.get("brightness"),
+            color_temp=state.attributes.get("color_temp"),
+            xy_color=state.attributes.get("xy_color"),
+            hs_color=state.attributes.get("hs_color"),
+            color_mode=color_mode,
+            effect=state.attributes.get("effect"),
         )
