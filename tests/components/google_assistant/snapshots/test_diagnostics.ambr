@@ -106,6 +106,9 @@
         'valve',
         'water_heater',
       ]),
+      'languages': list([
+        'en',
+      ]),
       'project_id': '1234',
       'report_state': False,
       'service_account': '**REDACTED**',
