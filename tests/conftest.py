@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
-from contextlib import asynccontextmanager, contextmanager
+from contextlib import AsyncExitStack, asynccontextmanager, contextmanager
 import datetime
 import functools
 import gc
@@ -1506,25 +1506,21 @@ async def async_setup_recorder_instance(
 ) -> AsyncGenerator[RecorderInstanceGenerator]:
     """Yield callable to setup recorder instance."""
 
-    # pylint: disable-next=import-outside-toplevel
+    async with AsyncExitStack() as stack:
 
-    context_manager = None
+        async def async_setup_recorder(
+            hass: HomeAssistant,
+            config: ConfigType | None = None,
+            *,
+            wait_recorder: bool = True,
+        ) -> AsyncGenerator[recorder.Recorder]:
+            """Set up and return recorder instance."""
 
-    async def async_setup_recorder(
-        hass: HomeAssistant,
-        config: ConfigType | None = None,
-        *,
-        wait_recorder: bool = True,
-    ) -> AsyncGenerator[recorder.Recorder]:
-        """Setup and return recorder instance."""  # noqa: D401
+            return await stack.enter_async_context(
+                async_test_recorder(hass, config, wait_recorder=wait_recorder)
+            )
 
-        # Store the context manager to prevent it from being garbage collected
-        nonlocal context_manager
-        context_manager = async_test_recorder(hass, config, wait_recorder=wait_recorder)
-        # pylint: disable-next=unnecessary-dunder-call
-        return await context_manager.__aenter__()
-
-    return async_setup_recorder
+        yield async_setup_recorder
 
 
 @pytest.fixture
