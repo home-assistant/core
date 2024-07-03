@@ -53,11 +53,7 @@ async def websocket_create(
         )
         return
 
-    try:
-        await provider.async_add_auth(msg["username"], msg["password"])
-    except auth_ha.InvalidUser:
-        connection.send_error(msg["id"], "username_exists", "Username already exists")
-        return
+    await provider.async_add_auth(msg["username"], msg["password"])
 
     credentials = await provider.async_get_or_create_credentials(
         {"username": msg["username"]}
@@ -94,13 +90,7 @@ async def websocket_delete(
         connection.send_result(msg["id"])
         return
 
-    try:
-        await provider.async_remove_auth(msg["username"])
-    except auth_ha.InvalidUser:
-        connection.send_error(
-            msg["id"], "auth_not_found", "Given username was not found."
-        )
-        return
+    await provider.async_remove_auth(msg["username"])
 
     connection.send_result(msg["id"])
 
@@ -187,14 +177,8 @@ async def websocket_admin_change_password(
         )
         return
 
-    try:
-        await provider.async_change_password(username, msg["password"])
-        connection.send_result(msg["id"])
-    except auth_ha.InvalidUser:
-        connection.send_error(
-            msg["id"], "credentials_not_found", "Credentials not found"
-        )
-        return
+    await provider.async_change_password(username, msg["password"])
+    connection.send_result(msg["id"])
 
 
 @websocket_api.websocket_command(

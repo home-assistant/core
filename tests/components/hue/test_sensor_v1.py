@@ -10,7 +10,7 @@ from homeassistant.components.hue.const import ATTR_HUE_EVENT
 from homeassistant.components.hue.v1 import sensor_base
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import create_mock_bridge, setup_platform
 
@@ -452,7 +452,10 @@ async def test_update_unauthorized(hass: HomeAssistant, mock_bridge_v1) -> None:
 
 
 async def test_hue_events(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_bridge_v1, device_reg
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_bridge_v1,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that hue remotes fire events when pressed."""
     mock_bridge_v1.mock_sensor_responses.append(SENSOR_RESPONSE)
@@ -464,7 +467,7 @@ async def test_hue_events(
     assert len(hass.states.async_all()) == 7
     assert len(events) == 0
 
-    hue_tap_device = device_reg.async_get_device(
+    hue_tap_device = device_registry.async_get_device(
         identifiers={(hue.DOMAIN, "00:00:00:00:00:44:23:08")}
     )
 
@@ -495,7 +498,7 @@ async def test_hue_events(
         "last_updated": "2019-12-28T22:58:03",
     }
 
-    hue_dimmer_device = device_reg.async_get_device(
+    hue_dimmer_device = device_registry.async_get_device(
         identifiers={(hue.DOMAIN, "00:17:88:01:10:3e:3a:dc")}
     )
 
@@ -594,7 +597,7 @@ async def test_hue_events(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    hue_aurora_device = device_reg.async_get_device(
+    hue_aurora_device = device_registry.async_get_device(
         identifiers={(hue.DOMAIN, "ff:ff:00:0f:e7:fd:bc:b7")}
     )
 

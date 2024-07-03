@@ -10,14 +10,12 @@ from bimmer_connected.vehicle import MyBMWVehicle
 from bimmer_connected.vehicle.charging_profile import ChargingMode
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfElectricCurrent
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BMWBaseEntity
-from .const import DOMAIN
+from . import BMWBaseEntity, BMWConfigEntry
 from .coordinator import BMWDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,11 +61,11 @@ SELECT_TYPES: tuple[BMWSelectEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BMWConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the MyBMW lock from config entry."""
-    coordinator: BMWDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data.coordinator
 
     entities: list[BMWSelect] = []
 

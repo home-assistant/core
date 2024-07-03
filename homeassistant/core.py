@@ -2243,16 +2243,45 @@ class StateMachine:
 
         This method must be run in the event loop.
         """
-        new_state = str(new_state)
-        attributes = attributes or {}
-        old_state = self._states_data.get(entity_id)
-        if old_state is None:
-            # If the state is missing, try to convert the entity_id to lowercase
-            # and try again.
-            entity_id = entity_id.lower()
-            old_state = self._states_data.get(entity_id)
+        self.async_set_internal(
+            entity_id.lower(),
+            str(new_state),
+            attributes or {},
+            force_update,
+            context,
+            state_info,
+            timestamp or time.time(),
+        )
 
-        if old_state is None:
+    @callback
+    def async_set_internal(
+        self,
+        entity_id: str,
+        new_state: str,
+        attributes: Mapping[str, Any] | None,
+        force_update: bool,
+        context: Context | None,
+        state_info: StateInfo | None,
+        timestamp: float,
+    ) -> None:
+        """Set the state of an entity, add entity if it does not exist.
+
+        This method is intended to only be used by core internally
+        and should not be considered a stable API. We will make
+        breaking changes to this function in the future and it
+        should not be used in integrations.
+
+        This method must be run in the event loop.
+        """
+        # Most cases the key will be in the dict
+        # so we optimize for the happy path as
+        # python 3.11+ has near zero overhead for
+        # try when it does not raise an exception.
+        old_state: State | None
+        try:
+            old_state = self._states_data[entity_id]
+        except KeyError:
+            old_state = None
             same_state = False
             same_attr = False
             last_changed = None
@@ -2272,9 +2301,10 @@ class StateMachine:
         # timestamp implementation:
         # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6387
         # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6323
-        if timestamp is None:
-            timestamp = time.time()
         now = dt_util.utc_from_timestamp(timestamp)
+
+        if context is None:
+            context = Context(id=ulid_at_time(timestamp))
 
         if same_state and same_attr:
             # mypy does not understand this is only possible if old_state is not None
@@ -2293,9 +2323,6 @@ class StateMachine:
                 time_fired=timestamp,
             )
             return
-
-        if context is None:
-            context = Context(id=ulid_at_time(timestamp))
 
         if same_attr:
             if TYPE_CHECKING:
