@@ -155,16 +155,18 @@ async def test_purge_old_states(
         assert state_attributes.count() == 3
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_purge_old_states_encouters_database_corruption(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     recorder_db_url: str,
 ) -> None:
-    """Test database image image is malformed while deleting old states."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test is specific for SQLite, wiping the database on error only happens
-        # with SQLite.
-        return
+    """Test database image image is malformed while deleting old states.
+
+    This test is specific for SQLite, wiping the database on error only happens
+    with SQLite.
+    """
 
     await async_setup_recorder_instance(hass)
     await async_attach_db_engine(hass)
@@ -1097,14 +1099,17 @@ async def test_purge_can_mix_legacy_and_new_format(
         assert states_without_event_id.count() == 1
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_purge_can_mix_legacy_and_new_format_with_detached_state(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     recorder_db_url: str,
 ) -> None:
-    """Test purging with legacy and new events with a detached state."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        return pytest.skip("This tests disables foreign key checks on SQLite")
+    """Test purging with legacy and new events with a detached state.
+
+    This tests disables foreign key checks on SQLite.
+    """
 
     instance = await async_setup_recorder_instance(hass)
     await async_attach_db_engine(hass)
