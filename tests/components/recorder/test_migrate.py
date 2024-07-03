@@ -182,9 +182,6 @@ async def test_database_migration_encounters_corruption(
         patch(
             "homeassistant.components.recorder.core.move_away_broken_database"
         ) as move_away,
-        patch(
-            "homeassistant.components.recorder.Recorder._schedule_compile_missing_statistics",
-        ),
     ):
         await async_setup_recorder_instance(hass)
         hass.states.async_set("my.entity", "on", {})
@@ -415,9 +412,6 @@ async def test_schema_migrate(
         patch(
             "homeassistant.components.recorder.migration._create_index",
             wraps=_sometimes_failing_create_index,
-        ),
-        patch(
-            "homeassistant.components.recorder.Recorder._schedule_compile_missing_statistics",
         ),
         patch(
             "homeassistant.components.recorder.Recorder._process_state_changed_event_into_session",
