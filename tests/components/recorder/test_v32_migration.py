@@ -320,27 +320,6 @@ async def test_migrate_can_resume_entity_id_post_migration(
     assert "ix_states_event_id" in states_index_names
     assert "ix_states_entity_id_last_updated_ts" in states_index_names
 
-    with patch("homeassistant.components.recorder.Recorder._post_migrate_entity_ids"):
-        async with async_test_home_assistant() as hass:
-            recorder_helper.async_initialize_recorder(hass)
-            assert await async_setup_component(
-                hass, "recorder", {"recorder": {"db_url": dburl}}
-            )
-            await hass.async_block_till_done()
-
-            # We need to wait for all the migration tasks to complete
-            # before we can check the database.
-            for _ in range(number_of_migrations):
-                await recorder.get_instance(hass).async_block_till_done()
-                await async_wait_recording_done(hass)
-
-            states_indexes = await recorder.get_instance(hass).async_add_executor_job(
-                _get_states_index_names
-            )
-            states_index_names = {index["name"] for index in states_indexes}
-            await hass.async_stop()
-            await hass.async_block_till_done()
-
     async with async_test_home_assistant() as hass:
         recorder_helper.async_initialize_recorder(hass)
         assert await async_setup_component(
