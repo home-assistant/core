@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from types import ModuleType
 from typing import Any
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import sensor
 from homeassistant.components.number import NumberDeviceClass

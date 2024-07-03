@@ -30,8 +30,8 @@ async def async_setup_entry(
 
 def _get_event_from_mealplan(mealplan: Mealplan) -> CalendarEvent:
     """Create a CalendarEvent from a Mealplan."""
-    description: str | None = None
-    name = "No recipe"
+    description: str | None = mealplan.description
+    name = mealplan.title or "No recipe"
     if mealplan.recipe:
         name = mealplan.recipe.name
         description = mealplan.recipe.description
@@ -50,12 +50,9 @@ class MealieMealplanCalendarEntity(MealieEntity, CalendarEntity):
         self, coordinator: MealieCoordinator, entry_type: MealplanEntryType
     ) -> None:
         """Create the Calendar entity."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, entry_type.name.lower())
         self._entry_type = entry_type
         self._attr_translation_key = entry_type.name.lower()
-        self._attr_unique_id = (
-            f"{self.coordinator.config_entry.entry_id}_{entry_type.name.lower()}"
-        )
 
     @property
     def event(self) -> CalendarEvent | None:

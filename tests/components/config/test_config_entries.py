@@ -1,12 +1,12 @@
 """Test config entries API."""
 
 from collections import OrderedDict
+from collections.abc import Generator
 from http import HTTPStatus
 from unittest.mock import ANY, AsyncMock, patch
 
 from aiohttp.test_utils import TestClient
 import pytest
-from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant import config_entries as core_ce, data_entry_flow, loader

@@ -105,6 +105,7 @@
         "battery": "[%key:component::sensor::entity_component::battery::name%]",
         "carbon_dioxide": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
         "carbon_monoxide": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
+        "conductivity": "[%key:component::sensor::entity_component::conductivity::name%]",
         "current": "[%key:component::sensor::entity_component::current::name%]",
         "data_rate": "[%key:component::sensor::entity_component::data_rate::name%]",
         "data_size": "[%key:component::sensor::entity_component::data_size::name%]",

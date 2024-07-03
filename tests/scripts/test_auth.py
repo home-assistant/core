@@ -1,12 +1,12 @@
 """Test the auth script to manage local users."""
 
 from asyncio import AbstractEventLoop
+from collections.abc import Generator
 import logging
 from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.auth.providers import homeassistant as hass_auth
 from homeassistant.core import HomeAssistant
