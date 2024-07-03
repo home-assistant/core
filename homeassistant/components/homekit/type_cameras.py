@@ -317,7 +317,7 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
         char = self._char_motion_detected
         assert char is not None
         if self.motion_is_event:
-            if state in (STATE_ON, STATE_UNAVAILABLE):
+            if state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                 return
             _LOGGER.debug(
                 "%s: Set linked motion %s sensor to True/False",
