@@ -2277,6 +2277,7 @@ class StateMachine:
         # so we optimize for the happy path as
         # python 3.11+ has near zero overhead for
         # try when it does not raise an exception.
+        old_state: State | None
         try:
             old_state = self._states_data[entity_id]
         except KeyError:
