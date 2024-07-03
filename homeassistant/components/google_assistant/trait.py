@@ -5,7 +5,6 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from datetime import datetime, timedelta
-from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -88,10 +87,8 @@ from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.translation import (
-    async_translate_state,
-    async_translate_state_attribute_name,
-    async_translate_state_attribute_value,
-    async_translate_state_name,
+    async_translate_entity_string,
+    async_translation_suffix,
 )
 from homeassistant.util import color as color_util, dt as dt_util
 from homeassistant.util.dt import utcnow
@@ -343,47 +340,33 @@ class _Trait(ABC):
             translation_key = entry.translation_key
 
         if attribute is not ATTR_STATE and value:
-            return partial(
-                async_translate_state_attribute_value,
+            suffix = async_translation_suffix(attribute=attribute, value=value)
+            default = value
+        elif attribute is not ATTR_STATE:
+            suffix = async_translation_suffix(attribute=attribute)
+            default = attribute
+        elif value:
+            suffix = async_translation_suffix(value=value)
+            default = value
+        else:
+            suffix = async_translation_suffix()
+            default = "name"
+
+        def _translate(language):
+            result = async_translate_entity_string(
                 self.hass,
-                attribute,
-                value,
                 domain,
                 platform,
                 translation_key,
                 device_class,
+                suffix,
+                language,
             )
+            if result is None:
+                return default
+            return result
 
-        if attribute is not ATTR_STATE:
-            return partial(
-                async_translate_state_attribute_name,
-                self.hass,
-                attribute,
-                domain,
-                platform,
-                translation_key,
-                device_class,
-            )
-
-        if value:
-            return partial(
-                async_translate_state,
-                self.hass,
-                value,
-                domain,
-                platform,
-                translation_key,
-                device_class,
-            )
-
-        return partial(
-            async_translate_state_name,
-            self.hass,
-            domain,
-            platform,
-            translation_key,
-            device_class,
-        )
+        return _translate
 
     def _synonyms_name(self, attr: str):
         translator = self._translator(None, attr)

@@ -26,6 +26,7 @@ from homeassistant.loader import (
 from homeassistant.util.json import load_json
 
 from . import singleton
+from .typing import UNDEFINED, UndefinedType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -460,14 +461,14 @@ def async_get_exception_message(
 
 
 @callback
-def _async_translate_entity_string(
+def async_translate_entity_string(
     hass: HomeAssistant,
     domain: str,
     platform: str | None,
     translation_key: str | None,
     device_class: str | None,
-    language: str,
     suffix: str,
+    language: str,
 ) -> str | None:
     """Translate provided suffix using cached translations for given language."""
     if platform is not None and translation_key is not None:
@@ -505,92 +506,30 @@ def async_translate_state(
         return state
     if language is None:
         language = hass.config.language
-    if translation := _async_translate_entity_string(
+    if translation := async_translate_entity_string(
         hass,
         domain,
         platform,
         translation_key,
         device_class,
-        language,
         f"state.{state}",
+        language,
     ):
         return translation
     return state
 
 
 @callback
-def async_translate_state_name(
-    hass: HomeAssistant,
-    domain: str,
-    platform: str | None,
-    translation_key: str | None,
-    device_class: str | None,
-    language: str | None = None,
+def async_translation_suffix(
+    attribute: str | UndefinedType = UNDEFINED,
+    value: str | UndefinedType = UNDEFINED,
 ) -> str:
-    """Translate provided state using cached translations for currently selected language."""
-    if language is None:
-        language = hass.config.language
-    if translation := _async_translate_entity_string(
-        hass,
-        domain,
-        platform,
-        translation_key,
-        device_class,
-        language,
-        "name",
-    ):
-        return translation
-    return domain
+    """Construct a translation suffix."""
+    if attribute is UNDEFINED and value is UNDEFINED:
+        return "name"
+    if attribute is UNDEFINED:
+        return f"state.{value}"
+    if value is UNDEFINED:
+        return f"state_attributes.{attribute}.name"
 
-
-@callback
-def async_translate_state_attribute_name(
-    hass: HomeAssistant,
-    attribute: str,
-    domain: str,
-    platform: str | None,
-    translation_key: str | None,
-    device_class: str | None,
-    language: str | None = None,
-) -> str:
-    """Translate provided state using cached translations for currently selected language."""
-    if language is None:
-        language = hass.config.language
-    if translation := _async_translate_entity_string(
-        hass,
-        domain,
-        platform,
-        translation_key,
-        device_class,
-        language,
-        f"state_attributes.{attribute}.name",
-    ):
-        return translation
-    return attribute
-
-
-@callback
-def async_translate_state_attribute_value(
-    hass: HomeAssistant,
-    attribute: str,
-    value: str,
-    domain: str,
-    platform: str | None,
-    translation_key: str | None,
-    device_class: str | None,
-    language: str | None = None,
-) -> str:
-    """Translate provided state using cached translations for currently selected language."""
-    if language is None:
-        language = hass.config.language
-    if translation := _async_translate_entity_string(
-        hass,
-        domain,
-        platform,
-        translation_key,
-        device_class,
-        language,
-        f"state_attributes.{attribute}.state.{value}",
-    ):
-        return translation
-    return value
+    return f"state_attributes.{attribute}.state.{value}"
