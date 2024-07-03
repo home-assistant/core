@@ -185,9 +185,9 @@ async def test_general_and_feed_in_price_sensor(hass: HomeAssistant) -> None:
 
 
 async def test_general_actual_sensor(hass: HomeAssistant, setup_general: Mock) -> None:
-    """Test the General Actual sensor."""
+    """Test the General Previous sensor."""
     assert len(hass.states.async_all()) == 6
-    price = hass.states.get("sensor.mock_title_general_actual")
+    price = hass.states.get("sensor.mock_title_general_previous")
     assert price
     assert price.state == "0.08"
     attributes = price.attributes
@@ -211,7 +211,7 @@ async def test_general_actual_sensor(hass: HomeAssistant, setup_general: Mock) -
 async def test_controlled_load_actual_sensor(hass: HomeAssistant) -> None:
     """Test the Controlled Load Actual sensor."""
     assert len(hass.states.async_all()) == 10
-    price = hass.states.get("sensor.mock_title_controlled_load_actual")
+    price = hass.states.get("sensor.mock_title_controlled_load_previous")
     assert price
     assert price.state == "0.08"
     attributes = price.attributes
@@ -235,7 +235,7 @@ async def test_controlled_load_actual_sensor(hass: HomeAssistant) -> None:
 async def test_feed_in_actual_sensor(hass: HomeAssistant) -> None:
     """Test the Feed In Actual sensor."""
     assert len(hass.states.async_all()) == 10
-    price = hass.states.get("sensor.mock_title_feed_in_actual")
+    price = hass.states.get("sensor.mock_title_feed_in_previous")
     assert price
     assert price.state == "-0.08"
     attributes = price.attributes
