@@ -100,7 +100,7 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema(
     assert schema_errors == set()
 
 
-@pytest.mark.test_on_db_engine("mysql")
+@pytest.mark.skip_on_db_engine(["postgresql", "sqlite"])
 @pytest.mark.usefixtures("skip_by_db_engine")
 async def test_validate_db_schema_fix_incorrect_collation(
     async_setup_recorder_instance: RecorderInstanceGenerator,
