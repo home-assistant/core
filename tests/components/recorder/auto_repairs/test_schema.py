@@ -40,6 +40,8 @@ async def test_validate_db_schema(
     assert "Database is about to correct DB schema errors" not in caplog.text
 
 
+@pytest.mark.skip_on_db_engine(["postgresql", "sqlite"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_validate_db_schema_fix_utf8_issue_good_schema(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -47,9 +49,6 @@ async def test_validate_db_schema_fix_utf8_issue_good_schema(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test validating DB schema with MySQL when the schema is correct."""
-    if not recorder_db_url.startswith("mysql://"):
-        # This problem only happens on MySQL
-        return
     await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
     instance = get_instance(hass)
@@ -59,6 +58,8 @@ async def test_validate_db_schema_fix_utf8_issue_good_schema(
     assert schema_errors == set()
 
 
+@pytest.mark.skip_on_db_engine(["postgresql", "sqlite"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_validate_db_schema_fix_utf8_issue_with_broken_schema(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -66,9 +67,6 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test validating DB schema with MySQL when the schema is broken and repairing it."""
-    if not recorder_db_url.startswith("mysql://"):
-        # This problem only happens on MySQL
-        return
     await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
     instance = get_instance(hass)
@@ -102,6 +100,8 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema(
     assert schema_errors == set()
 
 
+@pytest.mark.skip_on_db_engine(["postgresql", "sqlite"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_validate_db_schema_fix_incorrect_collation(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -109,9 +109,6 @@ async def test_validate_db_schema_fix_incorrect_collation(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test validating DB schema with MySQL when the collation is incorrect."""
-    if not recorder_db_url.startswith("mysql://"):
-        # This problem only happens on MySQL
-        return
     await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
     instance = get_instance(hass)
@@ -144,6 +141,8 @@ async def test_validate_db_schema_fix_incorrect_collation(
     assert schema_errors == set()
 
 
+@pytest.mark.skip_on_db_engine(["postgresql", "sqlite"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_validate_db_schema_precision_correct_collation(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -151,9 +150,6 @@ async def test_validate_db_schema_precision_correct_collation(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test validating DB schema when the schema is correct with the correct collation."""
-    if not recorder_db_url.startswith("mysql://"):
-        # This problem only happens on MySQL
-        return
     await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
     instance = get_instance(hass)
@@ -165,6 +161,8 @@ async def test_validate_db_schema_precision_correct_collation(
     assert schema_errors == set()
 
 
+@pytest.mark.skip_on_db_engine(["postgresql", "sqlite"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_validate_db_schema_fix_utf8_issue_with_broken_schema_unrepairable(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -172,9 +170,6 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema_unrepairable
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test validating DB schema with MySQL when the schema is broken and cannot be repaired."""
-    if not recorder_db_url.startswith("mysql://"):
-        # This problem only happens on MySQL
-        return
     await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
     instance = get_instance(hass)
@@ -206,6 +201,8 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema_unrepairable
     assert "Error when validating DB schema" in caplog.text
 
 
+@pytest.mark.skip_on_db_engine(["sqlite"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_validate_db_schema_precision_good_schema(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -213,9 +210,6 @@ async def test_validate_db_schema_precision_good_schema(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test validating DB schema when the schema is correct."""
-    if not recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This problem only happens on MySQL and PostgreSQL
-        return
     await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
     instance = get_instance(hass)
@@ -227,6 +221,8 @@ async def test_validate_db_schema_precision_good_schema(
     assert schema_errors == set()
 
 
+@pytest.mark.skip_on_db_engine(["sqlite"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_validate_db_schema_precision_with_broken_schema(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -234,9 +230,6 @@ async def test_validate_db_schema_precision_with_broken_schema(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test validating DB schema when the schema is broken and than repair it."""
-    if not recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This problem only happens on MySQL and PostgreSQL
-        return
     await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
     instance = get_instance(hass)
@@ -275,6 +268,8 @@ async def test_validate_db_schema_precision_with_broken_schema(
     assert schema_errors == set()
 
 
+@pytest.mark.skip_on_db_engine(["postgresql", "sqlite"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_validate_db_schema_precision_with_unrepairable_broken_schema(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -282,9 +277,6 @@ async def test_validate_db_schema_precision_with_unrepairable_broken_schema(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test validating DB schema when the schema is broken and cannot be repaired."""
-    if not recorder_db_url.startswith("mysql://"):
-        # This problem only happens on MySQL
-        return
     await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
     instance = get_instance(hass)
