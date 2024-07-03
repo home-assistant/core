@@ -501,7 +501,7 @@ async def test_rpc_device_virtual_switch_without_name(
 
     entry = entity_registry.async_get(entity_id)
     assert entry
-    assert entry.unique_id == "123456789ABC-boolean:200"
+    assert entry.unique_id == "123456789ABC-boolean:200-boolean"
 
 
 async def test_rpc_device_virtual_binary_sensor(
@@ -540,7 +540,7 @@ async def test_rpc_device_remove_orphaned_virtual_component(
         hass,
         SWITCH_DOMAIN,
         "test_name_boolean_200",
-        "boolean:200",
+        "boolean:200-boolean",
         config_entry,
         device_id=device_entry.id,
     )
