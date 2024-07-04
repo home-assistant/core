@@ -208,8 +208,6 @@ class BaseProtectEntity(Entity, ABC):
         last_updated_success = self.data.last_update_success
 
         if device.model is ModelType.NVR:
-            if TYPE_CHECKING:
-                assert isinstance(device, NVR)
             if available := last_updated_success:
                 self.device = device
         else:
