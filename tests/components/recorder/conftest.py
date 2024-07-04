@@ -53,7 +53,7 @@ def recorder_dialect_name(hass: HomeAssistant, db_engine: str) -> Generator[None
 
 
 @dataclass
-class InstrumentedMigration:
+class InstrumentedMigration(slots=True):
     """Container to aid controlling migration progress."""
 
     migration_done: threading.Event
