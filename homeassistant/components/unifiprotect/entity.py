@@ -219,6 +219,7 @@ class BaseProtectEntity(Entity):
         was_available = self._attr_available
         async_get_ufp_enabled = self._async_get_ufp_enabled
         last_updated_success = self.data.last_update_success
+
         if device.model is ModelType.NVR:
             if TYPE_CHECKING:
                 assert isinstance(device, NVR)
