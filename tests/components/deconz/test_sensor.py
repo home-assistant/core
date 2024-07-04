@@ -3,7 +3,6 @@
 from collections.abc import Callable
 from datetime import timedelta
 from typing import Any
-from unittest.mock import patch
 
 import pytest
 
@@ -26,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
+from .test_gateway import setup_deconz_integration
 
 from tests.common import async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -911,23 +910,17 @@ TEST_DATA = [
 ]
 
 
-@pytest.mark.parametrize(("sensor_data", "expected"), TEST_DATA)
+@pytest.mark.parametrize(("sensor_1_payload", "expected"), TEST_DATA)
+@pytest.mark.parametrize("config_entry_options", [{CONF_ALLOW_CLIP_SENSOR: True}])
 async def test_sensors(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: ConfigEntry,
     mock_deconz_websocket,
-    sensor_data,
-    expected,
+    expected: dict[str, Any],
 ) -> None:
     """Test successful creation of sensor entities."""
-
-    with patch.dict(DECONZ_WEB_REQUEST, {"sensors": {"1": sensor_data}}):
-        config_entry = await setup_deconz_integration(
-            hass, aioclient_mock, options={CONF_ALLOW_CLIP_SENSOR: True}
-        )
-
     # Enable in entity registry
     if expected.get("enable_entity"):
         entity_registry.async_update_entity(
@@ -960,7 +953,11 @@ async def test_sensors(
 
     # Verify device registry
     assert (
-        len(dr.async_entries_for_config_entry(device_registry, config_entry.entry_id))
+        len(
+            dr.async_entries_for_config_entry(
+                device_registry, config_entry_setup.entry_id
+            )
+        )
         == expected["device_count"]
     )
 
@@ -974,12 +971,12 @@ async def test_sensors(
 
     # Unload entry
 
-    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.config_entries.async_unload(config_entry_setup.entry_id)
     assert hass.states.get(expected["entity_id"]).state == STATE_UNAVAILABLE
 
     # Remove entry
 
-    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.config_entries.async_remove(config_entry_setup.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
 
