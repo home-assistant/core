@@ -1,7 +1,6 @@
 """Test deCONZ component setup process."""
 
 import asyncio
-from collections.abc import Callable
 from unittest.mock import patch
 
 from homeassistant.components.deconz import (
@@ -14,8 +13,9 @@ from homeassistant.components.deconz.errors import AuthenticationRequired, Canno
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
+from .conftest import ConfigEntryFactoryType
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 ENTRY1_HOST = "1.2.3.4"
@@ -50,7 +50,7 @@ async def test_setup_entry_successful(
 
 
 async def test_setup_entry_fails_config_entry_not_ready(
-    hass: HomeAssistant, config_entry_factory: Callable[[], ConfigEntry]
+    hass: HomeAssistant, config_entry_factory: ConfigEntryFactoryType
 ) -> None:
     """Failed authentication trigger a reauthentication flow."""
     with patch(
@@ -63,7 +63,7 @@ async def test_setup_entry_fails_config_entry_not_ready(
 
 
 async def test_setup_entry_fails_trigger_reauth_flow(
-    hass: HomeAssistant, config_entry_factory: Callable[[], ConfigEntry]
+    hass: HomeAssistant, config_entry_factory: ConfigEntryFactoryType
 ) -> None:
     """Failed authentication trigger a reauthentication flow."""
     with (
@@ -80,24 +80,21 @@ async def test_setup_entry_fails_trigger_reauth_flow(
 
 
 async def test_setup_entry_multiple_gateways(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    config_entry_setup: ConfigEntry,
+    hass: HomeAssistant, config_entry_factory: ConfigEntryFactoryType
 ) -> None:
     """Test setup entry is successful with multiple gateways."""
-    aioclient_mock.clear_requests()
+    config_entry = await config_entry_factory()
 
-    data = {"config": {"bridgeid": "01234E56789B"}}
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry2 = await setup_deconz_integration(
-            hass,
-            aioclient_mock,
-            entry_id="2",
-            unique_id="01234E56789B",
-        )
+    entry2 = MockConfigEntry(
+        domain=DECONZ_DOMAIN,
+        entry_id="2",
+        unique_id="01234E56789B",
+        data=config_entry.data | {"host": "2.3.4.5"},
+    )
+    config_entry2 = await config_entry_factory(entry2)
 
     assert len(hass.data[DECONZ_DOMAIN]) == 2
-    assert hass.data[DECONZ_DOMAIN][config_entry_setup.entry_id].master
+    assert hass.data[DECONZ_DOMAIN][config_entry.entry_id].master
     assert not hass.data[DECONZ_DOMAIN][config_entry2.entry_id].master
 
 
@@ -114,49 +111,45 @@ async def test_unload_entry(
 async def test_unload_entry_multiple_gateways(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    config_entry_setup: ConfigEntry,
+    config_entry_factory,
 ) -> None:
     """Test being able to unload an entry and master gateway gets moved."""
-    aioclient_mock.clear_requests()
+    config_entry = await config_entry_factory()
 
-    data = {"config": {"bridgeid": "01234E56789B"}}
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry2 = await setup_deconz_integration(
-            hass,
-            aioclient_mock,
-            entry_id="2",
-            unique_id="01234E56789B",
-        )
+    entry2 = MockConfigEntry(
+        domain=DECONZ_DOMAIN,
+        entry_id="2",
+        unique_id="01234E56789B",
+        data=config_entry.data | {"host": "2.3.4.5"},
+    )
+    config_entry2 = await config_entry_factory(entry2)
 
     assert len(hass.data[DECONZ_DOMAIN]) == 2
 
-    assert await async_unload_entry(hass, config_entry_setup)
+    assert await async_unload_entry(hass, config_entry)
 
     assert len(hass.data[DECONZ_DOMAIN]) == 1
     assert hass.data[DECONZ_DOMAIN][config_entry2.entry_id].master
 
 
 async def test_unload_entry_multiple_gateways_parallel(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    config_entry_setup: ConfigEntry,
+    hass: HomeAssistant, config_entry_factory
 ) -> None:
     """Test race condition when unloading multiple config entries in parallel."""
-    aioclient_mock.clear_requests()
+    config_entry = await config_entry_factory()
 
-    data = {"config": {"bridgeid": "01234E56789B"}}
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry2 = await setup_deconz_integration(
-            hass,
-            aioclient_mock,
-            entry_id="2",
-            unique_id="01234E56789B",
-        )
+    entry2 = MockConfigEntry(
+        domain=DECONZ_DOMAIN,
+        entry_id="2",
+        unique_id="01234E56789B",
+        data=config_entry.data | {"host": "2.3.4.5"},
+    )
+    config_entry2 = await config_entry_factory(entry2)
 
     assert len(hass.data[DECONZ_DOMAIN]) == 2
 
     await asyncio.gather(
-        hass.config_entries.async_unload(config_entry_setup.entry_id),
+        hass.config_entries.async_unload(config_entry.entry_id),
         hass.config_entries.async_unload(config_entry2.entry_id),
     )
 

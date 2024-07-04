@@ -41,6 +41,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
+from .conftest import ConfigEntryFactoryType
 from .test_gateway import (
     DECONZ_WEB_REQUEST,
     mock_deconz_put_request,
@@ -1090,7 +1091,7 @@ async def test_groups(
 )
 async def test_group_service_calls(
     hass: HomeAssistant,
-    config_entry_factory: Callable[[], ConfigEntry],
+    config_entry_factory: ConfigEntryFactoryType,
     group_payload: dict[str, Any],
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
     input: dict[str, Any],
