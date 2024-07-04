@@ -307,7 +307,7 @@ async def test_events_during_migration_queue_exhausted(
 
 @pytest.mark.parametrize(
     ("start_version", "live"),
-    [(0, True), (16, True), (18, True), (22, True), (25, True)],
+    [(0, True), (16, True), (18, True), (22, True), (25, True), (43, True)],
 )
 async def test_schema_migrate(
     hass: HomeAssistant,
