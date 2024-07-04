@@ -13,7 +13,7 @@ async def test_entry_diagnostics(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     hass_client: ClientSessionGenerator,
-    setup_guardian: None,
+    setup_guardian: None,  # relies on config_entry fixture
 ) -> None:
     """Test config entry diagnostics."""
     data: GuardianData = hass.data[DOMAIN][config_entry.entry_id]
