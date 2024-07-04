@@ -635,11 +635,7 @@ class MountableProtectDeviceBinarySensor(ProtectDeviceBinarySensor):
     """A UniFi Protect Device Binary Sensor that can change device class at runtime."""
 
     device: Sensor
-    _state_attrs: tuple[str, ...] = (
-        "_attr_available",
-        "_attr_is_on",
-        "_attr_device_class",
-    )
+    _state_attrs = ("_attr_available", "_attr_is_on", "_attr_device_class")
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
