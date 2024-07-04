@@ -223,7 +223,7 @@ class BaseProtectEntity(Entity):
             self.device = device
 
         async_get_ufp_enabled = self._async_get_ufp_enabled
-        self._attr_available = (
+        available = (
             last_update_success
             and (
                 device.state is StateType.CONNECTED
@@ -231,6 +231,8 @@ class BaseProtectEntity(Entity):
             )
             and (not async_get_ufp_enabled or async_get_ufp_enabled(device))
         )
+        if self._attr_available != available:
+            self._attr_available = available
 
     @callback
     def _async_updated_event(self, device: ProtectAdoptableDeviceModel | NVR) -> None:
@@ -275,7 +277,9 @@ class ProtectIsOnMixin(BaseProtectEntity):
 
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
-        self._attr_is_on = self.entity_description.get_ufp_value(self.device) is True
+        is_on = self.entity_description.get_ufp_value(self.device) is True
+        if self._attr_is_on != is_on:
+            self._attr_is_on = is_on
 
 
 class ProtectDeviceEntity(BaseProtectEntity):

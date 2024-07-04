@@ -8,7 +8,6 @@ import dataclasses
 from uiprotect.data import (
     NVR,
     Camera,
-    Light,
     ModelType,
     MountType,
     ProtectAdoptableDeviceModel,
@@ -629,7 +628,6 @@ class ProtectDeviceBinarySensor(
 ):
     """A UniFi Protect Device Binary Sensor."""
 
-    device: Camera | Light | Sensor
     entity_description: ProtectBinaryEntityDescription
 
 
@@ -670,7 +668,6 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
         self._disk = disk
         # backwards compat with old unique IDs
         index = self._disk.slot - 1
-
         description = dataclasses.replace(
             description,
             key=f"{description.key}_{index}",
