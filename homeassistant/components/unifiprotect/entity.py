@@ -208,7 +208,7 @@ class BaseProtectEntity(Entity, ABC):
             self.device = device
 
         if device.model is ModelType.NVR:
-            enabled = connected = True
+            available = last_updated_success
         else:
             if TYPE_CHECKING:
                 assert isinstance(device, ProtectAdoptableDeviceModel)
@@ -217,8 +217,8 @@ class BaseProtectEntity(Entity, ABC):
             )
             async_get_ufp_enabled = self._async_get_ufp_enabled
             enabled = not async_get_ufp_enabled or async_get_ufp_enabled(device)
+            available = last_updated_success and connected and enabled
 
-        available = last_updated_success and connected and enabled
         if available != was_available:
             self._attr_available = available
 
