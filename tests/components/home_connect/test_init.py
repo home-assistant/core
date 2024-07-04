@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 from unittest.mock import MagicMock, Mock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from requests import HTTPError
 import requests_mock
@@ -134,6 +135,36 @@ async def test_api_setup(
     await hass.async_block_till_done()
 
     assert config_entry.state == ConfigEntryState.NOT_LOADED
+
+
+async def test_update_throttle(
+    appliance: Mock,
+    freezer: FrozenDateTimeFactory,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    get_appliances: MagicMock,
+) -> None:
+    """Test to check Throttle functionality."""
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup()
+    assert config_entry.state == ConfigEntryState.LOADED
+    get_appliances_call_count = get_appliances.call_count
+
+    # First re-load after 1 minute is not blocked.
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    freezer.tick(60)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert get_appliances.call_count == get_appliances_call_count + 1
+
+    # Second re-load is blocked by Throttle.
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    freezer.tick(59)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert get_appliances.call_count == get_appliances_call_count + 1
 
 
 @pytest.mark.usefixtures("bypass_throttle")
