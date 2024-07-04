@@ -30,7 +30,7 @@
   "iot_class": "local_push",
   "loggers": ["axis"],
   "quality_scale": "platinum",
-  "requirements": ["axis==61"],
+  "requirements": ["axis==62"],
   "ssdp": [
     {
       "manufacturer": "AXIS"
