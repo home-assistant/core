@@ -1,21 +1,3 @@
-# Sorted by hassfest.
-#
-# To sort, run python3 -m script.hassfest -p coverage
-
-[run]
-source = homeassistant
-omit =
-    homeassistant/__main__.py
-    homeassistant/helpers/backports/aiohttp_resolver.py
-    homeassistant/helpers/signal.py
-    homeassistant/scripts/__init__.py
-    homeassistant/scripts/benchmark/__init__.py
-    homeassistant/scripts/check_config.py
-    homeassistant/scripts/ensure_config.py
-    homeassistant/scripts/macos/__init__.py
-
-    # omit pieces of code that rely on external devices being present
-
 
 [report]
 # Regexes for lines to exclude from consideration
