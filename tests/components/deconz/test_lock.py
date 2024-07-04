@@ -1,12 +1,15 @@
 """deCONZ lock platform tests."""
 
-from unittest.mock import patch
+from collections.abc import Callable
+
+import pytest
 
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_LOCKED,
@@ -15,29 +18,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .test_gateway import (
-    DECONZ_WEB_REQUEST,
-    mock_deconz_put_request,
-    setup_deconz_integration,
-)
-
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_no_locks(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test that no lock entities are created."""
-    await setup_deconz_integration(hass, aioclient_mock)
-    assert len(hass.states.async_all()) == 0
-
-
-async def test_lock_from_light(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
-) -> None:
-    """Test that all supported lock entities based on lights are created."""
-    data = {
-        "lights": {
+@pytest.mark.parametrize(
+    "light_payload",
+    [
+        {
             "1": {
                 "etag": "5c2ec06cde4bd654aef3a555fcd8ad12",
                 "hascolor": False,
@@ -52,10 +39,15 @@ async def test_lock_from_light(
                 "uniqueid": "00:00:00:00:00:00:00:00-00",
             }
         }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
+    ],
+)
+async def test_lock_from_light(
+    hass: HomeAssistant,
+    config_entry_setup: ConfigEntry,
+    mock_put_request: Callable[[str, str], AiohttpClientMocker],
+    mock_deconz_websocket,
+) -> None:
+    """Test that all supported lock entities based on lights are created."""
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("lock.door_lock").state == STATE_UNLOCKED
 
@@ -73,7 +65,7 @@ async def test_lock_from_light(
 
     # Verify service calls
 
-    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/1/state")
+    aioclient_mock = mock_put_request("/lights/1/state")
 
     # Service lock door
 
@@ -95,24 +87,22 @@ async def test_lock_from_light(
     )
     assert aioclient_mock.mock_calls[2][2] == {"on": False}
 
-    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.config_entries.async_unload(config_entry_setup.entry_id)
 
     states = hass.states.async_all()
     assert len(states) == 1
     for state in states:
         assert state.state == STATE_UNAVAILABLE
 
-    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.config_entries.async_remove(config_entry_setup.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
 
 
-async def test_lock_from_sensor(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
-) -> None:
-    """Test that all supported lock entities based on sensors are created."""
-    data = {
-        "sensors": {
+@pytest.mark.parametrize(
+    "sensor_payload",
+    [
+        {
             "1": {
                 "config": {
                     "battery": 100,
@@ -135,10 +125,15 @@ async def test_lock_from_sensor(
                 "uniqueid": "00:00:00:00:00:00:00:00-00",
             }
         }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
+    ],
+)
+async def test_lock_from_sensor(
+    hass: HomeAssistant,
+    config_entry_setup: ConfigEntry,
+    mock_put_request: Callable[[str, str], AiohttpClientMocker],
+    mock_deconz_websocket,
+) -> None:
+    """Test that all supported lock entities based on sensors are created."""
     assert len(hass.states.async_all()) == 2
     assert hass.states.get("lock.door_lock").state == STATE_UNLOCKED
 
@@ -156,7 +151,7 @@ async def test_lock_from_sensor(
 
     # Verify service calls
 
-    mock_deconz_put_request(aioclient_mock, config_entry.data, "/sensors/1/config")
+    aioclient_mock = mock_put_request("/sensors/1/config")
 
     # Service lock door
 
@@ -178,13 +173,13 @@ async def test_lock_from_sensor(
     )
     assert aioclient_mock.mock_calls[2][2] == {"lock": False}
 
-    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.config_entries.async_unload(config_entry_setup.entry_id)
 
     states = hass.states.async_all()
     assert len(states) == 2
     for state in states:
         assert state.state == STATE_UNAVAILABLE
 
-    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.config_entries.async_remove(config_entry_setup.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0

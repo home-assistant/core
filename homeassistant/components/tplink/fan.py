@@ -69,10 +69,11 @@ class TPLinkFanEntity(CoordinatedTPLinkEntity, FanEntity):
         parent: Device | None = None,
     ) -> None:
         """Initialize the fan."""
-        super().__init__(device, coordinator, parent=parent)
         self.fan_module = fan_module
         # If _attr_name is None the entity name will be the device name
         self._attr_name = None if parent is None else device.alias
+
+        super().__init__(device, coordinator, parent=parent)
 
     @async_refresh_after
     async def async_turn_on(

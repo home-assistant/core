@@ -1,7 +1,6 @@
 """Test run time migrations are remembered in the migration_changes table."""
 
 import importlib
-from pathlib import Path
 import sys
 from unittest.mock import patch
 
@@ -63,10 +62,10 @@ def _create_engine_test(*args, **kwargs):
 
 
 @pytest.mark.parametrize("enable_migrate_context_ids", [True])
+@pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migration_changes_prevent_trying_to_migrate_again(
     async_setup_recorder_instance: RecorderInstanceGenerator,
-    tmp_path: Path,
-    recorder_db_url: str,
 ) -> None:
     """Test that we do not try to migrate when migration_changes indicate its already migrated.
 
@@ -76,13 +75,8 @@ async def test_migration_changes_prevent_trying_to_migrate_again(
     2. With current schema so the migration happens
     3. With current schema to verify we do not have to query to see if the migration is done
     """
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test uses a test database between runs so its
-        # SQLite specific
-        return
 
     config = {
-        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
         recorder.CONF_COMMIT_INTERVAL: 1,
     }
     importlib.import_module(SCHEMA_MODULE)
