@@ -6,6 +6,8 @@ import functools
 import logging
 from typing import Any
 
+from zha.application.platforms.cover import Shade as ZhaShade
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
@@ -136,6 +138,11 @@ class ZhaCover(ZHAEntity, CoverEntity):
     @callback
     def restore_external_state_attributes(self, state: State) -> None:
         """Restore entity state."""
+
+        # Shades are a subtype of cover that do not need external state restored
+        if isinstance(self.entity_data.entity, ZhaShade):
+            return
+
         # Same as `light`, some entity state is not derived from ZCL attributes
         self.entity_data.entity.restore_external_state_attributes(
             state=state.state,
