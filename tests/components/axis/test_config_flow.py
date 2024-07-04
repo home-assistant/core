@@ -55,7 +55,7 @@ async def mock_config_entry_fixture(
     return config_entry
 
 
-@pytest.mark.usefixtures("setup_default_vapix_requests", "mock_setup_entry")
+@pytest.mark.usefixtures("mock_default_requests", "mock_setup_entry")
 async def test_flow_manual_configuration(hass: HomeAssistant) -> None:
     """Test that config flow works."""
     MockConfigEntry(domain=AXIS_DOMAIN, source=SOURCE_IGNORE).add_to_hass(hass)
@@ -94,7 +94,7 @@ async def test_flow_manual_configuration(hass: HomeAssistant) -> None:
 async def test_manual_configuration_update_configuration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_vapix_requests: Callable[[str], None],
+    mock_requests: Callable[[str], None],
 ) -> None:
     """Test that config flow fails on already configured device."""
     assert mock_config_entry.data[CONF_HOST] == "1.2.3.4"
@@ -106,7 +106,7 @@ async def test_manual_configuration_update_configuration(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    mock_vapix_requests("2.3.4.5")
+    mock_requests("2.3.4.5")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -178,7 +178,7 @@ async def test_flow_fails_cannot_connect(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-@pytest.mark.usefixtures("setup_default_vapix_requests", "mock_setup_entry")
+@pytest.mark.usefixtures("mock_default_requests", "mock_setup_entry")
 async def test_flow_create_entry_multiple_existing_entries_of_same_model(
     hass: HomeAssistant,
 ) -> None:
@@ -230,7 +230,7 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(
 async def test_reauth_flow_update_configuration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_vapix_requests: Callable[[str], None],
+    mock_requests: Callable[[str], None],
 ) -> None:
     """Test that config flow fails on already configured device."""
     assert mock_config_entry.data[CONF_HOST] == "1.2.3.4"
@@ -246,7 +246,7 @@ async def test_reauth_flow_update_configuration(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    mock_vapix_requests("2.3.4.5")
+    mock_requests("2.3.4.5")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -271,7 +271,7 @@ async def test_reauth_flow_update_configuration(
 async def test_reconfiguration_flow_update_configuration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_vapix_requests: Callable[[str], None],
+    mock_requests: Callable[[str], None],
 ) -> None:
     """Test that config flow reconfiguration updates configured device."""
     assert mock_config_entry.data[CONF_HOST] == "1.2.3.4"
@@ -289,7 +289,7 @@ async def test_reconfiguration_flow_update_configuration(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    mock_vapix_requests("2.3.4.5")
+    mock_requests("2.3.4.5")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -372,7 +372,7 @@ async def test_reconfiguration_flow_update_configuration(
         ),
     ],
 )
-@pytest.mark.usefixtures("setup_default_vapix_requests", "mock_setup_entry")
+@pytest.mark.usefixtures("mock_default_requests", "mock_setup_entry")
 async def test_discovery_flow(
     hass: HomeAssistant,
     source: str,
@@ -514,7 +514,7 @@ async def test_discovered_device_already_configured(
 async def test_discovery_flow_updated_configuration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_vapix_requests: Callable[[str], None],
+    mock_requests: Callable[[str], None],
     source: str,
     discovery_info: BaseServiceInfo,
     expected_port: int,
@@ -529,7 +529,7 @@ async def test_discovery_flow_updated_configuration(
         CONF_NAME: NAME,
     }
 
-    mock_vapix_requests("2.3.4.5")
+    mock_requests("2.3.4.5")
     result = await hass.config_entries.flow.async_init(
         AXIS_DOMAIN, data=discovery_info, context={"source": source}
     )
@@ -646,13 +646,13 @@ async def test_discovery_flow_ignore_link_local_address(
 
 
 async def test_option_flow(
-    hass: HomeAssistant, setup_config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry_setup: ConfigEntry
 ) -> None:
     """Test config flow options."""
-    assert CONF_STREAM_PROFILE not in setup_config_entry.options
-    assert CONF_VIDEO_SOURCE not in setup_config_entry.options
+    assert CONF_STREAM_PROFILE not in config_entry_setup.options
+    assert CONF_VIDEO_SOURCE not in config_entry_setup.options
 
-    result = await hass.config_entries.options.async_init(setup_config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(config_entry_setup.entry_id)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_stream"
@@ -676,5 +676,5 @@ async def test_option_flow(
         CONF_STREAM_PROFILE: "profile_1",
         CONF_VIDEO_SOURCE: 1,
     }
-    assert setup_config_entry.options[CONF_STREAM_PROFILE] == "profile_1"
-    assert setup_config_entry.options[CONF_VIDEO_SOURCE] == 1
+    assert config_entry_setup.options[CONF_STREAM_PROFILE] == "profile_1"
+    assert config_entry_setup.options[CONF_VIDEO_SOURCE] == 1

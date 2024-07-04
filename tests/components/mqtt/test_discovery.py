@@ -1363,24 +1363,29 @@ EXCLUDED_MODULES = {
 
 
 async def test_missing_discover_abbreviations(
+    hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Check MQTT platforms for missing abbreviations."""
     await mqtt_mock_entry()
-    missing = []
+    missing: list[str] = []
     regex = re.compile(r"(CONF_[a-zA-Z\d_]*) *= *[\'\"]([a-zA-Z\d_]*)[\'\"]")
-    for fil in Path(mqtt.__file__).parent.rglob("*.py"):
-        if fil.name in EXCLUDED_MODULES:
-            continue
-        with open(fil, encoding="utf-8") as file:
-            matches = re.findall(regex, file.read())
-            missing.extend(
-                f"{fil}: no abbreviation for {match[1]} ({match[0]})"
-                for match in matches
-                if match[1] not in ABBREVIATIONS.values()
-                and match[1] not in DEVICE_ABBREVIATIONS.values()
-                and match[0] not in ABBREVIATIONS_WHITE_LIST
-            )
+
+    def _add_missing():
+        for fil in Path(mqtt.__file__).parent.rglob("*.py"):
+            if fil.name in EXCLUDED_MODULES:
+                continue
+            with open(fil, encoding="utf-8") as file:
+                matches = re.findall(regex, file.read())
+                missing.extend(
+                    f"{fil}: no abbreviation for {match[1]} ({match[0]})"
+                    for match in matches
+                    if match[1] not in ABBREVIATIONS.values()
+                    and match[1] not in DEVICE_ABBREVIATIONS.values()
+                    and match[0] not in ABBREVIATIONS_WHITE_LIST
+                )
+
+    await hass.async_add_executor_job(_add_missing)
 
     assert not missing
 

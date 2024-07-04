@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from asyncio import Event
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import AsyncGenerator, Awaitable, Callable, Coroutine
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -175,7 +175,7 @@ def mock_client(mock_device_info) -> APIClient:
 
 
 @pytest.fixture
-async def mock_dashboard(hass):
+async def mock_dashboard(hass: HomeAssistant) -> AsyncGenerator[dict[str, Any]]:
     """Mock dashboard."""
     data = {"configured": [], "importable": []}
     with patch(

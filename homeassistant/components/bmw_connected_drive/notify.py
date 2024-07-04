@@ -24,8 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
-from .coordinator import BMWDataUpdateCoordinator
+from . import BMWConfigEntry
 
 ATTR_LAT = "lat"
 ATTR_LOCATION_ATTRIBUTES = ["street", "city", "postal_code", "country"]
@@ -42,12 +41,16 @@ def get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> BMWNotificationService:
     """Get the BMW notification service."""
-    coordinator: BMWDataUpdateCoordinator = hass.data[DOMAIN][
+    config_entry: BMWConfigEntry | None = hass.config_entries.async_get_entry(
         (discovery_info or {})[CONF_ENTITY_ID]
-    ]
+    )
 
     targets = {}
-    if not coordinator.read_only:
+    if (
+        config_entry
+        and (coordinator := config_entry.runtime_data.coordinator)
+        and not coordinator.read_only
+    ):
         targets.update({v.name: v for v in coordinator.account.vehicles})
     return BMWNotificationService(targets)
 

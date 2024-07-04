@@ -403,7 +403,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     @property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        if self._volume.level and self._volume.level.level:
+        if self._volume.level and self._volume.level.level is not None:
             return float(self._volume.level.level / 100)
         return None
 
@@ -435,9 +435,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     @property
     def media_image_url(self) -> str | None:
         """Return URL of the currently playing music."""
-        if self._media_image:
-            return self._media_image.url
-        return None
+        return self._media_image.url
 
     @property
     def media_image_remotely_accessible(self) -> bool:

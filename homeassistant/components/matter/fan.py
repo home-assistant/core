@@ -170,6 +170,14 @@ class MatterFan(MatterEntity, FanEntity):
         """Update from device."""
         if not hasattr(self, "_attr_preset_modes"):
             self._calculate_features()
+
+        if self.get_matter_attribute_value(clusters.OnOff.Attributes.OnOff) is False:
+            # special case: the appliance has a dedicated Power switch on the OnOff cluster
+            # if the mains power is off - treat it as if the fan mode is off
+            self._attr_preset_mode = None
+            self._attr_percentage = 0
+            return
+
         if self._attr_supported_features & FanEntityFeature.DIRECTION:
             direction_value = self.get_matter_attribute_value(
                 clusters.FanControl.Attributes.AirflowDirection
@@ -200,7 +208,13 @@ class MatterFan(MatterEntity, FanEntity):
         wind_setting = self.get_matter_attribute_value(
             clusters.FanControl.Attributes.WindSetting
         )
-        if (
+        fan_mode = self.get_matter_attribute_value(
+            clusters.FanControl.Attributes.FanMode
+        )
+        if fan_mode == clusters.FanControl.Enums.FanModeEnum.kOff:
+            self._attr_preset_mode = None
+            self._attr_percentage = 0
+        elif (
             self._attr_preset_modes
             and PRESET_NATURAL_WIND in self._attr_preset_modes
             and wind_setting & WindBitmap.kNaturalWind

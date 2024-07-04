@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 import logging
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.application_credentials import (

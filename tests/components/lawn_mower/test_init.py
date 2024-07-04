@@ -1,9 +1,9 @@
 """The tests for the lawn mower integration."""
 
+from collections.abc import Generator
 from unittest.mock import MagicMock
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.lawn_mower import (
     DOMAIN as LAWN_MOWER_DOMAIN,
