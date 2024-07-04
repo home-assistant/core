@@ -174,12 +174,7 @@ class IcloudAccount:
             _LOGGER.error("Unknown iCloud error: %s", err)
             self._fetch_interval = 2
             dispatcher_send(self.hass, self.signal_device_update)
-            if not self._config_entry.pref_disable_polling:
-                track_point_in_utc_time(
-                    self.hass,
-                    self.keep_alive,
-                    utcnow() + timedelta(minutes=self._fetch_interval),
-                )
+            self._track_point()
             return
 
         # Gets devices infos
@@ -225,12 +220,7 @@ class IcloudAccount:
         if new_device:
             dispatcher_send(self.hass, self.signal_device_new)
 
-        if not self._config_entry.pref_disable_polling:
-            track_point_in_utc_time(
-                self.hass,
-                self.keep_alive,
-                utcnow() + timedelta(minutes=self._fetch_interval),
-            )
+        self._track_point()
 
     def _require_reauth(self):
         """Require the user to log in again."""
@@ -308,6 +298,14 @@ class IcloudAccount:
             int(min(intervals.items(), key=operator.itemgetter(1))[1]),
             self._max_interval,
         )
+
+    def _track_point(self):
+        if not self._config_entry.pref_disable_polling:
+            track_point_in_utc_time(
+                self.hass,
+                self.keep_alive,
+                utcnow() + timedelta(minutes=self._fetch_interval),
+            )
 
     def keep_alive(self, now=None) -> None:
         """Keep the API alive."""
