@@ -68,7 +68,7 @@
     "timestamp": 1701139037461,
     "trip_charging": false,
     "usable_battery_level": 75,
-    "user_charge_enable_request": null
+    "user_charge_enable_request": true
   },
   "climate_state": {
     "allow_cabin_overheat_protection": true,

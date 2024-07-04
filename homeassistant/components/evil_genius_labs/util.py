@@ -4,16 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from . import EvilGeniusEntity
 
-_EvilGeniusEntityT = TypeVar("_EvilGeniusEntityT", bound=EvilGeniusEntity)
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
 
-
-def update_when_done(
+def update_when_done[_EvilGeniusEntityT: EvilGeniusEntity, **_P, _R](
     func: Callable[Concatenate[_EvilGeniusEntityT, _P], Awaitable[_R]],
 ) -> Callable[Concatenate[_EvilGeniusEntityT, _P], Coroutine[Any, Any, _R]]:
     """Decorate function to trigger update when function is done."""

@@ -6,13 +6,12 @@ from pytest_unordered import unordered
 from homeassistant.components.config import entity_registry
 from homeassistant.const import ATTR_ICON, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import (
     RegistryEntry,
     RegistryEntryDisabler,
     RegistryEntryHider,
-    async_get as async_get_entity_registry,
 )
 
 from tests.common import (
@@ -863,6 +862,7 @@ async def test_enable_entity_disabled_device(
     hass: HomeAssistant,
     client: MockHAClientWebSocket,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test enabling entity of disabled device."""
     entity_id = "test_domain.test_platform_1234"
@@ -889,8 +889,7 @@ async def test_enable_entity_disabled_device(
     state = hass.states.get(entity_id)
     assert state is None
 
-    entity_reg = async_get_entity_registry(hass)
-    entity_entry = entity_reg.async_get(entity_id)
+    entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry.config_entry_id == config_entry.entry_id
     assert entity_entry.device_id == device.id
     assert entity_entry.disabled_by == RegistryEntryDisabler.DEVICE

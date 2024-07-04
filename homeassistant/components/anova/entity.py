@@ -19,6 +19,11 @@ class AnovaEntity(CoordinatorEntity[AnovaCoordinator], Entity):
         self.device = coordinator.anova_device
         self._attr_device_info = coordinator.device_info
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.data is not None and super().available
+
 
 class AnovaDescriptionEntity(AnovaEntity):
     """Defines an Anova entity that uses a description."""

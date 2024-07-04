@@ -66,7 +66,7 @@ async def test_subscribe(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> No
     await hass.async_block_till_done()
 
     # Verify that the this entity was subscribed to the topic
-    mqtt_mock.async_subscribe.assert_called_with(sub_topic, ANY, 0, ANY)
+    mqtt_mock.async_subscribe.assert_called_with(sub_topic, ANY, 0, ANY, ANY)
 
 
 async def test_state_changed_event_sends_message(

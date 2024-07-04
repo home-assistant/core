@@ -15,15 +15,12 @@ import pytest
 from homeassistant.components import hue
 from homeassistant.components.hue.v1 import sensor_base as hue_sensor_base
 from homeassistant.components.hue.v2.device import async_setup_devices
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    MockConfigEntry,
-    async_mock_service,
-    load_fixture,
-    mock_device_registry,
-)
-from tests.components.hue.const import FAKE_BRIDGE, FAKE_BRIDGE_DEVICE
+from .const import FAKE_BRIDGE, FAKE_BRIDGE_DEVICE
+
+from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(autouse=True)
@@ -136,7 +133,7 @@ def create_mock_api_v1(hass):
     return api
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def v2_resources_test_data():
     """Load V2 resources mock data."""
     return json.loads(load_fixture("hue/v2_resources.json"))
@@ -274,20 +271,8 @@ async def setup_platform(
     assert await async_setup_component(hass, hue.DOMAIN, {}) is True
     await hass.async_block_till_done()
 
-    for platform in platforms:
-        await hass.config_entries.async_forward_entry_setup(config_entry, platform)
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    await hass.config_entries.async_forward_entry_setups(config_entry, platforms)
 
     # and make sure it completes before going further
     await hass.async_block_till_done()
-
-
-@pytest.fixture(name="device_reg")
-def get_device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture(name="calls")
-def track_calls(hass):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")

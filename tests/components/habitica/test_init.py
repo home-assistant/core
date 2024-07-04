@@ -13,11 +13,11 @@ from homeassistant.components.habitica.const import (
     EVENT_API_CALL_SUCCESS,
     SERVICE_API_CALL,
 )
-from homeassistant.components.habitica.sensor import TASKS_TYPES
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, async_capture_events
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_API_CALL_ARGS = {"text": "Use API from Home Assistant", "type": "todo"}
 TEST_USER_NAME = "test_user"
@@ -46,7 +46,7 @@ def habitica_entry(hass):
 
 
 @pytest.fixture
-def common_requests(aioclient_mock):
+def common_requests(aioclient_mock: AiohttpClientMocker) -> AiohttpClientMocker:
     """Register requests for the tests."""
     aioclient_mock.get(
         "https://habitica.com/api/v3/user",
@@ -55,7 +55,7 @@ def common_requests(aioclient_mock):
                 "api_user": "test-api-user",
                 "profile": {"name": TEST_USER_NAME},
                 "stats": {
-                    "class": "test-class",
+                    "class": "warrior",
                     "con": 1,
                     "exp": 2,
                     "gp": 3,
@@ -73,16 +73,21 @@ def common_requests(aioclient_mock):
             }
         },
     )
-    for n_tasks, task_type in enumerate(TASKS_TYPES.keys(), start=1):
-        aioclient_mock.get(
-            f"https://habitica.com/api/v3/tasks/user?type={task_type}",
-            json={
-                "data": [
-                    {"text": f"this is a mock {task_type} #{task}", "id": f"{task}"}
-                    for task in range(n_tasks)
-                ]
-            },
-        )
+
+    aioclient_mock.get(
+        "https://habitica.com/api/v3/tasks/user",
+        json={
+            "data": [
+                {
+                    "text": f"this is a mock {task} #{i}",
+                    "id": f"{i}",
+                    "type": task,
+                    "completed": False,
+                }
+                for i, task in enumerate(("habit", "daily", "todo", "reward"), start=1)
+            ]
+        },
+    )
 
     aioclient_mock.post(
         "https://habitica.com/api/v3/tasks/user",

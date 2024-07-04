@@ -74,12 +74,12 @@ class SynoDSMCamera(SynologyDSMBaseEntity[SynologyDSMCameraUpdateCoordinator], C
             api_key=SynoSurveillanceStation.CAMERA_API_KEY,
             key=str(camera_id),
             camera_id=camera_id,
-            name=coordinator.data["cameras"][camera_id].name,
+            name=None,
             entity_registry_enabled_default=coordinator.data["cameras"][
                 camera_id
             ].is_enabled,
         )
-        self.snapshot_quality = api._entry.options.get(
+        self.snapshot_quality = api._entry.options.get(  # noqa: SLF001
             CONF_SNAPSHOT_QUALITY, DEFAULT_SNAPSHOT_QUALITY
         )
         super().__init__(api, coordinator, description)

@@ -89,7 +89,7 @@ async def get_integration_info(
             data = await registration.info_callback(hass)
     except TimeoutError:
         data = {"error": {"type": "failed", "error": "timeout"}}
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Error fetching info")
         data = {"error": {"type": "failed", "error": "unknown"}}
 

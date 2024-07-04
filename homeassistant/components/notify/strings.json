@@ -35,6 +35,10 @@
         "message": {
           "name": "Message",
           "description": "Your notification message."
+        },
+        "title": {
+          "name": "Title",
+          "description": "Title for your notification message."
         }
       }
     },
@@ -53,6 +57,30 @@
         "data": {
           "name": "Data",
           "description": "Some integrations provide extended functionality. For information on how to use _data_, refer to the integration documentation.."
+        }
+      }
+    }
+  },
+  "issues": {
+    "migrate_notify": {
+      "title": "Migration of {integration_title} notify service",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The {integration_title} `notify` service(s) are migrated. A new `notify` entity is available now to replace each legacy `notify` service.\n\nUpdate any automations to use the new `notify.send_message` service exposed with this new entity. When this is done, fix this issue and restart Home Assistant.",
+            "title": "Migrate legacy {integration_title} notify service for domain `{domain}`"
+          }
+        }
+      }
+    },
+    "migrate_notify_service": {
+      "title": "Legacy service `notify.{service_name}` stll being used",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The {integration_title} `notify.{service_name}` service is migrated, but it seems the old `notify` service is still being used.\n\nA new `notify` entity is available now to replace each legacy `notify` service.\n\nUpdate any automations or scripts to use the new `notify.send_message` service exposed with this new entity. When this is done, select Submit and restart Home Assistant.",
+            "title": "Migrate legacy {integration_title} notify service for domain `{domain}`"
+          }
         }
       }
     }

@@ -901,13 +901,15 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'friendly_name': 'Bedroom Reachability',
+      'latitude': 13.377726,
+      'longitude': 52.516263,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bedroom_reachability',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'False',
   })
 # ---
 # name: test_entity[sensor.bedroom_temperature-entry]
@@ -1050,13 +1052,15 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'friendly_name': 'Bedroom Wi-Fi',
+      'latitude': 13.377726,
+      'longitude': 52.516263,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bedroom_wi_fi',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'High',
   })
 # ---
 # name: test_entity[sensor.bureau_modulate_battery-entry]
@@ -6692,7 +6696,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '27',
   })
 # ---
 # name: test_entity[sensor.villa_outdoor_humidity-entry]
@@ -6791,7 +6795,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'High',
   })
 # ---
 # name: test_entity[sensor.villa_outdoor_reachability-entry]
@@ -6838,7 +6842,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'False',
   })
 # ---
 # name: test_entity[sensor.villa_outdoor_temperature-entry]

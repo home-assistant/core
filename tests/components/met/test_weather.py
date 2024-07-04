@@ -84,19 +84,22 @@ async def test_not_tracking_home(hass: HomeAssistant, mock_weather) -> None:
     assert len(hass.states.async_entity_ids("weather")) == 0
 
 
-async def test_remove_hourly_entity(hass: HomeAssistant, mock_weather) -> None:
+async def test_remove_hourly_entity(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_weather
+) -> None:
     """Test removing the hourly entity."""
 
     # Pre-create registry entry for disabled by default hourly weather
-    registry = er.async_get(hass)
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         WEATHER_DOMAIN,
         DOMAIN,
         "10-20-hourly",
         suggested_object_id="forecast_somewhere_hourly",
         disabled_by=None,
     )
-    assert list(registry.entities.keys()) == ["weather.forecast_somewhere_hourly"]
+    assert list(entity_registry.entities.keys()) == [
+        "weather.forecast_somewhere_hourly"
+    ]
 
     await hass.config_entries.flow.async_init(
         "met",
@@ -105,4 +108,4 @@ async def test_remove_hourly_entity(hass: HomeAssistant, mock_weather) -> None:
     )
     await hass.async_block_till_done()
     assert hass.states.async_entity_ids("weather") == ["weather.forecast_somewhere"]
-    assert list(registry.entities.keys()) == ["weather.forecast_somewhere"]
+    assert list(entity_registry.entities.keys()) == ["weather.forecast_somewhere"]

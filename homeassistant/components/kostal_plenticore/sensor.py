@@ -29,7 +29,8 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .helper import PlenticoreDataFormatter, ProcessDataUpdateCoordinator
+from .coordinator import ProcessDataUpdateCoordinator
+from .helper import PlenticoreDataFormatter
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -40,7 +40,7 @@ class LookinFlowHandler(ConfigFlow, domain=DOMAIN):
             device: Device = await self._validate_device(host=host)
         except (aiohttp.ClientError, NoUsableService):
             return self.async_abort(reason="cannot_connect")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
@@ -62,7 +62,7 @@ class LookinFlowHandler(ConfigFlow, domain=DOMAIN):
                 device = await self._validate_device(host=host)
             except (aiohttp.ClientError, NoUsableService):
                 errors[CONF_HOST] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

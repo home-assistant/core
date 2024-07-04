@@ -31,7 +31,7 @@ async def test_async_pre_backup_with_timeout(
         pytest.raises(TimeoutError),
     ):
         await async_pre_backup(hass)
-        assert lock_mock.called
+    assert lock_mock.called
 
 
 async def test_async_pre_backup_with_migration(
@@ -69,4 +69,4 @@ async def test_async_post_backup_failure(
         pytest.raises(HomeAssistantError),
     ):
         await async_post_backup(hass)
-        assert unlock_mock.called
+    assert unlock_mock.called

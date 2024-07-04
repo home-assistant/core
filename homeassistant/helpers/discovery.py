@@ -16,7 +16,7 @@ from homeassistant.const import Platform
 from homeassistant.loader import bind_hass
 
 from ..util.signal_type import SignalTypeFormat
-from .dispatcher import async_dispatcher_connect, async_dispatcher_send
+from .dispatcher import async_dispatcher_connect, async_dispatcher_send_internal
 from .typing import ConfigType, DiscoveryInfoType
 
 SIGNAL_PLATFORM_DISCOVERED: SignalTypeFormat[DiscoveryDict] = SignalTypeFormat(
@@ -95,7 +95,9 @@ async def async_discover(
         "discovered": discovered,
     }
 
-    async_dispatcher_send(hass, SIGNAL_PLATFORM_DISCOVERED.format(service), data)
+    async_dispatcher_send_internal(
+        hass, SIGNAL_PLATFORM_DISCOVERED.format(service), data
+    )
 
 
 @bind_hass
@@ -177,4 +179,6 @@ async def async_load_platform(
         "discovered": discovered,
     }
 
-    async_dispatcher_send(hass, SIGNAL_PLATFORM_DISCOVERED.format(service), data)
+    async_dispatcher_send_internal(
+        hass, SIGNAL_PLATFORM_DISCOVERED.format(service), data
+    )

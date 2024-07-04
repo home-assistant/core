@@ -89,7 +89,7 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             errors["base"] = "cannot_connect"
 
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Unknown error connecting with Freebox router at %s",
                 self._data[CONF_HOST],

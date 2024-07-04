@@ -23,7 +23,6 @@ from homeassistant.util.dt import utcnow
 
 from .common import (
     Helper,
-    remove_device,
     setup_accessories_from_file,
     setup_test_accessories,
     setup_test_accessories_with_controller,
@@ -71,7 +70,7 @@ async def test_async_remove_entry(hass: HomeAssistant) -> None:
     assert hkid in hass.data[ENTITY_MAP].storage_data
 
     # Remove it via config entry and number of pairings should go down
-    await helper.config_entry.async_remove(hass)
+    await hass.config_entries.async_remove(helper.config_entry.entry_id)
     assert len(controller.pairings) == 0
 
     assert hkid not in hass.data[ENTITY_MAP].storage_data
@@ -99,19 +98,16 @@ async def test_device_remove_devices(
     entity = entity_registry.entities[ALIVE_DEVICE_ENTITY_ID]
 
     live_device_entry = device_registry.async_get(entity.device_id)
-    assert (
-        await remove_device(await hass_ws_client(hass), live_device_entry.id, entry_id)
-        is False
-    )
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(live_device_entry.id, entry_id)
+    assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={("homekit_controller:accessory-id", "E9:88:E7:B8:B4:40:aid:1")},
     )
-    assert (
-        await remove_device(await hass_ws_client(hass), dead_device_entry.id, entry_id)
-        is True
-    )
+    response = await client.remove_device(dead_device_entry.id, entry_id)
+    assert response["success"]
 
 
 async def test_offline_device_raises(hass: HomeAssistant, controller) -> None:
@@ -160,7 +156,7 @@ async def test_offline_device_raises(hass: HomeAssistant, controller) -> None:
     is_connected = True
 
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("light.testdevice").state == STATE_OFF
 
@@ -217,16 +213,18 @@ async def test_ble_device_only_checks_is_available(
     is_available = True
 
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("light.testdevice").state == STATE_OFF
 
     is_available = False
     async_fire_time_changed(hass, utcnow() + timedelta(hours=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get("light.testdevice").state == STATE_UNAVAILABLE
 
     is_available = True
     async_fire_time_changed(hass, utcnow() + timedelta(hours=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get("light.testdevice").state == STATE_OFF
 
 

@@ -35,23 +35,42 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant, State
-from homeassistant.helpers import (
-    area_registry as ar,
-    config_validation as cv,
-    integration_platform,
-    intent,
-)
+from homeassistant.helpers import config_validation as cv, integration_platform, intent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DOMAIN, TIMER_DATA
+from .timers import (
+    CancelTimerIntentHandler,
+    DecreaseTimerIntentHandler,
+    IncreaseTimerIntentHandler,
+    PauseTimerIntentHandler,
+    StartTimerIntentHandler,
+    TimerEventType,
+    TimerInfo,
+    TimerManager,
+    TimerStatusIntentHandler,
+    UnpauseTimerIntentHandler,
+    async_device_supports_timers,
+    async_register_timer_handler,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
+__all__ = [
+    "async_register_timer_handler",
+    "async_device_supports_timers",
+    "TimerInfo",
+    "TimerEventType",
+    "DOMAIN",
+]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Intent component."""
+    hass.data[TIMER_DATA] = TimerManager(hass)
+
     hass.http.register_view(IntentHandleView())
 
     await integration_platform.async_process_integration_platforms(
@@ -60,15 +79,30 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     intent.async_register(
         hass,
-        OnOffIntentHandler(intent.INTENT_TURN_ON, HA_DOMAIN, SERVICE_TURN_ON),
+        OnOffIntentHandler(
+            intent.INTENT_TURN_ON,
+            HA_DOMAIN,
+            SERVICE_TURN_ON,
+            description="Turns on/opens a device or entity",
+        ),
     )
     intent.async_register(
         hass,
-        OnOffIntentHandler(intent.INTENT_TURN_OFF, HA_DOMAIN, SERVICE_TURN_OFF),
+        OnOffIntentHandler(
+            intent.INTENT_TURN_OFF,
+            HA_DOMAIN,
+            SERVICE_TURN_OFF,
+            description="Turns off/closes a device or entity",
+        ),
     )
     intent.async_register(
         hass,
-        intent.ServiceIntentHandler(intent.INTENT_TOGGLE, HA_DOMAIN, SERVICE_TOGGLE),
+        intent.ServiceIntentHandler(
+            intent.INTENT_TOGGLE,
+            HA_DOMAIN,
+            SERVICE_TOGGLE,
+            description="Toggles a device or entity",
+        ),
     )
     intent.async_register(
         hass,
@@ -79,6 +113,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         NevermindIntentHandler(),
     )
     intent.async_register(hass, SetPositionIntentHandler())
+    intent.async_register(hass, StartTimerIntentHandler())
+    intent.async_register(hass, CancelTimerIntentHandler())
+    intent.async_register(hass, IncreaseTimerIntentHandler())
+    intent.async_register(hass, DecreaseTimerIntentHandler())
+    intent.async_register(hass, PauseTimerIntentHandler())
+    intent.async_register(hass, UnpauseTimerIntentHandler())
+    intent.async_register(hass, TimerStatusIntentHandler())
 
     return True
 
@@ -175,8 +216,9 @@ class GetStateIntentHandler(intent.IntentHandler):
     """Answer questions about entity states."""
 
     intent_type = intent.INTENT_GET_STATE
+    description = "Gets or checks the state of a device or entity"
     slot_schema = {
-        vol.Any("name", "area"): cv.string,
+        vol.Any("name", "area", "floor"): cv.string,
         vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional("state"): vol.All(cv.ensure_list, [cv.string]),
@@ -190,18 +232,13 @@ class GetStateIntentHandler(intent.IntentHandler):
         # Entity name to match
         name_slot = slots.get("name", {})
         entity_name: str | None = name_slot.get("value")
-        entity_text: str | None = name_slot.get("text")
 
-        # Look up area first to fail early
+        # Get area/floor info
         area_slot = slots.get("area", {})
         area_id = area_slot.get("value")
-        area_name = area_slot.get("text")
-        area: ar.AreaEntry | None = None
-        if area_id is not None:
-            areas = ar.async_get(hass)
-            area = areas.async_get_area(area_id)
-            if area is None:
-                raise intent.IntentHandleError(f"No area named {area_name}")
+
+        floor_slot = slots.get("floor", {})
+        floor_id = floor_slot.get("value")
 
         # Optional domain/device class filters.
         # Convert to sets for speed.
@@ -218,32 +255,24 @@ class GetStateIntentHandler(intent.IntentHandler):
         if "state" in slots:
             state_names = set(slots["state"]["value"])
 
-        states = list(
-            intent.async_match_states(
-                hass,
-                name=entity_name,
-                area=area,
-                domains=domains,
-                device_classes=device_classes,
-                assistant=intent_obj.assistant,
-            )
+        match_constraints = intent.MatchTargetsConstraints(
+            name=entity_name,
+            area_name=area_id,
+            floor_name=floor_id,
+            domains=domains,
+            device_classes=device_classes,
+            assistant=intent_obj.assistant,
         )
-
-        _LOGGER.debug(
-            "Found %s state(s) that matched: name=%s, area=%s, domains=%s, device_classes=%s, assistant=%s",
-            len(states),
-            entity_name,
-            area,
-            domains,
-            device_classes,
-            intent_obj.assistant,
-        )
-
-        if entity_name and (len(states) > 1):
-            # Multiple entities matched for the same name
-            raise intent.DuplicateNamesMatchedError(
-                name=entity_text or entity_name,
-                area=area_name or area_id,
+        match_result = intent.async_match_targets(hass, match_constraints)
+        if (
+            (not match_result.is_match)
+            and (match_result.no_match_reason is not None)
+            and (not match_result.no_match_reason.is_no_entities_reason())
+        ):
+            # Don't try to answer questions for certain errors.
+            # Other match failure reasons are OK.
+            raise intent.MatchFailedError(
+                result=match_result, constraints=match_constraints
             )
 
         # Create response
@@ -251,13 +280,24 @@ class GetStateIntentHandler(intent.IntentHandler):
         response.response_type = intent.IntentResponseType.QUERY_ANSWER
 
         success_results: list[intent.IntentResponseTarget] = []
-        if area is not None:
-            success_results.append(
+        if match_result.areas:
+            success_results.extend(
                 intent.IntentResponseTarget(
                     type=intent.IntentResponseTargetType.AREA,
                     name=area.name,
                     id=area.id,
                 )
+                for area in match_result.areas
+            )
+
+        if match_result.floors:
+            success_results.extend(
+                intent.IntentResponseTarget(
+                    type=intent.IntentResponseTargetType.FLOOR,
+                    name=floor.name,
+                    id=floor.floor_id,
+                )
+                for floor in match_result.floors
             )
 
         # If we are matching a state name (e.g., "which lights are on?"), then
@@ -271,7 +311,7 @@ class GetStateIntentHandler(intent.IntentHandler):
         matched_states: list[State] = []
         unmatched_states: list[State] = []
 
-        for state in states:
+        for state in match_result.states:
             success_results.append(
                 intent.IntentResponseTarget(
                     type=intent.IntentResponseTargetType.ENTITY,
@@ -296,6 +336,7 @@ class NevermindIntentHandler(intent.IntentHandler):
     """Takes no action."""
 
     intent_type = intent.INTENT_NEVERMIND
+    description = "Cancels the current request and does nothing"
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Doe not do anything, and produces an empty response."""
@@ -309,7 +350,11 @@ class SetPositionIntentHandler(intent.DynamicServiceIntentHandler):
         """Create set position handler."""
         super().__init__(
             intent.INTENT_SET_POSITION,
-            extra_slots={ATTR_POSITION: vol.All(vol.Range(min=0, max=100))},
+            required_slots={
+                ATTR_POSITION: vol.All(vol.Coerce(int), vol.Range(min=0, max=100))
+            },
+            description="Sets the position of a device or entity",
+            platforms={COVER_DOMAIN, VALVE_DOMAIN},
         )
 
     def get_domain_and_service(

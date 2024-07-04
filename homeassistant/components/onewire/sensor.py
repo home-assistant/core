@@ -17,7 +17,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
@@ -29,10 +28,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from . import OneWireConfigEntry
 from .const import (
     DEVICE_KEYS_0_3,
     DEVICE_KEYS_A_B,
-    DOMAIN,
     OPTION_ENTRY_DEVICE_OPTIONS,
     OPTION_ENTRY_SENSOR_PRECISION,
     PRECISION_MAPPING_FAMILY_28,
@@ -350,13 +349,12 @@ def get_sensor_types(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: OneWireConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up 1-Wire platform."""
-    onewire_hub = hass.data[DOMAIN][config_entry.entry_id]
     entities = await hass.async_add_executor_job(
-        get_entities, onewire_hub, config_entry.options
+        get_entities, config_entry.runtime_data, config_entry.options
     )
     async_add_entities(entities, True)
 
@@ -377,10 +375,10 @@ def get_entities(
         device_info = device.device_info
         device_sub_type = "std"
         device_path = device.path
-        if "EF" in family:
+        if device_type and "EF" in family:
             device_sub_type = "HobbyBoard"
             family = device_type
-        elif "7E" in family:
+        elif device_type and "7E" in family:
             device_sub_type = "EDS"
             family = device_type
         elif "A6" in family:

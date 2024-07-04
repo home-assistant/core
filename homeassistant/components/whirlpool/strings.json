@@ -14,7 +14,7 @@
         }
       },
       "reauth_confirm": {
-        "title": "Correct your Whirlpool account credentials",
+        "title": "[%key:common::config_flow::title::reauth%]",
         "description": "For 'brand', please choose the brand of the mobile app you use, or the brand of the appliances in your account",
         "data": {
           "password": "[%key:common::config_flow::data::password%]",

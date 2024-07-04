@@ -33,6 +33,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     CONF_OLD_DISCOVERY,
@@ -91,7 +92,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             return ERROR_AUTH_INVALID
         except FritzConnectionException:
             return ERROR_CANNOT_CONNECT
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return ERROR_UNKNOWN
 
@@ -210,7 +211,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Show the setup form to the user."""
 
-        advanced_data_schema = {}
+        advanced_data_schema: VolDictType = {}
         if self.show_advanced_options:
             advanced_data_schema = {
                 vol.Optional(CONF_PORT): vol.Coerce(int),
@@ -348,7 +349,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any], errors: dict[str, str] | None = None
     ) -> ConfigFlowResult:
         """Show the reconfigure form to the user."""
-        advanced_data_schema = {}
+        advanced_data_schema: VolDictType = {}
         if self.show_advanced_options:
             advanced_data_schema = {
                 vol.Optional(CONF_PORT, default=user_input[CONF_PORT]): vol.Coerce(int),

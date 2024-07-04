@@ -33,10 +33,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import (
-    DeviceInfo,
-    async_entries_for_config_entry,
-)
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -459,7 +456,7 @@ async def async_setup_entry(
         """Retrieve Netatmo public weather entities."""
         entities = {
             device.name: device.id
-            for device in async_entries_for_config_entry(
+            for device in dr.async_entries_for_config_entry(
                 device_registry, entry.entry_id
             )
             if device.model == "Public Weather station"
@@ -529,7 +526,10 @@ class NetatmoWeatherSensor(NetatmoWeatherModuleEntity, SensorEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.device.reachable or False
+        return (
+            self.device.reachable
+            or getattr(self.device, self.entity_description.netatmo_name) is not None
+        )
 
     @callback
     def async_update_callback(self) -> None:

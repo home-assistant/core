@@ -115,16 +115,14 @@ def _migration_connect(*args, **kwargs):
 )
 async def test_async_migrate_entries(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     entity_def: dict,
     ent_data: EntityMigrationData,
 ) -> None:
     """Test migration to new entity names."""
-
     mock_config_entry.add_to_hass(hass)
-
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     device: dr.DeviceEntry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
@@ -181,14 +179,12 @@ async def test_async_migrate_entries(
 
 async def test_entity_migration_data(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test ENTITY_MIGRATION data guards."""
-
     mock_config_entry.add_to_hass(hass)
-
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     device: dr.DeviceEntry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,

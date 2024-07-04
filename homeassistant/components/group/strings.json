@@ -189,14 +189,15 @@
   "selector": {
     "type": {
       "options": {
-        "min": "Minimum",
+        "last": "Most recently updated",
         "max": "Maximum",
         "mean": "Arithmetic mean",
         "median": "Median",
-        "last": "Most recently updated",
+        "min": "Minimum",
+        "product": "Product",
         "range": "Statistical range",
-        "sum": "Sum",
-        "product": "Product"
+        "stdev": "Standard deviation",
+        "sum": "Sum"
       }
     }
   },

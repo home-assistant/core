@@ -9,12 +9,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import DevoloHomeControlConfigEntry
 from .devolo_device import DevoloDeviceEntity
 
 DEVICE_CLASS_MAPPING = {
@@ -28,12 +27,14 @@ DEVICE_CLASS_MAPPING = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DevoloHomeControlConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Get all binary sensor and multi level sensor devices and setup them via config entry."""
     entities: list[BinarySensorEntity] = []
 
-    for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:
+    for gateway in entry.runtime_data:
         entities.extend(
             DevoloBinaryDeviceEntity(
                 homecontrol=gateway,

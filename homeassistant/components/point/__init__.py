@@ -104,7 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ConnectTimeout as err:
         _LOGGER.debug("Connection Timeout")
         raise ConfigEntryNotReady from err
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         _LOGGER.error("Authentication Error")
         return False
 
@@ -205,8 +205,8 @@ class MinutPointClient:
             config_entries_key = f"{platform}.{DOMAIN}"
             async with self._hass.data[DATA_CONFIG_ENTRY_LOCK]:
                 if config_entries_key not in self._hass.data[CONFIG_ENTRY_IS_SETUP]:
-                    await self._hass.config_entries.async_forward_entry_setup(
-                        self._config_entry, platform
+                    await self._hass.config_entries.async_forward_entry_setups(
+                        self._config_entry, [platform]
                     )
                     self._hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
 

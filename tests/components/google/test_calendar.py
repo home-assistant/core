@@ -42,9 +42,9 @@ TEST_ENTITY_NAME = TEST_API_ENTITY_NAME
 
 @pytest.fixture(autouse=True)
 def mock_test_setup(
-    test_api_calendar,
-    mock_calendars_list,
-):
+    test_api_calendar: dict[str, Any],
+    mock_calendars_list: ApiResult,
+) -> None:
     """Fixture that sets up the default API responses during integration setup."""
     mock_calendars_list({"items": [test_api_calendar]})
 
@@ -103,7 +103,7 @@ class Client:
         return resp.get("result")
 
 
-ClientFixture = Callable[[], Awaitable[Client]]
+type ClientFixture = Callable[[], Awaitable[Client]]
 
 
 @pytest.fixture
@@ -385,6 +385,9 @@ async def test_update_error(
     with patch("homeassistant.util.utcnow", return_value=now):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
+        # Ensure coordinator update completes
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     # Entity is marked uanvailable due to API failure
     state = hass.states.get(TEST_ENTITY)
@@ -413,6 +416,9 @@ async def test_update_error(
 
     with patch("homeassistant.util.utcnow", return_value=now):
         async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+        # Ensure coordinator update completes
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
 
     # State updated with new API response
@@ -447,9 +453,7 @@ async def test_http_event_api_failure(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     component_setup,
-    mock_calendars_list,
     mock_events_list,
-    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test the Rest API response during a calendar failure."""
     mock_events_list({}, exc=ClientError())
@@ -474,7 +478,7 @@ async def test_http_api_event(
     component_setup,
 ) -> None:
     """Test querying the API and fetching events from the server."""
-    hass.config.set_time_zone("Asia/Baghdad")
+    await hass.config.async_set_time_zone("Asia/Baghdad")
     event = {
         **TEST_EVENT,
         **upcoming(),
@@ -487,7 +491,7 @@ async def test_http_api_event(
     assert response.status == HTTPStatus.OK
     events = await response.json()
     assert len(events) == 1
-    assert {k: events[0].get(k) for k in ["summary", "start", "end"]} == {
+    assert {k: events[0].get(k) for k in ("summary", "start", "end")} == {
         "summary": TEST_EVENT["summary"],
         "start": {"dateTime": "2022-03-27T15:05:00+03:00"},
         "end": {"dateTime": "2022-03-27T15:10:00+03:00"},
@@ -515,7 +519,7 @@ async def test_http_api_all_day_event(
     assert response.status == HTTPStatus.OK
     events = await response.json()
     assert len(events) == 1
-    assert {k: events[0].get(k) for k in ["summary", "start", "end"]} == {
+    assert {k: events[0].get(k) for k in ("summary", "start", "end")} == {
         "summary": TEST_EVENT["summary"],
         "start": {"date": "2022-03-27"},
         "end": {"date": "2022-03-28"},
@@ -570,7 +574,7 @@ async def test_opaque_event(
 async def test_scan_calendar_error(
     hass: HomeAssistant,
     component_setup,
-    mock_calendars_list,
+    mock_calendars_list: ApiResult,
     config_entry,
 ) -> None:
     """Test that the calendar update handles a server error."""
@@ -608,6 +612,9 @@ async def test_future_event_update_behavior(
     freezer.move_to(now)
     async_fire_time_changed(hass, now)
     await hass.async_block_till_done()
+    # Ensure coordinator update completes
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     # Event has started
     state = hass.states.get(TEST_ENTITY)
@@ -644,6 +651,9 @@ async def test_future_event_offset_update_behavior(
     now += datetime.timedelta(minutes=45)
     freezer.move_to(now)
     async_fire_time_changed(hass, now)
+    await hass.async_block_till_done()
+    # Ensure coordinator update completes
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     # Event has not started, but the offset was reached
@@ -788,7 +798,7 @@ async def test_all_day_iter_order(
     event_order,
 ) -> None:
     """Test the sort order of an all day events depending on the time zone."""
-    hass.config.set_time_zone(time_zone)
+    await hass.config.async_set_time_zone(time_zone)
     mock_events_list_items(
         [
             {

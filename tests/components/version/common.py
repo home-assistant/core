@@ -42,13 +42,12 @@ async def mock_get_version_update(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     version: str = MOCK_VERSION,
-    data: dict[str, Any] = MOCK_VERSION_DATA,
     side_effect: Exception | None = None,
 ) -> None:
     """Mock getting version."""
     with patch(
         "pyhaversion.HaVersion.get_version",
-        return_value=(version, data),
+        return_value=(version, MOCK_VERSION_DATA),
         side_effect=side_effect,
     ):
         freezer.tick(UPDATE_COORDINATOR_UPDATE_INTERVAL)

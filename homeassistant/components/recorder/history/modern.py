@@ -782,24 +782,30 @@ def _sorted_states_to_dict(
         if compressed_state_format:
             # Compressed state format uses the timestamp directly
             ent_results.extend(
-                {
-                    attr_state: (prev_state := state),
-                    attr_time: row[last_updated_ts_idx],
-                }
-                for row in group
-                if (state := row[state_idx]) != prev_state
+                [
+                    {
+                        attr_state: (prev_state := state),
+                        attr_time: row[last_updated_ts_idx],
+                    }
+                    for row in group
+                    if (state := row[state_idx]) != prev_state
+                ]
             )
             continue
 
         # Non-compressed state format returns an ISO formatted string
         _utc_from_timestamp = dt_util.utc_from_timestamp
         ent_results.extend(
-            {
-                attr_state: (prev_state := state),
-                attr_time: _utc_from_timestamp(row[last_updated_ts_idx]).isoformat(),
-            }
-            for row in group
-            if (state := row[state_idx]) != prev_state
+            [
+                {
+                    attr_state: (prev_state := state),
+                    attr_time: _utc_from_timestamp(
+                        row[last_updated_ts_idx]
+                    ).isoformat(),
+                }
+                for row in group
+                if (state := row[state_idx]) != prev_state
+            ]
         )
 
     if descending:

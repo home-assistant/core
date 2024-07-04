@@ -112,7 +112,7 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         digits = self.coordinator.entry.options.get(
             CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
         )
-        return "^\\d{%s}$" % digits
+        return f"^\\d{{{digits}}}$"
 
     @property
     def is_locked(self) -> bool:

@@ -1,0 +1,25 @@
+# serializer version: 1
+# name: test_migration
+  dict({
+    'data': dict({
+      'items': list([
+        dict({
+          'id': 'test tag id',
+          'migrated': True,
+          'name': 'test tag name',
+        }),
+        dict({
+          'device_id': 'some_scanner',
+          'id': 'new tag',
+          'last_scanned': '2024-02-29T13:00:00+00:00',
+        }),
+        dict({
+          'id': '1234567890',
+        }),
+      ]),
+    }),
+    'key': 'tag',
+    'minor_version': 3,
+    'version': 1,
+  })
+# ---

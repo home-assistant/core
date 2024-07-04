@@ -10,6 +10,8 @@ from homeassistant.util.dt import get_time_zone
 
 from .const import DOMAIN, LOGGER
 
+EUROPE_AMSTERDAM_ZONE_INFO = get_time_zone("Europe/Amsterdam")
+
 
 class RovaCoordinator(DataUpdateCoordinator[dict[str, datetime]]):
     """Class to manage fetching Rova data."""
@@ -33,7 +35,7 @@ class RovaCoordinator(DataUpdateCoordinator[dict[str, datetime]]):
 
         for item in items:
             date = datetime.strptime(item["Date"], "%Y-%m-%dT%H:%M:%S").replace(
-                tzinfo=get_time_zone("Europe/Amsterdam")
+                tzinfo=EUROPE_AMSTERDAM_ZONE_INFO
             )
             code = item["GarbageTypeCode"].lower()
             if code not in data:

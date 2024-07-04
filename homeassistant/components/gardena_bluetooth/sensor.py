@@ -120,9 +120,7 @@ class GardenaBluetoothSensor(GardenaBluetoothDescriptorEntity, SensorEntity):
     def _handle_coordinator_update(self) -> None:
         value = self.coordinator.get_cached(self.entity_description.char)
         if isinstance(value, datetime):
-            value = value.replace(
-                tzinfo=dt_util.get_time_zone(self.hass.config.time_zone)
-            )
+            value = value.replace(tzinfo=dt_util.get_default_time_zone())
         self._attr_native_value = value
 
         if char := self.entity_description.connected_state:

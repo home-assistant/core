@@ -170,7 +170,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
                 # the Overkiz API server. Login will return unknown user.
                 description_placeholders["unsupported_device"] = "Somfy Protect"
                 errors["base"] = "unsupported_hardware"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
                 LOGGER.exception("Unknown error")
             else:
@@ -253,7 +253,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
                 # the Overkiz API server. Login will return unknown user.
                 description_placeholders["unsupported_device"] = "Somfy Protect"
                 errors["base"] = "unsupported_hardware"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
                 LOGGER.exception("Unknown error")
             else:

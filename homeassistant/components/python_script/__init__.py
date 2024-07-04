@@ -200,7 +200,7 @@ def execute(hass, filename, source, data=None, return_response=False):
         _LOGGER.error(
             "Error loading script %s: %s", filename, ", ".join(compiled.errors)
         )
-        return
+        return None
 
     if compiled.warnings:
         _LOGGER.warning(
@@ -285,7 +285,7 @@ def execute(hass, filename, source, data=None, return_response=False):
             raise ServiceValidationError(f"Error executing script: {err}") from err
         logger.error("Error executing script: %s", err)
         return None
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:
         if return_response:
             raise HomeAssistantError(
                 f"Error executing script ({type(err).__name__}): {err}"

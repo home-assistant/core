@@ -85,7 +85,7 @@ async def probe_silabs_firmware_type(
 
     try:
         await flasher.probe_app_type()
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         _LOGGER.debug("Failed to probe application type", exc_info=True)
 
     return flasher.app_type

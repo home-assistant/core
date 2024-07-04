@@ -3,6 +3,7 @@
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -90,6 +91,24 @@ def create_window_covering_service_with_v_tilt_2(accessory):
 
     tilt_target = service.add_char(CharacteristicsTypes.VERTICAL_TILT_TARGET)
     tilt_target.value = 0
+    tilt_target.minValue = -90
+    tilt_target.maxValue = 0
+
+
+def create_window_covering_service_with_none_tilt(accessory):
+    """Define a window-covering characteristics as per page 219 of HAP spec.
+
+    This accessory uses None for the tilt value unexpectedly.
+    """
+    service = create_window_covering_service(accessory)
+
+    tilt_current = service.add_char(CharacteristicsTypes.VERTICAL_TILT_CURRENT)
+    tilt_current.value = None
+    tilt_current.minValue = -90
+    tilt_current.maxValue = 0
+
+    tilt_target = service.add_char(CharacteristicsTypes.VERTICAL_TILT_TARGET)
+    tilt_target.value = None
     tilt_target.minValue = -90
     tilt_target.maxValue = 0
 
@@ -210,6 +229,21 @@ async def test_read_window_cover_tilt_vertical_2(hass: HomeAssistant) -> None:
     state = await helper.poll_and_get_state()
     # Expect converted value from arcdegree scale to percentage scale.
     assert state.attributes["current_tilt_position"] == 83
+
+
+async def test_read_window_cover_tilt_missing_tilt(hass: HomeAssistant) -> None:
+    """Test that missing tilt is handled."""
+    helper = await setup_test_component(
+        hass, create_window_covering_service_with_none_tilt
+    )
+
+    await helper.async_update(
+        ServicesTypes.WINDOW_COVERING,
+        {CharacteristicsTypes.OBSTRUCTION_DETECTED: True},
+    )
+    state = await helper.poll_and_get_state()
+    assert "current_tilt_position" not in state.attributes
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def test_write_window_cover_tilt_horizontal(hass: HomeAssistant) -> None:

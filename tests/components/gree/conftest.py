@@ -9,7 +9,7 @@ from .common import FakeDiscovery, build_device_mock
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.gree.async_setup_entry", return_value=True
@@ -20,7 +20,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 @pytest.fixture(autouse=True, name="discovery")
 def discovery_fixture():
     """Patch the discovery object."""
-    with patch("homeassistant.components.gree.bridge.Discovery") as mock:
+    with patch("homeassistant.components.gree.coordinator.Discovery") as mock:
         mock.return_value = FakeDiscovery()
         yield mock
 
@@ -29,7 +29,7 @@ def discovery_fixture():
 def device_fixture():
     """Patch the device search and bind."""
     with patch(
-        "homeassistant.components.gree.bridge.Device",
+        "homeassistant.components.gree.coordinator.Device",
         return_value=build_device_mock(),
     ) as mock:
         yield mock

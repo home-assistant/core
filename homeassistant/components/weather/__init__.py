@@ -8,18 +8,9 @@ from contextlib import suppress
 from datetime import timedelta
 from functools import cached_property, partial
 import logging
-from typing import (
-    Any,
-    Final,
-    Generic,
-    Literal,
-    Required,
-    TypedDict,
-    TypeVar,
-    cast,
-    final,
-)
+from typing import Any, Final, Generic, Literal, Required, TypedDict, cast, final
 
+from typing_extensions import TypeVar
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -40,13 +31,9 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ABCCachedProperties, Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-import homeassistant.helpers.issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -57,7 +44,6 @@ from homeassistant.util.dt import utcnow
 from homeassistant.util.json import JsonValueType
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from . import group as group_pre_import  # noqa: F401
 from .const import (
     ATTR_WEATHER_APPARENT_TEMPERATURE,
     ATTR_WEATHER_CLOUD_COVERAGE,
@@ -84,6 +70,11 @@ from .const import (
 from .websocket_api import async_setup as async_setup_ws_api
 
 _LOGGER = logging.getLogger(__name__)
+
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=30)
 
 ATTR_CONDITION_CLASS = "condition_class"
 ATTR_CONDITION_CLEAR_NIGHT = "clear-night"
@@ -126,32 +117,30 @@ ATTR_FORECAST_DEW_POINT: Final = "dew_point"
 ATTR_FORECAST_CLOUD_COVERAGE: Final = "cloud_coverage"
 ATTR_FORECAST_UV_INDEX: Final = "uv_index"
 
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
-SCAN_INTERVAL = timedelta(seconds=30)
-
 ROUNDING_PRECISION = 2
 
-LEGACY_SERVICE_GET_FORECAST: Final = "get_forecast"
-"""Deprecated: please use SERVICE_GET_FORECASTS."""
 SERVICE_GET_FORECASTS: Final = "get_forecasts"
 
 _ObservationUpdateCoordinatorT = TypeVar(
-    "_ObservationUpdateCoordinatorT", bound="DataUpdateCoordinator[Any]"
+    "_ObservationUpdateCoordinatorT",
+    bound=DataUpdateCoordinator[Any],
+    default=DataUpdateCoordinator[dict[str, Any]],
 )
-
-# Note:
-# Mypy bug https://github.com/python/mypy/issues/9424 prevents us from making the
-# forecast cooordinators optional, bound=TimestampDataUpdateCoordinator[Any] | None
 
 _DailyForecastUpdateCoordinatorT = TypeVar(
-    "_DailyForecastUpdateCoordinatorT", bound="TimestampDataUpdateCoordinator[Any]"
+    "_DailyForecastUpdateCoordinatorT",
+    bound=TimestampDataUpdateCoordinator[Any],
+    default=TimestampDataUpdateCoordinator[None],
 )
 _HourlyForecastUpdateCoordinatorT = TypeVar(
-    "_HourlyForecastUpdateCoordinatorT", bound="TimestampDataUpdateCoordinator[Any]"
+    "_HourlyForecastUpdateCoordinatorT",
+    bound=TimestampDataUpdateCoordinator[Any],
+    default=_DailyForecastUpdateCoordinatorT,
 )
 _TwiceDailyForecastUpdateCoordinatorT = TypeVar(
-    "_TwiceDailyForecastUpdateCoordinatorT", bound="TimestampDataUpdateCoordinator[Any]"
+    "_TwiceDailyForecastUpdateCoordinatorT",
+    bound=TimestampDataUpdateCoordinator[Any],
+    default=_DailyForecastUpdateCoordinatorT,
 )
 
 # mypy: disallow-any-generics
@@ -208,17 +197,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the weather component."""
     component = hass.data[DOMAIN] = EntityComponent[WeatherEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
-    )
-    component.async_register_legacy_entity_service(
-        LEGACY_SERVICE_GET_FORECAST,
-        {vol.Required("type"): vol.In(("daily", "hourly", "twice_daily"))},
-        async_get_forecast_service,
-        required_features=[
-            WeatherEntityFeature.FORECAST_DAILY,
-            WeatherEntityFeature.FORECAST_HOURLY,
-            WeatherEntityFeature.FORECAST_TWICE_DAILY,
-        ],
-        supports_response=SupportsResponse.ONLY,
     )
     component.async_register_entity_service(
         SERVICE_GET_FORECASTS,
@@ -1017,32 +995,6 @@ def raise_unsupported_forecast(entity_id: str, forecast_type: str) -> None:
     )
 
 
-async def async_get_forecast_service(
-    weather: WeatherEntity, service_call: ServiceCall
-) -> ServiceResponse:
-    """Get weather forecast.
-
-    Deprecated: please use async_get_forecasts_service.
-    """
-    _LOGGER.warning(
-        "Detected use of service 'weather.get_forecast'. "
-        "This is deprecated and will stop working in Home Assistant 2024.6. "
-        "Use 'weather.get_forecasts' instead which supports multiple entities",
-    )
-    ir.async_create_issue(
-        weather.hass,
-        DOMAIN,
-        "deprecated_service_weather_get_forecast",
-        breaks_in_ha_version="2024.6.0",
-        is_fixable=True,
-        is_persistent=False,
-        issue_domain=weather.platform.platform_name,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_service_weather_get_forecast",
-    )
-    return await async_get_forecasts_service(weather, service_call)
-
-
 async def async_get_forecasts_service(
     weather: WeatherEntity, service_call: ServiceCall
 ) -> ServiceResponse:
@@ -1064,8 +1016,7 @@ async def async_get_forecasts_service(
     if native_forecast_list is None:
         converted_forecast_list = []
     else:
-        # pylint: disable-next=protected-access
-        converted_forecast_list = weather._convert_forecast(native_forecast_list)
+        converted_forecast_list = weather._convert_forecast(native_forecast_list)  # noqa: SLF001
     return {
         "forecast": converted_forecast_list,
     }
@@ -1089,8 +1040,8 @@ class CoordinatorWeatherEntity(
         *,
         context: Any = None,
         daily_coordinator: _DailyForecastUpdateCoordinatorT | None = None,
-        hourly_coordinator: _DailyForecastUpdateCoordinatorT | None = None,
-        twice_daily_coordinator: _DailyForecastUpdateCoordinatorT | None = None,
+        hourly_coordinator: _HourlyForecastUpdateCoordinatorT | None = None,
+        twice_daily_coordinator: _TwiceDailyForecastUpdateCoordinatorT | None = None,
         daily_forecast_valid: timedelta | None = None,
         hourly_forecast_valid: timedelta | None = None,
         twice_daily_forecast_valid: timedelta | None = None,
@@ -1244,19 +1195,12 @@ class CoordinatorWeatherEntity(
 
 class SingleCoordinatorWeatherEntity(
     CoordinatorWeatherEntity[
-        _ObservationUpdateCoordinatorT,
-        TimestampDataUpdateCoordinator[None],
-        TimestampDataUpdateCoordinator[None],
-        TimestampDataUpdateCoordinator[None],
+        _ObservationUpdateCoordinatorT, TimestampDataUpdateCoordinator[None]
     ],
 ):
     """A class for weather entities using a single DataUpdateCoordinators.
 
-    This class is added as a convenience because:
-    - Deriving from CoordinatorWeatherEntity requires specifying all type parameters
-    until we upgrade to Python 3.12 which supports defaults
-    - Mypy bug https://github.com/python/mypy/issues/9424 prevents us from making the
-    forecast cooordinator type vars optional
+    This class is added as a convenience.
     """
 
     def __init__(

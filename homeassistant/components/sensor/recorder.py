@@ -80,6 +80,7 @@ def _get_sensor_states(hass: HomeAssistant) -> list[State]:
     # We check for state class first before calling the filter
     # function as the filter function is much more expensive
     # than checking the state class
+    entity_filter = instance.entity_filter
     return [
         state
         for state in hass.states.all(DOMAIN)
@@ -88,7 +89,7 @@ def _get_sensor_states(hass: HomeAssistant) -> list[State]:
             type(state_class) is SensorStateClass
             or try_parse_enum(SensorStateClass, state_class)
         )
-        and instance.entity_filter(state.entity_id)
+        and (not entity_filter or entity_filter(state.entity_id))
     ]
 
 
@@ -680,6 +681,7 @@ def validate_statistics(
     sensor_entity_ids = {i.entity_id for i in sensor_states}
     sensor_statistic_ids = set(metadatas)
     instance = get_instance(hass)
+    entity_filter = instance.entity_filter
 
     for state in sensor_states:
         entity_id = state.entity_id
@@ -689,7 +691,7 @@ def validate_statistics(
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if metadata := metadatas.get(entity_id):
-            if not instance.entity_filter(state.entity_id):
+            if entity_filter and not entity_filter(state.entity_id):
                 # Sensor was previously recorded, but no longer is
                 validation_result[entity_id].append(
                     statistics.ValidationIssue(
@@ -739,7 +741,7 @@ def validate_statistics(
                     )
                 )
         elif state_class is not None:
-            if not instance.entity_filter(state.entity_id):
+            if entity_filter and not entity_filter(state.entity_id):
                 # Sensor is not recorded
                 validation_result[entity_id].append(
                     statistics.ValidationIssue(

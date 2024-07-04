@@ -6,7 +6,7 @@ from collections.abc import Callable
 from contextlib import suppress
 import logging
 import string
-from typing import Any, TypeVar, cast
+from typing import Any, cast
 
 from aiohttp import web
 import prometheus_client
@@ -26,7 +26,7 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
 )
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES, ATTR_HUMIDITY
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.sensor import SensorDeviceClass
@@ -61,7 +61,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import as_timestamp
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-_MetricBaseT = TypeVar("_MetricBaseT", bound=MetricWrapperBase)
 _LOGGER = logging.getLogger(__name__)
 
 API_ENDPOINT = "/api/prometheus"
@@ -286,7 +285,7 @@ class PrometheusMetrics:
             except (ValueError, TypeError):
                 pass
 
-    def _metric(
+    def _metric[_MetricBaseT: MetricWrapperBase](
         self,
         metric: str,
         factory: type[_MetricBaseT],
@@ -730,7 +729,11 @@ class PrometheusView(HomeAssistantView):
         """Handle request for Prometheus metrics."""
         _LOGGER.debug("Received Prometheus metrics request")
 
+        hass = request.app[KEY_HASS]
+        body = await hass.async_add_executor_job(
+            prometheus_client.generate_latest, prometheus_client.REGISTRY
+        )
         return web.Response(
-            body=prometheus_client.generate_latest(prometheus_client.REGISTRY),
+            body=body,
             content_type=CONTENT_TYPE_TEXT_PLAIN,
         )

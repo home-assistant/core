@@ -22,9 +22,9 @@ from . import ENTRY_CONFIG
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_coordinator(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     freezer: FrozenDateTimeFactory,
     monkeypatch: pytest.MonkeyPatch,
     get_ferries: list[FerryStop],

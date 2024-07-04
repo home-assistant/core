@@ -38,7 +38,7 @@ pytestmark = [
 ]
 
 
-BrowseResultList = list[didl_lite.DidlObject | didl_lite.Descriptor]
+type BrowseResultList = list[didl_lite.DidlObject | didl_lite.Descriptor]
 
 
 async def async_resolve_media(

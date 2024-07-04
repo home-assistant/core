@@ -94,6 +94,18 @@ def test_get_zha_device_path() -> None:
     )
 
 
+def test_get_zha_device_path_ignored_discovery() -> None:
+    """Test extracting the ZHA device path from an ignored ZHA discovery."""
+    config_entry = MockConfigEntry(
+        domain="zha",
+        unique_id="some_unique_id",
+        data={},
+        version=4,
+    )
+
+    assert get_zha_device_path(config_entry) is None
+
+
 async def test_guess_firmware_type_unknown(hass: HomeAssistant) -> None:
     """Test guessing the firmware type."""
 

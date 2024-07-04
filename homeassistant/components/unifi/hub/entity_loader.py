@@ -18,7 +18,6 @@ from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 
 from ..const import LOGGER, UNIFI_WIRELESS_CLIENTS
 from ..entity import UnifiEntity, UnifiEntityDescription
@@ -86,7 +85,7 @@ class UnifiEntityLoader:
         entity_registry = er.async_get(self.hub.hass)
         macs: list[str] = [
             entry.unique_id.split("-", 1)[1]
-            for entry in async_entries_for_config_entry(
+            for entry in er.async_entries_for_config_entry(
                 entity_registry, config.entry.entry_id
             )
             if entry.domain == Platform.DEVICE_TRACKER and "-" in entry.unique_id

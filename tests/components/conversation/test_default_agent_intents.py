@@ -1,5 +1,7 @@
 """Test intents for the default agent."""
 
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components import (
@@ -7,14 +9,23 @@ from homeassistant.components import (
     cover,
     light,
     media_player,
+    todo,
     vacuum,
     valve,
 )
 from homeassistant.components.cover import intent as cover_intent
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
-from homeassistant.components.media_player import intent as media_player_intent
+from homeassistant.components.media_player import (
+    MediaPlayerEntityFeature,
+    intent as media_player_intent,
+)
 from homeassistant.components.vacuum import intent as vaccum_intent
-from homeassistant.const import STATE_CLOSED
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
+    STATE_CLOSED,
+    STATE_PAUSED,
+    STATE_PLAYING,
+)
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -25,6 +36,27 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
+
+
+class MockTodoListEntity(todo.TodoListEntity):
+    """Test todo list entity."""
+
+    def __init__(self, items: list[todo.TodoItem] | None = None) -> None:
+        """Initialize entity."""
+        self._attr_todo_items = items or []
+
+    @property
+    def items(self) -> list[todo.TodoItem]:
+        """Return the items in the To-do list."""
+        return self._attr_todo_items
+
+    async def async_create_todo_item(self, item: todo.TodoItem) -> None:
+        """Add an item to the To-do list."""
+        self._attr_todo_items.append(item)
+
+    async def async_delete_todo_items(self, uids: list[str]) -> None:
+        """Delete an item in the To-do list."""
+        self._attr_todo_items = [item for item in self.items if item.uid not in uids]
 
 
 @pytest.fixture
@@ -189,7 +221,13 @@ async def test_media_player_intents(
     await media_player_intent.async_setup_intents(hass)
 
     entity_id = f"{media_player.DOMAIN}.tv"
-    hass.states.async_set(entity_id, media_player.STATE_PLAYING)
+    attributes = {
+        ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.VOLUME_SET
+    }
+
+    hass.states.async_set(entity_id, STATE_PLAYING, attributes=attributes)
     async_expose_entity(hass, conversation.DOMAIN, entity_id, True)
 
     # pause
@@ -206,6 +244,9 @@ async def test_media_player_intents(
     call = calls[0]
     assert call.data == {"entity_id": entity_id}
 
+    # Unpause requires paused state
+    hass.states.async_set(entity_id, STATE_PAUSED, attributes=attributes)
+
     # unpause
     calls = async_mock_service(
         hass, media_player.DOMAIN, media_player.SERVICE_MEDIA_PLAY
@@ -217,10 +258,13 @@ async def test_media_player_intents(
 
     response = result.response
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert response.speech["plain"]["speech"] == "Unpaused"
+    assert response.speech["plain"]["speech"] == "Resumed"
     assert len(calls) == 1
     call = calls[0]
     assert call.data == {"entity_id": entity_id}
+
+    # Next track requires playing state
+    hass.states.async_set(entity_id, STATE_PLAYING, attributes=attributes)
 
     # next
     calls = async_mock_service(
@@ -345,3 +389,27 @@ async def test_turn_floor_lights_on_off(
     assert {s.entity_id for s in result.response.matched_states} == {
         bedroom_light.entity_id
     }
+
+
+async def test_todo_add_item_fr(
+    hass: HomeAssistant,
+    init_components,
+) -> None:
+    """Test that wildcard matches prioritize results with more literal text matched."""
+    assert await async_setup_component(hass, todo.DOMAIN, {})
+    hass.states.async_set("todo.liste_des_courses", 0, {})
+
+    with (
+        patch.object(hass.config, "language", "fr"),
+        patch(
+            "homeassistant.components.todo.intent.ListAddItemIntent.async_handle",
+            return_value=intent.IntentResponse(hass.config.language),
+        ) as mock_handle,
+    ):
+        await conversation.async_converse(
+            hass, "Ajoute de la farine a la liste des courses", None, Context(), None
+        )
+        mock_handle.assert_called_once()
+        assert mock_handle.call_args.args
+        intent_obj = mock_handle.call_args.args[0]
+        assert intent_obj.slots.get("item", {}).get("value", "").strip() == "farine"

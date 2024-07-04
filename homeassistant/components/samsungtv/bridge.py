@@ -8,7 +8,7 @@ from asyncio.exceptions import TimeoutError as AsyncioTimeoutError
 from collections.abc import Callable, Iterable, Mapping
 import contextlib
 from datetime import datetime, timedelta
-from typing import Any, Generic, TypeVar, cast
+from typing import Any, cast
 
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
@@ -84,9 +84,6 @@ ENCRYPTED_MODEL_USES_POWER_OFF = {"H6400", "H6410"}
 ENCRYPTED_MODEL_USES_POWER = {"JU6400", "JU641D"}
 
 REST_EXCEPTIONS = (HttpApiError, AsyncioTimeoutError, ResponseError)
-
-_RemoteT = TypeVar("_RemoteT", SamsungTVWSAsyncRemote, SamsungTVEncryptedWSAsyncRemote)
-_CommandT = TypeVar("_CommandT", SamsungTVCommand, SamsungTVEncryptedCommand)
 
 
 def mac_from_device_info(info: dict[str, Any]) -> str | None:
@@ -168,6 +165,7 @@ class SamsungTVBridge(ABC):
         self.host = host
         self.token: str | None = None
         self.session_id: str | None = None
+        self.auth_failed: bool = False
         self._reauth_callback: CALLBACK_TYPE | None = None
         self._update_config_entry: Callable[[Mapping[str, Any]], None] | None = None
         self._app_list_callback: Callable[[dict[str, str]], None] | None = None
@@ -327,6 +325,11 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         """Try to gather infos of this device."""
         return None
 
+    def _notify_reauth_callback(self) -> None:
+        """Notify access denied callback."""
+        if self._reauth_callback is not None:
+            self.hass.loop.call_soon_threadsafe(self._reauth_callback)
+
     def _get_remote(self) -> Remote:
         """Create or return a remote control instance."""
         if self._remote is None:
@@ -338,6 +341,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             # A removed auth will lead to socket timeout because waiting
             # for auth popup is just an open socket
             except AccessDenied:
+                self.auth_failed = True
                 self._notify_reauth_callback()
                 raise
             except (ConnectionClosed, OSError):
@@ -393,7 +397,10 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             LOGGER.debug("Could not establish connection")
 
 
-class SamsungTVWSBaseBridge(SamsungTVBridge, Generic[_RemoteT, _CommandT]):
+class SamsungTVWSBaseBridge[
+    _RemoteT: (SamsungTVWSAsyncRemote, SamsungTVEncryptedWSAsyncRemote),
+    _CommandT: (SamsungTVCommand, SamsungTVEncryptedCommand),
+](SamsungTVBridge):
     """The Bridge for WebSocket TVs (v1/v2)."""
 
     def __init__(
@@ -607,6 +614,7 @@ class SamsungTVWSBridge(
                     self.host,
                     repr(err),
                 )
+                self.auth_failed = True
                 self._notify_reauth_callback()
                 self._remote = None
             except ConnectionClosedError as err:

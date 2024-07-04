@@ -10,8 +10,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
-from . import PureEnergieDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import PureEnergieDataUpdateCoordinator
 
 TO_REDACT = {
     CONF_HOST,

@@ -75,18 +75,18 @@ async def test_config_flow(
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
 async def test_config_flow_registered_entity(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     target_domain: Platform,
     mock_setup_entry: AsyncMock,
     hidden_by_before: er.RegistryEntryHider | None,
     hidden_by_after: er.RegistryEntryHider,
 ) -> None:
     """Test the config flow hides a registered entity."""
-    registry = er.async_get(hass)
-    switch_entity_entry = registry.async_get_or_create(
+    switch_entity_entry = entity_registry.async_get_or_create(
         "switch", "test", "unique", suggested_object_id="ceiling"
     )
     assert switch_entity_entry.entity_id == "switch.ceiling"
-    registry.async_update_entity("switch.ceiling", hidden_by=hidden_by_before)
+    entity_registry.async_update_entity("switch.ceiling", hidden_by=hidden_by_before)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -122,7 +122,7 @@ async def test_config_flow_registered_entity(
         CONF_TARGET_DOMAIN: target_domain,
     }
 
-    switch_entity_entry = registry.async_get("switch.ceiling")
+    switch_entity_entry = entity_registry.async_get("switch.ceiling")
     assert switch_entity_entry.hidden_by == hidden_by_after
 
 

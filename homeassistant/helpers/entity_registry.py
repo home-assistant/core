@@ -10,13 +10,14 @@ timer.
 
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Callable, Container, Hashable, KeysView, Mapping
 from datetime import datetime, timedelta
 from enum import StrEnum
 from functools import cached_property
 import logging
 import time
-from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict
 
 import attr
 import voluptuous as vol
@@ -48,6 +49,7 @@ from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import slugify, uuid as uuid_util
 from homeassistant.util.event_type import EventType
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import format_unserializable_data
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
@@ -57,15 +59,14 @@ from .device_registry import (
     EventDeviceRegistryUpdatedData,
 )
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
-from .registry import BaseRegistry, BaseRegistryItems
+from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
+from .singleton import singleton
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
 
-T = TypeVar("T")
-
-DATA_REGISTRY = "entity_registry"
+DATA_REGISTRY: HassKey[EntityRegistry] = HassKey("entity_registry")
 EVENT_ENTITY_REGISTRY_UPDATED: EventType[EventEntityRegistryUpdatedData] = EventType(
     "entity_registry_updated"
 )
@@ -132,14 +133,14 @@ class _EventEntityRegistryUpdatedData_Update(TypedDict):
     old_entity_id: NotRequired[str]
 
 
-EventEntityRegistryUpdatedData = (
+type EventEntityRegistryUpdatedData = (
     _EventEntityRegistryUpdatedData_CreateRemove
     | _EventEntityRegistryUpdatedData_Update
 )
 
 
-EntityOptionsType = Mapping[str, Mapping[str, Any]]
-ReadOnlyEntityOptionsType = ReadOnlyDict[str, ReadOnlyDict[str, Any]]
+type EntityOptionsType = Mapping[str, Mapping[str, Any]]
+type ReadOnlyEntityOptionsType = ReadOnlyDict[str, ReadOnlyDict[str, Any]]
 
 DISPLAY_DICT_OPTIONAL = (
     # key, attr_name, convert_to_list
@@ -533,10 +534,10 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
         super().__init__()
         self._entry_ids: dict[str, RegistryEntry] = {}
         self._index: dict[tuple[str, str, str], str] = {}
-        self._config_entry_id_index: dict[str, dict[str, Literal[True]]] = {}
-        self._device_id_index: dict[str, dict[str, Literal[True]]] = {}
-        self._area_id_index: dict[str, dict[str, Literal[True]]] = {}
-        self._labels_index: dict[str, dict[str, Literal[True]]] = {}
+        self._config_entry_id_index: RegistryIndexType = defaultdict(dict)
+        self._device_id_index: RegistryIndexType = defaultdict(dict)
+        self._area_id_index: RegistryIndexType = defaultdict(dict)
+        self._labels_index: RegistryIndexType = defaultdict(dict)
 
     def _index_entry(self, key: str, entry: RegistryEntry) -> None:
         """Index an entry."""
@@ -545,13 +546,13 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
         # python has no ordered set, so we use a dict with True values
         # https://discuss.python.org/t/add-orderedset-to-stdlib/12730
         if (config_entry_id := entry.config_entry_id) is not None:
-            self._config_entry_id_index.setdefault(config_entry_id, {})[key] = True
+            self._config_entry_id_index[config_entry_id][key] = True
         if (device_id := entry.device_id) is not None:
-            self._device_id_index.setdefault(device_id, {})[key] = True
+            self._device_id_index[device_id][key] = True
         if (area_id := entry.area_id) is not None:
-            self._area_id_index.setdefault(area_id, {})[key] = True
+            self._area_id_index[area_id][key] = True
         for label in entry.labels:
-            self._labels_index.setdefault(label, {})[key] = True
+            self._labels_index[label][key] = True
 
     def _unindex_entry(
         self, key: str, replacement_entry: RegistryEntry | None = None
@@ -617,17 +618,22 @@ def _validate_item(
     hass: HomeAssistant,
     domain: str,
     platform: str,
-    unique_id: str | Hashable | UndefinedType | Any,
     *,
     disabled_by: RegistryEntryDisabler | None | UndefinedType = None,
     entity_category: EntityCategory | None | UndefinedType = None,
     hidden_by: RegistryEntryHider | None | UndefinedType = None,
+    report_non_string_unique_id: bool = True,
+    unique_id: str | Hashable | UndefinedType | Any,
 ) -> None:
     """Validate entity registry item."""
     if unique_id is not UNDEFINED and not isinstance(unique_id, Hashable):
         raise TypeError(f"unique_id must be a string, got {unique_id}")
-    if unique_id is not UNDEFINED and not isinstance(unique_id, str):
-        # In HA Core 2025.4, we should fail if unique_id is not a string
+    if (
+        report_non_string_unique_id
+        and unique_id is not UNDEFINED
+        and not isinstance(unique_id, str)
+    ):
+        # In HA Core 2025.10, we should fail if unique_id is not a string
         report_issue = async_suggest_report_issue(hass, integration_domain=platform)
         _LOGGER.error(
             ("'%s' from integration %s has a non string unique_id" " '%s', please %s"),
@@ -636,7 +642,6 @@ def _validate_item(
             unique_id,
             report_issue,
         )
-        return
     if (
         disabled_by
         and disabled_by is not UNDEFINED
@@ -820,6 +825,7 @@ class EntityRegistry(BaseRegistry):
                 unit_of_measurement=unit_of_measurement,
             )
 
+        self.hass.verify_event_loop_thread("entity_registry.async_get_or_create")
         _validate_item(
             self.hass,
             domain,
@@ -850,7 +856,7 @@ class EntityRegistry(BaseRegistry):
         ):
             disabled_by = RegistryEntryDisabler.INTEGRATION
 
-        def none_if_undefined(value: T | UndefinedType) -> T | None:
+        def none_if_undefined[_T](value: _T | UndefinedType) -> _T | None:
             """Return None if value is UNDEFINED, otherwise return value."""
             return None if value is UNDEFINED else value
 
@@ -880,7 +886,7 @@ class EntityRegistry(BaseRegistry):
         _LOGGER.info("Registered new %s.%s entity: %s", domain, platform, entity_id)
         self.async_schedule_save()
 
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_ENTITY_REGISTRY_UPDATED,
             _EventEntityRegistryUpdatedData_CreateRemove(
                 action="create", entity_id=entity_id
@@ -892,6 +898,7 @@ class EntityRegistry(BaseRegistry):
     @callback
     def async_remove(self, entity_id: str) -> None:
         """Remove an entity from registry."""
+        self.hass.verify_event_loop_thread("entity_registry.async_remove")
         entity = self.entities.pop(entity_id)
         config_entry_id = entity.config_entry_id
         key = (entity.domain, entity.platform, entity.unique_id)
@@ -905,7 +912,7 @@ class EntityRegistry(BaseRegistry):
             platform=entity.platform,
             unique_id=entity.unique_id,
         )
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_ENTITY_REGISTRY_UPDATED,
             _EventEntityRegistryUpdatedData_CreateRemove(
                 action="remove", entity_id=entity_id
@@ -1086,6 +1093,8 @@ class EntityRegistry(BaseRegistry):
         if not new_values:
             return old
 
+        self.hass.verify_event_loop_thread("entity_registry.async_update_entity")
+
         new = self.entities[entity_id] = attr.evolve(old, **new_values)
 
         self.async_schedule_save()
@@ -1099,7 +1108,7 @@ class EntityRegistry(BaseRegistry):
         if old.entity_id != entity_id:
             data["old_entity_id"] = old.entity_id
 
-        self.hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, data)
+        self.hass.bus.async_fire_internal(EVENT_ENTITY_REGISTRY_UPDATED, data)
 
         return new
 
@@ -1220,14 +1229,14 @@ class EntityRegistry(BaseRegistry):
 
         if data is not None:
             for entity in data["entities"]:
-                # We removed this in 2022.5. Remove this check in 2023.1.
-                if entity["entity_category"] == "system":
-                    entity["entity_category"] = None
-
                 try:
                     domain = split_entity_id(entity["entity_id"])[0]
                     _validate_item(
-                        self.hass, domain, entity["platform"], entity["unique_id"]
+                        self.hass,
+                        domain,
+                        entity["platform"],
+                        report_non_string_unique_id=False,
+                        unique_id=entity["unique_id"],
                     )
                 except (TypeError, ValueError) as err:
                     report_issue = async_suggest_report_issue(
@@ -1283,7 +1292,11 @@ class EntityRegistry(BaseRegistry):
                 try:
                     domain = split_entity_id(entity["entity_id"])[0]
                     _validate_item(
-                        self.hass, domain, entity["platform"], entity["unique_id"]
+                        self.hass,
+                        domain,
+                        entity["platform"],
+                        report_non_string_unique_id=False,
+                        unique_id=entity["unique_id"],
                     )
                 except (TypeError, ValueError):
                     continue
@@ -1374,16 +1387,16 @@ class EntityRegistry(BaseRegistry):
 
 
 @callback
+@singleton(DATA_REGISTRY)
 def async_get(hass: HomeAssistant) -> EntityRegistry:
     """Get entity registry."""
-    return cast(EntityRegistry, hass.data[DATA_REGISTRY])
+    return EntityRegistry(hass)
 
 
 async def async_load(hass: HomeAssistant) -> None:
     """Load entity registry."""
     assert DATA_REGISTRY not in hass.data
-    hass.data[DATA_REGISTRY] = EntityRegistry(hass)
-    await hass.data[DATA_REGISTRY].async_load()
+    await async_get(hass).async_load()
 
 
 @callback

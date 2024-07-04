@@ -26,6 +26,8 @@ class AirQCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         entry: ConfigEntry,
+        clip_negative: bool = True,
+        return_average: bool = True,
     ) -> None:
         """Initialise a custom coordinator."""
         super().__init__(
@@ -44,6 +46,8 @@ class AirQCoordinator(DataUpdateCoordinator):
             manufacturer=MANUFACTURER,
             identifiers={(DOMAIN, self.device_id)},
         )
+        self.clip_negative = clip_negative
+        self.return_average = return_average
 
     async def _async_update_data(self) -> dict:
         """Fetch the data from the device."""
@@ -57,4 +61,7 @@ class AirQCoordinator(DataUpdateCoordinator):
                     hw_version=info["hw_version"],
                 )
             )
-        return await self.airq.get_latest_data()  # type: ignore[no-any-return]
+        return await self.airq.get_latest_data(  # type: ignore[no-any-return]
+            return_average=self.return_average,
+            clip_negative_values=self.clip_negative,
+        )

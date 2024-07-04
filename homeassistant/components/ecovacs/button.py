@@ -2,24 +2,17 @@
 
 from dataclasses import dataclass
 
-from deebot_client.capabilities import (
-    Capabilities,
-    CapabilityExecute,
-    CapabilityLifeSpan,
-    VacuumCapabilities,
-)
+from deebot_client.capabilities import CapabilityExecute, CapabilityLifeSpan
 from deebot_client.events import LifeSpan
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, SUPPORTED_LIFESPANS
-from .controller import EcovacsController
+from . import EcovacsConfigEntry
+from .const import SUPPORTED_LIFESPANS
 from .entity import (
-    CapabilityDevice,
     EcovacsCapabilityEntityDescription,
     EcovacsDescriptionEntity,
     EcovacsEntity,
@@ -44,7 +37,6 @@ class EcovacsLifespanButtonEntityDescription(ButtonEntityDescription):
 
 ENTITY_DESCRIPTIONS: tuple[EcovacsButtonEntityDescription, ...] = (
     EcovacsButtonEntityDescription(
-        device_capabilities=VacuumCapabilities,
         capability_fn=lambda caps: caps.map.relocation if caps.map else None,
         key="relocate",
         translation_key="relocate",
@@ -66,11 +58,11 @@ LIFESPAN_ENTITY_DESCRIPTIONS = tuple(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EcovacsConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add entities for passed config_entry in HA."""
-    controller: EcovacsController = hass.data[DOMAIN][config_entry.entry_id]
+    controller = config_entry.runtime_data
     entities: list[EcovacsEntity] = get_supported_entitites(
         controller, EcovacsButtonEntity, ENTITY_DESCRIPTIONS
     )
@@ -78,7 +70,7 @@ async def async_setup_entry(
         EcovacsResetLifespanButtonEntity(
             device, device.capabilities.life_span, description
         )
-        for device in controller.devices(Capabilities)
+        for device in controller.devices
         for description in LIFESPAN_ENTITY_DESCRIPTIONS
         if description.component in device.capabilities.life_span.types
     )
@@ -86,7 +78,7 @@ async def async_setup_entry(
 
 
 class EcovacsButtonEntity(
-    EcovacsDescriptionEntity[CapabilityDevice, CapabilityExecute],
+    EcovacsDescriptionEntity[CapabilityExecute],
     ButtonEntity,
 ):
     """Ecovacs button entity."""
@@ -99,7 +91,7 @@ class EcovacsButtonEntity(
 
 
 class EcovacsResetLifespanButtonEntity(
-    EcovacsDescriptionEntity[Capabilities, CapabilityLifeSpan],
+    EcovacsDescriptionEntity[CapabilityLifeSpan],
     ButtonEntity,
 ):
     """Ecovacs reset lifespan button entity."""

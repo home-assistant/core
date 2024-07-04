@@ -37,7 +37,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.jellyfin.async_setup_entry", return_value=True
@@ -46,7 +46,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_client_device_id() -> Generator[None, MagicMock, None]:
+def mock_client_device_id() -> Generator[MagicMock]:
     """Mock generating device id."""
     with patch(
         "homeassistant.components.jellyfin.config_flow._generate_client_device_id"
@@ -108,7 +108,7 @@ def mock_client(
 
 
 @pytest.fixture
-def mock_jellyfin(mock_client: MagicMock) -> Generator[None, MagicMock, None]:
+def mock_jellyfin(mock_client: MagicMock) -> Generator[MagicMock]:
     """Return a mocked Jellyfin."""
     with patch(
         "homeassistant.components.jellyfin.client_wrapper.Jellyfin", autospec=True
@@ -144,6 +144,8 @@ def api_artwork_side_effect(*args, **kwargs):
 def api_audio_url_side_effect(*args, **kwargs):
     """Handle variable responses for audio_url method."""
     item_id = args[0]
+    if audio_codec := kwargs.get("audio_codec"):
+        return f"http://localhost/Audio/{item_id}/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000,AudioCodec={audio_codec}"
     return f"http://localhost/Audio/{item_id}/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000"
 
 

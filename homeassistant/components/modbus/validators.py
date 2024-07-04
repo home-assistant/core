@@ -183,9 +183,7 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
         try:
             size = struct.calcsize(structure)
         except struct.error as err:
-            raise vol.Invalid(
-                f"{name}: error in structure format --> {str(err)}"
-            ) from err
+            raise vol.Invalid(f"{name}: error in structure format --> {err!s}") from err
         bytecount = count * 2
         if bytecount != size:
             raise vol.Invalid(

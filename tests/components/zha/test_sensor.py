@@ -1,10 +1,13 @@
 """Test ZHA sensor."""
 
+from collections.abc import Callable
 from datetime import timedelta
 import math
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from zhaquirks.danfoss import thermostat as danfoss_thermostat
 import zigpy.profiles.zha
 from zigpy.quirks import CustomCluster
 from zigpy.quirks.v2 import CustomDeviceV2, add_to_registry_v2
@@ -22,8 +25,6 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
     LIGHT_LUX,
     PERCENTAGE,
     STATE_UNAVAILABLE,
@@ -632,10 +633,10 @@ def assert_state(hass: HomeAssistant, entity_id, state, unit_of_measurement):
 
 
 @pytest.fixture
-def hass_ms(hass: HomeAssistant):
+def hass_ms(hass: HomeAssistant) -> Callable[[str], HomeAssistant]:
     """Hass instance with measurement system."""
 
-    async def _hass_ms(meas_sys):
+    async def _hass_ms(meas_sys: str) -> HomeAssistant:
         await config_util.async_process_ha_core_config(
             hass, {CONF_UNIT_SYSTEM: meas_sys}
         )
@@ -646,7 +647,7 @@ def hass_ms(hass: HomeAssistant):
 
 
 @pytest.fixture
-def core_rs(hass_storage):
+def core_rs(hass_storage: dict[str, Any]):
     """Core.restore_state fixture."""
 
     def _storage(entity_id, uom, state):
@@ -687,11 +688,11 @@ def core_rs(hass_storage):
 )
 async def test_temp_uom(
     hass: HomeAssistant,
-    uom,
-    raw_temp,
-    expected,
-    restore,
-    hass_ms,
+    uom: UnitOfTemperature,
+    raw_temp: int,
+    expected: int,
+    restore: bool,
+    hass_ms: Callable[[str], HomeAssistant],
     core_rs,
     zigpy_device_mock,
     zha_device_restored,
@@ -703,11 +704,7 @@ async def test_temp_uom(
         core_rs(entity_id, uom, state=(expected - 2))
         await async_mock_load_restore_state_from_storage(hass)
 
-    hass = await hass_ms(
-        CONF_UNIT_SYSTEM_METRIC
-        if uom == UnitOfTemperature.CELSIUS
-        else CONF_UNIT_SYSTEM_IMPERIAL
-    )
+    hass = await hass_ms("metric" if uom == UnitOfTemperature.CELSIUS else "imperial")
 
     zigpy_device = zigpy_device_mock(
         {
@@ -1320,3 +1317,61 @@ async def test_device_counter_sensors(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "2"
+
+
+@pytest.fixture
+async def zigpy_device_danfoss_thermostat(
+    hass: HomeAssistant, zigpy_device_mock, zha_device_joined_restored
+):
+    """Device tracker zigpy danfoss thermostat device."""
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [
+                    general.Basic.cluster_id,
+                    general.PowerConfiguration.cluster_id,
+                    general.Identify.cluster_id,
+                    general.Time.cluster_id,
+                    general.PollControl.cluster_id,
+                    Thermostat.cluster_id,
+                    hvac.UserInterface.cluster_id,
+                    homeautomation.Diagnostic.cluster_id,
+                ],
+                SIG_EP_OUTPUT: [general.Basic.cluster_id, general.Ota.cluster_id],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.THERMOSTAT,
+            }
+        },
+        manufacturer="Danfoss",
+        model="eTRV0100",
+    )
+
+    zha_device = await zha_device_joined_restored(zigpy_device)
+    return zha_device, zigpy_device
+
+
+async def test_danfoss_thermostat_sw_error(
+    hass: HomeAssistant, zigpy_device_danfoss_thermostat
+) -> None:
+    """Test quirks defined thermostat."""
+
+    zha_device, zigpy_device = zigpy_device_danfoss_thermostat
+
+    entity_id = find_entity_id(
+        Platform.SENSOR, zha_device, hass, qualifier="software_error"
+    )
+    assert entity_id is not None
+
+    cluster = zigpy_device.endpoints[1].diagnostic
+
+    await send_attributes_report(
+        hass,
+        cluster,
+        {
+            danfoss_thermostat.DanfossDiagnosticCluster.AttributeDefs.sw_error_code.id: 0x0001
+        },
+    )
+
+    hass_state = hass.states.get(entity_id)
+    assert hass_state.state == "something"
+    assert hass_state.attributes["Top_pcb_sensor_error"]

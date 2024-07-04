@@ -91,9 +91,9 @@ def platforms() -> list[Platform]:
 
 
 @pytest.fixture(autouse=True)
-def set_tz(hass: HomeAssistant) -> None:
+async def set_tz(hass: HomeAssistant) -> None:
     """Fixture to set timezone with fixed offset year round."""
-    hass.config.set_time_zone("America/Regina")
+    await hass.config.async_set_time_zone("America/Regina")
 
 
 @pytest.fixture(name="todos")

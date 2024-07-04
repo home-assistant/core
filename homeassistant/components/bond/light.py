@@ -10,21 +10,19 @@ from bond_async import Action, BPUPSubscriptions, DeviceType
 import voluptuous as vol
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import BondConfigEntry
 from .const import (
     ATTR_POWER_STATE,
-    DOMAIN,
     SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
     SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
 )
 from .entity import BondEntity
-from .models import BondData
 from .utils import BondDevice, BondHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,11 +40,11 @@ ENTITY_SERVICES = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: BondConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Bond light devices."""
-    data: BondData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     hub = data.hub
     bpup_subs = data.bpup_subs
     platform = entity_platform.async_get_current_platform()

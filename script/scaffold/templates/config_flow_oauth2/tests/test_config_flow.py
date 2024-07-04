@@ -44,7 +44,7 @@ async def test_full_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    state = config_entry_oauth2_flow._encode_jwt(
+    state = config_entry_oauth2_flow._encode_jwt(  # noqa: SLF001
         hass,
         {
             "flow_id": result["flow_id"],

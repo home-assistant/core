@@ -12,10 +12,11 @@ from .conftest import BED_ID, BED_NAME, BED_NAME_LOWER, setup_platform
 from tests.common import async_fire_time_changed
 
 
-async def test_setup(hass: HomeAssistant, mock_asyncsleepiq) -> None:
+async def test_setup(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_asyncsleepiq
+) -> None:
     """Test for successfully setting up the SleepIQ platform."""
     entry = await setup_platform(hass, DOMAIN)
-    entity_registry = er.async_get(hass)
 
     assert len(entity_registry.entities) == 2
 

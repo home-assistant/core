@@ -130,7 +130,7 @@ class CoinbaseConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth_secret"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -188,7 +188,7 @@ class OptionsFlowHandler(OptionsFlow):
                 errors["base"] = "currency_unavailable"
             except ExchangeRateUnavailable:
                 errors["base"] = "exchange_rate_unavailable"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

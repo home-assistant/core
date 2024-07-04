@@ -361,9 +361,9 @@ async def test_lazy_state_handles_same_last_updated_and_last_changed(
 @pytest.mark.parametrize(
     "time_zone", ["Europe/Berlin", "America/Chicago", "US/Hawaii", "UTC"]
 )
-def test_process_datetime_to_timestamp(time_zone, hass: HomeAssistant) -> None:
+async def test_process_datetime_to_timestamp(time_zone, hass: HomeAssistant) -> None:
     """Test we can handle processing database datatimes to timestamps."""
-    hass.config.set_time_zone(time_zone)
+    await hass.config.async_set_time_zone(time_zone)
     utc_now = dt_util.utcnow()
     assert process_datetime_to_timestamp(utc_now) == utc_now.timestamp()
     now = dt_util.now()
@@ -373,14 +373,14 @@ def test_process_datetime_to_timestamp(time_zone, hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     "time_zone", ["Europe/Berlin", "America/Chicago", "US/Hawaii", "UTC"]
 )
-def test_process_datetime_to_timestamp_freeze_time(
+async def test_process_datetime_to_timestamp_freeze_time(
     time_zone, hass: HomeAssistant
 ) -> None:
     """Test we can handle processing database datatimes to timestamps.
 
     This test freezes time to make sure everything matches.
     """
-    hass.config.set_time_zone(time_zone)
+    await hass.config.async_set_time_zone(time_zone)
     utc_now = dt_util.utcnow()
     with freeze_time(utc_now):
         epoch = utc_now.timestamp()
@@ -396,7 +396,7 @@ async def test_process_datetime_to_timestamp_mirrors_utc_isoformat_behavior(
     time_zone, hass: HomeAssistant
 ) -> None:
     """Test process_datetime_to_timestamp mirrors process_timestamp_to_utc_isoformat."""
-    hass.config.set_time_zone(time_zone)
+    await hass.config.async_set_time_zone(time_zone)
     datetime_with_tzinfo = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt_util.UTC)
     datetime_without_tzinfo = datetime(2016, 7, 9, 11, 0, 0)
     est = dt_util.get_time_zone("US/Eastern")

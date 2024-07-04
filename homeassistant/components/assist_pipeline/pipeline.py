@@ -44,7 +44,7 @@ from homeassistant.helpers.collection import (
 )
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType, VolDictType
 from homeassistant.util import (
     dt as dt_util,
     language as language_util,
@@ -93,7 +93,7 @@ def validate_language(data: dict[str, Any]) -> Any:
     return data
 
 
-PIPELINE_FIELDS = {
+PIPELINE_FIELDS: VolDictType = {
     vol.Required("conversation_engine"): str,
     vol.Required("conversation_language"): str,
     vol.Required("language"): str,
@@ -115,7 +115,8 @@ AUDIO_PROCESSOR_SAMPLES: Final = 160  # 10 ms @ 16 Khz
 AUDIO_PROCESSOR_BYTES: Final = AUDIO_PROCESSOR_SAMPLES * 2  # 16-bit samples
 
 
-async def _async_resolve_default_pipeline_settings(
+@callback
+def _async_resolve_default_pipeline_settings(
     hass: HomeAssistant,
     stt_engine_id: str | None,
     tts_engine_id: str | None,
@@ -139,7 +140,7 @@ async def _async_resolve_default_pipeline_settings(
     # Find a matching language supported by the Home Assistant conversation agent
     conversation_languages = language_util.matches(
         hass.config.language,
-        await conversation.async_get_conversation_languages(
+        conversation.async_get_conversation_languages(
             hass, conversation.HOME_ASSISTANT_AGENT
         ),
         country=hass.config.country,
@@ -222,7 +223,7 @@ async def _async_create_default_pipeline(
     The default pipeline will use the homeassistant conversation agent and the
     default stt / tts engines.
     """
-    pipeline_settings = await _async_resolve_default_pipeline_settings(
+    pipeline_settings = _async_resolve_default_pipeline_settings(
         hass, stt_engine_id=None, tts_engine_id=None, pipeline_name="Home Assistant"
     )
     return await pipeline_store.async_create_item(pipeline_settings)
@@ -241,7 +242,7 @@ async def async_create_default_pipeline(
     """
     pipeline_data: PipelineData = hass.data[DOMAIN]
     pipeline_store = pipeline_data.pipeline_store
-    pipeline_settings = await _async_resolve_default_pipeline_settings(
+    pipeline_settings = _async_resolve_default_pipeline_settings(
         hass, stt_engine_id, tts_engine_id, pipeline_name=pipeline_name
     )
     if (
@@ -303,21 +304,25 @@ async def async_update_pipeline(
     updates.pop("id")
     # Refactor this once we bump to Python 3.12
     # and have https://peps.python.org/pep-0692/
-    for key, val in (
-        ("conversation_engine", conversation_engine),
-        ("conversation_language", conversation_language),
-        ("language", language),
-        ("name", name),
-        ("stt_engine", stt_engine),
-        ("stt_language", stt_language),
-        ("tts_engine", tts_engine),
-        ("tts_language", tts_language),
-        ("tts_voice", tts_voice),
-        ("wake_word_entity", wake_word_entity),
-        ("wake_word_id", wake_word_id),
-    ):
-        if val is not UNDEFINED:
-            updates[key] = val
+    updates.update(
+        {
+            key: val
+            for key, val in (
+                ("conversation_engine", conversation_engine),
+                ("conversation_language", conversation_language),
+                ("language", language),
+                ("name", name),
+                ("stt_engine", stt_engine),
+                ("stt_language", stt_language),
+                ("tts_engine", tts_engine),
+                ("tts_language", tts_language),
+                ("tts_voice", tts_voice),
+                ("wake_word_entity", wake_word_entity),
+                ("wake_word_id", wake_word_id),
+            )
+            if val is not UNDEFINED
+        }
+    )
 
     await pipeline_data.pipeline_store.async_update_item(pipeline.id, updates)
 
@@ -349,7 +354,7 @@ class PipelineEvent:
     timestamp: str = field(default_factory=lambda: dt_util.utcnow().isoformat())
 
 
-PipelineEventCallback = Callable[[PipelineEvent], None]
+type PipelineEventCallback = Callable[[PipelineEvent], None]
 
 
 @dataclass(frozen=True)
@@ -922,7 +927,7 @@ class PipelineRun:
         stt_vad: VoiceCommandSegmenter | None,
         sample_rate: int = 16000,
         sample_width: int = 2,
-    ) -> AsyncGenerator[bytes, None]:
+    ) -> AsyncGenerator[bytes]:
         """Yield audio chunks until VAD detects silence or speech-to-text completes."""
         chunk_seconds = AUDIO_PROCESSOR_SAMPLES / sample_rate
         sent_vad_start = False
@@ -1185,7 +1190,7 @@ class PipelineRun:
         audio_stream: AsyncIterable[bytes],
         sample_rate: int = 16000,
         sample_width: int = 2,
-    ) -> AsyncGenerator[ProcessedAudioChunk, None]:
+    ) -> AsyncGenerator[ProcessedAudioChunk]:
         """Apply volume transformation only (no VAD/audio enhancements) with optional chunking."""
         ms_per_sample = sample_rate // 1000
         ms_per_chunk = (AUDIO_PROCESSOR_SAMPLES // sample_width) // ms_per_sample
@@ -1220,7 +1225,7 @@ class PipelineRun:
         audio_stream: AsyncIterable[bytes],
         sample_rate: int = 16000,
         sample_width: int = 2,
-    ) -> AsyncGenerator[ProcessedAudioChunk, None]:
+    ) -> AsyncGenerator[ProcessedAudioChunk]:
         """Split audio into 10 ms chunks and apply VAD/noise suppression/auto gain/volume transformation."""
         assert self.audio_processor is not None
 
@@ -1295,7 +1300,7 @@ def _pipeline_debug_recording_thread_proc(
                     wav_writer.writeframes(message)
     except Empty:
         pass  # occurs when pipeline has unexpected error
-    except Exception:  # pylint: disable=broad-exception-caught
+    except Exception:
         _LOGGER.exception("Unexpected error in debug recording thread")
     finally:
         if wav_writer is not None:
@@ -1386,7 +1391,7 @@ class PipelineInput:
                     # Send audio in the buffer first to speech-to-text, then move on to stt_stream.
                     # This is basically an async itertools.chain.
                     async def buffer_then_audio_stream() -> (
-                        AsyncGenerator[ProcessedAudioChunk, None]
+                        AsyncGenerator[ProcessedAudioChunk]
                     ):
                         # Buffered audio
                         for chunk in stt_audio_buffer:
@@ -1604,15 +1609,9 @@ class PipelineStorageCollectionWebsocket(
     """Class to expose storage collection management over websocket."""
 
     @callback
-    def async_setup(
-        self,
-        hass: HomeAssistant,
-        *,
-        create_list: bool = True,
-        create_create: bool = True,
-    ) -> None:
+    def async_setup(self, hass: HomeAssistant) -> None:
         """Set up the websocket commands."""
-        super().async_setup(hass, create_list=create_list, create_create=create_create)
+        super().async_setup(hass)
 
         websocket_api.async_register_command(
             hass,
@@ -1647,9 +1646,7 @@ class PipelineStorageCollectionWebsocket(
         try:
             await super().ws_delete_item(hass, connection, msg)
         except PipelinePreferred as exc:
-            connection.send_error(
-                msg["id"], websocket_api.const.ERR_NOT_ALLOWED, str(exc)
-            )
+            connection.send_error(msg["id"], websocket_api.ERR_NOT_ALLOWED, str(exc))
 
     @callback
     def ws_get_item(
@@ -1663,7 +1660,7 @@ class PipelineStorageCollectionWebsocket(
         if item_id not in self.storage_collection.data:
             connection.send_error(
                 msg["id"],
-                websocket_api.const.ERR_NOT_FOUND,
+                websocket_api.ERR_NOT_FOUND,
                 f"Unable to find {self.item_id_key} {item_id}",
             )
             return
@@ -1694,7 +1691,7 @@ class PipelineStorageCollectionWebsocket(
             self.storage_collection.async_set_preferred_item(msg[self.item_id_key])
         except ItemNotFound:
             connection.send_error(
-                msg["id"], websocket_api.const.ERR_NOT_FOUND, "unknown item"
+                msg["id"], websocket_api.ERR_NOT_FOUND, "unknown item"
             )
             return
         connection.send_result(msg["id"])

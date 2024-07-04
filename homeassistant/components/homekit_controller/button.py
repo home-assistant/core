@@ -44,14 +44,14 @@ BUTTON_ENTITIES: dict[str, HomeKitButtonEntityDescription] = {
         name="Setup",
         translation_key="setup",
         entity_category=EntityCategory.CONFIG,
-        write_value="#HAA@trcmd",
+        write_value="#HAA@trcmd",  # codespell:ignore haa
     ),
     CharacteristicsTypes.VENDOR_HAA_UPDATE: HomeKitButtonEntityDescription(
         key=CharacteristicsTypes.VENDOR_HAA_UPDATE,
         name="Update",
         device_class=ButtonDeviceClass.UPDATE,
         entity_category=EntityCategory.CONFIG,
-        write_value="#HAA@trcmd",
+        write_value="#HAA@trcmd",  # codespell:ignore haa
     ),
     CharacteristicsTypes.IDENTIFY: HomeKitButtonEntityDescription(
         key=CharacteristicsTypes.IDENTIFY,

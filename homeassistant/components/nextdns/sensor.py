@@ -19,40 +19,33 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import NextDnsConfigEntry
 from .const import (
     ATTR_DNSSEC,
     ATTR_ENCRYPTION,
     ATTR_IP_VERSIONS,
     ATTR_PROTOCOLS,
     ATTR_STATUS,
-    DOMAIN,
 )
 from .coordinator import CoordinatorDataT, NextDnsUpdateCoordinator
 
 PARALLEL_UPDATES = 1
 
 
-@dataclass(frozen=True)
-class NextDnsSensorRequiredKeysMixin(Generic[CoordinatorDataT]):
-    """Class for NextDNS entity required keys."""
+@dataclass(frozen=True, kw_only=True)
+class NextDnsSensorEntityDescription(
+    SensorEntityDescription, Generic[CoordinatorDataT]
+):
+    """NextDNS sensor entity description."""
 
     coordinator_type: str
     value: Callable[[CoordinatorDataT], StateType]
-
-
-@dataclass(frozen=True)
-class NextDnsSensorEntityDescription(
-    SensorEntityDescription,
-    NextDnsSensorRequiredKeysMixin[CoordinatorDataT],
-):
-    """NextDNS sensor entity description."""
 
 
 SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
@@ -307,14 +300,14 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NextDnsConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add a NextDNS entities from a config_entry."""
-    coordinators = hass.data[DOMAIN][entry.entry_id]
-
     async_add_entities(
-        NextDnsSensor(coordinators[description.coordinator_type], description)
+        NextDnsSensor(
+            getattr(entry.runtime_data, description.coordinator_type), description
+        )
         for description in SENSORS
     )
 
