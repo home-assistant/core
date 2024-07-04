@@ -223,7 +223,9 @@ async def test_manual_configuration_after_discovery_ResponseError(
 
 
 async def test_manual_configuration_update_configuration(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, config_entry_setup
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: ConfigEntry,
 ) -> None:
     """Test that manual configuration can update existing config entry."""
     aioclient_mock.get(
