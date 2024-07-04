@@ -3701,6 +3701,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "mini_connected": {
+      "name": "MINI Connected",
+      "integration_type": "virtual",
+      "supported_by": "bmw_connected_drive"
+    },
     "minio": {
       "name": "Minio",
       "integration_type": "hub",
