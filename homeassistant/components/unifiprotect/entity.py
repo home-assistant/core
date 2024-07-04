@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
 from datetime import datetime
 from functools import partial
@@ -151,7 +150,7 @@ def async_all_device_entities(
     )
 
 
-class BaseProtectEntity(Entity, ABC):
+class BaseProtectEntity(Entity):
     """Base class for UniFi protect entities."""
 
     device: ProtectDeviceType
@@ -196,7 +195,6 @@ class BaseProtectEntity(Entity, ABC):
         await self.data.async_refresh()
 
     @callback
-    @abstractmethod
     def _async_set_device_info(self) -> None:
         """Set device info."""
 
