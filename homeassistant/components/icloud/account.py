@@ -299,7 +299,7 @@ class IcloudAccount:
             self._max_interval,
         )
 
-    def _track_point(self):
+    def _schedule_next_fetch(self) -> None:
         if not self._config_entry.pref_disable_polling:
             track_point_in_utc_time(
                 self.hass,
