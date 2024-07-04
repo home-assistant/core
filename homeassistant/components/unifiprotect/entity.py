@@ -218,23 +218,23 @@ class BaseProtectEntity(Entity):
         """Update Entity object from Protect device."""
         was_available = self._attr_available
         async_get_ufp_enabled = self._async_get_ufp_enabled
-        available = self.data.last_update_success
+        last_updated_success = self.data.last_update_success
         if device.model is ModelType.NVR:
             if TYPE_CHECKING:
                 assert isinstance(device, NVR)
-            connected_or_adoptable = True
-            if available:
+            if available := last_updated_success:
                 self.device = device
         else:
             if TYPE_CHECKING:
                 assert isinstance(device, ProtectAdoptableDeviceModel)
+            if last_updated_success:
+                self.device = device
+
             connected_or_adoptable = device.state is StateType.CONNECTED or (
                 not device.is_adopted_by_us and device.can_adopt
             )
-            if available:
-                self.device = device
             available = (
-                available
+                last_updated_success
                 and connected_or_adoptable
                 and (not async_get_ufp_enabled or async_get_ufp_enabled(device))
             )
