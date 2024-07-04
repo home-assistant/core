@@ -346,9 +346,8 @@ class EventEntityMixin(ProtectDeviceEntity):
         event object so we need to check the datetime object that was
         saved from the last time the entity was updated.
         """
-        event = self._event
         return bool(
-            event
+            (event := self._event)
             and event.end
             and prev_event
             and prev_event_end
