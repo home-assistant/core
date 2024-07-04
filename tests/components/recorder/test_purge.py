@@ -194,7 +194,6 @@ async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) ->
 @pytest.mark.usefixtures("recorder_mock", "skip_by_db_engine")
 async def test_purge_old_states_encouters_database_corruption(
     hass: HomeAssistant,
-    recorder_db_url: str,
 ) -> None:
     """Test database image image is malformed while deleting old states.
 
