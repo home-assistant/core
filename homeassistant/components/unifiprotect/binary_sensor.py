@@ -31,7 +31,7 @@ from .entity import (
     BaseProtectEntity,
     EventEntityMixin,
     ProtectDeviceEntity,
-    ProtectIsOnMixin,
+    ProtectIsOnEntity,
     ProtectNVREntity,
     async_all_device_entities,
 )
@@ -624,7 +624,7 @@ _MOUNTABLE_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription
 
 
 class ProtectDeviceBinarySensor(
-    ProtectIsOnMixin, ProtectDeviceEntity, BinarySensorEntity
+    ProtectIsOnEntity, ProtectDeviceEntity, BinarySensorEntity
 ):
     """A UniFi Protect Device Binary Sensor."""
 

@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import partial
-import logging
 from typing import Any
 
 from uiprotect.data import (
@@ -27,13 +26,12 @@ from .data import ProtectData, UFPConfigEntry
 from .entity import (
     BaseProtectEntity,
     ProtectDeviceEntity,
-    ProtectIsOnMixin,
+    ProtectIsOnEntity,
     ProtectNVREntity,
     async_all_device_entities,
 )
 from .models import PermRequired, ProtectEntityDescription, ProtectSetableKeysMixin, T
 
-_LOGGER = logging.getLogger(__name__)
 ATTR_PREV_MIC = "prev_mic_level"
 ATTR_PREV_RECORD = "prev_record_mode"
 
@@ -46,10 +44,7 @@ class ProtectSwitchEntityDescription(
 
 
 async def _set_highfps(obj: Camera, value: bool) -> None:
-    if value:
-        await obj.set_video_mode(VideoMode.HIGH_FPS)
-    else:
-        await obj.set_video_mode(VideoMode.DEFAULT)
+    await obj.set_video_mode(VideoMode.HIGH_FPS if value else VideoMode.DEFAULT)
 
 
 CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
@@ -473,7 +468,7 @@ _PRIVACY_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
 }
 
 
-class ProtectBaseSwitch(ProtectIsOnMixin):
+class ProtectBaseSwitch(ProtectIsOnEntity):
     """Base class for UniFi Protect Switch."""
 
     entity_description: ProtectSwitchEntityDescription

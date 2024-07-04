@@ -269,7 +269,7 @@ class BaseProtectEntity(Entity):
         )
 
 
-class ProtectIsOnMixin(BaseProtectEntity):
+class ProtectIsOnEntity(BaseProtectEntity):
     """Base class for entities with is_on property."""
 
     _state_attrs: tuple[str, ...] = ("_attr_available", "_attr_is_on")
