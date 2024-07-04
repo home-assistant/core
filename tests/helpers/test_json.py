@@ -351,24 +351,22 @@ def test_deprecated_json_loads(caplog: pytest.LogCaptureFixture) -> None:
     json_helper.json_loads("{}")
     assert (
         "json_loads is a deprecated function which will be removed in "
-        "HA Core 2025.2. Use homeassistant.util.json.json_loads instead"
+        "HA Core 2025.8. Use homeassistant.util.json.json_loads instead"
     ) in caplog.text
 
 
 @pytest.mark.parametrize(
-    ("constant_name", "replacement_name", "replacement", "breaks_in_ha_version"),
+    ("constant_name", "replacement_name", "replacement"),
     [
         (
             "JSON_DECODE_EXCEPTIONS",
             "homeassistant.util.json.JSON_DECODE_EXCEPTIONS",
             JSON_DECODE_EXCEPTIONS,
-            "2025.2",
         ),
         (
             "JSON_ENCODE_EXCEPTIONS",
             "homeassistant.util.json.JSON_ENCODE_EXCEPTIONS",
             JSON_ENCODE_EXCEPTIONS,
-            "2025.2",
         ),
     ],
 )
@@ -377,7 +375,6 @@ def test_deprecated_aliases(
     constant_name: str,
     replacement_name: str,
     replacement: Any,
-    breaks_in_ha_version: str,
 ) -> None:
     """Test deprecated JSON_DECODE_EXCEPTIONS and JSON_ENCODE_EXCEPTIONS constants.
 
@@ -389,5 +386,5 @@ def test_deprecated_aliases(
         constant_name,
         replacement_name,
         replacement,
-        breaks_in_ha_version,
+        "2025.8",
     )

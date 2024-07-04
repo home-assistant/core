@@ -29,13 +29,13 @@ from .deprecation import (
 )
 
 _DEPRECATED_JSON_DECODE_EXCEPTIONS = DeprecatedConstant(
-    _JSON_DECODE_EXCEPTIONS, "homeassistant.util.json.JSON_DECODE_EXCEPTIONS", "2025.2"
+    _JSON_DECODE_EXCEPTIONS, "homeassistant.util.json.JSON_DECODE_EXCEPTIONS", "2025.8"
 )
 _DEPRECATED_JSON_ENCODE_EXCEPTIONS = DeprecatedConstant(
-    _JSON_ENCODE_EXCEPTIONS, "homeassistant.util.json.JSON_ENCODE_EXCEPTIONS", "2025.2"
+    _JSON_ENCODE_EXCEPTIONS, "homeassistant.util.json.JSON_ENCODE_EXCEPTIONS", "2025.8"
 )
 json_loads = deprecated_function(
-    "homeassistant.util.json.json_loads", breaks_in_ha_version="2025.2"
+    "homeassistant.util.json.json_loads", breaks_in_ha_version="2025.8"
 )(_json_loads)
 
 # These can be removed if no deprecated constant are in this module anymore
