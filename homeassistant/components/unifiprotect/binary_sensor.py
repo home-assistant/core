@@ -32,6 +32,7 @@ from .entity import (
     BaseProtectEntity,
     EventEntityMixin,
     ProtectDeviceEntity,
+    ProtectIsOnMixin,
     ProtectNVREntity,
     async_all_device_entities,
 )
@@ -623,17 +624,13 @@ _MOUNTABLE_MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription
 }
 
 
-class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
+class ProtectDeviceBinarySensor(
+    ProtectIsOnMixin, ProtectDeviceEntity, BinarySensorEntity
+):
     """A UniFi Protect Device Binary Sensor."""
 
     device: Camera | Light | Sensor
     entity_description: ProtectBinaryEntityDescription
-    _state_attrs: tuple[str, ...] = ("_attr_available", "_attr_is_on")
-
-    @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        super()._async_update_device_from_protect(device)
-        self._attr_is_on = self.entity_description.get_ufp_value(self.device)
 
 
 class MountableProtectDeviceBinarySensor(ProtectDeviceBinarySensor):

@@ -27,6 +27,7 @@ from .data import ProtectData, UFPConfigEntry
 from .entity import (
     BaseProtectEntity,
     ProtectDeviceEntity,
+    ProtectIsOnMixin,
     ProtectNVREntity,
     async_all_device_entities,
 )
@@ -472,15 +473,10 @@ _PRIVACY_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
 }
 
 
-class ProtectBaseSwitch(BaseProtectEntity, SwitchEntity):
+class ProtectBaseSwitch(ProtectIsOnMixin):
     """Base class for UniFi Protect Switch."""
 
     entity_description: ProtectSwitchEntityDescription
-    _state_attrs = ("_attr_available", "_attr_is_on")
-
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        super()._async_update_device_from_protect(device)
-        self._attr_is_on = self.entity_description.get_ufp_value(self.device) is True
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -491,18 +487,23 @@ class ProtectBaseSwitch(BaseProtectEntity, SwitchEntity):
         await self.entity_description.ufp_set(self.device, False)
 
 
-class ProtectSwitch(ProtectBaseSwitch, ProtectDeviceEntity):
+class ProtectSwitch(ProtectDeviceEntity, ProtectBaseSwitch, SwitchEntity):
     """A UniFi Protect Switch."""
 
+    entity_description: ProtectSwitchEntityDescription
 
-class ProtectNVRSwitch(ProtectBaseSwitch, ProtectNVREntity):
+
+class ProtectNVRSwitch(ProtectNVREntity, ProtectBaseSwitch, SwitchEntity):
     """A UniFi Protect NVR Switch."""
+
+    entity_description: ProtectSwitchEntityDescription
 
 
 class ProtectPrivacyModeSwitch(RestoreEntity, ProtectSwitch):
     """A UniFi Protect Switch."""
 
     device: Camera
+    entity_description: ProtectSwitchEntityDescription
 
     def __init__(
         self,

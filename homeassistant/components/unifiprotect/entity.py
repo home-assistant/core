@@ -266,6 +266,18 @@ class BaseProtectEntity(Entity):
         )
 
 
+class ProtectIsOnMixin(BaseProtectEntity):
+    """Base class for entities with is_on property."""
+
+    _state_attrs: tuple[str, ...] = ("_attr_available", "_attr_is_on")
+    _attr_is_on: bool | None
+    entity_description: ProtectEntityDescription
+
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
+        self._attr_is_on = self.entity_description.get_ufp_value(self.device) is True
+
+
 class ProtectDeviceEntity(BaseProtectEntity):
     """Base class for UniFi protect entities."""
 
