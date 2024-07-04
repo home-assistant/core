@@ -407,6 +407,8 @@ def _init_blocking_io_modules_in_executor() -> None:
     # Initialize the mimetypes module to avoid blocking calls
     # to the filesystem to load the mime.types file.
     mimetypes.init()
+    # Initialize is_official_image and is_docker_env to avoid blocking calls
+    # to the filesystem.
     is_official_image()
     is_docker_env()
 
