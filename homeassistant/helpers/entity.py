@@ -309,8 +309,9 @@ class CachedProperties(type):
         Wrap _attr_ for cached properties in property objects.
         """
 
-        def deleter(name: str, private_attr_name: str) -> Callable[[Any], None]:
+        def deleter(name: str) -> Callable[[Any], None]:
             """Create a deleter for an _attr_ property."""
+            private_attr_name = f"__attr_{name}"
 
             def _deleter(o: Any) -> None:
                 """Delete an _attr_ property.
@@ -328,8 +329,9 @@ class CachedProperties(type):
 
             return _deleter
 
-        def setter(name: str, private_attr_name: str) -> Callable[[Any, Any], None]:
+        def setter(name: str) -> Callable[[Any, Any], None]:
             """Create a setter for an _attr_ property."""
+            private_attr_name = f"__attr_{name}"
 
             def _setter(o: Any, val: Any) -> None:
                 """Set an _attr_ property to the backing __attr attribute.
@@ -347,11 +349,8 @@ class CachedProperties(type):
 
         def make_property(name: str) -> property:
             """Help create a property object."""
-            private_attr_name = f"__attr_{name}"
             return property(
-                fget=attrgetter(private_attr_name),
-                fset=setter(name, private_attr_name),
-                fdel=deleter(name, private_attr_name),
+                fget=attrgetter(f"__attr_{name}"), fset=setter(name), fdel=deleter(name)
             )
 
         def wrap_attr(cls: CachedProperties, property_name: str) -> None:
