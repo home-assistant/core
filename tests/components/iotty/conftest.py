@@ -28,15 +28,24 @@ test_devices = [
 ]
 
 
-test_ls = [
-    LightSwitch("TestLS", "TEST_SERIAL_0", LS_DEVICE_TYPE_UID, "[TEST] Light switch 0"),
-    LightSwitch(
-        "TestLS1", "TEST_SERIAL_1", LS_DEVICE_TYPE_UID, "[TEST] Light switch 1"
-    ),
-]
+ls_0 = LightSwitch(
+    "TestLS", "TEST_SERIAL_0", LS_DEVICE_TYPE_UID, "[TEST] Light switch 0"
+)
+ls_1 = LightSwitch(
+    "TestLS1", "TEST_SERIAL_1", LS_DEVICE_TYPE_UID, "[TEST] Light switch 1"
+)
+ls_2 = LightSwitch(
+    "TestLS2", "TEST_SERIAL_2", LS_DEVICE_TYPE_UID, "[TEST] Light switch 2"
+)
 
-test_ls_one_removed = [
-    LightSwitch("TestLS", "TEST_SERIAL_0", LS_DEVICE_TYPE_UID, "[TEST] Light switch 0"),
+test_ls = [ls_0, ls_1]
+
+test_ls_one_removed = [ls_0]
+
+test_ls_one_added = [
+    ls_0,
+    ls_1,
+    ls_2,
 ]
 
 
@@ -165,21 +174,6 @@ def mock_get_devices_twolightswitches() -> Generator[AsyncMock, None, None]:
         "iottycloud.cloudapi.CloudApi.get_devices", return_value=test_ls
     ) as mock_fn:
         yield mock_fn
-
-
-@pytest.fixture
-def mock_get_devices_twolightswitches_then_one() -> Generator[AsyncMock, None, None]:
-    """Mock for get_devices, returning two objects at the first call, and only one afterwards."""
-
-    with patch(
-        "homeassistant.components.iotty.api.IottyProxy", autospec=True
-    ) as mock_proxy:
-        mock_proxy.return_value.get_devices.side_effect = [
-            test_ls,
-            test_ls_one_removed,
-            test_ls_one_removed,
-        ]
-        yield mock_proxy
 
 
 @pytest.fixture

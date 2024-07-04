@@ -37,7 +37,7 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
     config_entry: ConfigEntry
     _entities: dict[str, Entity]
     _devices: list[Device]
-    _device_registry: dr.DeivceRegistry
+    _device_registry: dr.DeviceRegistry
 
     def __init__(
         self, hass: HomeAssistant, entry: ConfigEntry, session: OAuth2Session
@@ -84,7 +84,8 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
             device_to_remove = self._device_registry.async_get_device(
                 {(DOMAIN, device_to_remove.device_id)}
             )
-            self._device_registry.async_remove_device(device_to_remove.id)
+            if device_to_remove is not None:
+                self._device_registry.async_remove_device(device_to_remove.id)
 
         self._devices = current_devices
 

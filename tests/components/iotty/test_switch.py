@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .conftest import test_ls
+from .conftest import test_ls, test_ls_one_added, test_ls_one_removed
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -149,7 +149,7 @@ async def test_devices_deletion_ok(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     local_oauth_impl: ClientSession,
-    mock_get_devices_twolightswitches_then_one,
+    mock_get_devices_twolightswitches,
     mock_get_status_filled,
     snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
@@ -162,10 +162,48 @@ async def test_devices_deletion_ok(
         hass, DOMAIN, local_oauth_impl
     )
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # Should have two devices
+    assert hass.states.async_entity_ids() == snapshot
+
+    mock_get_devices_twolightswitches.return_value = test_ls_one_removed
 
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
+    # Should have one device
+    assert hass.states.async_entity_ids() == snapshot
+
+
+async def test_devices_insertion_ok(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    local_oauth_impl: ClientSession,
+    mock_get_devices_twolightswitches,
+    mock_get_status_filled,
+    snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test iotty switch insertion."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, DOMAIN, local_oauth_impl
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # Should have two devices
+    assert hass.states.async_entity_ids() == snapshot
+
+    mock_get_devices_twolightswitches.return_value = test_ls_one_added
+
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Should have three devices
     assert hass.states.async_entity_ids() == snapshot

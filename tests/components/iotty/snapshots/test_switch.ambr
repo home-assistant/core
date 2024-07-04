@@ -7,5 +7,25 @@
 # ---
 # name: test_devices_deletion_ok
   list([
+    'switch.test_light_switch_0_test_serial_0_test_light_switch_0_test_serial_0',
+    'switch.test_light_switch_1_test_serial_1_test_light_switch_1_test_serial_1',
+  ])
+# ---
+# name: test_devices_deletion_ok.1
+  list([
+    'switch.test_light_switch_0_test_serial_0_test_light_switch_0_test_serial_0',
+  ])
+# ---
+# name: test_devices_insertion_ok
+  list([
+    'switch.test_light_switch_0_test_serial_0_test_light_switch_0_test_serial_0',
+    'switch.test_light_switch_1_test_serial_1_test_light_switch_1_test_serial_1',
+  ])
+# ---
+# name: test_devices_insertion_ok.1
+  list([
+    'switch.test_light_switch_0_test_serial_0_test_light_switch_0_test_serial_0',
+    'switch.test_light_switch_1_test_serial_1_test_light_switch_1_test_serial_1',
+    'switch.test_light_switch_2_test_serial_2_test_light_switch_2_test_serial_2',
   ])
 # ---
