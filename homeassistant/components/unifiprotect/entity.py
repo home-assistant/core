@@ -222,16 +222,17 @@ class BaseProtectEntity(Entity):
         if last_update_success := self.data.last_update_success:
             self.device = device
 
+        was_available = self._attr_available
         async_get_ufp_enabled = self._async_get_ufp_enabled
+        connected_or_adoptable = device.state is StateType.CONNECTED or (
+            not device.is_adopted_by_us and device.can_adopt
+        )
         available = (
             last_update_success
-            and (
-                device.state is StateType.CONNECTED
-                or (not device.is_adopted_by_us and device.can_adopt)
-            )
+            and connected_or_adoptable
             and (not async_get_ufp_enabled or async_get_ufp_enabled(device))
         )
-        if self._attr_available != available:
+        if available != was_available:
             self._attr_available = available
 
     @callback
