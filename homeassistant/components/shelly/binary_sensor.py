@@ -246,6 +246,8 @@ async def async_setup_entry(
             coordinator = config_entry.runtime_data.rpc
             assert coordinator
 
+            # the user can remove virtual components from the device configuration, so
+            # we need to remove orphaned entities
             virtual_switch_ids = get_virtual_component_ids(
                 coordinator.device.config, BINARY_SENSOR_PLATFORM
             )

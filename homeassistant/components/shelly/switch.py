@@ -178,6 +178,8 @@ def async_setup_rpc_entry(
         RpcVirtualSwitch,
     )
 
+    # the user can remove virtual components from the device configuration, so we need
+    # to remove orphaned entities
     virtual_switch_ids = get_virtual_component_ids(
         coordinator.device.config, SWITCH_PLATFORM
     )
