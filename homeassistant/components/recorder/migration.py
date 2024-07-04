@@ -1164,7 +1164,7 @@ def _apply_update(  # noqa: C901
                 session_maker, engine, table, column
             )
         ]
-        _LOGGER.debug(dropped_constraints)
+        _LOGGER.debug("Dropped foreign key constraints: %s", dropped_constraints)
 
         # Then modify the constrained columns
         for table, columns in foreign_columns:
