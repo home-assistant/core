@@ -21,7 +21,7 @@ from homeassistant.components.calendar import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -213,7 +213,8 @@ def async_register_services(  # noqa: C901
 
     session = async_get_clientsession(hass)
 
-    async def handle_new_task(call: ServiceCall) -> None:
+
+    async def handle_new_task(call: ServiceCall) -> None:  # noqa: C901
         """Call when a user creates a new Todoist Task from Home Assistant."""
         project_name = call.data[PROJECT_NAME].lower()
         projects = await coordinator.async_get_projects()
@@ -227,14 +228,20 @@ def async_register_services(  # noqa: C901
         # Optional section within project
         section_id: str | None = None
         if SECTION_NAME in call.data:
-            section_name = call.data[SECTION_NAME].lower()
+            section_name = call.data[SECTION_NAME]
             sections = await coordinator.async_get_sections(project_id)
             for section in sections:
                 if section_name == section.name.lower():
                     section_id = section.id
+                    break
             if section_id is None:
-                raise HomeAssistantError(
-                    f"Invalid section '{section_name}' within project '{project_name}'"
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="section_invalid",
+                    translation_placeholders={
+                        "section": section_name,
+                        "project": project_name,
+                    },
                 )
 
         # Create the task

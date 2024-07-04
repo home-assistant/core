@@ -20,6 +20,11 @@
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
+  "exceptions": {
+    "section_invalid": {
+      "message": "Invalid section \"{section}\" within project \"{project}\""
+    }
+  },
   "services": {
     "new_task": {
       "name": "New task",
