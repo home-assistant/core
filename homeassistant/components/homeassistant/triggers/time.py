@@ -68,10 +68,9 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     trigger_data = trigger_info["trigger_data"]
-    entities: dict[str, CALLBACK_TYPE] = {}
+    entities: dict[tuple[str, timedelta], CALLBACK_TYPE] = {}
     removes: list[CALLBACK_TYPE] = []
     job = HassJob(action, f"time trigger {trigger_info}")
-    offsets: dict[str, timedelta] = {}
 
     @callback
     def time_automation_listener(
@@ -92,15 +91,21 @@ async def async_attach_trigger(
         )
 
     @callback
-    def update_entity_trigger_event(event: Event[EventStateChangedData]) -> None:
+    def update_entity_trigger_event(
+        event: Event[EventStateChangedData], offset: timedelta = timedelta(0)
+    ) -> None:
         """update_entity_trigger from the event."""
-        return update_entity_trigger(event.data["entity_id"], event.data["new_state"])
+        return update_entity_trigger(
+            event.data["entity_id"], event.data["new_state"], offset
+        )
 
     @callback
-    def update_entity_trigger(entity_id: str, new_state: State | None = None) -> None:
+    def update_entity_trigger(
+        entity_id: str, new_state: State | None = None, offset: timedelta = timedelta(0)
+    ) -> None:
         """Update the entity trigger for the entity_id."""
         # If a listener was already set up for entity, remove it.
-        if remove := entities.pop(entity_id, None):
+        if remove := entities.pop((entity_id, offset), None):
             remove()
             remove = None
 
@@ -108,8 +113,6 @@ async def async_attach_trigger(
             return
 
         trigger_dt: datetime | None
-
-        offset = offsets[entity_id] if entity_id in offsets else timedelta(0)
 
         # Check state of entity. If valid, set up a listener.
         if new_state.domain == "input_datetime":
@@ -184,23 +187,31 @@ async def async_attach_trigger(
 
         # Was a listener set up?
         if remove:
-            entities[entity_id] = remove
-
-    to_track: list[str] = []
+            entities[(entity_id, offset)] = remove
 
     for at_time in config[CONF_AT]:
         if isinstance(at_time, str):
             # entity
-            to_track.append(at_time)
             update_entity_trigger(at_time, new_state=hass.states.get(at_time))
+            # Track state changes of entity.
+            removes.append(
+                async_track_state_change_event(
+                    hass, at_time, update_entity_trigger_event
+                )
+            )
         elif isinstance(at_time, dict) and CONF_OFFSET in at_time:
             # entity with offset
             entity_id: str = at_time.get(CONF_ENTITY_ID, "")
-            to_track.append(entity_id)
-            offsets[entity_id] = at_time.get(CONF_OFFSET, timedelta(0))
+            offset: timedelta = at_time.get(CONF_OFFSET, timedelta(0))
             update_entity_trigger(
-                entity_id,
-                new_state=hass.states.get(entity_id),
+                entity_id, new_state=hass.states.get(entity_id), offset=offset
+            )
+
+            # Track state changes of any entities.
+            removes.append(
+                async_track_state_change_event(
+                    hass, entity_id, partial(update_entity_trigger_event, offset=offset)
+                )
             )
         else:
             # datetime.time
@@ -213,11 +224,6 @@ async def async_attach_trigger(
                     second=at_time.second,
                 )
             )
-
-    # Track state changes of any entities.
-    removes.append(
-        async_track_state_change_event(hass, to_track, update_entity_trigger_event)
-    )
 
     @callback
     def remove_track_time_changes() -> None:
