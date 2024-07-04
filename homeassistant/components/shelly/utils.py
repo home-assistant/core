@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address
+import re
 from types import MappingProxyType
 from typing import Any, cast
 
@@ -26,7 +27,7 @@ from aioshelly.rpc_device import RpcDevice, WsServer
 from homeassistant.components import network
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     device_registry as dr,
@@ -500,3 +501,53 @@ def async_remove_shelly_rpc_entities(
 def is_rpc_thermostat_mode(ident: int, status: dict[str, Any]) -> bool:
     """Return True if 'thermostat:<IDent>' is present in the status."""
     return f"thermostat:{ident}" in status
+
+
+def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str]:
+    """Return a list of virtual component IDs for a platform."""
+    ids: list[str] = []
+    if platform == Platform.SWITCH.value:
+        ids.extend(
+            k
+            for k, v in config.items()
+            if k.startswith("boolean") and v["meta"]["ui"]["view"] == "toggle"
+        )
+    if platform == Platform.BINARY_SENSOR.value:
+        ids.extend(
+            k
+            for k, v in config.items()
+            if k.startswith("boolean") and v["meta"]["ui"]["view"] == "label"
+        )
+
+    return ids
+
+
+@callback
+def async_remove_orphaned_virtual_entities(
+    hass: HomeAssistant,
+    config_entry_id: str,
+    mac: str,
+    platform: str,
+    virt_comp_type: str,
+    virt_comp_ids: list[str],
+) -> None:
+    """Remove orphaned virtual entities."""
+    orphaned_entities = []
+    entity_reg = er.async_get(hass)
+    device_reg = dr.async_get(hass)
+
+    if devices := device_reg.devices.get_devices_for_config_entry_id(config_entry_id):
+        device_id = devices[0].id
+        entities = er.async_entries_for_device(entity_reg, device_id, True)
+        for entity in entities:
+            if not entity.entity_id.startswith(platform):
+                continue
+            if virt_comp_type in entity.unique_id:
+                # we are looking for the component ID, e.g. boolean:201
+                if match := re.search(r"[a-z]+:\d+", entity.unique_id):
+                    virt_comp_id = match.group()
+                    if virt_comp_id not in virt_comp_ids:
+                        orphaned_entities.append(f"{virt_comp_id}-{virt_comp_type}")
+
+    if orphaned_entities:
+        async_remove_shelly_rpc_entities(hass, platform, mac, orphaned_entities)

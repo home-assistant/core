@@ -8,7 +8,11 @@ from typing import Any, cast
 from aioshelly.block_device import Block
 from aioshelly.const import MODEL_2, MODEL_25, MODEL_WALL_DISPLAY, RPC_GENERATIONS
 
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_PLATFORM,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -28,9 +32,11 @@ from .entity import (
     async_setup_rpc_attribute_entities,
 )
 from .utils import (
+    async_remove_orphaned_virtual_entities,
     async_remove_shelly_entity,
     get_device_entry_gen,
     get_rpc_key_ids,
+    get_virtual_component_ids,
     is_block_channel_type_light,
     is_rpc_channel_type_light,
     is_rpc_thermostat_internal_actuator,
@@ -170,6 +176,18 @@ def async_setup_rpc_entry(
         async_add_entities,
         {"boolean": RPC_VIRTUAL_SWITCH},
         RpcVirtualSwitch,
+    )
+
+    virtual_switch_ids = get_virtual_component_ids(
+        coordinator.device.config, SWITCH_PLATFORM
+    )
+    async_remove_orphaned_virtual_entities(
+        hass,
+        config_entry.entry_id,
+        coordinator.mac,
+        SWITCH_PLATFORM,
+        "boolean",
+        virtual_switch_ids,
     )
 
     if not switch_ids:

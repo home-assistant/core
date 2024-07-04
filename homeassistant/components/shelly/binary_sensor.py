@@ -8,6 +8,7 @@ from typing import Final, cast
 from aioshelly.const import RPC_GENERATIONS
 
 from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_PLATFORM,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -33,7 +34,9 @@ from .entity import (
     async_setup_entry_rpc,
 )
 from .utils import (
+    async_remove_orphaned_virtual_entities,
     get_device_entry_gen,
+    get_virtual_component_ids,
     is_block_momentary_input,
     is_rpc_momentary_input,
 )
@@ -240,6 +243,21 @@ async def async_setup_entry(
                 RpcSleepingBinarySensor,
             )
         else:
+            coordinator = config_entry.runtime_data.rpc
+            assert coordinator
+
+            virtual_switch_ids = get_virtual_component_ids(
+                coordinator.device.config, BINARY_SENSOR_PLATFORM
+            )
+            async_remove_orphaned_virtual_entities(
+                hass,
+                config_entry.entry_id,
+                coordinator.mac,
+                BINARY_SENSOR_PLATFORM,
+                "boolean",
+                virtual_switch_ids,
+            )
+
             async_setup_entry_rpc(
                 hass, config_entry, async_add_entities, RPC_SENSORS, RpcBinarySensor
             )
