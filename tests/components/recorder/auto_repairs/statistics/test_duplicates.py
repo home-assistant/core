@@ -1,7 +1,6 @@
 """Test removing statistics duplicates."""
 
 import importlib
-from pathlib import Path
 import sys
 from unittest.mock import patch
 
@@ -15,7 +14,6 @@ from homeassistant.components.recorder.auto_repairs.statistics.duplicates import
     delete_statistics_duplicates,
     delete_statistics_meta_duplicates,
 )
-from homeassistant.components.recorder.const import SQLITE_URL_PREFIX
 from homeassistant.components.recorder.statistics import async_add_external_statistics
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant
@@ -133,17 +131,13 @@ def _create_engine_28(*args, **kwargs):
     return engine
 
 
+@pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_delete_metadata_duplicates(
     async_test_recorder: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
-    tmp_path: Path,
 ) -> None:
     """Test removal of duplicated statistics."""
-    test_dir = tmp_path.joinpath("sqlite")
-    test_dir.mkdir()
-    test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
-
     module = "tests.components.recorder.db_schema_28"
     importlib.import_module(module)
     old_db_schema = sys.modules[module]
@@ -202,7 +196,7 @@ async def test_delete_metadata_duplicates(
     ):
         async with (
             async_test_home_assistant() as hass,
-            async_test_recorder(hass, {"db_url": dburl}),
+            async_test_recorder(hass),
         ):
             await async_wait_recording_done(hass)
             await async_wait_recording_done(hass)
@@ -224,7 +218,7 @@ async def test_delete_metadata_duplicates(
     # Test that the duplicates are removed during migration from schema 28
     async with (
         async_test_home_assistant() as hass,
-        async_test_recorder(hass, {"db_url": dburl}),
+        async_test_recorder(hass),
     ):
         await hass.async_start()
         await async_wait_recording_done(hass)
@@ -242,17 +236,13 @@ async def test_delete_metadata_duplicates(
         await hass.async_stop()
 
 
+@pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_delete_metadata_duplicates_many(
     async_test_recorder: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
-    tmp_path: Path,
 ) -> None:
     """Test removal of duplicated statistics."""
-    test_dir = tmp_path.joinpath("sqlite")
-    test_dir.mkdir()
-    test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
-
     module = "tests.components.recorder.db_schema_28"
     importlib.import_module(module)
     old_db_schema = sys.modules[module]
@@ -323,7 +313,7 @@ async def test_delete_metadata_duplicates_many(
     ):
         async with (
             async_test_home_assistant() as hass,
-            async_test_recorder(hass, {"db_url": dburl}),
+            async_test_recorder(hass),
         ):
             await async_wait_recording_done(hass)
             await async_wait_recording_done(hass)
@@ -336,7 +326,7 @@ async def test_delete_metadata_duplicates_many(
     # Test that the duplicates are removed during migration from schema 28
     async with (
         async_test_home_assistant() as hass,
-        async_test_recorder(hass, {"db_url": dburl}),
+        async_test_recorder(hass),
     ):
         await hass.async_start()
         await async_wait_recording_done(hass)
