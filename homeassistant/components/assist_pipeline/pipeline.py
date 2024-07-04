@@ -5,7 +5,7 @@ from __future__ import annotations
 import array
 import asyncio
 from collections import defaultdict, deque
-from collections.abc import AsyncGenerator, AsyncIterable, Callable, Iterable
+from collections.abc import AsyncGenerator, AsyncIterable, Callable
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 import logging
@@ -280,11 +280,11 @@ def async_get_pipeline(hass: HomeAssistant, pipeline_id: str | None = None) -> P
 
 
 @callback
-def async_get_pipelines(hass: HomeAssistant) -> Iterable[Pipeline]:
+def async_get_pipelines(hass: HomeAssistant) -> list[Pipeline]:
     """Get all pipelines."""
     pipeline_data: PipelineData = hass.data[DOMAIN]
 
-    return pipeline_data.pipeline_store.data.values()
+    return list(pipeline_data.pipeline_store.data.values())
 
 
 async def async_update_pipeline(
