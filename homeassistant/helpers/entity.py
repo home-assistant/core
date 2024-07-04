@@ -1202,7 +1202,7 @@ class Entity(
             self._context_set = None
 
         try:
-            hass.states.async_set(
+            hass.states.async_set_internal(
                 entity_id,
                 state,
                 attr,
