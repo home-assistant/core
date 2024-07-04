@@ -678,7 +678,7 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
         # should not be possible since it would require user to
         # _downgrade_ to make ustorage disppear
         assert ustorage is not None
-        disk = next(iter(d for d in ustorage.disks if d.slot == slot), None)
+        disk = next((d for d in ustorage.disks if d.slot == slot), None)
         if disk is None:
             # disk was removed
             self._attr_available = False
