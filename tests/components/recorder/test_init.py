@@ -1367,9 +1367,10 @@ async def test_statistics_runs_initiated(
 
 @pytest.mark.freeze_time("2022-09-13 09:00:00+02:00")
 @pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.parametrize("enable_statistics", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_compile_missing_statistics(
-    recorder_db_url: str, freezer: FrozenDateTimeFactory
+    async_test_recorder: RecorderInstanceGenerator, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test missing statistics are compiled on startup."""
     now = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
@@ -1378,16 +1379,14 @@ async def test_compile_missing_statistics(
         with session_scope(hass=hass, read_only=True) as session:
             return list(session.query(StatisticsRuns))
 
-    async with async_test_home_assistant() as hass:
-        recorder_helper.async_initialize_recorder(hass)
-        await async_setup_component(
-            hass, DOMAIN, {DOMAIN: {CONF_DB_URL: recorder_db_url}}
-        )
+    async with (
+        async_test_home_assistant() as hass,
+        async_test_recorder(hass, wait_recorder=False) as instance,
+    ):
         await hass.async_start()
         await async_wait_recording_done(hass)
         await async_wait_recording_done(hass)
 
-        instance = recorder.get_instance(hass)
         statistics_runs = await instance.async_add_executor_job(
             get_statistic_runs, hass
         )
@@ -1413,7 +1412,10 @@ async def test_compile_missing_statistics(
         stats_hourly.append(event)
 
     freezer.tick(timedelta(hours=1))
-    async with async_test_home_assistant() as hass:
+    async with (
+        async_test_home_assistant() as hass,
+        async_test_recorder(hass, wait_recorder=False) as instance,
+    ):
         hass.bus.async_listen(
             EVENT_RECORDER_5MIN_STATISTICS_GENERATED, async_5min_stats_updated_listener
         )
@@ -1422,15 +1424,9 @@ async def test_compile_missing_statistics(
             async_hourly_stats_updated_listener,
         )
 
-        recorder_helper.async_initialize_recorder(hass)
-        await async_setup_component(
-            hass, DOMAIN, {DOMAIN: {CONF_DB_URL: recorder_db_url}}
-        )
-        await hass.async_start()
         await async_wait_recording_done(hass)
         await async_wait_recording_done(hass)
 
-        instance = recorder.get_instance(hass)
         statistics_runs = await instance.async_add_executor_job(
             get_statistic_runs, hass
         )
@@ -1632,22 +1628,22 @@ async def test_service_disable_states_not_recording(
 
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
-async def test_service_disable_run_information_recorded(recorder_db_url: str) -> None:
+async def test_service_disable_run_information_recorded(
+    async_test_recorder: RecorderInstanceGenerator,
+) -> None:
     """Test that runs are still recorded when recorder is disabled."""
 
     def get_recorder_runs(hass: HomeAssistant) -> list:
         with session_scope(hass=hass, read_only=True) as session:
             return list(session.query(RecorderRuns))
 
-    async with async_test_home_assistant() as hass:
-        recorder_helper.async_initialize_recorder(hass)
-        await async_setup_component(
-            hass, DOMAIN, {DOMAIN: {CONF_DB_URL: recorder_db_url}}
-        )
+    async with (
+        async_test_home_assistant() as hass,
+        async_test_recorder(hass) as instance,
+    ):
         await hass.async_start()
         await async_wait_recording_done(hass)
 
-        instance = recorder.get_instance(hass)
         db_run_info = await instance.async_add_executor_job(get_recorder_runs, hass)
         assert len(db_run_info) == 1
         assert db_run_info[0].start is not None
@@ -1663,15 +1659,13 @@ async def test_service_disable_run_information_recorded(recorder_db_url: str) ->
         await async_wait_recording_done(hass)
         await hass.async_stop()
 
-    async with async_test_home_assistant() as hass:
-        recorder_helper.async_initialize_recorder(hass)
-        await async_setup_component(
-            hass, DOMAIN, {DOMAIN: {CONF_DB_URL: recorder_db_url}}
-        )
+    async with (
+        async_test_home_assistant() as hass,
+        async_test_recorder(hass) as instance,
+    ):
         await hass.async_start()
         await async_wait_recording_done(hass)
 
-        instance = recorder.get_instance(hass)
         db_run_info = await instance.async_add_executor_job(get_recorder_runs, hass)
         assert len(db_run_info) == 2
         assert db_run_info[0].start is not None
@@ -1689,14 +1683,14 @@ class CannotSerializeMe:
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
 @pytest.mark.usefixtures("skip_by_db_engine")
 @pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.parametrize("recorder_config", [{CONF_COMMIT_INTERVAL: 0}])
 async def test_database_corruption_while_running(
-    hass: HomeAssistant, recorder_db_url: str, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    recorder_mock: Recorder,
+    recorder_db_url: str,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test we can recover from sqlite3 db corruption."""
-    recorder_helper.async_initialize_recorder(hass)
-    assert await async_setup_component(
-        hass, DOMAIN, {DOMAIN: {CONF_DB_URL: recorder_db_url, CONF_COMMIT_INTERVAL: 0}}
-    )
     await hass.async_block_till_done()
     caplog.clear()
 
