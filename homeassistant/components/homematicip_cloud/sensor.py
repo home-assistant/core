@@ -182,8 +182,7 @@ async def async_setup_entry(
                 if ch.connectedEnergySensorType == ESI_CONNECTED_SENSOR_TYPE_LED:
                     if ch.currentPowerConsumption is not None:
                         entities.append(HmipEsiLedCurrentPowerConsumption(hap, device))
-                    if ch.energyCounterOneType != ESI_TYPE_UNKNOWN:
-                        entities.append(HmipEsiLedEnergyCounterHighTariff(hap, device))
+                    entities.append(HmipEsiLedEnergyCounterHighTariff(hap, device))
 
     async_add_entities(entities)
 
