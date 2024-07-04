@@ -41,6 +41,7 @@ async def test_streaming(
     assert sensor_state.attributes["entity_picture"] == "stream-medium.png"
     assert sensor_state.attributes["game"] == "Good game"
     assert sensor_state.attributes["title"] == "Title"
+    assert sensor_state.attributes["started_at"] == "2021-03-10T03:18:11Z"
 
 
 async def test_oauth_without_sub_and_follow(
