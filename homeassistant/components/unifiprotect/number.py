@@ -53,7 +53,7 @@ async def _set_auto_close(obj: Doorlock, value: float) -> None:
 
 
 def _get_chime_duration(obj: Camera) -> int:
-    return int(obj.chime_duration.total_seconds())
+    return int(obj.chime_duration_seconds)
 
 
 CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
