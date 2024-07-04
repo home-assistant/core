@@ -520,7 +520,7 @@ aurorapy==0.2.7
 # avion==0.10
 
 # homeassistant.components.axis
-axis==61
+axis==62
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -709,7 +709,7 @@ debugpy==1.8.1
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==8.0.0
+deebot-client==8.1.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1068,7 +1068,7 @@ heatmiserV3==1.1.18
 here-routing==1.0.1
 
 # homeassistant.components.here_travel_time
-here-transit==1.2.0
+here-transit==1.2.1
 
 # homeassistant.components.hikvisioncam
 hikvision==0.4
@@ -1090,10 +1090,10 @@ hole==0.8.0
 holidays==0.51
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240702.0
+home-assistant-frontend==20240703.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.6.26
+home-assistant-intents==2024.7.3
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1161,7 +1161,7 @@ influxdb-client==1.24.0
 influxdb==5.3.1
 
 # homeassistant.components.inkbird
-inkbird-ble==0.5.7
+inkbird-ble==0.5.8
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.5.0
@@ -1398,7 +1398,7 @@ neurio==0.3.1
 nexia==2.0.8
 
 # homeassistant.components.nextcloud
-nextcloudmonitor==1.5.0
+nextcloudmonitor==1.5.1
 
 # homeassistant.components.discord
 nextcord==2.6.0
@@ -2281,7 +2281,7 @@ python-kasa[speedups]==0.7.0.2
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==6.2.0b1
+python-matter-server==6.2.2
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2324,7 +2324,7 @@ python-songpal==0.16.2
 python-tado==0.17.6
 
 # homeassistant.components.technove
-python-technove==1.3.0
+python-technove==1.3.1
 
 # homeassistant.components.telegram_bot
 python-telegram-bot[socks]==21.0.1
@@ -2789,7 +2789,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==5.0.0
+uiprotect==5.2.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7

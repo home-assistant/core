@@ -119,16 +119,13 @@ async def test_warning_schema_option(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("vacuum.test")
+    # We do not fail if the schema option is still in the payload, but we log an error
     assert state is not None
     with caplog.at_level(logging.WARNING):
         assert (
-            "The `schema` option is deprecated for MQTT vacuum, but it was used in a "
-            "discovery payload. Please contact the maintainer of the integration or "
-            "service that supplies the config, and suggest to remove the option."
-            in caplog.text
+            "The 'schema' option has been removed, "
+            "please remove it from your configuration" in caplog.text
         )
-        assert "https://example.com/support" in caplog.text
-        assert "at discovery topic homeassistant/vacuum/bla/config" in caplog.text
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
