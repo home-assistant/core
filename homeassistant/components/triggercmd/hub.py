@@ -1,4 +1,4 @@
-"""A demonstration 'hub' that connects several devices."""
+"""A 'hub' that connects several devices."""
 
 from __future__ import annotations
 

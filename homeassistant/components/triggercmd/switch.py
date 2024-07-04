@@ -1,4 +1,4 @@
-"""Platform for sensor integration."""
+"""Platform for switch integration."""
 
 from __future__ import annotations
 
