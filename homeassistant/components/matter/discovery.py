@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
-
 from chip.clusters.Objects import ClusterAttributeDescriptor
 from matter_server.client.models.node import MatterEndpoint
+from typing_extensions import Generator
 
 from homeassistant.const import Platform
 from homeassistant.core import callback
@@ -19,6 +18,7 @@ from .light import DISCOVERY_SCHEMAS as LIGHT_SCHEMAS
 from .lock import DISCOVERY_SCHEMAS as LOCK_SCHEMAS
 from .models import MatterDiscoverySchema, MatterEntityInfo
 from .number import DISCOVERY_SCHEMAS as NUMBER_SCHEMAS
+from .select import DISCOVERY_SCHEMAS as SELECT_SCHEMAS
 from .sensor import DISCOVERY_SCHEMAS as SENSOR_SCHEMAS
 from .switch import DISCOVERY_SCHEMAS as SWITCH_SCHEMAS
 
@@ -33,6 +33,7 @@ DISCOVERY_SCHEMAS: dict[Platform, list[MatterDiscoverySchema]] = {
     Platform.NUMBER: NUMBER_SCHEMAS,
     Platform.SENSOR: SENSOR_SCHEMAS,
     Platform.SWITCH: SWITCH_SCHEMAS,
+    Platform.SELECT: SELECT_SCHEMAS,
 }
 SUPPORTED_PLATFORMS = tuple(DISCOVERY_SCHEMAS)
 
