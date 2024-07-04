@@ -39,7 +39,6 @@ class ProtectButtonEntityDescription(
 
 
 DEVICE_CLASS_CHIME_BUTTON: Final = "unifiprotect__chime_button"
-KEY_ADOPT = "adopt"
 
 
 ALL_DEVICE_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
@@ -62,7 +61,7 @@ ALL_DEVICE_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
 )
 
 ADOPT_BUTTON = ProtectButtonEntityDescription[ProtectAdoptableDeviceModel](
-    key=KEY_ADOPT,
+    key="adopt",
     name="Adopt device",
     icon="mdi:plus-circle",
     ufp_press="adopt",
