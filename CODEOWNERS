@@ -237,6 +237,8 @@ build.json @home-assistant/supervisor
 /tests/components/ccm15/ @ocalvo
 /homeassistant/components/cert_expiry/ @jjlawren
 /tests/components/cert_expiry/ @jjlawren
+/homeassistant/components/chacon_dio/ @cnico
+/tests/components/chacon_dio/ @cnico
 /homeassistant/components/cisco_ios/ @fbradyirl
 /homeassistant/components/cisco_mobility_express/ @fbradyirl
 /homeassistant/components/cisco_webex_teams/ @fbradyirl

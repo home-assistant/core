@@ -601,7 +601,7 @@ async def test_binary_device_classes(hass: HomeAssistant, hk_driver) -> None:
 
 
 async def test_sensor_restore(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver, events
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver
 ) -> None:
     """Test setting up an entity from state in the event registry."""
     hass.set_state(CoreState.not_running)
