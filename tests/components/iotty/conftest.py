@@ -135,14 +135,6 @@ def mock_coordinator() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
-def mock_iotty_command_fn() -> Generator[AsyncMock, None, None]:
-    """Mock iottyProxy to simulate cmd issuing."""
-
-    with patch("homeassistant.components.iotty.api.IottyProxy.command") as mock_fn:
-        return mock_fn
-
-
-@pytest.fixture
 def mock_devices() -> Generator[None, MagicMock, None]:
     """Fixture for two LS Devices."""
     return test_devices
@@ -173,6 +165,14 @@ def mock_get_devices_twolightswitches() -> Generator[AsyncMock, None, None]:
     with patch(
         "iottycloud.cloudapi.CloudApi.get_devices", return_value=test_ls
     ) as mock_fn:
+        yield mock_fn
+
+
+@pytest.fixture
+def mock_command_fn() -> Generator[AsyncMock, None, None]:
+    """Mock for command."""
+
+    with patch("iottycloud.cloudapi.CloudApi.command", return_value=None) as mock_fn:
         yield mock_fn
 
 

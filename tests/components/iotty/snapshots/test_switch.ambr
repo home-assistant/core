@@ -29,3 +29,7 @@
     'switch.test_light_switch_2_test_serial_2_test_light_switch_2_test_serial_2',
   ])
 # ---
+# name: test_setup_entry_ok_nodevices
+  list([
+  ])
+# ---
