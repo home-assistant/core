@@ -1,6 +1,6 @@
 """Test the integration init functionality."""
 
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Awaitable, Callable
 from typing import Any
 from unittest.mock import MagicMock, Mock
 
@@ -116,8 +116,8 @@ SERVICE_APPLIANCE_METHOD_MAPPING = {
 }
 
 
+@pytest.mark.usefixtures("bypass_throttle")
 async def test_api_setup(
-    bypass_throttle: Generator[None, Any, None],
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
@@ -136,9 +136,8 @@ async def test_api_setup(
     assert config_entry.state == ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.usefixtures("bypass_throttle")
 async def test_exception_handling(
-    bypass_throttle: Generator[None, Any, None],
-    hass: HomeAssistant,
     integration_setup: Callable[[], Awaitable[bool]],
     config_entry: MockConfigEntry,
     setup_credentials: None,
@@ -153,8 +152,8 @@ async def test_exception_handling(
 
 
 @pytest.mark.parametrize("token_expiration_time", [12345])
+@pytest.mark.usefixtures("bypass_throttle")
 async def test_token_refresh_success(
-    bypass_throttle: Generator[None, Any, None],
     integration_setup: Callable[[], Awaitable[bool]],
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
@@ -191,9 +190,8 @@ async def test_token_refresh_success(
     )
 
 
+@pytest.mark.usefixtures("bypass_throttle")
 async def test_http_error(
-    bypass_throttle: Generator[None, Any, None],
-    hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
     setup_credentials: None,
@@ -211,9 +209,9 @@ async def test_http_error(
     "service_call",
     SERVICE_KV_CALL_PARAMS + SERVICE_COMMAND_CALL_PARAMS + SERVICE_PROGRAM_CALL_PARAMS,
 )
+@pytest.mark.usefixtures("bypass_throttle")
 async def test_services(
     service_call: list[dict[str, Any]],
-    bypass_throttle: Generator[None, Any, None],
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
@@ -243,8 +241,8 @@ async def test_services(
     )
 
 
+@pytest.mark.usefixtures("bypass_throttle")
 async def test_services_exception(
-    bypass_throttle: Generator[None, Any, None],
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
