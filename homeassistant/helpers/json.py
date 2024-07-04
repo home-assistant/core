@@ -21,21 +21,21 @@ from homeassistant.util.json import (  # noqa: F401
 )
 
 from .deprecation import (
-    DeprecatedAlias,
+    DeprecatedConstant,
     all_with_deprecated_constants,
     check_if_deprecated_constant,
     deprecated_function,
     dir_with_deprecated_constants,
 )
 
-_DEPRECATED_JSON_DECODE_EXCEPTIONS = DeprecatedAlias(
-    _JSON_DECODE_EXCEPTIONS, "homeassistant.util.json.JSON_DECODE_EXCEPTIONS", "2024.2"
+_DEPRECATED_JSON_DECODE_EXCEPTIONS = DeprecatedConstant(
+    _JSON_DECODE_EXCEPTIONS, "homeassistant.util.json.JSON_DECODE_EXCEPTIONS", "2025.2"
 )
-_DEPRECATED_JSON_ENCODE_EXCEPTIONS = DeprecatedAlias(
-    _JSON_ENCODE_EXCEPTIONS, "homeassistant.util.json.JSON_ENCODE_EXCEPTIONS", "2024.2"
+_DEPRECATED_JSON_ENCODE_EXCEPTIONS = DeprecatedConstant(
+    _JSON_ENCODE_EXCEPTIONS, "homeassistant.util.json.JSON_ENCODE_EXCEPTIONS", "2025.2"
 )
 json_loads = deprecated_function(
-    "homeassistant.util.json.json_loads", breaks_in_ha_version="2024.2"
+    "homeassistant.util.json.json_loads", breaks_in_ha_version="2025.2"
 )(_json_loads)
 
 # These can be removed if no deprecated constant are in this module anymore
