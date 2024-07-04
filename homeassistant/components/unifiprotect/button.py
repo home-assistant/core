@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import logging
 from typing import Final
 
-from uiprotect.data import ModelType, ProtectAdoptableDeviceModel, ProtectModelWithId
+from uiprotect.data import ModelType, ProtectAdoptableDeviceModel
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -21,7 +21,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DEVICES_THAT_ADOPT, DOMAIN
-from .data import UFPConfigEntry
+from .data import ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity, async_all_device_entities
 from .models import PermRequired, ProtectEntityDescription, ProtectSetableKeysMixin, T
 
@@ -171,7 +171,7 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
     entity_description: ProtectButtonEntityDescription
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         if self.entity_description.key == KEY_ADOPT:
             device = self.device

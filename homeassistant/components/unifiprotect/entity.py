@@ -24,7 +24,7 @@ from .const import (
     DEFAULT_BRAND,
     DOMAIN,
 )
-from .data import ProtectData
+from .data import ProtectData, ProtectDeviceType
 from .models import PermRequired, ProtectEntityDescription, ProtectEventMixin
 
 _LOGGER = logging.getLogger(__name__)
@@ -154,7 +154,7 @@ def async_all_device_entities(
 class BaseProtectEntity(Entity, ABC):
     """Base class for UniFi protect entities."""
 
-    device: ProtectAdoptableDeviceModel | NVR
+    device: ProtectDeviceType
 
     _attr_should_poll = False
     _attr_attribution = DEFAULT_ATTRIBUTION
@@ -165,7 +165,7 @@ class BaseProtectEntity(Entity, ABC):
     def __init__(
         self,
         data: ProtectData,
-        device: ProtectAdoptableDeviceModel | NVR,
+        device: ProtectDeviceType,
         description: EntityDescription | None = None,
     ) -> None:
         """Initialize the entity."""
@@ -201,9 +201,7 @@ class BaseProtectEntity(Entity, ABC):
         """Set device info."""
 
     @callback
-    def _async_update_device_from_protect(
-        self, device: ProtectAdoptableDeviceModel | NVR
-    ) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         """Update Entity object from Protect device."""
         was_available = self._attr_available
         async_get_ufp_enabled = self._async_get_ufp_enabled
@@ -233,7 +231,7 @@ class BaseProtectEntity(Entity, ABC):
             self._attr_available = available
 
     @callback
-    def _async_updated_event(self, device: ProtectAdoptableDeviceModel | NVR) -> None:
+    def _async_updated_event(self, device: ProtectDeviceType) -> None:
         """When device is updated from Protect."""
         previous_attrs = [getter() for getter in self._state_getters]
         self._async_update_device_from_protect(device)

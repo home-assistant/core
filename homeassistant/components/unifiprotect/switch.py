@@ -11,7 +11,6 @@ from uiprotect.data import (
     Camera,
     ModelType,
     ProtectAdoptableDeviceModel,
-    ProtectModelWithId,
     RecordingMode,
     VideoMode,
 )
@@ -22,7 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .data import ProtectData, UFPConfigEntry
+from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     BaseProtectEntity,
     ProtectDeviceEntity,
@@ -529,7 +528,7 @@ class ProtectPrivacyModeSwitch(RestoreEntity, ProtectSwitch):
             self._attr_extra_state_attributes = {}
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         # do not add extra state attribute on initialize
         if self.entity_id:

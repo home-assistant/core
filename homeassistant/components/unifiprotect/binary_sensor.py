@@ -11,7 +11,6 @@ from uiprotect.data import (
     ModelType,
     MountType,
     ProtectAdoptableDeviceModel,
-    ProtectModelWithId,
     Sensor,
     SmartDetectObjectType,
 )
@@ -26,7 +25,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .data import ProtectData, UFPConfigEntry
+from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     BaseProtectEntity,
     EventEntityMixin,
@@ -638,7 +637,7 @@ class MountableProtectDeviceBinarySensor(ProtectDeviceBinarySensor):
     _state_attrs = ("_attr_available", "_attr_is_on", "_attr_device_class")
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         # UP Sense can be any of the 3 contact sensor device classes
         self._attr_device_class = MOUNT_DEVICE_CLASS_MAP.get(
@@ -672,7 +671,7 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
         super().__init__(data, device, description)
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         slot = self._disk.slot
         self._attr_available = False
@@ -702,7 +701,7 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
         self._attr_extra_state_attributes = {}
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         description = self.entity_description
 
         prev_event = self._event
