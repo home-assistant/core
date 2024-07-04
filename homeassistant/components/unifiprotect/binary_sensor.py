@@ -674,18 +674,16 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         slot = self._disk.slot
-        self._attr_available = False
-        available = self.data.last_update_success
-
+        ustorage = self.device.system_info.ustorage
         # should not be possible since it would require user to
         # _downgrade_ to make ustorage disppear
-        assert self.device.system_info.ustorage is not None
-        for disk in self.device.system_info.ustorage.disks:
-            if disk.slot == slot:
-                self._disk = disk
-                self._attr_available = available
-                break
-
+        assert ustorage is not None
+        disk = next(iter(d for d in ustorage.disks if d.slot == slot), None)
+        if disk is None:
+            # disk was removed
+            self._attr_available = False
+            return
+        self._disk = disk
         self._attr_is_on = not self._disk.is_healthy
 
 
