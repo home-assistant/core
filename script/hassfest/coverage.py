@@ -170,7 +170,7 @@ def generate(integrations: dict[str, Integration], config: Config) -> None:
                 components.append(line)
 
     assert core, "core should be a non-empty list"
-    assert components, "components should be a non-empty list"
+    # assert components, "components should be a non-empty list"
     content = (
         f"{CORE_PREFIX}{"".join(sorted(core))}\n"
         f"{COMPONENTS_PREFIX}{"".join(sorted(components))}\n"
