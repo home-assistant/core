@@ -1128,25 +1128,25 @@ def _apply_update(  # noqa: C901
 
         # Then modify the ID columns
         id_columns = (
-            ("events", ("event_id",)),
-            ("event_data", ("data_id",)),
-            ("event_types", ("event_type_id",)),
-            ("states", ("state_id",)),
-            ("state_attributes", ("attributes_id",)),
-            ("states_meta", ("metadata_id",)),
-            ("statistics", ("id",)),
-            ("statistics_short_term", ("id",)),
-            ("statistics_meta", ("id",)),
-            ("recorder_runs", ("run_id",)),
-            ("schema_changes", ("change_id",)),
-            ("statistics_runs", ("run_id",)),
+            ("events", "event_id"),
+            ("event_data", "data_id"),
+            ("event_types", "event_type_id"),
+            ("states", "state_id"),
+            ("state_attributes", "attributes_id"),
+            ("states_meta", "metadata_id"),
+            ("statistics", "id"),
+            ("statistics_short_term", "id"),
+            ("statistics_meta", "id"),
+            ("recorder_runs", "run_id"),
+            ("schema_changes", "change_id"),
+            ("statistics_runs", "run_id"),
         )
-        for table, columns in id_columns:
+        for table, column in id_columns:
             _modify_columns(
                 session_maker,
                 engine,
                 table,
-                [f"{column} {BIG_INTEGER_SQL} {identity_sql}" for column in columns],
+                [f"{column} {BIG_INTEGER_SQL} {identity_sql}"],
             )
 
     else:
