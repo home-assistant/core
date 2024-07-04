@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
 from datetime import datetime
 from functools import partial
@@ -158,7 +157,7 @@ def async_all_device_entities(
     )
 
 
-class BaseProtectEntity(Entity, ABC):
+class BaseProtectEntity(Entity):
     """Base class for UniFi protect entities."""
 
     device: ProtectAdoptableDeviceModel | NVR
@@ -203,13 +202,46 @@ class BaseProtectEntity(Entity, ABC):
         await self.data.async_refresh()
 
     @callback
-    @abstractmethod
     def _async_set_device_info(self) -> None:
-        """Set device information."""
+        self._attr_device_info = DeviceInfo(
+            name=self.device.display_name,
+            manufacturer=DEFAULT_BRAND,
+            model=self.device.type,
+            via_device=(DOMAIN, self.data.api.bootstrap.nvr.mac),
+            sw_version=self.device.firmware_version,
+            connections={(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
+            configuration_url=self.device.protect_url,
+        )
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         """Update Entity object from Protect device."""
+        was_available = self._attr_available
+        async_get_ufp_enabled = self._async_get_ufp_enabled
+        last_updated_success = self.data.last_update_success
+
+        if device.model is ModelType.NVR:
+            if TYPE_CHECKING:
+                assert isinstance(device, NVR)
+            if available := last_updated_success:
+                self.device = device
+        else:
+            if TYPE_CHECKING:
+                assert isinstance(device, ProtectAdoptableDeviceModel)
+            if last_updated_success:
+                self.device = device
+
+            connected_or_adoptable = device.state is StateType.CONNECTED or (
+                not device.is_adopted_by_us and device.can_adopt
+            )
+            available = (
+                last_updated_success
+                and connected_or_adoptable
+                and (not async_get_ufp_enabled or async_get_ufp_enabled(device))
+            )
+
+        if available != was_available:
+            self._attr_available = available
 
     @callback
     def _async_updated_event(self, device: ProtectAdoptableDeviceModel | NVR) -> None:
@@ -264,38 +296,6 @@ class ProtectDeviceEntity(BaseProtectEntity):
 
     device: ProtectAdoptableDeviceModel
 
-    @callback
-    def _async_set_device_info(self) -> None:
-        self._attr_device_info = DeviceInfo(
-            name=self.device.display_name,
-            manufacturer=DEFAULT_BRAND,
-            model=self.device.type,
-            via_device=(DOMAIN, self.data.api.bootstrap.nvr.mac),
-            sw_version=self.device.firmware_version,
-            connections={(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
-            configuration_url=self.device.protect_url,
-        )
-
-    @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        """Update Entity object from Protect device."""
-        if TYPE_CHECKING:
-            assert isinstance(device, ProtectAdoptableDeviceModel)
-        was_available = self._attr_available
-        async_get_ufp_enabled = self._async_get_ufp_enabled
-        if last_updated_success := self.data.last_update_success:
-            self.device = device
-        connected_or_adoptable = device.state is StateType.CONNECTED or (
-            not device.is_adopted_by_us and device.can_adopt
-        )
-        available = (
-            last_updated_success
-            and connected_or_adoptable
-            and (not async_get_ufp_enabled or async_get_ufp_enabled(device))
-        )
-        if available != was_available:
-            self._attr_available = available
-
 
 class ProtectNVREntity(BaseProtectEntity):
     """Base class for unifi protect entities."""
@@ -313,17 +313,6 @@ class ProtectNVREntity(BaseProtectEntity):
             sw_version=str(self.device.version),
             configuration_url=self.device.api.base_url,
         )
-
-    @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        """Update Entity object from Protect device."""
-        if TYPE_CHECKING:
-            assert isinstance(device, NVR)
-        was_available = self._attr_available
-        if available := self.data.last_update_success:
-            self.device = device
-        if available != was_available:
-            self._attr_available = available
 
 
 class EventEntityMixin(ProtectDeviceEntity):
