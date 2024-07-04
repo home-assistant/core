@@ -192,7 +192,7 @@ async def test_service_refresh_devices(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     deconz_payload: dict[str, Any],
-    mock_requests,
+    mock_requests: Callable[[], None],
 ) -> None:
     """Test that service can refresh devices."""
     assert len(hass.states.async_all()) == 0
