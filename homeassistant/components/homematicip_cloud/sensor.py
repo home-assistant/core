@@ -516,7 +516,7 @@ SENSORS_ESI = {
         HmipEsiSensorEntityDescription(
             key=ESI_TYPE_CURRENT_GAS_VOLUME,
             native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
-            device_class=SensorDeviceClass.VOLUME,
+            device_class=SensorDeviceClass.GAS,
             state_class=SensorStateClass.TOTAL_INCREASING,
             value_fn=lambda device: device.functional_channel.gasVolume,
             exists_fn=lambda channel: channel.gasVolume is not None,
