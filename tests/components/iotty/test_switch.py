@@ -2,6 +2,7 @@
 
 from aiohttp import ClientSession
 from freezegun.api import FrozenDateTimeFactory
+from iottycloud.verbs import RESULT, STATUS, STATUS_OFF, STATUS_ON
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -28,7 +29,7 @@ async def test_turn_on_ok(
     mock_config_entry: MockConfigEntry,
     local_oauth_impl: ClientSession,
     mock_get_devices_twolightswitches,
-    mock_get_status_filled,
+    mock_get_status_filled_off,
     mock_command_fn,
 ) -> None:
     """Issue a turnon command."""
@@ -45,6 +46,11 @@ async def test_turn_on_ok(
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATUS_OFF
+
+    mock_get_status_filled_off.return_value = {RESULT: {STATUS: STATUS_ON}}
+
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
@@ -54,6 +60,9 @@ async def test_turn_on_ok(
 
     await hass.async_block_till_done()
     mock_command_fn.assert_called_once()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATUS_ON
 
 
 async def test_turn_off_ok(
@@ -78,6 +87,11 @@ async def test_turn_off_ok(
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATUS_ON
+
+    mock_get_status_filled.return_value = {RESULT: {STATUS: STATUS_OFF}}
+
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
@@ -87,6 +101,9 @@ async def test_turn_off_ok(
 
     await hass.async_block_till_done()
     mock_command_fn.assert_called_once()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATUS_OFF
 
 
 async def test_setup_entry_wrongdomaindata_error(

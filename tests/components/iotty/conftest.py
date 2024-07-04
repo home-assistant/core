@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiohttp import ClientSession
 from iottycloud.device import Device
 from iottycloud.lightswitch import LightSwitch
-from iottycloud.verbs import LS_DEVICE_TYPE_UID, RESULT, STATUS, STATUS_ON
+from iottycloud.verbs import LS_DEVICE_TYPE_UID, RESULT, STATUS, STATUS_OFF, STATUS_ON
 import pytest
 
 from homeassistant import setup
@@ -188,6 +188,17 @@ def mock_async_first_refresh() -> Generator[AsyncMock, None, None]:
     """Mock Coordinator's superclass first_refresh method."""
     with patch(
         "homeassistant.helpers.update_coordinator.DataUpdateCoordinator.async_config_entry_first_refresh"
+    ) as mock_fn:
+        yield mock_fn
+
+
+@pytest.fixture
+def mock_get_status_filled_off() -> Generator[AsyncMock, None, None]:
+    """Mock setting up a get_status."""
+
+    retval = {RESULT: {STATUS: STATUS_OFF}}
+    with patch(
+        "iottycloud.cloudapi.CloudApi.get_status", return_value=retval
     ) as mock_fn:
         yield mock_fn
 
