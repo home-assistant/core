@@ -10,7 +10,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import Recorder, statistics
+from homeassistant.components.recorder import statistics
 from homeassistant.components.recorder.auto_repairs.statistics.duplicates import (
     delete_statistics_duplicates,
     delete_statistics_meta_duplicates,
@@ -34,15 +34,10 @@ async def mock_recorder_before_hass(
     """Set up recorder."""
 
 
-@pytest.fixture
-def setup_recorder(recorder_mock: Recorder) -> None:
-    """Set up recorder."""
-
-
+@pytest.mark.usefixtures("recorder_mock")
 async def test_delete_duplicates_no_duplicates(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    setup_recorder: None,
 ) -> None:
     """Test removal of duplicated statistics."""
     await async_wait_recording_done(hass)
@@ -54,10 +49,10 @@ async def test_delete_duplicates_no_duplicates(
     assert "Found duplicated" not in caplog.text
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_duplicate_statistics_handle_integrity_error(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    setup_recorder: None,
 ) -> None:
     """Test the recorder does not blow up if statistics is duplicated."""
     await async_wait_recording_done(hass)
@@ -139,7 +134,7 @@ def _create_engine_28(*args, **kwargs):
 
 
 async def test_delete_metadata_duplicates(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
     tmp_path: Path,
 ) -> None:
@@ -205,8 +200,10 @@ async def test_delete_metadata_duplicates(
             new=_create_engine_28,
         ),
     ):
-        async with async_test_home_assistant() as hass:
-            await async_setup_recorder_instance(hass, {"db_url": dburl})
+        async with (
+            async_test_home_assistant() as hass,
+            async_test_recorder(hass, {"db_url": dburl}),
+        ):
             await async_wait_recording_done(hass)
             await async_wait_recording_done(hass)
 
@@ -225,8 +222,10 @@ async def test_delete_metadata_duplicates(
             await hass.async_stop()
 
     # Test that the duplicates are removed during migration from schema 28
-    async with async_test_home_assistant() as hass:
-        await async_setup_recorder_instance(hass, {"db_url": dburl})
+    async with (
+        async_test_home_assistant() as hass,
+        async_test_recorder(hass, {"db_url": dburl}),
+    ):
         await hass.async_start()
         await async_wait_recording_done(hass)
         await async_wait_recording_done(hass)
@@ -244,7 +243,7 @@ async def test_delete_metadata_duplicates(
 
 
 async def test_delete_metadata_duplicates_many(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
     tmp_path: Path,
 ) -> None:
@@ -322,8 +321,10 @@ async def test_delete_metadata_duplicates_many(
             new=_create_engine_28,
         ),
     ):
-        async with async_test_home_assistant() as hass:
-            await async_setup_recorder_instance(hass, {"db_url": dburl})
+        async with (
+            async_test_home_assistant() as hass,
+            async_test_recorder(hass, {"db_url": dburl}),
+        ):
             await async_wait_recording_done(hass)
             await async_wait_recording_done(hass)
 
@@ -333,8 +334,10 @@ async def test_delete_metadata_duplicates_many(
             await hass.async_stop()
 
     # Test that the duplicates are removed during migration from schema 28
-    async with async_test_home_assistant() as hass:
-        await async_setup_recorder_instance(hass, {"db_url": dburl})
+    async with (
+        async_test_home_assistant() as hass,
+        async_test_recorder(hass, {"db_url": dburl}),
+    ):
         await hass.async_start()
         await async_wait_recording_done(hass)
         await async_wait_recording_done(hass)
@@ -353,8 +356,9 @@ async def test_delete_metadata_duplicates_many(
         await hass.async_stop()
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_delete_metadata_duplicates_no_duplicates(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, setup_recorder: None
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test removal of duplicated statistics."""
     await async_wait_recording_done(hass)
