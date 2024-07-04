@@ -1,11 +1,11 @@
 """Test the CalDAV config flow."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 from caldav.lib.error import AuthorizationError, DAVError
 import pytest
 import requests
-from typing_extensions import Generator
 
 from homeassistant import config_entries
 from homeassistant.components.caldav.const import DOMAIN

@@ -5,7 +5,7 @@ from __future__ import annotations
 import array
 import asyncio
 from collections import defaultdict, deque
-from collections.abc import AsyncIterable, Callable, Iterable
+from collections.abc import AsyncGenerator, AsyncIterable, Callable, Iterable
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 import logging
@@ -16,7 +16,6 @@ import time
 from typing import TYPE_CHECKING, Any, Final, Literal, cast
 import wave
 
-from typing_extensions import AsyncGenerator
 import voluptuous as vol
 
 if TYPE_CHECKING:
@@ -116,7 +115,8 @@ AUDIO_PROCESSOR_SAMPLES: Final = 160  # 10 ms @ 16 Khz
 AUDIO_PROCESSOR_BYTES: Final = AUDIO_PROCESSOR_SAMPLES * 2  # 16-bit samples
 
 
-async def _async_resolve_default_pipeline_settings(
+@callback
+def _async_resolve_default_pipeline_settings(
     hass: HomeAssistant,
     stt_engine_id: str | None,
     tts_engine_id: str | None,
@@ -140,7 +140,7 @@ async def _async_resolve_default_pipeline_settings(
     # Find a matching language supported by the Home Assistant conversation agent
     conversation_languages = language_util.matches(
         hass.config.language,
-        await conversation.async_get_conversation_languages(
+        conversation.async_get_conversation_languages(
             hass, conversation.HOME_ASSISTANT_AGENT
         ),
         country=hass.config.country,
@@ -223,7 +223,7 @@ async def _async_create_default_pipeline(
     The default pipeline will use the homeassistant conversation agent and the
     default stt / tts engines.
     """
-    pipeline_settings = await _async_resolve_default_pipeline_settings(
+    pipeline_settings = _async_resolve_default_pipeline_settings(
         hass, stt_engine_id=None, tts_engine_id=None, pipeline_name="Home Assistant"
     )
     return await pipeline_store.async_create_item(pipeline_settings)
@@ -242,7 +242,7 @@ async def async_create_default_pipeline(
     """
     pipeline_data: PipelineData = hass.data[DOMAIN]
     pipeline_store = pipeline_data.pipeline_store
-    pipeline_settings = await _async_resolve_default_pipeline_settings(
+    pipeline_settings = _async_resolve_default_pipeline_settings(
         hass, stt_engine_id, tts_engine_id, pipeline_name=pipeline_name
     )
     if (
