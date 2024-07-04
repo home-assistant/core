@@ -245,6 +245,7 @@ omit =
     homeassistant/components/doorbird/camera.py
     homeassistant/components/doorbird/device.py
     homeassistant/components/doorbird/entity.py
+    homeassistant/components/doorbird/event.py
     homeassistant/components/doorbird/util.py
     homeassistant/components/doorbird/view.py
     homeassistant/components/dormakaba_dkey/__init__.py
