@@ -487,7 +487,6 @@ omit =
     homeassistant/components/goodwe/sensor.py
     homeassistant/components/google_cloud/tts.py
     homeassistant/components/google_maps/device_tracker.py
-    homeassistant/components/google_pubsub/__init__.py
     homeassistant/components/gpsd/__init__.py
     homeassistant/components/gpsd/sensor.py
     homeassistant/components/greenwave/light.py
