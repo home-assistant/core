@@ -37,7 +37,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self._host: str = ""
         self._name: str = ""
         self._port: int = 9621
-        self._uuid: str | None = None
         self._entry: ConfigEntry | None = None
 
     async def async_step_user(
