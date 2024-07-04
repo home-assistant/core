@@ -39,6 +39,11 @@
         "name": "Static IP"
       }
     },
+    "number": {
+      "max_current": {
+        "name": "Maximum Current"
+      }
+    },
     "sensor": {
       "voltage_in": {
         "name": "Input voltage"
@@ -73,6 +78,11 @@
       "auto_charge": {
         "name": "Auto charge"
       }
+    }
+  },
+  "exceptions": {
+    "max_current_in_sharing_mode": {
+      "message": "Cannot set the max current when power sharing mode is enabled."
     }
   }
 }
