@@ -174,7 +174,7 @@ class IcloudAccount:
             _LOGGER.error("Unknown iCloud error: %s", err)
             self._fetch_interval = 2
             dispatcher_send(self.hass, self.signal_device_update)
-            self._track_point()
+            self._schedule_next_fetch()
             return
 
         # Gets devices infos
@@ -220,7 +220,7 @@ class IcloudAccount:
         if new_device:
             dispatcher_send(self.hass, self.signal_device_new)
 
-        self._track_point()
+        self._schedule_next_fetch()
 
     def _require_reauth(self):
         """Require the user to log in again."""
