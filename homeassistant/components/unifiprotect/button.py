@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 import logging
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from uiprotect.data import ModelType, ProtectAdoptableDeviceModel
 
@@ -174,7 +174,8 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         if self.entity_description.key == KEY_ADOPT:
-            device = self.device
+            if TYPE_CHECKING:
+                assert isinstance(device, ProtectAdoptableDeviceModel)
             self._attr_available = device.can_adopt and device.can_create(
                 self.data.api.bootstrap.auth_user
             )
