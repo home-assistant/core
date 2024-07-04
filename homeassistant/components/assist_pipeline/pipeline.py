@@ -139,7 +139,7 @@ async def _async_resolve_default_pipeline_settings(
     # Find a matching language supported by the Home Assistant conversation agent
     conversation_languages = language_util.matches(
         hass.config.language,
-        await conversation.async_get_conversation_languages(
+        conversation.async_get_conversation_languages(
             hass, conversation.HOME_ASSISTANT_AGENT
         ),
         country=hass.config.country,
