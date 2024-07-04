@@ -14,6 +14,19 @@ from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
+type SelectCluster = (
+    clusters.ModeSelect
+    | clusters.OvenMode
+    | clusters.LaundryWasherMode
+    | clusters.RefrigeratorAndTemperatureControlledCabinetMode
+    | clusters.RvcRunMode
+    | clusters.RvcCleanMode
+    | clusters.DishwasherMode
+    | clusters.MicrowaveOvenMode
+    | clusters.EnergyEvseMode
+    | clusters.DeviceEnergyManagementMode
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -30,7 +43,7 @@ class MatterModeSelectEntity(MatterEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected mode."""
-        cluster: clusters.ModeSelect = self._endpoint.get_cluster(
+        cluster: SelectCluster = self._endpoint.get_cluster(
             self._entity_info.primary_attribute.cluster_id
         )
         # select the mode ID from the label string
@@ -49,7 +62,7 @@ class MatterModeSelectEntity(MatterEntity, SelectEntity):
         """Update from device."""
         # NOTE: cluster can be ModeSelect or a variant of that,
         # such as DishwasherMode. They all have the same characteristics.
-        cluster: clusters.ModeSelect = self._endpoint.get_cluster(
+        cluster: SelectCluster = self._endpoint.get_cluster(
             self._entity_info.primary_attribute.cluster_id
         )
         modes = {mode.mode: mode.label for mode in cluster.supportedModes}
