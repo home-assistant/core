@@ -279,8 +279,6 @@ class ProtectIsOnEntity(BaseProtectEntity):
 class ProtectDeviceEntity(BaseProtectEntity):
     """Base class for UniFi protect entities."""
 
-    device: ProtectAdoptableDeviceModel
-
     @callback
     def _async_set_device_info(self) -> None:
         self._attr_device_info = DeviceInfo(
