@@ -119,6 +119,7 @@ def test_validate_or_move_away_sqlite_database(
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
 @pytest.mark.usefixtures("skip_by_db_engine")
 @pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_last_run_was_recently_clean(
     async_setup_recorder_instance: RecorderInstanceGenerator,
 ) -> None:

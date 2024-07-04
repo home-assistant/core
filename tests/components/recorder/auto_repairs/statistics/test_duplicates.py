@@ -132,6 +132,7 @@ def _create_engine_28(*args, **kwargs):
 
 
 @pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_delete_metadata_duplicates(
     async_test_recorder: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
@@ -236,6 +237,7 @@ async def test_delete_metadata_duplicates(
 
 
 @pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_delete_metadata_duplicates_many(
     async_test_recorder: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,

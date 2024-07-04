@@ -1367,6 +1367,7 @@ async def test_statistics_runs_initiated(
 
 @pytest.mark.freeze_time("2022-09-13 09:00:00+02:00")
 @pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_compile_missing_statistics(
     recorder_db_url: str, freezer: FrozenDateTimeFactory
 ) -> None:
@@ -1630,6 +1631,7 @@ async def test_service_disable_states_not_recording(
 
 
 @pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_service_disable_run_information_recorded(recorder_db_url: str) -> None:
     """Test that runs are still recorded when recorder is disabled."""
 

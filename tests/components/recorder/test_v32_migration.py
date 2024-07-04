@@ -49,6 +49,7 @@ def _create_engine_test(*args, **kwargs):
 
 
 @pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_times(
     caplog: pytest.LogCaptureFixture,
     recorder_db_url: str,
@@ -219,6 +220,7 @@ async def test_migrate_times(
 
 
 @pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_can_resume_entity_id_post_migration(
     caplog: pytest.LogCaptureFixture,
     recorder_db_url: str,
