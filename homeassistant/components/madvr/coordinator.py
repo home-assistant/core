@@ -32,9 +32,11 @@ class MadVRCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Initialize madvr coordinator."""
         super().__init__(hass, _LOGGER, name=DOMAIN)
         self.entry_id = self.config_entry.entry_id
+        # get the mac address from the config entry
+        self.mac = self.config_entry.data.get(CONF_MAC, "")
         self.client = client
         self.client.set_update_callback(self.handle_push_data)
-        _LOGGER.debug("MadVRCoordinator initialized")
+        _LOGGER.debug("MadVRCoordinator initialized with mac: %s", self.mac)
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -53,6 +55,7 @@ class MadVRCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def handle_push_data(self, data: dict[str, Any]) -> None:
         """Handle new data pushed from the API."""
         _LOGGER.debug("Received push data: %s", data)
+        # inform HA that we have new data
         self.async_set_updated_data(data)
 
     async def handle_coordinator_load(self) -> None:
