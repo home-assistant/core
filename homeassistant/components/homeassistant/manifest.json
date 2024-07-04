@@ -1,6 +1,7 @@
 {
   "domain": "homeassistant",
   "name": "Home Assistant Core Integration",
+  "after_dependencies": ["repairs"],
   "codeowners": ["@home-assistant/core"],
   "documentation": "https://www.home-assistant.io/integrations/homeassistant",
   "integration_type": "system",

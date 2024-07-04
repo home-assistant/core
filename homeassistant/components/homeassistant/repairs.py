@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import voluptuous as vol
-
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import issue_registry as ir
 
 
 class IntegrationNotFoundFlow(RepairsFlow):
@@ -21,20 +20,30 @@ class IntegrationNotFoundFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Handle the first step of a fix flow."""
-        return await self.async_step_remove_entries()
+        return self.async_show_menu(
+            step_id="init",
+            menu_options=["confirm", "ignore"],
+            description_placeholders=self.description_placeholders,
+        )
 
-    async def async_step_remove_entries(
+    async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
-        """Handle the remove entries step of a fix flow."""
-        if user_input is not None:
-            entries = self.hass.config_entries.async_entries(self.domain)
-            for entry in entries:
-                await self.hass.config_entries.async_remove(entry.entry_id)
-            return self.async_create_entry(data={})
-        return self.async_show_form(
-            step_id="remove_entries",
-            data_schema=vol.Schema({}),
+        """Handle the confirm step of a fix flow."""
+        entries = self.hass.config_entries.async_entries(self.domain)
+        for entry in entries:
+            await self.hass.config_entries.async_remove(entry.entry_id)
+        return self.async_create_entry(data={})
+
+    async def async_step_ignore(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
+        """Handle the ignore step of a fix flow."""
+        ir.async_get(self.hass).async_ignore(
+            DOMAIN, f"integration_not_found.{self.domain}", True
+        )
+        return self.async_abort(
+            reason="issue_ignored",
             description_placeholders=self.description_placeholders,
         )
 

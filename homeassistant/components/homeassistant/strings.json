@@ -58,12 +58,16 @@
       "description": "Reauthentication is needed"
     },
     "integration_not_found": {
-      "title": "Could not set up {domain}",
+      "title": "Could not find integration {domain}",
       "fix_flow": {
         "step": {
           "remove_entries": {
             "title": "[%key:component::homeassistant::issues::integration_not_found::title%]",
-            "description": "Home Assistant could not set up {domain} because its integration (`{domain}`) could not be found."
+            "description": "The integration `{domain}` could not be found. This could be because the integration got removed from Home Assistant or the custom integration is not installed anymore. Please use the buttons below to either remove the previous configurations for `domain` or ignore this.",
+            "menu_options": {
+              "confirm": "Remove previous configurations",
+              "ignore": "Ignore"
+            }
           }
         }
       }
