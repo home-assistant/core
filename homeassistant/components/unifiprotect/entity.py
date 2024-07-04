@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
 from datetime import datetime
 from functools import partial
@@ -9,14 +10,7 @@ import logging
 from operator import attrgetter
 from typing import TYPE_CHECKING
 
-from uiprotect.data import (
-    NVR,
-    Event,
-    ModelType,
-    ProtectAdoptableDeviceModel,
-    ProtectModelWithId,
-    StateType,
-)
+from uiprotect.data import NVR, Event, ModelType, ProtectAdoptableDeviceModel, StateType
 
 from homeassistant.core import callback
 import homeassistant.helpers.device_registry as dr
@@ -157,7 +151,7 @@ def async_all_device_entities(
     )
 
 
-class BaseProtectEntity(Entity):
+class BaseProtectEntity(Entity, ABC):
     """Base class for UniFi protect entities."""
 
     device: ProtectAdoptableDeviceModel | NVR
@@ -202,19 +196,14 @@ class BaseProtectEntity(Entity):
         await self.data.async_refresh()
 
     @callback
+    @abstractmethod
     def _async_set_device_info(self) -> None:
-        self._attr_device_info = DeviceInfo(
-            name=self.device.display_name,
-            manufacturer=DEFAULT_BRAND,
-            model=self.device.type,
-            via_device=(DOMAIN, self.data.api.bootstrap.nvr.mac),
-            sw_version=self.device.firmware_version,
-            connections={(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
-            configuration_url=self.device.protect_url,
-        )
+        """Set device info."""
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(
+        self, device: ProtectAdoptableDeviceModel | NVR
+    ) -> None:
         """Update Entity object from Protect device."""
         was_available = self._attr_available
         async_get_ufp_enabled = self._async_get_ufp_enabled
@@ -284,7 +273,9 @@ class ProtectIsOnEntity(BaseProtectEntity):
     _attr_is_on: bool | None
     entity_description: ProtectEntityDescription
 
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(
+        self, device: ProtectAdoptableDeviceModel | NVR
+    ) -> None:
         super()._async_update_device_from_protect(device)
         was_on = self._attr_is_on
         if was_on != (is_on := self.entity_description.get_ufp_value(device) is True):
@@ -295,6 +286,18 @@ class ProtectDeviceEntity(BaseProtectEntity):
     """Base class for UniFi protect entities."""
 
     device: ProtectAdoptableDeviceModel
+
+    @callback
+    def _async_set_device_info(self) -> None:
+        self._attr_device_info = DeviceInfo(
+            name=self.device.display_name,
+            manufacturer=DEFAULT_BRAND,
+            model=self.device.type,
+            via_device=(DOMAIN, self.data.api.bootstrap.nvr.mac),
+            sw_version=self.device.firmware_version,
+            connections={(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
+            configuration_url=self.device.protect_url,
+        )
 
 
 class ProtectNVREntity(BaseProtectEntity):
