@@ -2945,7 +2945,7 @@ yeelightsunflower==0.0.10
 yolink-api==0.4.4
 
 # homeassistant.components.youless
-youless-api==2.1.0
+youless-api==2.1.2
 
 # homeassistant.components.youtube
 youtubeaio==1.1.5
