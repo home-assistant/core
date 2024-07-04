@@ -66,11 +66,6 @@ class Thermostat(ZHAEntity, ClimateEntity):
         return self.entity_data.entity.current_temperature
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return device specific state attributes."""
-        return self.entity_data.entity.extra_state_attributes
-
-    @property
     def fan_mode(self) -> str | None:
         """Return current FAN mode."""
         return self.entity_data.entity.fan_mode

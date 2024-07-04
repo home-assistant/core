@@ -65,18 +65,6 @@ class ZhaCover(ZHAEntity, CoverEntity):
         )
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return state attributes."""
-        return {
-            "target_lift_position": self.entity_data.entity.state[
-                "target_lift_position"
-            ],
-            "target_tilt_position": self.entity_data.entity.state[
-                "target_tilt_position"
-            ],
-        }
-
-    @property
     def is_closed(self) -> bool | None:
         """Return True if the cover is closed."""
         return self.entity_data.entity.is_closed

@@ -83,14 +83,6 @@ class Light(LightEntity, ZHAEntity):
         )
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return state attributes."""
-        return {
-            "off_with_transition": self.entity_data.entity.state["off_with_transition"],
-            "off_brightness": self.entity_data.entity.state["off_brightness"],
-        }
-
-    @property
     def is_on(self) -> bool:
         """Return true if entity is on."""
         return self.entity_data.entity.is_on
