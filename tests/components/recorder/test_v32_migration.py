@@ -2,7 +2,6 @@
 
 from datetime import timedelta
 import importlib
-from pathlib import Path
 import sys
 from unittest.mock import patch
 
@@ -11,7 +10,7 @@ from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import Session
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import SQLITE_URL_PREFIX, core, statistics
+from homeassistant.components.recorder import core, statistics
 from homeassistant.components.recorder.queries import select_event_type_ids
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import EVENT_STATE_CHANGED, Event, EventOrigin, State
@@ -49,13 +48,13 @@ def _create_engine_test(*args, **kwargs):
     return engine
 
 
-async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmp_path: Path) -> None:
+@pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
+async def test_migrate_times(
+    caplog: pytest.LogCaptureFixture,
+    recorder_db_url: str,
+) -> None:
     """Test we can migrate times."""
-    test_dir = tmp_path.joinpath("sqlite")
-    test_dir.mkdir()
-    test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
-
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
     now = dt_util.utcnow()
@@ -123,7 +122,7 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmp_path: Path) -
         async with async_test_home_assistant() as hass:
             recorder_helper.async_initialize_recorder(hass)
             assert await async_setup_component(
-                hass, "recorder", {"recorder": {"db_url": dburl}}
+                hass, "recorder", {"recorder": {"db_url": recorder_db_url}}
             )
             await hass.async_block_till_done()
             await async_wait_recording_done(hass)
@@ -153,7 +152,7 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmp_path: Path) -
     async with async_test_home_assistant() as hass:
         recorder_helper.async_initialize_recorder(hass)
         assert await async_setup_component(
-            hass, "recorder", {"recorder": {"db_url": dburl}}
+            hass, "recorder", {"recorder": {"db_url": recorder_db_url}}
         )
         await hass.async_block_till_done()
 
@@ -220,15 +219,13 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmp_path: Path) -
         await hass.async_stop()
 
 
+@pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_can_resume_entity_id_post_migration(
-    caplog: pytest.LogCaptureFixture, tmp_path: Path
+    caplog: pytest.LogCaptureFixture,
+    recorder_db_url: str,
 ) -> None:
     """Test we resume the entity id post migration after a restart."""
-    test_dir = tmp_path.joinpath("sqlite")
-    test_dir.mkdir()
-    test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
-
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
     now = dt_util.utcnow()
@@ -293,7 +290,7 @@ async def test_migrate_can_resume_entity_id_post_migration(
         async with async_test_home_assistant() as hass:
             recorder_helper.async_initialize_recorder(hass)
             assert await async_setup_component(
-                hass, "recorder", {"recorder": {"db_url": dburl}}
+                hass, "recorder", {"recorder": {"db_url": recorder_db_url}}
             )
             await hass.async_block_till_done()
             await async_wait_recording_done(hass)
@@ -323,7 +320,7 @@ async def test_migrate_can_resume_entity_id_post_migration(
     async with async_test_home_assistant() as hass:
         recorder_helper.async_initialize_recorder(hass)
         assert await async_setup_component(
-            hass, "recorder", {"recorder": {"db_url": dburl}}
+            hass, "recorder", {"recorder": {"db_url": recorder_db_url}}
         )
         await hass.async_block_till_done()
 
