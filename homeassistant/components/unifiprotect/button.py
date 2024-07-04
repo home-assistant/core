@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from functools import partial
 import logging
 from typing import TYPE_CHECKING, Final
 
@@ -119,17 +120,25 @@ async def async_setup_entry(
     """Discover devices on a UniFi Protect NVR."""
     data = entry.runtime_data
 
+    adopt_entities = partial(
+        async_all_device_entities,
+        data,
+        ProtectAdoptButton,
+        unadopted_descs=[ADOPT_BUTTON],
+    )
+    base_entities = partial(
+        async_all_device_entities,
+        data,
+        ProtectButton,
+        all_descs=ALL_DEVICE_BUTTONS,
+        model_descriptions=_MODEL_DESCRIPTIONS,
+    )
+
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        entities = async_all_device_entities(
-            data,
-            ProtectButton,
-            all_descs=ALL_DEVICE_BUTTONS,
-            unadopted_descs=[ADOPT_BUTTON],
-            model_descriptions=_MODEL_DESCRIPTIONS,
-            ufp_device=device,
+        async_add_entities(
+            [*base_entities(ufp_device=device), *adopt_entities(ufp_device=device)]
         )
-        async_add_entities(entities)
         _async_remove_adopt_button(hass, device)
 
     @callback
@@ -137,29 +146,13 @@ async def async_setup_entry(
         if not device.can_adopt or not device.can_create(data.api.bootstrap.auth_user):
             _LOGGER.debug("Device is not adoptable: %s", device.id)
             return
-        async_add_entities(
-            async_all_device_entities(
-                data,
-                ProtectButton,
-                unadopted_descs=[ADOPT_BUTTON],
-                ufp_device=device,
-            )
-        )
+        async_add_entities(adopt_entities(ufp_device=device))
 
     data.async_subscribe_adopt(_add_new_device)
     entry.async_on_unload(
         async_dispatcher_connect(hass, data.add_signal, _async_add_unadopted_device)
     )
-
-    async_add_entities(
-        async_all_device_entities(
-            data,
-            ProtectButton,
-            all_descs=ALL_DEVICE_BUTTONS,
-            unadopted_descs=[ADOPT_BUTTON],
-            model_descriptions=_MODEL_DESCRIPTIONS,
-        )
-    )
+    async_add_entities([*base_entities(), *adopt_entities()])
 
     for device in data.get_by_types(DEVICES_THAT_ADOPT):
         _async_remove_adopt_button(hass, device)
@@ -170,17 +163,20 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
 
     entity_description: ProtectButtonEntityDescription
 
-    @callback
-    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
-        super()._async_update_device_from_protect(device)
-        if self.entity_description.key == KEY_ADOPT:
-            if TYPE_CHECKING:
-                assert isinstance(device, ProtectAdoptableDeviceModel)
-            self._attr_available = device.can_adopt and device.can_create(
-                self.data.api.bootstrap.auth_user
-            )
-
     async def async_press(self) -> None:
         """Press the button."""
         if self.entity_description.ufp_press is not None:
             await getattr(self.device, self.entity_description.ufp_press)()
+
+
+class ProtectAdoptButton(ProtectButton):
+    """A Ubiquiti UniFi Protect Adopt button."""
+
+    @callback
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
+        super()._async_update_device_from_protect(device)
+        if TYPE_CHECKING:
+            assert isinstance(device, ProtectAdoptableDeviceModel)
+        self._attr_available = device.can_adopt and device.can_create(
+            self.data.api.bootstrap.auth_user
+        )
