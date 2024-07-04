@@ -209,7 +209,7 @@ async def test_if_fires_using_multiple_at(
     )
     await hass.async_block_till_done()
 
-    for count, delta in enumerate(trigger_deltas):
+    for count, delta in enumerate(sorted(trigger_deltas)):
         async_fire_time_changed(hass, start_dt + delta + timedelta(seconds=1))
         await hass.async_block_till_done()
 
