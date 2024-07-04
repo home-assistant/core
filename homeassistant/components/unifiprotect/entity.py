@@ -278,8 +278,9 @@ class ProtectIsOnMixin(BaseProtectEntity):
 
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
-        is_on = self.entity_description.get_ufp_value(self.device) is True
-        if self._attr_is_on != is_on:
+        was_on = self._attr_is_on
+        is_on = self.entity_description.get_ufp_value(device) is True
+        if was_on != is_on:
             self._attr_is_on = is_on
 
 
