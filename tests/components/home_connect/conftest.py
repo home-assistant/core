@@ -94,7 +94,7 @@ async def bypass_throttle(hass: HomeAssistant, config_entry: MockConfigEntry):
 
 
 @pytest.fixture(name="bypass_throttle")
-def mock_bypass_throttle():
+def mock_bypass_throttle() -> Generator[None]:
     """Fixture to bypass the throttle decorator in __init__."""
     with patch(
         "homeassistant.components.home_connect.update_all_devices",
@@ -122,7 +122,7 @@ async def mock_integration_setup(
 
 
 @pytest.fixture(name="get_appliances")
-def mock_get_appliances() -> Generator[None, Any, None]:
+def mock_get_appliances() -> Generator[MagicMock]:
     """Mock ConfigEntryAuth parent (HomeAssistantAPI) method."""
     with patch(
         "homeassistant.components.home_connect.api.ConfigEntryAuth.get_appliances",

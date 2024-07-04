@@ -8,7 +8,7 @@ from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.hue.v2.device import async_setup_devices
 from homeassistant.components.hue.v2.hue_event import async_setup_hue_events
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import setup_platform
 
@@ -50,14 +50,14 @@ async def test_get_triggers(
     entity_registry: er.EntityRegistry,
     mock_bridge_v2,
     v2_resources_test_data,
-    device_reg,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we get the expected triggers from a hue remote."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
     await setup_platform(hass, mock_bridge_v2, ["binary_sensor", "sensor"])
 
     # Get triggers for `Wall switch with 2 controls`
-    hue_wall_switch_device = device_reg.async_get_device(
+    hue_wall_switch_device = device_registry.async_get_device(
         identifiers={(hue.DOMAIN, "3ff06175-29e8-44a8-8fe7-af591b0025da")}
     )
     hue_bat_sensor = entity_registry.async_get(

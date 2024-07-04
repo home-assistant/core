@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
 import datetime
 import http
 import time
@@ -13,7 +13,6 @@ from aiohttp.client_exceptions import ClientError
 from gcal_sync.auth import API_BASE_URL
 from oauth2client.client import OAuth2Credentials
 import pytest
-from typing_extensions import AsyncGenerator, Generator
 import yaml
 
 from homeassistant.components.application_credentials import (

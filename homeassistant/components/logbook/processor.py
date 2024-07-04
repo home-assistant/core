@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Generator, Sequence
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime as dt
@@ -11,7 +11,6 @@ from typing import Any
 
 from sqlalchemy.engine import Result
 from sqlalchemy.engine.row import Row
-from typing_extensions import Generator
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.filters import Filters
