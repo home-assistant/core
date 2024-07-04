@@ -124,7 +124,7 @@ async def test_set_max_current_sharing_mode(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Cannot set the max current when sharing mode is enabled",
+        match="power sharing mode is enabled",
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
