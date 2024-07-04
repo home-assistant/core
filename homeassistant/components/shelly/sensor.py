@@ -991,20 +991,18 @@ RPC_SENSORS: Final = {
     ),
     "counter_frequency": RpcSensorDescription(
         key="input",
-        sub_key="counts",
+        sub_key="freq",
         name="Pulse counter frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         state_class=SensorStateClass.MEASUREMENT,
-        value=lambda status, _: status["freq"],
-        removal_condition=lambda config, status, key: (config[key]["enable"] is False),
+        removal_condition=lambda config, _, key: (config[key]["enable"] is False),
     ),
     "counter_frequency_value": RpcSensorDescription(
         key="input",
-        sub_key="counts",
+        sub_key="xfreq",
         name="Pulse counter frequency value",
-        value=lambda status, _: status["xfreq"],
         removal_condition=lambda config, status, key: (
-            config[key]["enable"] is False or status[key]["counts"].get("xfreq") is None
+            config[key]["enable"] is False or status[key].get("xfreq") is None
         ),
     ),
 }
