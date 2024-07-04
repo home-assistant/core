@@ -2,46 +2,39 @@
 
 from __future__ import annotations
 
+<<<<<<< HEAD
 from aiorussound import Russound
 import voluptuous as vol
+=======
+import logging
+from typing import cast
+
+from russound_rio import Russound
+>>>>>>> 89707ca3a7 (Add config flow to Russound RIO)
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=9621): cv.port,
-    }
-)
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Russound RIO platform."""
-
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
+    host = entry.data[CONF_HOST]
+    port = entry.data[CONF_PORT]
 
     russ = Russound(hass.loop, host, port)
 
@@ -51,11 +44,17 @@ async def async_setup_platform(
     sources = await russ.enumerate_sources()
     valid_zones = await russ.enumerate_zones()
 
-    devices = []
+    entities = []
     for zone_id, name in valid_zones:
+        if zone_id.controller > 6:
+            _LOGGER.debug(
+                "Zone ID %s exceeds RIO controller maximum, skipping",
+                zone_id.device_str(),
+            )
+            continue
         await russ.watch_zone(zone_id)
-        dev = RussoundZoneDevice(russ, zone_id, name, sources)
-        devices.append(dev)
+        zone = RussoundZoneDevice(entry, russ, zone_id, name, sources)
+        entities.append(zone)
 
     @callback
     def on_stop(event):
@@ -64,7 +63,7 @@ async def async_setup_platform(
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_stop)
 
-    async_add_entities(devices)
+    async_add_entities(entities)
 
 
 class RussoundZoneDevice(MediaPlayerEntity):
@@ -80,13 +79,17 @@ class RussoundZoneDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, russ, zone_id, name, sources):
+    def __init__(self, entry: ConfigEntry, russ, zone_id, name, sources) -> None:
         """Initialize the zone device."""
         super().__init__()
+        self._entry = entry
+        self._device_name = entry.title
+        self._attr_unique_id = zone_id.device_str()
         self._name = name
         self._russ = russ
         self._zone_id = zone_id
         self._sources = sources
+        self._update_states()
 
     def _zone_var(self, name, default=None):
         return self._russ.get_cached_zone_variable(self._zone_id, name, default)
@@ -195,3 +198,11 @@ class RussoundZoneDevice(MediaPlayerEntity):
                 continue
             await self._russ.send_zone_event(self._zone_id, "SelectSource", source_id)
             break
+
+    def _update_states(self) -> None:
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, cast(str, self._entry.unique_id))},
+            manufacturer="Russound",
+            name=self._device_name,
+            model="MCA-C5",
+        )
