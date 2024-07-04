@@ -15,6 +15,7 @@ from uuid import UUID
 import sqlalchemy
 from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text, update
 from sqlalchemy.engine import CursorResult, Engine
+from sqlalchemy.engine.interfaces import ReflectedForeignKeyConstraint
 from sqlalchemy.exc import (
     DatabaseError,
     IntegrityError,
@@ -591,14 +592,19 @@ def _update_states_table_with_foreign_key_options(
 
 
 def _drop_foreign_key_constraints(
-    session_maker: Callable[[], Session], engine: Engine, table: str, columns: list[str]
-) -> None:
+    session_maker: Callable[[], Session], engine: Engine, table: str, column: str
+) -> list[tuple[str, str, ReflectedForeignKeyConstraint]]:
     """Drop foreign key constraints for a table on specific columns."""
     inspector = sqlalchemy.inspect(engine)
+    dropped_constraints = [
+        (table, column, foreign_key)
+        for foreign_key in inspector.get_foreign_keys(table)
+        if foreign_key["name"] and foreign_key["constrained_columns"] == [column]
+    ]
     drops = [
         ForeignKeyConstraint((), (), name=foreign_key["name"])
         for foreign_key in inspector.get_foreign_keys(table)
-        if foreign_key["name"] and foreign_key["constrained_columns"] == columns
+        if foreign_key["name"] and foreign_key["constrained_columns"] == [column]
     ]
 
     # Bind the ForeignKeyConstraints to the table
@@ -613,7 +619,36 @@ def _drop_foreign_key_constraints(
                 _LOGGER.exception(
                     "Could not drop foreign constraints in %s table on %s",
                     TABLE_STATES,
-                    columns,
+                    column,
+                )
+
+    return dropped_constraints
+
+
+def _restore_foreign_key_constraints(
+    session_maker: Callable[[], Session],
+    engine: Engine,
+    dropped_constraints: list[tuple[str, str, ReflectedForeignKeyConstraint]],
+) -> None:
+    """Restore foreign key constraints."""
+    for table, column, dropped_constraint in dropped_constraints:
+        constraints = Base.metadata.tables[table].foreign_key_constraints
+        for constraint in constraints:
+            if constraint.column_keys == [column]:
+                break
+        else:
+            _LOGGER.info(
+                "Did not find a matching constraint for %s", dropped_constraint
+            )
+            continue
+
+        with session_scope(session=session_maker()) as session:
+            try:
+                connection = session.connection()
+                connection.execute(AddConstraint(constraint))  # type: ignore[no-untyped-call]
+            except (InternalError, OperationalError):
+                _LOGGER.exception(
+                    "Could not update foreign options in %s table", TABLE_STATES
                 )
 
 
@@ -741,7 +776,7 @@ def _apply_update(  # noqa: C901
         pass
     elif new_version == 16:
         _drop_foreign_key_constraints(
-            session_maker, engine, TABLE_STATES, ["old_state_id"]
+            session_maker, engine, TABLE_STATES, "old_state_id"
         )
     elif new_version == 17:
         # This dropped the statistics table, done again in version 18.
@@ -1109,7 +1144,6 @@ def _apply_update(  # noqa: C901
             [f"last_reported_ts {_column_types.timestamp_type}"],
         )
     elif new_version == 44:
-        columns: tuple[str, ...]
         identity_sql = (
             "NOT NULL AUTO_INCREMENT"
             if engine.dialect.name == SupportedDialect.MYSQL
@@ -1122,9 +1156,24 @@ def _apply_update(  # noqa: C901
             ("statistics", ("metadata_id",)),
             ("statistics_short_term", ("metadata_id",)),
         )
+        dropped_constraints = [
+            dropped_constraint
+            for table, columns in foreign_columns
+            for column in columns
+            for dropped_constraint in _drop_foreign_key_constraints(
+                session_maker, engine, table, column
+            )
+        ]
+        _LOGGER.debug(dropped_constraints)
+
+        # Then modify the constrained columns
         for table, columns in foreign_columns:
-            for column in columns:
-                _drop_foreign_key_constraints(session_maker, engine, table, [column])
+            _modify_columns(
+                session_maker,
+                engine,
+                table,
+                [f"{column} {BIG_INTEGER_SQL}" for column in columns],
+            )
 
         # Then modify the ID columns
         id_columns = (
@@ -1148,6 +1197,8 @@ def _apply_update(  # noqa: C901
                 table,
                 [f"{column} {BIG_INTEGER_SQL} {identity_sql}"],
             )
+        # Finally restore dropped constraints
+        _restore_foreign_key_constraints(session_maker, engine, dropped_constraints)
 
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
@@ -1804,7 +1855,7 @@ def cleanup_legacy_states_event_ids(instance: Recorder) -> bool:
             rebuild_sqlite_table(session_maker, instance.engine, States)
         else:
             _drop_foreign_key_constraints(
-                session_maker, instance.engine, TABLE_STATES, ["event_id"]
+                session_maker, instance.engine, TABLE_STATES, "event_id"
             )
         _drop_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
         instance.use_legacy_events_index = False
