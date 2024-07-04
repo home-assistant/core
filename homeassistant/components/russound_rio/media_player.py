@@ -2,15 +2,10 @@
 
 from __future__ import annotations
 
-<<<<<<< HEAD
-from aiorussound import Russound
-import voluptuous as vol
-=======
 import logging
 from typing import cast
 
-from russound_rio import Russound
->>>>>>> 89707ca3a7 (Add config flow to Russound RIO)
+from aiorussound import Russound
 
 from homeassistant.components.media_player import (
     MediaPlayerEntity,

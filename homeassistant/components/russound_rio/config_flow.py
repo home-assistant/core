@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
-from russound_rio import CommandException
+from russound_rio import Russound
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
@@ -27,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
-    """WebosTV configuration flow."""
+    """Russound RIO configuration flow."""
 
     VERSION = 1
 
@@ -61,17 +62,17 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         self.context[CONF_HOST] = self._host
         errors = {}
+
         try:
-            if self._host != "192.168.20.75":
-                raise CommandException
-        except RUSSOUND_RIO_EXCEPTIONS:
+            russ = Russound(self.hass.loop, self._host, self._port)
+            async with asyncio.timeout(5):
+                await russ.connect()
+                await russ.enumerate_sources()
+                await russ.close()
+        except RUSSOUND_RIO_EXCEPTIONS as err:
+            _LOGGER.error("Could not connect to Russound RIO: %s", err)
             errors["base"] = "cannot_connect"
         else:
-            await self.async_set_unique_id(
-                "eda8b599-828a-4e26-86bf-52dca65fb8f6", raise_on_progress=False
-            )
-            self._abort_if_unique_id_configured({CONF_HOST: self._host})
-
             data = {
                 CONF_HOST: self._host,
                 CONF_NAME: self._name,

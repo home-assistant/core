@@ -8,5 +8,7 @@ DOMAIN = "russound_rio"
 
 RUSSOUND_RIO_EXCEPTIONS = (
     CommandException,
+    ConnectionRefusedError,
+    TimeoutError,
     asyncio.CancelledError,
 )
