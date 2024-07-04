@@ -1144,6 +1144,9 @@ def _apply_update(  # noqa: C901
             [f"last_reported_ts {_column_types.timestamp_type}"],
         )
     elif new_version == 44:
+        # We skip this step for SQLITE, it doesn't have differently sized integers
+        if engine.dialect.name == SupportedDialect.SQLITE:
+            return
         identity_sql = (
             "NOT NULL AUTO_INCREMENT"
             if engine.dialect.name == SupportedDialect.MYSQL
