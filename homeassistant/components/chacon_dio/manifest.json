@@ -1,9 +1,9 @@
 {
-  "domain": "dio_chacon",
-  "name": "Dio Chacon",
+  "domain": "chacon_dio",
+  "name": "Chacon DiO",
   "codeowners": ["@cnico"],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/dio_chacon",
+  "documentation": "https://www.home-assistant.io/integrations/chacon_dio",
   "iot_class": "cloud_push",
   "loggers": ["dio_chacon_api"],
   "requirements": ["dio-chacon-wifi-api==1.1.0"]

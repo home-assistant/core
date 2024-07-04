@@ -1,11 +1,11 @@
-"""Test the dio_chacon config flow."""
+"""Test the chacon_dio config flow."""
 
 from unittest.mock import AsyncMock
 
 from dio_chacon_wifi_api.exceptions import DIOChaconAPIError, DIOChaconInvalidAuthError
 import pytest
 
-from homeassistant.components.dio_chacon.const import DOMAIN
+from homeassistant.components.chacon_dio.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -36,7 +36,7 @@ async def test_full_flow(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Dio Chacon dummylogin"
+    assert result["title"] == "Chacon DiO dummylogin"
     assert result["result"].unique_id == "dummy-user-id"
     assert result["data"] == {
         CONF_USERNAME: "dummylogin",
@@ -86,7 +86,7 @@ async def test_errors(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Dio Chacon dummylogin"
+    assert result["title"] == "Chacon DiO dummylogin"
     assert result["result"].unique_id == "dummy-user-id"
     assert result["data"] == {
         CONF_USERNAME: "dummylogin",

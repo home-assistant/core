@@ -1,4 +1,4 @@
-"""The dio_chacon integration."""
+"""The chacon_dio integration."""
 
 from dataclasses import dataclass
 import logging
@@ -21,18 +21,18 @@ PLATFORMS: list[Platform] = [Platform.COVER]
 
 
 @dataclass
-class DioChaconData:
-    """Dio Chacon data class."""
+class ChaconDioData:
+    """Chacon Dio data class."""
 
-    dio_chacon_client: DIOChaconAPIClient
+    client: DIOChaconAPIClient
     list_devices: list[dict[str, Any]]
 
 
-type DioChaconConfigEntry = ConfigEntry[DioChaconData]
+type ChaconDioConfigEntry = ConfigEntry[ChaconDioData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DioChaconConfigEntry) -> bool:
-    """Set up dio_chacon from a config entry."""
+async def async_setup_entry(hass: HomeAssistant, entry: ChaconDioConfigEntry) -> bool:
+    """Set up chacon_dio from a config entry."""
 
     config = entry.data
 
@@ -40,19 +40,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: DioChaconConfigEntry) ->
     password = config[CONF_PASSWORD]
     dio_chacon_id = entry.unique_id
 
-    _LOGGER.debug("Initializing Dio Chacon client %s, %s", username, dio_chacon_id)
-    dio_chacon_client: DIOChaconAPIClient = DIOChaconAPIClient(
+    _LOGGER.debug("Initializing Chacon Dio client %s, %s", username, dio_chacon_id)
+    client = DIOChaconAPIClient(
         username,
         password,
         dio_chacon_id,
     )
 
-    found_devices = await dio_chacon_client.search_all_devices(with_state=True)
-    list_devices = found_devices.values()
+    found_devices = await client.search_all_devices(with_state=True)
+    list_devices = list(found_devices.values())
     _LOGGER.debug("List of devices %s", list_devices)
 
-    entry.runtime_data = DioChaconData(
-        dio_chacon_client=dio_chacon_client,
+    entry.runtime_data = ChaconDioData(
+        client=client,
         list_devices=list_devices,
     )
 
@@ -60,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DioChaconConfigEntry) ->
 
     # Disconnect the permanent websocket connection of home assistant on shutdown
     async def _async_disconnect_websocket(_: Event) -> None:
-        await dio_chacon_client.disconnect()
+        await client.disconnect()
 
     entry.async_on_unload(
         hass.bus.async_listen_once(
@@ -75,6 +75,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.dio_chacon_client.disconnect()
+        await entry.runtime_data.client.disconnect()
 
     return unload_ok

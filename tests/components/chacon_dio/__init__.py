@@ -1,4 +1,4 @@
-"""Tests for the Dio Chacon integration."""
+"""Tests for the Chacon Dio integration."""
 
 from homeassistant.core import HomeAssistant
 

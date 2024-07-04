@@ -1,9 +1,8 @@
-"""Cover Platform for Dio Chacon REV-SHUTTER devices."""
+"""Cover Platform for Chacon Dio REV-SHUTTER devices."""
 
 import logging
 from typing import Any
 
-from dio_chacon_wifi_api import DIOChaconAPIClient
 from dio_chacon_wifi_api.const import DeviceTypeEnum, ShutterMoveEnum
 
 from homeassistant.components.cover import (
@@ -12,34 +11,33 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DioChaconData
-from .entity import DioChaconEntity
+from . import ChaconDioConfigEntry
+from .entity import ChaconDioEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ChaconDioConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Defer sensor setup to the shared sensor module."""
-    data: DioChaconData = config_entry.runtime_data
-    client: DIOChaconAPIClient = data.dio_chacon_client
+    """Set up Chacon Dio cover devices."""
+    data = config_entry.runtime_data
+    client = data.client
 
     async_add_entities(
-        DioChaconCover(client, device)
+        ChaconDioCover(client, device)
         for device in data.list_devices
         if device["type"] == DeviceTypeEnum.SHUTTER.value
     )
 
 
-class DioChaconCover(DioChaconEntity, CoverEntity):
-    """Object for controlling a Dio Chacon cover."""
+class ChaconDioCover(ChaconDioEntity, CoverEntity):
+    """Object for controlling a Chacon Dio cover."""
 
     _attr_device_class = CoverDeviceClass.SHUTTER
     _attr_name = None

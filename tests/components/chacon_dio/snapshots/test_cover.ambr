@@ -24,7 +24,7 @@
     'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
     'original_icon': None,
     'original_name': None,
-    'platform': 'dio_chacon',
+    'platform': 'chacon_dio',
     'previous_unique_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': None,

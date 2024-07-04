@@ -1,4 +1,4 @@
-"""Test the Dio Chacon cover."""
+"""Test the Chacon Dio cover."""
 
 from collections.abc import Callable
 from unittest.mock import AsyncMock
@@ -35,7 +35,7 @@ async def test_entities(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the creation and values of the Dio Chacon covers."""
+    """Test the creation and values of the Chacon Dio covers."""
 
     await setup_integration(hass, mock_config_entry)
 
@@ -49,7 +49,7 @@ async def test_cover_actions(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the creation and values of the Dio Chacon covers."""
+    """Test the creation and values of the Chacon Dio covers."""
 
     await setup_integration(hass, mock_config_entry)
 
@@ -100,7 +100,7 @@ async def test_cover_callbacks(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the creation and values of the Dio Chacon covers."""
+    """Test the creation and values of the Chacon Dio covers."""
 
     await setup_integration(hass, mock_config_entry)
 

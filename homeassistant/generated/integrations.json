@@ -884,6 +884,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "chacon_dio": {
+      "name": "Chacon DiO",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "channels": {
       "name": "Channels",
       "integration_type": "hub",
@@ -1225,12 +1231,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
-    },
-    "dio_chacon": {
-      "name": "Dio Chacon",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_push"
     },
     "directv": {
       "name": "DirecTV",

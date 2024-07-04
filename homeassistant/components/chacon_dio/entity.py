@@ -1,4 +1,4 @@
-"""Base entity for the Dio Chacon entity."""
+"""Base entity for the Chacon Dio entity."""
 
 import logging
 from typing import Any
@@ -13,18 +13,16 @@ from .const import DOMAIN, MANUFACTURER
 _LOGGER = logging.getLogger(__name__)
 
 
-class DioChaconEntity(Entity):
-    """Implements a common class elements representing the Dio Chacon entity."""
+class ChaconDioEntity(Entity):
+    """Implements a common class elements representing the Chacon Dio entity."""
 
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(
-        self, dio_chacon_client: DIOChaconAPIClient, device: dict[str, Any]
-    ) -> None:
-        """Initialize Dio Chacon entity."""
+    def __init__(self, client: DIOChaconAPIClient, device: dict[str, Any]) -> None:
+        """Initialize Chacon Dio entity."""
 
-        self.client = dio_chacon_client
+        self.client = client
 
         self.target_id: str = device["id"]
         self._attr_unique_id = self.target_id
