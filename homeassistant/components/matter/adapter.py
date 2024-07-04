@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
+from chip.clusters.Objects import GeneralDiagnostics
 from matter_server.client.models.device_types import BridgedDevice
+from matter_server.common.helpers.util import convert_mac_address
 from matter_server.common.models import EventType, ServerInfoMessage
 
 from homeassistant.config_entries import ConfigEntry
@@ -185,6 +187,23 @@ class MatterAdapter:
             endpoint,
         )
         identifiers = {(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
+
+        network_interfaces: list[GeneralDiagnostics.Structs.NetworkInterface] = (
+            endpoint.get_attribute_value(
+                None, GeneralDiagnostics.Attributes.NetworkInterfaces
+            )
+            or []
+        )
+
+        connections = {
+            (
+                dr.CONNECTION_NETWORK_MAC,
+                convert_mac_address(network_interface.hardwareAddress),
+            )
+            for network_interface in network_interfaces
+            if network_interface.hardwareAddress
+        }
+
         serial_number: str | None = None
         # if available, we also add the serialnumber as identifier
         if (
@@ -203,6 +222,7 @@ class MatterAdapter:
             name=name,
             config_entry_id=self.config_entry.entry_id,
             identifiers=identifiers,
+            connections=connections,
             hw_version=basic_info.hardwareVersionString,
             sw_version=basic_info.softwareVersionString,
             manufacturer=basic_info.vendorName or endpoint.node.device_info.vendorName,
