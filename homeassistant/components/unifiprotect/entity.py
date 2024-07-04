@@ -216,22 +216,29 @@ class BaseProtectEntity(Entity):
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         """Update Entity object from Protect device."""
-        if TYPE_CHECKING:
-            assert isinstance(device, ProtectAdoptableDeviceModel)
-
-        if last_update_success := self.data.last_update_success:
-            self.device = device
-
         was_available = self._attr_available
         async_get_ufp_enabled = self._async_get_ufp_enabled
-        connected_or_adoptable = device.state is StateType.CONNECTED or (
-            not device.is_adopted_by_us and device.can_adopt
-        )
-        available = (
-            last_update_success
-            and connected_or_adoptable
-            and (not async_get_ufp_enabled or async_get_ufp_enabled(device))
-        )
+        available = self.data.last_update_success
+        if device.model is ModelType.NVR:
+            if TYPE_CHECKING:
+                assert isinstance(device, NVR)
+            connected_or_adoptable = True
+            if available:
+                self.device = device
+        else:
+            if TYPE_CHECKING:
+                assert isinstance(device, ProtectAdoptableDeviceModel)
+            connected_or_adoptable = device.state is StateType.CONNECTED or (
+                not device.is_adopted_by_us and device.can_adopt
+            )
+            if available:
+                self.device = device
+            available = (
+                available
+                and connected_or_adoptable
+                and (not async_get_ufp_enabled or async_get_ufp_enabled(device))
+            )
+
         if available != was_available:
             self._attr_available = available
 
@@ -305,11 +312,6 @@ class ProtectNVREntity(BaseProtectEntity):
             sw_version=str(self.device.version),
             configuration_url=self.device.api.base_url,
         )
-
-    @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        if (data := self.data).last_update_success:
-            self.device = data.api.bootstrap.nvr
 
 
 class EventEntityMixin(ProtectDeviceEntity):
