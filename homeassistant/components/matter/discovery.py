@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
+
 from chip.clusters.Objects import ClusterAttributeDescriptor
 from matter_server.client.models.node import MatterEndpoint
-from typing_extensions import Generator
 
 from homeassistant.const import Platform
 from homeassistant.core import callback
