@@ -19,7 +19,7 @@ async def test_datetime(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test Broadlink datetime."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
 
     device = get_device("Guest room")
     mock_setup = await device.setup_entry(hass)
