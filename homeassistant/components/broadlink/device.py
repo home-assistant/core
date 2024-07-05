@@ -50,7 +50,7 @@ class BroadlinkDevice(Generic[_ApiT]):
         """Initialize the device."""
         self.hass = hass
         self.config = config
-        self.update_manager: BroadlinkUpdateManager | None = None
+        self.update_manager: BroadlinkUpdateManager[_ApiT] | None = None
         self.fw_version: int | None = None
         self.authorized: bool | None = None
         self.reset_jobs: list[CALLBACK_TYPE] = []

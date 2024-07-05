@@ -9,17 +9,20 @@ from typing import TYPE_CHECKING, Any, Generic
 
 import broadlink as blk
 from broadlink.exceptions import AuthorizationError, BroadlinkException
+from typing_extensions import TypeVar
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
-    from .device import BroadlinkDevice, _ApiT
+    from .device import BroadlinkDevice
+
+_ApiT = TypeVar("_ApiT", bound=blk.Device)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_update_manager(device: BroadlinkDevice) -> BroadlinkUpdateManager:
+def get_update_manager(device: BroadlinkDevice[_ApiT]) -> BroadlinkUpdateManager[_ApiT]:
     """Return an update manager for a given Broadlink device."""
     update_managers: dict[str, type[BroadlinkUpdateManager]] = {
         "A1": BroadlinkA1UpdateManager,
