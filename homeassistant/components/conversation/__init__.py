@@ -40,6 +40,7 @@ from .const import (
     OLD_HOME_ASSISTANT_AGENT,
     SERVICE_PROCESS,
     SERVICE_RELOAD,
+    ConversationEntityFeature,
 )
 from .default_agent import async_get_default_agent, async_setup_default_agent
 from .entity import ConversationEntity
@@ -58,6 +59,7 @@ __all__ = [
     "ConversationEntity",
     "ConversationInput",
     "ConversationResult",
+    "ConversationEntityFeature",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -116,7 +118,8 @@ def async_unset_agent(
     get_agent_manager(hass).async_unset_agent(config_entry.entry_id)
 
 
-async def async_get_conversation_languages(
+@callback
+def async_get_conversation_languages(
     hass: HomeAssistant, agent_id: str | None = None
 ) -> set[str] | Literal["*"]:
     """Return languages supported by conversation agents.

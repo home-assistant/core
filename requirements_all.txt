@@ -195,7 +195,7 @@ aioambient==2024.01.0
 aioapcaccess==0.4.2
 
 # homeassistant.components.aquacell
-aioaquacell==0.1.7
+aioaquacell==0.1.8
 
 # homeassistant.components.aseko_pool_live
 aioaseko==0.1.1
@@ -282,7 +282,7 @@ aiolifx-effects==0.3.2
 aiolifx-themes==0.4.15
 
 # homeassistant.components.lifx
-aiolifx==1.0.2
+aiolifx==1.0.4
 
 # homeassistant.components.livisi
 aiolivisi==0.0.19
@@ -404,7 +404,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webostv
-aiowebostv==0.4.1
+aiowebostv==0.4.2
 
 # homeassistant.components.withings
 aiowithings==3.0.2
@@ -434,7 +434,7 @@ airtouch5py==0.2.10
 alpha-vantage==2.3.1
 
 # homeassistant.components.amberelectric
-amberelectric==1.1.0
+amberelectric==1.1.1
 
 # homeassistant.components.amcrest
 amcrest==1.9.8
@@ -449,7 +449,7 @@ androidtvremote2==0.1.1
 anel-pwrctrl-homeassistant==0.0.1.dev2
 
 # homeassistant.components.anova
-anova-wifi==0.14.0
+anova-wifi==0.15.0
 
 # homeassistant.components.anthemav
 anthemav==1.4.1
@@ -520,7 +520,7 @@ aurorapy==0.2.7
 # avion==0.10
 
 # homeassistant.components.axis
-axis==61
+axis==62
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -709,7 +709,7 @@ debugpy==1.8.1
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==8.0.0
+deebot-client==8.1.1
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -733,6 +733,9 @@ devolo-home-control-api==0.18.3
 
 # homeassistant.components.devolo_home_network
 devolo-plc-api==1.4.1
+
+# homeassistant.components.chacon_dio
+dio-chacon-wifi-api==1.1.0
 
 # homeassistant.components.directv
 directv==0.4.0
@@ -1068,7 +1071,7 @@ heatmiserV3==1.1.18
 here-routing==1.0.1
 
 # homeassistant.components.here_travel_time
-here-transit==1.2.0
+here-transit==1.2.1
 
 # homeassistant.components.hikvisioncam
 hikvision==0.4
@@ -1090,10 +1093,10 @@ hole==0.8.0
 holidays==0.51
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240628.0
+home-assistant-frontend==20240703.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.6.26
+home-assistant-intents==2024.7.3
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1161,7 +1164,7 @@ influxdb-client==1.24.0
 influxdb==5.3.1
 
 # homeassistant.components.inkbird
-inkbird-ble==0.5.6
+inkbird-ble==0.5.8
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.5.0
@@ -1221,7 +1224,7 @@ lacrosse-view==1.0.1
 lakeside==0.13
 
 # homeassistant.components.laundrify
-laundrify-aio==1.1.2
+laundrify-aio==1.2.2
 
 # homeassistant.components.ld2410_ble
 ld2410-ble==0.1.1
@@ -1389,7 +1392,7 @@ netdata==1.1.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==3.2.0
+nettigo-air-monitor==3.3.0
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1
@@ -1398,7 +1401,7 @@ neurio==0.3.1
 nexia==2.0.8
 
 # homeassistant.components.nextcloud
-nextcloudmonitor==1.5.0
+nextcloudmonitor==1.5.1
 
 # homeassistant.components.discord
 nextcord==2.6.0
@@ -2275,13 +2278,13 @@ python-join-api==0.0.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.7.0.2
+python-kasa[speedups]==0.7.0.3
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==6.2.0b1
+python-matter-server==6.2.2
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2324,7 +2327,7 @@ python-songpal==0.16.2
 python-tado==0.17.6
 
 # homeassistant.components.technove
-python-technove==1.2.2
+python-technove==1.3.1
 
 # homeassistant.components.telegram_bot
 python-telegram-bot[socks]==21.0.1
@@ -2355,7 +2358,7 @@ pytradfri[async]==9.0.1
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==0.3.10
+pytrafikverket==1.0.0
 
 # homeassistant.components.v2c
 pytrydan==0.7.0
@@ -2726,7 +2729,7 @@ tessie-api==0.0.9
 # tf-models-official==2.5.0
 
 # homeassistant.components.thermobeacon
-thermobeacon-ble==0.6.2
+thermobeacon-ble==0.7.0
 
 # homeassistant.components.thermopro
 thermopro-ble==0.10.0
@@ -2789,7 +2792,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==4.2.0
+uiprotect==5.2.2
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2945,7 +2948,7 @@ yeelightsunflower==0.0.10
 yolink-api==0.4.4
 
 # homeassistant.components.youless
-youless-api==2.1.0
+youless-api==2.1.2
 
 # homeassistant.components.youtube
 youtubeaio==1.1.5
