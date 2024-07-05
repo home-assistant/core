@@ -24,6 +24,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from .conftest import WebsocketDataType
+
 TEST_DATA = [
     (  # Alarm binary sensor
         {
@@ -458,7 +460,7 @@ async def test_binary_sensors(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     config_entry_setup: ConfigEntry,
-    mock_deconz_websocket,
+    mock_websocket_data: WebsocketDataType,
     expected: dict[str, Any],
 ) -> None:
     """Test successful creation of binary sensor entities."""
@@ -497,7 +499,7 @@ async def test_binary_sensors(
         "id": "1",
         "state": expected["websocket_event"],
     }
-    await mock_deconz_websocket(data=event_changed_sensor)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
     assert hass.states.get(expected["entity_id"]).state == expected["next_state"]
 
@@ -598,7 +600,8 @@ async def test_allow_clip_sensor(hass: HomeAssistant, config_entry_setup) -> Non
 
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_add_new_binary_sensor(
-    hass: HomeAssistant, mock_deconz_websocket
+    hass: HomeAssistant,
+    mock_websocket_data: WebsocketDataType,
 ) -> None:
     """Test that adding a new binary sensor works."""
     assert len(hass.states.async_all()) == 0
@@ -617,7 +620,7 @@ async def test_add_new_binary_sensor(
             "uniqueid": "00:00:00:00:00:00:00:00-00",
         },
     }
-    await mock_deconz_websocket(data=event_added_sensor)
+    await mock_websocket_data(event_added_sensor)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 1
@@ -633,7 +636,7 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
     config_entry_setup: ConfigEntry,
     deconz_payload: dict[str, Any],
     mock_requests: Callable[[str], None],
-    mock_deconz_websocket,
+    mock_websocket_data: WebsocketDataType,
 ) -> None:
     """Test that adding a new binary sensor is not allowed."""
     sensor = {
@@ -653,7 +656,7 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
 
     assert len(hass.states.async_all()) == 0
 
-    await mock_deconz_websocket(data=event_added_sensor)
+    await mock_websocket_data(event_added_sensor)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
@@ -687,7 +690,7 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_options_change(
     config_entry_setup: ConfigEntry,
     deconz_payload: dict[str, Any],
     mock_requests: Callable[[str], None],
-    mock_deconz_websocket,
+    mock_websocket_data: WebsocketDataType,
 ) -> None:
     """Test that adding a new binary sensor is not allowed."""
     sensor = {
@@ -707,7 +710,7 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_options_change(
 
     assert len(hass.states.async_all()) == 0
 
-    await mock_deconz_websocket(data=event_added_sensor)
+    await mock_websocket_data(event_added_sensor)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0

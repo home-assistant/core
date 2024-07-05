@@ -133,17 +133,17 @@ async def test_gateway_device_configuration_url_when_addon(
 )
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_connection_status_signalling(
-    hass: HomeAssistant, mock_deconz_websocket
+    hass: HomeAssistant, mock_websocket_state
 ) -> None:
     """Make sure that connection status triggers a dispatcher send."""
     assert hass.states.get("binary_sensor.presence").state == STATE_OFF
 
-    await mock_deconz_websocket(state=State.RETRYING)
+    await mock_websocket_state(State.RETRYING)
     await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.presence").state == STATE_UNAVAILABLE
 
-    await mock_deconz_websocket(state=State.RUNNING)
+    await mock_websocket_state(State.RUNNING)
     await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.presence").state == STATE_OFF
