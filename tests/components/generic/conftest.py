@@ -13,8 +13,8 @@ from homeassistant import config_entries
 from homeassistant.components.generic.const import DOMAIN
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
-
 from homeassistant.setup import async_setup_component
+
 from tests.common import MockConfigEntry
 
 
@@ -64,7 +64,7 @@ def fakeimg_gif(fakeimgbytes_gif: bytes) -> None:
 
 
 @pytest.fixture
-async def mock_create_stream(hass:HomeAssistant) -> _patch[MagicMock]:
+async def mock_create_stream(hass: HomeAssistant) -> _patch[MagicMock]:
     """Mock create stream."""
     assert await async_setup_component(hass, "stream", {})
     assert "stream" in hass.config.components
