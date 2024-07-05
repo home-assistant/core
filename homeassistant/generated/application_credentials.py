@@ -4,7 +4,6 @@ To update, run python3 -m script.hassfest
 """
 
 APPLICATION_CREDENTIALS = [
-    "aladdin_connect",
     "electric_kiwi",
     "fitbit",
     "geocaching",
