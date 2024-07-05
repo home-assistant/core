@@ -1,6 +1,5 @@
 """deCONZ sensor platform tests."""
 
-from collections.abc import Callable
 from datetime import timedelta
 from typing import Any
 
@@ -24,6 +23,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
+
+from .conftest import ConfigEntryFactoryType
 
 from tests.common import async_fire_time_changed
 
@@ -1093,7 +1094,7 @@ BAD_SENSOR_DATA = [
 @pytest.mark.parametrize(("sensor_type", "sensor_property"), BAD_SENSOR_DATA)
 async def test_dont_add_sensor_if_state_is_none(
     hass: HomeAssistant,
-    config_entry_factory: Callable[[], ConfigEntry],
+    config_entry_factory: ConfigEntryFactoryType,
     sensor_payload: dict[str, Any],
     sensor_type: str,
     sensor_property: str,
@@ -1205,7 +1206,7 @@ async def test_add_battery_later(hass: HomeAssistant, mock_deconz_websocket) -> 
 @pytest.mark.parametrize("model_id", ["0x8030", "0x8031", "0x8034", "0x8035"])
 async def test_special_danfoss_battery_creation(
     hass: HomeAssistant,
-    config_entry_factory: Callable[[], ConfigEntry],
+    config_entry_factory: ConfigEntryFactoryType,
     sensor_payload: dict[str, Any],
     model_id: str,
 ) -> None:

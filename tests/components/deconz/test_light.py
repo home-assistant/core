@@ -40,6 +40,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
+from .conftest import ConfigEntryFactoryType
+
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -1082,7 +1084,7 @@ async def test_groups(
 )
 async def test_group_service_calls(
     hass: HomeAssistant,
-    config_entry_factory: Callable[[], ConfigEntry],
+    config_entry_factory: ConfigEntryFactoryType,
     group_payload: dict[str, Any],
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
     input: dict[str, Any],
