@@ -226,7 +226,7 @@ def fixture_websocket() -> WebsocketMock:
     with patch("pydeconz.gateway.WSClient") as mock:
 
         async def make_websocket_call(
-            data: dict | None = None, state: str = ""
+            data: dict[str, Any] | None = None, state: str = ""
         ) -> None:
             """Generate a websocket call."""
             pydeconz_gateway_session_handler = mock.call_args[0][3]
