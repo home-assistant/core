@@ -36,7 +36,7 @@ class SimpleFinDataUpdateCoordinator(DataUpdateCoordinator[Any]):
         try:
             return await self.sf_client.fetch_data()
         except SimpleFinAuthError as err:
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryError from err
 
         except SimpleFinPaymentRequiredError as err:
             LOGGER.warning(
