@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Callable
 import functools
 import logging
-from typing import Any, Concatenate
+from typing import Concatenate
 
 from androidtv.exceptions import LockNotAcquiredException
 
@@ -21,6 +21,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import AsyncCallable
 
 from . import (
     ADB_PYTHON_EXCEPTIONS,
@@ -35,10 +36,8 @@ PREFIX_FIRETV = "Fire TV"
 
 _LOGGER = logging.getLogger(__name__)
 
-type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], Awaitable[_R]]
-type _ReturnFuncType[_T, **_P, _R] = Callable[
-    Concatenate[_T, _P], Coroutine[Any, Any, _R | None]
-]
+type _FuncType[_T, **_P, _R] = AsyncCallable[Concatenate[_T, _P], _R]
+type _ReturnFuncType[_T, **_P, _R] = AsyncCallable[Concatenate[_T, _P], _R | None]
 
 
 def adb_decorator[_ADBDeviceT: AndroidTVEntity, **_P, _R](
