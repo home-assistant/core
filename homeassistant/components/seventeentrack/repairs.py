@@ -1,34 +1,13 @@
 """Repairs for the SeventeenTrack integration."""
 
-from typing import cast
-
 import voluptuous as vol
 
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import issue_registry as ir
 
-from . import DOMAIN
 from .const import DEPRECATED_KEY
-
-
-@callback
-def deprecate_sensor_issue(hass: HomeAssistant, entry_id: str) -> None:
-    """Ensure an issue is registered."""
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecate_sensor",
-        breaks_in_ha_version="2025.2.0",
-        issue_domain=DOMAIN,
-        is_fixable=True,
-        is_persistent=True,
-        translation_key="deprecate_sensor",
-        severity=ir.IssueSeverity.WARNING,
-        data={"entry_id": entry_id},
-    )
 
 
 class SensorDeprecationRepairFlow(RepairsFlow):
@@ -60,17 +39,12 @@ class SensorDeprecationRepairFlow(RepairsFlow):
 
 
 async def async_create_fix_flow(
-    hass: HomeAssistant,
-    issue_id: str,
-    data: dict[str, str | int | float | None] | None,
+    hass: HomeAssistant, issue_id: str, data: dict
 ) -> RepairsFlow:
     """Create flow."""
-    if (
-        issue_id == "deprecate_sensor"
-        and data
-        and (entry_id := cast(str, data.get("entry_id")))
-    ):
-        entry = hass.config_entries.async_get_entry(entry_id)
-        assert entry
-        return SensorDeprecationRepairFlow(entry)
+    if data and (entry_id := data.get("entry_id")):
+        if entry_id and issue_id == f"deprecate_sensor_{entry_id}":
+            entry = hass.config_entries.async_get_entry(entry_id)
+            assert entry
+            return SensorDeprecationRepairFlow(entry)
     return ConfirmRepairFlow()

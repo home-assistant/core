@@ -20,7 +20,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -41,6 +45,7 @@ from .const import (
     ATTRIBUTION,
     CONF_SHOW_ARCHIVED,
     CONF_SHOW_DELIVERED,
+    DEPRECATED_KEY,
     DOMAIN,
     LOGGER,
     NOTIFICATION_DELIVERED_MESSAGE,
@@ -48,7 +53,6 @@ from .const import (
     UNIQUE_ID_TEMPLATE,
     VALUE_DELIVERED,
 )
-from .repairs import deprecate_sensor_issue
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
@@ -117,7 +121,7 @@ async def async_setup_entry(
     # This has been deprecated in 2024.8, will be removed in 2025.2
     @callback
     def _async_create_remove_entities():
-        if config_entry.data.get("deprecated"):
+        if config_entry.data.get(DEPRECATED_KEY):
             remove_packages(hass, coordinator.account_id, previous_tracking_numbers)
             return
         live_tracking_numbers = set(coordinator.data.live_packages.keys())
@@ -162,7 +166,7 @@ async def async_setup_entry(
         for status, summary_data in coordinator.data.summary.items()
     )
 
-    if not config_entry.data.get("deprecated"):
+    if not config_entry.data.get(DEPRECATED_KEY):
         deprecate_sensor_issue(hass, config_entry.entry_id)
         _async_create_remove_entities()
         config_entry.async_on_unload(
@@ -305,4 +309,21 @@ def notify_delivered(hass: HomeAssistant, friendly_name: str, tracking_number: s
 
     persistent_notification.create(
         hass, message, title=title, notification_id=notification_id
+    )
+
+
+@callback
+def deprecate_sensor_issue(hass: HomeAssistant, entry_id: str) -> None:
+    """Ensure an issue is registered."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecate_sensor_{entry_id}",
+        breaks_in_ha_version="2025.1.0",
+        issue_domain=DOMAIN,
+        is_fixable=True,
+        is_persistent=True,
+        translation_key="deprecate_sensor",
+        severity=ir.IssueSeverity.WARNING,
+        data={"entry_id": entry_id},
     )

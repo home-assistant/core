@@ -48,7 +48,7 @@ async def test_repair(
     assert "deprecated" not in mock_config_entry.data
 
     repair_issue = issue_registry.async_get_issue(
-        domain=DOMAIN, issue_id="deprecate_sensor"
+        domain=DOMAIN, issue_id=f"deprecate_sensor_{mock_config_entry.entry_id}"
     )
 
     assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
