@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Awaitable, Callable, Generator, Mapping
 import contextlib
 import contextvars
 from enum import StrEnum
@@ -13,8 +13,6 @@ import logging.handlers
 import time
 from types import ModuleType
 from typing import Any, Final, TypedDict
-
-from typing_extensions import Generator
 
 from . import config as conf_util, core, loader, requirements
 from .const import (

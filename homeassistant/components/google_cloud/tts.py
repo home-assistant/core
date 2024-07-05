@@ -1,9 +1,9 @@
 """Support for the Google Cloud TTS service."""
 
-import asyncio
 import logging
 import os
 
+from google.api_core.exceptions import GoogleAPIError
 from google.cloud import texttospeech
 import voluptuous as vol
 
@@ -11,8 +11,12 @@ from homeassistant.components.tts import (
     CONF_LANG,
     PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
     Provider,
+    Voice,
 )
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+
+from .helpers import async_tts_voices
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,70 +30,12 @@ CONF_GAIN = "gain"
 CONF_PROFILES = "profiles"
 CONF_TEXT_TYPE = "text_type"
 
-SUPPORTED_LANGUAGES = [
-    "af-ZA",
-    "ar-XA",
-    "bg-BG",
-    "bn-IN",
-    "ca-ES",
-    "cmn-CN",
-    "cmn-TW",
-    "cs-CZ",
-    "da-DK",
-    "de-DE",
-    "el-GR",
-    "en-AU",
-    "en-GB",
-    "en-IN",
-    "en-US",
-    "es-ES",
-    "es-US",
-    "eu-ES",
-    "fi-FI",
-    "fil-PH",
-    "fr-CA",
-    "fr-FR",
-    "gl-ES",
-    "gu-IN",
-    "he-IL",
-    "hi-IN",
-    "hu-HU",
-    "id-ID",
-    "is-IS",
-    "it-IT",
-    "ja-JP",
-    "kn-IN",
-    "ko-KR",
-    "lv-LV",
-    "lt-LT",
-    "ml-IN",
-    "mr-IN",
-    "ms-MY",
-    "nb-NO",
-    "nl-BE",
-    "nl-NL",
-    "pa-IN",
-    "pl-PL",
-    "pt-BR",
-    "pt-PT",
-    "ro-RO",
-    "ru-RU",
-    "sk-SK",
-    "sr-RS",
-    "sv-SE",
-    "ta-IN",
-    "te-IN",
-    "th-TH",
-    "tr-TR",
-    "uk-UA",
-    "vi-VN",
-    "yue-HK",
-]
 DEFAULT_LANG = "en-US"
 
 DEFAULT_GENDER = "NEUTRAL"
 
-VOICE_REGEX = r"[a-z]{2,3}-[A-Z]{2}-(Standard|Wavenet)-[A-Z]|"
+LANG_REGEX = r"[a-z]{2,3}-[A-Z]{2}|"
+VOICE_REGEX = r"[a-z]{2,3}-[A-Z]{2}-.*-[A-Z]|"
 DEFAULT_VOICE = ""
 
 DEFAULT_ENCODING = "MP3"
@@ -143,7 +89,7 @@ TEXT_TYPE_SCHEMA = vol.All(vol.Lower, vol.In(SUPPORTED_TEXT_TYPES))
 PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_KEY_FILE): cv.string,
-        vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORTED_LANGUAGES),
+        vol.Optional(CONF_LANG, default=DEFAULT_LANG): cv.matches_regex(LANG_REGEX),
         vol.Optional(CONF_GENDER, default=DEFAULT_GENDER): GENDER_SCHEMA,
         vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): VOICE_SCHEMA,
         vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): SCHEMA_ENCODING,
@@ -163,10 +109,21 @@ async def async_get_engine(hass, config, discovery_info=None):
         if not os.path.isfile(key_file):
             _LOGGER.error("File %s doesn't exist", key_file)
             return None
-
+    if key_file:
+        client = texttospeech.TextToSpeechAsyncClient.from_service_account_json(
+            key_file
+        )
+    else:
+        client = texttospeech.TextToSpeechAsyncClient()
+    try:
+        voices = await async_tts_voices(client)
+    except GoogleAPIError as err:
+        _LOGGER.error("Error from calling list_voices: %s", err)
+        return None
     return GoogleCloudTTSProvider(
         hass,
-        key_file,
+        client,
+        voices,
         config[CONF_LANG],
         config[CONF_GENDER],
         config[CONF_VOICE],
@@ -184,8 +141,9 @@ class GoogleCloudTTSProvider(Provider):
 
     def __init__(
         self,
-        hass,
-        key_file=None,
+        hass: HomeAssistant,
+        client: texttospeech.TextToSpeechAsyncClient,
+        voices: dict[str, list[str]],
         language=DEFAULT_LANG,
         gender=DEFAULT_GENDER,
         voice=DEFAULT_VOICE,
@@ -195,10 +153,12 @@ class GoogleCloudTTSProvider(Provider):
         gain=0,
         profiles=None,
         text_type=DEFAULT_TEXT_TYPE,
-    ):
+    ) -> None:
         """Init Google Cloud TTS service."""
         self.hass = hass
         self.name = "Google Cloud TTS"
+        self._client = client
+        self._voices = voices
         self._language = language
         self._gender = gender
         self._voice = voice
@@ -209,17 +169,10 @@ class GoogleCloudTTSProvider(Provider):
         self._profiles = profiles
         self._text_type = text_type
 
-        if key_file:
-            self._client = texttospeech.TextToSpeechClient.from_service_account_json(
-                key_file
-            )
-        else:
-            self._client = texttospeech.TextToSpeechClient()
-
     @property
     def supported_languages(self):
         """Return list of supported languages."""
-        return SUPPORTED_LANGUAGES
+        return list(self._voices)
 
     @property
     def default_language(self):
@@ -245,6 +198,13 @@ class GoogleCloudTTSProvider(Provider):
             CONF_TEXT_TYPE: self._text_type,
         }
 
+    @callback
+    def async_get_supported_voices(self, language: str) -> list[Voice] | None:
+        """Return a list of supported voices for a language."""
+        if not (voices := self._voices.get(language)):
+            return None
+        return [Voice(voice, voice) for voice in voices]
+
     async def async_get_tts_audio(self, message, language, options):
         """Load TTS from google."""
         options_schema = vol.Schema(
@@ -259,47 +219,47 @@ class GoogleCloudTTSProvider(Provider):
                 vol.Optional(CONF_TEXT_TYPE, default=self._text_type): TEXT_TYPE_SCHEMA,
             }
         )
-        options = options_schema(options)
-
-        _encoding = options[CONF_ENCODING]
-        _voice = options[CONF_VOICE]
-        if _voice and not _voice.startswith(language):
-            language = _voice[:5]
-
         try:
-            params = {options[CONF_TEXT_TYPE]: message}
-            synthesis_input = texttospeech.SynthesisInput(**params)
+            options = options_schema(options)
+        except vol.Invalid as err:
+            _LOGGER.error("Error: %s when validating options: %s", err, options)
+            return None, None
 
-            voice = texttospeech.VoiceSelectionParams(
+        encoding = texttospeech.AudioEncoding[options[CONF_ENCODING]]
+        gender = texttospeech.SsmlVoiceGender[options[CONF_GENDER]]
+        voice = options[CONF_VOICE]
+        if voice:
+            gender = None
+            if not voice.startswith(language):
+                language = voice[:5]
+
+        request = texttospeech.SynthesizeSpeechRequest(
+            input=texttospeech.SynthesisInput(**{options[CONF_TEXT_TYPE]: message}),
+            voice=texttospeech.VoiceSelectionParams(
                 language_code=language,
-                ssml_gender=texttospeech.SsmlVoiceGender[options[CONF_GENDER]],
-                name=_voice,
-            )
-
-            audio_config = texttospeech.AudioConfig(
-                audio_encoding=texttospeech.AudioEncoding[_encoding],
+                ssml_gender=gender,
+                name=voice,
+            ),
+            audio_config=texttospeech.AudioConfig(
+                audio_encoding=encoding,
                 speaking_rate=options[CONF_SPEED],
                 pitch=options[CONF_PITCH],
                 volume_gain_db=options[CONF_GAIN],
                 effects_profile_id=options[CONF_PROFILES],
-            )
+            ),
+        )
 
-            request = {
-                "voice": voice,
-                "audio_config": audio_config,
-                "input": synthesis_input,
-            }
+        try:
+            response = await self._client.synthesize_speech(request, timeout=10)
+        except GoogleAPIError as err:
+            _LOGGER.error("Error occurred during Google Cloud TTS call: %s", err)
+            return None, None
 
-            async with asyncio.timeout(10):
-                assert self.hass
-                response = await self.hass.async_add_executor_job(
-                    self._client.synthesize_speech, request
-                )
-                return _encoding, response.audio_content
+        if encoding == texttospeech.AudioEncoding.MP3:
+            extension = "mp3"
+        elif encoding == texttospeech.AudioEncoding.OGG_OPUS:
+            extension = "ogg"
+        else:
+            extension = "wav"
 
-        except TimeoutError as ex:
-            _LOGGER.error("Timeout for Google Cloud TTS call: %s", ex)
-        except Exception:
-            _LOGGER.exception("Error occurred during Google Cloud TTS call")
-
-        return None, None
+        return extension, response.audio_content

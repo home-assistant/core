@@ -1,11 +1,11 @@
 """Tests for Renault selects."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
 from renault_api.kamereon import schemas
 from syrupy.assertion import SnapshotAssertion
-from typing_extensions import Generator
 
 from homeassistant.components.select import (
     ATTR_OPTION,

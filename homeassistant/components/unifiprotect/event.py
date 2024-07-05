@@ -4,12 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 
-from uiprotect.data import (
-    Camera,
-    EventType,
-    ProtectAdoptableDeviceModel,
-    ProtectModelWithId,
-)
+from uiprotect.data import Camera, EventType, ProtectAdoptableDeviceModel
 
 from homeassistant.components.event import (
     EventDeviceClass,
@@ -20,7 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_EVENT_ID
-from .data import ProtectData, UFPConfigEntry
+from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import EventEntityMixin, ProtectDeviceEntity
 from .models import ProtectEventMixin
 
@@ -50,7 +45,7 @@ class ProtectDeviceEventEntity(EventEntityMixin, ProtectDeviceEntity, EventEntit
     entity_description: ProtectEventEntityDescription
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         description = self.entity_description
 
         prev_event = self._event

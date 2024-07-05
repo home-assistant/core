@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed, async_mock_service, mock_component
+from tests.common import async_fire_time_changed, mock_component
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -26,14 +26,8 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
     """Stub copying the blueprints to the config folder."""
 
 
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
-
-
 @pytest.fixture(autouse=True)
-def setup_comp(hass):
+def setup_comp(hass: HomeAssistant) -> None:
     """Initialize components."""
     mock_component(hass, "group")
     hass.loop.run_until_complete(
@@ -41,7 +35,9 @@ def setup_comp(hass):
     )
 
 
-async def test_sunset_trigger(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
+async def test_sunset_trigger(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
     """Test the sunset trigger."""
     now = datetime(2015, 9, 15, 23, tzinfo=dt_util.UTC)
     trigger_time = datetime(2015, 9, 16, 2, tzinfo=dt_util.UTC)
@@ -67,10 +63,11 @@ async def test_sunset_trigger(hass: HomeAssistant, calls: list[ServiceCall]) -> 
             {ATTR_ENTITY_ID: ENTITY_MATCH_ALL},
             blocking=True,
         )
+        assert len(service_calls) == 1
 
         async_fire_time_changed(hass, trigger_time)
         await hass.async_block_till_done()
-        assert len(calls) == 0
+        assert len(service_calls) == 1
 
     with freeze_time(now):
         await hass.services.async_call(
@@ -79,14 +76,17 @@ async def test_sunset_trigger(hass: HomeAssistant, calls: list[ServiceCall]) -> 
             {ATTR_ENTITY_ID: ENTITY_MATCH_ALL},
             blocking=True,
         )
+        assert len(service_calls) == 2
 
         async_fire_time_changed(hass, trigger_time)
         await hass.async_block_till_done()
-        assert len(calls) == 1
-        assert calls[0].data["id"] == 0
+        assert len(service_calls) == 3
+        assert service_calls[2].data["id"] == 0
 
 
-async def test_sunrise_trigger(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
+async def test_sunrise_trigger(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
     """Test the sunrise trigger."""
     now = datetime(2015, 9, 13, 23, tzinfo=dt_util.UTC)
     trigger_time = datetime(2015, 9, 16, 14, tzinfo=dt_util.UTC)
@@ -105,11 +105,11 @@ async def test_sunrise_trigger(hass: HomeAssistant, calls: list[ServiceCall]) ->
 
         async_fire_time_changed(hass, trigger_time)
         await hass.async_block_till_done()
-        assert len(calls) == 1
+        assert len(service_calls) == 1
 
 
 async def test_sunset_trigger_with_offset(
-    hass: HomeAssistant, calls: list[ServiceCall]
+    hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
     """Test the sunset trigger with offset."""
     now = datetime(2015, 9, 15, 23, tzinfo=dt_util.UTC)
@@ -142,12 +142,12 @@ async def test_sunset_trigger_with_offset(
 
         async_fire_time_changed(hass, trigger_time)
         await hass.async_block_till_done()
-        assert len(calls) == 1
-        assert calls[0].data["some"] == "sun - sunset - 0:30:00"
+        assert len(service_calls) == 1
+        assert service_calls[0].data["some"] == "sun - sunset - 0:30:00"
 
 
 async def test_sunrise_trigger_with_offset(
-    hass: HomeAssistant, calls: list[ServiceCall]
+    hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
     """Test the sunrise trigger with offset."""
     now = datetime(2015, 9, 13, 23, tzinfo=dt_util.UTC)
@@ -171,4 +171,4 @@ async def test_sunrise_trigger_with_offset(
 
         async_fire_time_changed(hass, trigger_time)
         await hass.async_block_till_done()
-        assert len(calls) == 1
+        assert len(service_calls) == 1
