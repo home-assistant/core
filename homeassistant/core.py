@@ -168,7 +168,7 @@ class EventStateEventData(TypedDict):
 class EventStateChangedData(EventStateEventData):
     """EVENT_STATE_CHANGED data.
 
-    A state changed event is fired when on state write when the state is changed.
+    A state changed event is fired when on state write the state is changed.
     """
 
     old_state: State | None
@@ -177,7 +177,7 @@ class EventStateChangedData(EventStateEventData):
 class EventStateReportedData(EventStateEventData):
     """EVENT_STATE_REPORTED data.
 
-    A state reported event is fired when on state write when the state is unchanged.
+    A state reported event is fired when on state write the state is unchanged.
     """
 
     old_last_reported: datetime.datetime

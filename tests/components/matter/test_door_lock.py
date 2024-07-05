@@ -8,13 +8,11 @@ import pytest
 
 from homeassistant.components.lock import (
     STATE_LOCKED,
-    STATE_LOCKING,
     STATE_OPEN,
     STATE_UNLOCKED,
-    STATE_UNLOCKING,
     LockEntityFeature,
 )
-from homeassistant.const import ATTR_CODE, STATE_UNKNOWN
+from homeassistant.const import ATTR_CODE, STATE_LOCKING, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.entity_registry as er
@@ -68,14 +66,14 @@ async def test_lock(
 
     state = hass.states.get("lock.mock_door_lock_lock")
     assert state
-    assert state.state == STATE_LOCKED
+    assert state.state == STATE_LOCKING
 
     set_node_attribute(door_lock, 1, 257, 0, 0)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("lock.mock_door_lock_lock")
     assert state
-    assert state.state == STATE_UNLOCKING
+    assert state.state == STATE_UNLOCKED
 
     set_node_attribute(door_lock, 1, 257, 0, 2)
     await trigger_subscription_callback(hass, matter_client)
@@ -89,7 +87,7 @@ async def test_lock(
 
     state = hass.states.get("lock.mock_door_lock_lock")
     assert state
-    assert state.state == STATE_LOCKING
+    assert state.state == STATE_UNLOCKED
 
     set_node_attribute(door_lock, 1, 257, 0, None)
     await trigger_subscription_callback(hass, matter_client)

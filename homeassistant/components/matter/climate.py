@@ -350,6 +350,7 @@ DISCOVERY_SCHEMAS = [
             clusters.Thermostat.Attributes.TemperatureSetpointHold,
             clusters.Thermostat.Attributes.UnoccupiedCoolingSetpoint,
             clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,
+            clusters.OnOff.Attributes.OnOff,
         ),
         device_type=(device_types.Thermostat, device_types.RoomAirConditioner),
     ),

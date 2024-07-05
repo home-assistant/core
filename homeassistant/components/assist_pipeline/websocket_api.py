@@ -378,8 +378,8 @@ def websocket_get_run(
         vol.Required("type"): "assist_pipeline/language/list",
     }
 )
-@websocket_api.async_response
-async def websocket_list_languages(
+@callback
+def websocket_list_languages(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
     msg: dict[str, Any],
@@ -389,7 +389,7 @@ async def websocket_list_languages(
     This will return a list of languages which are supported by at least one stt, tts
     and conversation engine respectively.
     """
-    conv_language_tags = await conversation.async_get_conversation_languages(hass)
+    conv_language_tags = conversation.async_get_conversation_languages(hass)
     stt_language_tags = stt.async_get_speech_to_text_languages(hass)
     tts_language_tags = tts.async_get_text_to_speech_languages(hass)
     pipeline_languages: set[str] | None = None
