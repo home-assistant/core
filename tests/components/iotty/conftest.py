@@ -135,26 +135,10 @@ def mock_coordinator() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
-def mock_devices() -> Generator[None, MagicMock, None]:
-    """Fixture for two LS Devices."""
-    return test_devices
-
-
-@pytest.fixture
 def mock_get_devices_nodevices() -> Generator[AsyncMock, None, None]:
     """Mock for get_devices, returning two objects."""
 
     with patch("iottycloud.cloudapi.CloudApi.get_devices") as mock_fn:
-        yield mock_fn
-
-
-@pytest.fixture
-def mock_get_devices_twodevices() -> Generator[AsyncMock, None, None]:
-    """Mock for get_devices, returning two objects."""
-
-    with patch(
-        "iottycloud.cloudapi.CloudApi.get_devices", return_value=test_devices
-    ) as mock_fn:
         yield mock_fn
 
 
@@ -177,22 +161,6 @@ def mock_command_fn() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_get_status_empty() -> Generator[AsyncMock, None, None]:
-    """Mock setting up a config entry."""
-    with patch("iottycloud.cloudapi.CloudApi.get_status") as mock_fn:
-        yield mock_fn
-
-
-@pytest.fixture
-def mock_async_first_refresh() -> Generator[AsyncMock, None, None]:
-    """Mock Coordinator's superclass first_refresh method."""
-    with patch(
-        "homeassistant.helpers.update_coordinator.DataUpdateCoordinator.async_config_entry_first_refresh"
-    ) as mock_fn:
-        yield mock_fn
-
-
-@pytest.fixture
 def mock_get_status_filled_off() -> Generator[AsyncMock, None, None]:
     """Mock setting up a get_status."""
 
@@ -210,38 +178,5 @@ def mock_get_status_filled() -> Generator[AsyncMock, None, None]:
     retval = {RESULT: {STATUS: STATUS_ON}}
     with patch(
         "iottycloud.cloudapi.CloudApi.get_status", return_value=retval
-    ) as mock_fn:
-        yield mock_fn
-
-
-@pytest.fixture
-def mock_update_status() -> Generator[AsyncMock, None, None]:
-    """Mock setting up a update_status."""
-
-    with patch("iottycloud.device.Device.update_status") as mock_fn:
-        yield mock_fn
-
-
-@pytest.fixture
-def mock_schedule_update_ha_state() -> Generator[None, MagicMock, None]:
-    """Mock Hass update."""
-    with patch(
-        "homeassistant.helpers.entity.Entity.schedule_update_ha_state"
-    ) as mock_fn:
-        yield mock_fn
-
-
-@pytest.fixture
-def mock_async_add_entities() -> Generator[None, MagicMock, None]:
-    """Mock Hass add_entities."""
-    with patch("homeassistant.helpers.entity_platform.AddEntitiesCallback") as mock_fn:
-        yield mock_fn
-
-
-@pytest.fixture
-def mock_async_write_ha_state() -> Generator[None, MagicMock, None]:
-    """Mock IottyLightswitch async_write_ha_state."""
-    with patch(
-        "homeassistant.components.iotty.switch.IottyLightSwitch.async_write_ha_state"
     ) as mock_fn:
         yield mock_fn
