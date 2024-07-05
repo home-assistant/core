@@ -1042,11 +1042,19 @@ class Entity(
     @callback
     def _async_calculate_state(self) -> CalculatedState:
         """Calculate state string and attribute mapping."""
-        return CalculatedState(*self.__async_calculate_state())
+        state, attr, capabilities, shadowed_attr, _, _ = self.__async_calculate_state()
+        return CalculatedState(state, attr, capabilities, shadowed_attr)
 
     def __async_calculate_state(
         self,
-    ) -> tuple[str, dict[str, Any], Mapping[str, Any] | None, Mapping[str, Any]]:
+    ) -> tuple[
+        str,
+        dict[str, Any],
+        Mapping[str, Any] | None,
+        Mapping[str, Any],
+        str | None,
+        int | None,
+    ]:
         """Calculate state string and attribute mapping.
 
         Returns a tuple (state, attr, capability_attr, shadowed_attr).
@@ -1054,6 +1062,8 @@ class Entity(
         attr - the attribute dictionary
         capability_attr - a mapping with capability attributes
         shadowed_attr - a mapping with attributes which may be overridden
+        original_device_class - the device class which may be overridden
+        supported_features - the supported features
 
         This method is called when writing the state to avoid the overhead of creating
         a dataclass object.
@@ -1081,7 +1091,8 @@ class Entity(
         if (attribution := self.attribution) is not None:
             attr[ATTR_ATTRIBUTION] = attribution
 
-        shadowed_attr[ATTR_DEVICE_CLASS] = self.device_class
+        original_device_class = self.device_class
+        shadowed_attr[ATTR_DEVICE_CLASS] = original_device_class
         if (
             device_class := (entry and entry.device_class)
             or shadowed_attr[ATTR_DEVICE_CLASS]
@@ -1104,7 +1115,14 @@ class Entity(
         if (supported_features := self.supported_features) is not None:
             attr[ATTR_SUPPORTED_FEATURES] = supported_features
 
-        return (state, attr, capability_attr, shadowed_attr)
+        return (
+            state,
+            attr,
+            capability_attr,
+            shadowed_attr,
+            original_device_class,
+            supported_features,
+        )
 
     @callback
     def _async_write_ha_state(self) -> None:
@@ -1130,14 +1148,15 @@ class Entity(
             return
 
         state_calculate_start = timer()
-        state, attr, capabilities, shadowed_attr = self.__async_calculate_state()
+        state, attr, capabilities, _, original_device_class, supported_features = (
+            self.__async_calculate_state()
+        )
         time_now = timer()
 
         if entry:
             # Make sure capabilities in the entity registry are up to date. Capabilities
             # include capability attributes, device class and supported features
-            original_device_class: str | None = shadowed_attr[ATTR_DEVICE_CLASS]
-            supported_features: int = attr.get(ATTR_SUPPORTED_FEATURES) or 0
+            supported_features = supported_features or 0
             if (
                 capabilities != entry.capabilities
                 or original_device_class != entry.original_device_class
