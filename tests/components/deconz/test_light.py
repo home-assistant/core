@@ -42,6 +42,8 @@ from homeassistant.core import HomeAssistant
 
 from .conftest import ConfigEntryFactoryType
 
+from tests.test_util.aiohttp import AiohttpClientMocker
+
 
 @pytest.mark.parametrize(
     ("light_0_payload", "expected"),
