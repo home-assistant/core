@@ -13,7 +13,7 @@ def get_station_device_info(station_name: str, station_id: int) -> DeviceInfo:
     return DeviceInfo(
         name=station_name,
         entry_type=DeviceEntryType.SERVICE,
-        identifiers={(DOMAIN, f"{station_id}")},
+        identifiers={(DOMAIN, str(station_id))},
         manufacturer=MANUFACTURER,
         configuration_url=f"https://tempestwx.com/station/{station_id}/grid",
     )
