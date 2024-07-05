@@ -647,9 +647,7 @@ def _restore_foreign_key_constraints(
                 connection = session.connection()
                 connection.execute(AddConstraint(constraint))  # type: ignore[no-untyped-call]
             except (InternalError, OperationalError):
-                _LOGGER.exception(
-                    "Could not update foreign options in %s table", TABLE_STATES
-                )
+                _LOGGER.exception("Could not update foreign options in %s table", table)
 
 
 @database_job_retry_wrapper("Apply migration update", 10)
