@@ -98,6 +98,7 @@ FLOWS = {
         "cast",
         "ccm15",
         "cert_expiry",
+        "chacon_dio",
         "cloudflare",
         "co2signal",
         "coinbase",

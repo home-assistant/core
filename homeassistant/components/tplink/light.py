@@ -382,7 +382,12 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness, transition = self._async_extract_brightness_transition(**kwargs)
-        if ATTR_EFFECT in kwargs:
+        if (
+            (effect := kwargs.get(ATTR_EFFECT))
+            # Effect is unlikely to be LIGHT_EFFECTS_OFF but check for it anyway
+            and effect not in {LightEffect.LIGHT_EFFECTS_OFF, EFFECT_OFF}
+            and effect in self._effect_module.effect_list
+        ):
             await self._effect_module.set_effect(
                 kwargs[ATTR_EFFECT], brightness=brightness, transition=transition
             )

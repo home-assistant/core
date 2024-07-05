@@ -38,7 +38,6 @@
 # name: test_entity_state_attrs[sensor.i3_rex_ac_current_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'current',
       'friendly_name': 'i3 (+ REX) AC current limit',
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
@@ -87,7 +86,6 @@
 # name: test_entity_state_attrs[sensor.i3_rex_charging_end_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'timestamp',
       'friendly_name': 'i3 (+ REX) Charging end time',
     }),
@@ -135,7 +133,6 @@
 # name: test_entity_state_attrs[sensor.i3_rex_charging_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'timestamp',
       'friendly_name': 'i3 (+ REX) Charging start time',
     }),
@@ -198,7 +195,6 @@
 # name: test_entity_state_attrs[sensor.i3_rex_charging_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'enum',
       'friendly_name': 'i3 (+ REX) Charging status',
       'options': list([
@@ -263,7 +259,6 @@
 # name: test_entity_state_attrs[sensor.i3_rex_charging_target-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'battery',
       'friendly_name': 'i3 (+ REX) Charging target',
       'unit_of_measurement': '%',
@@ -317,7 +312,6 @@
 # name: test_entity_state_attrs[sensor.i3_rex_mileage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'distance',
       'friendly_name': 'i3 (+ REX) Mileage',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -372,7 +366,6 @@
 # name: test_entity_state_attrs[sensor.i3_rex_remaining_battery_percent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'battery',
       'friendly_name': 'i3 (+ REX) Remaining battery percent',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -427,7 +420,6 @@
 # name: test_entity_state_attrs[sensor.i3_rex_remaining_fuel-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'volume',
       'friendly_name': 'i3 (+ REX) Remaining fuel',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -482,7 +474,6 @@
 # name: test_entity_state_attrs[sensor.i3_rex_remaining_fuel_percent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'friendly_name': 'i3 (+ REX) Remaining fuel percent',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
@@ -536,7 +527,6 @@
 # name: test_entity_state_attrs[sensor.i3_rex_remaining_range_electric-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'distance',
       'friendly_name': 'i3 (+ REX) Remaining range electric',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -591,7 +581,6 @@
 # name: test_entity_state_attrs[sensor.i3_rex_remaining_range_fuel-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'distance',
       'friendly_name': 'i3 (+ REX) Remaining range fuel',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -646,7 +635,6 @@
 # name: test_entity_state_attrs[sensor.i3_rex_remaining_range_total-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'distance',
       'friendly_name': 'i3 (+ REX) Remaining range total',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -699,7 +687,6 @@
 # name: test_entity_state_attrs[sensor.i4_edrive40_ac_current_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'current',
       'friendly_name': 'i4 eDrive40 AC current limit',
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
@@ -748,7 +735,6 @@
 # name: test_entity_state_attrs[sensor.i4_edrive40_charging_end_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'timestamp',
       'friendly_name': 'i4 eDrive40 Charging end time',
     }),
@@ -796,7 +782,6 @@
 # name: test_entity_state_attrs[sensor.i4_edrive40_charging_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'timestamp',
       'friendly_name': 'i4 eDrive40 Charging start time',
     }),
@@ -859,7 +844,6 @@
 # name: test_entity_state_attrs[sensor.i4_edrive40_charging_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'enum',
       'friendly_name': 'i4 eDrive40 Charging status',
       'options': list([
@@ -924,7 +908,6 @@
 # name: test_entity_state_attrs[sensor.i4_edrive40_charging_target-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'battery',
       'friendly_name': 'i4 eDrive40 Charging target',
       'unit_of_measurement': '%',
@@ -980,7 +963,6 @@
 # name: test_entity_state_attrs[sensor.i4_edrive40_climate_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'enum',
       'friendly_name': 'i4 eDrive40 Climate status',
       'options': list([
@@ -1039,7 +1021,6 @@
 # name: test_entity_state_attrs[sensor.i4_edrive40_mileage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'distance',
       'friendly_name': 'i4 eDrive40 Mileage',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1094,7 +1075,6 @@
 # name: test_entity_state_attrs[sensor.i4_edrive40_remaining_battery_percent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'battery',
       'friendly_name': 'i4 eDrive40 Remaining battery percent',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1149,7 +1129,6 @@
 # name: test_entity_state_attrs[sensor.i4_edrive40_remaining_range_electric-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'distance',
       'friendly_name': 'i4 eDrive40 Remaining range electric',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1204,7 +1183,6 @@
 # name: test_entity_state_attrs[sensor.i4_edrive40_remaining_range_total-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'distance',
       'friendly_name': 'i4 eDrive40 Remaining range total',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1257,7 +1235,6 @@
 # name: test_entity_state_attrs[sensor.ix_xdrive50_ac_current_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'current',
       'friendly_name': 'iX xDrive50 AC current limit',
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
@@ -1306,7 +1283,6 @@
 # name: test_entity_state_attrs[sensor.ix_xdrive50_charging_end_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'timestamp',
       'friendly_name': 'iX xDrive50 Charging end time',
     }),
@@ -1354,7 +1330,6 @@
 # name: test_entity_state_attrs[sensor.ix_xdrive50_charging_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'timestamp',
       'friendly_name': 'iX xDrive50 Charging start time',
     }),
@@ -1417,7 +1392,6 @@
 # name: test_entity_state_attrs[sensor.ix_xdrive50_charging_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'enum',
       'friendly_name': 'iX xDrive50 Charging status',
       'options': list([
@@ -1482,7 +1456,6 @@
 # name: test_entity_state_attrs[sensor.ix_xdrive50_charging_target-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'battery',
       'friendly_name': 'iX xDrive50 Charging target',
       'unit_of_measurement': '%',
@@ -1538,7 +1511,6 @@
 # name: test_entity_state_attrs[sensor.ix_xdrive50_climate_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'enum',
       'friendly_name': 'iX xDrive50 Climate status',
       'options': list([
@@ -1597,7 +1569,6 @@
 # name: test_entity_state_attrs[sensor.ix_xdrive50_mileage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'distance',
       'friendly_name': 'iX xDrive50 Mileage',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1652,7 +1623,6 @@
 # name: test_entity_state_attrs[sensor.ix_xdrive50_remaining_battery_percent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'battery',
       'friendly_name': 'iX xDrive50 Remaining battery percent',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1707,7 +1677,6 @@
 # name: test_entity_state_attrs[sensor.ix_xdrive50_remaining_range_electric-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'distance',
       'friendly_name': 'iX xDrive50 Remaining range electric',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1762,7 +1731,6 @@
 # name: test_entity_state_attrs[sensor.ix_xdrive50_remaining_range_total-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'distance',
       'friendly_name': 'iX xDrive50 Remaining range total',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1819,7 +1787,6 @@
 # name: test_entity_state_attrs[sensor.m340i_xdrive_climate_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'enum',
       'friendly_name': 'M340i xDrive Climate status',
       'options': list([
@@ -1878,7 +1845,6 @@
 # name: test_entity_state_attrs[sensor.m340i_xdrive_mileage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'distance',
       'friendly_name': 'M340i xDrive Mileage',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1933,7 +1899,6 @@
 # name: test_entity_state_attrs[sensor.m340i_xdrive_remaining_fuel-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'volume',
       'friendly_name': 'M340i xDrive Remaining fuel',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1988,7 +1953,6 @@
 # name: test_entity_state_attrs[sensor.m340i_xdrive_remaining_fuel_percent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'friendly_name': 'M340i xDrive Remaining fuel percent',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
@@ -2042,7 +2006,6 @@
 # name: test_entity_state_attrs[sensor.m340i_xdrive_remaining_range_fuel-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'distance',
       'friendly_name': 'M340i xDrive Remaining range fuel',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2097,7 +2060,6 @@
 # name: test_entity_state_attrs[sensor.m340i_xdrive_remaining_range_total-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'distance',
       'friendly_name': 'M340i xDrive Remaining range total',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
