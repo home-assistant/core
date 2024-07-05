@@ -35,6 +35,8 @@ ERROR_STATES = [
 
 
 def handle_sending_exception(
+    _func=None,
+    *,
     poll_after_sending: bool = False,
 ) -> Callable[
     [Callable[..., Awaitable[Any]]], Callable[..., Coroutine[Any, Any, None]]
@@ -63,7 +65,12 @@ def handle_sending_exception(
 
         return wrapper
 
-    return decorator
+    if _func is None:
+        # We're called with brackets.
+        return decorator
+
+    # We're called as @handle_sending_exception without brackets.
+    return decorator(_func)
 
 
 class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):

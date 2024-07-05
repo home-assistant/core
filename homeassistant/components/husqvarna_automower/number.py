@@ -156,7 +156,7 @@ class AutomowerNumberEntity(AutomowerControlEntity, NumberEntity):
         """Return the state of the number."""
         return self.entity_description.value_fn(self.mower_attributes)
 
-    @handle_sending_exception()
+    @handle_sending_exception
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
         await self.entity_description.set_value_fn(

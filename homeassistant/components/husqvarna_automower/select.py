@@ -62,7 +62,7 @@ class AutomowerSelectEntity(AutomowerControlEntity, SelectEntity):
             HeadlightModes, self.mower_attributes.settings.headlight.mode
         ).lower()
 
-    @handle_sending_exception()
+    @handle_sending_exception
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.coordinator.api.commands.set_headlight_mode(
