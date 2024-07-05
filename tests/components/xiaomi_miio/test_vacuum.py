@@ -1,12 +1,12 @@
 """The tests for the Xiaomi vacuum platform."""
 
+from collections.abc import Generator
 from datetime import datetime, time, timedelta
 from unittest import mock
 from unittest.mock import MagicMock, patch
 
 from miio import DeviceException
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_ICON,

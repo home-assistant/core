@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from ipaddress import ip_address
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from rabbitair import Mode, Model, Speed
-from typing_extensions import Generator
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf

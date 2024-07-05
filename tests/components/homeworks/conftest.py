@@ -1,9 +1,9 @@
 """Common fixtures for the Lutron Homeworks Series 4 and 8 tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.homeworks.const import (
     CONF_ADDR,

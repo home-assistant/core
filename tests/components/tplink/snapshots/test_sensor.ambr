@@ -770,7 +770,7 @@
     'supported_features': 0,
     'translation_key': 'voltage',
     'unique_id': '123456789ABCDEFGH_voltage',
-    'unit_of_measurement': 'v',
+    'unit_of_measurement': 'V',
   })
 # ---
 # name: test_states[sensor.my_device_voltage-state]
@@ -779,7 +779,7 @@
       'device_class': 'voltage',
       'friendly_name': 'my_device Voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'v',
+      'unit_of_measurement': 'V',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_device_voltage',

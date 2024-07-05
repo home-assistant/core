@@ -1,6 +1,6 @@
 """Test config flow."""
 
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from ssl import SSLError
@@ -9,7 +9,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
-from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant import config_entries

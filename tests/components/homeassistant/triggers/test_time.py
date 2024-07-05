@@ -20,28 +20,19 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import (
-    assert_setup_component,
-    async_fire_time_changed,
-    async_mock_service,
-    mock_component,
-)
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
+from tests.common import assert_setup_component, async_fire_time_changed, mock_component
 
 
 @pytest.fixture(autouse=True)
-def setup_comp(hass):
+def setup_comp(hass: HomeAssistant) -> None:
     """Initialize components."""
     mock_component(hass, "group")
 
 
 async def test_if_fires_using_at(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls: list[ServiceCall]
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for firing at."""
     now = dt_util.now()
@@ -71,9 +62,9 @@ async def test_if_fires_using_at(
     async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "time - 5"
-    assert calls[0].data["id"] == 0
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "time - 5"
+    assert service_calls[0].data["id"] == 0
 
 
 @pytest.mark.parametrize(
@@ -82,7 +73,7 @@ async def test_if_fires_using_at(
 async def test_if_fires_using_at_input_datetime(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     has_date,
     has_time,
 ) -> None:
@@ -132,9 +123,9 @@ async def test_if_fires_using_at_input_datetime(
     async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
+    assert len(service_calls) == 2
     assert (
-        calls[0].data["some"]
+        service_calls[1].data["some"]
         == f"time-{trigger_dt.day}-{trigger_dt.hour}-input_datetime.trigger"
     )
 
@@ -152,20 +143,23 @@ async def test_if_fires_using_at_input_datetime(
         },
         blocking=True,
     )
+    assert len(service_calls) == 3
     await hass.async_block_till_done()
 
     async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
     await hass.async_block_till_done()
 
-    assert len(calls) == 2
+    assert len(service_calls) == 4
     assert (
-        calls[1].data["some"]
+        service_calls[3].data["some"]
         == f"time-{trigger_dt.day}-{trigger_dt.hour}-input_datetime.trigger"
     )
 
 
 async def test_if_fires_using_multiple_at(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls: list[ServiceCall]
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for firing at."""
 
@@ -195,18 +189,20 @@ async def test_if_fires_using_multiple_at(
     async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "time - 5"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "time - 5"
 
     async_fire_time_changed(hass, trigger_dt + timedelta(hours=1, seconds=1))
     await hass.async_block_till_done()
 
-    assert len(calls) == 2
-    assert calls[1].data["some"] == "time - 6"
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == "time - 6"
 
 
 async def test_if_not_fires_using_wrong_at(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls: list[ServiceCall]
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_calls: list[ServiceCall],
 ) -> None:
     """YAML translates time values to total seconds.
 
@@ -242,10 +238,12 @@ async def test_if_not_fires_using_wrong_at(
     )
 
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
 
-async def test_if_action_before(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
+async def test_if_action_before(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
     """Test for if action before."""
     assert await async_setup_component(
         hass,
@@ -267,16 +265,18 @@ async def test_if_action_before(hass: HomeAssistant, calls: list[ServiceCall]) -
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
-    assert len(calls) == 1
+    assert len(service_calls) == 1
 
     with patch("homeassistant.helpers.condition.dt_util.now", return_value=after_10):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
-    assert len(calls) == 1
+    assert len(service_calls) == 1
 
 
-async def test_if_action_after(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
+async def test_if_action_after(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
     """Test for if action after."""
     assert await async_setup_component(
         hass,
@@ -298,17 +298,17 @@ async def test_if_action_after(hass: HomeAssistant, calls: list[ServiceCall]) ->
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     with patch("homeassistant.helpers.condition.dt_util.now", return_value=after_10):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
-    assert len(calls) == 1
+    assert len(service_calls) == 1
 
 
 async def test_if_action_one_weekday(
-    hass: HomeAssistant, calls: list[ServiceCall]
+    hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
     """Test for if action with one weekday."""
     assert await async_setup_component(
@@ -332,17 +332,17 @@ async def test_if_action_one_weekday(
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
-    assert len(calls) == 1
+    assert len(service_calls) == 1
 
     with patch("homeassistant.helpers.condition.dt_util.now", return_value=tuesday):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
-    assert len(calls) == 1
+    assert len(service_calls) == 1
 
 
 async def test_if_action_list_weekday(
-    hass: HomeAssistant, calls: list[ServiceCall]
+    hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
     """Test for action with a list of weekdays."""
     assert await async_setup_component(
@@ -367,19 +367,19 @@ async def test_if_action_list_weekday(
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
-    assert len(calls) == 1
+    assert len(service_calls) == 1
 
     with patch("homeassistant.helpers.condition.dt_util.now", return_value=tuesday):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
-    assert len(calls) == 2
+    assert len(service_calls) == 2
 
     with patch("homeassistant.helpers.condition.dt_util.now", return_value=wednesday):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
-    assert len(calls) == 2
+    assert len(service_calls) == 2
 
 
 async def test_untrack_time_change(hass: HomeAssistant) -> None:
@@ -416,7 +416,9 @@ async def test_untrack_time_change(hass: HomeAssistant) -> None:
 
 
 async def test_if_fires_using_at_sensor(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls: list[ServiceCall]
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for firing at sensor time."""
     now = dt_util.now()
@@ -452,9 +454,9 @@ async def test_if_fires_using_at_sensor(
     async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
+    assert len(service_calls) == 1
     assert (
-        calls[0].data["some"]
+        service_calls[0].data["some"]
         == f"time-{trigger_dt.day}-{trigger_dt.hour}-sensor.next_alarm"
     )
 
@@ -470,9 +472,9 @@ async def test_if_fires_using_at_sensor(
     async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
     await hass.async_block_till_done()
 
-    assert len(calls) == 2
+    assert len(service_calls) == 2
     assert (
-        calls[1].data["some"]
+        service_calls[1].data["some"]
         == f"time-{trigger_dt.day}-{trigger_dt.hour}-sensor.next_alarm"
     )
 
@@ -494,7 +496,7 @@ async def test_if_fires_using_at_sensor(
         await hass.async_block_till_done()
 
         # We should not have listened to anything
-        assert len(calls) == 2
+        assert len(service_calls) == 2
 
     # Now without device class
     hass.states.async_set(
@@ -513,7 +515,7 @@ async def test_if_fires_using_at_sensor(
     await hass.async_block_till_done()
 
     # We should not have listened to anything
-    assert len(calls) == 2
+    assert len(service_calls) == 2
 
 
 @pytest.mark.parametrize(
@@ -544,7 +546,7 @@ def test_schema_invalid(conf) -> None:
 
 
 async def test_datetime_in_past_on_load(
-    hass: HomeAssistant, calls: list[ServiceCall]
+    hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
     """Test time trigger works if input_datetime is in past."""
     await async_setup_component(
@@ -566,6 +568,7 @@ async def test_datetime_in_past_on_load(
         },
         blocking=True,
     )
+    assert len(service_calls) == 1
     await hass.async_block_till_done()
 
     assert await async_setup_component(
@@ -587,7 +590,7 @@ async def test_datetime_in_past_on_load(
     async_fire_time_changed(hass, now)
     await hass.async_block_till_done()
 
-    assert len(calls) == 0
+    assert len(service_calls) == 1
 
     await hass.services.async_call(
         "input_datetime",
@@ -598,13 +601,14 @@ async def test_datetime_in_past_on_load(
         },
         blocking=True,
     )
+    assert len(service_calls) == 2
     await hass.async_block_till_done()
 
     async_fire_time_changed(hass, future + timedelta(seconds=1))
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
+    assert len(service_calls) == 3
     assert (
-        calls[0].data["some"]
+        service_calls[2].data["some"]
         == f"time-{future.day}-{future.hour}-input_datetime.my_trigger"
     )

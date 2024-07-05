@@ -1,5 +1,6 @@
 """Test deCONZ gateway."""
 
+from collections.abc import Callable
 from copy import deepcopy
 from typing import Any
 from unittest.mock import patch
@@ -34,7 +35,12 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_UDN,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_HASSIO,
+    SOURCE_SSDP,
+    SOURCE_USER,
+    ConfigEntry,
+)
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -47,13 +53,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
+from .conftest import API_KEY, BRIDGEID, HOST, PORT
+
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-API_KEY = "1234567890ABCDEF"
-BRIDGEID = "01234E56789A"
-HOST = "1.2.3.4"
-PORT = 80
 
 DEFAULT_URL = f"http://{HOST}:{PORT}/api/{API_KEY}"
 
@@ -137,8 +140,8 @@ async def setup_deconz_integration(
 
 async def test_gateway_setup(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     device_registry: dr.DeviceRegistry,
+    config_entry_factory: Callable[[], ConfigEntry],
 ) -> None:
     """Successful setup."""
     # Patching async_forward_entry_setup* is not advisable, and should be refactored
@@ -147,7 +150,7 @@ async def test_gateway_setup(
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
         return_value=True,
     ) as forward_entry_setup:
-        config_entry = await setup_deconz_integration(hass, aioclient_mock)
+        config_entry = await config_entry_factory()
         gateway = DeconzHub.get_hub(hass, config_entry)
         assert gateway.bridgeid == BRIDGEID
         assert gateway.master is True
@@ -186,10 +189,11 @@ async def test_gateway_setup(
     assert gateway_entry.entry_type is dr.DeviceEntryType.SERVICE
 
 
+@pytest.mark.parametrize("config_entry_source", [SOURCE_HASSIO])
 async def test_gateway_device_configuration_url_when_addon(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     device_registry: dr.DeviceRegistry,
+    config_entry_factory: Callable[[], ConfigEntry],
 ) -> None:
     """Successful setup."""
     # Patching async_forward_entry_setup* is not advisable, and should be refactored
@@ -198,9 +202,7 @@ async def test_gateway_device_configuration_url_when_addon(
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
         return_value=True,
     ):
-        config_entry = await setup_deconz_integration(
-            hass, aioclient_mock, source=SOURCE_HASSIO
-        )
+        config_entry = await config_entry_factory()
         gateway = DeconzHub.get_hub(hass, config_entry)
 
     gateway_entry = device_registry.async_get_device(
@@ -212,12 +214,10 @@ async def test_gateway_device_configuration_url_when_addon(
     )
 
 
-async def test_connection_status_signalling(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
-) -> None:
-    """Make sure that connection status triggers a dispatcher send."""
-    data = {
-        "sensors": {
+@pytest.mark.parametrize(
+    "sensor_payload",
+    [
+        {
             "1": {
                 "name": "presence",
                 "type": "ZHAPresence",
@@ -226,10 +226,13 @@ async def test_connection_status_signalling(
                 "uniqueid": "00:00:00:00:00:00:00:00-00",
             }
         }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        await setup_deconz_integration(hass, aioclient_mock)
-
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_connection_status_signalling(
+    hass: HomeAssistant, mock_deconz_websocket
+) -> None:
+    """Make sure that connection status triggers a dispatcher send."""
     assert hass.states.get("binary_sensor.presence").state == STATE_OFF
 
     await mock_deconz_websocket(state=State.RETRYING)
@@ -244,11 +247,10 @@ async def test_connection_status_signalling(
 
 
 async def test_update_address(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, config_entry_setup: ConfigEntry
 ) -> None:
     """Make sure that connection status triggers a dispatcher send."""
-    config_entry = await setup_deconz_integration(hass, aioclient_mock)
-    gateway = DeconzHub.get_hub(hass, config_entry)
+    gateway = DeconzHub.get_hub(hass, config_entry_setup)
     assert gateway.api.host == "1.2.3.4"
 
     with patch(
@@ -276,11 +278,10 @@ async def test_update_address(
 
 
 async def test_reset_after_successful_setup(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, config_entry_setup: ConfigEntry
 ) -> None:
     """Make sure that connection status triggers a dispatcher send."""
-    config_entry = await setup_deconz_integration(hass, aioclient_mock)
-    gateway = DeconzHub.get_hub(hass, config_entry)
+    gateway = DeconzHub.get_hub(hass, config_entry_setup)
 
     result = await gateway.async_reset()
     await hass.async_block_till_done()

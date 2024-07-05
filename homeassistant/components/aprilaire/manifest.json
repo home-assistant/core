@@ -1,6 +1,6 @@
 {
   "domain": "aprilaire",
-  "name": "Aprilaire",
+  "name": "AprilAire",
   "codeowners": ["@chamberlain2007"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/aprilaire",

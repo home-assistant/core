@@ -13,12 +13,38 @@ import orjson
 
 from homeassistant.util.file import write_utf8_file, write_utf8_file_atomic
 from homeassistant.util.json import (  # noqa: F401
-    JSON_DECODE_EXCEPTIONS,
-    JSON_ENCODE_EXCEPTIONS,
+    JSON_DECODE_EXCEPTIONS as _JSON_DECODE_EXCEPTIONS,
+    JSON_ENCODE_EXCEPTIONS as _JSON_ENCODE_EXCEPTIONS,
     SerializationError,
     format_unserializable_data,
-    json_loads,
+    json_loads as _json_loads,
 )
+
+from .deprecation import (
+    DeprecatedConstant,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    deprecated_function,
+    dir_with_deprecated_constants,
+)
+
+_DEPRECATED_JSON_DECODE_EXCEPTIONS = DeprecatedConstant(
+    _JSON_DECODE_EXCEPTIONS, "homeassistant.util.json.JSON_DECODE_EXCEPTIONS", "2025.8"
+)
+_DEPRECATED_JSON_ENCODE_EXCEPTIONS = DeprecatedConstant(
+    _JSON_ENCODE_EXCEPTIONS, "homeassistant.util.json.JSON_ENCODE_EXCEPTIONS", "2025.8"
+)
+json_loads = deprecated_function(
+    "homeassistant.util.json.json_loads", breaks_in_ha_version="2025.8"
+)(_json_loads)
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())
+
 
 _LOGGER = logging.getLogger(__name__)
 

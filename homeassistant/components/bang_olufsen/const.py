@@ -62,6 +62,7 @@ class BangOlufsenMediaType(StrEnum):
 class BangOlufsenModel(StrEnum):
     """Enum for compatible model names."""
 
+    BEOCONNECT_CORE = "Beoconnect Core"
     BEOLAB_8 = "BeoLab 8"
     BEOLAB_28 = "BeoLab 28"
     BEOSOUND_2 = "Beosound 2 3rd Gen"

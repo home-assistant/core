@@ -107,6 +107,13 @@ class GoogleCloudTTSProvider(Provider):
             return None
         return [Voice(voice, voice) for voice in voices]
 
+    @callback
+    def async_get_supported_voices(self, language: str) -> list[Voice] | None:
+        """Return a list of supported voices for a language."""
+        if not (voices := self._voices.get(language)):
+            return None
+        return [Voice(voice, voice) for voice in voices]
+
     async def async_get_tts_audio(self, message, language, options):
         """Load TTS from google."""
         try:
@@ -115,7 +122,7 @@ class GoogleCloudTTSProvider(Provider):
             _LOGGER.error("Error: %s when validating options: %s", err, options)
             return None, None
 
-        encoding = options[CONF_ENCODING]
+        encoding = texttospeech.AudioEncoding[options[CONF_ENCODING]]
         gender = texttospeech.SsmlVoiceGender[options[CONF_GENDER]]
         voice = options[CONF_VOICE]
         if voice:
@@ -131,7 +138,7 @@ class GoogleCloudTTSProvider(Provider):
                 name=voice,
             ),
             audio_config=texttospeech.AudioConfig(
-                audio_encoding=texttospeech.AudioEncoding[encoding],
+                audio_encoding=encoding,
                 speaking_rate=options[CONF_SPEED],
                 pitch=options[CONF_PITCH],
                 volume_gain_db=options[CONF_GAIN],
@@ -145,4 +152,11 @@ class GoogleCloudTTSProvider(Provider):
             _LOGGER.error("Error occurred during Google Cloud TTS call: %s", err)
             return None, None
 
-        return encoding, response.audio_content
+        if encoding == texttospeech.AudioEncoding.MP3:
+            extension = "mp3"
+        elif encoding == texttospeech.AudioEncoding.OGG_OPUS:
+            extension = "ogg"
+        else:
+            extension = "wav"
+
+        return extension, response.audio_content
