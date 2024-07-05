@@ -24,7 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .conftest import ConfigEntryFactoryType
+from .conftest import ConfigEntryFactoryType, WebsocketDataType
 
 from tests.common import async_fire_time_changed
 
@@ -906,7 +906,7 @@ async def test_sensors(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     config_entry_setup: ConfigEntry,
-    mock_deconz_websocket,
+    mock_websocket_data: WebsocketDataType,
     expected: dict[str, Any],
 ) -> None:
     """Test successful creation of sensor entities."""
@@ -954,7 +954,7 @@ async def test_sensors(
 
     event_changed_sensor = {"t": "event", "e": "changed", "r": "sensors", "id": "1"}
     event_changed_sensor |= expected["websocket_event"]
-    await mock_deconz_websocket(data=event_changed_sensor)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
     assert hass.states.get(expected["entity_id"]).state == expected["next_state"]
 
@@ -1057,7 +1057,10 @@ async def test_allow_clip_sensors(
 
 
 @pytest.mark.usefixtures("config_entry_setup")
-async def test_add_new_sensor(hass: HomeAssistant, mock_deconz_websocket) -> None:
+async def test_add_new_sensor(
+    hass: HomeAssistant,
+    mock_websocket_data: WebsocketDataType,
+) -> None:
     """Test that adding a new sensor works."""
     event_added_sensor = {
         "t": "event",
@@ -1076,7 +1079,7 @@ async def test_add_new_sensor(hass: HomeAssistant, mock_deconz_websocket) -> Non
 
     assert len(hass.states.async_all()) == 0
 
-    await mock_deconz_websocket(data=event_added_sensor)
+    await mock_websocket_data(event_added_sensor)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 2
@@ -1168,7 +1171,10 @@ async def test_air_quality_sensor_without_ppb(hass: HomeAssistant) -> None:
     ],
 )
 @pytest.mark.usefixtures("config_entry_setup")
-async def test_add_battery_later(hass: HomeAssistant, mock_deconz_websocket) -> None:
+async def test_add_battery_later(
+    hass: HomeAssistant,
+    mock_websocket_data: WebsocketDataType,
+) -> None:
     """Test that a battery sensor can be created later on.
 
     Without an initial battery state a battery sensor
@@ -1183,7 +1189,7 @@ async def test_add_battery_later(hass: HomeAssistant, mock_deconz_websocket) -> 
         "id": "2",
         "config": {"battery": 50},
     }
-    await mock_deconz_websocket(data=event_changed_sensor)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
@@ -1195,7 +1201,7 @@ async def test_add_battery_later(hass: HomeAssistant, mock_deconz_websocket) -> 
         "id": "1",
         "config": {"battery": 50},
     }
-    await mock_deconz_websocket(data=event_changed_sensor)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 1

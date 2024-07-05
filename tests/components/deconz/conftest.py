@@ -20,6 +20,7 @@ from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 type ConfigEntryFactoryType = Callable[[ConfigEntry | None], ConfigEntry]
+type WebsocketDataType = Callable[[dict[str, Any]], None]
 type WebsocketStateType = Callable[[str], None]
 
 # Config entry fixtures
@@ -239,6 +240,17 @@ def fixture_websocket():
                 raise NotImplementedError
 
         yield make_websocket_call
+
+
+@pytest.fixture(name="mock_websocket_data")
+def fixture_websocket_data(mock_deconz_websocket) -> WebsocketDataType:
+    """Fixture to send websocket data."""
+
+    async def change_websocket_data(data: dict[str, Any]) -> None:
+        """Provide new data on the websocket."""
+        await mock_deconz_websocket(data=data)
+
+    return change_websocket_data
 
 
 @pytest.fixture(name="mock_websocket_state")
