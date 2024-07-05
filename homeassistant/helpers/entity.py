@@ -1048,7 +1048,7 @@ class Entity(
     ) -> tuple[str, dict[str, Any], Mapping[str, Any] | None, str | None, int | None]:
         """Calculate state string and attribute mapping.
 
-        Returns a tuple (state, attr, capability_attr, shadowed_attr).
+        Returns a tuple:
         state - the stringified state
         attr - the attribute dictionary
         capability_attr - a mapping with capability attributes
