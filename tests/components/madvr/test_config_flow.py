@@ -102,7 +102,7 @@ async def test_user_form_cannot_connect(hass: HomeAssistant, mock_madvr) -> None
 
 
 async def test_user_form_no_mac(hass: HomeAssistant, mock_madvr) -> None:
-    """Test we can set up the integration even if no MAC is returned."""
+    """Test we handle the case when no MAC is returned."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -123,10 +123,29 @@ async def test_user_form_no_mac(hass: HomeAssistant, mock_madvr) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == DEFAULT_NAME
-    assert result2["data"] == {
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "user"
+    assert result2["errors"] == {"base": "no_mac"}
+
+    # Test that we can retry and succeed if a MAC is returned on the second attempt
+    mock_mac = "00:11:22:33:44:55"
+    with patch(
+        "homeassistant.components.madvr.config_flow.MadVRConfigFlow._test_connection",
+        return_value=mock_mac,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                "host": "192.168.1.100",
+                "port": 44077,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["title"] == DEFAULT_NAME
+    assert result3["data"] == {
         "host": "192.168.1.100",
         "port": 44077,
-        "mac": "",  # Empty string for MAC
+        "mac": mock_mac,
     }

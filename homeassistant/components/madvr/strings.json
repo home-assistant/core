@@ -14,7 +14,8 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_mac": "A MAC address was not found. It required to identify the device. Please ensure your device is connectable."
     }
   }
 }
