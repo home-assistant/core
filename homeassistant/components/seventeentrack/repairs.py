@@ -4,13 +4,14 @@ from typing import cast
 
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import issue_registry as ir
 
 from . import DOMAIN
+from .const import DEPRECATED_KEY
 
 
 @callback
@@ -35,7 +36,6 @@ class SensorDeprecationRepairFlow(RepairsFlow):
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Create flow."""
-        super().__init__()
         self.entry = entry
 
     async def async_step_init(
@@ -46,10 +46,10 @@ class SensorDeprecationRepairFlow(RepairsFlow):
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> FlowResult:
         """Handle the confirm step of a fix flow."""
         if user_input is not None:
-            data = {**self.entry.data, "deprecated": True}
+            data = {**self.entry.data, DEPRECATED_KEY: True}
             self.hass.config_entries.async_update_entry(self.entry, data=data)
             return self.async_create_entry(data={})
 
@@ -65,7 +65,11 @@ async def async_create_fix_flow(
     data: dict[str, str | int | float | None] | None,
 ) -> RepairsFlow:
     """Create flow."""
-    if data and (entry_id := cast(str, data.get("entry_id"))):
+    if (
+        issue_id == "deprecate_sensor"
+        and data
+        and (entry_id := cast(str, data.get("entry_id")))
+    ):
         entry = hass.config_entries.async_get_entry(entry_id)
         assert entry
         return SensorDeprecationRepairFlow(entry)

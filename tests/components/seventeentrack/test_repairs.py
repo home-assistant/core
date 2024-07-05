@@ -124,7 +124,7 @@ async def test_other_fixable_issues(
     assert msg["success"]
 
     issue = {
-        "breaks_in_ha_version": "2022.9.0dev0",
+        "breaks_in_ha_version": "2025.1.0",
         "domain": DOMAIN,
         "issue_id": "issue_1",
         "is_fixable": True,
@@ -150,7 +150,7 @@ async def test_other_fixable_issues(
     assert msg["success"]
     results = msg["result"]["issues"]
     assert {
-        "breaks_in_ha_version": "2022.9.0dev0",
+        "breaks_in_ha_version": "2025.1.0",
         "created": ANY,
         "dismissed_version": None,
         "domain": DOMAIN,

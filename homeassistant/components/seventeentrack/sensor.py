@@ -165,10 +165,9 @@ async def async_setup_entry(
     if not config_entry.data.get("deprecated"):
         deprecate_sensor_issue(hass, config_entry.entry_id)
         _async_create_remove_entities()
-
-    config_entry.async_on_unload(
-        coordinator.async_add_listener(_async_create_remove_entities)
-    )
+        config_entry.async_on_unload(
+            coordinator.async_add_listener(_async_create_remove_entities)
+        )
 
 
 class SeventeenTrackSensor(CoordinatorEntity[SeventeenTrackCoordinator], SensorEntity):
