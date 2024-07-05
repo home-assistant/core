@@ -31,10 +31,9 @@ from homeassistant.helpers import device_registry as dr
 from .const import DEFAULT_PORT, DOMAIN, DOMAINS_AND_TYPES
 from .updater import BroadlinkUpdateManager, get_update_manager
 
-_LOGGER = logging.getLogger(__name__)
-
-
 _ApiT = TypeVar("_ApiT", bound=blk.Device, default=blk.Device)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def get_domains(device_type: str) -> set[Platform]:
