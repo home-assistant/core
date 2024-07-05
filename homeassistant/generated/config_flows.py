@@ -150,6 +150,7 @@ FLOWS = {
         "elkm1",
         "elmax",
         "elvia",
+        "emoncms",
         "emonitor",
         "emulated_roku",
         "energenie_power_sockets",

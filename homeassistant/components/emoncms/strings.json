@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "id": "id",
+          "url": "Server Hostname",
+          "api_key": "API Key",
+          "scan_interval": "update interval in seconds"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "url": "[%key:component::emoncms::config::step::user::data::url%]",
+          "api_key": "[%key:component::emoncms::config::step::user::data::api_key%]",
+          "scan_interval": "[%key:component::emoncms::config::step::user::data::scan_interval%]",
+          "feed list": "choose feeds to include"
+        }
+      }
+    }
+  },
+  "issues": {
+    "migrate_database": {
+      "title": "Upgrade your emoncms version",
+      "description": "Your [emoncms]({url}) does not ship a unique identifier.\n\nPlease upgrade to at least version 11.5.7 and migrate your emoncms database.\n\nMore info on [emoncms documentation](https://docs.openenergymonitor.org/emoncms/update.html#)."
+    }
+  }
+}
