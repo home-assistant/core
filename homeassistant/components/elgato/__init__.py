@@ -8,7 +8,7 @@ from .coordinator import ElgatoDataUpdateCoordinator
 
 PLATFORMS = [Platform.BUTTON, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
 
-ElgatorConfigEntry = ConfigEntry[ElgatoDataUpdateCoordinator]
+type ElgatorConfigEntry = ConfigEntry[ElgatoDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ElgatorConfigEntry) -> bool:

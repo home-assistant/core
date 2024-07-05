@@ -102,7 +102,7 @@ async def test_full_zeroconf_flow_implementation(
 
 
 @patch(
-    "homeassistant.components.modern_forms.ModernFormsDevice.update",
+    "homeassistant.components.modern_forms.coordinator.ModernFormsDevice.update",
     side_effect=ModernFormsConnectionError,
 )
 async def test_connection_error(
@@ -123,7 +123,7 @@ async def test_connection_error(
 
 
 @patch(
-    "homeassistant.components.modern_forms.ModernFormsDevice.update",
+    "homeassistant.components.modern_forms.coordinator.ModernFormsDevice.update",
     side_effect=ModernFormsConnectionError,
 )
 async def test_zeroconf_connection_error(
@@ -151,7 +151,7 @@ async def test_zeroconf_connection_error(
 
 
 @patch(
-    "homeassistant.components.modern_forms.ModernFormsDevice.update",
+    "homeassistant.components.modern_forms.coordinator.ModernFormsDevice.update",
     side_effect=ModernFormsConnectionError,
 )
 async def test_zeroconf_confirm_connection_error(

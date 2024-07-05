@@ -70,6 +70,7 @@ async def test_list_devices(
             "model": "model",
             "name_by_user": None,
             "name": None,
+            "primary_config_entry": entry.entry_id,
             "serial_number": None,
             "sw_version": None,
             "via_device_id": None,
@@ -88,6 +89,7 @@ async def test_list_devices(
             "model": "model",
             "name_by_user": None,
             "name": None,
+            "primary_config_entry": entry.entry_id,
             "serial_number": None,
             "sw_version": None,
             "via_device_id": dev1,
@@ -119,6 +121,7 @@ async def test_list_devices(
             "model": "model",
             "name_by_user": None,
             "name": None,
+            "primary_config_entry": entry.entry_id,
             "serial_number": None,
             "sw_version": None,
             "via_device_id": None,
@@ -146,7 +149,7 @@ async def test_update_device(
     client: MockHAClientWebSocket,
     device_registry: dr.DeviceRegistry,
     payload_key: str,
-    payload_value: str | None | dr.DeviceEntryDisabler,
+    payload_value: str | dr.DeviceEntryDisabler | None,
 ) -> None:
     """Test update entry."""
     entry = MockConfigEntry(title=None)

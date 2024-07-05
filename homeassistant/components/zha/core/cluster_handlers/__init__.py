@@ -7,7 +7,7 @@ import contextlib
 from enum import Enum
 import functools
 import logging
-from typing import TYPE_CHECKING, Any, ParamSpec, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 import zigpy.exceptions
 import zigpy.util
@@ -51,10 +51,8 @@ _LOGGER = logging.getLogger(__name__)
 RETRYABLE_REQUEST_DECORATOR = zigpy.util.retryable_request(tries=3)
 UNPROXIED_CLUSTER_METHODS = {"general_command"}
 
-
-_P = ParamSpec("_P")
-_FuncType = Callable[_P, Awaitable[Any]]
-_ReturnFuncType = Callable[_P, Coroutine[Any, Any, Any]]
+type _FuncType[**_P] = Callable[_P, Awaitable[Any]]
+type _ReturnFuncType[**_P] = Callable[_P, Coroutine[Any, Any, Any]]
 
 
 @contextlib.contextmanager
@@ -75,7 +73,7 @@ def wrap_zigpy_exceptions() -> Iterator[None]:
         raise HomeAssistantError(message) from exc
 
 
-def retry_request(func: _FuncType[_P]) -> _ReturnFuncType[_P]:
+def retry_request[**_P](func: _FuncType[_P]) -> _ReturnFuncType[_P]:
     """Send a request with retries and wrap expected zigpy exceptions."""
 
     @functools.wraps(func)

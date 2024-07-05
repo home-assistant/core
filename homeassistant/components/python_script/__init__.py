@@ -200,7 +200,7 @@ def execute(hass, filename, source, data=None, return_response=False):
         _LOGGER.error(
             "Error loading script %s: %s", filename, ", ".join(compiled.errors)
         )
-        return
+        return None
 
     if compiled.warnings:
         _LOGGER.warning(

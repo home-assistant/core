@@ -3,7 +3,6 @@
   "name": "ecobee",
   "codeowners": [],
   "config_flow": true,
-  "dependencies": ["http", "repairs"],
   "documentation": "https://www.home-assistant.io/integrations/ecobee",
   "homekit": {
     "models": ["EB", "ecobee*"]

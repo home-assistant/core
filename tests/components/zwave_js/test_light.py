@@ -865,13 +865,16 @@ async def test_black_is_off_zdb5100(
 
 
 async def test_basic_cc_light(
-    hass: HomeAssistant, client, ge_in_wall_dimmer_switch, integration
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client,
+    ge_in_wall_dimmer_switch,
+    integration,
 ) -> None:
     """Test light is created from Basic CC."""
     node = ge_in_wall_dimmer_switch
 
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(BASIC_LIGHT_ENTITY)
+    entity_entry = entity_registry.async_get(BASIC_LIGHT_ENTITY)
 
     assert entity_entry
     assert not entity_entry.disabled

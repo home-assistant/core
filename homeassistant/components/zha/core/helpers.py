@@ -14,7 +14,7 @@ from dataclasses import dataclass
 import enum
 import logging
 import re
-from typing import TYPE_CHECKING, Any, TypeVar, overload
+from typing import TYPE_CHECKING, Any, overload
 
 import voluptuous as vol
 import zigpy.exceptions
@@ -62,7 +62,6 @@ if TYPE_CHECKING:
     from .device import ZHADevice
     from .gateway import ZHAGateway
 
-_T = TypeVar("_T")
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -228,7 +227,7 @@ def async_is_bindable_target(source_zha_device, target_zha_device):
 
 
 @callback
-def async_get_zha_config_value(
+def async_get_zha_config_value[_T](
     config_entry: ConfigEntry, section: str, config_key: str, default: _T
 ) -> _T:
     """Get the value for the specified configuration from the ZHA config entry."""

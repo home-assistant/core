@@ -2,15 +2,8 @@
 
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 import logging
-
-from aiohttp import ClientSession
-from aiohttp.client_exceptions import ClientConnectorError
-from gios import Gios
-from gios.exceptions import GiosError
-from gios.model import GiosSensors
 
 from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
 from homeassistant.config_entries import ConfigEntry
@@ -18,15 +11,15 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import API_TIMEOUT, CONF_STATION_ID, DOMAIN, SCAN_INTERVAL
+from .const import CONF_STATION_ID, DOMAIN
+from .coordinator import GiosDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
 
-GiosConfigEntry = ConfigEntry["GiosData"]
+type GiosConfigEntry = ConfigEntry[GiosData]
 
 
 @dataclass
@@ -77,23 +70,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: GiosConfigEntry) -> bool
 async def async_unload_entry(hass: HomeAssistant, entry: GiosConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-class GiosDataUpdateCoordinator(DataUpdateCoordinator[GiosSensors]):  # pylint: disable=hass-enforce-coordinator-module
-    """Define an object to hold GIOS data."""
-
-    def __init__(
-        self, hass: HomeAssistant, session: ClientSession, station_id: int
-    ) -> None:
-        """Class to manage fetching GIOS data API."""
-        self.gios = Gios(station_id, session)
-
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
-
-    async def _async_update_data(self) -> GiosSensors:
-        """Update data via library."""
-        try:
-            async with asyncio.timeout(API_TIMEOUT):
-                return await self.gios.async_update()
-        except (GiosError, ClientConnectorError) as error:
-            raise UpdateFailed(error) from error

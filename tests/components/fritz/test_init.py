@@ -56,7 +56,6 @@ async def test_options_reload(
         assert entry.state is ConfigEntryState.LOADED
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
-        await hass.async_block_till_done()
         await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={CONF_CONSIDER_HOME: 60},
@@ -76,7 +75,7 @@ async def test_setup_auth_fail(hass: HomeAssistant, error) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.fritz.common.FritzConnection",
+        "homeassistant.components.fritz.coordinator.FritzConnection",
         side_effect=error,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -96,7 +95,7 @@ async def test_setup_fail(hass: HomeAssistant, error) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.fritz.common.FritzConnection",
+        "homeassistant.components.fritz.coordinator.FritzConnection",
         side_effect=error,
     ):
         await hass.config_entries.async_setup(entry.entry_id)

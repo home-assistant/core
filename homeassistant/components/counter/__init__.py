@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Self, TypeVar
+from typing import Any, Self
 
 import voluptuous as vol
 
@@ -21,9 +21,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
-
-_T = TypeVar("_T")
+from homeassistant.helpers.typing import ConfigType, VolDictType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +49,7 @@ SERVICE_SET_VALUE = "set_value"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
-STORAGE_FIELDS = {
+STORAGE_FIELDS: VolDictType = {
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL): cv.positive_int,
     vol.Required(CONF_NAME): vol.All(cv.string, vol.Length(min=1)),
@@ -62,7 +60,7 @@ STORAGE_FIELDS = {
 }
 
 
-def _none_to_empty_dict(value: _T | None) -> _T | dict[str, Any]:
+def _none_to_empty_dict[_T](value: _T | None) -> _T | dict[str, Any]:
     if value is None:
         return {}
     return value

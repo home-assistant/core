@@ -4,9 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+import requests_mock
 
 from homeassistant.components.plex.const import DOMAIN, PLEX_SERVER_CONFIG, SERVERS
 from homeassistant.const import CONF_URL
+from homeassistant.core import HomeAssistant
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, PLEX_DIRECT_URL
 from .helpers import websocket_connected
@@ -21,7 +23,7 @@ def plex_server_url(entry):
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.plex.async_setup_entry", return_value=True
@@ -436,7 +438,7 @@ def mock_websocket():
 @pytest.fixture
 def mock_plex_calls(
     entry,
-    requests_mock,
+    requests_mock: requests_mock.Mocker,
     children_20,
     children_30,
     children_200,
@@ -481,7 +483,7 @@ def mock_plex_calls(
 
     url = plex_server_url(entry)
 
-    for server in [url, PLEX_DIRECT_URL]:
+    for server in (url, PLEX_DIRECT_URL):
         requests_mock.get(server, text=plex_server_default)
         requests_mock.get(f"{server}/accounts", text=plex_server_accounts)
 
@@ -545,12 +547,12 @@ def mock_plex_calls(
 
 @pytest.fixture
 def setup_plex_server(
-    hass,
+    hass: HomeAssistant,
     entry,
     livetv_sessions,
     mock_websocket,
     mock_plex_calls,
-    requests_mock,
+    requests_mock: requests_mock.Mocker,
     empty_payload,
     session_default,
     session_live_tv,

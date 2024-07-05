@@ -5,26 +5,26 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 import functools
-from typing import Any, TypeVar, cast, overload
+from typing import Any, cast, overload
 
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
-_T = TypeVar("_T")
-
-_FuncType = Callable[[HomeAssistant], _T]
+type _FuncType[_T] = Callable[[HomeAssistant], _T]
 
 
 @overload
-def singleton(data_key: HassKey[_T]) -> Callable[[_FuncType[_T]], _FuncType[_T]]: ...
+def singleton[_T](
+    data_key: HassKey[_T],
+) -> Callable[[_FuncType[_T]], _FuncType[_T]]: ...
 
 
 @overload
-def singleton(data_key: str) -> Callable[[_FuncType[_T]], _FuncType[_T]]: ...
+def singleton[_T](data_key: str) -> Callable[[_FuncType[_T]], _FuncType[_T]]: ...
 
 
-def singleton(data_key: Any) -> Callable[[_FuncType[_T]], _FuncType[_T]]:
+def singleton[_T](data_key: Any) -> Callable[[_FuncType[_T]], _FuncType[_T]]:
     """Decorate a function that should be called once per instance.
 
     Result will be cached and simultaneous calls will be handled.

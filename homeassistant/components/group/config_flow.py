@@ -35,14 +35,15 @@ from .sensor import async_create_preview_sensor
 from .switch import async_create_preview_switch
 
 _STATISTIC_MEASURES = [
-    "min",
+    "last",
     "max",
     "mean",
     "median",
-    "last",
-    "range",
-    "sum",
+    "min",
     "product",
+    "range",
+    "stdev",
+    "sum",
 ]
 
 
@@ -50,6 +51,7 @@ async def basic_group_options_schema(
     domain: str | list[str], handler: SchemaCommonFlowHandler | None
 ) -> vol.Schema:
     """Generate options schema."""
+    entity_selector: selector.Selector[Any] | vol.Schema
     if handler is None:
         entity_selector = selector.selector(
             {"entity": {"domain": domain, "multiple": True}}

@@ -13,7 +13,7 @@ from functools import cached_property, partial
 import itertools
 import logging
 from types import MappingProxyType
-from typing import Any, Literal, TypedDict, TypeVar, cast
+from typing import Any, Literal, TypedDict, cast
 
 import async_interrupt
 import voluptuous as vol
@@ -89,6 +89,7 @@ from .condition import ConditionCheckerType, trace_condition_function
 from .dispatcher import async_dispatcher_connect, async_dispatcher_send_internal
 from .event import async_call_later, async_track_template
 from .script_variables import ScriptVariables
+from .template import Template
 from .trace import (
     TraceElement,
     async_trace_path,
@@ -109,8 +110,6 @@ from .trigger import async_initialize_triggers, async_validate_trigger_config
 from .typing import UNDEFINED, ConfigType, UndefinedType
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
-
-_T = TypeVar("_T")
 
 SCRIPT_MODE_PARALLEL = "parallel"
 SCRIPT_MODE_QUEUED = "queued"
@@ -158,7 +157,7 @@ SCRIPT_DEBUG_CONTINUE_STOP: SignalTypeFormat[Literal["continue", "stop"]] = (
 )
 SCRIPT_DEBUG_CONTINUE_ALL = "script_debug_continue_all"
 
-script_stack_cv: ContextVar[list[int] | None] = ContextVar("script_stack", default=None)
+script_stack_cv: ContextVar[list[str] | None] = ContextVar("script_stack", default=None)
 
 
 class ScriptData(TypedDict):
@@ -191,7 +190,7 @@ async def trace_action(
     script_run: _ScriptRun,
     stop: asyncio.Future[None],
     variables: dict[str, Any],
-) -> AsyncGenerator[TraceElement, None]:
+) -> AsyncGenerator[TraceElement]:
     """Trace action execution."""
     path = trace_path_get()
     trace_element = action_trace_append(variables, path)
@@ -371,6 +370,11 @@ async def async_validate_action_config(
                 hass, parallel_conf[CONF_SEQUENCE]
             )
 
+    elif action_type == cv.SCRIPT_ACTION_SEQUENCE:
+        config[CONF_SEQUENCE] = await async_validate_actions_config(
+            hass, config[CONF_SEQUENCE]
+        )
+
     else:
         raise ValueError(f"No validation for {action_type}")
 
@@ -432,9 +436,7 @@ class _ScriptRun:
     def _log(
         self, msg: str, *args: Any, level: int = logging.INFO, **kwargs: Any
     ) -> None:
-        self._script._log(  # noqa: SLF001
-            msg, *args, level=level, **kwargs
-        )
+        self._script._log(msg, *args, level=level, **kwargs)  # noqa: SLF001
 
     def _step_log(self, default_message, timeout=None):
         self._script.last_action = self._action.get(CONF_ALIAS, default_message)
@@ -450,7 +452,7 @@ class _ScriptRun:
         if (script_stack := script_stack_cv.get()) is None:
             script_stack = []
             script_stack_cv.set(script_stack)
-        script_stack.append(id(self._script))
+        script_stack.append(self._script.unique_id)
         response = None
 
         try:
@@ -500,12 +502,24 @@ class _ScriptRun:
 
                 action = cv.determine_script_action(self._action)
 
-                if not self._action.get(CONF_ENABLED, True):
-                    self._log(
-                        "Skipped disabled step %s", self._action.get(CONF_ALIAS, action)
-                    )
-                    trace_set_result(enabled=False)
-                    return
+                if CONF_ENABLED in self._action:
+                    enabled = self._action[CONF_ENABLED]
+                    if isinstance(enabled, Template):
+                        try:
+                            enabled = enabled.async_render(limited=True)
+                        except exceptions.TemplateError as ex:
+                            self._handle_exception(
+                                ex,
+                                continue_on_error,
+                                self._log_exceptions or log_exceptions,
+                            )
+                    if not enabled:
+                        self._log(
+                            "Skipped disabled step %s",
+                            self._action.get(CONF_ALIAS, action),
+                        )
+                        trace_set_result(enabled=False)
+                        return
 
                 handler = f"_async_{action}_step"
                 try:
@@ -700,7 +714,9 @@ class _ScriptRun:
         else:
             wait_var["remaining"] = None
 
-    async def _async_run_long_action(self, long_task: asyncio.Task[_T]) -> _T | None:
+    async def _async_run_long_action[_T](
+        self, long_task: asyncio.Task[_T]
+    ) -> _T | None:
         """Run a long task while monitoring for stop request."""
         try:
             async with async_interrupt.interrupt(self._stop, ScriptStoppedError, None):
@@ -1193,6 +1209,12 @@ class _ScriptRun:
             response = None
         raise _StopScript(stop, response)
 
+    @async_trace_path("sequence")
+    async def _async_sequence_step(self) -> None:
+        """Run a sequence."""
+        sequence = await self._script._async_get_sequence_script(self._step)  # noqa: SLF001
+        await self._async_run_script(sequence)
+
     @async_trace_path("parallel")
     async def _async_parallel_step(self) -> None:
         """Run a sequence in parallel."""
@@ -1298,7 +1320,7 @@ async def _async_stop_scripts_at_shutdown(hass: HomeAssistant, event: Event) -> 
         )
 
 
-_VarsType = dict[str, Any] | MappingProxyType
+type _VarsType = dict[str, Any] | MappingProxyType
 
 
 def _referenced_extract_ids(data: Any, key: str, found: set[str]) -> None:
@@ -1350,7 +1372,7 @@ class Script:
         domain: str,
         *,
         # Used in "Running <running_description>" log message
-        change_listener: Callable[..., Any] | None = None,
+        change_listener: Callable[[], Any] | None = None,
         copy_variables: bool = False,
         log_exceptions: bool = True,
         logger: logging.Logger | None = None,
@@ -1379,6 +1401,7 @@ class Script:
         self.sequence = sequence
         template.attach(hass, self.sequence)
         self.name = name
+        self.unique_id = f"{domain}.{name}-{id(self)}"
         self.domain = domain
         self.running_description = running_description or f"{domain} script"
         self._change_listener = change_listener
@@ -1403,6 +1426,7 @@ class Script:
         self._choose_data: dict[int, _ChooseData] = {}
         self._if_data: dict[int, _IfData] = {}
         self._parallel_scripts: dict[int, list[Script]] = {}
+        self._sequence_scripts: dict[int, Script] = {}
         self.variables = variables
         self._variables_dynamic = template.is_complex(variables)
         if self._variables_dynamic:
@@ -1415,7 +1439,7 @@ class Script:
         return self._change_listener
 
     @change_listener.setter
-    def change_listener(self, change_listener: Callable[..., Any]) -> None:
+    def change_listener(self, change_listener: Callable[[], Any]) -> None:
         """Update the change_listener."""
         self._change_listener = change_listener
         if (
@@ -1700,10 +1724,21 @@ class Script:
         if (
             self.script_mode in (SCRIPT_MODE_RESTART, SCRIPT_MODE_QUEUED)
             and script_stack is not None
-            and id(self) in script_stack
+            and self.unique_id in script_stack
         ):
             script_execution_set("disallowed_recursion_detected")
-            self._log("Disallowed recursion detected", level=logging.WARNING)
+            formatted_stack = [
+                f"- {name_id.partition('-')[0]}" for name_id in script_stack
+            ]
+            self._log(
+                "Disallowed recursion detected, "
+                f"{script_stack[-1].partition('-')[0]} tried to start "
+                f"{self.domain}.{self.name} which is already running "
+                "in the current execution path; "
+                "Traceback (most recent call last):\n"
+                f"{"\n".join(formatted_stack)}",
+                level=logging.WARNING,
+            )
             return None
 
         if self.script_mode != SCRIPT_MODE_QUEUED:
@@ -1723,10 +1758,6 @@ class Script:
             # runs before sleeping as otherwise if two runs are started at the exact
             # same time they will cancel each other out.
             self._log("Restarting")
-            # Important: yield to the event loop to allow the script to start in case
-            # the script is restarting itself so it ends up in the script stack and
-            # the recursion check above will prevent the script from running.
-            await asyncio.sleep(0)
             await self.async_stop(update_state=False, spare=run)
 
         if started_action:
@@ -1928,6 +1959,35 @@ class Script:
             parallel_scripts = await self._async_prep_parallel_scripts(step)
             self._parallel_scripts[step] = parallel_scripts
         return parallel_scripts
+
+    async def _async_prep_sequence_script(self, step: int) -> Script:
+        """Prepare a sequence script."""
+        action = self.sequence[step]
+        step_name = action.get(CONF_ALIAS, f"Sequence action at step {step+1}")
+
+        sequence_script = Script(
+            self._hass,
+            action[CONF_SEQUENCE],
+            f"{self.name}: {step_name}",
+            self.domain,
+            running_description=self.running_description,
+            script_mode=SCRIPT_MODE_PARALLEL,
+            max_runs=self.max_runs,
+            logger=self._logger,
+            top_level=False,
+        )
+        sequence_script.change_listener = partial(
+            self._chain_change_listener, sequence_script
+        )
+
+        return sequence_script
+
+    async def _async_get_sequence_script(self, step: int) -> Script:
+        """Get a (cached) sequence script."""
+        if not (sequence_script := self._sequence_scripts.get(step)):
+            sequence_script = await self._async_prep_sequence_script(step)
+            self._sequence_scripts[step] = sequence_script
+        return sequence_script
 
     def _log(
         self, msg: str, *args: Any, level: int = logging.INFO, **kwargs: Any

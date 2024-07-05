@@ -14,8 +14,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import WLEDConfigEntry
 from .coordinator import WLEDDataUpdateCoordinator
+from .entity import WLEDEntity
 from .helpers import wled_exception_handler
-from .models import WLEDEntity
 
 
 async def async_setup_entry(
@@ -24,8 +24,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up WLED update based on a config entry."""
-    coordinator = entry.runtime_data
-    async_add_entities([WLEDUpdateEntity(coordinator)])
+    async_add_entities([WLEDUpdateEntity(entry.runtime_data)])
 
 
 class WLEDUpdateEntity(WLEDEntity, UpdateEntity):

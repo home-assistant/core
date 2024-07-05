@@ -59,6 +59,8 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             session=async_get_clientsession(hass),
         )
 
+        self._host = entry.data[CONF_HOST]
+
         super().__init__(
             hass,
             LOGGER,
@@ -191,7 +193,14 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                 self.unsub = None
             self.last_update_success = False
             self.async_update_listeners()
-            raise ConfigEntryAuthFailed from exception
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+                translation_placeholders={
+                    "title": self.title,
+                    "host": self._host,
+                },
+            ) from exception
         except ConnectionErrorException as exception:
             self.logger.warning(
                 "Connection error occurred for %s. Will retry: %s",

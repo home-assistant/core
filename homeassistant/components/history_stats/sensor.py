@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import datetime
-from typing import Any, TypeVar
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
@@ -55,10 +55,8 @@ UNITS: dict[str, str] = {
 }
 ICON = "mdi:chart-line"
 
-_T = TypeVar("_T", bound=dict[str, Any])
 
-
-def exactly_two_period_keys(conf: _T) -> _T:
+def exactly_two_period_keys[_T: dict[str, Any]](conf: _T) -> _T:
     """Ensure exactly 2 of CONF_PERIOD_KEYS are provided."""
     if sum(param in conf for param in CONF_PERIOD_KEYS) != 2:
         raise vol.Invalid(
@@ -68,7 +66,7 @@ def exactly_two_period_keys(conf: _T) -> _T:
 
 
 PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA.extend(
+    SENSOR_PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_ENTITY_ID): cv.entity_id,
             vol.Required(CONF_STATE): vol.All(cv.ensure_list, [cv.string]),

@@ -33,7 +33,7 @@ from tests.typing import RecorderInstanceGenerator
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceGenerator,
 ) -> None:
     """Set up recorder."""
 
@@ -382,7 +382,7 @@ async def test_get_significant_states_with_initial(
     includes an attribute change, but only the state updates for
     media player (attribute changes are not significant and not returned).
     """
-    hass.config.set_time_zone(time_zone)
+    await hass.config.async_set_time_zone(time_zone)
     zero, four, states = record_states(hass)
     await async_wait_recording_done(hass)
 
@@ -568,7 +568,9 @@ async def test_get_significant_states_only(
         )
 
 
-def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
+def record_states(
+    hass: HomeAssistant,
+) -> tuple[datetime, datetime, dict[str, list[State]]]:
     """Record some test states.
 
     We inject a bunch of state updates from media player, zone and

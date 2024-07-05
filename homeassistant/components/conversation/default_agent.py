@@ -44,7 +44,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_added_domain
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
-from .const import DEFAULT_EXPOSED_ATTRIBUTES, DOMAIN
+from .const import DEFAULT_EXPOSED_ATTRIBUTES, DOMAIN, ConversationEntityFeature
 from .entity import ConversationEntity
 from .models import ConversationInput, ConversationResult
 
@@ -147,6 +147,7 @@ class DefaultAgent(ConversationEntity):
     """Default agent for conversation agent."""
 
     _attr_name = "Home Assistant"
+    _attr_supported_features = ConversationEntityFeature.CONTROL
 
     def __init__(
         self, hass: core.HomeAssistant, config_intents: dict[str, Any]
@@ -335,8 +336,11 @@ class DefaultAgent(ConversationEntity):
         assert lang_intents is not None
 
         # Slot values to pass to the intent
-        slots = {
-            entity.name: {"value": entity.value, "text": entity.text or entity.value}
+        slots: dict[str, Any] = {
+            entity.name: {
+                "value": entity.value,
+                "text": entity.text or entity.value,
+            }
             for entity in result.entities_list
         }
 
@@ -350,11 +354,13 @@ class DefaultAgent(ConversationEntity):
                 user_input.context,
                 language,
                 assistant=DOMAIN,
+                device_id=user_input.device_id,
+                conversation_agent_id=user_input.agent_id,
             )
         except intent.MatchFailedError as match_error:
             # Intent was valid, but no entities matched the constraints.
             error_response_type, error_response_args = _get_match_error_response(
-                match_error
+                self.hass, match_error
             )
             return _make_error_result(
                 language,
@@ -364,14 +370,16 @@ class DefaultAgent(ConversationEntity):
                 ),
                 conversation_id,
             )
-        except intent.IntentHandleError:
+        except intent.IntentHandleError as err:
             # Intent was valid and entities matched constraints, but an error
             # occurred during handling.
             _LOGGER.exception("Intent handling error")
             return _make_error_result(
                 language,
                 intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
-                self._get_error_text(ErrorKey.HANDLE_ERROR, lang_intents),
+                self._get_error_text(
+                    err.response_key or ErrorKey.HANDLE_ERROR, lang_intents
+                ),
                 conversation_id,
             )
         except intent.IntentUnexpectedError:
@@ -412,8 +420,10 @@ class DefaultAgent(ConversationEntity):
         language: str,
     ) -> RecognizeResult | None:
         """Search intents for a match to user input."""
-        # Prioritize matches with entity names above area names
-        maybe_result: RecognizeResult | None = None
+        custom_result: RecognizeResult | None = None
+        name_result: RecognizeResult | None = None
+        best_results: list[RecognizeResult] = []
+        best_text_chunks_matched: int | None = None
         for result in recognize_all(
             user_input.text,
             lang_intents.intents,
@@ -421,18 +431,58 @@ class DefaultAgent(ConversationEntity):
             intent_context=intent_context,
             language=language,
         ):
-            if "name" in result.entities:
-                return result
+            # User intents have highest priority
+            if (result.intent_metadata is not None) and result.intent_metadata.get(
+                METADATA_CUSTOM_SENTENCE
+            ):
+                if (custom_result is None) or (
+                    result.text_chunks_matched > custom_result.text_chunks_matched
+                ):
+                    custom_result = result
 
-            # Keep looking in case an entity has the same name
-            maybe_result = result
+                # Clear builtin results
+                best_results = []
+                name_result = None
+                continue
 
-        if maybe_result is not None:
+            # Prioritize results with a "name" slot, but still prefer ones with
+            # more literal text matched.
+            if (
+                ("name" in result.entities)
+                and (not result.entities["name"].is_wildcard)
+                and (
+                    (name_result is None)
+                    or (result.text_chunks_matched > name_result.text_chunks_matched)
+                )
+            ):
+                name_result = result
+
+            if (best_text_chunks_matched is None) or (
+                result.text_chunks_matched > best_text_chunks_matched
+            ):
+                # Only overwrite if more literal text was matched.
+                # This causes wildcards to match last.
+                best_results = [result]
+                best_text_chunks_matched = result.text_chunks_matched
+            elif result.text_chunks_matched == best_text_chunks_matched:
+                # Accumulate results with the same number of literal text matched.
+                # We will resolve the ambiguity below.
+                best_results.append(result)
+
+        if custom_result is not None:
+            # Prioritize user intents
+            return custom_result
+
+        if name_result is not None:
+            # Prioritize matches with entity names above area names
+            return name_result
+
+        if best_results:
             # Successful strict match
-            return maybe_result
+            return best_results[0]
 
         # Try again with missing entities enabled
-        best_num_unmatched_entities = 0
+        maybe_result: RecognizeResult | None = None
         for result in recognize_all(
             user_input.text,
             lang_intents.intents,
@@ -518,13 +568,16 @@ class DefaultAgent(ConversationEntity):
             state1 = unmatched[0]
 
         # Render response template
+        speech_slots = {
+            entity_name: entity_value.text or entity_value.value
+            for entity_name, entity_value in recognize_result.entities.items()
+        }
+        speech_slots.update(intent_response.speech_slots)
+
         speech = response_template.async_render(
             {
-                # Slots from intent recognizer
-                "slots": {
-                    entity_name: entity_value.text or entity_value.value
-                    for entity_name, entity_value in recognize_result.entities.items()
-                },
+                # Slots from intent recognizer and response
+                "slots": speech_slots,
                 # First matched or unmatched state
                 "state": (
                     template.TemplateState(self.hass, state1)
@@ -685,11 +738,22 @@ class DefaultAgent(ConversationEntity):
             if self._config_intents and (
                 self.hass.config.language in (language, language_variant)
             ):
+                hass_config_path = self.hass.config.path()
                 merge_dict(
                     intents_dict,
                     {
                         "intents": {
-                            intent_name: {"data": [{"sentences": sentences}]}
+                            intent_name: {
+                                "data": [
+                                    {
+                                        "sentences": sentences,
+                                        "metadata": {
+                                            METADATA_CUSTOM_SENTENCE: True,
+                                            METADATA_CUSTOM_FILE: hass_config_path,
+                                        },
+                                    }
+                                ]
+                            }
                             for intent_name, sentences in self._config_intents.items()
                         }
                     },
@@ -845,11 +909,11 @@ class DefaultAgent(ConversationEntity):
         if device_area is None:
             return None
 
-        return {"area": {"value": device_area.id, "text": device_area.name}}
+        return {"area": {"value": device_area.name, "text": device_area.name}}
 
     def _get_error_text(
         self,
-        error_key: ErrorKey,
+        error_key: ErrorKey | str,
         lang_intents: LanguageIntents | None,
         **response_args,
     ) -> str:
@@ -857,7 +921,11 @@ class DefaultAgent(ConversationEntity):
         if lang_intents is None:
             return _DEFAULT_ERROR_TEXT
 
-        response_key = error_key.value
+        if isinstance(error_key, ErrorKey):
+            response_key = error_key.value
+        else:
+            response_key = error_key
+
         response_str = (
             lang_intents.error_responses.get(response_key) or _DEFAULT_ERROR_TEXT
         )
@@ -1008,6 +1076,7 @@ def _get_unmatched_response(result: RecognizeResult) -> tuple[ErrorKey, dict[str
 
 
 def _get_match_error_response(
+    hass: core.HomeAssistant,
     match_error: intent.MatchFailedError,
 ) -> tuple[ErrorKey, dict[str, Any]]:
     """Return key and template arguments for error when target matching fails."""
@@ -1073,6 +1142,23 @@ def _get_match_error_response(
     if reason == intent.MatchFailedReason.INVALID_FLOOR:
         # Invalid floor name
         return ErrorKey.NO_FLOOR, {"floor": result.no_match_name}
+
+    if reason == intent.MatchFailedReason.FEATURE:
+        # Feature not supported by entity
+        return ErrorKey.FEATURE_NOT_SUPPORTED, {}
+
+    if reason == intent.MatchFailedReason.STATE:
+        # Entity is not in correct state
+        assert match_error.constraints.states
+        state = next(iter(match_error.constraints.states))
+        if match_error.constraints.domains:
+            # Translate if domain is available
+            domain = next(iter(match_error.constraints.domains))
+            state = translation.async_translate_state(
+                hass, state, domain, None, None, None
+            )
+
+        return ErrorKey.ENTITY_WRONG_STATE, {"state": state}
 
     # Default error
     return ErrorKey.NO_INTENT, {}

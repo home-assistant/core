@@ -35,7 +35,7 @@ _API_TIMEOUT = SLOW_UPDATE_WARNING - 1
 
 _LOGGER = logging.getLogger(__name__)
 
-BondConfigEntry = ConfigEntry[BondData]
+type BondConfigEntry = ConfigEntry[BondData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BondConfigEntry) -> bool:

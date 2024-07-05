@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic, Literal, TypeVar, cast
+from typing import Any, Literal
 
 from pytraccar import DeviceModel
 
@@ -22,13 +22,9 @@ from .const import DOMAIN
 from .coordinator import TraccarServerCoordinator
 from .entity import TraccarServerEntity
 
-_T = TypeVar("_T")
-
 
 @dataclass(frozen=True, kw_only=True)
-class TraccarServerBinarySensorEntityDescription(
-    Generic[_T], BinarySensorEntityDescription
-):
+class TraccarServerBinarySensorEntityDescription[_T](BinarySensorEntityDescription):
     """Describe Traccar Server sensor entity."""
 
     data_key: Literal["position", "device", "geofence", "attributes"]
@@ -37,7 +33,9 @@ class TraccarServerBinarySensorEntityDescription(
     value_fn: Callable[[_T], bool | None]
 
 
-TRACCAR_SERVER_BINARY_SENSOR_ENTITY_DESCRIPTIONS = (
+TRACCAR_SERVER_BINARY_SENSOR_ENTITY_DESCRIPTIONS: tuple[
+    TraccarServerBinarySensorEntityDescription[Any], ...
+] = (
     TraccarServerBinarySensorEntityDescription[DeviceModel](
         key="attributes.motion",
         data_key="position",
@@ -65,18 +63,18 @@ async def async_setup_entry(
         TraccarServerBinarySensor(
             coordinator=coordinator,
             device=entry["device"],
-            description=cast(TraccarServerBinarySensorEntityDescription, description),
+            description=description,
         )
         for entry in coordinator.data.values()
         for description in TRACCAR_SERVER_BINARY_SENSOR_ENTITY_DESCRIPTIONS
     )
 
 
-class TraccarServerBinarySensor(TraccarServerEntity, BinarySensorEntity):
+class TraccarServerBinarySensor[_T](TraccarServerEntity, BinarySensorEntity):
     """Represent a traccar server binary sensor."""
 
     _attr_has_entity_name = True
-    entity_description: TraccarServerBinarySensorEntityDescription
+    entity_description: TraccarServerBinarySensorEntityDescription[_T]
 
     def __init__(
         self,

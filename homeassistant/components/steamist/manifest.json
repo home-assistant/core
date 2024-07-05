@@ -16,5 +16,5 @@
   "documentation": "https://www.home-assistant.io/integrations/steamist",
   "iot_class": "local_polling",
   "loggers": ["aiosteamist", "discovery30303"],
-  "requirements": ["aiosteamist==0.3.2", "discovery30303==0.2.1"]
+  "requirements": ["aiosteamist==1.0.0", "discovery30303==0.3.2"]
 }

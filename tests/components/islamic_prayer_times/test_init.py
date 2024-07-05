@@ -21,9 +21,9 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)
-def set_utc(hass: HomeAssistant) -> None:
+async def set_utc(hass: HomeAssistant) -> None:
     """Set timezone to UTC."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
 
 
 async def test_successful_config_entry(hass: HomeAssistant) -> None:

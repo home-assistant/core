@@ -7,13 +7,12 @@ from aioautomower.exceptions import ApiException
 from aioautomower.model import HeadlightModes
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerControlEntity
 
@@ -29,10 +28,12 @@ HEADLIGHT_MODES: list = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AutomowerConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up select platform."""
-    coordinator: AutomowerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         AutomowerSelectEntity(mower_id, coordinator)
         for mower_id in coordinator.data
@@ -59,7 +60,9 @@ class AutomowerSelectEntity(AutomowerControlEntity, SelectEntity):
     @property
     def current_option(self) -> str:
         """Return the current option for the entity."""
-        return cast(HeadlightModes, self.mower_attributes.headlight.mode).lower()
+        return cast(
+            HeadlightModes, self.mower_attributes.settings.headlight.mode
+        ).lower()
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""

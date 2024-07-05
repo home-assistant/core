@@ -5,6 +5,10 @@
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Husqvarna Automower integration needs to re-authenticate your account"
       },
+      "missing_scope": {
+        "title": "Your account is missing some API connections",
+        "description": "For the best experience with this integration both the `Authentication API` and the `Automower Connect API` should be connected. Please make sure that both of them are connected to your account in the [Husqvarna Developer Portal]({application_url})."
+      },
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       }
@@ -22,7 +26,8 @@
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "wrong_account": "You can only reauthenticate this entry with the same Husqvarna account."
+      "wrong_account": "You can only reauthenticate this entry with the same Husqvarna account.",
+      "missing_amc_scope": "The `Authentication API` and the `Automower Connect API` are not connected to your application in the Husqvarna Developer Portal."
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -35,6 +40,11 @@
       },
       "returning_to_dock": {
         "name": "Returning to dock"
+      }
+    },
+    "button": {
+      "confirm_error": {
+        "name": "Confirm error"
       }
     },
     "number": {
@@ -238,11 +248,49 @@
           "home": "Home",
           "demo": "Demo"
         }
+      },
+      "work_area": {
+        "name": "Work area",
+        "state": {
+          "my_lawn": "My lawn"
+        }
       }
     },
     "switch": {
       "enable_schedule": {
         "name": "Enable schedule"
+      },
+      "stay_out_zones": {
+        "name": "Avoid {stay_out_zone}"
+      }
+    }
+  },
+  "exceptions": {
+    "command_send_failed": {
+      "message": "Failed to send command: {exception}"
+    }
+  },
+  "selector": {
+    "override_modes": {
+      "options": {
+        "mow": "Mow",
+        "park": "Park"
+      }
+    }
+  },
+  "services": {
+    "override_schedule": {
+      "name": "Override schedule",
+      "description": "Override the schedule to either mow or park for a duration of time.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "Minimum: 1 minute, maximum: 42 days, seconds will be ignored."
+        },
+        "override_mode": {
+          "name": "Override mode",
+          "description": "With which action the schedule should be overridden."
+        }
       }
     }
   }

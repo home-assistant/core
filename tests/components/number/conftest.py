@@ -2,7 +2,7 @@
 
 import pytest
 
-from tests.components.number.common import MockNumberEntity
+from .common import MockNumberEntity
 
 UNIQUE_NUMBER = "unique_number"
 

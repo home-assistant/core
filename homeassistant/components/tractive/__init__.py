@@ -73,7 +73,7 @@ class TractiveData:
     trackables: list[Trackables]
 
 
-TractiveConfigEntry = ConfigEntry[TractiveData]
+type TractiveConfigEntry = ConfigEntry[TractiveData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> bool:
@@ -147,6 +147,11 @@ async def _generate_trackables(
     tracker_details, hw_info, pos_report = await asyncio.gather(
         tracker.details(), tracker.hw_info(), tracker.pos_report()
     )
+
+    if not tracker_details.get("_id"):
+        raise ConfigEntryNotReady(
+            f"Tractive API returns incomplete data for tracker {trackable['device_id']}",
+        )
 
     return Trackables(tracker, trackable, tracker_details, hw_info, pos_report)
 

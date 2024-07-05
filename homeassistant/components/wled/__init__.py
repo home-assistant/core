@@ -10,7 +10,6 @@ from .const import LOGGER
 from .coordinator import WLEDDataUpdateCoordinator
 
 PLATFORMS = (
-    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.LIGHT,
     Platform.NUMBER,
@@ -20,7 +19,7 @@ PLATFORMS = (
     Platform.UPDATE,
 )
 
-WLEDConfigEntry = ConfigEntry[WLEDDataUpdateCoordinator]
+type WLEDConfigEntry = ConfigEntry[WLEDDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WLEDConfigEntry) -> bool:

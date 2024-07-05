@@ -5,9 +5,11 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from nettigo_air_monitor import ApiError
+import pytest
 from syrupy import SnapshotAssertion
+from tenacity import RetryError
 
-from homeassistant.components.nam.const import DOMAIN
+from homeassistant.components.nam.const import DEFAULT_UPDATE_INTERVAL, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -31,15 +33,15 @@ from tests.common import (
 )
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test states of the air_quality."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2024-04-20 12:00:00+00:00")
 
     with patch("homeassistant.components.nam.PLATFORMS", [Platform.SENSOR]):
@@ -75,7 +77,7 @@ async def test_incompleta_data_after_device_restart(hass: HomeAssistant) -> None
 
     state = hass.states.get("sensor.nettigo_air_monitor_heca_temperature")
     assert state
-    assert state.state == "8.0"
+    assert state.state == "7.95"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
 
@@ -96,7 +98,10 @@ async def test_incompleta_data_after_device_restart(hass: HomeAssistant) -> None
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_availability(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("exc", [ApiError("API Error"), RetryError])
+async def test_availability(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, exc: Exception
+) -> None:
     """Ensure that we mark the entities unavailable correctly when device causes an error."""
     nam_data = load_json_object_fixture("nam/nam_data.json")
 
@@ -105,24 +110,23 @@ async def test_availability(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.nettigo_air_monitor_bme280_temperature")
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "7.6"
+    assert state.state == "7.56"
 
-    future = utcnow() + timedelta(minutes=6)
     with (
         patch("homeassistant.components.nam.NettigoAirMonitor.initialize"),
         patch(
             "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
-            side_effect=ApiError("API Error"),
+            side_effect=exc,
         ),
     ):
-        async_fire_time_changed(hass, future)
+        freezer.tick(DEFAULT_UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.nettigo_air_monitor_bme280_temperature")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    future = utcnow() + timedelta(minutes=12)
     update_response = Mock(json=AsyncMock(return_value=nam_data))
     with (
         patch("homeassistant.components.nam.NettigoAirMonitor.initialize"),
@@ -131,13 +135,14 @@ async def test_availability(hass: HomeAssistant) -> None:
             return_value=update_response,
         ),
     ):
-        async_fire_time_changed(hass, future)
+        freezer.tick(DEFAULT_UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.nettigo_air_monitor_bme280_temperature")
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "7.6"
+    assert state.state == "7.56"
 
 
 async def test_manual_update_entity(hass: HomeAssistant) -> None:

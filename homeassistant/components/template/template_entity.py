@@ -189,7 +189,7 @@ class _TemplateAttribute:
         self,
         event: Event[EventStateChangedData] | None,
         template: Template,
-        last_result: str | None | TemplateError,
+        last_result: str | TemplateError | None,
         result: str | TemplateError,
     ) -> None:
         """Handle a template result event callback."""

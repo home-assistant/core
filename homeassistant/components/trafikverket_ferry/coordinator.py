@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 from pytrafikverket import TrafikverketFerry
 from pytrafikverket.exceptions import InvalidAuthentication, NoFerryFound
-from pytrafikverket.trafikverket_ferry import FerryStop
+from pytrafikverket.models import FerryStopModel
 
 from homeassistant.const import CONF_API_KEY, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.core import HomeAssistant
@@ -77,7 +77,7 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator):
             datetime.combine(
                 departure_day,
                 self._time,
-                dt_util.get_time_zone(self.hass.config.time_zone),
+                dt_util.get_default_time_zone(),
             )
             if self._time
             else dt_util.now()
@@ -86,7 +86,7 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator):
 
         try:
             routedata: list[
-                FerryStop
+                FerryStopModel
             ] = await self._ferry_api.async_get_next_ferry_stops(
                 self._from, self._to, when, 3
             )

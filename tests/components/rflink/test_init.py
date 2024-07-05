@@ -417,7 +417,9 @@ async def test_keepalive(
     )
 
 
-async def test2_keepalive(hass, monkeypatch, caplog):
+async def test_keepalive_2(
+    hass: HomeAssistant, monkeypatch, caplog: pytest.LogCaptureFixture
+) -> None:
     """Validate very short keepalive values."""
     keepalive_value = 30
     domain = RFLINK_DOMAIN
@@ -443,7 +445,9 @@ async def test2_keepalive(hass, monkeypatch, caplog):
     )
 
 
-async def test3_keepalive(hass, monkeypatch, caplog):
+async def test_keepalive_3(
+    hass: HomeAssistant, monkeypatch, caplog: pytest.LogCaptureFixture
+) -> None:
     """Validate keepalive=0 value."""
     domain = RFLINK_DOMAIN
     config = {
@@ -480,7 +484,9 @@ async def test_default_keepalive(
     assert "TCP Keepalive IDLE timer was provided" not in caplog.text
 
 
-async def test_unique_id(hass: HomeAssistant, monkeypatch) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, monkeypatch
+) -> None:
     """Validate the device unique_id."""
 
     DOMAIN = "sensor"
@@ -503,15 +509,13 @@ async def test_unique_id(hass: HomeAssistant, monkeypatch) -> None:
         },
     }
 
-    registry = er.async_get(hass)
-
     # setup mocking rflink module
     event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
 
-    humidity_entry = registry.async_get("sensor.humidity_device")
+    humidity_entry = entity_registry.async_get("sensor.humidity_device")
     assert humidity_entry
     assert humidity_entry.unique_id == "my_humidity_device_unique_id"
 
-    temperature_entry = registry.async_get("sensor.temperature_device")
+    temperature_entry = entity_registry.async_get("sensor.temperature_device")
     assert temperature_entry
     assert temperature_entry.unique_id == "my_temperature_device_unique_id"
