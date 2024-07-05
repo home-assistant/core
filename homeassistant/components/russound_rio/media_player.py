@@ -5,8 +5,6 @@ from __future__ import annotations
 import logging
 from typing import cast
 
-from aiorussound import Russound
-
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -14,14 +12,55 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the Russound RIO platform."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
+    )
+    issue_key = f"deprecated_yaml_{DOMAIN}"
+    translation_key = "deprecated_yaml"
+    if not (
+        result["type"] is FlowResultType.CREATE_ENTRY
+        or result["reason"] == "single_instance_allowed"
+    ):
+        issue_key = f"deprecated_yaml_import_issue_{result['reason']}"
+        translation_key = f"deprecated_yaml_import_issue_{result['reason']}"
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        issue_key,
+        breaks_in_ha_version="2025.1.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key=translation_key,
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Russound RIO",
+        },
+    )
 
 
 async def async_setup_entry(

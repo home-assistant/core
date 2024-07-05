@@ -54,5 +54,29 @@ async def test_cannot_connect(hass: HomeAssistant) -> None:
             MOCK_CONFIG,
         )
 
-    assert result2["type"] is data_entry_flow.FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result2["reason"] == "cannot_connect"
+
+
+async def test_import(hass: HomeAssistant) -> None:
+    """Test we import a config entry."""
+    with (
+        patch(
+            "homeassistant.components.russound_rio.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.russound_rio.Russound.connect", return_value=None
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=MOCK_CONFIG,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == MOCK_CONFIG["name"]
+    assert result["data"] == MOCK_CONFIG
+    assert len(mock_setup_entry.mock_calls) == 1

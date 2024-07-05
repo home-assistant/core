@@ -60,7 +60,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Display pairing form."""
 
         self.context[CONF_HOST] = self._host
-        errors = {}
 
         try:
             russ = Russound(self.hass.loop, self._host, self._port)
@@ -70,7 +69,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 await russ.close()
         except RUSSOUND_RIO_EXCEPTIONS as err:
             _LOGGER.error("Could not connect to Russound RIO: %s", err)
-            errors["base"] = "cannot_connect"
+            return self.async_abort(
+                reason="cannot_connect", description_placeholders={}
+            )
         else:
             data = {
                 CONF_HOST: self._host,
@@ -80,4 +81,13 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(title=self._name, data=data)
 
-        return self.async_show_form(step_id="pairing", errors=errors)
+    async def async_step_import(
+        self, import_config: dict[str, Any]
+    ) -> ConfigFlowResult:
+        """Attempt to import the existing configuration."""
+        self._async_abort_entries_match({CONF_HOST: import_config[CONF_HOST]})
+        self._host = import_config[CONF_HOST]
+        self._name = import_config[CONF_NAME]
+        self._port = import_config.get(CONF_PORT, self._port)
+
+        return await self.async_step_pairing()
