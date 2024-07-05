@@ -249,45 +249,40 @@ async def test_climate_hvac_action_running_state(
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
-    # TODO something is wrong here   # pylint: disable=fixme
-    # hvac_sensor_state = hass.states.get(sensor_entity_id)
-    # assert hvac_sensor_state.state == HVACAction.IDLE
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == HVACAction.IDLE
 
     await send_attributes_report(
         hass, thrm_cluster, {0x001E: Thermostat.RunningMode.Cool}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING
-    # TODO something is wrong here   # pylint: disable=fixme
-    # hvac_sensor_state = hass.states.get(sensor_entity_id)
-    # assert hvac_sensor_state.state == HVACAction.COOLING
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == HVACAction.COOLING
 
     await send_attributes_report(
         hass, thrm_cluster, {0x001E: Thermostat.RunningMode.Heat}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
-    # TODO something is wrong here   # pylint: disable=fixme
-    # hvac_sensor_state = hass.states.get(sensor_entity_id)
-    # assert hvac_sensor_state.state == HVACAction.HEATING
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == HVACAction.HEATING
 
     await send_attributes_report(
         hass, thrm_cluster, {0x001E: Thermostat.RunningMode.Off}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
-    # TODO something is wrong here   # pylint: disable=fixme
-    # hvac_sensor_state = hass.states.get(sensor_entity_id)
-    # assert hvac_sensor_state.state == HVACAction.IDLE
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == HVACAction.IDLE
 
     await send_attributes_report(
         hass, thrm_cluster, {0x0029: Thermostat.RunningState.Fan_State_On}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.FAN
-    # TODO something is wrong here   # pylint: disable=fixme
-    # hvac_sensor_state = hass.states.get(sensor_entity_id)
-    # assert hvac_sensor_state.state == HVACAction.FAN
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == HVACAction.FAN
 
 
 async def test_climate_hvac_action_pi_demand(
