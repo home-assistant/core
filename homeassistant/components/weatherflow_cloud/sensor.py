@@ -192,9 +192,9 @@ async def async_setup_entry(
             async_add_entities(
                 [
                     WeatherFlowCloudSensor(
-                        coordinator=coordinator,
-                        description=sensor_description,
-                        station_id=station_id,
+                        coordinator,
+                        sensor_description,
+                        station_id,
                     )
                 ],
             )
