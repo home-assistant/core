@@ -40,7 +40,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .conftest import ConfigEntryFactoryType
+from .conftest import ConfigEntryFactoryType, WebsocketDataType
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -471,7 +471,10 @@ async def test_lights(
     ],
 )
 @pytest.mark.usefixtures("config_entry_setup")
-async def test_light_state_change(hass: HomeAssistant, mock_deconz_websocket) -> None:
+async def test_light_state_change(
+    hass: HomeAssistant,
+    mock_websocket_data: WebsocketDataType,
+) -> None:
     """Verify light can change state on websocket event."""
     assert hass.states.get("light.hue_go").state == STATE_ON
 
@@ -482,7 +485,7 @@ async def test_light_state_change(hass: HomeAssistant, mock_deconz_websocket) ->
         "id": "0",
         "state": {"on": False},
     }
-    await mock_deconz_websocket(data=event_changed_light)
+    await mock_websocket_data(event_changed_light)
     await hass.async_block_till_done()
 
     assert hass.states.get("light.hue_go").state == STATE_OFF
@@ -1295,7 +1298,8 @@ async def test_disable_light_groups(
 )
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_non_color_light_reports_color(
-    hass: HomeAssistant, mock_deconz_websocket
+    hass: HomeAssistant,
+    mock_websocket_data: WebsocketDataType,
 ) -> None:
     """Verify hs_color does not crash when a group gets updated with a bad color value.
 
@@ -1331,7 +1335,7 @@ async def test_non_color_light_reports_color(
         "t": "event",
         "uniqueid": "ec:1b:bd:ff:fe:ee:ed:dd-01",
     }
-    await mock_deconz_websocket(data=event_changed_light)
+    await mock_websocket_data(event_changed_light)
     await hass.async_block_till_done()
 
     group = hass.states.get("light.group")
@@ -1510,15 +1514,16 @@ async def test_verify_group_supported_features(hass: HomeAssistant) -> None:
 )
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_verify_group_color_mode_fallback(
-    hass: HomeAssistant, mock_deconz_websocket
+    hass: HomeAssistant,
+    mock_websocket_data: WebsocketDataType,
 ) -> None:
     """Test that group supported features reflect what included lights support."""
     group_state = hass.states.get("light.opbergruimte")
     assert group_state.state == STATE_OFF
     assert group_state.attributes[ATTR_COLOR_MODE] is None
 
-    await mock_deconz_websocket(
-        data={
+    await mock_websocket_data(
+        {
             "e": "changed",
             "id": "13",
             "r": "lights",
@@ -1533,8 +1538,8 @@ async def test_verify_group_color_mode_fallback(
             "uniqueid": "00:17:88:01:08:11:22:33-01",
         }
     )
-    await mock_deconz_websocket(
-        data={
+    await mock_websocket_data(
+        {
             "e": "changed",
             "id": "43",
             "r": "groups",
