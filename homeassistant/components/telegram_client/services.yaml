@@ -1,0 +1,41 @@
+# Describes the format for available Telegram client services
+
+send_message:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: telegram_client
+    target_username:
+      example: me, telegram, BotFather, +380987654321
+      selector:
+        text:
+    target_id:
+      example: -1000000000000, 1000000000000
+      selector:
+        number:
+    message:
+      required: true
+      example: The garage door has been open for 10 minutes.
+      selector:
+        text:
+    parse_mode:
+      selector:
+        select:
+          options:
+            - html
+            - markdown
+    disable_notification:
+      selector:
+        boolean:
+    disable_web_page_preview:
+      selector:
+        boolean:
+    schedule:
+      selector:
+        datetime:
+    reply_to_message_id:
+      selector:
+        number:
+          mode: box

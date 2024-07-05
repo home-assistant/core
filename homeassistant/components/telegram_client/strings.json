@@ -1,0 +1,86 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "api_id": "api_id",
+          "api_hash": "api_hash"
+        },
+        "title": "API parameters",
+        "description": "You can obtain api_id and api_hash using [this manual](https://core.telegram.org/api/obtaining_api_id#obtaining-api-id)."
+      },
+      "phone": {
+        "data": {
+          "phone_number": "Phone number"
+        },
+        "data_description": {
+          "phone_number": "Phone number in international format (+XXXXXXXXXXXX)"
+        },
+        "title": "Phone"
+      },
+      "otp": {
+        "data": {
+          "otp": "One time password"
+        },
+        "title": "OTP"
+      },
+      "password": {
+        "data": {
+          "password": "Password"
+        },
+        "title": "Password"
+      },
+      "reauth_confirm": {
+        "title": "Reauthentication",
+        "description": "Press the button to start reauthentication process. You'll receive new OTP to submit on the next step.",
+        "data": {}
+      }
+    },
+    "error": {},
+    "abort": {}
+  },
+  "services": {
+    "send_message": {
+      "name": "Send message",
+      "description": "Sends a notification.",
+      "fields": {
+        "device_id": {
+          "name": "Account",
+          "description": "Account to send message from."
+        },
+        "message": {
+          "name": "Message",
+          "description": "Message body of the notification."
+        },
+        "target_username": {
+          "name": "Target username",
+          "description": "User, channel, bot username or phone number."
+        },
+        "target_id": {
+          "name": "Target ID",
+          "description": "User or group id."
+        },
+        "parse_mode": {
+          "name": "Parse mode",
+          "description": "Parser for the message text."
+        },
+        "disable_notification": {
+          "name": "Disable notification",
+          "description": "Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound."
+        },
+        "disable_web_page_preview": {
+          "name": "Disable web page preview",
+          "description": "Disables link previews for links in the message."
+        },
+        "schedule": {
+          "name": "Schedule",
+          "description": "Schedule message delivery."
+        },
+        "reply_to_message_id": {
+          "name": "Reply to message id",
+          "description": "Mark the message as a reply to a previous message."
+        }
+      }
+    }
+  }
+}
