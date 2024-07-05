@@ -31,7 +31,7 @@ class MadVRCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(hass, _LOGGER, name=DOMAIN)
         self.entry_id = self.config_entry.entry_id
         # get the mac address from the config entry
-        self.mac = self.config_entry.data[CONF_MAC]
+        self.mac = self.config_entry.data.get(CONF_MAC)
         self.client = client
         self.client.set_update_callback(self.handle_push_data)
         _LOGGER.debug("MadVRCoordinator initialized with mac: %s", self.mac)
