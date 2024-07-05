@@ -17,7 +17,7 @@ PLATFORMS: list[str] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
     access_url = entry.data[CONF_ACCESS_URL]
-    sf_client: SimpleFin = SimpleFin(access_url)
+    sf_client = SimpleFin(access_url)
     sf_coordinator = SimpleFinDataUpdateCoordinator(hass, sf_client)
     await sf_coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = sf_coordinator
