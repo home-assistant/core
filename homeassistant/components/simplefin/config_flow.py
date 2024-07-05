@@ -26,22 +26,7 @@ SF_SCHEMA = vol.Schema(
 
 
 async def __validate_or_obtain_access_url(input_string: str) -> str:
-    """Validate the input string as an access URL or a claim token and fetch data using SimpleFin.
-
-    Args:
-        input_string (str): The input_string will either be a URL or a base64 encoded claim_token
-
-    Returns:
-        str: The validated access URL - (or throws an error)
-
-    Raises:
-        SimpleFinInvalidAccountURLError: If the input string is an invalid access URL.
-        SimpleFinPaymentRequiredError: User needs to contact SimpleFin for payment.
-        SimpleFinAuthError: Generic Auth Error
-        SimpleFinInvalidClaimTokenError: If the input string is an invalid claim token.
-        SimpleFinClaimError: If there's an error in claim token processing.
-
-    """
+    """Validate the input string as an access URL or a claim token and fetch data using SimpleFin."""
 
     if not input_string.startswith("http"):
         LOGGER.debug("[Setup Token] - Claiming Access URL")
@@ -62,16 +47,7 @@ async def __validate_or_obtain_access_url(input_string: str) -> str:
 async def _validate_and_get_errors(
     user_input: dict[str, Any],
 ) -> tuple[str, dict[str, str]]:
-    """Validate the user input and returns the validated URL and any errors that might occur.
-
-    Args:
-        user_input (dict[str, Any]): The user input dictionary which contains the CONF_ACCESS_URL key.
-        CONF_ACCESS_URL (str): The key used to access the URL from the user input dictionary.
-
-    Returns:
-        tuple[str, dict[str, str]]: A tuple containing the validated URL and a dictionary of any errors that occurred.
-
-    """
+    """Validate the user input and returns the validated URL and any errors that might occur."""
 
     errors = {}
     try:

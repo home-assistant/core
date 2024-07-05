@@ -16,13 +16,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import SimpleFinDataUpdateCoordinator
+from . import SimpleFinConfigEntry, SimpleFinData
 from .entity import SimpleFinEntity
 
 
@@ -61,26 +59,25 @@ SIMPLEFIN_SENSORS: tuple[SimpleFinSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SimpleFinConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up SimpleFIN sensors for config entries."""
-    simplefin_coordinator: SimpleFinDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
-    accounts = simplefin_coordinator.data.accounts
+
+    runtime_data: SimpleFinData = config_entry.runtime_data
+
+    accounts = runtime_data.sf_coordinator.data.accounts
 
     for account in accounts:
         for sensor_description in SIMPLEFIN_SENSORS:
             async_add_entities(
                 [
                     SimpleFinSensor(
-                        coordinator=simplefin_coordinator,
+                        coordinator=runtime_data.sf_coordinator,
                         description=sensor_description,
                         account=account,
                     )
-                ],
-                True,
+                ]
             )
 
 
