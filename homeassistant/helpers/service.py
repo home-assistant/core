@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Iterable
+from collections.abc import Awaitable, Callable, Iterable
 import dataclasses
 from enum import Enum
 from functools import cache, partial
@@ -63,7 +63,7 @@ from . import (
 )
 from .group import expand_entity_ids
 from .selector import TargetSelector
-from .typing import ConfigType, TemplateVarsType, VolSchemaType
+from .typing import AsyncCallable, ConfigType, TemplateVarsType, VolSchemaType
 
 if TYPE_CHECKING:
     from .entity import Entity
@@ -1189,7 +1189,7 @@ class ReloadServiceHelper[_T]:
 
     def __init__(
         self,
-        service_func: Callable[[ServiceCall], Coroutine[Any, Any, Any]],
+        service_func: AsyncCallable[[ServiceCall], Any],
         reload_targets_func: Callable[[ServiceCall], set[_T]],
     ) -> None:
         """Initialize ReloadServiceHelper."""

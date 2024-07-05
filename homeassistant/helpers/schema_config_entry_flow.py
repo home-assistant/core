@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.data_entry_flow import UnknownHandler
 
 from . import entity_registry as er, selector
-from .typing import UNDEFINED, UndefinedType
+from .typing import UNDEFINED, AsyncCallable, UndefinedType
 
 
 class SchemaFlowError(Exception):
@@ -39,9 +39,7 @@ class SchemaFlowFormStep(SchemaFlowStep):
     """Define a config or options flow form step."""
 
     schema: (
-        vol.Schema
-        | Callable[[SchemaCommonFlowHandler], Coroutine[Any, Any, vol.Schema | None]]
-        | None
+        vol.Schema | AsyncCallable[[SchemaCommonFlowHandler], vol.Schema | None] | None
     ) = None
     """Optional voluptuous schema, or function which returns a schema or None, for
     requesting and validating user input.
@@ -67,9 +65,7 @@ class SchemaFlowFormStep(SchemaFlowStep):
     - The `validate_user_input` should raise `SchemaFlowError` if user input is invalid.
     """
 
-    next_step: (
-        Callable[[dict[str, Any]], Coroutine[Any, Any, str | None]] | str | None
-    ) = None
+    next_step: AsyncCallable[[dict[str, Any]], str | None] | str | None = None
     """Optional property to identify next step.
 
     - If `next_step` is a function, it is called if the schema validates successfully or
@@ -80,9 +76,7 @@ class SchemaFlowFormStep(SchemaFlowStep):
     """
 
     suggested_values: (
-        Callable[[SchemaCommonFlowHandler], Coroutine[Any, Any, dict[str, Any]]]
-        | None
-        | UndefinedType
+        AsyncCallable[[SchemaCommonFlowHandler], dict[str, Any]] | None | UndefinedType
     ) = UNDEFINED
     """Optional property to populate suggested values.
 
@@ -412,8 +406,7 @@ class SchemaOptionsFlowHandler(OptionsFlowWithConfigEntry):
         options_flow: Mapping[str, SchemaFlowStep],
         async_options_flow_finished: Callable[[HomeAssistant, Mapping[str, Any]], None]
         | None = None,
-        async_setup_preview: Callable[[HomeAssistant], Coroutine[Any, Any, None]]
-        | None = None,
+        async_setup_preview: AsyncCallable[[HomeAssistant], None] | None = None,
     ) -> None:
         """Initialize options flow.
 

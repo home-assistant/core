@@ -33,7 +33,7 @@ from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.hass_dict import HassKey
 
 from .template import Template
-from .typing import ConfigType, TemplateVarsType
+from .typing import AsyncCallable, ConfigType, TemplateVarsType
 
 _PLATFORM_ALIASES = {
     "device": "device_automation",
@@ -265,9 +265,9 @@ def _trigger_action_wrapper(
     while isinstance(check_func, functools.partial):
         check_func = check_func.func
 
-    wrapper_func: Callable[..., None] | Callable[..., Coroutine[Any, Any, None]]
+    wrapper_func: Callable[..., None] | AsyncCallable[..., None]
     if asyncio.iscoroutinefunction(check_func):
-        async_action = cast(Callable[..., Coroutine[Any, Any, None]], action)
+        async_action = cast(AsyncCallable[..., None], action)
 
         @functools.wraps(async_action)
         async def async_with_vars(

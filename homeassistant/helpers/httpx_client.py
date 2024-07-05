@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 import sys
 from typing import Any, Self
 
@@ -19,6 +18,7 @@ from homeassistant.util.ssl import (
 )
 
 from .frame import warn_use
+from .typing import AsyncCallable
 
 # We have a lot of integrations that poll every 10-30 seconds
 # and we want to keep the connection open for a while so we
@@ -105,7 +105,7 @@ def create_async_httpx_client(
 def _async_register_async_client_shutdown(
     hass: HomeAssistant,
     client: httpx.AsyncClient,
-    original_aclose: Callable[[], Coroutine[Any, Any, None]],
+    original_aclose: AsyncCallable[[], None],
 ) -> None:
     """Register httpx AsyncClient aclose on Home Assistant shutdown.
 
