@@ -648,9 +648,9 @@ async def test_http_api_wrong_data(
     assert resp.status == HTTPStatus.BAD_REQUEST
 
 
+@pytest.mark.usefixtures("init_components")
 async def test_custom_agent(
     hass: HomeAssistant,
-    init_components,
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
     mock_conversation_agent: MockAgent,
