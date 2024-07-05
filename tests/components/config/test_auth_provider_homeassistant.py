@@ -183,7 +183,13 @@ async def test_create_auth_duplicate_username(
 
     result = await client.receive_json()
     assert not result["success"], result
-    assert result["error"]["code"] == "username_exists"
+    assert result["error"] == {
+        "code": "home_assistant_error",
+        "message": "username_already_exists",
+        "translation_key": "username_already_exists",
+        "translation_placeholders": {"username": "test-user"},
+        "translation_domain": "auth",
+    }
 
 
 async def test_delete_removes_just_auth(
@@ -282,7 +288,13 @@ async def test_delete_unknown_auth(
 
     result = await client.receive_json()
     assert not result["success"], result
-    assert result["error"]["code"] == "auth_not_found"
+    assert result["error"] == {
+        "code": "home_assistant_error",
+        "message": "user_not_found",
+        "translation_key": "user_not_found",
+        "translation_placeholders": None,
+        "translation_domain": "auth",
+    }
 
 
 async def test_change_password(
