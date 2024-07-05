@@ -11,7 +11,6 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
 
 from . import RoborockConfigEntry
 from .coordinator import RoborockDataUpdateCoordinator
@@ -81,7 +80,7 @@ async def async_setup_entry(
     )
     async_add_entities(
         RoborockCurrentMapSelectEntity(
-            f"selected_map_{slugify(coordinator.duid)}", coordinator
+            f"selected_map_{coordinator.duid_slug}", coordinator
         )
         for coordinator in config_entry.runtime_data.v1
     )
@@ -101,7 +100,7 @@ class RoborockSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
         """Create a select entity."""
         self.entity_description = entity_description
         super().__init__(
-            f"{entity_description.key}_{slugify(coordinator.duid)}",
+            f"{entity_description.key}_{coordinator.duid_slug}",
             coordinator,
             entity_description.protocol_listener,
         )
@@ -152,8 +151,6 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Get the current status of the select entity from device_status."""
-        return (
-            self.coordinator.maps[self.coordinator.current_map].name
-            if self.coordinator.current_map is not None
-            else None
-        )
+        if self.coordinator.current_map is not None:
+            return self.coordinator.maps[self.coordinator.current_map].name
+        return None
