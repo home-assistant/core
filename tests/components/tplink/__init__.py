@@ -210,7 +210,8 @@ def _mocked_device(
 
     if modules:
         device.modules = {
-            module_name: MODULE_TO_MOCK_GEN[module_name]() for module_name in modules
+            module_name: MODULE_TO_MOCK_GEN[module_name](device)
+            for module_name in modules
         }
 
     if features:
@@ -298,7 +299,7 @@ def _mocked_feature(
     return feature
 
 
-def _mocked_light_module() -> Light:
+def _mocked_light_module(device) -> Light:
     light = MagicMock(spec=Light, name="Mocked light module")
     light.update = AsyncMock()
     light.brightness = 50
@@ -314,26 +315,58 @@ def _mocked_light_module() -> Light:
     light.hsv = (10, 30, 5)
     light.valid_temperature_range = ColorTempRange(min=4000, max=9000)
     light.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
-    light.set_state = AsyncMock()
-    light.set_brightness = AsyncMock()
-    light.set_hsv = AsyncMock()
-    light.set_color_temp = AsyncMock()
+
+    async def _set_state(state, *_, **__):
+        light.state = state
+
+    light.set_state = AsyncMock(wraps=_set_state)
+
+    async def _set_brightness(brightness, *_, **__):
+        light.state.brightness = brightness
+        light.state.light_on = brightness > 0
+
+    light.set_brightness = AsyncMock(wraps=_set_brightness)
+
+    async def _set_hsv(h, s, v, *_, **__):
+        light.state.hue = h
+        light.state.saturation = s
+        light.state.brightness = v
+        light.state.light_on = True
+
+    light.set_hsv = AsyncMock(wraps=_set_hsv)
+
+    async def _set_color_temp(temp, *_, **__):
+        light.state.color_temp = temp
+        light.state.light_on = True
+
+    light.set_color_temp = AsyncMock(wraps=_set_color_temp)
     light.protocol = _mock_protocol()
     return light
 
 
-def _mocked_light_effect_module() -> LightEffect:
+def _mocked_light_effect_module(device) -> LightEffect:
     effect = MagicMock(spec=LightEffect, name="Mocked light effect")
     effect.has_effects = True
     effect.has_custom_effects = True
     effect.effect = "Effect1"
     effect.effect_list = ["Off", "Effect1", "Effect2"]
-    effect.set_effect = AsyncMock()
+
+    async def _set_effect(effect_name, *_, **__):
+        assert (
+            effect_name in effect.effect_list
+        ), f"set_effect '{effect_name}' not in {effect.effect_list}"
+        assert device.modules[
+            Module.Light
+        ], "Need a light module to test set_effect method"
+        device.modules[Module.Light].state.light_on = True
+        effect.effect = effect_name
+
+    effect.set_effect = AsyncMock(wraps=_set_effect)
     effect.set_custom_effect = AsyncMock()
     return effect
 
 
-def _mocked_fan_module() -> Fan:
+def _mocked_fan_module(effect) -> Fan:
     fan = MagicMock(auto_spec=Fan, name="Mocked fan")
     fan.fan_speed_level = 0
     fan.set_fan_speed_level = AsyncMock()

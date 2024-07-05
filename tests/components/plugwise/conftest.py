@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from plugwise import PlugwiseData
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.plugwise.const import DOMAIN
 from homeassistant.const import (

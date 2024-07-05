@@ -32,14 +32,14 @@ habluetooth==3.1.3
 hass-nabucasa==0.81.1
 hassil==1.7.1
 home-assistant-bluetooth==1.12.2
-home-assistant-frontend==20240628.0
-home-assistant-intents==2024.6.26
+home-assistant-frontend==20240705.0
+home-assistant-intents==2024.7.3
 httpx==0.27.0
 ifaddr==0.2.0
 Jinja2==3.1.4
 lru-dict==1.3.0
 mutagen==1.47.0
-orjson==3.9.15
+orjson==3.10.6
 packaging>=23.1
 paho-mqtt==1.6.1
 Pillow==10.3.0
@@ -60,7 +60,7 @@ ulid-transform==0.9.0
 urllib3>=1.26.5,<2
 voluptuous-openapi==0.0.4
 voluptuous-serialize==2.6.0
-voluptuous==0.13.1
+voluptuous==0.15.2
 webrtc-noise-gain==1.2.3
 yarl==1.9.4
 zeroconf==0.132.2

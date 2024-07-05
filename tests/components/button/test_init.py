@@ -1,11 +1,11 @@
 """The tests for the Button component."""
 
+from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.button import (
     DOMAIN,
