@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 import logging
 import math
 from typing import Any
@@ -54,6 +53,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.helpers import network
+from homeassistant.helpers.typing import AsyncCallable
 from homeassistant.util import color as color_util, dt as dt_util
 from homeassistant.util.decorator import Registry
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -102,9 +102,8 @@ SERVICE_SET_TEMPERATURE = {
 
 HANDLERS: Registry[
     tuple[str, str],
-    Callable[
-        [ha.HomeAssistant, AbstractConfig, AlexaDirective, ha.Context],
-        Coroutine[Any, Any, AlexaResponse],
+    AsyncCallable[
+        [ha.HomeAssistant, AbstractConfig, AlexaDirective, ha.Context], AlexaResponse
     ],
 ] = Registry()
 
