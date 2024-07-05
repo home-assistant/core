@@ -26,9 +26,14 @@ SF_SCHEMA = vol.Schema(
 
 
 async def __validate_or_obtain_access_url(input_string: str) -> str:
-    """Validate the input string as an access URL or a claim token and fetch data using SimpleFin."""
+    """Validate the input string as an access URL or a claim token and fetch data using SimpleFin.
+
+    A claim token will be a hex string
+    An access URL will be an http/https url
+    """
 
     if not input_string.startswith("http"):
+        # Claim token detected - convert to an access url
         LOGGER.debug("[Setup Token] - Claiming Access URL")
         access_url = await SimpleFin.claim_setup_token(input_string)
 
