@@ -28,12 +28,12 @@ class SimpleFinEntity(CoordinatorEntity[SimpleFinDataUpdateCoordinator]):
         self._account_id = account.id
 
         self._attr_unique_id = f"account_{account.id}_{description.key}".lower()
-        self._attr_name = f"{account.name} {description.translation_key}"
+        self._attr_name = f"{description.translation_key}"
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, account.org.domain)},
-            name=account.org.name,
+            identifiers={(DOMAIN, account.id)},
+            name=f"{account.org.name} {account.name}",
             entry_type=DeviceEntryType.SERVICE,
-            manufacturer="SimpleFIN",
-            model="Account",
+            manufacturer=account.org.name,
+            model=account.name,
         )

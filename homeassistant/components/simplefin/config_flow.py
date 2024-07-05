@@ -18,30 +18,6 @@ from homeassistant.config_entries import ConfigFlowResult
 from .const import CONF_ACCESS_URL, DOMAIN, LOGGER
 
 
-async def _async_validate_or_obtain_access_url(input_string: str) -> str:
-    """Validate the input string as an access URL or a claim token and fetch data using SimpleFin.
-
-    A claim token will be a hex string
-    An access URL will be an http/https url
-    """
-
-    if not input_string.startswith("http"):
-        # Claim token detected - convert to an access url
-        LOGGER.debug("[Setup Token] - Claiming Access URL")
-        access_url = await SimpleFin.claim_setup_token(input_string)
-
-    else:
-        LOGGER.debug("[Access Url] - 'http' string detected")
-        access_url = input_string
-        LOGGER.debug("[Access Url] - validating access url")
-        SimpleFin.decode_access_url(access_url)
-
-    LOGGER.debug("[Access Url] - Fetching data")
-    simple_fin = SimpleFin(access_url=access_url)
-    await simple_fin.fetch_data()
-    return access_url
-
-
 class SimpleFinConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for the initial setup of a SimpleFIN integration."""
 
