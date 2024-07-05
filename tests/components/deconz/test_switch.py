@@ -16,6 +16,8 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVA
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from .conftest import ConfigEntryFactoryType
+
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -127,7 +129,7 @@ async def test_power_plugs(
 async def test_remove_legacy_on_off_output_as_light(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    config_entry_factory: Callable[[], ConfigEntry],
+    config_entry_factory: ConfigEntryFactoryType,
 ) -> None:
     """Test that switch platform cleans up legacy light entities."""
     assert entity_registry.async_get_or_create(
