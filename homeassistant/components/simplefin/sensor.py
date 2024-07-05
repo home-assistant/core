@@ -55,17 +55,15 @@ async def async_setup_entry(
 
     accounts = runtime_data.sf_coordinator.data.accounts
 
-    for account in accounts:
-        for sensor_description in SIMPLEFIN_SENSORS:
-            async_add_entities(
-                [
-                    SimpleFinSensor(
-                        coordinator=runtime_data.sf_coordinator,
-                        description=sensor_description,
-                        account=account,
-                    )
-                ]
-            )
+    async_add_entities(
+        SimpleFinSensor(
+            coordinator=runtime_data.sf_coordinator,
+            description=sensor_description,
+            account=account,
+        )
+        for account in accounts
+        for sensor_description in SIMPLEFIN_SENSORS
+    )
 
 
 class SimpleFinSensor(SimpleFinEntity, SensorEntity):
