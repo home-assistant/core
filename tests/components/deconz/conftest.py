@@ -20,6 +20,7 @@ from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 type ConfigEntryFactoryType = Callable[[ConfigEntry | None], ConfigEntry]
+type WebsocketStateType = Callable[[str], None]
 
 # Config entry fixtures
 
@@ -217,12 +218,14 @@ async def fixture_config_entry_setup(
 # Websocket fixtures
 
 
-@pytest.fixture(autouse=True)
-def mock_deconz_websocket():
+@pytest.fixture(autouse=True, name="mock_deconz_websocket")
+def fixture_websocket():
     """No real websocket allowed."""
     with patch("pydeconz.gateway.WSClient") as mock:
 
-        async def make_websocket_call(data: dict | None = None, state: str = ""):
+        async def make_websocket_call(
+            data: dict | None = None, state: str = ""
+        ) -> None:
             """Generate a websocket call."""
             pydeconz_gateway_session_handler = mock.call_args[0][3]
 
@@ -236,3 +239,14 @@ def mock_deconz_websocket():
                 raise NotImplementedError
 
         yield make_websocket_call
+
+
+@pytest.fixture(name="mock_websocket_state")
+def fixture_websocket_state(mock_deconz_websocket) -> WebsocketStateType:
+    """Fixture to set websocket state."""
+
+    async def change_websocket_state(state: str) -> None:
+        """Simulate a change to the websocket connection state."""
+        await mock_deconz_websocket(state=state)
+
+    return change_websocket_state
