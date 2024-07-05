@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from copy import deepcopy
-from typing import Any
 from unittest.mock import patch
 
 import pydeconz
@@ -35,12 +34,7 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_UDN,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import (
-    SOURCE_HASSIO,
-    SOURCE_SSDP,
-    SOURCE_USER,
-    ConfigEntry,
-)
+from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_SSDP, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -51,12 +45,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .conftest import API_KEY, BRIDGEID, HOST, PORT
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 DEFAULT_URL = f"http://{HOST}:{PORT}/api/{API_KEY}"
 
@@ -107,35 +99,6 @@ def mock_deconz_put_request(aioclient_mock, config, path):
         json={},
         headers={"content-type": CONTENT_TYPE_JSON},
     )
-
-
-async def setup_deconz_integration(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker | None = None,
-    *,
-    options: dict[str, Any] | UndefinedType = UNDEFINED,
-    entry_id="1",
-    unique_id=BRIDGEID,
-    source=SOURCE_USER,
-):
-    """Create the deCONZ gateway."""
-    config_entry = MockConfigEntry(
-        domain=DECONZ_DOMAIN,
-        source=source,
-        data=deepcopy(ENTRY_CONFIG),
-        options=deepcopy(ENTRY_OPTIONS if options is UNDEFINED else options),
-        entry_id=entry_id,
-        unique_id=unique_id,
-    )
-    config_entry.add_to_hass(hass)
-
-    if aioclient_mock:
-        mock_deconz_request(aioclient_mock, ENTRY_CONFIG, DECONZ_WEB_REQUEST)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    return config_entry
 
 
 async def test_gateway_setup(
