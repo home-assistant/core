@@ -17,7 +17,11 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    device_registry as dr,
+    entity_registry as er,
+)
 
 from .conftest import test_ls_one_added, test_ls_one_removed
 
@@ -139,11 +143,14 @@ async def test_setup_entry_ok_nodevices(
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
+    assert hass.states.async_entity_ids_count() == 0
     assert hass.states.async_entity_ids() == snapshot
 
 
 async def test_devices_creaction_ok(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     local_oauth_impl: ClientSession,
     mock_get_devices_twolightswitches,
@@ -151,6 +158,10 @@ async def test_devices_creaction_ok(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test iotty switch creation."""
+
+    entity_id = (
+        "switch.test_light_switch_0_test_serial_0_test_light_switch_0_test_serial_0"
+    )
 
     mock_config_entry.add_to_hass(hass)
 
@@ -160,7 +171,18 @@ async def test_devices_creaction_ok(
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    assert hass.states.async_entity_ids() == snapshot
+    assert (state := hass.states.get(entity_id))
+    assert state == snapshot(name="state")
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry == snapshot(name="entity")
+
+    assert entry.device_id
+    assert (device_entry := device_registry.async_get(entry.device_id))
+    assert device_entry == snapshot(name="device")
+
+    assert hass.states.async_entity_ids_count() == 2
+    assert hass.states.async_entity_ids() == snapshot(name="entity-ids")
 
 
 async def test_devices_deletion_ok(
@@ -183,6 +205,7 @@ async def test_devices_deletion_ok(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     # Should have two devices
+    assert hass.states.async_entity_ids_count() == 2
     assert hass.states.async_entity_ids() == snapshot
 
     mock_get_devices_twolightswitches.return_value = test_ls_one_removed
@@ -192,6 +215,7 @@ async def test_devices_deletion_ok(
     await hass.async_block_till_done()
 
     # Should have one device
+    assert hass.states.async_entity_ids_count() == 1
     assert hass.states.async_entity_ids() == snapshot
 
 
@@ -215,6 +239,7 @@ async def test_devices_insertion_ok(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     # Should have two devices
+    assert hass.states.async_entity_ids_count() == 2
     assert hass.states.async_entity_ids() == snapshot
 
     mock_get_devices_twolightswitches.return_value = test_ls_one_added
@@ -224,4 +249,5 @@ async def test_devices_insertion_ok(
     await hass.async_block_till_done()
 
     # Should have three devices
+    assert hass.states.async_entity_ids_count() == 3
     assert hass.states.async_entity_ids() == snapshot
