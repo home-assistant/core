@@ -7,7 +7,8 @@ import pytest
 from simplefin4py import FinancialData
 from simplefin4py.exceptions import SimpleFinInvalidClaimTokenError
 
-from homeassistant.components.simplefin import CONF_ACCESS_URL, DOMAIN
+from homeassistant.components.simplefin import CONF_ACCESS_URL
+from homeassistant.components.simplefin.const import DOMAIN
 
 from tests.common import MockConfigEntry, load_json_value_fixture
 

@@ -13,7 +13,8 @@ from simplefin4py.exceptions import (
 )
 
 from homeassistant import config_entries
-from homeassistant.components.simplefin import CONF_ACCESS_URL, DOMAIN
+from homeassistant.components.simplefin import CONF_ACCESS_URL
+from homeassistant.components.simplefin.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
