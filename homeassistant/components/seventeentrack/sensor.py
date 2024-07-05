@@ -319,7 +319,7 @@ def deprecate_sensor_issue(hass: HomeAssistant, entry_id: str) -> None:
         hass,
         DOMAIN,
         f"deprecate_sensor_{entry_id}",
-        breaks_in_ha_version="2025.1.0",
+        breaks_in_ha_version="2025.2.0",
         issue_domain=DOMAIN,
         is_fixable=True,
         is_persistent=True,
