@@ -125,7 +125,6 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_translation_key = "selected_map"
 
-
     async def async_select_option(self, option: str) -> None:
         """Set the option."""
         for map_id, map_ in self.coordinator.maps.items():
