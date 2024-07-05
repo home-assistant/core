@@ -52,7 +52,7 @@
         "step": {
           "confirm": {
             "title": "[%key:component::seventeentrack::issues::deprecate_sensor::title%]",
-            "description": "17Track package sensors are deprecated and will be removed.\nPlease update your automations and scripts to use `Home Assistant Core Integration: Service call` `17TRACK: Get packages`."
+            "description": "17Track package sensors are deprecated and will be removed.\nPlease update your automations and scripts to use the `seventeentrack.get_packages` service call."
           }
         }
       }
