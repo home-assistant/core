@@ -263,8 +263,6 @@ class CalculatedState:
     attributes: dict[str, Any]
     # Capability attributes returned by the capability_attributes property
     capability_attributes: Mapping[str, Any] | None
-    # Attributes which may be overridden by the entity registry
-    shadowed_attributes: Mapping[str, Any]
 
 
 class CachedProperties(type):
@@ -1042,26 +1040,18 @@ class Entity(
     @callback
     def _async_calculate_state(self) -> CalculatedState:
         """Calculate state string and attribute mapping."""
-        state, attr, capabilities, shadowed_attr, _, _ = self.__async_calculate_state()
-        return CalculatedState(state, attr, capabilities, shadowed_attr)
+        state, attr, capabilities, _, _ = self.__async_calculate_state()
+        return CalculatedState(state, attr, capabilities)
 
     def __async_calculate_state(
         self,
-    ) -> tuple[
-        str,
-        dict[str, Any],
-        Mapping[str, Any] | None,
-        Mapping[str, Any],
-        str | None,
-        int | None,
-    ]:
+    ) -> tuple[str, dict[str, Any], Mapping[str, Any] | None, str | None, int | None]:
         """Calculate state string and attribute mapping.
 
         Returns a tuple (state, attr, capability_attr, shadowed_attr).
         state - the stringified state
         attr - the attribute dictionary
         capability_attr - a mapping with capability attributes
-        shadowed_attr - a mapping with attributes which may be overridden
         original_device_class - the device class which may be overridden
         supported_features - the supported features
 
@@ -1072,7 +1062,6 @@ class Entity(
 
         capability_attr = self.capability_attributes
         attr = capability_attr.copy() if capability_attr else {}
-        shadowed_attr = {}
 
         available = self.available  # only call self.available once per update cycle
         state = self._stringify_state(available)
@@ -1092,37 +1081,26 @@ class Entity(
             attr[ATTR_ATTRIBUTION] = attribution
 
         original_device_class = self.device_class
-        shadowed_attr[ATTR_DEVICE_CLASS] = original_device_class
         if (
-            device_class := (entry and entry.device_class)
-            or shadowed_attr[ATTR_DEVICE_CLASS]
+            device_class := (entry and entry.device_class) or original_device_class
         ) is not None:
             attr[ATTR_DEVICE_CLASS] = str(device_class)
 
         if (entity_picture := self.entity_picture) is not None:
             attr[ATTR_ENTITY_PICTURE] = entity_picture
 
-        shadowed_attr[ATTR_ICON] = self.icon
-        if (icon := (entry and entry.icon) or shadowed_attr[ATTR_ICON]) is not None:
+        if (icon := (entry and entry.icon) or self.icon) is not None:
             attr[ATTR_ICON] = icon
 
-        shadowed_attr[ATTR_FRIENDLY_NAME] = self._friendly_name_internal()
         if (
-            name := (entry and entry.name) or shadowed_attr[ATTR_FRIENDLY_NAME]
+            name := (entry and entry.name) or self._friendly_name_internal()
         ) is not None:
             attr[ATTR_FRIENDLY_NAME] = name
 
         if (supported_features := self.supported_features) is not None:
             attr[ATTR_SUPPORTED_FEATURES] = supported_features
 
-        return (
-            state,
-            attr,
-            capability_attr,
-            shadowed_attr,
-            original_device_class,
-            supported_features,
-        )
+        return (state, attr, capability_attr, original_device_class, supported_features)
 
     @callback
     def _async_write_ha_state(self) -> None:
@@ -1148,7 +1126,7 @@ class Entity(
             return
 
         state_calculate_start = timer()
-        state, attr, capabilities, _, original_device_class, supported_features = (
+        state, attr, capabilities, original_device_class, supported_features = (
             self.__async_calculate_state()
         )
         time_now = timer()
