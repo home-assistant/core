@@ -718,7 +718,7 @@ class PrometheusMetrics:
             fan_oscillating_metric = self._metric(
                 "fan_is_oscillating",
                 prometheus_client.Gauge,
-                "Fan oscillating attribute (0/1)",
+                "Whether the fan is oscillating (0/1)",
             )
             fan_oscillating_metric.labels(**self._labels(state)).set(
                 float(fan_is_oscillating)
