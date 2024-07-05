@@ -676,7 +676,7 @@ filterwarnings = [
 ]
 
 [tool.coverage.run]
-source = "homeassistant"
+source = ["homeassistant"]
 
 [tool.coverage.report]
 exclude_lines = [
