@@ -42,6 +42,7 @@ async def async_setup_entry(
         )
         for d in coordinator.data.devices
         if d.device_type == LS_DEVICE_TYPE_UID
+        if (isinstance(d, LightSwitch))
     ]
     _LOGGER.debug("Found %d LightSwitches", len(entities))
 
@@ -53,7 +54,7 @@ async def async_setup_entry(
             known_devices.add(known_device)
 
     @callback
-    def async_update_data():
+    def async_update_data() -> None:
         """Handle updated data from the API endpoint."""
         if not coordinator.last_update_success:
             return None
@@ -70,26 +71,27 @@ async def async_setup_entry(
             ):
                 continue
 
-            entities.extend(
-                [
-                    IottyLightSwitch(
-                        coordinator=coordinator,
-                        iotty_cloud=coordinator.iotty,
-                        iotty_device=device,
-                    )
-                ]
+            iotty_entity = IottyLightSwitch(
+                coordinator=coordinator,
+                iotty_cloud=coordinator.iotty,
+                iotty_device=LightSwitch(
+                    device.device_id,
+                    device.serial_number,
+                    device.device_type,
+                    device.device_name,
+                ),
             )
+
+            entities.extend([iotty_entity])
             known_devices.add(device)
 
         async_add_entities(entities)
-
-        return devices
 
     # Add a subscriber to the coordinator to discover new devices
     coordinator.async_add_listener(async_update_data)
 
 
-class IottyLightSwitch(SwitchEntity, CoordinatorEntity[Device]):
+class IottyLightSwitch(SwitchEntity, CoordinatorEntity[IottyDataUpdateCoordinator]):
     """Haas entity class for iotty LightSwitch."""
 
     _attr_has_entity_name = True
@@ -166,12 +168,13 @@ class IottyLightSwitch(SwitchEntity, CoordinatorEntity[Device]):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         try:
-            device: LightSwitch = next(
+            device: Device = next(
                 device
                 for device in self.coordinator.data.devices
                 if device.device_id == self._iotty_device.device_id
             )
-            self._iotty_device.is_on = device.is_on
+            if isinstance(device, LightSwitch):
+                self._iotty_device.is_on = device.is_on
             self.async_write_ha_state()
         except StopIteration:
             _LOGGER.debug(
