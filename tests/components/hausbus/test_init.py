@@ -5,7 +5,6 @@ from unittest.mock import Mock, patch
 from pyhausbus.HomeServer import HomeServer
 
 from homeassistant.components.hausbus import async_setup_entry, async_unload_entry
-from homeassistant.components.hausbus.const import DOMAIN as HAUSBUS_DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .helpers import setup_hausbus_integration
@@ -45,7 +44,7 @@ async def test_unload(hass: HomeAssistant) -> None:
     ):
         await async_setup_entry(hass, config_entry)
 
-    gateway = hass.data[HAUSBUS_DOMAIN][config_entry.entry_id]
+    gateway = config_entry.runtime_data.gateway
     result = await async_unload_entry(hass, config_entry)
 
     # Assert that unload was successful

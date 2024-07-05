@@ -11,8 +11,8 @@ from pyhausbus.de.hausbus.homeassistant.proxy.controller.params.EFirmwareId impo
 from pyhausbus.HomeServer import HomeServer
 from pyhausbus.ObjectId import ObjectId
 
-from homeassistant.components.hausbus.channel import HausbusChannel
 from homeassistant.components.hausbus.const import DOMAIN as HAUSBUS_DOMAIN
+from homeassistant.components.hausbus.entity import HausbusEntity
 from homeassistant.components.hausbus.gateway import HausbusGateway
 from homeassistant.components.hausbus.light import HausbusLight
 from homeassistant.const import Platform
@@ -72,11 +72,12 @@ async def create_gateway(hass: HomeAssistant):
     config_entry = await setup_hausbus_integration(hass)
 
     # return gateway that was added ti the config entry
-    return hass.data[HAUSBUS_DOMAIN][config_entry.entry_id]
+    # return hass.data[HAUSBUS_DOMAIN][config_entry.entry_id]
+    return config_entry.runtime_data.gateway
 
 
 async def add_channel_from_thread(
-    hass: HomeAssistant, channel: HausbusChannel, gateway: HausbusGateway
+    hass: HomeAssistant, channel: HausbusEntity, gateway: HausbusGateway
 ):
     """Add a channel to the gateway via a different thread."""
 

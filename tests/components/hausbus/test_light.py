@@ -29,8 +29,8 @@ from pyhausbus.de.hausbus.homeassistant.proxy.rGBDimmer.data.Status import (
 from pyhausbus.ObjectId import ObjectId
 import pytest
 
-from homeassistant.components.hausbus.channel import HausbusChannel
 from homeassistant.components.hausbus.device import HausbusDevice
+from homeassistant.components.hausbus.entity import HausbusEntity
 from homeassistant.components.hausbus.light import HausbusLight
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_HS_COLOR, ColorMode
 from homeassistant.core import HomeAssistant
@@ -185,7 +185,7 @@ async def test_generic_channel_event_received(hass: HomeAssistant) -> None:
     gateway.add_device(device_id, module)
 
     object_id = ObjectId(65536)  # = 0x00 01 00 00
-    channel = HausbusChannel("generic_channel", 0, gateway.get_device(object_id))
+    channel = HausbusEntity("generic_channel", 0, gateway.get_device(object_id))
 
     channel_list = gateway.get_channel_list(object_id)
     channel_list[gateway.get_channel_id(object_id)] = channel
