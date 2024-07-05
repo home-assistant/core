@@ -93,9 +93,7 @@ class SimpleFinSensor(SimpleFinEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the currency of this account."""
-        if self.entity_description.unit_fn and callable(
-            self.entity_description.unit_fn
-        ):
+        if self.entity_description.unit_fn:
             return self.entity_description.unit_fn(self.account_data)
 
         return None
