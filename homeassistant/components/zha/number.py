@@ -11,6 +11,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import UndefinedType
 
 from .entity import ZHAEntity
 from .helpers import (
@@ -44,6 +45,17 @@ async def async_setup_entry(
 
 class ZhaNumber(ZHAEntity, RestoreNumber):
     """Representation of a ZHA Number entity."""
+
+    @property
+    def name(self) -> str | UndefinedType | None:
+        """Return the name of the number entity."""
+        if (name := self.entity_data.entity.name) is None:
+            return super().name
+
+        # The name of this entity is reported by the device itself.
+        # For backwards compatibility, we keep the same format as before. This
+        # should probably be changed in the future to omit the prefix.
+        return f"{super().name} {name}"
 
     @property
     def native_value(self) -> float | None:

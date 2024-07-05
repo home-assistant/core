@@ -90,12 +90,10 @@ async def test_number(hass: HomeAssistant, setup_zha, zigpy_device_mock) -> None
     assert hass.states.get(entity_id).attributes.get("icon") == "mdi:percent"
     assert hass.states.get(entity_id).attributes.get("unit_of_measurement") == "%"
 
-    """ TODO did friendly name change for number entities?
     assert (
         hass.states.get(entity_id).attributes.get("friendly_name")
         == "FakeManufacturer FakeModel Number PWM1"
     )
-    """
 
     # change value from device
     await send_attributes_report(hass, cluster, {0x0055: 15})
