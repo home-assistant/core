@@ -140,9 +140,7 @@ async def async_setup_entry(
     parent_coordinator = data.parent_coordinator
     device = parent_coordinator.device
     entities: list[TPLinkLightEntity | TPLinkLightEffectEntity] = []
-    if (
-        effect_module := device.modules.get(Module.LightEffect)
-    ) and effect_module.has_custom_effects:
+    if effect_module := device.modules.get(Module.LightEffect):
         entities.append(
             TPLinkLightEffectEntity(
                 device,
@@ -151,17 +149,18 @@ async def async_setup_entry(
                 effect_module=effect_module,
             )
         )
-        platform = entity_platform.async_get_current_platform()
-        platform.async_register_entity_service(
-            SERVICE_RANDOM_EFFECT,
-            RANDOM_EFFECT_DICT,
-            "async_set_random_effect",
-        )
-        platform.async_register_entity_service(
-            SERVICE_SEQUENCE_EFFECT,
-            SEQUENCE_EFFECT_DICT,
-            "async_set_sequence_effect",
-        )
+        if effect_module.has_custom_effects:
+            platform = entity_platform.async_get_current_platform()
+            platform.async_register_entity_service(
+                SERVICE_RANDOM_EFFECT,
+                RANDOM_EFFECT_DICT,
+                "async_set_random_effect",
+            )
+            platform.async_register_entity_service(
+                SERVICE_SEQUENCE_EFFECT,
+                SEQUENCE_EFFECT_DICT,
+                "async_set_sequence_effect",
+            )
     elif Module.Light in device.modules:
         entities.append(
             TPLinkLightEntity(
@@ -197,7 +196,6 @@ class TPLinkLightEntity(CoordinatedTPLinkEntity, LightEntity):
     ) -> None:
         """Initialize the light."""
         self._parent = parent
-        super().__init__(device, coordinator, parent=parent)
         self._light_module = light_module
         # If _attr_name is None the entity name will be the device name
         self._attr_name = None if parent is None else device.alias
@@ -215,7 +213,8 @@ class TPLinkLightEntity(CoordinatedTPLinkEntity, LightEntity):
         if len(self._attr_supported_color_modes) == 1:
             # If the light supports only a single color mode, set it now
             self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
-        self._async_call_update_attrs()
+
+        super().__init__(device, coordinator, parent=parent)
 
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""
@@ -371,6 +370,7 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
         effect_module = self._effect_module
         if effect_module.effect != LightEffect.LIGHT_EFFECTS_OFF:
             self._attr_effect = effect_module.effect
+            self._attr_color_mode = ColorMode.BRIGHTNESS
         else:
             self._attr_effect = EFFECT_OFF
         if effect_list := effect_module.effect_list:
