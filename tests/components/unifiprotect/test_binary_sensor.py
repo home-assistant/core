@@ -25,7 +25,6 @@ from homeassistant.components.unifiprotect.binary_sensor import (
     LIGHT_SENSORS,
     MOUNTABLE_SENSE_SENSORS,
     SENSE_SENSORS,
-    SMART_EVENT_SENSORS,
 )
 from homeassistant.components.unifiprotect.const import (
     ATTR_EVENT_SCORE,
@@ -453,7 +452,7 @@ async def test_binary_sensor_package_detected(
     doorbell.smart_detect_settings.object_types.append(SmartDetectObjectType.PACKAGE)
 
     _, entity_id = ids_from_device_description(
-        Platform.BINARY_SENSOR, doorbell, SMART_EVENT_SENSORS[4]
+        Platform.BINARY_SENSOR, doorbell, EVENT_SENSORS[6]
     )
 
     event = Event(

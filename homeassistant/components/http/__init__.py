@@ -483,7 +483,7 @@ class HomeAssistantHTTP:
         frame.report(
             "calls hass.http.register_static_path which is deprecated because "
             "it does blocking I/O in the event loop, instead "
-            "call `await hass.http.async_register_static_path("
+            "call `await hass.http.async_register_static_paths("
             f'[StaticPathConfig("{url_path}", "{path}", {cache_headers})])`; '
             "This function will be removed in 2025.7",
             exclude_integrations={"http"},

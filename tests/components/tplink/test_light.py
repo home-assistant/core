@@ -140,13 +140,17 @@ async def test_color_light(
     assert state.state == "on"
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
-    assert attributes[ATTR_COLOR_MODE] == "hs"
     assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
-    assert attributes[ATTR_MIN_MIREDS] == 111
-    assert attributes[ATTR_MAX_MIREDS] == 250
-    assert attributes[ATTR_HS_COLOR] == (10, 30)
-    assert attributes[ATTR_RGB_COLOR] == (255, 191, 178)
-    assert attributes[ATTR_XY_COLOR] == (0.42, 0.336)
+    # If effect is active, only the brightness can be controlled
+    if attributes.get(ATTR_EFFECT) is not None:
+        assert attributes[ATTR_COLOR_MODE] == "brightness"
+    else:
+        assert attributes[ATTR_COLOR_MODE] == "hs"
+        assert attributes[ATTR_MIN_MIREDS] == 111
+        assert attributes[ATTR_MAX_MIREDS] == 250
+        assert attributes[ATTR_HS_COLOR] == (10, 30)
+        assert attributes[ATTR_RGB_COLOR] == (255, 191, 178)
+        assert attributes[ATTR_XY_COLOR] == (0.42, 0.336)
 
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_off", BASE_PAYLOAD, blocking=True
