@@ -3,7 +3,6 @@
 from unittest.mock import patch
 
 import pytest
-from zha.exceptions import ZHAException
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import closures
 import zigpy.zcl.foundation as zcl_f
@@ -393,7 +392,7 @@ async def test_cover_failures(
             status=zcl_f.Status.UNSUP_CLUSTER_COMMAND,
         ),
     ):
-        with pytest.raises(ZHAException, match=r"Failed to close cover tilt"):
+        with pytest.raises(HomeAssistantError, match=r"Failed to close cover tilt"):
             await hass.services.async_call(
                 COVER_DOMAIN,
                 SERVICE_CLOSE_COVER_TILT,
@@ -414,7 +413,7 @@ async def test_cover_failures(
             status=zcl_f.Status.UNSUP_CLUSTER_COMMAND,
         ),
     ):
-        with pytest.raises(ZHAException, match=r"Failed to open cover"):
+        with pytest.raises(HomeAssistantError, match=r"Failed to open cover"):
             await hass.services.async_call(
                 COVER_DOMAIN,
                 SERVICE_OPEN_COVER,
@@ -434,7 +433,7 @@ async def test_cover_failures(
             status=zcl_f.Status.UNSUP_CLUSTER_COMMAND,
         ),
     ):
-        with pytest.raises(ZHAException, match=r"Failed to open cover tilt"):
+        with pytest.raises(HomeAssistantError, match=r"Failed to open cover tilt"):
             await hass.services.async_call(
                 COVER_DOMAIN,
                 SERVICE_OPEN_COVER_TILT,
@@ -455,7 +454,7 @@ async def test_cover_failures(
             status=zcl_f.Status.UNSUP_CLUSTER_COMMAND,
         ),
     ):
-        with pytest.raises(ZHAException, match=r"Failed to set cover position"):
+        with pytest.raises(HomeAssistantError, match=r"Failed to set cover position"):
             await hass.services.async_call(
                 COVER_DOMAIN,
                 SERVICE_SET_COVER_POSITION,
@@ -476,7 +475,9 @@ async def test_cover_failures(
             status=zcl_f.Status.UNSUP_CLUSTER_COMMAND,
         ),
     ):
-        with pytest.raises(ZHAException, match=r"Failed to set cover tilt position"):
+        with pytest.raises(
+            HomeAssistantError, match=r"Failed to set cover tilt position"
+        ):
             await hass.services.async_call(
                 COVER_DOMAIN,
                 SERVICE_SET_COVER_TILT_POSITION,
@@ -497,7 +498,7 @@ async def test_cover_failures(
             status=zcl_f.Status.UNSUP_CLUSTER_COMMAND,
         ),
     ):
-        with pytest.raises(ZHAException, match=r"Failed to stop cover"):
+        with pytest.raises(HomeAssistantError, match=r"Failed to stop cover"):
             await hass.services.async_call(
                 COVER_DOMAIN,
                 SERVICE_STOP_COVER,
@@ -518,7 +519,7 @@ async def test_cover_failures(
             status=zcl_f.Status.UNSUP_CLUSTER_COMMAND,
         ),
     ):
-        with pytest.raises(ZHAException, match=r"Failed to stop cover"):
+        with pytest.raises(HomeAssistantError, match=r"Failed to stop cover"):
             await hass.services.async_call(
                 COVER_DOMAIN,
                 SERVICE_STOP_COVER_TILT,
