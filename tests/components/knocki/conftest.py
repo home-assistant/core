@@ -1,10 +1,10 @@
 """Common fixtures for the Knocki tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from knocki import TokenResponse, Trigger
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.knocki.const import DOMAIN
 from homeassistant.const import CONF_TOKEN

@@ -1,10 +1,10 @@
 """Tests for IPMA config flow."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 from pyipma import IPMAException
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.ipma.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER

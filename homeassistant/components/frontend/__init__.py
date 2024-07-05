@@ -189,7 +189,7 @@ MANIFEST_JSON = Manifest(
         ],
         "lang": "en-US",
         "name": "Home Assistant",
-        "short_name": "Assistant",
+        "short_name": "Home Assistant",
         "start_url": "/?homescreen=1",
         "id": "/?homescreen=1",
         "theme_color": DEFAULT_THEME_COLOR,
