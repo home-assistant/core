@@ -117,12 +117,16 @@ async def test_service_mealplan_without_entry(
 ) -> None:
     """Test the get_mealplan service without entry."""
     mock_config_entry.add_to_hass(hass)
+    mock_config_entry2 = MockConfigEntry(domain=DOMAIN)
+    mock_config_entry2.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_MEALPLAN,
-            {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id},
+            {ATTR_CONFIG_ENTRY_ID: mock_config_entry2.entry_id},
             blocking=True,
             return_response=True,
         )
