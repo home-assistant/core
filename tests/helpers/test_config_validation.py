@@ -865,7 +865,7 @@ def schema():
 
 
 @pytest.fixture
-def version(monkeypatch):
+def version(monkeypatch: pytest.MonkeyPatch) -> None:
     """Patch the version used for testing to 0.5.0."""
     monkeypatch.setattr(homeassistant.const, "__version__", "0.5.0")
 

@@ -61,7 +61,7 @@ def mock_is_file_fixture() -> Generator[MagicMock]:
 
 
 @pytest.fixture(autouse=True)
-def mock_json(hass, monkeypatch):
+def mock_json(monkeypatch: pytest.MonkeyPatch) -> None:
     """Mock the event bus listener and os component."""
     monkeypatch.setattr(
         f"{GOOGLE_PUBSUB_PATH}.json.dumps", Mock(return_value=MagicMock())
