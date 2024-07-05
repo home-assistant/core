@@ -32,8 +32,8 @@ class SimpleFinEntity(CoordinatorEntity[SimpleFinDataUpdateCoordinator]):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, account.org.domain)},
-            name=account.org.name,
+            name=account.name,
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="SimpleFIN",
-            model="Account",
+            model=account.org.name,
         )
