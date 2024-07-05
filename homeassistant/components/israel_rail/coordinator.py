@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, SENSOR_CONNECTIONS_COUNT
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, SENSOR_CONNECTIONS_COUNT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ class IsraelRailDataUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=90),
+            update_interval=DEFAULT_SCAN_INTERVAL,
         )
         self._train_schedule = train_schedule
         self._start = start
