@@ -34,15 +34,13 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .config_entry import HausbusConfigEntry
-from .const import ATTR_ON_STATE, DOMAIN as HAUSBUSDOMAIN
+from .const import ATTR_ON_STATE
 from .device import HausbusDevice
 from .entity import HausbusEntity
-from .event_handler import IEventHandler
 
 
 async def async_setup_entry(
