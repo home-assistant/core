@@ -390,8 +390,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     @property
     def unique_id(self) -> str | None:
         """Return an unique ID."""
-        if self._sync_status is None:
-            return None
+        assert self._sync_status is not None
         return f"{format_mac(self._sync_status.mac)}-{self.port}"
 
     async def async_trigger_sync_on_all(self):
