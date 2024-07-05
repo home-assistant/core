@@ -40,7 +40,7 @@ class SensorDeprecationRepairFlow(RepairsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> FlowResult:
         """Handle the first step of a fix flow."""
         return await self.async_step_confirm()
 
