@@ -895,7 +895,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.51
+holidays==0.52
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240703.0
@@ -1600,7 +1600,7 @@ pynuki==1.6.3
 pynws[retry]==1.8.2
 
 # homeassistant.components.nx584
-pynx584==0.5
+pynx584==0.8.2
 
 # homeassistant.components.nzbget
 pynzbgetapi==0.2.0
