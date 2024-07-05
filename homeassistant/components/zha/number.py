@@ -5,7 +5,7 @@ from __future__ import annotations
 import functools
 import logging
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import RestoreNumber
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -42,7 +42,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-class ZhaNumber(ZHAEntity, NumberEntity):
+class ZhaNumber(ZHAEntity, RestoreNumber):
     """Representation of a ZHA Number entity."""
 
     @property
