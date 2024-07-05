@@ -35,9 +35,7 @@ async def test_turn_on_ok(
 ) -> None:
     """Issue a turnon command."""
 
-    entity_id = (
-        "switch.test_light_switch_0_test_serial_0_test_light_switch_0_test_serial_0"
-    )
+    entity_id = "switch.test_light_switch_0_test_serial_0"
 
     mock_config_entry.add_to_hass(hass)
 
@@ -76,9 +74,7 @@ async def test_turn_off_ok(
 ) -> None:
     """Issue a turnoff command."""
 
-    entity_id = (
-        "switch.test_light_switch_0_test_serial_0_test_light_switch_0_test_serial_0"
-    )
+    entity_id = "switch.test_light_switch_0_test_serial_0"
 
     mock_config_entry.add_to_hass(hass)
 
@@ -141,9 +137,7 @@ async def test_devices_creaction_ok(
 ) -> None:
     """Test iotty switch creation."""
 
-    entity_id = (
-        "switch.test_light_switch_0_test_serial_0_test_light_switch_0_test_serial_0"
-    )
+    entity_id = "switch.test_light_switch_0_test_serial_0"
 
     mock_config_entry.add_to_hass(hass)
 

@@ -32,8 +32,8 @@
 # ---
 # name: test_devices_creaction_ok[entity-ids]
   list([
-    'switch.test_light_switch_0_test_serial_0_test_light_switch_0_test_serial_0',
-    'switch.test_light_switch_1_test_serial_1_test_light_switch_1_test_serial_1',
+    'switch.test_light_switch_0_test_serial_0',
+    'switch.test_light_switch_1_test_serial_1',
   ])
 # ---
 # name: test_devices_creaction_ok[entity]
@@ -48,7 +48,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.test_light_switch_0_test_serial_0_test_light_switch_0_test_serial_0',
+    'entity_id': 'switch.test_light_switch_0_test_serial_0',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -76,7 +76,7 @@
       'friendly_name': '[TEST] Light switch 0 (TEST_SERIAL_0) [TEST] Light switch 0 (TEST_SERIAL_0)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_light_switch_0_test_serial_0_test_light_switch_0_test_serial_0',
+    'entity_id': 'switch.test_light_switch_0_test_serial_0',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -85,26 +85,26 @@
 # ---
 # name: test_devices_deletion_ok
   list([
-    'switch.test_light_switch_0_test_serial_0_test_light_switch_0_test_serial_0',
-    'switch.test_light_switch_1_test_serial_1_test_light_switch_1_test_serial_1',
+    'switch.test_light_switch_0_test_serial_0',
+    'switch.test_light_switch_1_test_serial_1',
   ])
 # ---
 # name: test_devices_deletion_ok.1
   list([
-    'switch.test_light_switch_0_test_serial_0_test_light_switch_0_test_serial_0',
+    'switch.test_light_switch_0_test_serial_0',
   ])
 # ---
 # name: test_devices_insertion_ok
   list([
-    'switch.test_light_switch_0_test_serial_0_test_light_switch_0_test_serial_0',
-    'switch.test_light_switch_1_test_serial_1_test_light_switch_1_test_serial_1',
+    'switch.test_light_switch_0_test_serial_0',
+    'switch.test_light_switch_1_test_serial_1',
   ])
 # ---
 # name: test_devices_insertion_ok.1
   list([
-    'switch.test_light_switch_0_test_serial_0_test_light_switch_0_test_serial_0',
-    'switch.test_light_switch_1_test_serial_1_test_light_switch_1_test_serial_1',
-    'switch.test_light_switch_2_test_serial_2_test_light_switch_2_test_serial_2',
+    'switch.test_light_switch_0_test_serial_0',
+    'switch.test_light_switch_1_test_serial_1',
+    'switch.test_light_switch_2_test_serial_2',
   ])
 # ---
 # name: test_setup_entry_ok_nodevices

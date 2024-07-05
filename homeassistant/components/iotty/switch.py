@@ -92,6 +92,7 @@ class IottyLightSwitch(SwitchEntity, CoordinatorEntity[IottyDataUpdateCoordinato
     """Haas entity class for iotty LightSwitch."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = SwitchDeviceClass.SWITCH
     _iotty_cloud: IottyProxy
