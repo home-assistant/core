@@ -1,7 +1,6 @@
 """Define common test fixtures for Enphase Envoy."""
 
-from collections.abc import AsyncGenerator
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock
 
 import jwt
 from pyenphase import EnvoyTokenAuth
