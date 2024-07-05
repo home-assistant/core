@@ -48,7 +48,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_capture_events
@@ -294,13 +294,13 @@ async def matrix_bot(
 
 
 @pytest.fixture
-def matrix_events(hass: HomeAssistant):
+def matrix_events(hass: HomeAssistant) -> list[Event]:
     """Track event calls."""
     return async_capture_events(hass, MATRIX_DOMAIN)
 
 
 @pytest.fixture
-def command_events(hass: HomeAssistant):
+def command_events(hass: HomeAssistant) -> list[Event]:
     """Track event calls."""
     return async_capture_events(hass, EVENT_MATRIX_COMMAND)
 

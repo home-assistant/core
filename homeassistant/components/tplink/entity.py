@@ -56,14 +56,20 @@ DEVICETYPES_WITH_SPECIALIZED_PLATFORMS = {
     DeviceType.Thermostat,
 }
 
+# Primary features to always include even when the device type has its own platform
+FEATURES_ALLOW_LIST = {
+    # lights have current_consumption and a specialized platform
+    "current_consumption"
+}
+
+
 # Features excluded due to future platform additions
 EXCLUDED_FEATURES = {
     # update
     "current_firmware_version",
     "available_firmware_version",
-    # fan
-    "fan_speed_level",
 }
+
 
 LEGACY_KEY_MAPPING = {
     "current": ATTR_CURRENT_A,
@@ -179,14 +185,11 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
 
         self._attr_unique_id = self._get_unique_id()
 
+        self._async_call_update_attrs()
+
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""
         return legacy_device_id(self._device)
-
-    async def async_added_to_hass(self) -> None:
-        """Handle being added to hass."""
-        self._async_call_update_attrs()
-        return await super().async_added_to_hass()
 
     @abstractmethod
     @callback
@@ -196,11 +199,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
 
     @callback
     def _async_call_update_attrs(self) -> None:
-        """Call update_attrs and make entity unavailable on error.
-
-        update_attrs can sometimes fail if a device firmware update breaks the
-        downstream library.
-        """
+        """Call update_attrs and make entity unavailable on errors."""
         try:
             self._async_update_attrs()
         except Exception as ex:  # noqa: BLE001
@@ -358,6 +357,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
             and (
                 feat.category is not Feature.Category.Primary
                 or device.device_type not in DEVICETYPES_WITH_SPECIALIZED_PLATFORMS
+                or feat.id in FEATURES_ALLOW_LIST
             )
             and (
                 desc := cls._description_for_feature(
