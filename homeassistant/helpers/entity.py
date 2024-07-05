@@ -1185,11 +1185,18 @@ class Entity(
                 report_issue,
             )
 
-        # Overwrite properties that have been set in the config file.
-        if (customize := hass.data.get(DATA_CUSTOMIZE)) and (
-            custom := customize.get(entity_id)
-        ):
-            attr.update(custom)
+        try:
+            # Most of the time this will already be
+            # set and since try is near zero cost
+            # on py3.11+ its faster to assume it is
+            # set and catch the exception if it is not.
+            customize = hass.data[DATA_CUSTOMIZE]
+        except KeyError:
+            pass
+        else:
+            # Overwrite properties that have been set in the config file.
+            if custom := customize.get(entity_id):
+                attr.update(custom)
 
         if (
             self._context_set is not None
