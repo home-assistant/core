@@ -20,7 +20,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import BMWConfigEntry
+from . import DOMAIN, BMWConfigEntry
 
 ATTR_LOCATION_ATTRIBUTES = ["street", "city", "postal_code", "country"]
 
