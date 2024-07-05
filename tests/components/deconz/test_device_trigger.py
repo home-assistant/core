@@ -33,6 +33,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.setup import async_setup_component
 
+from .conftest import WebsocketDataType
+
 from tests.common import async_get_device_automations
 
 
@@ -318,7 +320,7 @@ async def test_functional_device_trigger(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     service_calls: list[ServiceCall],
-    mock_deconz_websocket,
+    mock_websocket_data: WebsocketDataType,
 ) -> None:
     """Test proper matching and attachment of device trigger automation."""
     device = device_registry.async_get_device(
@@ -356,7 +358,7 @@ async def test_functional_device_trigger(
         "id": "1",
         "state": {"buttonevent": 1002},
     }
-    await mock_deconz_websocket(data=event_changed_sensor)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
 
     assert len(service_calls) == 1

@@ -28,6 +28,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
+from .conftest import WebsocketDataType
+
 from tests.common import async_capture_events
 
 
@@ -77,7 +79,7 @@ async def test_deconz_events(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     config_entry_setup: ConfigEntry,
-    mock_deconz_websocket,
+    mock_websocket_data: WebsocketDataType,
 ) -> None:
     """Test successful creation of deconz events."""
     assert len(hass.states.async_all()) == 3
@@ -103,7 +105,7 @@ async def test_deconz_events(
         "id": "1",
         "state": {"buttonevent": 2000},
     }
-    await mock_deconz_websocket(data=event_changed_sensor)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
@@ -125,7 +127,7 @@ async def test_deconz_events(
         "id": "3",
         "state": {"buttonevent": 2000},
     }
-    await mock_deconz_websocket(data=event_changed_sensor)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
@@ -148,7 +150,7 @@ async def test_deconz_events(
         "id": "4",
         "state": {"gesture": 0},
     }
-    await mock_deconz_websocket(data=event_changed_sensor)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
@@ -171,7 +173,7 @@ async def test_deconz_events(
         "id": "5",
         "state": {"buttonevent": 6002, "angle": 110, "xy": [0.5982, 0.3897]},
     }
-    await mock_deconz_websocket(data=event_changed_sensor)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
@@ -197,7 +199,7 @@ async def test_deconz_events(
         "id": "1",
         "name": "other name",
     }
-    await mock_deconz_websocket(data=event_changed_sensor)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
 
     assert len(captured_events) == 4
@@ -284,7 +286,7 @@ async def test_deconz_alarm_events(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     config_entry_setup: ConfigEntry,
-    mock_deconz_websocket,
+    mock_websocket_data: WebsocketDataType,
 ) -> None:
     """Test successful creation of deconz alarm events."""
     assert len(hass.states.async_all()) == 4
@@ -309,7 +311,7 @@ async def test_deconz_alarm_events(
         "id": "1",
         "state": {"action": AncillaryControlAction.EMERGENCY},
     }
-    await mock_deconz_websocket(data=event_changed_sensor)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
@@ -333,7 +335,7 @@ async def test_deconz_alarm_events(
         "id": "1",
         "state": {"action": AncillaryControlAction.FIRE},
     }
-    await mock_deconz_websocket(data=event_changed_sensor)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
@@ -357,7 +359,7 @@ async def test_deconz_alarm_events(
         "id": "1",
         "state": {"action": AncillaryControlAction.INVALID_CODE},
     }
-    await mock_deconz_websocket(data=event_changed_sensor)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
@@ -381,7 +383,7 @@ async def test_deconz_alarm_events(
         "id": "1",
         "state": {"action": AncillaryControlAction.PANIC},
     }
-    await mock_deconz_websocket(data=event_changed_sensor)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
@@ -405,7 +407,7 @@ async def test_deconz_alarm_events(
         "id": "1",
         "state": {"action": AncillaryControlAction.ARMED_AWAY},
     }
-    await mock_deconz_websocket(data=event_changed_sensor)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
 
     assert len(captured_events) == 4
@@ -419,7 +421,7 @@ async def test_deconz_alarm_events(
         "id": "1",
         "state": {"panel": AncillaryControlPanel.ARMED_AWAY},
     }
-    await mock_deconz_websocket(data=event_changed_sensor)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
 
     assert len(captured_events) == 4
@@ -470,7 +472,7 @@ async def test_deconz_presence_events(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     config_entry_setup: ConfigEntry,
-    mock_deconz_websocket,
+    mock_websocket_data: WebsocketDataType,
 ) -> None:
     """Test successful creation of deconz presence events."""
     assert len(hass.states.async_all()) == 5
@@ -506,7 +508,7 @@ async def test_deconz_presence_events(
             "id": "1",
             "state": {"presenceevent": presence_event},
         }
-        await mock_deconz_websocket(data=event_changed_sensor)
+        await mock_websocket_data(event_changed_sensor)
         await hass.async_block_till_done()
 
         assert len(captured_events) == 1
@@ -527,7 +529,7 @@ async def test_deconz_presence_events(
         "id": "1",
         "state": {"presenceevent": PresenceStatePresenceEvent.NINE},
     }
-    await mock_deconz_websocket(data=event_changed_sensor)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
 
     assert len(captured_events) == 0
@@ -577,7 +579,7 @@ async def test_deconz_relative_rotary_events(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     config_entry_setup: ConfigEntry,
-    mock_deconz_websocket,
+    mock_websocket_data: WebsocketDataType,
 ) -> None:
     """Test successful creation of deconz relative rotary events."""
     assert len(hass.states.async_all()) == 1
@@ -608,7 +610,7 @@ async def test_deconz_relative_rotary_events(
                 "expectedrotation": rotation,
             },
         }
-        await mock_deconz_websocket(data=event_changed_sensor)
+        await mock_websocket_data(event_changed_sensor)
         await hass.async_block_till_done()
 
         assert len(captured_events) == 1
@@ -631,7 +633,7 @@ async def test_deconz_relative_rotary_events(
         "id": "1",
         "name": "123",
     }
-    await mock_deconz_websocket(data=event_changed_sensor)
+    await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()
 
     assert len(captured_events) == 0
