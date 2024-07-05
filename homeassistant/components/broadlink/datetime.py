@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from typing import Any
 
 from homeassistant.components.datetime import DateTimeEntity
 from homeassistant.config_entries import ConfigEntry
@@ -10,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from . import BroadlinkDevice
 from .const import DOMAIN
 from .entity import BroadlinkEntity
 
@@ -30,13 +32,13 @@ class BroadlinkDateTime(BroadlinkEntity, DateTimeEntity):
     _attr_has_entity_name = True
     _attr_native_value: datetime | None = None
 
-    def __init__(self, device) -> None:
+    def __init__(self, device: BroadlinkDevice) -> None:
         """Initialize the sensor."""
         super().__init__(device)
 
-        self._attr_unique_id = f"{device.unique_id}-datetime"
+        self._attr_unique_id = f"{device.unique_id}-device-datetime"
 
-    def _update_state(self, data) -> None:
+    def _update_state(self, data: dict[str, Any]) -> None:
         """Update the state of the entity."""
         if data is None or "dayofweek" not in data:
             self._attr_native_value = None
