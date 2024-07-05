@@ -125,18 +125,11 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_translation_key = "selected_map"
 
-    def __init__(
-        self,
-        unique_id: str,
-        coordinator: RoborockDataUpdateCoordinator,
-    ) -> None:
-        """Create a select entity."""
-        super().__init__(unique_id, coordinator)
 
     async def async_select_option(self, option: str) -> None:
         """Set the option."""
-        for map_id in self.coordinator.maps:
-            if self.coordinator.maps[map_id].name == option:
+        for map_id, map_ in self.coordinator.maps.items():
+            if map_.name == option:
                 await self.send(
                     RoborockCommand.LOAD_MULTI_MAP,
                     [map_id],
@@ -151,6 +144,6 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Get the current status of the select entity from device_status."""
-        if self.coordinator.current_map is not None:
-            return self.coordinator.maps[self.coordinator.current_map].name
+        if current_map := self.coordinator.current_map:
+            return self.coordinator.maps[current_map].name
         return None
