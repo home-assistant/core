@@ -1,7 +1,6 @@
 """Test deCONZ gateway."""
 
 from collections.abc import Callable
-from copy import deepcopy
 from unittest.mock import patch
 
 import pydeconz
@@ -39,7 +38,6 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
     CONF_PORT,
-    CONTENT_TYPE_JSON,
     STATE_OFF,
     STATE_UNAVAILABLE,
 )
@@ -73,19 +71,6 @@ DECONZ_WEB_REQUEST = {
     "lights": {},
     "sensors": {},
 }
-
-
-def mock_deconz_request(aioclient_mock, config, data):
-    """Mock a deCONZ get request."""
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
-    api_key = config[CONF_API_KEY]
-
-    aioclient_mock.get(
-        f"http://{host}:{port}/api/{api_key}",
-        json=deepcopy(data),
-        headers={"content-type": CONTENT_TYPE_JSON},
-    )
 
 
 async def test_gateway_setup(
