@@ -213,6 +213,16 @@ async def test_pm25(hass: HomeAssistant, hk_driver) -> None:
     assert acc.char_density.value == 0
     assert acc.char_quality.value == 0
 
+    hass.states.async_set(entity_id, "8")
+    await hass.async_block_till_done()
+    assert acc.char_density.value == 8
+    assert acc.char_quality.value == 1
+
+    hass.states.async_set(entity_id, "12")
+    await hass.async_block_till_done()
+    assert acc.char_density.value == 12
+    assert acc.char_quality.value == 2
+
     hass.states.async_set(entity_id, "23")
     await hass.async_block_till_done()
     assert acc.char_density.value == 23
