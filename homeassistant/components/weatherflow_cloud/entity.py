@@ -1,5 +1,7 @@
 """Base entity class for WeatherFlow Cloud integration."""
 
+from weatherflow4py.models.rest.unified import WeatherFlowDataREST
+
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -23,7 +25,7 @@ class WeatherFlowCloudEntity(CoordinatorEntity[WeatherFlowCloudDataUpdateCoordin
         # self.entity_description = description
         self.station_id = station_id
 
-        station_name = self.coordinator.data[station_id].station.name
+        station_name = coordinator.data[station_id].station.name
 
         self._attr_device_info = DeviceInfo(
             name=station_name,
@@ -32,3 +34,8 @@ class WeatherFlowCloudEntity(CoordinatorEntity[WeatherFlowCloudDataUpdateCoordin
             manufacturer=MANUFACTURER,
             configuration_url=f"https://tempestwx.com/station/{station_id}/grid",
         )
+
+    @property
+    def station(self) -> WeatherFlowDataREST:
+        """Individual Station data."""
+        return self.coordinator.data[self.station_id]
