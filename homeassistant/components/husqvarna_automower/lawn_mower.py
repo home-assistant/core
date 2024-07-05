@@ -2,6 +2,8 @@
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
+
 from aioautomower.model import MowerActivities, MowerStates, WorkArea
 import voluptuous as vol
 
@@ -11,11 +13,12 @@ from homeassistant.components.lawn_mower import (
     LawnMowerEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AutomowerConfigEntry
+from .const import DOMAIN
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerAvailableEntity, handle_sending_exception
 
