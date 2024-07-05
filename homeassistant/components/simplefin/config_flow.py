@@ -18,7 +18,7 @@ from homeassistant.config_entries import ConfigFlowResult
 from .const import CONF_ACCESS_URL, DOMAIN, LOGGER
 
 
-class SimpleFinConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SimpleFinConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for the initial setup of a SimpleFIN integration."""
 
     async def async_step_user(
