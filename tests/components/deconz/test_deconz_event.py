@@ -99,7 +99,6 @@ async def test_deconz_events(
     captured_events = async_capture_events(hass, CONF_DECONZ_EVENT)
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "1",
@@ -121,7 +120,6 @@ async def test_deconz_events(
     }
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "3",
@@ -144,7 +142,6 @@ async def test_deconz_events(
     }
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "4",
@@ -167,7 +164,6 @@ async def test_deconz_events(
     }
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "5",
@@ -193,7 +189,6 @@ async def test_deconz_events(
     # Unsupported event
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "1",
@@ -305,7 +300,6 @@ async def test_deconz_alarm_events(
     # Emergency event
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "1",
@@ -329,7 +323,6 @@ async def test_deconz_alarm_events(
     # Fire event
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "1",
@@ -353,7 +346,6 @@ async def test_deconz_alarm_events(
     # Invalid code event
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "1",
@@ -377,7 +369,6 @@ async def test_deconz_alarm_events(
     # Panic event
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "1",
@@ -401,7 +392,6 @@ async def test_deconz_alarm_events(
     # Only care for changes to specific action events
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "1",
@@ -415,7 +405,6 @@ async def test_deconz_alarm_events(
     # Only care for action events
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "1",
@@ -502,7 +491,6 @@ async def test_deconz_presence_events(
         PresenceStatePresenceEvent.RIGHT_LEAVE,
     ):
         event_changed_sensor = {
-            "t": "event",
             "e": "changed",
             "r": "sensors",
             "id": "1",
@@ -523,7 +511,6 @@ async def test_deconz_presence_events(
     # Unsupported presence event
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "1",
@@ -600,7 +587,6 @@ async def test_deconz_relative_rotary_events(
 
     for rotary_event, duration, rotation in ((1, 100, 50), (2, 200, -50)):
         event_changed_sensor = {
-            "t": "event",
             "e": "changed",
             "r": "sensors",
             "id": "1",
@@ -627,7 +613,6 @@ async def test_deconz_relative_rotary_events(
     # Unsupported relative rotary event
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "1",

@@ -69,7 +69,6 @@ async def test_cover(
     # Event signals cover is open
 
     event_changed_light = {
-        "t": "event",
         "e": "changed",
         "r": "lights",
         "id": "1",

@@ -113,7 +113,6 @@ async def test_simple_climate_device(
     # Event signals thermostat configured off
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "0",
@@ -131,7 +130,6 @@ async def test_simple_climate_device(
     # Event signals thermostat state on
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "0",
@@ -230,7 +228,6 @@ async def test_climate_device_without_cooling_support(
     # Event signals thermostat configured off
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "1",
@@ -248,7 +245,6 @@ async def test_climate_device_without_cooling_support(
     # Event signals thermostat state on
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "1",
@@ -267,7 +263,6 @@ async def test_climate_device_without_cooling_support(
     # Event signals thermostat state off
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "1",
@@ -420,7 +415,6 @@ async def test_climate_device_with_cooling_support(
     # Event signals thermostat mode cool
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "0",
@@ -439,7 +433,6 @@ async def test_climate_device_with_cooling_support(
     # Event signals thermostat state on
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "0",
@@ -528,7 +521,6 @@ async def test_climate_device_with_fan_support(
     # Event signals fan mode defaults to off
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "0",
@@ -545,7 +537,6 @@ async def test_climate_device_with_fan_support(
     # Event signals unsupported fan mode
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "0",
@@ -564,7 +555,6 @@ async def test_climate_device_with_fan_support(
     # Event signals unsupported fan mode
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "0",
@@ -677,7 +667,6 @@ async def test_climate_device_with_preset(
     # Event signals deCONZ preset
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "0",
@@ -694,7 +683,6 @@ async def test_climate_device_with_preset(
     # Event signals unknown preset
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "0",
@@ -837,7 +825,6 @@ async def test_verify_state_update(
     )
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "1",
@@ -860,7 +847,6 @@ async def test_add_new_climate_device(
 ) -> None:
     """Test that adding a new climate device works."""
     event_added_sensor = {
-        "t": "event",
         "e": "added",
         "r": "sensors",
         "id": "1",
@@ -1011,7 +997,6 @@ async def test_boost_mode(
 
     # Event signals thermostat preset boost and valve 100 (real data)
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "0",

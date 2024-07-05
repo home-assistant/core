@@ -113,7 +113,6 @@ async def test_alarm_control_panel(
     # Event signals alarm control panel armed away
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "0",
@@ -127,7 +126,6 @@ async def test_alarm_control_panel(
     # Event signals alarm control panel armed night
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "0",
@@ -143,7 +141,6 @@ async def test_alarm_control_panel(
     # Event signals alarm control panel armed home
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "0",
@@ -157,7 +154,6 @@ async def test_alarm_control_panel(
     # Event signals alarm control panel disarmed
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "0",
@@ -176,7 +172,6 @@ async def test_alarm_control_panel(
         AncillaryControlPanel.ARMING_STAY,
     ):
         event_changed_sensor = {
-            "t": "event",
             "e": "changed",
             "r": "sensors",
             "id": "0",
@@ -194,7 +189,6 @@ async def test_alarm_control_panel(
         AncillaryControlPanel.EXIT_DELAY,
     ):
         event_changed_sensor = {
-            "t": "event",
             "e": "changed",
             "r": "sensors",
             "id": "0",
@@ -210,7 +204,6 @@ async def test_alarm_control_panel(
     # Event signals alarm control panel triggered
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "0",
@@ -224,7 +217,6 @@ async def test_alarm_control_panel(
     # Event signals alarm control panel unknown state keeps previous state
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "0",

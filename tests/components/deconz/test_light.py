@@ -479,7 +479,6 @@ async def test_light_state_change(
     assert hass.states.get("light.hue_go").state == STATE_ON
 
     event_changed_light = {
-        "t": "event",
         "e": "changed",
         "r": "lights",
         "id": "0",
@@ -1332,7 +1331,6 @@ async def test_non_color_light_reports_color(
             "on": True,
             "reachable": True,
         },
-        "t": "event",
         "uniqueid": "ec:1b:bd:ff:fe:ee:ed:dd-01",
     }
     await mock_websocket_data(event_changed_light)
@@ -1534,7 +1532,6 @@ async def test_verify_group_color_mode_fallback(
                 "on": True,
                 "reachable": True,
             },
-            "t": "event",
             "uniqueid": "00:17:88:01:08:11:22:33-01",
         }
     )
@@ -1544,7 +1541,6 @@ async def test_verify_group_color_mode_fallback(
             "id": "43",
             "r": "groups",
             "state": {"all_on": True, "any_on": True},
-            "t": "event",
         }
     )
     group_state = hass.states.get("light.opbergruimte")

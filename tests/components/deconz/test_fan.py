@@ -59,7 +59,6 @@ async def test_fans(
     # Test states
 
     event_changed_light = {
-        "t": "event",
         "e": "changed",
         "r": "lights",
         "id": "1",
@@ -72,7 +71,6 @@ async def test_fans(
     assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 25
 
     event_changed_light = {
-        "t": "event",
         "e": "changed",
         "r": "lights",
         "id": "1",
@@ -85,7 +83,6 @@ async def test_fans(
     assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 50
 
     event_changed_light = {
-        "t": "event",
         "e": "changed",
         "r": "lights",
         "id": "1",
@@ -98,7 +95,6 @@ async def test_fans(
     assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 75
 
     event_changed_light = {
-        "t": "event",
         "e": "changed",
         "r": "lights",
         "id": "1",
@@ -111,7 +107,6 @@ async def test_fans(
     assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 100
 
     event_changed_light = {
-        "t": "event",
         "e": "changed",
         "r": "lights",
         "id": "1",
@@ -210,7 +205,6 @@ async def test_fans(
     # Events with an unsupported speed does not get converted
 
     event_changed_light = {
-        "t": "event",
         "e": "changed",
         "r": "lights",
         "id": "1",

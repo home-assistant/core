@@ -52,7 +52,6 @@ async def test_sirens(
     assert not hass.states.get("siren.unsupported_siren")
 
     event_changed_light = {
-        "t": "event",
         "e": "changed",
         "r": "lights",
         "id": "1",

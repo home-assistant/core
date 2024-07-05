@@ -139,7 +139,6 @@ async def test_number_entities(
     # Change state
 
     event_changed_sensor = {
-        "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "0",
