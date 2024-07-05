@@ -80,7 +80,9 @@ async def async_setup_entry(
         is not None
     )
     async_add_entities(
-        RoborockCurrentMapSelectEntity(f"selected_map_{coordinator.duid}", coordinator)
+        RoborockCurrentMapSelectEntity(
+            f"selected_map_{slugify(coordinator.duid)}", coordinator
+        )
         for coordinator in config_entry.runtime_data.v1
     )
 
