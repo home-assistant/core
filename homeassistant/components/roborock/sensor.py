@@ -30,7 +30,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util import slugify
 
 from . import RoborockConfigEntry
 from .coordinator import RoborockDataUpdateCoordinator, RoborockDataUpdateCoordinatorA01
@@ -291,7 +290,7 @@ class RoborockSensorEntity(RoborockCoordinatedEntityV1, SensorEntity):
         """Initialize the entity."""
         self.entity_description = description
         super().__init__(
-            f"{description.key}_{slugify(coordinator.duid)}",
+            f"{description.key}_{coordinator.duid_slug}",
             coordinator,
             description.protocol_listener,
         )
@@ -316,7 +315,7 @@ class RoborockSensorEntityA01(RoborockCoordinatedEntityA01, SensorEntity):
     ) -> None:
         """Initialize the entity."""
         self.entity_description = description
-        super().__init__(f"{description.key}_{slugify(coordinator.duid)}", coordinator)
+        super().__init__(f"{description.key}_{coordinator.duid_slug}", coordinator)
 
     @property
     def native_value(self) -> StateType:

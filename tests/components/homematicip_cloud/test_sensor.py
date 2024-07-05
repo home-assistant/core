@@ -634,3 +634,39 @@ async def test_hmip_esi_gas_gas_volume(
     )
 
     assert ha_state.state == "1019.26"
+
+
+async def test_hmip_esi_led_current_power_consumption(
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
+    """Test ESI-IEC currentPowerConsumption Sensor."""
+    entity_id = "sensor.esi_led_currentPowerConsumption"
+    entity_name = "esi_led CurrentPowerConsumption"
+    device_model = "HmIP-ESI"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["esi_led"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == "189.15"
+
+
+async def test_hmip_esi_led_energy_counter_usage_high_tariff(
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
+    """Test ESI-IEC ENERGY_COUNTER_USAGE_HIGH_TARIFF."""
+    entity_id = "sensor.esi_led_energy_counter_usage_high_tariff"
+    entity_name = "esi_led ENERGY_COUNTER_USAGE_HIGH_TARIFF"
+    device_model = "HmIP-ESI"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["esi_led"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == "23825.748"

@@ -25,19 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .test_gateway import setup_deconz_integration
-
 from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
-
-
-async def test_no_sensors(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test that no sensors in deconz results in no sensor entities."""
-    await setup_deconz_integration(hass, aioclient_mock)
-    assert len(hass.states.async_all()) == 0
-
 
 TEST_DATA = [
     (  # Air quality sensor
