@@ -73,7 +73,7 @@ async def _validate_and_get_errors(
     return user_input[CONF_ACCESS_URL], errors
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SimpleFinConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for the initial setup of a SimpleFIN integration."""
 
     def __init__(self) -> None:
