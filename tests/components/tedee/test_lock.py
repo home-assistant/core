@@ -1,8 +1,11 @@
 """Tests for tedee lock."""
+
 from datetime import timedelta
 from unittest.mock import MagicMock
+from urllib.parse import urlparse
 
 from freezegun.api import FrozenDateTimeFactory
+from pytedee_async import TedeeLock, TedeeLockState
 from pytedee_async.exception import (
     TedeeClientException,
     TedeeDataUpdateException,
@@ -16,15 +19,21 @@ from homeassistant.components.lock import (
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
+    STATE_LOCKED,
     STATE_LOCKING,
+    STATE_UNLOCKED,
     STATE_UNLOCKING,
 )
+from homeassistant.components.webhook import async_generate_url
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import async_fire_time_changed
+from .conftest import WEBHOOK_ID
+
+from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.typing import ClientSessionGenerator
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -207,3 +216,90 @@ async def test_update_failed(
     state = hass.states.get("lock.lock_1a2b")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_cleanup_removed_locks(
+    hass: HomeAssistant,
+    mock_tedee: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Ensure removed locks are cleaned up."""
+
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+
+    locks = [device.name for device in devices]
+    assert "Lock-1A2B" in locks
+
+    # remove a lock and wait for coordinator
+    mock_tedee.locks_dict.pop(12345)
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+
+    locks = [device.name for device in devices]
+    assert "Lock-1A2B" not in locks
+
+
+async def test_new_lock(
+    hass: HomeAssistant,
+    mock_tedee: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Ensure new lock is added automatically."""
+
+    state = hass.states.get("lock.lock_4e5f")
+    assert state is None
+
+    mock_tedee.locks_dict[666666] = TedeeLock("Lock-4E5F", 666666, 2)
+    mock_tedee.locks_dict[777777] = TedeeLock(
+        "Lock-6G7H",
+        777777,
+        4,
+        is_enabled_pullspring=True,
+    )
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lock.lock_4e5f")
+    assert state
+    state = hass.states.get("lock.lock_6g7h")
+    assert state
+
+
+async def test_webhook_update(
+    hass: HomeAssistant,
+    mock_tedee: MagicMock,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test updated data set through webhook."""
+
+    state = hass.states.get("lock.lock_1a2b")
+    assert state
+    assert state.state == STATE_UNLOCKED
+
+    webhook_data = {"dummystate": 6}
+    mock_tedee.locks_dict[
+        12345
+    ].state = TedeeLockState.LOCKED  # is updated in the lib, so mock and assert in L296
+    client = await hass_client_no_auth()
+    webhook_url = async_generate_url(hass, WEBHOOK_ID)
+
+    await client.post(
+        urlparse(webhook_url).path,
+        json=webhook_data,
+    )
+    mock_tedee.parse_webhook_message.assert_called_once_with(webhook_data)
+
+    state = hass.states.get("lock.lock_1a2b")
+    assert state
+    assert state.state == STATE_LOCKED

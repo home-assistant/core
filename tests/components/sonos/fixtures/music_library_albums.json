@@ -1,0 +1,30 @@
+[
+  {
+    "title": "A Hard Day's Night",
+    "item_id": "A:ALBUM/A%20Hard%20Day's%20Night",
+    "parent_id": "A:ALBUM",
+    "item_class": "object.container.album.musicAlbum",
+    "album_art_uri": "http://192.168.42.2:1400/getaa?u=x-file-cifs%3a%2f%2f192.168.42.100%2fmusic%2fThe%2520Beatles%2fA%2520Hard%2520Day's%2520Night%2f01%2520A%2520Hard%2520Day's%2520Night%25201.m4a&v=53"
+  },
+  {
+    "title": "Abbey Road",
+    "item_id": "A:ALBUM/Abbey%20Road",
+    "parent_id": "A:ALBUM",
+    "item_class": "object.container.album.musicAlbum",
+    "album_art_uri": "http://192.168.42.2:1400/getaa?u=x-file-cifs%3a%2f%2f192.168.42.100%2fmusic%2fThe%2520Beatles%2fAbbeyA%2520Road%2f01%2520Come%2520Together.m4a&v=53"
+  },
+  {
+    "title": "Between Good And Evil",
+    "item_id": "A:ALBUM/Between%20Good%20And%20Evil",
+    "parent_id": "A:ALBUM",
+    "item_class": "object.container.album.musicAlbum",
+    "album_art_uri": "http://192.168.42.2:1400/getaa?u=x-file-cifs%3a%2f%2f192.168.42.100%2fmusic%2fSantana%2fA%2520Between%2520Good%2520And%2520Evil%2f02%2520A%2520Persuasion.m4a&v=53"
+  },
+  {
+    "title": "Special Characters,'()+",
+    "item_id": "A:ALBUM/Special%20Characters,'()+",
+    "parent_id": "A:ALBUM",
+    "item_class": "object.container.album.musicAlbum",
+    "album_art_uri": "http://192.168.42.2:1400/getaa?u=x-file-cifs%3a%2f%2f192.168.42.100%2fmusic%2fSpecial%2fA%2520Special%2520Characters,()+%2f01%2520A%2520TheFirstTrack.m4a&v=53"
+  }
+]

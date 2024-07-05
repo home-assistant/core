@@ -1,4 +1,5 @@
 """Constants for the Skybell HD Doorbell."""
+
 import logging
 from typing import Final
 

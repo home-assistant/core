@@ -1,4 +1,5 @@
 """Sensor for the CityBikes data."""
+
 from __future__ import annotations
 
 import asyncio
@@ -10,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -72,7 +73,7 @@ CITYBIKES_NETWORKS = "citybikes_networks"
 
 PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_RADIUS, CONF_STATIONS_LIST),
-    PLATFORM_SCHEMA.extend(
+    SENSOR_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_NAME, default=""): cv.string,
             vol.Optional(CONF_NETWORK): cv.string,
@@ -144,7 +145,7 @@ async def async_citybikes_request(hass, uri, schema):
 
         json_response = await req.json()
         return schema(json_response)
-    except (asyncio.TimeoutError, aiohttp.ClientError):
+    except (TimeoutError, aiohttp.ClientError):
         _LOGGER.error("Could not connect to CityBikes API endpoint")
     except ValueError:
         _LOGGER.error("Received non-JSON data from CityBikes API endpoint")
@@ -200,9 +201,9 @@ async def async_setup_platform(
 
         if radius > dist or stations_list.intersection((station_id, station_uid)):
             if name:
-                uid = "_".join([network.network_id, name, station_id])
+                uid = f"{network.network_id}_{name}_{station_id}"
             else:
-                uid = "_".join([network.network_id, station_id])
+                uid = f"{network.network_id}_{station_id}"
             entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, uid, hass=hass)
             devices.append(CityBikesStation(network, station_id, entity_id))
 
@@ -227,6 +228,9 @@ class CityBikesNetworks:
                     self.hass, NETWORKS_URI, NETWORKS_RESPONSE_SCHEMA
                 )
                 self.networks = networks[ATTR_NETWORKS_LIST]
+        except CityBikesRequestError as err:
+            raise PlatformNotReady from err
+        else:
             result = None
             minimum_dist = None
             for network in self.networks:
@@ -240,8 +244,6 @@ class CityBikesNetworks:
                     result = network[ATTR_ID]
 
             return result
-        except CityBikesRequestError as err:
-            raise PlatformNotReady from err
         finally:
             self.networks_loading.release()
 

@@ -1,4 +1,5 @@
 """Base entity for the LaMetric integration."""
+
 from __future__ import annotations
 
 from homeassistant.helpers.device_registry import (

@@ -83,7 +83,7 @@
       dict({
         'condition': 'rainy',
         'datetime': datetime.datetime(2020, 1, 16, 0, 0),
-        'precipitation_probability': '100.0',
+        'precipitation_probability': 100.0,
         'temperature': 16.2,
         'templow': 10.6,
         'wind_bearing': 'S',
@@ -121,7 +121,7 @@
         dict({
           'condition': 'rainy',
           'datetime': datetime.datetime(2020, 1, 16, 0, 0),
-          'precipitation_probability': '100.0',
+          'precipitation_probability': 100.0,
           'temperature': 16.2,
           'templow': 10.6,
           'wind_bearing': 'S',
@@ -160,7 +160,7 @@
     dict({
       'condition': 'rainy',
       'datetime': '2020-01-16T00:00:00',
-      'precipitation_probability': '100.0',
+      'precipitation_probability': 100.0,
       'temperature': 16.2,
       'templow': 10.6,
       'wind_bearing': 'S',
@@ -173,7 +173,7 @@
     dict({
       'condition': 'rainy',
       'datetime': '2020-01-16T00:00:00',
-      'precipitation_probability': '100.0',
+      'precipitation_probability': 100.0,
       'temperature': 16.2,
       'templow': 10.6,
       'wind_bearing': 'S',

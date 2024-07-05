@@ -1,4 +1,5 @@
 """Basic checks for HomeKit motion sensors and contact sensors."""
+
 from aiohomekit.model.characteristics import (
     CharacteristicPermissions,
     CharacteristicsTypes,

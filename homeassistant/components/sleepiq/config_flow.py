@@ -1,4 +1,5 @@
 """Config flow to configure SleepIQ component."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,10 +9,9 @@ from typing import Any
 from asyncsleepiq import AsyncSleepIQ, SleepIQLoginException, SleepIQTimeoutException
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -28,7 +28,9 @@ class SleepIQFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._reauth_entry: ConfigEntry | None = None
 
-    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
+    async def async_step_import(
+        self, import_config: dict[str, Any]
+    ) -> ConfigFlowResult:
         """Import a SleepIQ account as a config entry.
 
         This flow is triggered by 'async_setup' for configured accounts.
@@ -46,7 +48,7 @@ class SleepIQFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
 
@@ -80,7 +82,9 @@ class SleepIQFlowHandler(ConfigFlow, domain=DOMAIN):
             last_step=True,
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -89,7 +93,7 @@ class SleepIQFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth."""
         errors: dict[str, str] = {}
         assert self._reauth_entry is not None

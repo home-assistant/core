@@ -1,19 +1,18 @@
 """Test ZHA registries."""
+
 from __future__ import annotations
 
-import typing
+from collections.abc import Generator
 from unittest import mock
 
 import pytest
 import zigpy.quirks as zigpy_quirks
 
 from homeassistant.components.zha.binary_sensor import IASZone
+from homeassistant.components.zha.core import registries
 from homeassistant.components.zha.core.const import ATTR_QUIRK_ID
-import homeassistant.components.zha.core.registries as registries
+from homeassistant.components.zha.entity import ZhaEntity
 from homeassistant.helpers import entity_registry as er
-
-if typing.TYPE_CHECKING:
-    from homeassistant.components.zha.core.entity import ZhaEntity
 
 MANUFACTURER = "mock manufacturer"
 MODEL = "mock model"
@@ -394,14 +393,14 @@ def entity_registry():
 
 @pytest.mark.parametrize(
     ("manufacturer", "model", "quirk_id", "match_name"),
-    (
+    [
         ("random manufacturer", "random model", "random.class", "OnOff"),
         ("random manufacturer", MODEL, "random.class", "OnOffModel"),
         (MANUFACTURER, "random model", "random.class", "OnOffManufacturer"),
         ("random manufacturer", "random model", QUIRK_ID, "OnOffQuirk"),
         (MANUFACTURER, MODEL, "random.class", "OnOffModelManufacturer"),
         (MANUFACTURER, "some model", "random.class", "OnOffMultimodel"),
-    ),
+    ],
 )
 def test_weighted_match(
     cluster_handler,
@@ -531,7 +530,7 @@ def test_multi_sensor_match(
     }
 
 
-def iter_all_rules() -> typing.Iterable[registries.MatchRule, list[type[ZhaEntity]]]:
+def iter_all_rules() -> Generator[tuple[registries.MatchRule, list[type[ZhaEntity]]]]:
     """Iterate over all match rules and their corresponding entities."""
 
     for rules in registries.ZHA_ENTITIES._strict_registry.values():
@@ -575,6 +574,7 @@ def test_quirk_classes() -> None:
                 quirk_id = getattr(quirk, ATTR_QUIRK_ID, None)
                 if quirk_id is not None and quirk_id not in all_quirk_ids:
                     all_quirk_ids.append(quirk_id)
+    # pylint: disable-next=undefined-loop-variable
     del quirk, model_quirk_list, manufacturer
 
     # validate all quirk IDs used in component match rules

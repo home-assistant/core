@@ -10,6 +10,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.frenck_battery',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '78.57',
   })
@@ -33,6 +34,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -72,10 +75,13 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Elgato',
     'model': 'Elgato Key Light Mini',
     'name': 'Frenck',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': 'GW24L1A02987',
     'suggested_area': None,
     'sw_version': '1.0.4 (229)',
@@ -93,6 +99,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.frenck_battery_voltage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.86',
   })
@@ -116,6 +123,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -158,10 +167,13 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Elgato',
     'model': 'Elgato Key Light Mini',
     'name': 'Frenck',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': 'GW24L1A02987',
     'suggested_area': None,
     'sw_version': '1.0.4 (229)',
@@ -179,6 +191,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.frenck_charging_current',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.008',
   })
@@ -202,6 +215,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -244,10 +259,13 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Elgato',
     'model': 'Elgato Key Light Mini',
     'name': 'Frenck',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': 'GW24L1A02987',
     'suggested_area': None,
     'sw_version': '1.0.4 (229)',
@@ -265,6 +283,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.frenck_charging_power',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '12.66',
   })
@@ -288,6 +307,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -327,10 +348,13 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Elgato',
     'model': 'Elgato Key Light Mini',
     'name': 'Frenck',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': 'GW24L1A02987',
     'suggested_area': None,
     'sw_version': '1.0.4 (229)',
@@ -348,6 +372,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.frenck_charging_voltage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4.208',
   })
@@ -371,6 +396,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -413,10 +440,13 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Elgato',
     'model': 'Elgato Key Light Mini',
     'name': 'Frenck',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': 'GW24L1A02987',
     'suggested_area': None,
     'sw_version': '1.0.4 (229)',

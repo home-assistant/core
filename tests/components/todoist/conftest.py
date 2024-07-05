@@ -1,4 +1,5 @@
 """Common fixtures for the todoist tests."""
+
 from collections.abc import Generator
 from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
@@ -23,7 +24,7 @@ TODAY = dt_util.now().strftime("%Y-%m-%d")
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.todoist.async_setup_entry", return_value=True
@@ -152,9 +153,10 @@ async def mock_setup_integration(
     """Mock setup of the todoist integration."""
     if todoist_config_entry is not None:
         todoist_config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.todoist.TodoistAPIAsync", return_value=api
-    ), patch("homeassistant.components.todoist.PLATFORMS", platforms):
+    with (
+        patch("homeassistant.components.todoist.TodoistAPIAsync", return_value=api),
+        patch("homeassistant.components.todoist.PLATFORMS", platforms),
+    ):
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         yield

@@ -1,4 +1,5 @@
 """Support for myStrom switches/plugs."""
+
 from __future__ import annotations
 
 import logging
@@ -9,7 +10,7 @@ from pymystrom.exceptions import MyStromConnectionError
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, MANUFACTURER
@@ -42,6 +43,8 @@ class MyStromSwitch(SwitchEntity):
             name=name,
             manufacturer=MANUFACTURER,
             sw_version=self.plug.firmware,
+            connections={("mac", format_mac(self.plug.mac))},
+            configuration_url=self.plug.uri,
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:

@@ -1,4 +1,5 @@
 """Test the Random config flow."""
+
 from typing import Any
 from unittest.mock import patch
 
@@ -22,7 +23,7 @@ from tests.common import MockConfigEntry
         "extra_input",
         "extra_options",
     ),
-    (
+    [
         (
             "binary_sensor",
             {},
@@ -46,7 +47,7 @@ from tests.common import MockConfigEntry
             {},
             {"minimum": 0, "maximum": 20},
         ),
-    ),
+    ],
 )
 async def test_config_flow(
     hass: HomeAssistant,
@@ -59,14 +60,14 @@ async def test_config_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"next_step_id": entity_type},
     )
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == entity_type
 
     with patch(
@@ -81,7 +82,7 @@ async def test_config_flow(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "My random entity"
     assert result["data"] == {}
     assert result["options"] == {
@@ -107,14 +108,14 @@ async def test_wrong_uom(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"next_step_id": "sensor"},
     )
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "sensor"
 
     with pytest.raises(Invalid, match="is not a valid unit for device class"):
@@ -134,7 +135,7 @@ async def test_wrong_uom(
         "extra_options",
         "options_options",
     ),
-    (
+    [
         (
             "sensor",
             {
@@ -150,7 +151,7 @@ async def test_wrong_uom(
                 "unit_of_measurement": UnitOfPower.WATT,
             },
         ),
-    ),
+    ],
 )
 async def test_options(
     hass: HomeAssistant,
@@ -178,7 +179,7 @@ async def test_options(
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == entity_type
     assert "name" not in result["data_schema"].schema
 
@@ -186,7 +187,7 @@ async def test_options(
         result["flow_id"],
         user_input=options_options,
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "name": "My random",
         "entity_type": entity_type,

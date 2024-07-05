@@ -1,4 +1,5 @@
 """The Android IP Webcam integration."""
+
 from __future__ import annotations
 
 from pydroid_ipcam import PyDroidIPCam

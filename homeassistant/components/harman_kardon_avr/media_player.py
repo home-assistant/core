@@ -1,11 +1,12 @@
 """Support for interface with an Harman/Kardon or JBL AVR."""
+
 from __future__ import annotations
 
 import hkavr
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -19,7 +20,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 DEFAULT_NAME = "Harman Kardon AVR"
 DEFAULT_PORT = 10025
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

@@ -1,4 +1,5 @@
 """Integration tests for the Tailwind integration."""
+
 from unittest.mock import MagicMock
 
 from gotailwind import TailwindAuthenticationError, TailwindConnectionError

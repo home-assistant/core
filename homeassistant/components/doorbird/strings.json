@@ -48,6 +48,26 @@
       "last_motion": {
         "name": "Last motion"
       }
+    },
+    "event": {
+      "doorbell": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "ring": "Ring"
+            }
+          }
+        }
+      },
+      "motion": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "Motion"
+            }
+          }
+        }
+      }
     }
   }
 }

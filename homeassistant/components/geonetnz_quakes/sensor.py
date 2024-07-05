@@ -1,4 +1,5 @@
 """Feed Entity Manager Sensor support for GeoNet NZ Quakes Feeds."""
+
 from __future__ import annotations
 
 import logging
@@ -136,16 +137,16 @@ class GeonetnzQuakesSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the device state attributes."""
-        attributes = {}
-        for key, value in (
-            (ATTR_STATUS, self._status),
-            (ATTR_LAST_UPDATE, self._last_update),
-            (ATTR_LAST_UPDATE_SUCCESSFUL, self._last_update_successful),
-            (ATTR_LAST_TIMESTAMP, self._last_timestamp),
-            (ATTR_CREATED, self._created),
-            (ATTR_UPDATED, self._updated),
-            (ATTR_REMOVED, self._removed),
-        ):
-            if value or isinstance(value, bool):
-                attributes[key] = value
-        return attributes
+        return {
+            key: value
+            for key, value in (
+                (ATTR_STATUS, self._status),
+                (ATTR_LAST_UPDATE, self._last_update),
+                (ATTR_LAST_UPDATE_SUCCESSFUL, self._last_update_successful),
+                (ATTR_LAST_TIMESTAMP, self._last_timestamp),
+                (ATTR_CREATED, self._created),
+                (ATTR_UPDATED, self._updated),
+                (ATTR_REMOVED, self._removed),
+            )
+            if value or isinstance(value, bool)
+        }

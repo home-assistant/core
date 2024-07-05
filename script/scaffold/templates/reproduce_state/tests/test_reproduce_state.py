@@ -1,4 +1,5 @@
 """Test reproduce state for NEW_NAME."""
+
 import pytest
 
 from homeassistant.core import HomeAssistant, State

@@ -1,4 +1,5 @@
 """Support for the Jellyfin media player."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -149,7 +150,9 @@ class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
             media_content_type = CONTENT_TYPE_MAP.get(self.now_playing["Type"], None)
             media_content_id = self.now_playing["Id"]
             media_title = self.now_playing["Name"]
-            media_duration = int(self.now_playing["RunTimeTicks"] / 10000000)
+
+            if "RunTimeTicks" in self.now_playing:
+                media_duration = int(self.now_playing["RunTimeTicks"] / 10000000)
 
             if media_content_type == MediaType.EPISODE:
                 media_content_type = MediaType.TVSHOW

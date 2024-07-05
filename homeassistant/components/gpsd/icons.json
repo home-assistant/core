@@ -1,0 +1,13 @@
+{
+  "entity": {
+    "sensor": {
+      "mode": {
+        "default": "mdi:crosshairs",
+        "state": {
+          "2d_fix": "mdi:crosshairs-gps",
+          "3d_fix": "mdi:crosshairs-gps"
+        }
+      }
+    }
+  }
+}

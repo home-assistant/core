@@ -1,5 +1,7 @@
 """Tests for the diagnostics data provided by Switcher."""
 
+import pytest
+
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.core import HomeAssistant
 
@@ -11,7 +13,10 @@ from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_bridge, monkeypatch
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_bridge,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test diagnostics."""
     entry = await init_integration(hass)
@@ -25,6 +30,7 @@ async def test_diagnostics(
             {
                 "auto_shutdown": "02:00:00",
                 "device_id": REDACTED,
+                "device_key": REDACTED,
                 "device_state": {
                     "__type": "<enum 'DeviceState'>",
                     "repr": "<DeviceState.ON: ('01', 'on')>",

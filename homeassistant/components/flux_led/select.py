@@ -1,4 +1,5 @@
 """Support for Magic Home select."""
+
 from __future__ import annotations
 
 import asyncio
@@ -91,7 +92,6 @@ class FluxPowerStateSelect(FluxConfigAtStartSelect, SelectEntity):
     """Representation of a Flux power restore state option."""
 
     _attr_translation_key = "power_restored"
-    _attr_icon = "mdi:transmission-tower-off"
     _attr_options = list(NAME_TO_POWER_RESTORE_STATE)
 
     def __init__(
@@ -125,7 +125,6 @@ class FluxPowerStateSelect(FluxConfigAtStartSelect, SelectEntity):
 class FluxICTypeSelect(FluxConfigSelect):
     """Representation of Flux ic type."""
 
-    _attr_icon = "mdi:chip"
     _attr_translation_key = "ic_type"
 
     @property
@@ -148,7 +147,6 @@ class FluxICTypeSelect(FluxConfigSelect):
 class FluxWiringsSelect(FluxConfigSelect):
     """Representation of Flux wirings."""
 
-    _attr_icon = "mdi:led-strip-variant"
     _attr_translation_key = "wiring"
 
     @property

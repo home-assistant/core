@@ -1,4 +1,5 @@
 """Tests for the Filesize integration."""
+
 from pathlib import Path
 
 from homeassistant.components.filesize.const import DOMAIN

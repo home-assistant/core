@@ -1,13 +1,16 @@
 """Support for interface with an Aquos TV."""
+
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
+from typing import Any, Concatenate
 
 import sharp_aquos_rc
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -34,7 +37,7 @@ DEFAULT_PASSWORD = "password"
 DEFAULT_TIMEOUT = 0.5
 DEFAULT_RETRIES = 2
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -79,10 +82,12 @@ def setup_platform(
     add_entities([SharpAquosTVDevice(name, remote, power_on_enabled)])
 
 
-def _retry(func):
+def _retry[_SharpAquosTVDeviceT: SharpAquosTVDevice, **_P](
+    func: Callable[Concatenate[_SharpAquosTVDeviceT, _P], Any],
+) -> Callable[Concatenate[_SharpAquosTVDeviceT, _P], None]:
     """Handle query retries."""
 
-    def wrapper(obj, *args, **kwargs):
+    def wrapper(obj: _SharpAquosTVDeviceT, *args: _P.args, **kwargs: _P.kwargs) -> None:
         """Wrap all query functions."""
         update_retries = 5
         while update_retries > 0:
@@ -125,7 +130,7 @@ class SharpAquosTVDevice(MediaPlayerEntity):
         # Assume that the TV is not muted
         self._remote = remote
 
-    def set_state(self, state):
+    def set_state(self, state: MediaPlayerState) -> None:
         """Set TV state."""
         self._attr_state = state
 

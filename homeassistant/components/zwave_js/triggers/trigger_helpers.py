@@ -1,4 +1,5 @@
 """Helpers for Z-Wave JS custom triggers."""
+
 from zwave_js_server.client import Client as ZwaveClient
 
 from homeassistant.config_entries import ConfigEntryState
@@ -36,7 +37,7 @@ def async_bypass_dynamic_config_validation(
             return True
 
         # The driver may not be ready when the config entry is loaded.
-        client: ZwaveClient = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
+        client: ZwaveClient = entry.runtime_data[DATA_CLIENT]
         if client.driver is None:
             return True
 

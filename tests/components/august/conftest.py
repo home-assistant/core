@@ -1,4 +1,5 @@
 """August tests conftest."""
+
 from unittest.mock import patch
 
 import pytest
@@ -8,6 +9,6 @@ import pytest
 def mock_discovery_fixture():
     """Mock discovery to avoid loading the whole bluetooth stack."""
     with patch(
-        "homeassistant.components.august.discovery_flow.async_create_flow"
+        "homeassistant.components.august.data.discovery_flow.async_create_flow"
     ) as mock_discovery:
         yield mock_discovery

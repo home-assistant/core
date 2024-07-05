@@ -1,4 +1,5 @@
 """Analytics helper class for the analytics integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -173,6 +174,7 @@ class Analytics:
 
     async def send_analytics(self, _: datetime | None = None) -> None:
         """Send analytics."""
+        hass = self.hass
         supervisor_info = None
         operating_system_info: dict[str, Any] = {}
 
@@ -185,13 +187,13 @@ class Analytics:
             await self._store.async_save(dataclass_asdict(self._data))
 
         if self.supervisor:
-            supervisor_info = hassio.get_supervisor_info(self.hass)
-            operating_system_info = hassio.get_os_info(self.hass) or {}
+            supervisor_info = hassio.get_supervisor_info(hass)
+            operating_system_info = hassio.get_os_info(hass) or {}
 
-        system_info = await async_get_system_info(self.hass)
+        system_info = await async_get_system_info(hass)
         integrations = []
         custom_integrations = []
-        addons = []
+        addons: list[dict[str, Any]] = []
         payload: dict = {
             ATTR_UUID: self.uuid,
             ATTR_VERSION: HA_VERSION,
@@ -214,10 +216,10 @@ class Analytics:
         if self.preferences.get(ATTR_USAGE, False) or self.preferences.get(
             ATTR_STATISTICS, False
         ):
-            ent_reg = er.async_get(self.hass)
+            ent_reg = er.async_get(hass)
 
             try:
-                yaml_configuration = await conf_util.async_hass_config_yaml(self.hass)
+                yaml_configuration = await conf_util.async_hass_config_yaml(hass)
             except HomeAssistantError as err:
                 LOGGER.error(err)
                 return
@@ -229,8 +231,8 @@ class Analytics:
                 if not entity.disabled
             }
 
-            domains = async_get_loaded_integrations(self.hass)
-            configured_integrations = await async_get_integrations(self.hass, domains)
+            domains = async_get_loaded_integrations(hass)
+            configured_integrations = await async_get_integrations(hass, domains)
             enabled_domains = set(configured_integrations)
 
             for integration in configured_integrations.values():
@@ -261,22 +263,22 @@ class Analytics:
             if supervisor_info is not None:
                 installed_addons = await asyncio.gather(
                     *(
-                        hassio.async_get_addon_info(self.hass, addon[ATTR_SLUG])
+                        hassio.async_get_addon_info(hass, addon[ATTR_SLUG])
                         for addon in supervisor_info[ATTR_ADDONS]
                     )
                 )
-                for addon in installed_addons:
-                    addons.append(
-                        {
-                            ATTR_SLUG: addon[ATTR_SLUG],
-                            ATTR_PROTECTED: addon[ATTR_PROTECTED],
-                            ATTR_VERSION: addon[ATTR_VERSION],
-                            ATTR_AUTO_UPDATE: addon[ATTR_AUTO_UPDATE],
-                        }
-                    )
+                addons.extend(
+                    {
+                        ATTR_SLUG: addon[ATTR_SLUG],
+                        ATTR_PROTECTED: addon[ATTR_PROTECTED],
+                        ATTR_VERSION: addon[ATTR_VERSION],
+                        ATTR_AUTO_UPDATE: addon[ATTR_AUTO_UPDATE],
+                    }
+                    for addon in installed_addons
+                )
 
         if self.preferences.get(ATTR_USAGE, False):
-            payload[ATTR_CERTIFICATE] = self.hass.http.ssl_certificate is not None
+            payload[ATTR_CERTIFICATE] = hass.http.ssl_certificate is not None
             payload[ATTR_INTEGRATIONS] = integrations
             payload[ATTR_CUSTOM_INTEGRATIONS] = custom_integrations
             if supervisor_info is not None:
@@ -284,11 +286,11 @@ class Analytics:
 
             if ENERGY_DOMAIN in enabled_domains:
                 payload[ATTR_ENERGY] = {
-                    ATTR_CONFIGURED: await energy_is_configured(self.hass)
+                    ATTR_CONFIGURED: await energy_is_configured(hass)
                 }
 
             if RECORDER_DOMAIN in enabled_domains:
-                instance = get_recorder_instance(self.hass)
+                instance = get_recorder_instance(hass)
                 engine = instance.database_engine
                 if engine and engine.version is not None:
                     payload[ATTR_RECORDER] = {
@@ -297,9 +299,9 @@ class Analytics:
                     }
 
         if self.preferences.get(ATTR_STATISTICS, False):
-            payload[ATTR_STATE_COUNT] = len(self.hass.states.async_all())
-            payload[ATTR_AUTOMATION_COUNT] = len(
-                self.hass.states.async_all(AUTOMATION_DOMAIN)
+            payload[ATTR_STATE_COUNT] = hass.states.async_entity_ids_count()
+            payload[ATTR_AUTOMATION_COUNT] = hass.states.async_entity_ids_count(
+                AUTOMATION_DOMAIN
             )
             payload[ATTR_INTEGRATION_COUNT] = len(integrations)
             if supervisor_info is not None:
@@ -307,7 +309,7 @@ class Analytics:
             payload[ATTR_USER_COUNT] = len(
                 [
                     user
-                    for user in await self.hass.auth.async_get_users()
+                    for user in await hass.auth.async_get_users()
                     if not user.system_generated
                 ]
             )
@@ -329,7 +331,7 @@ class Analytics:
                         response.status,
                         self.endpoint,
                     )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             LOGGER.error("Timeout sending analytics to %s", ANALYTICS_ENDPOINT_URL)
         except aiohttp.ClientError as err:
             LOGGER.error(

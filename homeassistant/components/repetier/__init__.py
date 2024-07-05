@@ -1,4 +1,5 @@
 """Support for Repetier-Server sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

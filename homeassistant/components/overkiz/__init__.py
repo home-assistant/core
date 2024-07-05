@@ -1,4 +1,5 @@
 """The Overkiz (by Somfy) integration."""
+
 from __future__ import annotations
 
 from collections import defaultdict

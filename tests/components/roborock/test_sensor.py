@@ -1,8 +1,8 @@
 """Test Roborock Sensors."""
+
 from unittest.mock import patch
 
 from roborock import DeviceData, HomeDataDevice
-from roborock.cloud_api import RoborockMqttClient
 from roborock.const import (
     FILTER_REPLACE_TIME,
     MAIN_BRUSH_REPLACE_TIME,
@@ -10,6 +10,7 @@ from roborock.const import (
     SIDE_BRUSH_REPLACE_TIME,
 )
 from roborock.roborock_message import RoborockMessage, RoborockMessageProtocol
+from roborock.version_1_apis import RoborockMqttClientV1
 
 from homeassistant.core import HomeAssistant
 
@@ -20,7 +21,7 @@ from tests.common import MockConfigEntry
 
 async def test_sensors(hass: HomeAssistant, setup_entry: MockConfigEntry) -> None:
     """Test sensors and check test values are correctly set."""
-    assert len(hass.states.async_all("sensor")) == 28
+    assert len(hass.states.async_all("sensor")) == 34
     assert hass.states.get("sensor.roborock_s7_maxv_main_brush_time_left").state == str(
         MAIN_BRUSH_REPLACE_TIME - 74382
     )
@@ -53,6 +54,12 @@ async def test_sensors(hass: HomeAssistant, setup_entry: MockConfigEntry) -> Non
         hass.states.get("sensor.roborock_s7_maxv_last_clean_end").state
         == "2023-01-01T03:43:58+00:00"
     )
+    assert hass.states.get("sensor.dyad_pro_status").state == "drying"
+    assert hass.states.get("sensor.dyad_pro_battery").state == "100"
+    assert hass.states.get("sensor.dyad_pro_filter_time_left").state == "111"
+    assert hass.states.get("sensor.dyad_pro_roller_left").state == "222"
+    assert hass.states.get("sensor.dyad_pro_error").state == "none"
+    assert hass.states.get("sensor.dyad_pro_total_cleaning_time").state == "213"
 
 
 async def test_listener_update(
@@ -61,11 +68,11 @@ async def test_listener_update(
     """Test that when we receive a mqtt topic, we successfully update the entity."""
     assert hass.states.get("sensor.roborock_s7_maxv_status").state == "charging"
     # Listeners are global based on uuid - so this is okay
-    client = RoborockMqttClient(
+    client = RoborockMqttClientV1(
         USER_DATA, DeviceData(device=HomeDataDevice("abc123", "", "", "", ""), model="")
     )
     # Test Status
-    with patch("roborock.api.AttributeCache.value", STATUS.as_dict()):
+    with patch("roborock.version_1_apis.AttributeCache.value", STATUS.as_dict()):
         # Symbolizes a mqtt message coming in
         client.on_message_received(
             [
@@ -79,7 +86,7 @@ async def test_listener_update(
     assert hass.states.get("sensor.roborock_s7_maxv_filter_time_left").state == str(
         FILTER_REPLACE_TIME - 74382
     )
-    with patch("roborock.api.AttributeCache.value", CONSUMABLE.as_dict()):
+    with patch("roborock.version_1_apis.AttributeCache.value", CONSUMABLE.as_dict()):
         client.on_message_received(
             [
                 RoborockMessage(
@@ -88,6 +95,7 @@ async def test_listener_update(
                 )
             ]
         )
+    await hass.async_block_till_done()
     assert hass.states.get("sensor.roborock_s7_maxv_filter_time_left").state == str(
         FILTER_REPLACE_TIME - 743
     )

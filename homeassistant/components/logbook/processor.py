@@ -1,4 +1,5 @@
 """Event parser and human readable log generator."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Generator, Sequence
@@ -37,6 +38,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
+from homeassistant.util.event_type import EventType
 
 from .const import (
     ATTR_MESSAGE,
@@ -74,7 +76,8 @@ class LogbookRun:
 
     context_lookup: dict[bytes | None, Row | EventAsRow | None]
     external_events: dict[
-        str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
+        EventType[Any] | str,
+        tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]],
     ]
     event_cache: EventCache
     entity_name_cache: EntityNameCache
@@ -89,7 +92,7 @@ class EventProcessor:
     def __init__(
         self,
         hass: HomeAssistant,
-        event_types: tuple[str, ...],
+        event_types: tuple[EventType[Any] | str, ...],
         entity_ids: list[str] | None = None,
         device_ids: list[str] | None = None,
         context_id: str | None = None,
@@ -170,11 +173,12 @@ class EventProcessor:
             )
 
     def humanify(
-        self, rows: Generator[EventAsRow, None, None] | Sequence[Row] | Result
+        self, rows: Generator[EventAsRow] | Sequence[Row] | Result
     ) -> list[dict[str, str]]:
         """Humanify rows."""
         return list(
             _humanify(
+                self.hass,
                 rows,
                 self.ent_reg,
                 self.logbook_run,
@@ -184,11 +188,12 @@ class EventProcessor:
 
 
 def _humanify(
-    rows: Generator[EventAsRow, None, None] | Sequence[Row] | Result,
+    hass: HomeAssistant,
+    rows: Generator[EventAsRow] | Sequence[Row] | Result,
     ent_reg: er.EntityRegistry,
     logbook_run: LogbookRun,
     context_augmenter: ContextAugmenter,
-) -> Generator[dict[str, Any], None, None]:
+) -> Generator[dict[str, Any]]:
     """Generate a converted list of events into entries."""
     # Continuous sensors, will be excluded from the logbook
     continuous_sensors: dict[str, bool] = {}
@@ -199,13 +204,12 @@ def _humanify(
     include_entity_name = logbook_run.include_entity_name
     format_time = logbook_run.format_time
     memoize_new_contexts = logbook_run.memoize_new_contexts
-    memoize_context = context_lookup.setdefault
 
     # Process rows
     for row in rows:
         context_id_bin: bytes = row.context_id_bin
-        if memoize_new_contexts:
-            memoize_context(context_id_bin, row)
+        if memoize_new_contexts and context_id_bin not in context_lookup:
+            context_lookup[context_id_bin] = row
         if row.context_only:
             continue
         event_type = row.event_type
@@ -219,7 +223,7 @@ def _humanify(
             if (
                 is_continuous := continuous_sensors.get(entity_id)
             ) is None and split_entity_id(entity_id)[0] == SENSOR_DOMAIN:
-                is_continuous = is_sensor_continuous(ent_reg, entity_id)
+                is_continuous = is_sensor_continuous(hass, ent_reg, entity_id)
                 continuous_sensors[entity_id] = is_continuous
             if is_continuous:
                 continue
@@ -241,7 +245,7 @@ def _humanify(
             domain, describe_event = external_events[event_type]
             try:
                 data = describe_event(event_cache.get(row))
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception(
                     "Error with %s describe event for %s", domain, event_type
                 )
@@ -353,7 +357,7 @@ class ContextAugmenter:
         event = self.event_cache.get(context_row)
         try:
             described = describe_event(event)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error with %s describe event for %s", domain, event_type)
             return
         if name := described.get(LOGBOOK_ENTRY_NAME):
@@ -425,7 +429,7 @@ class EventCache:
 
     def get(self, row: EventAsRow | Row) -> LazyEventPartialState:
         """Get the event from the row."""
-        if isinstance(row, EventAsRow):
+        if type(row) is EventAsRow:  # - this is never subclassed
             return LazyEventPartialState(row, self._event_data_cache)
         if event := self.event_cache.get(row):
             return event

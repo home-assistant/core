@@ -1,4 +1,5 @@
 """Provides device actions for ZHA devices."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -135,8 +136,7 @@ async def async_validate_action_config(
 ) -> ConfigType:
     """Validate config."""
     schema = ACTION_SCHEMA_MAP.get(config[CONF_TYPE], DEFAULT_ACTION_SCHEMA)
-    config = schema(config)
-    return config
+    return schema(config)
 
 
 async def async_get_actions(
@@ -167,8 +167,9 @@ async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List action capabilities."""
-
-    return {"extra_fields": DEVICE_ACTION_SCHEMAS.get(config[CONF_TYPE], {})}
+    if (fields := DEVICE_ACTION_SCHEMAS.get(config[CONF_TYPE])) is None:
+        return {}
+    return {"extra_fields": fields}
 
 
 async def _execute_service_based_action(

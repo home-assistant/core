@@ -1,10 +1,13 @@
 """Config flow for flo integration."""
+
 from aioflo import async_get_api
 from aioflo.errors import RequestError
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
@@ -14,7 +17,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(hass: HomeAssistant, data):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -28,7 +31,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         raise CannotConnect from request_error
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class FloConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for flo."""
 
     VERSION = 1
@@ -52,5 +55,5 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""

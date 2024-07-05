@@ -1,7 +1,7 @@
 """The AirVisual component."""
+
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 from datetime import timedelta
 from math import ceil
@@ -161,13 +161,13 @@ def _standardize_geography_config_entry(
         # about, infer it from the data we have:
         entry_updates["data"] = {**entry.data}
         if CONF_CITY in entry.data:
-            entry_updates["data"][
-                CONF_INTEGRATION_TYPE
-            ] = INTEGRATION_TYPE_GEOGRAPHY_NAME
+            entry_updates["data"][CONF_INTEGRATION_TYPE] = (
+                INTEGRATION_TYPE_GEOGRAPHY_NAME
+            )
         else:
-            entry_updates["data"][
-                CONF_INTEGRATION_TYPE
-            ] = INTEGRATION_TYPE_GEOGRAPHY_COORDS
+            entry_updates["data"][CONF_INTEGRATION_TYPE] = (
+                INTEGRATION_TYPE_GEOGRAPHY_COORDS
+            )
 
     if not entry_updates:
         return
@@ -242,7 +242,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # 1 -> 2: One geography per config entry
     if version == 1:
-        version = entry.version = 2
+        version = 2
 
         # Update the config entry to only include the first geography (there is always
         # guaranteed to be at least one):
@@ -255,6 +255,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             unique_id=first_id,
             title=f"Cloud API ({first_id})",
             data={CONF_API_KEY: entry.data[CONF_API_KEY], **first_geography},
+            version=version,
         )
 
         # For any geographies that remain, create a new config entry for each one:
@@ -305,15 +306,19 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # domain:
             new_entry_data = {**entry.data}
             new_entry_data.pop(CONF_INTEGRATION_TYPE)
-            tasks = [
+
+            # Schedule the removal in a task to avoid a deadlock
+            # since we cannot remove a config entry that is in
+            # the process of being setup.
+            hass.async_create_background_task(
                 hass.config_entries.async_remove(entry.entry_id),
-                hass.config_entries.flow.async_init(
-                    DOMAIN_AIRVISUAL_PRO,
-                    context={"source": SOURCE_IMPORT},
-                    data=new_entry_data,
-                ),
-            ]
-            await asyncio.gather(*tasks)
+                name="remove config legacy airvisual entry {entry.title}",
+            )
+            await hass.config_entries.flow.async_init(
+                DOMAIN_AIRVISUAL_PRO,
+                context={"source": SOURCE_IMPORT},
+                data=new_entry_data,
+            )
 
             # After the migration has occurred, grab the new config and device entries
             # (now under the `airvisual_pro` domain):
@@ -379,7 +384,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     },
                 )
         else:
-            entry.version = version
+            hass.config_entries.async_update_entry(entry, version=version)
 
     LOGGER.info("Migration to version %s successful", version)
 

@@ -1,4 +1,5 @@
 """Tests for gree component."""
+
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory

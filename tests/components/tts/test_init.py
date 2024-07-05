@@ -1,6 +1,8 @@
 """The tests for the TTS component."""
+
 import asyncio
 from http import HTTPStatus
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -42,12 +44,6 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 ORIG_WRITE_TAGS = tts.SpeechManager.write_tags
 
 
-@pytest.fixture
-async def setup_tts(hass: HomeAssistant, mock_tts: None) -> None:
-    """Mock TTS."""
-    assert await async_setup_component(hass, tts.DOMAIN, {"tts": {"platform": "test"}})
-
-
 class DefaultEntity(tts.TextToSpeechEntity):
     """Test entity."""
 
@@ -87,7 +83,7 @@ async def test_config_entry_unload(
     assert state is None
 
     config_entry = await mock_config_entry_setup(hass, mock_tts_entity)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNKNOWN
@@ -120,7 +116,7 @@ async def test_config_entry_unload(
 
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
     state = hass.states.get(entity_id)
     assert state is None
@@ -138,7 +134,7 @@ async def test_restore_state(
     config_entry = await mock_config_entry_setup(hass, mock_tts_entity)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     state = hass.states.get(entity_id)
     assert state
     assert state.state == timestamp
@@ -192,7 +188,7 @@ async def test_setup_component_no_access_cache_folder(
 )
 async def test_service(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -253,7 +249,7 @@ async def test_service(
 )
 async def test_service_default_language(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -314,7 +310,7 @@ async def test_service_default_language(
 )
 async def test_service_default_special_language(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -371,7 +367,7 @@ async def test_service_default_special_language(
 )
 async def test_service_language(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -428,7 +424,7 @@ async def test_service_language(
 )
 async def test_service_wrong_language(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -482,7 +478,7 @@ async def test_service_wrong_language(
 )
 async def test_service_options(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -566,7 +562,7 @@ class MockEntityWithDefaults(MockTTSEntity):
 )
 async def test_service_default_options(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -634,7 +630,7 @@ async def test_service_default_options(
 )
 async def test_merge_default_service_options(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -701,7 +697,7 @@ async def test_merge_default_service_options(
 )
 async def test_service_wrong_options(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -757,7 +753,7 @@ async def test_service_wrong_options(
 )
 async def test_service_clear_cache(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -819,7 +815,7 @@ async def test_service_clear_cache(
 async def test_service_receive_voice(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -891,7 +887,7 @@ async def test_service_receive_voice(
 async def test_service_receive_voice_german(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -999,7 +995,7 @@ async def test_web_view_wrong_filename(
 )
 async def test_service_without_cache(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -1047,7 +1043,7 @@ class MockEntityBoom(MockTTSEntity):
 @pytest.mark.parametrize("mock_provider", [MockProviderBoom(DEFAULT_LANG)])
 async def test_setup_legacy_cache_dir(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     mock_provider: MockProvider,
 ) -> None:
     """Set up a TTS platform with cache and call service without cache."""
@@ -1058,9 +1054,7 @@ async def test_setup_legacy_cache_dir(
         mock_tts_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3"
     )
 
-    with open(cache_file, "wb") as voice_file:
-        voice_file.write(tts_data)
-
+    await hass.async_add_executor_job(Path(cache_file).write_bytes, tts_data)
     await mock_setup(hass, mock_provider)
 
     await hass.services.async_call(
@@ -1083,7 +1077,7 @@ async def test_setup_legacy_cache_dir(
 @pytest.mark.parametrize("mock_tts_entity", [MockEntityBoom(DEFAULT_LANG)])
 async def test_setup_cache_dir(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     mock_tts_entity: MockTTSEntity,
 ) -> None:
     """Set up a TTS platform with cache and call service without cache."""
@@ -1094,9 +1088,7 @@ async def test_setup_cache_dir(
         "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_tts.test.mp3"
     )
 
-    with open(cache_file, "wb") as voice_file:
-        voice_file.write(tts_data)
-
+    await hass.async_add_executor_job(Path(cache_file).write_bytes, tts_data)
     await mock_config_entry_setup(hass, mock_tts_entity)
 
     await hass.services.async_call(
@@ -1190,7 +1182,7 @@ async def test_service_get_tts_error(
 async def test_load_cache_legacy_retrieve_without_mem_cache(
     hass: HomeAssistant,
     mock_provider: MockProvider,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Set up component and load cache and get without mem cache."""
@@ -1199,9 +1191,7 @@ async def test_load_cache_legacy_retrieve_without_mem_cache(
         mock_tts_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.mp3"
     )
 
-    with open(cache_file, "wb") as voice_file:
-        voice_file.write(tts_data)
-
+    await hass.async_add_executor_job(Path(cache_file).write_bytes, tts_data)
     await mock_setup(hass, mock_provider)
 
     client = await hass_client()
@@ -1216,7 +1206,7 @@ async def test_load_cache_legacy_retrieve_without_mem_cache(
 async def test_load_cache_retrieve_without_mem_cache(
     hass: HomeAssistant,
     mock_tts_entity: MockTTSEntity,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Set up component and load cache and get without mem cache."""
@@ -1225,9 +1215,7 @@ async def test_load_cache_retrieve_without_mem_cache(
         "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_tts.test.mp3"
     )
 
-    with open(cache_file, "wb") as voice_file:
-        voice_file.write(tts_data)
-
+    await hass.async_add_executor_job(Path(cache_file).write_bytes, tts_data)
     await mock_config_entry_setup(hass, mock_tts_entity)
 
     client = await hass_client()
@@ -1307,7 +1295,7 @@ async def test_tags_with_wave() -> None:
     # below data represents an empty wav file
     tts_data = bytes.fromhex(
         "52 49 46 46 24 00 00 00 57 41 56 45 66 6d 74 20 10 00 00 00 01 00 02 00"
-        + "22 56 00 00 88 58 01 00 04 00 10 00 64 61 74 61 00 00 00 00"
+        "22 56 00 00 88 58 01 00 04 00 10 00 64 61 74 61 00 00 00 00"
     )
 
     tagged_data = ORIG_WRITE_TAGS(
@@ -1332,12 +1320,12 @@ async def test_tags_with_wave() -> None:
 )
 @pytest.mark.parametrize(
     ("engine", "language", "options", "cache", "result_query"),
-    (
+    [
         (None, None, None, None, ""),
         (None, "de_DE", None, None, "language=de_DE"),
         (None, "de_DE", {"voice": "henk"}, None, "language=de_DE&voice=henk"),
         (None, "de_DE", None, True, "cache=true&language=de_DE"),
-    ),
+    ],
 )
 async def test_generate_media_source_id(
     hass: HomeAssistant,
@@ -1372,11 +1360,11 @@ async def test_generate_media_source_id(
 )
 @pytest.mark.parametrize(
     ("engine", "language", "options"),
-    (
+    [
         ("not-loaded-engine", None, None),
         (None, "unsupported-language", None),
         (None, None, {"option": "not-supported"}),
-    ),
+    ],
 )
 async def test_generate_media_source_id_invalid_options(
     hass: HomeAssistant,
@@ -1404,9 +1392,11 @@ def test_resolve_engine(hass: HomeAssistant, setup: str, engine_id: str) -> None
     assert tts.async_resolve_engine(hass, engine_id) == engine_id
     assert tts.async_resolve_engine(hass, "non-existing") is None
 
-    with patch.dict(
-        hass.data[tts.DATA_TTS_MANAGER].providers, {}, clear=True
-    ), patch.dict(hass.data[tts.DOMAIN]._platforms, {}, clear=True):
+    with (
+        patch.dict(hass.data[tts.DATA_TTS_MANAGER].providers, {}, clear=True),
+        patch.dict(hass.data[tts.DOMAIN]._platforms, {}, clear=True),
+        patch.dict(hass.data[tts.DOMAIN]._entities, {}, clear=True),
+    ):
         assert tts.async_resolve_engine(hass, None) is None
 
     with patch.dict(hass.data[tts.DATA_TTS_MANAGER].providers, {"cloud": object()}):

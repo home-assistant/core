@@ -1,4 +1,5 @@
 """Support for switches which integrates with other components."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -7,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.switch import (
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchEntity,
 )
 from homeassistant.const import (
@@ -54,7 +55,7 @@ SWITCH_SCHEMA = vol.All(
     ).extend(TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY.schema),
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_SWITCHES): cv.schema_with_slug_keys(SWITCH_SCHEMA)}
 )
 

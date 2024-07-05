@@ -1,4 +1,5 @@
 """The tests for Efergy sensor platform."""
+
 from datetime import timedelta
 
 import pytest
@@ -27,7 +28,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True)
-def enable_all_entities(entity_registry_enabled_by_default):
+def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
     """Make sure all entities are enabled."""
 
 
@@ -128,11 +129,11 @@ async def test_failed_update_and_reconnection(
     await mock_responses(hass, aioclient_mock, error=True)
     next_update = dt_util.utcnow() + timedelta(seconds=30)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get("sensor.efergy_power_usage").state == STATE_UNAVAILABLE
     aioclient_mock.clear_requests()
     await mock_responses(hass, aioclient_mock)
     next_update = dt_util.utcnow() + timedelta(seconds=30)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get("sensor.efergy_power_usage").state == "1580"

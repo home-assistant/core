@@ -1,4 +1,5 @@
 """Twitter platform for notify component."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -15,7 +16,7 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
@@ -32,7 +33,7 @@ CONF_ACCESS_TOKEN_SECRET = "access_token_secret"
 
 ATTR_MEDIA = "media"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ACCESS_TOKEN): cv.string,
         vol.Required(CONF_ACCESS_TOKEN_SECRET): cv.string,

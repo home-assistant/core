@@ -1,12 +1,13 @@
 """Data update coordinator for the Steam integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 import steam
 from steam.api import _interface_method as INTMethod
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -14,13 +15,16 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_ACCOUNTS, DOMAIN, LOGGER
 
+if TYPE_CHECKING:
+    from . import SteamConfigEntry
+
 
 class SteamDataUpdateCoordinator(
     DataUpdateCoordinator[dict[str, dict[str, str | int]]]
 ):
     """Data update coordinator for the Steam integration."""
 
-    config_entry: ConfigEntry
+    config_entry: SteamConfigEntry
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the coordinator."""

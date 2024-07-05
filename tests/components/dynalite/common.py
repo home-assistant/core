@@ -1,4 +1,5 @@
 """Common functions for tests."""
+
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from homeassistant.components import dynalite

@@ -76,6 +76,7 @@
       "Unit": "C",
       "UnitType": 17
     },
+    "RelativeHumidityDay": { "Average": 60 },
     "IconDay": 17,
     "IconPhraseDay": "Partly sunny w/ t-storms",
     "HasPrecipitationDay": true,
@@ -286,6 +287,7 @@
       "Unit": "C",
       "UnitType": 17
     },
+    "RelativeHumidityDay": { "Average": 58 },
     "IconDay": 4,
     "IconPhraseDay": "Intermittent clouds",
     "HasPrecipitationDay": false,
@@ -492,6 +494,7 @@
       "Unit": "C",
       "UnitType": 17
     },
+    "RelativeHumidityDay": { "Average": 52 },
     "IconDay": 4,
     "IconPhraseDay": "Intermittent clouds",
     "HasPrecipitationDay": false,
@@ -698,6 +701,7 @@
       "Unit": "C",
       "UnitType": 17
     },
+    "RelativeHumidityDay": { "Average": 65 },
     "IconDay": 3,
     "IconPhraseDay": "Partly sunny",
     "HasPrecipitationDay": false,
@@ -904,6 +908,7 @@
       "Unit": "C",
       "UnitType": 17
     },
+    "RelativeHumidityDay": { "Average": 55 },
     "IconDay": 4,
     "IconPhraseDay": "Intermittent clouds",
     "HasPrecipitationDay": false,

@@ -1,4 +1,5 @@
 """Support for LiteJet switch."""
+
 from typing import Any
 
 from pylitejet import LiteJet, LiteJetError
@@ -91,11 +92,11 @@ class LiteJetSwitch(SwitchEntity):
         try:
             await self._lj.press_switch(self._index)
         except LiteJetError as exc:
-            raise HomeAssistantError() from exc
+            raise HomeAssistantError from exc
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Release the switch."""
         try:
             await self._lj.release_switch(self._index)
         except LiteJetError as exc:
-            raise HomeAssistantError() from exc
+            raise HomeAssistantError from exc

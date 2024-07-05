@@ -1,0 +1,16 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:check-circle-outline",
+      "state": {
+        "off": "mdi:close-circle-outline"
+      }
+    }
+  },
+  "services": {
+    "toggle": "mdi:toggle-switch",
+    "turn_off": "mdi:toggle-switch-off",
+    "turn_on": "mdi:toggle-switch",
+    "reload": "mdi:reload"
+  }
+}

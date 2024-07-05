@@ -1,10 +1,13 @@
 """Support for DoorBird devices."""
+
 from __future__ import annotations
 
+from dataclasses import dataclass
+from functools import cached_property
 import logging
 from typing import Any, cast
 
-from doorbirdpy import DoorBird
+from doorbirdpy import DoorBird, DoorBirdScheduleEntry
 
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -14,6 +17,14 @@ from homeassistant.util import dt as dt_util, slugify
 from .const import API_URL
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(slots=True)
+class DoorbirdEvent:
+    """Describes a doorbird event."""
+
+    event: str
+    event_type: str
 
 
 class ConfiguredDoorBird:
@@ -35,6 +46,7 @@ class ConfiguredDoorBird:
         self._event_entity_ids = event_entity_ids
         self.events: list[str] = []
         self.door_station_events: list[str] = []
+        self.event_descriptions: list[DoorbirdEvent] = []
 
     def update_events(self, events: list[str]) -> None:
         """Update the doorbird events."""
@@ -83,7 +95,27 @@ class ConfiguredDoorBird:
                     "Successfully registered URL for %s on %s", event, self.name
                 )
 
-    @property
+        schedule: list[DoorBirdScheduleEntry] = self.device.schedule()
+        http_fav: dict[str, dict[str, Any]] = favorites.get("http") or {}
+        events: list[DoorbirdEvent] = []
+        favorite_input_type: dict[str, str] = {}
+        for entry in schedule:
+            input_type = entry.input
+            for output in entry.output:
+                if output.event == "http":
+                    favorite_input_type[output.param] = input_type
+
+        for identifier, data in http_fav.items():
+            title: str | None = data.get("title")
+            if not title or not title.startswith("Home Assistant"):
+                continue
+            event = title.split("(")[1].strip(")")
+            if input_type := favorite_input_type.get(identifier):
+                events.append(DoorbirdEvent(event, input_type))
+
+        self.event_descriptions = events
+
+    @cached_property
     def slug(self) -> str:
         """Get device slug."""
         return slugify(self._name)

@@ -1,4 +1,5 @@
 """Philips Hue lights platform tests for V2 bridge/api."""
+
 from homeassistant.components.light import ColorMode
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -72,7 +73,7 @@ async def test_lights(
     assert light_4.attributes["friendly_name"] == "Hue on/off light"
     assert light_4.state == "off"
     assert light_4.attributes["mode"] == "normal"
-    assert light_4.attributes["supported_color_modes"] == []
+    assert light_4.attributes["supported_color_modes"] == [ColorMode.ONOFF]
 
 
 async def test_light_turn_on_service(
@@ -203,6 +204,28 @@ async def test_light_turn_on_service(
         mock_bridge_v2.mock_requests[8]["json"]["timed_effects"]["effect"] == "sunrise"
     )
     assert mock_bridge_v2.mock_requests[8]["json"]["timed_effects"]["duration"] == 6000
+
+    # test enabling effect should ignore color temperature
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": test_light_id, "effect": "candle", "color_temp": 500},
+        blocking=True,
+    )
+    assert len(mock_bridge_v2.mock_requests) == 10
+    assert mock_bridge_v2.mock_requests[9]["json"]["effects"]["effect"] == "candle"
+    assert "color_temperature" not in mock_bridge_v2.mock_requests[9]["json"]
+
+    # test enabling effect should ignore xy color
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": test_light_id, "effect": "candle", "xy_color": [0.123, 0.123]},
+        blocking=True,
+    )
+    assert len(mock_bridge_v2.mock_requests) == 11
+    assert mock_bridge_v2.mock_requests[10]["json"]["effects"]["effect"] == "candle"
+    assert "xy_color" not in mock_bridge_v2.mock_requests[9]["json"]
 
 
 async def test_light_turn_off_service(
@@ -389,6 +412,11 @@ async def test_grouped_lights(
         "Hue light with color and color temperature gradient",
         "Hue light with color and color temperature 2",
     }
+    assert test_entity.attributes["entity_id"] == {
+        "light.hue_light_with_color_and_color_temperature_gradient",
+        "light.hue_light_with_color_and_color_temperature_2",
+        "light.hue_light_with_color_and_color_temperature_1",
+    }
 
     # test light created for hue room
     test_entity = hass.states.get("light.test_room")
@@ -407,6 +435,10 @@ async def test_grouped_lights(
     assert test_entity.attributes["lights"] == {
         "Hue on/off light",
         "Hue light with color temperature only",
+    }
+    assert test_entity.attributes["entity_id"] == {
+        "light.hue_light_with_color_temperature_only",
+        "light.hue_on_off_light",
     }
 
     # Test calling the turn on service on a grouped light
@@ -432,11 +464,11 @@ async def test_grouped_lights(
     assert mock_bridge_v2.mock_requests[0]["json"]["dynamics"]["duration"] == 200
 
     # Now generate update events by emitting the json we've sent as incoming events
-    for light_id in [
+    for light_id in (
         "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1",
         "b3fe71ef-d0ef-48de-9355-d9e604377df0",
         "8015b17f-8336-415b-966a-b364bd082397",
-    ]:
+    ):
         event = {
             "id": light_id,
             "type": "light",
@@ -527,7 +559,7 @@ async def test_grouped_lights(
 
     # PUT request should have been sent to ALL group lights with correct params
     assert len(mock_bridge_v2.mock_requests) == 3
-    for index in range(0, 3):
+    for index in range(3):
         assert (
             mock_bridge_v2.mock_requests[index]["json"]["identify"]["action"]
             == "identify"
@@ -565,7 +597,7 @@ async def test_grouped_lights(
 
     # PUT request should have been sent to ALL group lights with correct params
     assert len(mock_bridge_v2.mock_requests) == 3
-    for index in range(0, 3):
+    for index in range(3):
         assert (
             mock_bridge_v2.mock_requests[index]["json"]["identify"]["action"]
             == "identify"

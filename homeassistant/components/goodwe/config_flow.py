@@ -1,4 +1,5 @@
 """Config flow to configure Goodwe inverters using their local API."""
+
 from __future__ import annotations
 
 import logging
@@ -6,9 +7,8 @@ import logging
 from goodwe import InverterError, connect
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_MODEL_FAMILY, DEFAULT_NAME, DOMAIN
 
@@ -21,12 +21,12 @@ CONFIG_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-class GoodweFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class GoodweFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Goodwe config flow."""
 
     VERSION = 1
 
-    async def async_step_user(self, user_input: dict | None = None) -> FlowResult:
+    async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:

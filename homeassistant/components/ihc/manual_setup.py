@@ -1,4 +1,5 @@
 """Handle manual setup of ihc resources as entities in Home Assistant."""
+
 import logging
 
 import voluptuous as vol

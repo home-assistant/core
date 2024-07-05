@@ -1,6 +1,9 @@
 """Test ESPHome binary sensors."""
+
+import asyncio
 from collections.abc import Awaitable, Callable
 from typing import Any
+from unittest.mock import AsyncMock
 
 from aioesphomeapi import (
     APIClient,
@@ -20,13 +23,16 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.event import async_track_state_change_event
 
 from .conftest import MockESPHomeDevice
 
 
 async def test_entities_removed(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_client: APIClient,
     hass_storage: dict[str, Any],
     mock_esphome_device: Callable[
@@ -34,7 +40,7 @@ async def test_entities_removed(
         Awaitable[MockESPHomeDevice],
     ],
 ) -> None:
-    """Test a generic binary_sensor where has_state is false."""
+    """Test entities are removed when static info changes."""
     entity_info = [
         BinarySensorInfo(
             object_id="mybinary_sensor",
@@ -80,6 +86,10 @@ async def test_entities_removed(
     assert state.attributes[ATTR_RESTORED] is True
     state = hass.states.get("binary_sensor.test_mybinary_sensor_to_be_removed")
     assert state is not None
+    reg_entry = entity_registry.async_get(
+        "binary_sensor.test_mybinary_sensor_to_be_removed"
+    )
+    assert reg_entry is not None
     assert state.attributes[ATTR_RESTORED] is True
 
     entity_info = [
@@ -106,7 +116,146 @@ async def test_entities_removed(
     assert state.state == STATE_ON
     state = hass.states.get("binary_sensor.test_mybinary_sensor_to_be_removed")
     assert state is None
+    reg_entry = entity_registry.async_get(
+        "binary_sensor.test_mybinary_sensor_to_be_removed"
+    )
+    assert reg_entry is None
     await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(hass_storage[storage_key]["data"]["binary_sensor"]) == 1
+
+
+async def test_entities_removed_after_reload(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test entities and their registry entry are removed when static info changes after a reload."""
+    entity_info = [
+        BinarySensorInfo(
+            object_id="mybinary_sensor",
+            key=1,
+            name="my binary_sensor",
+            unique_id="my_binary_sensor",
+        ),
+        BinarySensorInfo(
+            object_id="mybinary_sensor_to_be_removed",
+            key=2,
+            name="my binary_sensor to be removed",
+            unique_id="mybinary_sensor_to_be_removed",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+        BinarySensorState(key=2, state=True, missing_state=False),
+    ]
+    user_service = []
+    mock_device: MockESPHomeDevice = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    entry = mock_device.entry
+    entry_id = entry.entry_id
+    storage_key = f"esphome.{entry_id}"
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
+    assert state is not None
+    assert state.state == STATE_ON
+    state = hass.states.get("binary_sensor.test_mybinary_sensor_to_be_removed")
+    assert state is not None
+    assert state.state == STATE_ON
+
+    reg_entry = entity_registry.async_get(
+        "binary_sensor.test_mybinary_sensor_to_be_removed"
+    )
+    assert reg_entry is not None
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass_storage[storage_key]["data"]["binary_sensor"]) == 2
+
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
+    assert state is not None
+    assert state.attributes[ATTR_RESTORED] is True
+    state = hass.states.get("binary_sensor.test_mybinary_sensor_to_be_removed")
+    assert state is not None
+    assert state.attributes[ATTR_RESTORED] is True
+
+    reg_entry = entity_registry.async_get(
+        "binary_sensor.test_mybinary_sensor_to_be_removed"
+    )
+    assert reg_entry is not None
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass_storage[storage_key]["data"]["binary_sensor"]) == 2
+
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
+    assert state is not None
+    assert ATTR_RESTORED not in state.attributes
+    state = hass.states.get("binary_sensor.test_mybinary_sensor_to_be_removed")
+    assert state is not None
+    assert ATTR_RESTORED not in state.attributes
+    reg_entry = entity_registry.async_get(
+        "binary_sensor.test_mybinary_sensor_to_be_removed"
+    )
+    assert reg_entry is not None
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_info = [
+        BinarySensorInfo(
+            object_id="mybinary_sensor",
+            key=1,
+            name="my binary_sensor",
+            unique_id="my_binary_sensor",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+    ]
+    mock_device.client.list_entities_services = AsyncMock(
+        return_value=(entity_info, user_service)
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    on_future = hass.loop.create_future()
+
+    @callback
+    def _async_wait_for_on(event: Event[EventStateChangedData]) -> None:
+        if event.data["new_state"].state == STATE_ON:
+            on_future.set_result(None)
+
+    async_track_state_change_event(
+        hass, ["binary_sensor.test_mybinary_sensor"], _async_wait_for_on
+    )
+    await hass.async_block_till_done()
+    async with asyncio.timeout(2):
+        await on_future
+
+    assert mock_device.entry.entry_id == entry_id
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
+    assert state is not None
+    assert state.state == STATE_ON
+    state = hass.states.get("binary_sensor.test_mybinary_sensor_to_be_removed")
+    assert state is None
+
+    await hass.async_block_till_done()
+
+    reg_entry = entity_registry.async_get(
+        "binary_sensor.test_mybinary_sensor_to_be_removed"
+    )
+    assert reg_entry is None
+    assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass_storage[storage_key]["data"]["binary_sensor"]) == 1
 

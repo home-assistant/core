@@ -1,6 +1,5 @@
 """Test ESPHome fans."""
 
-
 from unittest.mock import call
 
 from aioesphomeapi import (

@@ -1,4 +1,5 @@
 """Conftest for Picnic tests."""
+
 from collections.abc import Awaitable, Callable
 import json
 from unittest.mock import MagicMock, patch

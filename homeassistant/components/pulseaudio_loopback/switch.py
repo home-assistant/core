@@ -1,4 +1,5 @@
 """Switch logic for loading/unloading pulseaudio loopback modules."""
+
 from __future__ import annotations
 
 import logging
@@ -7,7 +8,10 @@ from typing import Any
 from pulsectl import Pulse, PulseError
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -26,7 +30,7 @@ DEFAULT_PORT = 4713
 
 IGNORED_SWITCH_WARN = "Switch is already in the desired state. Ignoring."
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SINK_NAME): cv.string,
         vol.Required(CONF_SOURCE_NAME): cv.string,

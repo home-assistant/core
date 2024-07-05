@@ -1,4 +1,5 @@
 """Growatt Sensor definitions for the Storage type."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass

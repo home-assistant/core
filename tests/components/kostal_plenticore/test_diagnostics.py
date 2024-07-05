@@ -1,8 +1,9 @@
 """Test Kostal Plenticore diagnostics."""
+
 from pykoplenti import SettingsData
 
 from homeassistant.components.diagnostics import REDACTED
-from homeassistant.components.kostal_plenticore.helper import Plenticore
+from homeassistant.components.kostal_plenticore.coordinator import Plenticore
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry

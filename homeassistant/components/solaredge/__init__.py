@@ -1,15 +1,17 @@
 """The SolarEdge integration."""
+
 from __future__ import annotations
 
 import socket
 
-from requests.exceptions import ConnectTimeout, HTTPError
-from solaredge import Solaredge
+from aiohttp import ClientError
+from aiosolaredge import SolarEdge
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_SITE_ID, DATA_API_CLIENT, DOMAIN, LOGGER
@@ -21,13 +23,12 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SolarEdge from a config entry."""
-    api = Solaredge(entry.data[CONF_API_KEY])
+    session = async_get_clientsession(hass)
+    api = SolarEdge(entry.data[CONF_API_KEY], session)
 
     try:
-        response = await hass.async_add_executor_job(
-            api.get_details, entry.data[CONF_SITE_ID]
-        )
-    except (ConnectTimeout, HTTPError, socket.gaierror) as ex:
+        response = await api.get_details(entry.data[CONF_SITE_ID])
+    except (TimeoutError, ClientError, socket.gaierror) as ex:
         LOGGER.error("Could not retrieve details from SolarEdge API")
         raise ConfigEntryNotReady from ex
 

@@ -1,4 +1,5 @@
 """Services for easyEnergy integration."""
+
 from __future__ import annotations
 
 from datetime import date, datetime
@@ -94,7 +95,6 @@ def __get_coordinator(
 
     if not entry:
         raise ServiceValidationError(
-            f"Invalid config entry: {entry_id}",
             translation_domain=DOMAIN,
             translation_key="invalid_config_entry",
             translation_placeholders={
@@ -103,7 +103,6 @@ def __get_coordinator(
         )
     if entry.state != ConfigEntryState.LOADED:
         raise ServiceValidationError(
-            f"{entry.title} is not loaded",
             translation_domain=DOMAIN,
             translation_key="unloaded_config_entry",
             translation_placeholders={
@@ -111,7 +110,8 @@ def __get_coordinator(
             },
         )
 
-    return hass.data[DOMAIN][entry_id]
+    coordinator: EasyEnergyDataUpdateCoordinator = hass.data[DOMAIN][entry_id]
+    return coordinator
 
 
 async def __get_prices(

@@ -1,5 +1,5 @@
 """Test configuration and mocks for Smart Meter Texas."""
-import asyncio
+
 from http import HTTPStatus
 import json
 
@@ -58,7 +58,7 @@ def mock_connection(
     """Mock all calls to the API."""
     aioclient_mock.get(BASE_URL)
 
-    auth_endpoint = f"{BASE_ENDPOINT}{AUTH_ENDPOINT}"
+    auth_endpoint = AUTH_ENDPOINT
     if not auth_fail and not auth_timeout:
         aioclient_mock.post(
             auth_endpoint,
@@ -71,7 +71,7 @@ def mock_connection(
             json={"errormessage": "ERR-USR-INVALIDPASSWORDERROR"},
         )
     else:  # auth_timeout
-        aioclient_mock.post(auth_endpoint, exc=asyncio.TimeoutError)
+        aioclient_mock.post(auth_endpoint, exc=TimeoutError)
 
     aioclient_mock.post(
         f"{BASE_ENDPOINT}{METER_ENDPOINT}",

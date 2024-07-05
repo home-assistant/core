@@ -1,4 +1,5 @@
 """Support for GPSLogger."""
+
 from http import HTTPStatus
 
 from aiohttp import web

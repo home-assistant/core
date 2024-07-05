@@ -9,6 +9,8 @@ import zoneinfo
 import pytest
 import voluptuous as vol
 
+from homeassistant.components import conversation
+from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.todo import (
     DOMAIN,
     TodoItem,
@@ -20,9 +22,10 @@ from homeassistant.components.todo import (
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import intent
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
@@ -75,7 +78,7 @@ class MockTodoListEntity(TodoListEntity):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -91,7 +94,7 @@ def mock_setup_integration(hass: HomeAssistant) -> None:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
         return True
 
     async def async_unload_entry_init(
@@ -113,9 +116,9 @@ def mock_setup_integration(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture(autouse=True)
-def set_time_zone(hass: HomeAssistant) -> None:
+async def set_time_zone(hass: HomeAssistant) -> None:
     """Set the time zone for the tests that keesp UTC-6 all year round."""
-    hass.config.set_time_zone("America/Regina")
+    await hass.config.async_set_time_zone("America/Regina")
 
 
 async def create_mock_platform(
@@ -180,14 +183,14 @@ async def test_unload_entry(
     """Test unloading a config entry with a todo entity."""
 
     config_entry = await create_mock_platform(hass, [test_entity])
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     state = hass.states.get("todo.entity1")
     assert state
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
     state = hass.states.get("todo.entity1")
     assert not state
@@ -227,23 +230,11 @@ async def test_list_todo_items(
     [
         ({}, [ITEM_1, ITEM_2]),
         (
-            [
-                {"status": [TodoItemStatus.COMPLETED, TodoItemStatus.NEEDS_ACTION]},
-                [ITEM_1, ITEM_2],
-            ]
+            {"status": [TodoItemStatus.COMPLETED, TodoItemStatus.NEEDS_ACTION]},
+            [ITEM_1, ITEM_2],
         ),
-        (
-            [
-                {"status": [TodoItemStatus.NEEDS_ACTION]},
-                [ITEM_1],
-            ]
-        ),
-        (
-            [
-                {"status": [TodoItemStatus.COMPLETED]},
-                [ITEM_2],
-            ]
-        ),
+        ({"status": [TodoItemStatus.NEEDS_ACTION]}, [ITEM_1]),
+        ({"status": [TodoItemStatus.COMPLETED]}, [ITEM_2]),
     ],
 )
 async def test_get_items_service(
@@ -347,21 +338,21 @@ async def test_add_item_service_raises(
         ({"item": ""}, vol.Invalid, "length of value must be at least 1"),
         (
             {"item": "Submit forms", "description": "Submit tax forms"},
-            ValueError,
-            "does not support setting field 'description'",
+            ServiceValidationError,
+            "does not support setting field: description",
         ),
         (
             {"item": "Submit forms", "due_date": "2023-11-17"},
-            ValueError,
-            "does not support setting field 'due_date'",
+            ServiceValidationError,
+            "does not support setting field: due_date",
         ),
         (
             {
                 "item": "Submit forms",
                 "due_datetime": f"2023-11-17T17:00:00{TEST_OFFSET}",
             },
-            ValueError,
-            "does not support setting field 'due_datetime'",
+            ServiceValidationError,
+            "does not support setting field: due_datetime",
         ),
     ],
 )
@@ -376,7 +367,7 @@ async def test_add_item_service_invalid_input(
 
     await create_mock_platform(hass, [test_entity])
 
-    with pytest.raises(expected_exception, match=expected_error):
+    with pytest.raises(expected_exception) as exc:
         await hass.services.async_call(
             DOMAIN,
             "add_item",
@@ -385,10 +376,12 @@ async def test_add_item_service_invalid_input(
             blocking=True,
         )
 
+    assert expected_error in str(exc.value)
+
 
 @pytest.mark.parametrize(
     ("supported_entity_feature", "item_data", "expected_item"),
-    (
+    [
         (
             TodoListEntityFeature.SET_DUE_DATE_ON_ITEM,
             {"item": "New item", "due_date": "2023-11-13"},
@@ -434,7 +427,7 @@ async def test_add_item_service_invalid_input(
                 description="Submit revised draft",
             ),
         ),
-    ),
+    ],
 )
 async def test_add_item_service_extended_fields(
     hass: HomeAssistant,
@@ -622,7 +615,7 @@ async def test_update_todo_item_service_by_summary_not_found(
 
     await create_mock_platform(hass, [test_entity])
 
-    with pytest.raises(ValueError, match="Unable to find"):
+    with pytest.raises(ServiceValidationError, match="Unable to find"):
         await hass.services.async_call(
             DOMAIN,
             "update_item",
@@ -681,7 +674,7 @@ async def test_update_todo_item_field_unsupported(
 
     await create_mock_platform(hass, [test_entity])
 
-    with pytest.raises(ValueError, match="does not support"):
+    with pytest.raises(ServiceValidationError, match="does not support"):
         await hass.services.async_call(
             DOMAIN,
             "update_item",
@@ -693,7 +686,7 @@ async def test_update_todo_item_field_unsupported(
 
 @pytest.mark.parametrize(
     ("supported_entity_feature", "update_data", "expected_update"),
-    (
+    [
         (
             TodoListEntityFeature.SET_DUE_DATE_ON_ITEM,
             {"due_date": "2023-11-13"},
@@ -724,7 +717,7 @@ async def test_update_todo_item_field_unsupported(
                 description="Submit revised draft",
             ),
         ),
-    ),
+    ],
 )
 async def test_update_todo_item_extended_fields(
     hass: HomeAssistant,
@@ -754,7 +747,7 @@ async def test_update_todo_item_extended_fields(
 
 @pytest.mark.parametrize(
     ("test_entity_items", "update_data", "expected_update"),
-    (
+    [
         (
             [TodoItem(uid="1", summary="Summary", description="description")],
             {"description": "Submit revised draft"},
@@ -802,7 +795,7 @@ async def test_update_todo_item_extended_fields(
             {"due_datetime": None},
             TodoItem(uid="1", summary="Summary"),
         ),
-    ),
+    ],
     ids=[
         "overwrite_description",
         "overwrite_empty_description",
@@ -931,7 +924,7 @@ async def test_remove_todo_item_service_by_summary_not_found(
 
     await create_mock_platform(hass, [test_entity])
 
-    with pytest.raises(ValueError, match="Unable to find"):
+    with pytest.raises(ServiceValidationError, match="Unable to find"):
         await hass.services.async_call(
             DOMAIN,
             "remove_item",
@@ -1120,6 +1113,7 @@ async def test_add_item_intent(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test adding items to lists using an intent."""
+    assert await async_setup_component(hass, "homeassistant", {})
     await todo_intent.async_setup_intents(hass)
 
     entity1 = MockTodoListEntity()
@@ -1138,6 +1132,7 @@ async def test_add_item_intent(
         "test",
         todo_intent.INTENT_LIST_ADD_ITEM,
         {"item": {"value": "beer"}, "name": {"value": "list 1"}},
+        assistant=conversation.DOMAIN,
     )
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -1153,6 +1148,7 @@ async def test_add_item_intent(
         "test",
         todo_intent.INTENT_LIST_ADD_ITEM,
         {"item": {"value": "cheese"}, "name": {"value": "List 2"}},
+        assistant=conversation.DOMAIN,
     )
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -1167,6 +1163,7 @@ async def test_add_item_intent(
         "test",
         todo_intent.INTENT_LIST_ADD_ITEM,
         {"item": {"value": "wine"}, "name": {"value": "lIST 2"}},
+        assistant=conversation.DOMAIN,
     )
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -1175,13 +1172,46 @@ async def test_add_item_intent(
     assert entity2.items[1].summary == "wine"
     assert entity2.items[1].status == TodoItemStatus.NEEDS_ACTION
 
+    # Should fail if lists are not exposed
+    async_expose_entity(hass, conversation.DOMAIN, entity1.entity_id, False)
+    async_expose_entity(hass, conversation.DOMAIN, entity2.entity_id, False)
+    with pytest.raises(intent.MatchFailedError) as err:
+        await intent.async_handle(
+            hass,
+            "test",
+            todo_intent.INTENT_LIST_ADD_ITEM,
+            {"item": {"value": "cookies"}, "name": {"value": "list 1"}},
+            assistant=conversation.DOMAIN,
+        )
+    assert err.value.result.no_match_reason == intent.MatchFailedReason.ASSISTANT
+
     # Missing list
-    with pytest.raises(intent.IntentHandleError):
+    with pytest.raises(intent.MatchFailedError):
         await intent.async_handle(
             hass,
             "test",
             todo_intent.INTENT_LIST_ADD_ITEM,
             {"item": {"value": "wine"}, "name": {"value": "This list does not exist"}},
+            assistant=conversation.DOMAIN,
+        )
+
+    # Fail with empty name/item
+    with pytest.raises(intent.InvalidSlotInfo):
+        await intent.async_handle(
+            hass,
+            "test",
+            todo_intent.INTENT_LIST_ADD_ITEM,
+            {"item": {"value": "wine"}, "name": {"value": ""}},
+            assistant=conversation.DOMAIN,
+        )
+
+    with pytest.raises(intent.InvalidSlotInfo):
+        await intent.async_handle(
+            hass,
+            "test",
+            todo_intent.INTENT_LIST_ADD_ITEM,
+            {"item": {"value": ""}, "name": {"value": "list 1"}},
+            assistant=conversation.DOMAIN,
         )
 
 

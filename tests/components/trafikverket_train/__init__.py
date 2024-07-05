@@ -1,12 +1,13 @@
 """Tests for the Trafikverket Train integration."""
+
 from __future__ import annotations
 
-from homeassistant.components.trafikverket_ferry.const import (
+from homeassistant.components.trafikverket_train.const import (
+    CONF_FILTER_PRODUCT,
     CONF_FROM,
     CONF_TIME,
     CONF_TO,
 )
-from homeassistant.components.trafikverket_train.const import CONF_FILTER_PRODUCT
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 
 ENTRY_CONFIG = {

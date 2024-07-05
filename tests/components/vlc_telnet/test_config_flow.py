@@ -1,4 +1,5 @@
 """Test the VLC media player Telnet config flow."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -50,24 +51,25 @@ async def test_user_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch("homeassistant.components.vlc_telnet.config_flow.Client.connect"), patch(
-        "homeassistant.components.vlc_telnet.config_flow.Client.login"
-    ), patch(
-        "homeassistant.components.vlc_telnet.config_flow.Client.disconnect"
-    ), patch(
-        "homeassistant.components.vlc_telnet.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.connect"),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.login"),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.disconnect"),
+        patch(
+            "homeassistant.components.vlc_telnet.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             input_data,
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == entry_data["host"]
     assert result["data"] == entry_data
     assert len(mock_setup_entry.mock_calls) == 1
@@ -92,7 +94,7 @@ async def test_abort_already_configured(hass: HomeAssistant, source: str) -> Non
         data=entry_data,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -117,21 +119,25 @@ async def test_errors(
         DOMAIN, context={"source": source}
     )
 
-    with patch(
-        "homeassistant.components.vlc_telnet.config_flow.Client.connect",
-        side_effect=connect_side_effect,
-    ), patch(
-        "homeassistant.components.vlc_telnet.config_flow.Client.login",
-        side_effect=login_side_effect,
-    ), patch(
-        "homeassistant.components.vlc_telnet.config_flow.Client.disconnect",
+    with (
+        patch(
+            "homeassistant.components.vlc_telnet.config_flow.Client.connect",
+            side_effect=connect_side_effect,
+        ),
+        patch(
+            "homeassistant.components.vlc_telnet.config_flow.Client.login",
+            side_effect=login_side_effect,
+        ),
+        patch(
+            "homeassistant.components.vlc_telnet.config_flow.Client.disconnect",
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"password": "test-password"},
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error}
 
 
@@ -157,21 +163,22 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         data=entry_data,
     )
 
-    with patch("homeassistant.components.vlc_telnet.config_flow.Client.connect"), patch(
-        "homeassistant.components.vlc_telnet.config_flow.Client.login"
-    ), patch(
-        "homeassistant.components.vlc_telnet.config_flow.Client.disconnect"
-    ), patch(
-        "homeassistant.components.vlc_telnet.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.connect"),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.login"),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.disconnect"),
+        patch(
+            "homeassistant.components.vlc_telnet.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"password": "new-password"},
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1
     assert dict(entry.data) == {**entry_data, "password": "new-password"}
@@ -212,34 +219,39 @@ async def test_reauth_errors(
         data=entry_data,
     )
 
-    with patch(
-        "homeassistant.components.vlc_telnet.config_flow.Client.connect",
-        side_effect=connect_side_effect,
-    ), patch(
-        "homeassistant.components.vlc_telnet.config_flow.Client.login",
-        side_effect=login_side_effect,
-    ), patch(
-        "homeassistant.components.vlc_telnet.config_flow.Client.disconnect",
+    with (
+        patch(
+            "homeassistant.components.vlc_telnet.config_flow.Client.connect",
+            side_effect=connect_side_effect,
+        ),
+        patch(
+            "homeassistant.components.vlc_telnet.config_flow.Client.login",
+            side_effect=login_side_effect,
+        ),
+        patch(
+            "homeassistant.components.vlc_telnet.config_flow.Client.disconnect",
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"password": "test-password"},
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error}
 
 
 async def test_hassio_flow(hass: HomeAssistant) -> None:
     """Test successful hassio flow."""
-    with patch("homeassistant.components.vlc_telnet.config_flow.Client.connect"), patch(
-        "homeassistant.components.vlc_telnet.config_flow.Client.login"
-    ), patch(
-        "homeassistant.components.vlc_telnet.config_flow.Client.disconnect"
-    ), patch(
-        "homeassistant.components.vlc_telnet.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.connect"),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.login"),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.disconnect"),
+        patch(
+            "homeassistant.components.vlc_telnet.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         test_data = HassioServiceInfo(
             config={
                 "password": "test-password",
@@ -260,11 +272,11 @@ async def test_hassio_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-        assert result2["type"] == FlowResultType.CREATE_ENTRY
+        assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["title"] == test_data.config["name"]
         assert result2["data"] == test_data.config
         assert len(mock_setup_entry.mock_calls) == 1
@@ -291,7 +303,7 @@ async def test_hassio_already_configured(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
 
 
 @pytest.mark.parametrize(
@@ -309,14 +321,18 @@ async def test_hassio_errors(
     login_side_effect: Exception | None,
 ) -> None:
     """Test we handle hassio errors."""
-    with patch(
-        "homeassistant.components.vlc_telnet.config_flow.Client.connect",
-        side_effect=connect_side_effect,
-    ), patch(
-        "homeassistant.components.vlc_telnet.config_flow.Client.login",
-        side_effect=login_side_effect,
-    ), patch(
-        "homeassistant.components.vlc_telnet.config_flow.Client.disconnect",
+    with (
+        patch(
+            "homeassistant.components.vlc_telnet.config_flow.Client.connect",
+            side_effect=connect_side_effect,
+        ),
+        patch(
+            "homeassistant.components.vlc_telnet.config_flow.Client.login",
+            side_effect=login_side_effect,
+        ),
+        patch(
+            "homeassistant.components.vlc_telnet.config_flow.Client.disconnect",
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -336,9 +352,9 @@ async def test_hassio_errors(
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-        assert result2["type"] == FlowResultType.ABORT
+        assert result2["type"] is FlowResultType.ABORT
         assert result2["reason"] == error

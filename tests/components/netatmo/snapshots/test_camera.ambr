@@ -1,0 +1,182 @@
+# serializer version: 1
+# name: test_entity[camera.front-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.front',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': <CameraEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': '12:34:56:10:b9:0e-DeviceType.NOC',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[camera.front-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1caab5c3b3',
+      'alim_status': 2,
+      'attribution': 'Data provided by Netatmo',
+      'brand': 'Netatmo',
+      'entity_picture': '/api/camera_proxy/camera.front?token=1caab5c3b3',
+      'friendly_name': 'Front',
+      'frontend_stream_type': <StreamType.HLS: 'hls'>,
+      'id': '12:34:56:10:b9:0e',
+      'is_local': False,
+      'light_state': None,
+      'local_url': None,
+      'monitoring': None,
+      'motion_detection': True,
+      'sd_status': 4,
+      'supported_features': <CameraEntityFeature: 3>,
+      'vpn_url': 'https://prodvpn-eu-6.netatmo.net/10.20.30.41/333333333333/444444444444,,',
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.front',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'streaming',
+  })
+# ---
+# name: test_entity[camera.hall-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.hall',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': <CameraEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': '12:34:56:00:f1:62-DeviceType.NACamera',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[camera.hall-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1caab5c3b3',
+      'alim_status': 2,
+      'attribution': 'Data provided by Netatmo',
+      'brand': 'Netatmo',
+      'entity_picture': '/api/camera_proxy/camera.hall?token=1caab5c3b3',
+      'friendly_name': 'Hall',
+      'frontend_stream_type': <StreamType.HLS: 'hls'>,
+      'id': '12:34:56:00:f1:62',
+      'is_local': True,
+      'light_state': None,
+      'local_url': 'http://192.168.0.123/678460a0d47e5618699fb31169e2b47d',
+      'monitoring': None,
+      'motion_detection': True,
+      'sd_status': 4,
+      'supported_features': <CameraEntityFeature: 3>,
+      'vpn_url': 'https://prodvpn-eu-2.netatmo.net/restricted/10.255.123.45/609e27de5699fb18147ab47d06846631/MTRPn_BeWCav5RBq4U1OMDruTW4dkQ0NuMwNDAw11g,,',
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.hall',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'streaming',
+  })
+# ---
+# name: test_entity[camera.netatmo_doorbell-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.netatmo_doorbell',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': <CameraEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': '12:34:56:10:f1:66-DeviceType.NDB',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[camera.netatmo_doorbell-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1caab5c3b3',
+      'alim_status': 2,
+      'attribution': 'Data provided by Netatmo',
+      'brand': 'Netatmo',
+      'entity_picture': '/api/camera_proxy/camera.netatmo_doorbell?token=1caab5c3b3',
+      'friendly_name': 'Netatmo-Doorbell',
+      'id': '12:34:56:10:f1:66',
+      'is_local': None,
+      'light_state': None,
+      'local_url': None,
+      'monitoring': None,
+      'sd_status': 4,
+      'supported_features': <CameraEntityFeature: 1>,
+      'vpn_url': 'https://prodvpn-eu-6.netatmo.net/10.20.30.40/1111111111111/2222222222222,,',
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.netatmo_doorbell',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---

@@ -1,9 +1,10 @@
 """Fixtures for DLNA DMS tests."""
+
 from __future__ import annotations
 
 from collections.abc import AsyncIterable, Iterable
 from typing import Final, cast
-from unittest.mock import Mock, create_autospec, patch, seal
+from unittest.mock import AsyncMock, MagicMock, Mock, create_autospec, patch, seal
 
 from async_upnp_client.client import UpnpDevice, UpnpService
 from async_upnp_client.utils import absolute_url
@@ -37,7 +38,7 @@ NEW_DEVICE_LOCATION: Final = "http://192.88.99.7" + "/dmr_description.xml"
 
 
 @pytest.fixture
-async def setup_media_source(hass) -> None:
+async def setup_media_source(hass: HomeAssistant) -> None:
     """Set up media source."""
     assert await async_setup_component(hass, "media_source", {})
 
@@ -86,13 +87,15 @@ def aiohttp_session_requester_mock() -> Iterable[Mock]:
     with patch(
         "homeassistant.components.dlna_dms.dms.AiohttpSessionRequester", autospec=True
     ) as requester_mock:
+        requester_mock.return_value = mock = AsyncMock()
+        mock.async_http_request.return_value.body = MagicMock()
         yield requester_mock
 
 
 @pytest.fixture
 def config_entry_mock() -> MockConfigEntry:
     """Mock a config entry for this platform."""
-    mock_entry = MockConfigEntry(
+    return MockConfigEntry(
         unique_id=MOCK_DEVICE_USN,
         domain=DOMAIN,
         version=CONFIG_VERSION,
@@ -103,7 +106,6 @@ def config_entry_mock() -> MockConfigEntry:
         },
         title=MOCK_DEVICE_NAME,
     )
-    return mock_entry
 
 
 @pytest.fixture

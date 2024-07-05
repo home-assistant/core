@@ -1,4 +1,5 @@
 """Test the speech-to-text platform for the cloud integration."""
+
 from collections.abc import AsyncGenerator
 from copy import deepcopy
 from http import HTTPStatus
@@ -9,70 +10,18 @@ from hass_nabucasa.voice import STTResponse, VoiceError
 import pytest
 
 from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY
-from homeassistant.components.cloud import DOMAIN
+from homeassistant.components.cloud.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from . import PIPELINE_DATA
+
 from tests.typing import ClientSessionGenerator
 
-PIPELINE_DATA = {
-    "items": [
-        {
-            "conversation_engine": "conversation_engine_1",
-            "conversation_language": "language_1",
-            "id": "01GX8ZWBAQYWNB1XV3EXEZ75DY",
-            "language": "language_1",
-            "name": "Home Assistant Cloud",
-            "stt_engine": "cloud",
-            "stt_language": "language_1",
-            "tts_engine": "cloud",
-            "tts_language": "language_1",
-            "tts_voice": "Arnold Schwarzenegger",
-            "wake_word_entity": None,
-            "wake_word_id": None,
-        },
-        {
-            "conversation_engine": "conversation_engine_2",
-            "conversation_language": "language_2",
-            "id": "01GX8ZWBAQTKFQNK4W7Q4CTRCX",
-            "language": "language_2",
-            "name": "name_2",
-            "stt_engine": "stt_engine_2",
-            "stt_language": "language_2",
-            "tts_engine": "tts_engine_2",
-            "tts_language": "language_2",
-            "tts_voice": "The Voice",
-            "wake_word_entity": None,
-            "wake_word_id": None,
-        },
-        {
-            "conversation_engine": "conversation_engine_3",
-            "conversation_language": "language_3",
-            "id": "01GX8ZWBAQSV1HP3WGJPFWEJ8J",
-            "language": "language_3",
-            "name": "name_3",
-            "stt_engine": None,
-            "stt_language": None,
-            "tts_engine": None,
-            "tts_language": None,
-            "tts_voice": None,
-            "wake_word_entity": None,
-            "wake_word_id": None,
-        },
-    ],
-    "preferred_item": "01GX8ZWBAQYWNB1XV3EXEZ75DY",
-}
-
 
 @pytest.fixture(autouse=True)
-async def load_homeassistant(hass: HomeAssistant) -> None:
-    """Load the homeassistant integration."""
-    assert await async_setup_component(hass, "homeassistant", {})
-
-
-@pytest.fixture(autouse=True)
-async def delay_save_fixture() -> AsyncGenerator[None, None]:
+async def delay_save_fixture() -> AsyncGenerator[None]:
     """Load the homeassistant integration."""
     with patch("homeassistant.helpers.collection.SAVE_DELAY", new=0):
         yield
@@ -143,6 +92,7 @@ async def test_migrating_pipelines(
     hass_storage: dict[str, Any],
 ) -> None:
     """Test migrating pipelines when cloud stt entity is added."""
+    entity_id = "stt.home_assistant_cloud"
     cloud.voice.process_stt = AsyncMock(
         return_value=STTResponse(True, "Turn the Kitchen Lights on")
     )
@@ -157,18 +107,18 @@ async def test_migrating_pipelines(
     assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
     await hass.async_block_till_done()
 
-    on_start_callback = cloud.register_on_start.call_args[0][0]
-    await on_start_callback()
+    await cloud.login("test-user", "test-pass")
     await hass.async_block_till_done()
 
-    state = hass.states.get("stt.home_assistant_cloud")
+    state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_UNKNOWN
 
-    # The stt engine should be updated to the new cloud stt engine id.
+    # The stt/tts engines should have been updated to the new cloud engine ids.
+    assert hass_storage[STORAGE_KEY]["data"]["items"][0]["stt_engine"] == entity_id
     assert (
-        hass_storage[STORAGE_KEY]["data"]["items"][0]["stt_engine"]
-        == "stt.home_assistant_cloud"
+        hass_storage[STORAGE_KEY]["data"]["items"][0]["tts_engine"]
+        == "tts.home_assistant_cloud"
     )
 
     # The other items should stay the same.
@@ -189,7 +139,6 @@ async def test_migrating_pipelines(
         hass_storage[STORAGE_KEY]["data"]["items"][0]["name"] == "Home Assistant Cloud"
     )
     assert hass_storage[STORAGE_KEY]["data"]["items"][0]["stt_language"] == "language_1"
-    assert hass_storage[STORAGE_KEY]["data"]["items"][0]["tts_engine"] == "cloud"
     assert hass_storage[STORAGE_KEY]["data"]["items"][0]["tts_language"] == "language_1"
     assert (
         hass_storage[STORAGE_KEY]["data"]["items"][0]["tts_voice"]

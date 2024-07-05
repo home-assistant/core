@@ -1,4 +1,5 @@
 """The tests for notify_events."""
+
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, DOMAIN
 from homeassistant.components.notify_events.notify import (
     ATTR_LEVEL,

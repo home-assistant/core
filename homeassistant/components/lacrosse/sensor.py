@@ -1,4 +1,5 @@
 """Support for LaCrosse sensor components."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -11,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
@@ -59,7 +60,7 @@ SENSOR_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA),
         vol.Optional(CONF_BAUD, default=DEFAULT_BAUD): cv.positive_int,

@@ -1,4 +1,5 @@
 """Component to interface with cameras."""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,12 +9,12 @@ from contextlib import suppress
 from dataclasses import asdict
 from datetime import datetime, timedelta
 from enum import IntFlag
-from functools import partial
+from functools import cached_property, partial
 import logging
 import os
 from random import SystemRandom
 import time
-from typing import TYPE_CHECKING, Any, Final, cast, final
+from typing import Any, Final, cast, final
 
 from aiohttp import hdrs, web
 import attr
@@ -47,13 +48,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -62,7 +60,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
 
 from .const import (  # noqa: F401
@@ -83,20 +81,17 @@ from .const import (  # noqa: F401
 from .img_util import scale_jpeg_camera_image
 from .prefs import CameraPreferences, DynamicStreamSettings  # noqa: F401
 
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 _LOGGER = logging.getLogger(__name__)
+
+ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL: Final = timedelta(seconds=30)
 
 SERVICE_ENABLE_MOTION: Final = "enable_motion_detection"
 SERVICE_DISABLE_MOTION: Final = "disable_motion_detection"
 SERVICE_SNAPSHOT: Final = "snapshot"
 SERVICE_PLAY_STREAM: Final = "play_stream"
-
-SCAN_INTERVAL: Final = timedelta(seconds=30)
-ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 
 ATTR_FILENAME: Final = "filename"
 ATTR_MEDIA_PLAYER: Final = "media_player"
@@ -123,10 +118,6 @@ _DEPRECATED_SUPPORT_STREAM: Final = DeprecatedConstantEnum(
     CameraEntityFeature.STREAM, "2025.1"
 )
 
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
-
 RTSP_PREFIXES = {"rtsp://", "rtsps://", "rtmp://"}
 
 DEFAULT_CONTENT_TYPE: Final = "image/jpeg"
@@ -137,14 +128,14 @@ _RND: Final = SystemRandom()
 
 MIN_STREAM_INTERVAL: Final = 0.5  # seconds
 
-CAMERA_SERVICE_SNAPSHOT: Final = {vol.Required(ATTR_FILENAME): cv.template}
+CAMERA_SERVICE_SNAPSHOT: VolDictType = {vol.Required(ATTR_FILENAME): cv.template}
 
-CAMERA_SERVICE_PLAY_STREAM: Final = {
+CAMERA_SERVICE_PLAY_STREAM: VolDictType = {
     vol.Required(ATTR_MEDIA_PLAYER): cv.entities_domain(DOMAIN_MP),
     vol.Optional(ATTR_FORMAT, default="hls"): vol.In(OUTPUT_FORMATS),
 }
 
-CAMERA_SERVICE_RECORD: Final = {
+CAMERA_SERVICE_RECORD: VolDictType = {
     vol.Required(CONF_FILENAME): cv.template,
     vol.Optional(CONF_DURATION, default=30): vol.Coerce(int),
     vol.Optional(CONF_LOOKBACK, default=0): vol.Coerce(int),
@@ -184,7 +175,7 @@ async def _async_get_image(
     that we can scale, however the majority of cases
     are handled.
     """
-    with suppress(asyncio.CancelledError, asyncio.TimeoutError):
+    with suppress(asyncio.CancelledError, TimeoutError):
         async with asyncio.timeout(timeout):
             image_bytes = (
                 await _async_get_stream_image(
@@ -303,8 +294,12 @@ async def async_get_still_stream(
         if img_bytes != last_image:
             await write_to_mjpeg_stream(img_bytes)
 
-            # Chrome seems to always ignore first picture,
-            # print it twice.
+            # Chrome always shows the n-1 frame:
+            # https://issues.chromium.org/issues/41199053
+            # https://issues.chromium.org/issues/40791855
+            # We send the first frame twice to ensure it shows
+            # Subsequent frames are not a concern at reasonable frame rates
+            # (even 1/10 FPS is about the latency of HLS)
             if last_image is None:
                 await write_to_mjpeg_stream(img_bytes)
             last_image = img_bytes
@@ -338,7 +333,7 @@ def _get_camera_from_entity_id(hass: HomeAssistant, entity_id: str) -> Camera:
 #     stream_id: A unique id for the stream, used to update an existing source
 # The output is the SDP answer, or None if the source or offer is not eligible.
 # The Callable may throw HomeAssistantError on failure.
-RtspToWebRtcProviderType = Callable[[str, str, str], Awaitable[str | None]]
+type RtspToWebRtcProviderType = Callable[[str, str, str], Awaitable[str | None]]
 
 
 def async_register_rtsp_to_web_rtc_provider(
@@ -390,6 +385,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     prefs = CameraPreferences(hass)
+    await prefs.async_load()
     hass.data[DATA_CAMERA_PREFS] = prefs
 
     hass.http.register_view(CameraImageView(component))
@@ -513,14 +509,14 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self._create_stream_lock: asyncio.Lock | None = None
         self._rtsp_to_webrtc = False
 
-    @property
+    @cached_property
     def entity_picture(self) -> str:
         """Return a link to the camera feed as entity picture."""
         if self._attr_entity_picture is not None:
             return self._attr_entity_picture
         return ENTITY_IMAGE_URL.format(self.entity_id, self.access_tokens[-1])
 
-    @property
+    @cached_property
     def use_stream_for_stills(self) -> bool:
         """Whether or not to use stream to generate stills."""
         return False
@@ -648,7 +644,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
@@ -693,23 +689,23 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def turn_off(self) -> None:
         """Turn off camera."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_turn_off(self) -> None:
         """Turn off camera."""
         await self.hass.async_add_executor_job(self.turn_off)
 
     def turn_on(self) -> None:
-        """Turn off camera."""
-        raise NotImplementedError()
+        """Turn on camera."""
+        raise NotImplementedError
 
     async def async_turn_on(self) -> None:
-        """Turn off camera."""
+        """Turn on camera."""
         await self.hass.async_add_executor_job(self.turn_on)
 
     def enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_enable_motion_detection(self) -> None:
         """Call the job and enable motion detection."""
@@ -717,7 +713,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_disable_motion_detection(self) -> None:
         """Call the job and disable motion detection."""
@@ -729,17 +725,17 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the camera state attributes."""
         attrs = {"access_token": self.access_tokens[-1]}
 
-        if self.model:
-            attrs["model_name"] = self.model
+        if model := self.model:
+            attrs["model_name"] = model
 
-        if self.brand:
-            attrs["brand"] = self.brand
+        if brand := self.brand:
+            attrs["brand"] = brand
 
-        if self.motion_detection_enabled:
-            attrs["motion_detection"] = self.motion_detection_enabled
+        if motion_detection_enabled := self.motion_detection_enabled:
+            attrs["motion_detection"] = motion_detection_enabled
 
-        if self.frontend_stream_type:
-            attrs["frontend_stream_type"] = self.frontend_stream_type
+        if frontend_stream_type := self.frontend_stream_type:
+            attrs["frontend_stream_type"] = frontend_stream_type
 
         return attrs
 
@@ -747,6 +743,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def async_update_token(self) -> None:
         """Update the used token."""
         self.access_tokens.append(hex(_RND.getrandbits(256))[2:])
+        self.__dict__.pop("entity_picture", None)
 
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -794,7 +791,7 @@ class CameraView(HomeAssistantView):
     async def get(self, request: web.Request, entity_id: str) -> web.StreamResponse:
         """Start a GET request."""
         if (camera := self.component.get_entity(entity_id)) is None:
-            raise web.HTTPNotFound()
+            raise web.HTTPNotFound
 
         authenticated = (
             request[KEY_AUTHENTICATED]
@@ -805,19 +802,19 @@ class CameraView(HomeAssistantView):
             # Attempt with invalid bearer token, raise unauthorized
             # so ban middleware can handle it.
             if hdrs.AUTHORIZATION in request.headers:
-                raise web.HTTPUnauthorized()
+                raise web.HTTPUnauthorized
             # Invalid sigAuth or camera access token
-            raise web.HTTPForbidden()
+            raise web.HTTPForbidden
 
         if not camera.is_on:
             _LOGGER.debug("Camera is off")
-            raise web.HTTPServiceUnavailable()
+            raise web.HTTPServiceUnavailable
 
         return await self.handle(request, camera)
 
     async def handle(self, request: web.Request, camera: Camera) -> web.StreamResponse:
         """Handle the camera request."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class CameraImageView(CameraView):
@@ -838,7 +835,7 @@ class CameraImageView(CameraView):
                 int(height) if height else None,
             )
         except (HomeAssistantError, ValueError) as ex:
-            raise web.HTTPInternalServerError() from ex
+            raise web.HTTPInternalServerError from ex
 
         return web.Response(body=image.content, content_type=image.content_type)
 
@@ -858,7 +855,7 @@ class CameraMjpegStream(CameraView):
                 stream = None
                 _LOGGER.debug("Error while writing MJPEG stream to transport")
             if stream is None:
-                raise web.HTTPBadGateway()
+                raise web.HTTPBadGateway
             return stream
 
         try:
@@ -868,7 +865,7 @@ class CameraMjpegStream(CameraView):
                 raise ValueError(f"Stream interval must be > {MIN_STREAM_INTERVAL}")
             return await camera.handle_async_still_stream(request, interval)
         except ValueError as err:
-            raise web.HTTPBadRequest() from err
+            raise web.HTTPBadRequest from err
 
 
 @websocket_api.websocket_command(
@@ -894,7 +891,7 @@ async def ws_camera_stream(
     except HomeAssistantError as ex:
         _LOGGER.error("Error requesting stream: %s", ex)
         connection.send_error(msg["id"], "start_stream_failed", str(ex))
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _LOGGER.error("Timeout getting stream source")
         connection.send_error(
             msg["id"], "start_stream_failed", "Timeout getting stream source"
@@ -939,7 +936,7 @@ async def ws_camera_web_rtc_offer(
     except (HomeAssistantError, ValueError) as ex:
         _LOGGER.error("Error handling WebRTC offer: %s", ex)
         connection.send_error(msg["id"], "web_rtc_offer_failed", str(ex))
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _LOGGER.error("Timeout handling WebRTC offer")
         connection.send_error(
             msg["id"], "web_rtc_offer_failed", "Timeout handling WebRTC offer"
@@ -1082,3 +1079,11 @@ async def async_handle_record_service(
         duration=service_call.data[CONF_DURATION],
         lookback=service_call.data[CONF_LOOKBACK],
     )
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

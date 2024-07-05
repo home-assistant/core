@@ -1,0 +1,51 @@
+{
+  "entity": {
+    "sensor": {
+      "display_name": {
+        "default": "mdi:account-circle"
+      },
+      "health": {
+        "default": "mdi:heart",
+        "state": {
+          "0": "mdi:skull-outline"
+        }
+      },
+      "health_max": {
+        "default": "mdi:heart"
+      },
+      "mana": {
+        "default": "mdi:flask",
+        "state": {
+          "0": "mdi:flask-empty-outline"
+        }
+      },
+      "mana_max": {
+        "default": "mdi:flask"
+      },
+      "experience": {
+        "default": "mdi:star-four-points"
+      },
+      "experience_max": {
+        "default": "mdi:star-four-points"
+      },
+      "level": {
+        "default": "mdi:crown-circle"
+      },
+      "gold": {
+        "default": "mdi:sack"
+      },
+      "class": {
+        "default": "mdi:sword",
+        "state": {
+          "warrior": "mdi:sword",
+          "healer": "mdi:shield",
+          "wizard": "mdi:wizard-hat",
+          "rogue": "mdi:ninja"
+        }
+      }
+    }
+  },
+  "services": {
+    "api_call": "mdi:console"
+  }
+}

@@ -1,4 +1,5 @@
 """Support for MotionMount numeric control."""
+
 import motionmount
 
 from homeassistant.components.number import NumberEntity

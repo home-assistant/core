@@ -1,4 +1,5 @@
 """Support for Bond fans."""
+
 from __future__ import annotations
 
 import logging
@@ -15,7 +16,6 @@ from homeassistant.components.fan import (
     FanEntity,
     FanEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
@@ -26,9 +26,9 @@ from homeassistant.util.percentage import (
 )
 from homeassistant.util.scaling import int_states_in_range
 
-from .const import DOMAIN, SERVICE_SET_FAN_SPEED_TRACKED_STATE
+from . import BondConfigEntry
+from .const import SERVICE_SET_FAN_SPEED_TRACKED_STATE
 from .entity import BondEntity
-from .models import BondData
 from .utils import BondDevice, BondHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,11 +38,11 @@ PRESET_MODE_BREEZE = "Breeze"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: BondConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Bond fan devices."""
-    data: BondData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     hub = data.hub
     bpup_subs = data.bpup_subs
     platform = entity_platform.async_get_current_platform()

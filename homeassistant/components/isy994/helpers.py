@@ -1,4 +1,5 @@
 """Sorting helpers for ISY device classifications."""
+
 from __future__ import annotations
 
 from typing import cast
@@ -316,9 +317,9 @@ def _generate_device_info(node: Node) -> DeviceInfo:
         and node.zwave_props
         and node.zwave_props.mfr_id != "0"
     ):
-        device_info[
-            ATTR_MANUFACTURER
-        ] = f"Z-Wave MfrID:{int(node.zwave_props.mfr_id):#0{6}x}"
+        device_info[ATTR_MANUFACTURER] = (
+            f"Z-Wave MfrID:{int(node.zwave_props.mfr_id):#0{6}x}"
+        )
         model += (
             f"Type:{int(node.zwave_props.prod_type_id):#0{6}x} "
             f"Product:{int(node.zwave_props.product_id):#0{6}x}"
@@ -430,7 +431,7 @@ def _categorize_programs(isy_data: IsyData, programs: Programs) -> None:
 
 
 def convert_isy_value_to_hass(
-    value: int | float | None,
+    value: float | None,
     uom: str | None,
     precision: int | str,
     fallback_precision: int | None = None,

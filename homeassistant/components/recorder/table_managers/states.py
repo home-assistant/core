@@ -1,4 +1,5 @@
 """Support managing States."""
+
 from __future__ import annotations
 
 from ..db_schema import States
@@ -11,6 +12,7 @@ class StatesManager:
         """Initialize the states manager for linking old_state_id."""
         self._pending: dict[str, States] = {}
         self._last_committed_id: dict[str, int] = {}
+        self._last_reported: dict[int, float] = {}
 
     def pop_pending(self, entity_id: str) -> States | None:
         """Pop a pending state.
@@ -43,6 +45,16 @@ class StatesManager:
         """
         self._pending[entity_id] = state
 
+    def update_pending_last_reported(
+        self, state_id: int, last_reported_timestamp: float
+    ) -> None:
+        """Update the last reported timestamp for a state."""
+        self._last_reported[state_id] = last_reported_timestamp
+
+    def get_pending_last_reported_timestamp(self) -> dict[int, float]:
+        """Return the last reported timestamp for all pending states."""
+        return self._last_reported
+
     def post_commit_pending(self) -> None:
         """Call after commit to load the state_id of the new States into committed.
 
@@ -52,6 +64,7 @@ class StatesManager:
         for entity_id, db_states in self._pending.items():
             self._last_committed_id[entity_id] = db_states.state_id
         self._pending.clear()
+        self._last_reported.clear()
 
     def reset(self) -> None:
         """Reset after the database has been reset or changed.

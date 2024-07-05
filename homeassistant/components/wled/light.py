@@ -1,4 +1,5 @@
 """Support for LED lights."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -14,25 +15,25 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_COLOR_PRIMARY, ATTR_ON, ATTR_SEGMENT_ID, DOMAIN
+from . import WLEDConfigEntry
+from .const import ATTR_COLOR_PRIMARY, ATTR_ON, ATTR_SEGMENT_ID
 from .coordinator import WLEDDataUpdateCoordinator
+from .entity import WLEDEntity
 from .helpers import wled_exception_handler
-from .models import WLEDEntity
 
 PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WLEDConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up WLED light based on a config entry."""
-    coordinator: WLEDDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     if coordinator.keep_main_light:
         async_add_entities([WLEDMainLight(coordinator=coordinator)])
 
@@ -51,7 +52,6 @@ class WLEDMainLight(WLEDEntity, LightEntity):
     """Defines a WLED main light."""
 
     _attr_color_mode = ColorMode.BRIGHTNESS
-    _attr_icon = "mdi:led-strip-variant"
     _attr_translation_key = "main"
     _attr_supported_features = LightEntityFeature.TRANSITION
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
@@ -103,7 +103,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
     """Defines a WLED light based on a segment."""
 
     _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
-    _attr_icon = "mdi:led-strip-variant"
+    _attr_translation_key = "segment"
 
     def __init__(
         self,
@@ -121,7 +121,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         if segment == 0:
             self._attr_name = None
         else:
-            self._attr_name = f"Segment {segment}"
+            self._attr_translation_placeholders = {"segment": str(segment)}
 
         self._attr_unique_id = (
             f"{self.coordinator.data.info.mac_address}_{self._segment}"

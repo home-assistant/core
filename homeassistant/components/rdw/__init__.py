@@ -1,4 +1,5 @@
 """Support for RDW."""
+
 from __future__ import annotations
 
 from vehicle import RDW, Vehicle

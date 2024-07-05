@@ -1,4 +1,5 @@
 """HomeAssistant specific aiohttp Site."""
+
 from __future__ import annotations
 
 import asyncio
@@ -26,7 +27,7 @@ class HomeAssistantTCPSite(web.BaseSite):
     def __init__(
         self,
         runner: web.BaseRunner,
-        host: None | str | list[str],
+        host: str | list[str] | None,
         port: int,
         *,
         ssl_context: SSLContext | None = None,

@@ -1,5 +1,8 @@
 """Support for BTHome sensors."""
+
 from __future__ import annotations
+
+from typing import cast
 
 from bthome_ble import SensorDeviceClass as BTHomeSensorDeviceClass, SensorUpdate, Units
 from bthome_ble.const import (
@@ -278,7 +281,6 @@ SENSOR_DESCRIPTIONS = {
     ): SensorEntityDescription(
         key=str(BTHomeSensorDeviceClass.TIMESTAMP),
         device_class=SensorDeviceClass.TIMESTAMP,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     # UV index (-)
     (
@@ -316,7 +318,7 @@ SENSOR_DESCRIPTIONS = {
         key=f"{BTHomeSensorDeviceClass.VOLUME}_{Units.VOLUME_LITERS}",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.LITERS,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
     ),
     # Volume (mL)
     (
@@ -326,7 +328,7 @@ SENSOR_DESCRIPTIONS = {
         key=f"{BTHomeSensorDeviceClass.VOLUME}_{Units.VOLUME_MILLILITERS}",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.MILLILITERS,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
     ),
     # Volume Flow Rate (m3/hour)
     (
@@ -334,7 +336,18 @@ SENSOR_DESCRIPTIONS = {
         Units.VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
     ): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.VOLUME_FLOW_RATE}_{Units.VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR}",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Volume Storage (L)
+    (
+        BTHomeExtendedSensorDeviceClass.VOLUME_STORAGE,
+        Units.VOLUME_LITERS,
+    ): SensorEntityDescription(
+        key=f"{BTHomeExtendedSensorDeviceClass.VOLUME_STORAGE}_{Units.VOLUME_LITERS}",
+        device_class=SensorDeviceClass.VOLUME_STORAGE,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # Water (L)
@@ -352,7 +365,7 @@ SENSOR_DESCRIPTIONS = {
 
 def sensor_update_to_bluetooth_data_update(
     sensor_update: SensorUpdate,
-) -> PassiveBluetoothDataUpdate:
+) -> PassiveBluetoothDataUpdate[float | None]:
     """Convert a sensor update to a bluetooth data update."""
     return PassiveBluetoothDataUpdate(
         devices={
@@ -367,7 +380,9 @@ def sensor_update_to_bluetooth_data_update(
             if description.device_class
         },
         entity_data={
-            device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
+            device_key_to_bluetooth_entity_key(device_key): cast(
+                float | None, sensor_values.native_value
+            )
             for device_key, sensor_values in sensor_update.entity_values.items()
         },
         entity_names={
@@ -400,7 +415,7 @@ async def async_setup_entry(
 
 
 class BTHomeBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[BTHomePassiveBluetoothDataProcessor],
+    PassiveBluetoothProcessorEntity[BTHomePassiveBluetoothDataProcessor[float | None]],
     SensorEntity,
 ):
     """Representation of a BTHome BLE sensor."""

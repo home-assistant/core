@@ -1,4 +1,5 @@
 """Ping classes shared between platforms."""
+
 import asyncio
 from contextlib import suppress
 import logging
@@ -58,8 +59,16 @@ class PingDataICMPLib(PingData):
                 privileged=self._privileged,
             )
         except NameLookupError:
+            _LOGGER.debug("Error resolving host: %s", self.ip_address)
             self.is_alive = False
             return
+
+        _LOGGER.debug(
+            "async_ping returned: reachable=%s sent=%i received=%s",
+            data.is_alive,
+            data.packets_sent,
+            data.packets_received,
+        )
 
         self.is_alive = data.is_alive
         if not self.is_alive:
@@ -70,7 +79,6 @@ class PingDataICMPLib(PingData):
             "min": data.min_rtt,
             "max": data.max_rtt,
             "avg": data.avg_rtt,
-            "mdev": "",
         }
 
 
@@ -94,6 +102,10 @@ class PingDataSubProcess(PingData):
 
     async def async_ping(self) -> dict[str, Any] | None:
         """Send ICMP echo request and return details if success."""
+        _LOGGER.debug(
+            "Pinging %s with: `%s`", self.ip_address, " ".join(self._ping_cmd)
+        )
+
         pinger = await asyncio.create_subprocess_exec(
             *self._ping_cmd,
             stdin=None,
@@ -135,26 +147,28 @@ class PingDataSubProcess(PingData):
                 if TYPE_CHECKING:
                     assert match is not None
                 rtt_min, rtt_avg, rtt_max = match.groups()
-                return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": ""}
+                return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max}
             match = PING_MATCHER.search(str(out_data).rsplit("\n", maxsplit=1)[-1])
             if TYPE_CHECKING:
                 assert match is not None
             rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
-            return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": rtt_mdev}
-        except asyncio.TimeoutError:
-            _LOGGER.exception(
-                "Timed out running command: `%s`, after: %ss",
-                self._ping_cmd,
+        except TimeoutError:
+            _LOGGER.debug(
+                "Timed out running command: `%s`, after: %s",
+                " ".join(self._ping_cmd),
                 self._count + PING_TIMEOUT,
             )
+
             if pinger:
                 with suppress(TypeError):
                     await pinger.kill()  # type: ignore[func-returns-value]
                 del pinger
 
             return None
-        except AttributeError:
+        except AttributeError as err:
+            _LOGGER.debug("Error matching ping output: %s", err)
             return None
+        return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": rtt_mdev}
 
     async def async_update(self) -> None:
         """Retrieve the latest details from the host."""

@@ -50,11 +50,17 @@ PLATFORMS_BY_TYPE = {
         Platform.LOCK,
         Platform.SENSOR,
     ],
+    SupportedModels.LOCK_PRO.value: [
+        Platform.BINARY_SENSOR,
+        Platform.LOCK,
+        Platform.SENSOR,
+    ],
     SupportedModels.BLIND_TILT.value: [
         Platform.COVER,
         Platform.BINARY_SENSOR,
         Platform.SENSOR,
     ],
+    SupportedModels.HUB2.value: [Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -65,6 +71,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.LIGHT_STRIP.value: switchbot.SwitchbotLightStrip,
     SupportedModels.HUMIDIFIER.value: switchbot.SwitchbotHumidifier,
     SupportedModels.LOCK.value: switchbot.SwitchbotLock,
+    SupportedModels.LOCK_PRO.value: switchbot.SwitchbotLock,
     SupportedModels.BLIND_TILT.value: switchbot.SwitchbotBlindTilt,
 }
 
@@ -98,6 +105,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # connectable means we can make connections to the device
     connectable = switchbot_model in CONNECTABLE_SUPPORTED_MODEL_TYPES
     address: str = entry.data[CONF_ADDRESS]
+
+    await switchbot.close_stale_connections_by_address(address)
+
     ble_device = bluetooth.async_ble_device_from_address(
         hass, address.upper(), connectable
     )
@@ -106,7 +116,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Could not find Switchbot {sensor_type} with address {address}"
         )
 
-    await switchbot.close_stale_connections(ble_device)
     cls = CLASS_BY_DEVICE.get(sensor_type, switchbot.SwitchbotDevice)
     if cls is switchbot.SwitchbotLock:
         try:
@@ -115,6 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 key_id=entry.data.get(CONF_KEY_ID),
                 encryption_key=entry.data.get(CONF_ENCRYPTION_KEY),
                 retry_count=entry.options[CONF_RETRY_COUNT],
+                model=switchbot_model,
             )
         except ValueError as error:
             raise ConfigEntryNotReady(

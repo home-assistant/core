@@ -1,4 +1,5 @@
 """Matter event entities from Node events."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -48,8 +49,6 @@ async def async_setup_entry(
 class MatterEventEntity(MatterEntity, EventEntity):
     """Representation of a Matter Event entity."""
 
-    _attr_translation_key = "push"
-
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the entity."""
         super().__init__(*args, **kwargs)
@@ -71,21 +70,6 @@ class MatterEventEntity(MatterEntity, EventEntity):
             event_types.append("multi_press_ongoing")
             event_types.append("multi_press_complete")
         self._attr_event_types = event_types
-        # the optional label attribute could be used to identify multiple buttons
-        # e.g. in case of a dimmer switch with 4 buttons, each button
-        # will have its own name, prefixed by the device name.
-        if labels := self.get_matter_attribute_value(
-            clusters.FixedLabel.Attributes.LabelList
-        ):
-            for label in labels:
-                if label.label == "Label":
-                    label_value: str = label.value
-                    # in the case the label is only the label id, prettify it a bit
-                    if label_value.isnumeric():
-                        self._attr_name = f"Button {label_value}"
-                    else:
-                        self._attr_name = label_value
-                    break
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
@@ -104,7 +88,7 @@ class MatterEventEntity(MatterEntity, EventEntity):
         """Call when Node attribute(s) changed."""
 
     @callback
-    def _on_matter_node_event(  # noqa: F821
+    def _on_matter_node_event(
         self,
         event: EventType,
         data: MatterNodeEvent,
@@ -121,7 +105,9 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.EVENT,
         entity_description=EventEntityDescription(
-            key="GenericSwitch", device_class=EventDeviceClass.BUTTON, name=None
+            key="GenericSwitch",
+            device_class=EventDeviceClass.BUTTON,
+            translation_key="button",
         ),
         entity_class=MatterEventEntity,
         required_attributes=(

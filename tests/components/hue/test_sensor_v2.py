@@ -1,4 +1,5 @@
 """Philips Hue sensor platform tests for V2 bridge/api."""
+
 from homeassistant.components import hue
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -74,7 +75,9 @@ async def test_enable_sensor(
 
     assert await async_setup_component(hass, hue.DOMAIN, {}) is True
     await hass.async_block_till_done()
-    await hass.config_entries.async_forward_entry_setup(mock_config_entry_v2, "sensor")
+    await hass.config_entries.async_forward_entry_setups(
+        mock_config_entry_v2, ["sensor"]
+    )
 
     entity_id = "sensor.wall_switch_with_2_controls_zigbee_connectivity"
     entity_entry = entity_registry.async_get(entity_id)
@@ -85,14 +88,16 @@ async def test_enable_sensor(
 
     # enable the entity
     updated_entry = entity_registry.async_update_entity(
-        entity_entry.entity_id, **{"disabled_by": None}
+        entity_entry.entity_id, disabled_by=None
     )
     assert updated_entry != entity_entry
     assert updated_entry.disabled is False
 
     # reload platform and check if entity is correctly there
     await hass.config_entries.async_forward_entry_unload(mock_config_entry_v2, "sensor")
-    await hass.config_entries.async_forward_entry_setup(mock_config_entry_v2, "sensor")
+    await hass.config_entries.async_forward_entry_setups(
+        mock_config_entry_v2, ["sensor"]
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)

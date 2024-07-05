@@ -3,8 +3,9 @@
 from collections.abc import Callable, Iterable
 import dataclasses
 import datetime
+from functools import cached_property
 import logging
-from typing import TYPE_CHECKING, Any, final
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -19,12 +20,8 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -41,17 +38,12 @@ from .const import (
     TodoListEntityFeature,
 )
 
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
-
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = datetime.timedelta(seconds=60)
-
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = datetime.timedelta(seconds=60)
 
 
 @dataclasses.dataclass
@@ -106,8 +98,10 @@ def _validate_supported_features(
         if desc.service_field not in call_data:
             continue
         if not supported_features or not supported_features & desc.required_feature:
-            raise ValueError(
-                f"Entity does not support setting field '{desc.service_field}'"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="update_field_not_supported",
+                translation_placeholders={"service_field": desc.service_field},
             )
 
 
@@ -258,15 +252,15 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item in the To-do list."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete an item in the To-do list."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_move_todo_item(
         self, uid: str, previous_uid: str | None = None
@@ -277,7 +271,7 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         in the list after the specified by `previous_uid` or `None` for the first
         position in the To-do list.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @final
     @callback
@@ -481,7 +475,11 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
     item = call.data["item"]
     found = _find_by_uid_or_summary(item, entity.todo_items)
     if not found:
-        raise ValueError(f"Unable to find To-do item '{item}'")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="item_not_found",
+            translation_placeholders={"item": item},
+        )
 
     _validate_supported_features(entity.supported_features, call.data)
 
@@ -509,7 +507,11 @@ async def _async_remove_todo_items(entity: TodoListEntity, call: ServiceCall) ->
     for item in call.data.get("item", []):
         found = _find_by_uid_or_summary(item, entity.todo_items)
         if not found or not found.uid:
-            raise ValueError(f"Unable to find To-do item '{item}")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="item_not_found",
+                translation_placeholders={"item": item},
+            )
         uids.append(found.uid)
     await entity.async_delete_todo_items(uids=uids)
 

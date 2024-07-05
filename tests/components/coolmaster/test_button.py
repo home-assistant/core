@@ -1,4 +1,5 @@
 """The test for the Coolmaster button platform."""
+
 from __future__ import annotations
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS

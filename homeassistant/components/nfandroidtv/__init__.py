@@ -1,4 +1,5 @@
 """The NFAndroidTV integration."""
+
 from notifications_android_tv.notifications import ConnectError, Notifications
 
 from homeassistant.config_entries import ConfigEntry

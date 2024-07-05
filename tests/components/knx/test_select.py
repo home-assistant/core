@@ -1,4 +1,5 @@
 """Test KNX select."""
+
 import pytest
 
 from homeassistant.components.knx.const import (
