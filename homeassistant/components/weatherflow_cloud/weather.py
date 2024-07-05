@@ -17,17 +17,21 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_ATTRIBUTION, DOMAIN, STATE_MAP
+from .const import ATTR_ATTRIBUTION, DOMAIN, MANUFACTURER, STATE_MAP
 from .coordinator import WeatherFlowCloudDataUpdateCoordinator
-from .entity import get_station_device_info
+<<<<<<< Updated upstream
+=======
+from .entity import get_station_device_info, WeatherFlowCloudEntity
+>>>>>>> Stashed changes
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
     coordinator: WeatherFlowCloudDataUpdateCoordinator = hass.data[DOMAIN][
@@ -43,6 +47,7 @@ async def async_setup_entry(
 
 
 class WeatherFlowWeather(
+    WeatherFlowCloudEntity,
     SingleCoordinatorWeatherEntity[WeatherFlowCloudDataUpdateCoordinator]
 ):
     """Implementation of a WeatherFlow weather condition."""
@@ -55,14 +60,14 @@ class WeatherFlowWeather(
     _attr_native_pressure_unit = UnitOfPressure.MBAR
     _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
     _attr_supported_features = (
-        WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
+            WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
     )
     _attr_name = None
 
     def __init__(
-        self,
-        coordinator: WeatherFlowCloudDataUpdateCoordinator,
-        station_id: int,
+            self,
+            coordinator: WeatherFlowCloudDataUpdateCoordinator,
+            station_id: int,
     ) -> None:
         """Initialise the platform with a data instance and station."""
         super().__init__(coordinator)
@@ -70,8 +75,12 @@ class WeatherFlowWeather(
         self.station_id = station_id
         self._attr_unique_id = f"weatherflow_forecast_{station_id}"
 
-        self._attr_device_info = get_station_device_info(
-            self.local_data.station.name, station_id
+        self._attr_device_info = DeviceInfo(
+            name=self.local_data.station.name,
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, f"{station_id}")},
+            manufacturer=MANUFACTURER,
+            configuration_url=f"https://tempestwx.com/station/{station_id}/grid",
         )
 
     @property

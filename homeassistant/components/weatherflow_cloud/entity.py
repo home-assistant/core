@@ -26,10 +26,11 @@ class WeatherFlowCloudEntity(CoordinatorEntity[WeatherFlowCloudDataUpdateCoordin
     _attr_has_entity_name = True
 
     def __init__(
-        self,
-        coordinator: WeatherFlowCloudDataUpdateCoordinator,
-        description: EntityDescription,
-        station_id: int,
+            self,
+            coordinator: WeatherFlowCloudDataUpdateCoordinator,
+            description: EntityDescription,
+            station_id: int,
+            is_sensor: bool = True
     ) -> None:
         """Class initializer."""
         super().__init__(coordinator=coordinator)
@@ -38,6 +39,15 @@ class WeatherFlowCloudEntity(CoordinatorEntity[WeatherFlowCloudDataUpdateCoordin
 
         station_name = self.coordinator.data[station_id].station.name
 
-        self._attr_unique_id = f"{station_name}_cloud_{description.key}"
+        if is_sensor:
+            self._attr_unique_id = f"{station_name}_{description.key}"
+        else:
+            self._attr_unique_id = f"weatherflow_forecast_{station_id}"
 
-        self._attr_device_info = get_station_device_info(station_name, station_id)
+        self._attr_device_info = DeviceInfo(
+            name=station_name,
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, str(station_id))},
+            manufacturer=MANUFACTURER,
+            configuration_url=f"https://tempestwx.com/station/{station_id}/grid",
+        )
