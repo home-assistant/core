@@ -15,6 +15,8 @@ from .deprecation import (
 )
 
 type AsyncCallable[**_P, _R_co] = Callable[_P, Coroutine[Any, Any, _R_co]]
+"""Mirrors `Callable` but for async functions."""
+
 type GPSType = tuple[float, float]
 type ConfigType = dict[str, Any]
 type DiscoveryInfoType = dict[str, Any]
