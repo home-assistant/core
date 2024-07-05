@@ -10,7 +10,8 @@ from iottycloud.verbs import LS_DEVICE_TYPE_UID, RESULT, STATUS, STATUS_OFF, STA
 import pytest
 
 from homeassistant import setup
-from homeassistant.components.iotty import DOMAIN, KnownDevicesData
+from homeassistant.components.iotty import IottyConfigEntryData
+from homeassistant.components.iotty.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -93,7 +94,9 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         },
         unique_id="IOTTY00001",
     )
-    mock.runtime_data = KnownDevicesData(set())
+
+    runtime_data = IottyConfigEntryData(set(), MagicMock())
+    mock.runtime_data = runtime_data
     return mock
 
 

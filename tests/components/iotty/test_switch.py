@@ -3,13 +3,10 @@
 from aiohttp import ClientSession
 from freezegun.api import FrozenDateTimeFactory
 from iottycloud.verbs import RESULT, STATUS, STATUS_OFF, STATUS_ON
-import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.iotty.api import IottyProxy
 from homeassistant.components.iotty.const import DOMAIN
 from homeassistant.components.iotty.coordinator import UPDATE_INTERVAL
-from homeassistant.components.iotty.switch import async_setup_entry
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -108,21 +105,6 @@ async def test_turn_off_ok(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATUS_OFF
-
-
-async def test_setup_entry_wrongdomaindata_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_iotty: IottyProxy,
-) -> None:
-    """Setup the SWITCH entry with empty or wrong DOMAIN data."""
-
-    with pytest.raises(KeyError):
-        await async_setup_entry(hass, mock_config_entry, None)
-
-    hass.data.setdefault(DOMAIN, {})
-    with pytest.raises(KeyError):
-        await async_setup_entry(hass, mock_config_entry, None)
 
 
 async def test_setup_entry_ok_nodevices(

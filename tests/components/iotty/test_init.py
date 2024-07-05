@@ -30,9 +30,6 @@ async def test_load_unload_coordinator_called(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    # Calls ctor, async_config_entry_first_refresh
-    assert len(mock_coordinator.mock_calls) == 2
-
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 

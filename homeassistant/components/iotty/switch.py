@@ -32,10 +32,7 @@ async def async_setup_entry(
     """Activate the iotty LightSwitch component."""
     _LOGGER.debug("Setup SWITCH entry id is %s", config_entry.entry_id)
 
-    hass_data = hass.data[DOMAIN]
-
-    coordinator: IottyDataUpdateCoordinator = hass_data[config_entry.entry_id]
-
+    coordinator: IottyDataUpdateCoordinator = config_entry.runtime_data.coordinator
     entities = [
         IottyLightSwitch(
             coordinator=coordinator, iotty_cloud=coordinator.iotty, iotty_device=d

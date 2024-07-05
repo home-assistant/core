@@ -16,20 +16,20 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from . import coordinator
-from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SWITCH]
 
-type IottyConfigEntry = ConfigEntry[KnownDevicesData]
+type IottyConfigEntry = ConfigEntry[IottyConfigEntryData]
 
 
 @dataclass
-class KnownDevicesData:
-    """Contains information useful for handling run-time changes in case of added or removed devices."""
+class IottyConfigEntryData:
+    """Contains config entry data for iotty."""
 
     known_devices: set[Device]
+    coordinator: coordinator.IottyDataUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -43,8 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, entry, session
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data_update_coordinator
-    entry.runtime_data = KnownDevicesData(set())
+    entry.runtime_data = IottyConfigEntryData(set(), data_update_coordinator)
 
     await data_update_coordinator.async_config_entry_first_refresh()
 
@@ -54,7 +53,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

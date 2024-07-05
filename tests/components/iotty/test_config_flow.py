@@ -11,8 +11,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.iotty import DOMAIN
-from homeassistant.components.iotty.const import OAUTH2_TOKEN
+from homeassistant.components.iotty.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
