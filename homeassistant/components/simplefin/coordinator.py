@@ -5,18 +5,18 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
-from simplefin4py import SimpleFin
+from simplefin4py import Account, SimpleFin
 from simplefin4py.exceptions import SimpleFinAuthError, SimpleFinPaymentRequiredError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import LOGGER
 
 
-class SimpleFinDataUpdateCoordinator(DataUpdateCoordinator[Any]):
+class SimpleFinDataUpdateCoordinator(DataUpdateCoordinator[list[Account]]):
     """Data update coordinator for the SimpleFIN integration."""
 
     config_entry: ConfigEntry
