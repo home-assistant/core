@@ -41,7 +41,7 @@
     },
     "number": {
       "max_current": {
-        "name": "Maximum Current"
+        "name": "Maximum current"
       }
     },
     "sensor": {
