@@ -1,6 +1,6 @@
 """Lamarzocco session fixtures."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 import json
 from unittest.mock import MagicMock, patch
 
@@ -9,7 +9,6 @@ from lmcloud.const import FirmwareType, MachineModel, SteamLevel
 from lmcloud.lm_machine import LaMarzoccoMachine
 from lmcloud.models import LaMarzoccoDeviceInfo
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.lamarzocco.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME, CONF_TOKEN

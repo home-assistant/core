@@ -18,6 +18,7 @@ from homeassistant.const import (
     REVOLUTIONS_PER_MINUTE,
     EntityCategory,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -125,6 +126,18 @@ class ValloxCellStateSensor(ValloxSensorEntity):
             return None
 
         return VALLOX_CELL_STATE_TO_STR.get(super_native_value)
+
+
+class ValloxProfileDurationSensor(ValloxSensorEntity):
+    """Child class for profile duration reporting."""
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the value reported by the sensor."""
+
+        return self.coordinator.data.get_remaining_profile_duration(
+            self.coordinator.data.profile
+        )
 
 
 @dataclass(frozen=True)
@@ -252,6 +265,14 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         entity_registry_enabled_default=False,
+    ),
+    ValloxSensorEntityDescription(
+        key="profile_duration",
+        translation_key="profile_duration",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        entity_type=ValloxProfileDurationSensor,
     ),
 )
 

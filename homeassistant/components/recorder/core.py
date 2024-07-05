@@ -958,7 +958,9 @@ class Recorder(threading.Thread):
                     self.db_retry_wait,
                 )
             tries += 1
-            time.sleep(self.db_retry_wait)
+
+            if tries <= self.db_max_retries:
+                time.sleep(self.db_retry_wait)
 
         return False
 

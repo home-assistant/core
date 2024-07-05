@@ -47,13 +47,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
+from .conftest import API_KEY, BRIDGEID, HOST, PORT
+
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-API_KEY = "1234567890ABCDEF"
-BRIDGEID = "01234E56789A"
-HOST = "1.2.3.4"
-PORT = 80
 
 DEFAULT_URL = f"http://{HOST}:{PORT}/api/{API_KEY}"
 

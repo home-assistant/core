@@ -614,7 +614,7 @@ def _get_annotation(item: Any) -> tuple[str, int | str] | None:
     return (getattr(item, "__config_file__"), getattr(item, "__line__", "?"))
 
 
-def _get_by_path(data: dict | list, items: list[str | int]) -> Any:
+def _get_by_path(data: dict | list, items: list[Hashable]) -> Any:
     """Access a nested object in root by item sequence.
 
     Returns None in case of error.
@@ -626,7 +626,7 @@ def _get_by_path(data: dict | list, items: list[str | int]) -> Any:
 
 
 def find_annotation(
-    config: dict | list, path: list[str | int]
+    config: dict | list, path: list[Hashable]
 ) -> tuple[str, int | str] | None:
     """Find file/line annotation for a node in config pointed to by path.
 
@@ -636,7 +636,7 @@ def find_annotation(
     """
 
     def find_annotation_for_key(
-        item: dict, path: list[str | int], tail: str | int
+        item: dict, path: list[Hashable], tail: Hashable
     ) -> tuple[str, int | str] | None:
         for key in item:
             if key == tail:
@@ -646,7 +646,7 @@ def find_annotation(
         return None
 
     def find_annotation_rec(
-        config: dict | list, path: list[str | int], tail: str | int | None
+        config: dict | list, path: list[Hashable], tail: Hashable | None
     ) -> tuple[str, int | str] | None:
         item = _get_by_path(config, path)
         if isinstance(item, dict) and tail is not None:
@@ -947,7 +947,7 @@ def _log_pkg_error(
 def _identify_config_schema(module: ComponentProtocol) -> str | None:
     """Extract the schema and identify list or dict based."""
     if not isinstance(module.CONFIG_SCHEMA, vol.Schema):
-        return None
+        return None  # type: ignore[unreachable]
 
     schema = module.CONFIG_SCHEMA.schema
 

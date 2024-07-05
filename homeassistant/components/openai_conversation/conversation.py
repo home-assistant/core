@@ -1,7 +1,8 @@
 """Conversation support for OpenAI."""
 
+from collections.abc import Callable
 import json
-from typing import Literal
+from typing import Any, Literal
 
 import openai
 from openai._types import NOT_GIVEN
@@ -58,9 +59,14 @@ async def async_setup_entry(
     async_add_entities([agent])
 
 
-def _format_tool(tool: llm.Tool) -> ChatCompletionToolParam:
+def _format_tool(
+    tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
+) -> ChatCompletionToolParam:
     """Format tool specification."""
-    tool_spec = FunctionDefinition(name=tool.name, parameters=convert(tool.parameters))
+    tool_spec = FunctionDefinition(
+        name=tool.name,
+        parameters=convert(tool.parameters, custom_serializer=custom_serializer),
+    )
     if tool.description:
         tool_spec["description"] = tool.description
     return ChatCompletionToolParam(type="function", function=tool_spec)
@@ -86,6 +92,10 @@ class OpenAIConversationEntity(
             model="ChatGPT",
             entry_type=dr.DeviceEntryType.SERVICE,
         )
+        if self.entry.options.get(CONF_LLM_HASS_API):
+            self._attr_supported_features = (
+                conversation.ConversationEntityFeature.CONTROL
+            )
 
     @property
     def supported_languages(self) -> list[str] | Literal["*"]:
@@ -139,7 +149,9 @@ class OpenAIConversationEntity(
                 return conversation.ConversationResult(
                     response=intent_response, conversation_id=user_input.conversation_id
                 )
-            tools = [_format_tool(tool) for tool in llm_api.tools]
+            tools = [
+                _format_tool(tool, llm_api.custom_serializer) for tool in llm_api.tools
+            ]
 
         if user_input.conversation_id is None:
             conversation_id = ulid.ulid_now()

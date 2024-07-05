@@ -2,6 +2,7 @@
 
 import datetime
 from decimal import Decimal
+from unittest.mock import MagicMock
 
 from dsmr_parser.obis_references import (
     BELGIUM_MBUS1_DEVICE_TYPE,
@@ -22,7 +23,7 @@ async def test_migrate_gas_to_mbus(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    dsmr_connection_fixture,
+    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
     """Test migration of unique_id."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
@@ -113,7 +114,7 @@ async def test_migrate_gas_to_mbus_exists(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    dsmr_connection_fixture,
+    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
     """Test migration of unique_id."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
