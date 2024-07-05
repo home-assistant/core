@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections import namedtuple
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 import functools
 import logging
 from typing import Any, cast
@@ -57,7 +57,7 @@ WrtDevice = namedtuple("WrtDevice", ["ip", "name", "connected_to"])
 
 _LOGGER = logging.getLogger(__name__)
 
-type _FuncType[_T] = Callable[[_T], Awaitable[list[Any] | tuple[Any] | dict[str, Any]]]
+type _FuncType[_T] = AsyncCallable[[_T], list[Any] | tuple[Any] | dict[str, Any]]
 type _ReturnFuncType[_T] = AsyncCallable[[_T], dict[str, Any]]
 
 
