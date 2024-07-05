@@ -18,7 +18,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_with_selected_platforms
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_technove")
@@ -30,16 +30,7 @@ async def test_numbers(
 ) -> None:
     """Test the creation and values of the TechnoVE numbers."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.NUMBER])
-
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-
-    assert entity_entries
-    for entity_entry in entity_entries:
-        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
-        assert (state := hass.states.get(entity_entry.entity_id))
-        assert state == snapshot(name=f"{entity_entry.entity_id}-state")
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
