@@ -88,19 +88,6 @@ def mock_deconz_request(aioclient_mock, config, data):
     )
 
 
-def mock_deconz_put_request(aioclient_mock, config, path):
-    """Mock a deCONZ put request."""
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
-    api_key = config[CONF_API_KEY]
-
-    aioclient_mock.put(
-        f"http://{host}:{port}/api/{api_key}{path}",
-        json={},
-        headers={"content-type": CONTENT_TYPE_JSON},
-    )
-
-
 async def test_gateway_setup(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
