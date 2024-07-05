@@ -1486,6 +1486,9 @@ omit =
     homeassistant/components/transmission/sensor.py
     homeassistant/components/transmission/switch.py
     homeassistant/components/travisci/sensor.py
+    homeassistant/components/triggercmd/__init__.py
+    homeassistant/components/triggercmd/hub.py
+    homeassistant/components/triggercmd/switch.py
     homeassistant/components/tuya/__init__.py
     homeassistant/components/tuya/alarm_control_panel.py
     homeassistant/components/tuya/base.py
