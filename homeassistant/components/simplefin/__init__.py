@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_ACCESS_URL, DOMAIN
+from .const import CONF_ACCESS_URL
 from .coordinator import SimpleFinDataUpdateCoordinator
 
 PLATFORMS: list[str] = [Platform.SENSOR]
@@ -33,9 +33,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SimpleFinConfigEntry) ->
     sf_client = SimpleFin(access_url)
     sf_coordinator = SimpleFinDataUpdateCoordinator(hass, sf_client)
     entry.runtime_data = SimpleFinData(sf_client, sf_coordinator)
-
     await sf_coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = sf_coordinator
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

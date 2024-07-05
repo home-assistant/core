@@ -12,8 +12,7 @@ from simplefin4py.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import CONF_ACCESS_URL, DOMAIN, LOGGER
 

@@ -18,7 +18,7 @@ from homeassistant.components.sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SimpleFinConfigEntry, SimpleFinData
+from . import SimpleFinConfigEntry
 from .entity import SimpleFinEntity
 
 
