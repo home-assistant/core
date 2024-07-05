@@ -317,8 +317,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
     async def _async_setup(self) -> None:
         """Set up the coordinator.
 
-        Can be overwritten by integrations to setup their coordinators,
-        or load resources that only need to be loaded once.
+        Can be overwritten by integrations to load data or resources
+        only once during the first refresh.
         """
         if self.setup_method is None:
             return None
