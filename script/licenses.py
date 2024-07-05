@@ -130,7 +130,6 @@ EXCEPTIONS = {
     "aioruuvigateway",  # https://github.com/akx/aioruuvigateway/pull/6
     "aiovodafone",  # https://github.com/chemelli74/aiovodafone/pull/131
     "airthings-ble",  # https://github.com/Airthings/airthings-ble/pull/42
-    "amberelectric",  # https://github.com/madpilot/amberelectric.py/pull/11
     "apple_weatherkit",  # https://github.com/tjhorner/python-weatherkit/pull/3
     "asyncio",  # PSF License
     "chacha20poly1305",  # LGPL
@@ -139,6 +138,7 @@ EXCEPTIONS = {
     "crownstone-core",  # https://github.com/crownstone/crownstone-lib-python-core/pull/6
     "crownstone-sse",  # https://github.com/crownstone/crownstone-lib-python-sse/pull/2
     "crownstone-uart",  # https://github.com/crownstone/crownstone-lib-python-uart/pull/12
+    "dio-chacon-wifi-api",
     "eliqonline",  # https://github.com/molobrakos/eliqonline/pull/17
     "enocean",  # https://github.com/kipe/enocean/pull/142
     "gardena-bluetooth",  # https://github.com/elupus/gardena-bluetooth/pull/11
@@ -152,7 +152,6 @@ EXCEPTIONS = {
     "maxcube-api",  # https://github.com/uebelack/python-maxcube-api/pull/48
     "nessclient",  # https://github.com/nickw444/nessclient/pull/65
     "neurio",  # https://github.com/jordanh/neurio-python/pull/13
-    "nextcloudmonitor",  # https://github.com/meichthys/nextcloud_monitor/pull/9
     "nsw-fuel-api-client",  # https://github.com/nickw444/nsw-fuel-api-client/pull/14
     "pigpio",  # https://github.com/joan2937/pigpio/pull/608
     "pyEmby",  # https://github.com/mezz64/pyEmby/pull/12
@@ -160,7 +159,6 @@ EXCEPTIONS = {
     "pybbox",  # https://github.com/HydrelioxGitHub/pybbox/pull/5
     "pyeconet",  # https://github.com/w1ll1am23/pyeconet/pull/41
     "pylutron-caseta",  # https://github.com/gurumitts/pylutron-caseta/pull/168
-    "pynx584",  # https://github.com/kk7ds/pynx584/pull/87
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
     "pyswitchbee",  # https://github.com/jafar-atili/pySwitchbee/pull/5
     "pyvera",  # https://github.com/maximvelichko/pyvera/pull/164
