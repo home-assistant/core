@@ -19,6 +19,8 @@ from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 from tests.test_util.aiohttp import AiohttpClientMocker
 
+type ConfigEntryFactoryType = Callable[[ConfigEntry | None], ConfigEntry]
+
 # Config entry fixtures
 
 API_KEY = "1234567890ABCDEF"
@@ -29,13 +31,12 @@ PORT = 80
 
 @pytest.fixture(name="config_entry")
 def fixture_config_entry(
-    hass: HomeAssistant,
     config_entry_data: MappingProxyType[str, Any],
     config_entry_options: MappingProxyType[str, Any],
     config_entry_source: str,
 ) -> ConfigEntry:
     """Define a config entry fixture."""
-    config_entry = MockConfigEntry(
+    return MockConfigEntry(
         domain=DECONZ_DOMAIN,
         entry_id="1",
         unique_id=BRIDGEID,
@@ -43,8 +44,6 @@ def fixture_config_entry(
         options=config_entry_options,
         source=config_entry_source,
     )
-    config_entry.add_to_hass(hass)
-    return config_entry
 
 
 @pytest.fixture(name="config_entry_data")
@@ -194,14 +193,15 @@ async def fixture_config_entry_factory(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     mock_requests: Callable[[str, str], None],
-) -> Callable[[], ConfigEntry]:
+) -> ConfigEntryFactoryType:
     """Fixture factory that can set up UniFi network integration."""
 
-    async def __mock_setup_config_entry() -> ConfigEntry:
-        mock_requests(config_entry.data[CONF_HOST])
-        await hass.config_entries.async_setup(config_entry.entry_id)
+    async def __mock_setup_config_entry(entry=config_entry) -> ConfigEntry:
+        entry.add_to_hass(hass)
+        mock_requests(entry.data[CONF_HOST])
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        return config_entry
+        return entry
 
     return __mock_setup_config_entry
 
