@@ -15,6 +15,7 @@ from homeassistant.data_entry_flow import FlowResultType
 def mock_madvr():
     """Mock the MadVR client."""
     with patch("homeassistant.components.madvr.config_flow.Madvr") as mock_madvr:
+        mock_madvr.return_value.connected = True
         yield mock_madvr
 
 
@@ -27,7 +28,6 @@ async def test_user_form(hass: HomeAssistant, mock_madvr) -> None:
     assert result["errors"] == {}
 
     mock_madvr.return_value.open_connection = MagicMock()
-    mock_madvr.return_value.connected.return_value = True
     mock_mac = "00:11:22:33:44:55"
 
     with patch(
@@ -108,7 +108,6 @@ async def test_user_form_no_mac(hass: HomeAssistant, mock_madvr) -> None:
     )
 
     mock_madvr.return_value.open_connection = MagicMock()
-    mock_madvr.return_value.connected.return_value = True
 
     with patch(
         "homeassistant.components.madvr.config_flow.MadVRConfigFlow._test_connection",

@@ -92,7 +92,7 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
             raise CannotConnect from err
 
         # check if we are connected
-        if not madvr_client.connected():
+        if not madvr_client.connected:
             raise CannotConnect("Connection failed")
 
         # background tasks needed to capture realtime info

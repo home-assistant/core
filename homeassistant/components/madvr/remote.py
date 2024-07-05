@@ -6,10 +6,12 @@ from typing import Any
 
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import MadVRConfigEntry
+from .const import DOMAIN
 from .coordinator import MadVRCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +34,7 @@ async def async_setup_entry(
 class MadvrRemote(CoordinatorEntity[MadVRCoordinator], RemoteEntity):
     """Remote entity for the MadVR integration."""
 
-    _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -43,32 +45,45 @@ class MadvrRemote(CoordinatorEntity[MadVRCoordinator], RemoteEntity):
         """Initialize the remote entity."""
         super().__init__(coordinator)
         self.madvr_client = coordinator.client
-        self._attr_name = coordinator.device_info.get("name")
-        self._attr_unique_id = f"{entry_id}_remote"
-        self.connection_event = self.madvr_client.connection_event
+        self._attr_name = None
+        self._attr_unique_id = f"{coordinator.mac}"
 
     @property
     def is_on(self) -> bool:
         """Return true if the device is on."""
         return self.madvr_client.is_on
 
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the DeviceInfo of this madVR Envy."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.mac)},
+            name="madVR Envy",
+            manufacturer="madVR",
+            model="Envy",
+        )
+
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
         _LOGGER.debug("Turning off")
-        await self.madvr_client.power_off()
-        self._attr_is_on = False
-        self.async_write_ha_state()
-        _LOGGER.debug("self._state is now: %s", self._attr_is_on)
+        try:
+            await self.madvr_client.power_off()
+        except (ConnectionError, NotImplementedError) as err:
+            _LOGGER.error("Failed to turn off device %s", err)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
         _LOGGER.debug("Turning on device")
 
-        # pass in the persisted mac to the library, if present
-        # it doesn't matter if it's empty, the library will handle it
-        await self.madvr_client.power_on(mac=self.coordinator.mac)
+        try:
+            await self.madvr_client.power_on(mac=self.coordinator.mac)
+        except (ConnectionError, NotImplementedError) as err:
+            _LOGGER.error("Failed to turn on device %s", err)
 
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
         _LOGGER.debug("adding command %s", command)
-        await self.madvr_client.add_command_to_queue(command)
+        try:
+            await self.madvr_client.add_command_to_queue(command)
+        except (ConnectionError, NotImplementedError) as err:
+            _LOGGER.error("Failed to send command %s", err)
