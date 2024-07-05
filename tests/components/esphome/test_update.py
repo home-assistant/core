@@ -34,6 +34,11 @@ from homeassistant.exceptions import HomeAssistantError
 from .conftest import MockESPHomeDevice
 
 
+@pytest.fixture(autouse=True)
+def enable_entity(entity_registry_enabled_by_default: None) -> None:
+    """Enable update entity."""
+
+
 @pytest.fixture
 def stub_reconnect():
     """Stub reconnect."""
