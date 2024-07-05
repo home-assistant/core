@@ -36,7 +36,7 @@ class WeatherFlowCloudSensorEntityDescription(
     value_fn: Callable[[WeatherFlowDataREST], int | str | datetime | None]
     icon_fn: Callable[[WeatherFlowDataREST], str] | None = None
     extra_state_attributes_fn: (
-            Callable[[WeatherFlowDataREST], dict[str, Any]] | None
+        Callable[[WeatherFlowDataREST], dict[str, Any]] | None
     ) = None
 
 
@@ -184,9 +184,9 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-        hass: HomeAssistant,
-        entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up WeatherFlow sensors based on a config entry."""
 
@@ -217,11 +217,12 @@ class WeatherFlowCloudSensor(WeatherFlowCloudEntity, SensorEntity):
     def __init__(self, coordinator, description, station_id, station_name, unique_id):
         """Initialize the sensor."""
         # Initialize the Entity Class
-        super().__init__(coordinator=coordinator,
-                         description=description,
-                         station_id=station_id,
-                         is_sensor=True
-                         )
+        super().__init__(
+            coordinator=coordinator,
+            description=description,
+            station_id=station_id,
+            is_sensor=True,
+        )
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal | None:

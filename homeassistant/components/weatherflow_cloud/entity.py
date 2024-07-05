@@ -26,11 +26,11 @@ class WeatherFlowCloudEntity(CoordinatorEntity[WeatherFlowCloudDataUpdateCoordin
     _attr_has_entity_name = True
 
     def __init__(
-            self,
-            coordinator: WeatherFlowCloudDataUpdateCoordinator,
-            description: EntityDescription,
-            station_id: int,
-            is_sensor: bool = True
+        self,
+        coordinator: WeatherFlowCloudDataUpdateCoordinator,
+        description: EntityDescription,
+        station_id: int,
+        is_sensor: bool = True,
     ) -> None:
         """Class initializer."""
         super().__init__(coordinator=coordinator)
