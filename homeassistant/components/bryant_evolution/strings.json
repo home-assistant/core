@@ -3,9 +3,7 @@
     "step": {
       "user": {
         "data": {
-          "filename": "Serial port filename",
-          "system_id": "System ID",
-          "zone_id": "Zone ID"
+          "filename": "Serial port filename"
         }
       }
     },

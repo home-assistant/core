@@ -11,11 +11,11 @@ from homeassistant.const import CONF_FILENAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_SYSTEM_ID, CONF_ZONE_ID
+from .const import CONF_SYSTEM_ZONE
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
-type BryantEvolutionConfigEntry = ConfigEntry[BryantEvolutionLocalClient]  # noqa: F821
+type BryantEvolutionConfigEntry = ConfigEntry[BryantEvolutionLocalClient]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -30,16 +30,17 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: BryantEvolutionConfigEntry
 ) -> bool:
     """Set up Bryant Evolution from a config entry."""
-    try:
-        entry.runtime_data = await BryantEvolutionLocalClient.get_client(
-            entry.data[CONF_SYSTEM_ID],
-            entry.data[CONF_ZONE_ID],
-            entry.data[CONF_FILENAME],
-        )
-    except FileNotFoundError as f:
-        raise ConfigEntryNotReady from f
-    if not await _can_reach_device(entry.runtime_data):
-        raise ConfigEntryNotReady
+    entry.runtime_data = {}
+    for sz in entry.data[CONF_SYSTEM_ZONE]:
+        try:
+            client = await BryantEvolutionLocalClient.get_client(
+                sz[0], sz[1], entry.data[CONF_FILENAME]
+            )
+            if not await _can_reach_device(client):
+                raise ConfigEntryNotReady
+            entry.runtime_data[tuple(sz)] = client
+        except FileNotFoundError as f:
+            raise ConfigEntryNotReady from f
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from evolutionhttp import BryantEvolutionClient
+from evolutionhttp import BryantEvolutionLocalClient
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -19,7 +19,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BryantEvolutionConfigEntry
-from .const import CONF_SYSTEM_ID, CONF_ZONE_ID, DOMAIN
+from .const import CONF_SYSTEM_ZONE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,14 +33,19 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
-    client = config_entry.runtime_data
-    climate = BryantEvolutionClimate(
-        client,
-        config_entry.entry_id,
-        config_entry.data[CONF_SYSTEM_ID],
-        config_entry.data[CONF_ZONE_ID],
-    )
-    async_add_entities([climate], update_before_add=True)
+    entities = []
+    for sz in config_entry.data[CONF_SYSTEM_ZONE]:
+        system = sz[0]
+        zone = sz[1]
+        client = config_entry.runtime_data.get(tuple(sz))
+        climate = BryantEvolutionClimate(
+            client,
+            system,
+            zone,
+            config_entry.entry_id,
+        )
+        entities.append(climate)
+    async_add_entities(entities, update_before_add=True)
 
 
 class BryantEvolutionClimate(ClimateEntity):
@@ -53,7 +58,6 @@ class BryantEvolutionClimate(ClimateEntity):
     """
 
     _attr_has_entity_name = True
-    _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
@@ -73,18 +77,18 @@ class BryantEvolutionClimate(ClimateEntity):
 
     def __init__(
         self,
-        client: BryantEvolutionClient,
-        unique_id: str,
+        client: BryantEvolutionLocalClient,
         system_id: int,
         zone_id: int,
+        sam_id: str,
     ) -> None:
         """Initialize an entity from parts."""
         self._client = client
-
-        self._attr_unique_id = unique_id
+        self._attr_name = f"System {system_id}, Zone {zone_id}"
+        self._attr_unique_id = f"{sam_id}-S{system_id}-Z{zone_id}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
-            name=f"Bryant Evolution (System {system_id}, Zone {zone_id})",
+            identifiers={(DOMAIN, sam_id)},
+            name="Bryant Evolution",
         )
 
     async def async_update(self) -> None:
