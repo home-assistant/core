@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 import functools
 import logging
 from typing import Any
@@ -26,6 +25,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import AsyncCallable
 
 from .config_flow import get_entry_client
 from .const import (
@@ -61,9 +61,7 @@ async def async_setup_entry(
     )
 
 
-def convert_exception[**_P, _R](
-    func: Callable[_P, Coroutine[Any, Any, _R]],
-) -> Callable[_P, Coroutine[Any, Any, _R]]:
+def convert_exception[**_P, _R](func: AsyncCallable[_P, _R]) -> AsyncCallable[_P, _R]:
     """Return decorator to convert a connection error into a home assistant error."""
 
     @functools.wraps(func)

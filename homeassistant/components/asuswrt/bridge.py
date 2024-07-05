@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections import namedtuple
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Awaitable, Callable
 import functools
 import logging
 from typing import Any, cast
@@ -25,6 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.typing import AsyncCallable
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
@@ -57,7 +58,7 @@ WrtDevice = namedtuple("WrtDevice", ["ip", "name", "connected_to"])
 _LOGGER = logging.getLogger(__name__)
 
 type _FuncType[_T] = Callable[[_T], Awaitable[list[Any] | tuple[Any] | dict[str, Any]]]
-type _ReturnFuncType[_T] = Callable[[_T], Coroutine[Any, Any, dict[str, Any]]]
+type _ReturnFuncType[_T] = AsyncCallable[[_T], dict[str, Any]]
 
 
 def handle_errors_and_zip[_AsusWrtBridgeT: AsusWrtBridge](

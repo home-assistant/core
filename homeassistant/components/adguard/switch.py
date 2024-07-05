@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
@@ -12,6 +12,7 @@ from adguardhome import AdGuardHome, AdGuardHomeError
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import AsyncCallable
 
 from . import AdGuardConfigEntry, AdGuardData
 from .const import DOMAIN, LOGGER
@@ -25,9 +26,9 @@ PARALLEL_UPDATES = 1
 class AdGuardHomeSwitchEntityDescription(SwitchEntityDescription):
     """Describes AdGuard Home switch entity."""
 
-    is_on_fn: Callable[[AdGuardHome], Callable[[], Coroutine[Any, Any, bool]]]
-    turn_on_fn: Callable[[AdGuardHome], Callable[[], Coroutine[Any, Any, None]]]
-    turn_off_fn: Callable[[AdGuardHome], Callable[[], Coroutine[Any, Any, None]]]
+    is_on_fn: Callable[[AdGuardHome], AsyncCallable[[], bool]]
+    turn_on_fn: Callable[[AdGuardHome], AsyncCallable[[], None]]
+    turn_off_fn: Callable[[AdGuardHome], AsyncCallable[[], None]]
 
 
 SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (

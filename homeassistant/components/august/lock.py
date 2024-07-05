@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 import logging
 from typing import Any
 
@@ -16,6 +15,7 @@ from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import AsyncCallable
 import homeassistant.util.dt as dt_util
 
 from . import AugustConfigEntry, AugustData
@@ -70,7 +70,7 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
         await self._call_lock_operation(self._data.async_unlock)
 
     async def _call_lock_operation(
-        self, lock_operation: Callable[[str], Coroutine[Any, Any, list[ActivityTypes]]]
+        self, lock_operation: AsyncCallable[[str], list[ActivityTypes]]
     ) -> None:
         try:
             activities = await lock_operation(self._device_id)

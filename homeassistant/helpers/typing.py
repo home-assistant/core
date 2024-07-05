@@ -1,6 +1,6 @@
 """Typing Helpers for Home Assistant."""
 
-from collections.abc import Mapping
+from collections.abc import Callable, Coroutine, Mapping
 from enum import Enum
 from functools import partial
 from typing import Any, Never
@@ -14,6 +14,7 @@ from .deprecation import (
     dir_with_deprecated_constants,
 )
 
+type AsyncCallable[**_P, _R_co] = Callable[_P, Coroutine[Any, Any, _R_co]]
 type GPSType = tuple[float, float]
 type ConfigType = dict[str, Any]
 type DiscoveryInfoType = dict[str, Any]

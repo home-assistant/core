@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
 
 from adguardhome import AdGuardHome
 
@@ -13,6 +11,7 @@ from homeassistant.components.sensor import SensorEntity, SensorEntityDescriptio
 from homeassistant.const import PERCENTAGE, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import AsyncCallable
 
 from . import AdGuardConfigEntry, AdGuardData
 from .const import DOMAIN
@@ -26,7 +25,7 @@ PARALLEL_UPDATES = 4
 class AdGuardHomeEntityDescription(SensorEntityDescription):
     """Describes AdGuard Home sensor entity."""
 
-    value_fn: Callable[[AdGuardHome], Coroutine[Any, Any, int | float]]
+    value_fn: AsyncCallable[[AdGuardHome], int | float]
 
 
 SENSORS: tuple[AdGuardHomeEntityDescription, ...] = (

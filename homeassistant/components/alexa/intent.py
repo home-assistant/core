@@ -1,6 +1,5 @@
 """Support for Alexa skill service end point."""
 
-from collections.abc import Callable, Coroutine
 import enum
 import logging
 from typing import Any
@@ -11,6 +10,7 @@ from homeassistant.components import http
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent
+from homeassistant.helpers.typing import AsyncCallable
 from homeassistant.util.decorator import Registry
 
 from .const import DOMAIN, SYN_RESOLUTION_MATCH
@@ -18,7 +18,7 @@ from .const import DOMAIN, SYN_RESOLUTION_MATCH
 _LOGGER = logging.getLogger(__name__)
 
 HANDLERS: Registry[
-    str, Callable[[HomeAssistant, dict[str, Any]], Coroutine[Any, Any, dict[str, Any]]]
+    str, AsyncCallable[[HomeAssistant, dict[str, Any]], dict[str, Any]]
 ] = Registry()
 
 INTENTS_API_ENDPOINT = "/api/alexa"

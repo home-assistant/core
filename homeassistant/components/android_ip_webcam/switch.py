@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
@@ -13,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import AsyncCallable
 
 from .const import DOMAIN
 from .coordinator import AndroidIPCamDataUpdateCoordinator
@@ -23,8 +23,8 @@ from .entity import AndroidIPCamBaseEntity
 class AndroidIPWebcamSwitchEntityDescription(SwitchEntityDescription):
     """Entity description class for Android IP Webcam switches."""
 
-    on_func: Callable[[PyDroidIPCam], Coroutine[Any, Any, bool]]
-    off_func: Callable[[PyDroidIPCam], Coroutine[Any, Any, bool]]
+    on_func: AsyncCallable[[PyDroidIPCam], bool]
+    off_func: AsyncCallable[[PyDroidIPCam], bool]
 
 
 SWITCH_TYPES: tuple[AndroidIPWebcamSwitchEntityDescription, ...] = (
