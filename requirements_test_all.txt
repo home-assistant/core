@@ -255,7 +255,7 @@ aiolifx-effects==0.3.2
 aiolifx-themes==0.4.15
 
 # homeassistant.components.lifx
-aiolifx==1.0.2
+aiolifx==1.0.4
 
 # homeassistant.components.livisi
 aiolivisi==0.0.19
@@ -895,10 +895,10 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.51
+holidays==0.52
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240703.0
+home-assistant-frontend==20240705.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.7.3
@@ -1600,7 +1600,7 @@ pynuki==1.6.3
 pynws[retry]==1.8.2
 
 # homeassistant.components.nx584
-pynx584==0.5
+pynx584==0.8.2
 
 # homeassistant.components.nzbget
 pynzbgetapi==0.2.0
@@ -2210,7 +2210,7 @@ vallox-websocket-api==5.3.0
 vehicle==2.2.1
 
 # homeassistant.components.velbus
-velbus-aio==2024.5.1
+velbus-aio==2024.7.5
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
