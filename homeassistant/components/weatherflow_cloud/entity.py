@@ -8,7 +8,7 @@ from .coordinator import WeatherFlowCloudDataUpdateCoordinator
 
 
 class WeatherFlowCloudEntity(CoordinatorEntity[WeatherFlowCloudDataUpdateCoordinator]):
-    """Base entity class to use for sensors."""
+    """Base entity class to use for everything."""
 
     _attr_attribution = ATTR_ATTRIBUTION
     _attr_has_entity_name = True
