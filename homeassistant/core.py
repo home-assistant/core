@@ -1535,7 +1535,15 @@ class EventBus:
                 "Bus:Handling %s", _event_repr(event_type, origin, event_data)
             )
 
-        listeners = self._listeners.get(event_type, EMPTY_LIST)
+        # Most cases the key will be in the dict
+        # so we optimize for the happy path as
+        # python 3.11+ has near zero overhead for
+        # try when it does not raise an exception.
+        try:
+            listeners = self._listeners[event_type]
+        except KeyError:
+            listeners = EMPTY_LIST
+
         if event_type not in EVENTS_EXCLUDED_FROM_MATCH_ALL:
             match_all_listeners = self._match_all_listeners
         else:
