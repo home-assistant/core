@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import datetime
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from aiohttp import ClientResponseError
 
@@ -26,6 +26,7 @@ from homeassistant.util import dt as dt_util
 from . import HabiticaConfigEntry
 from .const import ASSETS_URL, DOMAIN, MANUFACTURER, NAME
 from .coordinator import HabiticaDataUpdateCoordinator
+from .util import next_due_date
 
 
 class HabiticaTodoList(StrEnum):
@@ -284,36 +285,13 @@ class HabiticaDailiesListEntity(BaseHabiticaListEntity):
 
         dailies don't have a date, but we still can show the next due date,
         which is a calculated value based on recurrence of the task.
-        If a task is due and has not been completed, the due date is the last time
+        If a task is a yesterdaily, the due date is the last time
         a new day has been started. This allows to check off dailies from yesterday,
         that have been completed but forgotten to mark as completed before resetting the dailies.
         Changes of the date input field in Home Assistant will be ignored.
         """
 
-        def next_due_date(task: dict[str, Any]) -> datetime.date | None:
-            if task["isDue"] and not task["completed"]:
-                return dt_util.as_local(
-                    datetime.datetime.fromisoformat(
-                        self.coordinator.data.user["lastCron"]
-                    )
-                ).date()
-            try:
-                return dt_util.as_local(
-                    datetime.datetime.fromisoformat(task["nextDue"][0])
-                ).date()
-            except ValueError:
-                # sometimes nextDue dates are in this format instead of iso:
-                # "Mon May 06 2024 00:00:00 GMT+0200"
-                try:
-                    return dt_util.as_local(
-                        datetime.datetime.strptime(
-                            task["nextDue"][0], "%a %b %d %Y %H:%M:%S %Z%z"
-                        )
-                    ).date()
-                except ValueError:
-                    return None
-            except IndexError:
-                return None
+        last_cron = self.coordinator.data.user["lastCron"]
 
         return [
             *(
@@ -321,7 +299,7 @@ class HabiticaDailiesListEntity(BaseHabiticaListEntity):
                     uid=task["id"],
                     summary=task["text"],
                     description=task["notes"],
-                    due=next_due_date(task),
+                    due=next_due_date(task, last_cron),
                     status=(
                         TodoItemStatus.COMPLETED
                         if task["completed"]
