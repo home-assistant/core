@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+from functools import cached_property
 import logging
 
 from roborock import HomeDataRoom
@@ -21,6 +22,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .models import RoborockA01HassDeviceInfo, RoborockHassDeviceInfo, RoborockMapInfo
@@ -142,10 +144,15 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                         self._home_data_rooms.get(room.iot_id, "Unknown")
                     )
 
-    @property
+    @cached_property
     def duid(self) -> str:
         """Get the unique id of the device as specified by Roborock."""
         return self.roborock_device_info.device.duid
+
+    @cached_property
+    def duid_slug(self) -> str:
+        """Get the slug of the duid."""
+        return slugify(self.duid)
 
 
 class RoborockDataUpdateCoordinatorA01(
@@ -191,7 +198,12 @@ class RoborockDataUpdateCoordinatorA01(
         """Disconnect from API."""
         await self.api.async_release()
 
-    @property
+    @cached_property
     def duid(self) -> str:
         """Get the unique id of the device as specified by Roborock."""
         return self.roborock_device_info.device.duid
+
+    @cached_property
+    def duid_slug(self) -> str:
+        """Get the slug of the duid."""
+        return slugify(self.duid)
