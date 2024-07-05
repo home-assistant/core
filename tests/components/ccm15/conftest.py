@@ -1,10 +1,10 @@
 """Common fixtures for the Midea ccm15 AC Controller tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from ccm15 import CCM15DeviceState, CCM15SlaveDevice
 import pytest
-from typing_extensions import Generator
 
 
 @pytest.fixture

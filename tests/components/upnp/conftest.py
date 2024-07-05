@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import copy
 from datetime import datetime
+import socket
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, create_autospec, patch
 from urllib.parse import urlparse
 
+from async_upnp_client.aiohttp import AiohttpNotifyServer
 from async_upnp_client.client import UpnpDevice
 from async_upnp_client.profiles.igd import IgdDevice, IgdState
 import pytest
@@ -98,9 +100,24 @@ def mock_igd_device(mock_async_create_device) -> IgdDevice:
         port_mapping_number_of_entries=0,
     )
 
-    with patch(
-        "homeassistant.components.upnp.device.IgdDevice.__new__",
-        return_value=mock_igd_device,
+    mock_igd_device.async_subscribe_services = AsyncMock()
+
+    mock_notify_server = create_autospec(AiohttpNotifyServer)
+    mock_notify_server.event_handler = MagicMock()
+
+    with (
+        patch(
+            "homeassistant.components.upnp.device.async_get_local_ip",
+            return_value=(socket.AF_INET, "127.0.0.1"),
+        ),
+        patch(
+            "homeassistant.components.upnp.device.IgdDevice.__new__",
+            return_value=mock_igd_device,
+        ),
+        patch(
+            "homeassistant.components.upnp.device.AiohttpNotifyServer.__new__",
+            return_value=mock_notify_server,
+        ),
     ):
         yield mock_igd_device
 
