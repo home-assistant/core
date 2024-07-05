@@ -10,7 +10,10 @@
       "default": "mdi:meter-gas"
     },
     "water": {
-      "default": "mdi:pipe-valve"
+      "default": "mdi:valve-open",
+      "state": {
+        "off": "mdi:valve-closed"
+      }
     }
   },
   "services": {
