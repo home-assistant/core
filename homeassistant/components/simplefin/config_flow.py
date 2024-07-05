@@ -59,7 +59,7 @@ class SimpleFinConfigFlow(ConfigFlow, domain=DOMAIN):
             except SimpleFinPaymentRequiredError:
                 errors["base"] = "payment_required"
             except SimpleFinAuthError:
-                errors["base"] = "auth_error"
+                errors["base"] = "invalud_auth"
 
         return self.async_show_form(
             step_id="user",
