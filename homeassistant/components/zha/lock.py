@@ -20,6 +20,7 @@ from .entity import ZHAEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
     async_add_entities as zha_async_add_entities,
+    convert_zha_error_to_ha_error,
     get_zha_data,
 )
 
@@ -93,16 +94,19 @@ class ZhaDoorLock(ZHAEntity, LockEntity):
         """Return true if entity is locked."""
         return self.entity_data.entity.is_locked
 
+    @convert_zha_error_to_ha_error
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         await self.entity_data.entity.async_lock()
         self.async_write_ha_state()
 
+    @convert_zha_error_to_ha_error
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         await self.entity_data.entity.async_unlock()
         self.async_write_ha_state()
 
+    @convert_zha_error_to_ha_error
     async def async_set_lock_user_code(self, code_slot: int, user_code: str) -> None:
         """Set the user_code to index X on the lock."""
         await self.entity_data.entity.async_set_lock_user_code(
@@ -110,16 +114,19 @@ class ZhaDoorLock(ZHAEntity, LockEntity):
         )
         self.async_write_ha_state()
 
+    @convert_zha_error_to_ha_error
     async def async_enable_lock_user_code(self, code_slot: int) -> None:
         """Enable user_code at index X on the lock."""
         await self.entity_data.entity.async_enable_lock_user_code(code_slot=code_slot)
         self.async_write_ha_state()
 
+    @convert_zha_error_to_ha_error
     async def async_disable_lock_user_code(self, code_slot: int) -> None:
         """Disable user_code at index X on the lock."""
         await self.entity_data.entity.async_disable_lock_user_code(code_slot=code_slot)
         self.async_write_ha_state()
 
+    @convert_zha_error_to_ha_error
     async def async_clear_lock_user_code(self, code_slot: int) -> None:
         """Clear the user_code at index X on the lock."""
         await self.entity_data.entity.async_clear_lock_user_code(code_slot=code_slot)

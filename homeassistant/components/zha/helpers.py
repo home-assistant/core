@@ -4,16 +4,17 @@ from __future__ import annotations
 
 import asyncio
 import collections
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable, Coroutine
 import copy
 import dataclasses
 import enum
+import functools
 import itertools
 import logging
 import re
 import time
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, NamedTuple, cast
+from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, ParamSpec, TypeVar, cast
 
 import voluptuous as vol
 from zha.application.const import (
@@ -62,6 +63,7 @@ from zha.application.helpers import (
 )
 from zha.application.platforms import GroupEntity, PlatformEntity
 from zha.event import EventBase
+from zha.exceptions import ZHAException
 from zha.mixins import LogMixin
 from zha.zigbee.device import Device, ZHAEvent
 from zha.zigbee.group import Group, GroupMember
@@ -88,6 +90,7 @@ from homeassistant.components.system_log import LogEntry
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -150,6 +153,9 @@ if TYPE_CHECKING:
     from .update import ZHAFirmwareUpdateCoordinator
 
     _LogFilterType = Filter | Callable[[LogRecord], bool]
+
+_P = ParamSpec("_P")
+_EntityT = TypeVar("_EntityT", bound="ZHAEntity")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -1173,3 +1179,18 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
             device_overrides=overrides_config,
         ),
     )
+
+
+def convert_zha_error_to_ha_error(
+    func: Callable[Concatenate[_EntityT, _P], Awaitable[None]],
+) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
+    """Decorate ZHA commands and re-raises ZHAException as HomeAssistantError."""
+
+    @functools.wraps(func)
+    async def handler(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        try:
+            return await func(self, *args, **kwargs)
+        except ZHAException as err:
+            raise HomeAssistantError(err) from err
+
+    return handler

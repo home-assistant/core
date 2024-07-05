@@ -19,6 +19,7 @@ from .entity import ZHAEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
     async_add_entities as zha_async_add_entities,
+    convert_zha_error_to_ha_error,
     get_zha_data,
 )
 
@@ -62,26 +63,31 @@ class ZHAAlarmControlPanel(ZHAEntity, AlarmControlPanelEntity):
         """Whether the code is required for arm actions."""
         return self.entity_data.entity.code_arm_required
 
+    @convert_zha_error_to_ha_error
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         await self.entity_data.entity.async_alarm_disarm(code)
         self.async_write_ha_state()
 
+    @convert_zha_error_to_ha_error
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         await self.entity_data.entity.async_alarm_arm_home(code)
         self.async_write_ha_state()
 
+    @convert_zha_error_to_ha_error
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self.entity_data.entity.async_alarm_arm_away(code)
         self.async_write_ha_state()
 
+    @convert_zha_error_to_ha_error
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         await self.entity_data.entity.async_alarm_arm_night(code)
         self.async_write_ha_state()
 
+    @convert_zha_error_to_ha_error
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command."""
         await self.entity_data.entity.async_alarm_trigger(code)

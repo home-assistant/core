@@ -16,6 +16,7 @@ from .entity import ZHAEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
     async_add_entities as zha_async_add_entities,
+    convert_zha_error_to_ha_error,
     get_zha_data,
 )
 
@@ -70,6 +71,7 @@ class ZhaFan(FanEntity, ZHAEntity):
         """Return the number of speeds the fan supports."""
         return self.entity_data.entity.speed_count
 
+    @convert_zha_error_to_ha_error
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -80,22 +82,25 @@ class ZhaFan(FanEntity, ZHAEntity):
         await self.entity_data.entity.async_turn_on(
             percentage=percentage, preset_mode=preset_mode
         )
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
+    @convert_zha_error_to_ha_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_data.entity.async_turn_off()
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
+    @convert_zha_error_to_ha_error
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         await self.entity_data.entity.async_set_percentage(percentage=percentage)
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
+    @convert_zha_error_to_ha_error
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode for the fan."""
         await self.entity_data.entity.async_set_preset_mode(preset_mode=preset_mode)
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def percentage(self) -> int | None:

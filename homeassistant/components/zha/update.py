@@ -148,6 +148,8 @@ class ZHAFirmwareUpdateEntity(
         """URL to the full release notes of the latest version available."""
         return self.entity_data.entity.release_url
 
+    # We explicitly convert ZHA exceptions to HA exceptions here so there is no need to
+    # use the `@convert_zha_error_to_ha_error` decorator.
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -155,7 +157,7 @@ class ZHAFirmwareUpdateEntity(
         try:
             await self.entity_data.entity.async_install(version=version, backup=backup)
         except ZHAException as exc:
-            raise HomeAssistantError(str(exc)) from exc
+            raise HomeAssistantError(exc) from exc
         finally:
             self.async_write_ha_state()
 

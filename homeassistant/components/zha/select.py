@@ -18,6 +18,7 @@ from .helpers import (
     SIGNAL_ADD_ENTITIES,
     EntityData,
     async_add_entities as zha_async_add_entities,
+    convert_zha_error_to_ha_error,
     get_zha_data,
 )
 
@@ -59,6 +60,7 @@ class ZHAEnumSelectEntity(ZHAEntity, SelectEntity):
         """Return the selected entity option to represent the entity state."""
         return self.entity_data.entity.current_option
 
+    @convert_zha_error_to_ha_error
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_data.entity.async_select_option(option=option)

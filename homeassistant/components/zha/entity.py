@@ -19,7 +19,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DOMAIN
-from .helpers import SIGNAL_REMOVE_ENTITIES, EntityData
+from .helpers import SIGNAL_REMOVE_ENTITIES, EntityData, convert_zha_error_to_ha_error
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -149,6 +149,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         await super().async_will_remove_from_hass()
         self.remove_future.set_result(True)
 
+    @convert_zha_error_to_ha_error
     async def async_update(self) -> None:
         """Update the entity."""
         await self.entity_data.entity.async_update()

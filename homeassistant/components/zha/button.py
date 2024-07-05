@@ -16,6 +16,7 @@ from .entity import ZHAEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
     async_add_entities as zha_async_add_entities,
+    convert_zha_error_to_ha_error,
     get_zha_data,
 )
 
@@ -52,6 +53,7 @@ class ZHAButton(ZHAEntity, ButtonEntity):
                 self.entity_data.entity.info_object.device_class
             )
 
+    @convert_zha_error_to_ha_error
     async def async_press(self) -> None:
         """Send out a update command."""
         await self.entity_data.entity.async_press()

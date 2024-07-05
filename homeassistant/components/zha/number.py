@@ -16,6 +16,7 @@ from .entity import ZHAEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
     async_add_entities as zha_async_add_entities,
+    convert_zha_error_to_ha_error,
     get_zha_data,
 )
 
@@ -69,6 +70,7 @@ class ZhaNumber(ZHAEntity, NumberEntity):
         """Return the unit the value is expressed in."""
         return self.entity_data.entity.native_unit_of_measurement
 
+    @convert_zha_error_to_ha_error
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value from HA."""
         await self.entity_data.entity.async_set_native_value(value=value)

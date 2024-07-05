@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 import voluptuous as vol
+from zha.exceptions import ZHAException
 from zha.zigbee.cluster_handlers.const import (
     CLUSTER_HANDLER_IAS_WD,
     CLUSTER_HANDLER_INOVELLI,
@@ -17,6 +18,7 @@ from zha.zigbee.cluster_handlers.manufacturerspecific import (
 from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
@@ -227,7 +229,10 @@ async def _execute_cluster_handler_command_based_action(
             f" {action_type}"
         )
 
-    await getattr(action_cluster_handler, action_type)(**config)
+    try:
+        await getattr(action_cluster_handler, action_type)(**config)
+    except ZHAException as err:
+        raise HomeAssistantError(err) from err
 
 
 ZHA_ACTION_TYPES = {

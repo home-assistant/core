@@ -29,6 +29,7 @@ from .entity import ZHAEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
     async_add_entities as zha_async_add_entities,
+    convert_zha_error_to_ha_error,
     get_zha_data,
 )
 
@@ -134,21 +135,25 @@ class Thermostat(ZHAEntity, ClimateEntity):
         """Return the minimum temperature."""
         return self.entity_data.entity.min_temp
 
+    @convert_zha_error_to_ha_error
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
         await self.entity_data.entity.async_set_fan_mode(fan_mode=fan_mode)
         self.async_write_ha_state()
 
+    @convert_zha_error_to_ha_error
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         await self.entity_data.entity.async_set_hvac_mode(hvac_mode=hvac_mode)
         self.async_write_ha_state()
 
+    @convert_zha_error_to_ha_error
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self.entity_data.entity.async_set_preset_mode(preset_mode=preset_mode)
         self.async_write_ha_state()
 
+    @convert_zha_error_to_ha_error
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self.entity_data.entity.async_set_temperature(

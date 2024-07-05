@@ -30,6 +30,7 @@ from .entity import ZHAEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
     async_add_entities as zha_async_add_entities,
+    convert_zha_error_to_ha_error,
     get_zha_data,
 )
 
@@ -131,6 +132,7 @@ class Light(LightEntity, ZHAEntity):
         """Return the current effect."""
         return self.entity_data.entity.effect
 
+    @convert_zha_error_to_ha_error
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.entity_data.entity.async_turn_on(
@@ -144,6 +146,7 @@ class Light(LightEntity, ZHAEntity):
         )
         self.async_write_ha_state()
 
+    @convert_zha_error_to_ha_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_data.entity.async_turn_off(
