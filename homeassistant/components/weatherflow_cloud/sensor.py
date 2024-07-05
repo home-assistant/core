@@ -6,7 +6,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from typing import Any
 
 from weatherflow4py.models.rest.unified import WeatherFlowDataREST
 
@@ -34,10 +33,6 @@ class WeatherFlowCloudSensorEntityDescription(
     """Describes a weatherflow sensor."""
 
     value_fn: Callable[[WeatherFlowDataREST], int | str | datetime | None]
-    icon_fn: Callable[[WeatherFlowDataREST], str] | None = None
-    extra_state_attributes_fn: (
-        Callable[[WeatherFlowDataREST], dict[str, Any]] | None
-    ) = None
 
 
 WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
@@ -112,10 +107,6 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         value_fn=lambda data: data.observation.obs[0].wet_bulb_globe_temperature,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        extra_state_attributes_fn=lambda data: {
-            "flag": data.observation.obs[0].wet_bulb_globe_temperature_flag.name,
-            "category": data.observation.obs[0].wet_bulb_globe_temperature_category,
-        },
     ),
     # Pressure Sensors
     WeatherFlowCloudSensorEntityDescription(
@@ -214,35 +205,22 @@ class WeatherFlowCloudSensor(WeatherFlowCloudEntity, SensorEntity):
 
     entity_description: WeatherFlowCloudSensorEntityDescription
 
-    def __init__(self, coordinator, description, station_id, station_name, unique_id):
+    def __init__(self, coordinator, description, station_id):
         """Initialize the sensor."""
         # Initialize the Entity Class
         super().__init__(
             coordinator=coordinator,
-            description=description,
             station_id=station_id,
-            is_sensor=True,
         )
+        self.entity_description = description
+        self._attr_unique_id = (
+            f"{self.coordinator.data[station_id].station.name}_{description.key}"
+        )
+        self._attr_has_entity_name = True
+
+        #
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data[self.station_id])
-
-    @property
-    def extra_state_attributes(self) -> dict[str, str] | None:
-        """Return the state attributes."""
-        if self.entity_description.extra_state_attributes_fn:
-            return self.entity_description.extra_state_attributes_fn(
-                self.coordinator.data[self.station_id]
-            )
-        return None
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon to use in the frontend, if any."""
-        if self.entity_description.icon_fn:
-            return self.entity_description.icon_fn(
-                self.coordinator.data[self.station_id]
-            )
-        return super().icon

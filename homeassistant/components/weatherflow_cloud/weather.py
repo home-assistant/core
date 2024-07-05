@@ -22,16 +22,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_ATTRIBUTION, DOMAIN, MANUFACTURER, STATE_MAP
 from .coordinator import WeatherFlowCloudDataUpdateCoordinator
-<<<<<<< Updated upstream
-=======
-from .entity import get_station_device_info, WeatherFlowCloudEntity
->>>>>>> Stashed changes
+from .entity import WeatherFlowCloudEntity
 
 
 async def async_setup_entry(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
     coordinator: WeatherFlowCloudDataUpdateCoordinator = hass.data[DOMAIN][
@@ -48,7 +45,7 @@ async def async_setup_entry(
 
 class WeatherFlowWeather(
     WeatherFlowCloudEntity,
-    SingleCoordinatorWeatherEntity[WeatherFlowCloudDataUpdateCoordinator]
+    SingleCoordinatorWeatherEntity[WeatherFlowCloudDataUpdateCoordinator],
 ):
     """Implementation of a WeatherFlow weather condition."""
 
@@ -60,17 +57,17 @@ class WeatherFlowWeather(
     _attr_native_pressure_unit = UnitOfPressure.MBAR
     _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
     _attr_supported_features = (
-            WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
+        WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
     )
     _attr_name = None
 
     def __init__(
-            self,
-            coordinator: WeatherFlowCloudDataUpdateCoordinator,
-            station_id: int,
+        self,
+        coordinator: WeatherFlowCloudDataUpdateCoordinator,
+        station_id: int,
     ) -> None:
         """Initialise the platform with a data instance and station."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, station_id)
 
         self.station_id = station_id
         self._attr_unique_id = f"weatherflow_forecast_{station_id}"

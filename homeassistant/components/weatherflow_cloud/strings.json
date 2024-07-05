@@ -26,9 +26,6 @@
   },
   "entity": {
     "sensor": {
-      "air_temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      },
       "air_density": {
         "name": "Air density"
       },
@@ -60,9 +57,6 @@
         "name": "Lightning last"
       },
 
-      "wind_avg": {
-        "name": "Wind speed"
-      },
       "wind_chill": {
         "name": "Wind chill"
       },
