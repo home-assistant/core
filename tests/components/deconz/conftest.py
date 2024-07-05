@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from types import MappingProxyType
 from typing import Any
 from unittest.mock import patch
@@ -22,6 +22,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 type ConfigEntryFactoryType = Callable[[ConfigEntry | None], ConfigEntry]
 type WebsocketDataType = Callable[[dict[str, Any]], None]
 type WebsocketStateType = Callable[[str], None]
+type WebsocketMock = Generator[Any, Any, Callable[[dict[str, Any] | None, str]]]
 
 # Config entry fixtures
 
@@ -219,8 +220,8 @@ async def fixture_config_entry_setup(
 # Websocket fixtures
 
 
-@pytest.fixture(autouse=True, name="mock_deconz_websocket")
-def fixture_websocket():
+@pytest.fixture(autouse=True, name="_mock_websocket")
+def fixture_websocket() -> WebsocketMock:
     """No real websocket allowed."""
     with patch("pydeconz.gateway.WSClient") as mock:
 
@@ -243,22 +244,24 @@ def fixture_websocket():
 
 
 @pytest.fixture(name="mock_websocket_data")
-def fixture_websocket_data(mock_deconz_websocket) -> WebsocketDataType:
+def fixture_websocket_data(_mock_websocket: WebsocketMock) -> WebsocketDataType:
     """Fixture to send websocket data."""
 
     async def change_websocket_data(data: dict[str, Any]) -> None:
         """Provide new data on the websocket."""
-        await mock_deconz_websocket(data=data)
+        await _mock_websocket(data=data)
 
     return change_websocket_data
 
 
 @pytest.fixture(name="mock_websocket_state")
-def fixture_websocket_state(mock_deconz_websocket) -> WebsocketStateType:
+def fixture_websocket_state(
+    _mock_websocket: WebsocketMock,
+) -> WebsocketStateType:
     """Fixture to set websocket state."""
 
     async def change_websocket_state(state: str) -> None:
         """Simulate a change to the websocket connection state."""
-        await mock_deconz_websocket(state=state)
+        await _mock_websocket(state=state)
 
     return change_websocket_state
