@@ -31,15 +31,9 @@ async def async_setup_entry(
     gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]]
 
     async_add_entities(
-        OpenThermBinarySensor(
-            gw_dev,
-            var,
-            source,
-            info[0],
-            info[1],
-        )
-        for var, info in BINARY_SENSOR_INFO.items()
-        for source in info[2]
+        OpenThermBinarySensor(gw_dev, source, description)
+        for sources, description in BINARY_SENSOR_INFO
+        for source in sources
     )
 
 
@@ -50,22 +44,24 @@ class OpenThermBinarySensor(BinarySensorEntity):
     _attr_entity_registry_enabled_default = False
     _attr_available = False
 
-    def __init__(self, gw_dev, var, source, device_class, friendly_name_format):
+    def __init__(self, gw_dev, source, description):
         """Initialize the binary sensor."""
         self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, f"{var}_{source}_{gw_dev.gw_id}", hass=gw_dev.hass
+            ENTITY_ID_FORMAT,
+            f"{description.key}_{source}_{gw_dev.gw_id}",
+            hass=gw_dev.hass,
         )
+        self.entity_description = description
         self._gateway = gw_dev
-        self._var = var
         self._source = source
-        self._attr_device_class = device_class
-        if TRANSLATE_SOURCE[source] is not None:
-            friendly_name_format = (
-                f"{friendly_name_format} ({TRANSLATE_SOURCE[source]})"
-            )
+        friendly_name_format = (
+            f"{description.friendly_name_format} ({TRANSLATE_SOURCE[source]})"
+            if TRANSLATE_SOURCE[source] is not None
+            else description.friendly_name_format
+        )
         self._attr_name = friendly_name_format.format(gw_dev.name)
         self._unsub_updates = None
-        self._attr_unique_id = f"{gw_dev.gw_id}-{source}-{var}"
+        self._attr_unique_id = f"{gw_dev.gw_id}-{source}-{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, gw_dev.gw_id)},
             manufacturer="Schelte Bron",
@@ -90,6 +86,6 @@ class OpenThermBinarySensor(BinarySensorEntity):
     def receive_report(self, status):
         """Handle status updates from the component."""
         self._attr_available = self._gateway.connected
-        state = status[self._source].get(self._var)
+        state = status[self._source].get(self.entity_description.key)
         self._attr_is_on = None if state is None else bool(state)
         self.async_write_ha_state()
