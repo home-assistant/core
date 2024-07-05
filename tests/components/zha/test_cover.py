@@ -36,8 +36,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-
-# TODO from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_component import async_update_entity
 
 from .common import find_entity_id, send_attributes_report, update_attribute_cache
@@ -324,7 +323,7 @@ async def test_cover(hass: HomeAssistant, setup_zha, zigpy_device_mock) -> None:
         assert cluster.request.call_args[1]["expect_reply"] is True
 
 
-async def test_cover_failures(  # TODO switch ZHAException to HomeAssistantError when all errors are wrapped
+async def test_cover_failures(
     hass: HomeAssistant, setup_zha, zigpy_device_mock
 ) -> None:
     """Test ZHA cover platform failure cases."""
@@ -374,7 +373,7 @@ async def test_cover_failures(  # TODO switch ZHAException to HomeAssistantError
             status=zcl_f.Status.UNSUP_CLUSTER_COMMAND,
         ),
     ):
-        with pytest.raises(ZHAException, match=r"Failed to close cover"):
+        with pytest.raises(HomeAssistantError, match=r"Failed to close cover"):
             await hass.services.async_call(
                 COVER_DOMAIN,
                 SERVICE_CLOSE_COVER,
