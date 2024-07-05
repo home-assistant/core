@@ -34,43 +34,11 @@ from homeassistant.components.ssdp import (
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_SSDP, ConfigEntry
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_PORT,
-    STATE_OFF,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import API_KEY, BRIDGEID, HOST, PORT
-
-from tests.common import MockConfigEntry
-
-DEFAULT_URL = f"http://{HOST}:{PORT}/api/{API_KEY}"
-
-ENTRY_CONFIG = {CONF_API_KEY: API_KEY, CONF_HOST: HOST, CONF_PORT: PORT}
-
-ENTRY_OPTIONS = {}
-
-DECONZ_CONFIG = {
-    "bridgeid": BRIDGEID,
-    "ipaddress": HOST,
-    "mac": "00:11:22:33:44:55",
-    "modelid": "deCONZ",
-    "name": "deCONZ mock gateway",
-    "sw_version": "2.05.69",
-    "uuid": "1234",
-    "websocketport": 1234,
-}
-
-DECONZ_WEB_REQUEST = {
-    "config": DECONZ_CONFIG,
-    "groups": {},
-    "lights": {},
-    "sensors": {},
-}
+from .conftest import BRIDGEID, HOST, PORT
 
 
 async def test_gateway_setup(
@@ -224,9 +192,8 @@ async def test_reset_after_successful_setup(
     assert result is True
 
 
-async def test_get_deconz_api(hass: HomeAssistant) -> None:
+async def test_get_deconz_api(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Successful call."""
-    config_entry = MockConfigEntry(domain=DECONZ_DOMAIN, data=ENTRY_CONFIG)
     with patch("pydeconz.DeconzSession.refresh_state", return_value=True):
         assert await get_deconz_api(hass, config_entry)
 
@@ -241,10 +208,12 @@ async def test_get_deconz_api(hass: HomeAssistant) -> None:
     ],
 )
 async def test_get_deconz_api_fails(
-    hass: HomeAssistant, side_effect, raised_exception
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    side_effect: Exception,
+    raised_exception: Exception,
 ) -> None:
     """Failed call."""
-    config_entry = MockConfigEntry(domain=DECONZ_DOMAIN, data=ENTRY_CONFIG)
     with (
         patch(
             "pydeconz.DeconzSession.refresh_state",
