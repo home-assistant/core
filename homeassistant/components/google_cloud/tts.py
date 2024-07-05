@@ -107,13 +107,6 @@ class GoogleCloudTTSProvider(Provider):
             return None
         return [Voice(voice, voice) for voice in voices]
 
-    @callback
-    def async_get_supported_voices(self, language: str) -> list[Voice] | None:
-        """Return a list of supported voices for a language."""
-        if not (voices := self._voices.get(language)):
-            return None
-        return [Voice(voice, voice) for voice in voices]
-
     async def async_get_tts_audio(self, message, language, options):
         """Load TTS from google."""
         try:
