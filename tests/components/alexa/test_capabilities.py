@@ -619,6 +619,62 @@ async def test_report_fan_direction(hass: HomeAssistant) -> None:
     properties.assert_equal("Alexa.ModeController", "mode", "direction.forward")
 
 
+async def test_report_remote_power(hass: HomeAssistant) -> None:
+    """Test ModeController reports remote power state correctly."""
+    hass.states.async_set(
+        "remote.off",
+        "off",
+        {"current_activity": "TV", "activity_list": ["TV", "MUSIC", "DVD"]},
+    )
+    hass.states.async_set(
+        "remote.on",
+        "on",
+        {"current_activity": "TV", "activity_list": ["TV", "MUSIC", "DVD"]},
+    )
+
+    properties = await reported_properties(hass, "remote#off")
+    properties.assert_equal("Alexa.PowerController", "powerState", "OFF")
+
+    properties = await reported_properties(hass, "remote#on")
+    properties.assert_equal("Alexa.PowerController", "powerState", "ON")
+
+
+async def test_report_remote_activity(hass: HomeAssistant) -> None:
+    """Test ModeController reports remote activity correctly."""
+    hass.states.async_set(
+        "remote.unknown",
+        "on",
+        {"current_activity": "UNKNOWN"},
+    )
+    hass.states.async_set(
+        "remote.tv",
+        "on",
+        {"current_activity": "TV", "activity_list": ["TV", "MUSIC", "DVD"]},
+    )
+    hass.states.async_set(
+        "remote.music",
+        "on",
+        {"current_activity": "MUSIC", "activity_list": ["TV", "MUSIC", "DVD"]},
+    )
+    hass.states.async_set(
+        "remote.dvd",
+        "on",
+        {"current_activity": "DVD", "activity_list": ["TV", "MUSIC", "DVD"]},
+    )
+
+    properties = await reported_properties(hass, "remote#unknown")
+    properties.assert_not_has_property("Alexa.ModeController", "mode")
+
+    properties = await reported_properties(hass, "remote#tv")
+    properties.assert_equal("Alexa.ModeController", "mode", "activity.TV")
+
+    properties = await reported_properties(hass, "remote#music")
+    properties.assert_equal("Alexa.ModeController", "mode", "activity.MUSIC")
+
+    properties = await reported_properties(hass, "remote#dvd")
+    properties.assert_equal("Alexa.ModeController", "mode", "activity.DVD")
+
+
 async def test_report_cover_range_value(hass: HomeAssistant) -> None:
     """Test RangeController reports cover position correctly."""
     hass.states.async_set(
