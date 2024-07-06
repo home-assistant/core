@@ -94,7 +94,9 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
             )
         except ElmaxApiError as err:
             raise HomeAssistantError(
-                "Failed to arm the alarm. An API error occurred."
+                translation_domain=DOMAIN,
+                translation_key="alarm_operation_failed_generic",
+                translation_placeholders={"operation": "arm"},
             ) from err
         finally:
             await self.coordinator.async_refresh()
@@ -116,9 +118,13 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
             )
         except ElmaxApiError as err:
             if err.status_code == 403:
-                raise HomeAssistantError("Invalid disarm code specified.") from err
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="invalid_disarm_code"
+                ) from err
             raise HomeAssistantError(
-                "Failed to disarm the alarm. An API error occurred."
+                translation_domain=DOMAIN,
+                translation_key="alarm_operation_failed_generic",
+                translation_placeholders={"operation": "disarm"},
             ) from err
         finally:
             await self.coordinator.async_refresh()
