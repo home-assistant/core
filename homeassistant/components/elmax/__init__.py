@@ -109,7 +109,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Close connection when hass stops."""
         await coordinator.async_shutdown()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_on_hass_stop)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_on_hass_stop)
+    )
 
     # Issue a first refresh, so that we trigger a re-auth flow if necessary
     await coordinator.async_config_entry_first_refresh()
