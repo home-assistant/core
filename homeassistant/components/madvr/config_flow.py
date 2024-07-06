@@ -5,14 +5,14 @@ import logging
 from typing import Any
 
 import aiohttp
-from madvr.errors import CannotConnect
 from madvr.madvr import HeartBeatError, Madvr
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 
 from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
+from .errors import CannotConnect
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,32 +45,27 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
             port = user_input[CONF_PORT]
 
             try:
-                # get the mac address from device
+                # ensure we can connect and get the mac address from device
                 mac = await self._test_connection(host, port)
             except CannotConnect:
                 _LOGGER.error("CannotConnect error caught")
                 errors["base"] = "cannot_connect"
-                mac = ""
-
-            if not mac:
-                _LOGGER.error("No MAC address found")
-                if errors.get("base") != "cannot_connect":
-                    errors["base"] = "no_mac"
             else:
+                if not mac:
+                    errors["base"] = "no_mac"
+            if not errors:
                 _LOGGER.debug("MAC address found: %s", mac)
-                # this will prevent the user from adding the same device twice
+                # this will prevent the user from adding the same device twice and persist the mac address
                 await self.async_set_unique_id(mac)
                 self._abort_if_unique_id_configured()
 
-            if not errors:
-                _LOGGER.debug("Creating entry")
-                # persist the mac address between HA restarts
-                user_input[CONF_MAC] = mac
+                # create the entry
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
                     data=user_input,
                 )
-        # Whether it's the first attempt or a retry, show the form
+
+        # this will show the form or allow the user to retry if there was an error
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(

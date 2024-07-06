@@ -6,7 +6,6 @@ from typing import Any
 from madvr.madvr import Madvr
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -29,9 +28,8 @@ class MadVRCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     ) -> None:
         """Initialize madvr coordinator."""
         super().__init__(hass, _LOGGER, name=DOMAIN)
-        self.entry_id = self.config_entry.entry_id
-        # get the mac address from the config entry
-        self.mac = self.config_entry.data.get(CONF_MAC)
+        self.mac = self.config_entry.unique_id
+        assert self.mac
         self.client = client
         self.client.set_update_callback(self.handle_push_data)
         _LOGGER.debug("MadVRCoordinator initialized with mac: %s", self.mac)

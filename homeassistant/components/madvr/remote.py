@@ -35,6 +35,7 @@ class MadvrRemote(CoordinatorEntity[MadVRCoordinator], RemoteEntity):
     """Remote entity for the MadVR integration."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -45,23 +46,18 @@ class MadvrRemote(CoordinatorEntity[MadVRCoordinator], RemoteEntity):
         """Initialize the remote entity."""
         super().__init__(coordinator)
         self.madvr_client = coordinator.client
-        self._attr_name = None
-        self._attr_unique_id = f"{coordinator.mac}"
+        self._attr_unique_id = coordinator.mac
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{self.coordinator.mac}")},
+            name="madVR Envy",
+            manufacturer="madVR",
+            model="Envy",
+        )
 
     @property
     def is_on(self) -> bool:
         """Return true if the device is on."""
         return self.madvr_client.is_on
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the DeviceInfo of this madVR Envy."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.mac)},
-            name="madVR Envy",
-            manufacturer="madVR",
-            model="Envy",
-        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
