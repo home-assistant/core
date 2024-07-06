@@ -169,7 +169,7 @@ class Recorder(threading.Thread):
     """A threaded recorder class."""
 
     stop_requested: bool
-    original_entity_filter: EntityFilter
+    _original_entity_filter: EntityFilter
     entity_filter: Callable[[str], bool] | None
 
     def __init__(
@@ -217,7 +217,7 @@ class Recorder(threading.Thread):
         # The entity_filter is exposed on the recorder instance so that
         # it can be used to see if an entity is being recorded and is called
         # by is_entity_recorder and the sensor recorder.
-        self.original_entity_filter = entity_filter
+        self._original_entity_filter = entity_filter
         self._build_entity_filter()
         self.exclude_event_types = exclude_event_types
 
@@ -260,7 +260,7 @@ class Recorder(threading.Thread):
         self.max_bind_vars = SQLITE_MAX_BIND_VARS
 
     def _build_entity_filter(self) -> None:
-        entity_filter = self.original_entity_filter
+        entity_filter = self._original_entity_filter
         empty = entity_filter.empty_filter
         self.entity_filter = None if empty else entity_filter.get_filter()
 
@@ -275,7 +275,7 @@ class Recorder(threading.Thread):
         exclude_entity_globs: list[str] | None,
     ) -> None:
         """Update the entity filter."""
-        self.original_entity_filter.update(
+        self._original_entity_filter.update(
             operation,
             include_entities=include_entities,
             include_domains=include_domains,
