@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import TechnoVEDataUpdateCoordinator
 
-TO_REDACT = {CONF_HOST, CONF_MAC, "unique_id", "mac_address"}
+TO_REDACT = {CONF_HOST, CONF_MAC, "unique_id", "mac_address", "entry_id"}
 
 
 async def async_get_config_entry_diagnostics(
