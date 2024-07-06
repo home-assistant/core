@@ -9,7 +9,7 @@ from .const import VALID_ACCESS_TOKEN, VALID_ACCOUNT_ID
 from tests.common import MockConfigEntry
 
 
-def create_entry(
+async def setup_config_entry(
     hass: HomeAssistant, access_token: str = VALID_ACCESS_TOKEN
 ) -> MockConfigEntry:
     """Create laundrify entry in Home Assistant."""
@@ -19,4 +19,6 @@ def create_entry(
         data={CONF_ACCESS_TOKEN: access_token},
     )
     entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
     return entry

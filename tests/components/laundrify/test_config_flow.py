@@ -8,7 +8,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CODE, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import create_entry
+from . import setup_config_entry
 from .const import VALID_ACCESS_TOKEN, VALID_AUTH_CODE, VALID_USER_INPUT
 
 
@@ -112,7 +112,7 @@ async def test_step_reauth(hass: HomeAssistant) -> None:
 
 async def test_integration_already_exists(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
-    create_entry(hass)
+    await setup_config_entry(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )

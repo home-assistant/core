@@ -6,7 +6,7 @@ from homeassistant.components.laundrify.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from . import create_entry
+from . import setup_config_entry
 
 
 async def test_setup_entry_api_unauthorized(
@@ -14,10 +14,7 @@ async def test_setup_entry_api_unauthorized(
 ) -> None:
     """Test that ConfigEntryAuthFailed is thrown when authentication fails."""
     laundrify_validate_token.side_effect = exceptions.UnauthorizedException
-    config_entry = create_entry(hass)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    config_entry = await setup_config_entry(hass)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
@@ -29,10 +26,7 @@ async def test_setup_entry_api_cannot_connect(
 ) -> None:
     """Test that ApiConnectionException is thrown when connection fails."""
     laundrify_validate_token.side_effect = exceptions.ApiConnectionException
-    config_entry = create_entry(hass)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    config_entry = await setup_config_entry(hass)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
@@ -41,9 +35,7 @@ async def test_setup_entry_api_cannot_connect(
 
 async def test_setup_entry_successful(hass: HomeAssistant) -> None:
     """Test entry can be setup successfully."""
-    config_entry = create_entry(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    config_entry = await setup_config_entry(hass)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.LOADED
@@ -51,8 +43,7 @@ async def test_setup_entry_successful(hass: HomeAssistant) -> None:
 
 async def test_setup_entry_unload(hass: HomeAssistant) -> None:
     """Test unloading the laundrify entry."""
-    config_entry = create_entry(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
+    config_entry = await setup_config_entry(hass)
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
