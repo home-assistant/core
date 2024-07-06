@@ -379,7 +379,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         supported_features = self.supported_features
         if supported_features & (
-            ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_ON
+            ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
         ):
             # The entity supports both turn_on and turn_off, the backwards compatibility
             # checks are not needed
