@@ -22,7 +22,7 @@ async def test_full_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
@@ -57,7 +57,7 @@ async def test_flow_errors(
         result["flow_id"],
         {CONF_HOST: MOCK_CONFIG[CONF_HOST], CONF_PORT: MOCK_CONFIG[CONF_PORT]},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
     mock_madvr_client.open_connection.side_effect = None
@@ -67,8 +67,30 @@ async def test_flow_errors(
         result["flow_id"],
         {CONF_HOST: MOCK_CONFIG[CONF_HOST], CONF_PORT: MOCK_CONFIG[CONF_PORT]},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "no_mac"}
+
+    # ensure an error is recoverable
+    mock_madvr_client.mac_address = MOCK_MAC
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: MOCK_CONFIG[CONF_HOST], CONF_PORT: MOCK_CONFIG[CONF_PORT]},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
+    assert result["data"] == {
+        CONF_HOST: MOCK_CONFIG[CONF_HOST],
+        CONF_PORT: MOCK_CONFIG[CONF_PORT],
+    }
+    assert result["result"].unique_id == MOCK_MAC
+
+    # Verify method calls
+    assert mock_madvr_client.open_connection.call_count == 3
+    assert mock_madvr_client.async_add_tasks.call_count == 3
+    # the first call will not call this due to timeout as expected
+    assert mock_madvr_client.async_cancel_tasks.call_count == 2
 
 
 async def test_duplicate(
