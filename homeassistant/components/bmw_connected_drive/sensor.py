@@ -46,9 +46,8 @@ class BMWSensorEntityDescription(SensorEntityDescription):
 
 SENSOR_TYPES: list[BMWSensorEntityDescription] = [
     BMWSensorEntityDescription(
-        key="ac_current_limit",
+        key="charging_profile.ac_current_limit",
         translation_key="ac_current_limit",
-        key_class="charging_profile",
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         entity_registry_enabled_default=False,
@@ -56,41 +55,36 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
         is_available=lambda v: v.is_lsc_enabled and v.has_electric_drivetrain,
     ),
     BMWSensorEntityDescription(
-        key="charging_start_time",
+        key="fuel_and_battery.charging_start_time",
         translation_key="charging_start_time",
-        key_class="fuel_and_battery",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
         is_available=lambda v: v.is_lsc_enabled and v.has_electric_drivetrain,
     ),
     BMWSensorEntityDescription(
-        key="charging_end_time",
+        key="fuel_and_battery.charging_end_time",
         translation_key="charging_end_time",
-        key_class="fuel_and_battery",
         device_class=SensorDeviceClass.TIMESTAMP,
         is_available=lambda v: v.is_lsc_enabled and v.has_electric_drivetrain,
     ),
     BMWSensorEntityDescription(
-        key="charging_status",
+        key="fuel_and_battery.charging_status",
         translation_key="charging_status",
-        key_class="fuel_and_battery",
         device_class=SensorDeviceClass.ENUM,
         options=[s.value.lower() for s in ChargingState if s != ChargingState.UNKNOWN],
         is_available=lambda v: v.is_lsc_enabled and v.has_electric_drivetrain,
     ),
     BMWSensorEntityDescription(
-        key="charging_target",
+        key="fuel_and_battery.charging_target",
         translation_key="charging_target",
-        key_class="fuel_and_battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=0,
         is_available=lambda v: v.is_lsc_enabled and v.has_electric_drivetrain,
     ),
     BMWSensorEntityDescription(
-        key="remaining_battery_percent",
+        key="fuel_and_battery.remaining_battery_percent",
         translation_key="remaining_battery_percent",
-        key_class="fuel_and_battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -106,18 +100,16 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
         suggested_display_precision=0,
     ),
     BMWSensorEntityDescription(
-        key="remaining_range_total",
+        key="fuel_and_battery.remaining_range_total",
         translation_key="remaining_range_total",
-        key_class="fuel_and_battery",
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
     BMWSensorEntityDescription(
-        key="remaining_range_electric",
+        key="fuel_and_battery.remaining_range_electric",
         translation_key="remaining_range_electric",
-        key_class="fuel_and_battery",
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -125,9 +117,8 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
         is_available=lambda v: v.is_lsc_enabled and v.has_electric_drivetrain,
     ),
     BMWSensorEntityDescription(
-        key="remaining_range_fuel",
+        key="fuel_and_battery.remaining_range_fuel",
         translation_key="remaining_range_fuel",
-        key_class="fuel_and_battery",
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -135,9 +126,8 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
         is_available=lambda v: v.is_lsc_enabled and v.has_combustion_drivetrain,
     ),
     BMWSensorEntityDescription(
-        key="remaining_fuel",
+        key="fuel_and_battery.remaining_fuel",
         translation_key="remaining_fuel",
-        key_class="fuel_and_battery",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -145,18 +135,16 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
         is_available=lambda v: v.is_lsc_enabled and v.has_combustion_drivetrain,
     ),
     BMWSensorEntityDescription(
-        key="remaining_fuel_percent",
+        key="fuel_and_battery.remaining_fuel_percent",
         translation_key="remaining_fuel_percent",
-        key_class="fuel_and_battery",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         is_available=lambda v: v.is_lsc_enabled and v.has_combustion_drivetrain,
     ),
     BMWSensorEntityDescription(
-        key="activity",
+        key="climate.activity",
         translation_key="climate_status",
-        key_class="climate",
         device_class=SensorDeviceClass.ENUM,
         options=[
             s.value.lower()
@@ -208,13 +196,12 @@ class BMWSensor(BMWBaseEntity, SensorEntity):
         _LOGGER.debug(
             "Updating sensor '%s' of %s", self.entity_description.key, self.vehicle.name
         )
-        if self.entity_description.key_class is None:
-            state = getattr(self.vehicle, self.entity_description.key)
-        else:
-            state = getattr(
-                getattr(self.vehicle, self.entity_description.key_class),
-                self.entity_description.key,
-            )
+
+        key_path = self.entity_description.key.split(".")
+        state = getattr(self.vehicle, key_path.pop(0))
+
+        for key in key_path:
+            state = getattr(state, key)
 
         # For datetime without tzinfo, we assume it to be the same timezone as the HA instance
         if isinstance(state, datetime.datetime) and state.tzinfo is None:
