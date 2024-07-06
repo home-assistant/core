@@ -980,6 +980,234 @@
     'state': 'heating',
   })
 # ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_front_left_target_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.i4_edrive40_front_left_target_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Front left target pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_left_target_pressure',
+    'unique_id': 'WBA00000000DEMO02-tires.front_left.target_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_front_left_target_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'i4 eDrive40 Front left target pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.i4_edrive40_front_left_target_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.69',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_front_left_tire_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.i4_edrive40_front_left_tire_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Front left tire pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_left_current_pressure',
+    'unique_id': 'WBA00000000DEMO02-tires.front_left.current_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_front_left_tire_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'i4 eDrive40 Front left tire pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.i4_edrive40_front_left_tire_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.41',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_front_right_target_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.i4_edrive40_front_right_target_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Front right target pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_right_target_pressure',
+    'unique_id': 'WBA00000000DEMO02-tires.front_right.target_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_front_right_target_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'i4 eDrive40 Front right target pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.i4_edrive40_front_right_target_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.69',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_front_right_tire_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.i4_edrive40_front_right_tire_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Front right tire pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_right_current_pressure',
+    'unique_id': 'WBA00000000DEMO02-tires.front_right.current_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_front_right_tire_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'i4 eDrive40 Front right tire pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.i4_edrive40_front_right_tire_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.55',
+  })
+# ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_mileage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1034,7 +1262,7 @@
     'state': '1121',
   })
 # ---
-# name: test_entity_state_attrs[sensor.i4_edrive40_pressure-entry]
+# name: test_entity_state_attrs[sensor.i4_edrive40_rear_left_target_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1048,7 +1276,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.i4_edrive40_pressure',
+    'entity_id': 'sensor.i4_edrive40_rear_left_target_pressure',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1066,349 +1294,7 @@
     }),
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
-    'original_name': 'Pressure',
-    'platform': 'bmw_connected_drive',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'front_left_current_pressure',
-    'unique_id': 'WBA00000000DEMO02-tires.front_left.current_pressure',
-    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-  })
-# ---
-# name: test_entity_state_attrs[sensor.i4_edrive40_pressure-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
-      'friendly_name': 'i4 eDrive40 Pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.i4_edrive40_pressure',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.41',
-  })
-# ---
-# name: test_entity_state_attrs[sensor.i4_edrive40_pressure_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.i4_edrive40_pressure_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
-    'original_icon': None,
-    'original_name': 'Pressure',
-    'platform': 'bmw_connected_drive',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'front_right_current_pressure',
-    'unique_id': 'WBA00000000DEMO02-tires.front_right.current_pressure',
-    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-  })
-# ---
-# name: test_entity_state_attrs[sensor.i4_edrive40_pressure_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
-      'friendly_name': 'i4 eDrive40 Pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.i4_edrive40_pressure_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.55',
-  })
-# ---
-# name: test_entity_state_attrs[sensor.i4_edrive40_pressure_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.i4_edrive40_pressure_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
-    'original_icon': None,
-    'original_name': 'Pressure',
-    'platform': 'bmw_connected_drive',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'rear_left_current_pressure',
-    'unique_id': 'WBA00000000DEMO02-tires.rear_left.current_pressure',
-    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-  })
-# ---
-# name: test_entity_state_attrs[sensor.i4_edrive40_pressure_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
-      'friendly_name': 'i4 eDrive40 Pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.i4_edrive40_pressure_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '3.24',
-  })
-# ---
-# name: test_entity_state_attrs[sensor.i4_edrive40_pressure_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.i4_edrive40_pressure_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
-    'original_icon': None,
-    'original_name': 'Pressure',
-    'platform': 'bmw_connected_drive',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'rear_right_current_pressure',
-    'unique_id': 'WBA00000000DEMO02-tires.rear_right.current_pressure',
-    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-  })
-# ---
-# name: test_entity_state_attrs[sensor.i4_edrive40_pressure_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
-      'friendly_name': 'i4 eDrive40 Pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.i4_edrive40_pressure_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '3.31',
-  })
-# ---
-# name: test_entity_state_attrs[sensor.i4_edrive40_pressure_5-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.i4_edrive40_pressure_5',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
-    'original_icon': None,
-    'original_name': 'Pressure',
-    'platform': 'bmw_connected_drive',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'front_left_target_pressure',
-    'unique_id': 'WBA00000000DEMO02-tires.front_left.target_pressure',
-    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-  })
-# ---
-# name: test_entity_state_attrs[sensor.i4_edrive40_pressure_5-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
-      'friendly_name': 'i4 eDrive40 Pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.i4_edrive40_pressure_5',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.69',
-  })
-# ---
-# name: test_entity_state_attrs[sensor.i4_edrive40_pressure_6-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.i4_edrive40_pressure_6',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
-    'original_icon': None,
-    'original_name': 'Pressure',
-    'platform': 'bmw_connected_drive',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'front_right_target_pressure',
-    'unique_id': 'WBA00000000DEMO02-tires.front_right.target_pressure',
-    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-  })
-# ---
-# name: test_entity_state_attrs[sensor.i4_edrive40_pressure_6-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
-      'friendly_name': 'i4 eDrive40 Pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.i4_edrive40_pressure_6',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.69',
-  })
-# ---
-# name: test_entity_state_attrs[sensor.i4_edrive40_pressure_7-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.i4_edrive40_pressure_7',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
-    'original_icon': None,
-    'original_name': 'Pressure',
+    'original_name': 'Rear left target pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1417,23 +1303,23 @@
     'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
   })
 # ---
-# name: test_entity_state_attrs[sensor.i4_edrive40_pressure_7-state]
+# name: test_entity_state_attrs[sensor.i4_edrive40_rear_left_target_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
-      'friendly_name': 'i4 eDrive40 Pressure',
+      'friendly_name': 'i4 eDrive40 Rear left target pressure',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.i4_edrive40_pressure_7',
+    'entity_id': 'sensor.i4_edrive40_rear_left_target_pressure',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.03',
   })
 # ---
-# name: test_entity_state_attrs[sensor.i4_edrive40_pressure_8-entry]
+# name: test_entity_state_attrs[sensor.i4_edrive40_rear_left_tire_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1447,7 +1333,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.i4_edrive40_pressure_8',
+    'entity_id': 'sensor.i4_edrive40_rear_left_tire_pressure',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1465,7 +1351,64 @@
     }),
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
-    'original_name': 'Pressure',
+    'original_name': 'Rear left tire pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'rear_left_current_pressure',
+    'unique_id': 'WBA00000000DEMO02-tires.rear_left.current_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_rear_left_tire_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'i4 eDrive40 Rear left tire pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.i4_edrive40_rear_left_tire_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.24',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_rear_right_target_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.i4_edrive40_rear_right_target_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Rear right target pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1474,20 +1417,77 @@
     'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
   })
 # ---
-# name: test_entity_state_attrs[sensor.i4_edrive40_pressure_8-state]
+# name: test_entity_state_attrs[sensor.i4_edrive40_rear_right_target_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
-      'friendly_name': 'i4 eDrive40 Pressure',
+      'friendly_name': 'i4 eDrive40 Rear right target pressure',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.i4_edrive40_pressure_8',
+    'entity_id': 'sensor.i4_edrive40_rear_right_target_pressure',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.03',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_rear_right_tire_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.i4_edrive40_rear_right_tire_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Rear right tire pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'rear_right_current_pressure',
+    'unique_id': 'WBA00000000DEMO02-tires.rear_right.current_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_rear_right_tire_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'i4 eDrive40 Rear right tire pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.i4_edrive40_rear_right_tire_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.31',
   })
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_remaining_battery_percent-entry]
@@ -1984,6 +1984,234 @@
     'state': 'inactive',
   })
 # ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_front_left_target_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ix_xdrive50_front_left_target_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Front left target pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_left_target_pressure',
+    'unique_id': 'WBA00000000DEMO01-tires.front_left.target_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_front_left_target_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'iX xDrive50 Front left target pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ix_xdrive50_front_left_target_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.41',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_front_left_tire_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ix_xdrive50_front_left_tire_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Front left tire pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_left_current_pressure',
+    'unique_id': 'WBA00000000DEMO01-tires.front_left.current_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_front_left_tire_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'iX xDrive50 Front left tire pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ix_xdrive50_front_left_tire_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.41',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_front_right_target_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ix_xdrive50_front_right_target_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Front right target pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_right_target_pressure',
+    'unique_id': 'WBA00000000DEMO01-tires.front_right.target_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_front_right_target_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'iX xDrive50 Front right target pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ix_xdrive50_front_right_target_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.41',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_front_right_tire_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ix_xdrive50_front_right_tire_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Front right tire pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_right_current_pressure',
+    'unique_id': 'WBA00000000DEMO01-tires.front_right.current_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_front_right_tire_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'iX xDrive50 Front right tire pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ix_xdrive50_front_right_tire_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.41',
+  })
+# ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_mileage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2038,7 +2266,7 @@
     'state': '1121',
   })
 # ---
-# name: test_entity_state_attrs[sensor.ix_xdrive50_pressure-entry]
+# name: test_entity_state_attrs[sensor.ix_xdrive50_rear_left_target_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2052,7 +2280,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.ix_xdrive50_pressure',
+    'entity_id': 'sensor.ix_xdrive50_rear_left_target_pressure',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2070,349 +2298,7 @@
     }),
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
-    'original_name': 'Pressure',
-    'platform': 'bmw_connected_drive',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'front_left_current_pressure',
-    'unique_id': 'WBA00000000DEMO01-tires.front_left.current_pressure',
-    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-  })
-# ---
-# name: test_entity_state_attrs[sensor.ix_xdrive50_pressure-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
-      'friendly_name': 'iX xDrive50 Pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.ix_xdrive50_pressure',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.41',
-  })
-# ---
-# name: test_entity_state_attrs[sensor.ix_xdrive50_pressure_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.ix_xdrive50_pressure_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
-    'original_icon': None,
-    'original_name': 'Pressure',
-    'platform': 'bmw_connected_drive',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'front_right_current_pressure',
-    'unique_id': 'WBA00000000DEMO01-tires.front_right.current_pressure',
-    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-  })
-# ---
-# name: test_entity_state_attrs[sensor.ix_xdrive50_pressure_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
-      'friendly_name': 'iX xDrive50 Pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.ix_xdrive50_pressure_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.41',
-  })
-# ---
-# name: test_entity_state_attrs[sensor.ix_xdrive50_pressure_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.ix_xdrive50_pressure_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
-    'original_icon': None,
-    'original_name': 'Pressure',
-    'platform': 'bmw_connected_drive',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'rear_left_current_pressure',
-    'unique_id': 'WBA00000000DEMO01-tires.rear_left.current_pressure',
-    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-  })
-# ---
-# name: test_entity_state_attrs[sensor.ix_xdrive50_pressure_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
-      'friendly_name': 'iX xDrive50 Pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.ix_xdrive50_pressure_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.61',
-  })
-# ---
-# name: test_entity_state_attrs[sensor.ix_xdrive50_pressure_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.ix_xdrive50_pressure_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
-    'original_icon': None,
-    'original_name': 'Pressure',
-    'platform': 'bmw_connected_drive',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'rear_right_current_pressure',
-    'unique_id': 'WBA00000000DEMO01-tires.rear_right.current_pressure',
-    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-  })
-# ---
-# name: test_entity_state_attrs[sensor.ix_xdrive50_pressure_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
-      'friendly_name': 'iX xDrive50 Pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.ix_xdrive50_pressure_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.69',
-  })
-# ---
-# name: test_entity_state_attrs[sensor.ix_xdrive50_pressure_5-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.ix_xdrive50_pressure_5',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
-    'original_icon': None,
-    'original_name': 'Pressure',
-    'platform': 'bmw_connected_drive',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'front_left_target_pressure',
-    'unique_id': 'WBA00000000DEMO01-tires.front_left.target_pressure',
-    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-  })
-# ---
-# name: test_entity_state_attrs[sensor.ix_xdrive50_pressure_5-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
-      'friendly_name': 'iX xDrive50 Pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.ix_xdrive50_pressure_5',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.41',
-  })
-# ---
-# name: test_entity_state_attrs[sensor.ix_xdrive50_pressure_6-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.ix_xdrive50_pressure_6',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
-    'original_icon': None,
-    'original_name': 'Pressure',
-    'platform': 'bmw_connected_drive',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'front_right_target_pressure',
-    'unique_id': 'WBA00000000DEMO01-tires.front_right.target_pressure',
-    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-  })
-# ---
-# name: test_entity_state_attrs[sensor.ix_xdrive50_pressure_6-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
-      'friendly_name': 'iX xDrive50 Pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.ix_xdrive50_pressure_6',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.41',
-  })
-# ---
-# name: test_entity_state_attrs[sensor.ix_xdrive50_pressure_7-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.ix_xdrive50_pressure_7',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
-    'original_icon': None,
-    'original_name': 'Pressure',
+    'original_name': 'Rear left target pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2421,23 +2307,23 @@
     'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
   })
 # ---
-# name: test_entity_state_attrs[sensor.ix_xdrive50_pressure_7-state]
+# name: test_entity_state_attrs[sensor.ix_xdrive50_rear_left_target_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
-      'friendly_name': 'iX xDrive50 Pressure',
+      'friendly_name': 'iX xDrive50 Rear left target pressure',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ix_xdrive50_pressure_7',
+    'entity_id': 'sensor.ix_xdrive50_rear_left_target_pressure',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.69',
   })
 # ---
-# name: test_entity_state_attrs[sensor.ix_xdrive50_pressure_8-entry]
+# name: test_entity_state_attrs[sensor.ix_xdrive50_rear_left_tire_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2451,7 +2337,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.ix_xdrive50_pressure_8',
+    'entity_id': 'sensor.ix_xdrive50_rear_left_tire_pressure',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2469,7 +2355,64 @@
     }),
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
-    'original_name': 'Pressure',
+    'original_name': 'Rear left tire pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'rear_left_current_pressure',
+    'unique_id': 'WBA00000000DEMO01-tires.rear_left.current_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_rear_left_tire_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'iX xDrive50 Rear left tire pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ix_xdrive50_rear_left_tire_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.61',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_rear_right_target_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ix_xdrive50_rear_right_target_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Rear right target pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2478,16 +2421,73 @@
     'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
   })
 # ---
-# name: test_entity_state_attrs[sensor.ix_xdrive50_pressure_8-state]
+# name: test_entity_state_attrs[sensor.ix_xdrive50_rear_right_target_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
-      'friendly_name': 'iX xDrive50 Pressure',
+      'friendly_name': 'iX xDrive50 Rear right target pressure',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ix_xdrive50_pressure_8',
+    'entity_id': 'sensor.ix_xdrive50_rear_right_target_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.69',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_rear_right_tire_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ix_xdrive50_rear_right_tire_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Rear right tire pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'rear_right_current_pressure',
+    'unique_id': 'WBA00000000DEMO01-tires.rear_right.current_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_rear_right_tire_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'iX xDrive50 Rear right tire pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ix_xdrive50_rear_right_tire_pressure',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2716,6 +2716,234 @@
     'state': 'inactive',
   })
 # ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_front_left_target_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.m340i_xdrive_front_left_target_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Front left target pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_left_target_pressure',
+    'unique_id': 'WBA00000000DEMO03-tires.front_left.target_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_front_left_target_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'M340i xDrive Front left target pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.m340i_xdrive_front_left_target_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_front_left_tire_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.m340i_xdrive_front_left_tire_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Front left tire pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_left_current_pressure',
+    'unique_id': 'WBA00000000DEMO03-tires.front_left.current_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_front_left_tire_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'M340i xDrive Front left tire pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.m340i_xdrive_front_left_tire_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.41',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_front_right_target_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.m340i_xdrive_front_right_target_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Front right target pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_right_target_pressure',
+    'unique_id': 'WBA00000000DEMO03-tires.front_right.target_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_front_right_target_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'M340i xDrive Front right target pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.m340i_xdrive_front_right_target_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_front_right_tire_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.m340i_xdrive_front_right_tire_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Front right tire pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_right_current_pressure',
+    'unique_id': 'WBA00000000DEMO03-tires.front_right.current_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_front_right_tire_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'M340i xDrive Front right tire pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.m340i_xdrive_front_right_tire_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.55',
+  })
+# ---
 # name: test_entity_state_attrs[sensor.m340i_xdrive_mileage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2770,7 +2998,7 @@
     'state': '1121',
   })
 # ---
-# name: test_entity_state_attrs[sensor.m340i_xdrive_pressure-entry]
+# name: test_entity_state_attrs[sensor.m340i_xdrive_rear_left_target_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2784,7 +3012,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.m340i_xdrive_pressure',
+    'entity_id': 'sensor.m340i_xdrive_rear_left_target_pressure',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2802,349 +3030,7 @@
     }),
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
-    'original_name': 'Pressure',
-    'platform': 'bmw_connected_drive',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'front_left_current_pressure',
-    'unique_id': 'WBA00000000DEMO03-tires.front_left.current_pressure',
-    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-  })
-# ---
-# name: test_entity_state_attrs[sensor.m340i_xdrive_pressure-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
-      'friendly_name': 'M340i xDrive Pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.m340i_xdrive_pressure',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.41',
-  })
-# ---
-# name: test_entity_state_attrs[sensor.m340i_xdrive_pressure_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.m340i_xdrive_pressure_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
-    'original_icon': None,
-    'original_name': 'Pressure',
-    'platform': 'bmw_connected_drive',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'front_right_current_pressure',
-    'unique_id': 'WBA00000000DEMO03-tires.front_right.current_pressure',
-    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-  })
-# ---
-# name: test_entity_state_attrs[sensor.m340i_xdrive_pressure_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
-      'friendly_name': 'M340i xDrive Pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.m340i_xdrive_pressure_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.55',
-  })
-# ---
-# name: test_entity_state_attrs[sensor.m340i_xdrive_pressure_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.m340i_xdrive_pressure_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
-    'original_icon': None,
-    'original_name': 'Pressure',
-    'platform': 'bmw_connected_drive',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'rear_left_current_pressure',
-    'unique_id': 'WBA00000000DEMO03-tires.rear_left.current_pressure',
-    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-  })
-# ---
-# name: test_entity_state_attrs[sensor.m340i_xdrive_pressure_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
-      'friendly_name': 'M340i xDrive Pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.m340i_xdrive_pressure_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '3.24',
-  })
-# ---
-# name: test_entity_state_attrs[sensor.m340i_xdrive_pressure_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.m340i_xdrive_pressure_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
-    'original_icon': None,
-    'original_name': 'Pressure',
-    'platform': 'bmw_connected_drive',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'rear_right_current_pressure',
-    'unique_id': 'WBA00000000DEMO03-tires.rear_right.current_pressure',
-    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-  })
-# ---
-# name: test_entity_state_attrs[sensor.m340i_xdrive_pressure_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
-      'friendly_name': 'M340i xDrive Pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.m340i_xdrive_pressure_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '3.31',
-  })
-# ---
-# name: test_entity_state_attrs[sensor.m340i_xdrive_pressure_5-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.m340i_xdrive_pressure_5',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
-    'original_icon': None,
-    'original_name': 'Pressure',
-    'platform': 'bmw_connected_drive',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'front_left_target_pressure',
-    'unique_id': 'WBA00000000DEMO03-tires.front_left.target_pressure',
-    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-  })
-# ---
-# name: test_entity_state_attrs[sensor.m340i_xdrive_pressure_5-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
-      'friendly_name': 'M340i xDrive Pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.m340i_xdrive_pressure_5',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_entity_state_attrs[sensor.m340i_xdrive_pressure_6-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.m340i_xdrive_pressure_6',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
-    'original_icon': None,
-    'original_name': 'Pressure',
-    'platform': 'bmw_connected_drive',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'front_right_target_pressure',
-    'unique_id': 'WBA00000000DEMO03-tires.front_right.target_pressure',
-    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-  })
-# ---
-# name: test_entity_state_attrs[sensor.m340i_xdrive_pressure_6-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
-      'friendly_name': 'M340i xDrive Pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.m340i_xdrive_pressure_6',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_entity_state_attrs[sensor.m340i_xdrive_pressure_7-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.m340i_xdrive_pressure_7',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
-    'original_icon': None,
-    'original_name': 'Pressure',
+    'original_name': 'Rear left target pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -3153,23 +3039,23 @@
     'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
   })
 # ---
-# name: test_entity_state_attrs[sensor.m340i_xdrive_pressure_7-state]
+# name: test_entity_state_attrs[sensor.m340i_xdrive_rear_left_target_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
-      'friendly_name': 'M340i xDrive Pressure',
+      'friendly_name': 'M340i xDrive Rear left target pressure',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.m340i_xdrive_pressure_7',
+    'entity_id': 'sensor.m340i_xdrive_rear_left_target_pressure',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_entity_state_attrs[sensor.m340i_xdrive_pressure_8-entry]
+# name: test_entity_state_attrs[sensor.m340i_xdrive_rear_left_tire_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3183,7 +3069,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.m340i_xdrive_pressure_8',
+    'entity_id': 'sensor.m340i_xdrive_rear_left_tire_pressure',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3201,7 +3087,64 @@
     }),
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
-    'original_name': 'Pressure',
+    'original_name': 'Rear left tire pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'rear_left_current_pressure',
+    'unique_id': 'WBA00000000DEMO03-tires.rear_left.current_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_rear_left_tire_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'M340i xDrive Rear left tire pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.m340i_xdrive_rear_left_tire_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.24',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_rear_right_target_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.m340i_xdrive_rear_right_target_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Rear right target pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -3210,20 +3153,77 @@
     'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
   })
 # ---
-# name: test_entity_state_attrs[sensor.m340i_xdrive_pressure_8-state]
+# name: test_entity_state_attrs[sensor.m340i_xdrive_rear_right_target_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
-      'friendly_name': 'M340i xDrive Pressure',
+      'friendly_name': 'M340i xDrive Rear right target pressure',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.m340i_xdrive_pressure_8',
+    'entity_id': 'sensor.m340i_xdrive_rear_right_target_pressure',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_rear_right_tire_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.m340i_xdrive_rear_right_tire_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Rear right tire pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'rear_right_current_pressure',
+    'unique_id': 'WBA00000000DEMO03-tires.rear_right.current_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_rear_right_tire_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'M340i xDrive Rear right tire pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.m340i_xdrive_rear_right_tire_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.31',
   })
 # ---
 # name: test_entity_state_attrs[sensor.m340i_xdrive_remaining_fuel-entry]
