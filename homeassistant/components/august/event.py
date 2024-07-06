@@ -20,7 +20,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AugustConfigEntry, AugustData
 from .entity import AugustDescriptionEntity
-from .util import retrieve_ding_activity, retrieve_doorbell_motion_activity
+from .util import (
+    retrieve_ding_activity,
+    retrieve_doorbell_motion_activity,
+    retrieve_online_state,
+)
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -88,6 +92,7 @@ class AugustEventEntity(AugustDescriptionEntity, EventEntity):
     @callback
     def _update_from_data(self) -> None:
         """Update from data."""
+        self._attr_available = retrieve_online_state(self._data, self._detail)
         current_activity = self.entity_description.value_fn(self._data, self._detail)
         if not current_activity or current_activity == self._last_activity:
             return

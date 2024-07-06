@@ -79,3 +79,15 @@ def _activity_time_based(latest: Activity) -> Activity | None:
 def _native_datetime() -> datetime:
     """Return time in the format august uses without timezone."""
     return datetime.now()
+
+
+def retrieve_online_state(
+    data: AugustData, detail: DoorbellDetail | LockDetail
+) -> bool:
+    """Get the latest state of the sensor."""
+    # The doorbell will go into standby mode when there is no motion
+    # for a short while. It will wake by itself when needed so we need
+    # to consider is available or we will not report motion or dings
+    if isinstance(detail, DoorbellDetail):
+        return detail.is_online or detail.is_standby
+    return detail.bridge_is_online

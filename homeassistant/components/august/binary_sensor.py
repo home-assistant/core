@@ -29,6 +29,7 @@ from .entity import AugustDescriptionEntity
 from .util import (
     retrieve_ding_activity,
     retrieve_doorbell_motion_activity,
+    retrieve_online_state,
     retrieve_time_based_activity,
 )
 
@@ -37,18 +38,6 @@ _LOGGER = logging.getLogger(__name__)
 TIME_TO_RECHECK_DETECTION = timedelta(
     seconds=ACTIVITY_UPDATE_INTERVAL.total_seconds() * 3
 )
-
-
-def _retrieve_online_state(
-    data: AugustData, detail: DoorbellDetail | LockDetail
-) -> bool:
-    """Get the latest state of the sensor."""
-    # The doorbell will go into standby mode when there is no motion
-    # for a short while. It will wake by itself when needed so we need
-    # to consider is available or we will not report motion or dings
-    if isinstance(detail, DoorbellDetail):
-        return detail.is_online or detail.is_standby
-    return detail.bridge_is_online
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -83,7 +72,7 @@ SENSOR_TYPES_VIDEO_DOORBELL = (
         key="online",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=_retrieve_online_state,
+        value_fn=retrieve_online_state,
         is_time_based=False,
     ),
 )
@@ -163,7 +152,7 @@ class AugustDoorbellBinarySensor(AugustDescriptionEntity, BinarySensorEntity):
         )
 
         if self.entity_description.is_time_based:
-            self._attr_available = _retrieve_online_state(self._data, self._detail)
+            self._attr_available = retrieve_online_state(self._data, self._detail)
             self._schedule_update_to_recheck_turn_off_sensor()
         else:
             self._attr_available = True
