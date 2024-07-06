@@ -33,6 +33,9 @@
       },
       "packet_upload_speed": {
         "default": "mdi:server-network"
+      },
+      "port_mapping_number_of_entries_ipv4": {
+        "default": "mdi:server-network"
       }
     }
   }
