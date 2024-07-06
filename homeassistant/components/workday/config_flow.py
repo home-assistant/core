@@ -5,7 +5,7 @@ from __future__ import annotations
 from functools import partial
 from typing import Any
 
-from holidays import HolidayBase, country_holidays, list_supported_countries
+from holidays import PUBLIC, HolidayBase, country_holidays, list_supported_countries
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -36,6 +36,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ALLOWED_DAYS,
     CONF_ADD_HOLIDAYS,
+    CONF_CATEGORY,
     CONF_EXCLUDES,
     CONF_OFFSET,
     CONF_PROVINCE,
@@ -86,7 +87,29 @@ def add_province_and_language_to_schema(
             ),
         }
 
-    return vol.Schema({**DATA_SCHEMA_OPT.schema, **language_schema, **province_schema})
+    category_schema = {}
+    # PUBLIC will always be included and can therefore not be set/removed
+    _categories = [x for x in _country.supported_categories if x != PUBLIC]
+    if _categories:
+        category_schema = {
+            vol.Optional(CONF_CATEGORY): SelectSelector(
+                SelectSelectorConfig(
+                    options=_categories,
+                    mode=SelectSelectorMode.DROPDOWN,
+                    multiple=True,
+                    translation_key=CONF_CATEGORY,
+                )
+            ),
+        }
+
+    return vol.Schema(
+        {
+            **DATA_SCHEMA_OPT.schema,
+            **language_schema,
+            **province_schema,
+            **category_schema,
+        }
+    )
 
 
 def _is_valid_date_range(check_date: str, error: type[HomeAssistantError]) -> bool:
@@ -255,6 +278,7 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_ADD_HOLIDAYS: combined_input[CONF_ADD_HOLIDAYS],
                 CONF_REMOVE_HOLIDAYS: combined_input[CONF_REMOVE_HOLIDAYS],
                 CONF_PROVINCE: combined_input.get(CONF_PROVINCE),
+                CONF_CATEGORY: combined_input.get(CONF_CATEGORY),
             }
             LOGGER.debug("abort_check in options with %s", combined_input)
             self._async_abort_entries_match(abort_match)
@@ -324,6 +348,7 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
                             CONF_ADD_HOLIDAYS: combined_input[CONF_ADD_HOLIDAYS],
                             CONF_REMOVE_HOLIDAYS: combined_input[CONF_REMOVE_HOLIDAYS],
                             CONF_PROVINCE: combined_input.get(CONF_PROVINCE),
+                            CONF_CATEGORY: combined_input.get(CONF_CATEGORY),
                         }
                     )
                 except AbortFlow as err:
