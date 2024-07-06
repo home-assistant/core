@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.climate import (
     FAN_AUTO,
+    FAN_OFF,
     PRESET_AWAY,
     PRESET_HOME,
     SWING_BOTH,
@@ -394,6 +395,8 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Turn fan on/off."""
+        if fan_mode == FAN_OFF:
+            return
         if self._current_tado_fan_speed in TADO_FAN_LEVELS:
             self._control_hvac(fan_mode=HA_TO_TADO_FAN_MODE_MAP[fan_mode])
         else:
