@@ -456,6 +456,19 @@ def test_add_to_filter() -> None:
     assert filt("include.any")
     assert filt("include.any_1")
     assert not filt("exclude.any")
+    config = filt.config
+    assert set(config[CONF_INCLUDE_DOMAINS]) == {"light", "include"}
+    assert set(config[CONF_INCLUDE_ENTITIES]) == {"include.any", "switch.kitchen"}
+    assert set(config[CONF_INCLUDE_ENTITY_GLOBS]) == {
+        "sensor.kitchen_*",
+        "include.any_*",
+    }
+    assert set(config[CONF_EXCLUDE_DOMAINS]) == {"exclude", "cover"}
+    assert set(config[CONF_EXCLUDE_ENTITIES]) == {"light.kitchen", "exclude.any"}
+    assert set(config[CONF_EXCLUDE_ENTITY_GLOBS]) == {
+        "sensor.weather_*",
+        "exclude.any_*",
+    }
 
 
 def test_remove_from_filter() -> None:
@@ -486,6 +499,14 @@ def test_remove_from_filter() -> None:
         },
     )
     assert filt.empty_filter is True
+    assert filt.config == {
+        CONF_INCLUDE_DOMAINS: [],
+        CONF_INCLUDE_ENTITIES: [],
+        CONF_INCLUDE_ENTITY_GLOBS: [],
+        CONF_EXCLUDE_DOMAINS: [],
+        CONF_EXCLUDE_ENTITIES: [],
+        CONF_EXCLUDE_ENTITY_GLOBS: [],
+    }
 
 
 def test_complex_include_exclude_filter() -> None:
