@@ -1,4 +1,4 @@
-"""Support for doorbird events."""
+"""Support for august events."""
 
 from __future__ import annotations
 
