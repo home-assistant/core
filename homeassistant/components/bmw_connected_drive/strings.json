@@ -168,5 +168,10 @@
         "rest_of_world": "Rest of world"
       }
     }
+  },
+  "exceptions": {
+    "invalid_poi": {
+      "message": "Invalid data for point of interest: {poi_exception}"
+    }
   }
 }

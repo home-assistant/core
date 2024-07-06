@@ -493,8 +493,6 @@ async def test_binary_sensors(
     # Change state
 
     event_changed_sensor = {
-        "t": "event",
-        "e": "changed",
         "r": "sensors",
         "id": "1",
         "state": expected["websocket_event"],
@@ -607,7 +605,6 @@ async def test_add_new_binary_sensor(
     assert len(hass.states.async_all()) == 0
 
     event_added_sensor = {
-        "t": "event",
         "e": "added",
         "r": "sensors",
         "id": "1",
@@ -647,7 +644,6 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
         "uniqueid": "00:00:00:00:00:00:00:00-00",
     }
     event_added_sensor = {
-        "t": "event",
         "e": "added",
         "r": "sensors",
         "id": "1",
@@ -701,7 +697,6 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_options_change(
         "uniqueid": "00:00:00:00:00:00:00:00-00",
     }
     event_added_sensor = {
-        "t": "event",
         "e": "added",
         "r": "sensors",
         "id": "1",
