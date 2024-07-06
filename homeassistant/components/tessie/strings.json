@@ -488,6 +488,9 @@
     },
     "no_cable": {
       "message": "Insert cable to lock"
+    },
+    "command_failed": {
+      "message": "Command failed, {message}"
     }
   },
   "issues": {
