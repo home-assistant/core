@@ -1106,10 +1106,10 @@ async def test_remove_config_entry_from_device_removes_entities(
         config_entry_id=config_entry_2.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    assert device_entry.config_entries == [
+    assert device_entry.config_entries == {
         config_entry_1.entry_id,
         config_entry_2.entry_id,
-    ]
+    }
 
     # Create one entity for each config entry
     entry_1 = entity_registry.async_get_or_create(
@@ -1174,10 +1174,10 @@ async def test_remove_config_entry_from_device_removes_entities_2(
         config_entry_id=config_entry_2.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    assert device_entry.config_entries == [
+    assert device_entry.config_entries == {
         config_entry_1.entry_id,
         config_entry_2.entry_id,
-    ]
+    }
 
     # Create one entity for each config entry
     entry_1 = entity_registry.async_get_or_create(

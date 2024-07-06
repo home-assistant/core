@@ -56,7 +56,7 @@ class LovelaceConfig(ABC):
             self.config = None
 
     @property
-    def url_path(self) -> str:
+    def url_path(self) -> str | None:
         """Return url path."""
         return self.config[CONF_URL_PATH] if self.config else None
 

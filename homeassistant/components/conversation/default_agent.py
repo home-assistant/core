@@ -44,7 +44,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_added_domain
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
-from .const import DEFAULT_EXPOSED_ATTRIBUTES, DOMAIN
+from .const import DEFAULT_EXPOSED_ATTRIBUTES, DOMAIN, ConversationEntityFeature
 from .entity import ConversationEntity
 from .models import ConversationInput, ConversationResult
 
@@ -147,6 +147,7 @@ class DefaultAgent(ConversationEntity):
     """Default agent for conversation agent."""
 
     _attr_name = "Home Assistant"
+    _attr_supported_features = ConversationEntityFeature.CONTROL
 
     def __init__(
         self, hass: core.HomeAssistant, config_intents: dict[str, Any]
@@ -419,6 +420,7 @@ class DefaultAgent(ConversationEntity):
         language: str,
     ) -> RecognizeResult | None:
         """Search intents for a match to user input."""
+        custom_result: RecognizeResult | None = None
         name_result: RecognizeResult | None = None
         best_results: list[RecognizeResult] = []
         best_text_chunks_matched: int | None = None
@@ -429,6 +431,20 @@ class DefaultAgent(ConversationEntity):
             intent_context=intent_context,
             language=language,
         ):
+            # User intents have highest priority
+            if (result.intent_metadata is not None) and result.intent_metadata.get(
+                METADATA_CUSTOM_SENTENCE
+            ):
+                if (custom_result is None) or (
+                    result.text_chunks_matched > custom_result.text_chunks_matched
+                ):
+                    custom_result = result
+
+                # Clear builtin results
+                best_results = []
+                name_result = None
+                continue
+
             # Prioritize results with a "name" slot, but still prefer ones with
             # more literal text matched.
             if (
@@ -452,6 +468,10 @@ class DefaultAgent(ConversationEntity):
                 # Accumulate results with the same number of literal text matched.
                 # We will resolve the ambiguity below.
                 best_results.append(result)
+
+        if custom_result is not None:
+            # Prioritize user intents
+            return custom_result
 
         if name_result is not None:
             # Prioritize matches with entity names above area names
@@ -718,11 +738,22 @@ class DefaultAgent(ConversationEntity):
             if self._config_intents and (
                 self.hass.config.language in (language, language_variant)
             ):
+                hass_config_path = self.hass.config.path()
                 merge_dict(
                     intents_dict,
                     {
                         "intents": {
-                            intent_name: {"data": [{"sentences": sentences}]}
+                            intent_name: {
+                                "data": [
+                                    {
+                                        "sentences": sentences,
+                                        "metadata": {
+                                            METADATA_CUSTOM_SENTENCE: True,
+                                            METADATA_CUSTOM_FILE: hass_config_path,
+                                        },
+                                    }
+                                ]
+                            }
                             for intent_name, sentences in self._config_intents.items()
                         }
                     },

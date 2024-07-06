@@ -20,7 +20,7 @@ from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
 )
@@ -150,7 +150,7 @@ FILTER_TIME_THROTTLE_SCHEMA = FILTER_SCHEMA.extend(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): vol.Any(
             cv.entity_domain(SENSOR_DOMAIN),
