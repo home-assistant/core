@@ -1,24 +1,19 @@
 """Support for the (unofficial) Tado API."""
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import Any
 
-from PyTado.interface import Tado
-from requests import RequestException
 import requests.exceptions
 
-from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import Throttle
 
 from .const import (
     CONF_FALLBACK,
@@ -26,13 +21,7 @@ from .const import (
     CONST_OVERLAY_TADO_DEFAULT,
     CONST_OVERLAY_TADO_MODE,
     CONST_OVERLAY_TADO_OPTIONS,
-    DATA,
     DOMAIN,
-    INSIDE_TEMPERATURE_MEASUREMENT,
-    PRESET_AUTO,
-    SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED,
-    SIGNAL_TADO_UPDATE_RECEIVED,
-    TEMP_OFFSET,
     UPDATE_LISTENER,
     UPDATE_MOBILE_DEVICE_TRACK,
     UPDATE_TRACK,
