@@ -1,7 +1,7 @@
 """MadVR conftest for shared testing setup."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -40,7 +40,7 @@ def mock_madvr_client() -> Generator[AsyncMock, None, None]:
         client.async_cancel_tasks = AsyncMock()
         client.is_device_connectable = AsyncMock(return_value=True)
         client.send_command = AsyncMock()
-        client.stop = AsyncMock()
+        client.stop = MagicMock()
         yield client
 
 
