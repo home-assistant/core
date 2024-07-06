@@ -211,9 +211,9 @@ class AlexaCapabilityResource:
 
     def __init__(self, labels: list[str]) -> None:
         """Initialize an Alexa resource."""
-        self._resource_labels: dict[str, str] = {}
+        self._resource_labels = []
         for label in labels:
-            self._resource_labels.update({label: ""})
+            self._resource_labels.append(label)
 
     def serialize_capability_resources(self) -> dict[str, list[dict[str, Any]]]:
         """Return capabilityResources object serialized for an API response."""
@@ -226,22 +226,20 @@ class AlexaCapabilityResource:
         """
         raise NotImplementedError
 
-    def serialize_labels(
-        self, resources: dict[str, str]
-    ) -> dict[str, list[dict[str, Any]]]:
+    def serialize_labels(self, resources: list[str]) -> dict[str, list[dict[str, Any]]]:
         """Return serialized labels for an API response.
 
         Returns resource label objects for friendlyNames serialized.
         """
         labels: list[dict[str, Any]] = []
         label_dict: dict[str, Any]
-        for label, locale in resources.items():
+        for label in resources:
             if label in AlexaGlobalCatalog.__dict__.values():
                 label_dict = {"@type": "asset", "value": {"assetId": label}}
             else:
                 label_dict = {
                     "@type": "text",
-                    "value": {"text": label, "locale": locale or "en-US"},
+                    "value": {"text": label, "locale": "en-US"},
                 }
 
             labels.append(label_dict)
@@ -262,10 +260,6 @@ class AlexaModeResource(AlexaCapabilityResource):
         self._mode_ordered: bool = ordered
 
     def add_mode(self, value: str, labels: list[str]) -> None:
-        """Add mode to the supportedModes object."""
-        self.add_mode_with_locale(value, {label: "" for label in labels})
-
-    def add_mode_with_locale(self, value: str, labels: dict[str, str]) -> None:
         """Add mode to the supportedModes object."""
         self._supported_modes.append({"value": value, "labels": labels})
 
@@ -313,10 +307,6 @@ class AlexaPresetResource(AlexaCapabilityResource):
             self._unit_of_measure = unit
 
     def add_preset(self, value: float, labels: list[str]) -> None:
-        """Add preset to configuration presets array."""
-        self.add_preset_with_locale(value, {label: "" for label in labels})
-
-    def add_preset_with_locale(self, value: float, labels: dict[str, str]) -> None:
         """Add preset to configuration presets array."""
         self._presets.append({"value": value, "labels": labels})
 
