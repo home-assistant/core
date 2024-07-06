@@ -91,7 +91,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[binary_sensor.energy_site_none-entry]
+# name: test_binary_sensors[binary_sensor.energy_site_grid_services_enabled-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -103,7 +103,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.energy_site_none',
+    'entity_id': 'binary_sensor.energy_site_grid_services_enabled',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -115,7 +115,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Grid services enabled',
     'platform': 'tessie',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -124,13 +124,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.energy_site_none-state]
+# name: test_binary_sensors[binary_sensor.energy_site_grid_services_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Site None',
+      'friendly_name': 'Energy Site Grid services enabled',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.energy_site_none',
+    'entity_id': 'binary_sensor.energy_site_grid_services_enabled',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
