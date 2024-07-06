@@ -121,3 +121,76 @@ async def test_form_cannot_connect_bad_file(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reconfigure(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test that reconfigure discovers additional systems and zones."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    # Configure initial set of systems and zones.
+    with (
+        patch.object(
+            BryantEvolutionLocalClient,
+            "enumerate_zones",
+            return_value=DEFAULT,
+        ) as mock_call,
+    ):
+        mock_call.side_effect = lambda system_id, filename: {
+            1: [1, 2],
+            2: [3, 4],
+        }.get(system_id, [])
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_FILENAME: "test_reconfigure",
+            },
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY, result
+    assert result["title"] == "SAM at test_reconfigure"
+    assert result["data"] == {
+        CONF_FILENAME: "test_reconfigure",
+        CONF_SYSTEM_ZONE: [(1, 1), (1, 2), (2, 3), (2, 4)],
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    # Reconfigure with additional systems and zones.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": hass.config_entries.async_entries()[0].entry_id,
+        },
+    )
+    with (
+        patch.object(
+            BryantEvolutionLocalClient,
+            "enumerate_zones",
+            return_value=DEFAULT,
+        ) as mock_call,
+    ):
+        mock_call.side_effect = lambda system_id, filename: {
+            1: [1],
+            2: [3, 4, 5],
+        }.get(system_id, [])
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_FILENAME: "test_reconfigure",
+            },
+        )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT, result
+    assert result["reason"] == "reconfigured"
+    config_entry = hass.config_entries.async_entries()[0]
+    assert config_entry.data[CONF_SYSTEM_ZONE] == [
+        (1, 1),
+        (2, 3),
+        (2, 4),
+        (2, 5),
+    ]
