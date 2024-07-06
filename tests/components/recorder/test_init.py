@@ -25,10 +25,12 @@ from homeassistant.components.recorder import (
     CONF_DB_URL,
     DOMAIN,
     Recorder,
+    UpdateOperation,
     db_schema,
     get_instance,
     migration,
     statistics,
+    update_entity_filter,
 )
 from homeassistant.components.recorder.const import (
     EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
@@ -2700,3 +2702,19 @@ async def test_all_tables_use_default_table_args(hass: HomeAssistant) -> None:
     """Test that all tables use the default table args."""
     for table in db_schema.Base.metadata.tables.values():
         assert table.kwargs.items() >= db_schema._DEFAULT_TABLE_ARGS.items()
+
+
+async def test_update_entity_filter(
+    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
+) -> None:
+    """Test updating the entity filter."""
+    instance = await async_setup_recorder_instance(hass, {})
+    assert instance.entity_filter is None
+    update_entity_filter(hass, UpdateOperation.ADD, exclude_entities=["sensor.exclude"])
+    assert instance.entity_filter is not None
+    assert instance.entity_filter("switch.included") is True
+    assert instance.entity_filter("sensor.exclude") is False
+    update_entity_filter(
+        hass, UpdateOperation.REMOVE, exclude_entities=["sensor.exclude"]
+    )
+    assert instance.entity_filter is None
