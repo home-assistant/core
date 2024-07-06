@@ -474,7 +474,7 @@ def test_remove_from_filter() -> None:
     }
     filt: EntityFilter = INCLUDE_EXCLUDE_FILTER_SCHEMA(conf)
     assert not filt("sensor.any")
-    filt.remove(
+    filt.update(
         UpdateOperation.REMOVE,
         **{
             CONF_INCLUDE_DOMAINS: ["light"],
