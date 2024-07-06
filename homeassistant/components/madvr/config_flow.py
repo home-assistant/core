@@ -109,7 +109,6 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _close_test_connection(self, madvr_client: Madvr) -> None:
         """Close the test connection."""
-        if madvr_client:
-            madvr_client.stop()
-            await madvr_client.async_cancel_tasks()
-            await madvr_client.close_connection()
+        madvr_client.stop()
+        await madvr_client.async_cancel_tasks()
+        await madvr_client.close_connection()

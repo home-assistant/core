@@ -1,16 +1,19 @@
 """Support for MadVR remote control."""
 
+from __future__ import annotations
+
 from collections.abc import Iterable
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import MadVRConfigEntry
+if TYPE_CHECKING:
+    from . import MadVRConfigEntry
 from .const import DOMAIN
 from .coordinator import MadVRCoordinator
 
@@ -46,12 +49,13 @@ class MadvrRemote(CoordinatorEntity[MadVRCoordinator], RemoteEntity):
         """Initialize the remote entity."""
         super().__init__(coordinator)
         self.madvr_client = coordinator.client
-        self._attr_unique_id = coordinator.mac
+        self._attr_unique_id = cast(str, coordinator.mac)
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{self.coordinator.mac}")},
+            identifiers={(DOMAIN, cast(str, coordinator.mac))},
             name="madVR Envy",
             manufacturer="madVR",
             model="Envy",
+            connections={(CONNECTION_NETWORK_MAC, cast(str, coordinator.mac))},
         )
 
     @property
