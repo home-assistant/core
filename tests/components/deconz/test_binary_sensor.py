@@ -493,7 +493,6 @@ async def test_binary_sensors(
     # Change state
 
     event_changed_sensor = {
-        "e": "changed",
         "r": "sensors",
         "id": "1",
         "state": expected["websocket_event"],

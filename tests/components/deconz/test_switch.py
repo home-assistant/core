@@ -66,7 +66,6 @@ async def test_power_plugs(
     assert hass.states.get("switch.unsupported_switch") is None
 
     event_changed_light = {
-        "e": "changed",
         "r": "lights",
         "id": "1",
         "state": {"on": False},

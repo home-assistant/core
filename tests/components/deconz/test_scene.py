@@ -126,7 +126,6 @@ async def test_only_new_scenes_are_created(
     assert len(hass.states.async_all()) == 2
 
     event_changed_group = {
-        "e": "changed",
         "r": "groups",
         "id": "1",
         "scenes": [{"id": "1", "name": "Scene"}],

@@ -352,7 +352,6 @@ async def test_functional_device_trigger(
     assert len(hass.states.async_entity_ids(AUTOMATION_DOMAIN)) == 1
 
     event_changed_sensor = {
-        "e": "changed",
         "r": "sensors",
         "id": "1",
         "state": {"buttonevent": 1002},

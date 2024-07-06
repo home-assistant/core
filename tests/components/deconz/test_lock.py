@@ -54,7 +54,6 @@ async def test_lock_from_light(
     assert hass.states.get("lock.door_lock").state == STATE_UNLOCKED
 
     event_changed_light = {
-        "e": "changed",
         "r": "lights",
         "id": "1",
         "state": {"on": True},
@@ -139,7 +138,6 @@ async def test_lock_from_sensor(
     assert hass.states.get("lock.door_lock").state == STATE_UNLOCKED
 
     event_changed_light = {
-        "e": "changed",
         "r": "sensors",
         "id": "1",
         "state": {"lockstate": "locked"},

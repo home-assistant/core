@@ -952,7 +952,7 @@ async def test_sensors(
 
     # Change state
 
-    event_changed_sensor = {"e": "changed", "r": "sensors", "id": "1"}
+    event_changed_sensor = {"r": "sensors", "id": "1"}
     event_changed_sensor |= expected["websocket_event"]
     await mock_websocket_data(event_changed_sensor)
     await hass.async_block_till_done()

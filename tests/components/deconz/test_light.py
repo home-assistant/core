@@ -479,9 +479,7 @@ async def test_light_state_change(
     assert hass.states.get("light.hue_go").state == STATE_ON
 
     event_changed_light = {
-        "e": "changed",
         "r": "lights",
-        "id": "0",
         "state": {"on": False},
     }
     await mock_websocket_data(event_changed_light)
@@ -1320,7 +1318,6 @@ async def test_non_color_light_reports_color(
     # Updating a scene will return a faulty color value
     # for a non-color light causing an exception in hs_color
     event_changed_light = {
-        "e": "changed",
         "id": "1",
         "r": "lights",
         "state": {
@@ -1522,7 +1519,6 @@ async def test_verify_group_color_mode_fallback(
 
     await mock_websocket_data(
         {
-            "e": "changed",
             "id": "13",
             "r": "lights",
             "state": {
@@ -1537,7 +1533,6 @@ async def test_verify_group_color_mode_fallback(
     )
     await mock_websocket_data(
         {
-            "e": "changed",
             "id": "43",
             "r": "groups",
             "state": {"all_on": True, "any_on": True},

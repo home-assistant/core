@@ -113,9 +113,7 @@ async def test_alarm_control_panel(
     # Event signals alarm control panel armed away
 
     event_changed_sensor = {
-        "e": "changed",
         "r": "sensors",
-        "id": "0",
         "state": {"panel": AncillaryControlPanel.ARMED_AWAY},
     }
     await mock_websocket_data(event_changed_sensor)
@@ -126,9 +124,7 @@ async def test_alarm_control_panel(
     # Event signals alarm control panel armed night
 
     event_changed_sensor = {
-        "e": "changed",
         "r": "sensors",
-        "id": "0",
         "state": {"panel": AncillaryControlPanel.ARMED_NIGHT},
     }
     await mock_websocket_data(event_changed_sensor)
@@ -141,9 +137,7 @@ async def test_alarm_control_panel(
     # Event signals alarm control panel armed home
 
     event_changed_sensor = {
-        "e": "changed",
         "r": "sensors",
-        "id": "0",
         "state": {"panel": AncillaryControlPanel.ARMED_STAY},
     }
     await mock_websocket_data(event_changed_sensor)
@@ -154,9 +148,7 @@ async def test_alarm_control_panel(
     # Event signals alarm control panel disarmed
 
     event_changed_sensor = {
-        "e": "changed",
         "r": "sensors",
-        "id": "0",
         "state": {"panel": AncillaryControlPanel.DISARMED},
     }
     await mock_websocket_data(event_changed_sensor)
@@ -172,9 +164,7 @@ async def test_alarm_control_panel(
         AncillaryControlPanel.ARMING_STAY,
     ):
         event_changed_sensor = {
-            "e": "changed",
             "r": "sensors",
-            "id": "0",
             "state": {"panel": arming_event},
         }
         await mock_websocket_data(event_changed_sensor)
@@ -189,9 +179,7 @@ async def test_alarm_control_panel(
         AncillaryControlPanel.EXIT_DELAY,
     ):
         event_changed_sensor = {
-            "e": "changed",
             "r": "sensors",
-            "id": "0",
             "state": {"panel": pending_event},
         }
         await mock_websocket_data(event_changed_sensor)
@@ -204,9 +192,7 @@ async def test_alarm_control_panel(
     # Event signals alarm control panel triggered
 
     event_changed_sensor = {
-        "e": "changed",
         "r": "sensors",
-        "id": "0",
         "state": {"panel": AncillaryControlPanel.IN_ALARM},
     }
     await mock_websocket_data(event_changed_sensor)
@@ -217,9 +203,7 @@ async def test_alarm_control_panel(
     # Event signals alarm control panel unknown state keeps previous state
 
     event_changed_sensor = {
-        "e": "changed",
         "r": "sensors",
-        "id": "0",
         "state": {"panel": AncillaryControlPanel.NOT_READY},
     }
     await mock_websocket_data(event_changed_sensor)
