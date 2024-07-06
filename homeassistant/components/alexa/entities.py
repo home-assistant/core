@@ -197,6 +197,9 @@ class DisplayCategory:
     # Indicates a device that prints.
     PRINTER = "PRINTER"
 
+    # Indicates a decive that support stateless events, such as remote switches and smart buttons.
+    REMOTE = "REMOTE"
+
     # Indicates a network router.
     ROUTER = "ROUTER"
 
@@ -659,7 +662,7 @@ class RemoteCapabilities(AlexaEntity):
 
     def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
-        return [DisplayCategory.TV]
+        return [DisplayCategory.REMOTE]
 
     def interfaces(self) -> Generator[AlexaCapability]:
         """Yield the supported interfaces."""
