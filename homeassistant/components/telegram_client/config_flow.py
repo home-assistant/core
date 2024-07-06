@@ -21,7 +21,7 @@ from .const import (
     CONF_API_HASH,
     CONF_API_ID,
     CONF_OTP,
-    CONF_PHONE_NUMBER,
+    CONF_PHONE,
     CONF_SESSION_ID,
     DOMAIN,
 )
@@ -36,7 +36,7 @@ STEP_API_DATA_SCHEMA = vol.Schema(
 )
 STEP_PHONE_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PHONE_NUMBER): str,
+        vol.Required(CONF_PHONE): str,
     }
 )
 STEP_OTP_DATA_SCHEMA = vol.Schema(
@@ -94,7 +94,7 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle phone number input."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._phone = user_input[CONF_PHONE_NUMBER]
+            self._phone = user_input[CONF_PHONE]
             await self.async_set_unique_id(self._phone)
             self._abort_if_unique_id_configured()
             return await self.async_step_otp()
@@ -155,7 +155,10 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
                 await client.disconnect()
 
         return self.async_show_form(
-            step_id="password", data_schema=STEP_PASSWORD_DATA_SCHEMA, errors=errors
+            step_id="password",
+            data_schema=STEP_PASSWORD_DATA_SCHEMA,
+            errors=errors,
+            last_step=True,
         )
 
     async def async_finish(self) -> ConfigFlowResult:
@@ -166,7 +169,7 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_SESSION_ID: self._session,
                 CONF_API_ID: self._api_id,
                 CONF_API_HASH: self._api_hash,
-                CONF_PHONE_NUMBER: self._phone,
+                CONF_PHONE: self._phone,
                 CONF_PASSWORD: self._password,
             },
         )
@@ -178,7 +181,7 @@ class TelegramClientConfigFlow(ConfigFlow, domain=DOMAIN):
         self._session = self.flow_id
         self._api_id = entry_data[CONF_API_ID]
         self._api_hash = entry_data[CONF_API_HASH]
-        self._phone = entry_data[CONF_PHONE_NUMBER]
+        self._phone = entry_data[CONF_PHONE]
 
         return await self.async_step_reauth_confirm()
 

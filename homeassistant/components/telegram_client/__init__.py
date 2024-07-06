@@ -4,29 +4,22 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
-from pathlib import Path
 from typing import Any
 
-from telethon import TelegramClient, events
 from telethon.errors.common import AuthKeyNotFound
 from telethon.errors.rpcbaseerrors import AuthKeyError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    CONF_API_HASH,
-    CONF_API_ID,
-    CONF_PHONE_NUMBER,
-    CONF_SESSION_ID,
-    DOMAIN,
-)
+from .const import CONF_PHONE, DOMAIN
+from .device import TelegramClientDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,6 +75,12 @@ ATTR_OPEN_PERIOD = "open_period"
 ATTR_IS_ANONYMOUS = "is_anonymous"
 ATTR_ALLOWS_MULTIPLE_ANSWERS = "allows_multiple_answers"
 ATTR_MESSAGE_THREAD_ID = "message_thread_id"
+
+
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+]
 
 
 def _has_only_one_target_kind(conf: dict[str, Any]) -> dict[str, Any]:
@@ -143,14 +142,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Process Telegram service call."""
         device_id = call.data[ATTR_DEVICE_ID]
         device_registry = dr.async_get(hass)
-        device = device_registry.async_get(device_id)
-        if not device:
+        device_entity = device_registry.async_get(device_id)
+        if not device_entity:
             return
-        telegram_client_entry: TelegramClientEntry = hass.data[DOMAIN].get(
-            device.primary_config_entry
+        device: TelegramClientDevice = hass.data[DOMAIN].get(
+            device_entity.primary_config_entry
         )
-        client = telegram_client_entry.client
-        config = telegram_client_entry.config
 
         service = call.service
         target = call.data.get(ATTR_TARGET_USERNAME) or call.data.get(ATTR_TARGET_ID)
@@ -163,7 +160,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         try:
             if service == SERVICE_SEND_MESSAGE:
                 message = call.data[ATTR_MESSAGE]
-                await client.send_message(
+                await device.client.send_message(
                     target,
                     message,
                     reply_to=reply_to,
@@ -173,9 +170,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     schedule=schedule,
                 )
         except (AuthKeyError, AuthKeyNotFound) as ex:
-            await client.log_out()
+            await device.client.log_out()
             raise ConfigEntryAuthFailed(
-                f"Credentials expired for {config.data[CONF_PHONE_NUMBER]}"
+                f"Credentials expired for {device.entry.data[CONF_PHONE]}"
             ) from ex
 
     hass.services.async_register(
@@ -185,90 +182,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle Telegram client entry setup."""
-    telegram_client_entry = TelegramClientEntry(hass, config)
-    client = telegram_client_entry.client
-    try:
-        await client.connect()
-        if await client.is_user_authorized():
-            await client.start(config.data[CONF_PHONE_NUMBER])
-        else:
-            raise AuthKeyNotFound
-    except (AuthKeyError, AuthKeyNotFound) as ex:
-        await client.log_out()
-        raise ConfigEntryAuthFailed(
-            f"Credentials expired for {config.data[CONF_PHONE_NUMBER]}"
-        ) from ex
-    return client.is_connected()
+    device = TelegramClientDevice(hass, entry)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await device.async_start()
+
+    return device.is_connected
 
 
-async def async_unload_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if config.entry_id in hass.data[DOMAIN]:
-        client = hass.data[DOMAIN][config.entry_id].client
-        await client.disconnect()
-        del hass.data[DOMAIN][config.entry_id]
-        return not client.is_connected()
+    if entry.entry_id in hass.data[DOMAIN]:
+        device = hass.data[DOMAIN][entry.entry_id]
+        await device.async_disconnect()
+        del hass.data[DOMAIN][entry.entry_id]
+        return not device.is_connected
 
     return True
 
 
-async def async_remove_entry(hass: HomeAssistant, config: ConfigEntry) -> None:
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle removal of an entry."""
-    await async_unload_entry(hass, config)
-
-
-class TelegramClientEntry:
-    """Telegram client entry class."""
-
-    _client: TelegramClient
-    _config: ConfigEntry
-
-    def __init__(self, hass: HomeAssistant, config: ConfigEntry) -> None:
-        """Init."""
-        self._config = config
-        self._client = TelegramClient(
-            Path(
-                hass.config.path(
-                    STORAGE_DIR, DOMAIN, f"{self.config.data[CONF_SESSION_ID]}.session"
-                )
-            ),
-            self.config.data[CONF_API_ID],
-            self.config.data[CONF_API_HASH],
-        )
-        hass.data.setdefault(DOMAIN, {})
-        hass.data[DOMAIN][config.entry_id] = self
-
-        @self.client.on(events.NewMessage)
-        async def new_message_handler(event: events.newmessage.NewMessage.Event):
-            hass.bus.async_fire(
-                "telegram_client_new_message",
-                {
-                    key: getattr(event.message, key)
-                    for key in (
-                        "message",
-                        "raw_text",
-                        "sender_id",
-                        "chat_id",
-                        "is_channel",
-                        "is_group",
-                        "is_private",
-                        "silent",
-                        "post",
-                        "from_scheduled",
-                        "date",
-                    )
-                    if hasattr(event.message, key)
-                },
-            )
-
-    @property
-    def client(self) -> TelegramClient:
-        """Telegram client."""
-        return self._client
-
-    @property
-    def config(self) -> ConfigEntry:
-        """Telegram client config entry."""
-        return self._config
+    await async_unload_entry(hass, entry)
