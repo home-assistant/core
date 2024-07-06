@@ -18,6 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
     INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER,
+    UpdateOperation,
     convert_include_exclude_filter,
 )
 from homeassistant.helpers.integration_platform import (
@@ -73,6 +74,28 @@ FILTER_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
 
 
 ALLOW_IN_MEMORY_DB = False
+
+
+def update_entity_filter(
+    hass: HomeAssistant,
+    operation: UpdateOperation,
+    include_entities: list[str] | None = None,
+    include_domains: list[str] | None = None,
+    include_entity_globs: list[str] | None = None,
+    exclude_entities: list[str] | None = None,
+    exclude_domains: list[str] | None = None,
+    exclude_entity_globs: list[str] | None = None,
+) -> None:
+    """Update the entity filter."""
+    get_instance(hass).update_entity_filter(
+        operation,
+        include_entities=include_entities,
+        include_domains=include_domains,
+        include_entity_globs=include_entity_globs,
+        exclude_entities=exclude_entities,
+        exclude_domains=exclude_domains,
+        exclude_entity_globs=exclude_entity_globs,
+    )
 
 
 def validate_db_url(db_url: str) -> Any:
@@ -134,8 +157,7 @@ def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
     conf = config[DOMAIN]
-    _filter = convert_include_exclude_filter(conf)
-    entity_filter = None if _filter.empty_filter else _filter.get_filter()
+    entity_filter = convert_include_exclude_filter(conf)
     auto_purge = conf[CONF_AUTO_PURGE]
     auto_repack = conf[CONF_AUTO_REPACK]
     keep_days = conf[CONF_PURGE_KEEP_DAYS]
@@ -196,3 +218,11 @@ async def _async_setup_integration_platform(
             instance.queue_task(AddRecorderPlatformTask(domain, platform))
 
     await async_process_integration_platforms(hass, DOMAIN, _process_recorder_platform)
+
+
+__all__ = [
+    "UpdateOperation",
+    "update_entity_filter",
+    "get_instance",
+    "is_entity_recorded",
+]

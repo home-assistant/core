@@ -10,6 +10,7 @@ from homeassistant.helpers.entityfilter import (
     FILTER_SCHEMA,
     INCLUDE_EXCLUDE_FILTER_SCHEMA,
     EntityFilter,
+    UpdateOperation,
     generate_filter,
 )
 
@@ -440,7 +441,8 @@ def test_add_to_filter() -> None:
     }
     filt: EntityFilter = INCLUDE_EXCLUDE_FILTER_SCHEMA(conf)
     assert not filt("sensor.any")
-    filt.add(
+    filt.update(
+        UpdateOperation.ADD,
         **{
             CONF_INCLUDE_DOMAINS: ["include"],
             CONF_INCLUDE_ENTITIES: ["include.any"],
@@ -448,7 +450,7 @@ def test_add_to_filter() -> None:
             CONF_EXCLUDE_DOMAINS: ["exclude"],
             CONF_EXCLUDE_ENTITIES: ["exclude.any"],
             CONF_EXCLUDE_ENTITY_GLOBS: ["exclude.any_*"],
-        }
+        },
     )
     assert not filt("sensor.any")
     assert filt("include.any")
@@ -473,6 +475,7 @@ def test_remove_from_filter() -> None:
     filt: EntityFilter = INCLUDE_EXCLUDE_FILTER_SCHEMA(conf)
     assert not filt("sensor.any")
     filt.remove(
+        UpdateOperation.REMOVE,
         **{
             CONF_INCLUDE_DOMAINS: ["light"],
             CONF_INCLUDE_ENTITIES: ["switch.kitchen"],
@@ -480,7 +483,7 @@ def test_remove_from_filter() -> None:
             CONF_EXCLUDE_DOMAINS: ["cover"],
             CONF_EXCLUDE_ENTITIES: ["light.kitchen"],
             CONF_EXCLUDE_ENTITY_GLOBS: ["sensor.weather_*"],
-        }
+        },
     )
     assert filt.empty_filter is True
 
