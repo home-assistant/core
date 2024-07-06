@@ -50,13 +50,13 @@ class EntityFilter:
         self.config = {key: config.get(key, []) for key in _KEYS}
         self._generate_filter()
 
-    def remove_config(self, config: dict[str, list[str]]) -> None:
+    def remove(self, config: dict[str, list[str]]) -> None:
         """Remove from the filter config."""
         for key, values in config.items():
             self.config[key] = list(set(self.config[key]) - set(values))
         self._generate_filter()
 
-    def add_config(self, config: dict[str, list[str]]) -> None:
+    def add(self, config: dict[str, list[str]]) -> None:
         """Add to the filter config."""
         for key, values in config.items():
             self.config[key] = list(set(self.config[key] + list(values)))
